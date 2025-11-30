@@ -746,6 +746,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.JellyseerrUseJellyseerrLinks,
                 config.AddRequestedMediaToWatchlist,
                 config.SyncJellyseerrWatchlist,
+                config.SyncJellyseerrRequests,
 
                 // Arr Links Settings
                 config.ArrLinksEnabled,

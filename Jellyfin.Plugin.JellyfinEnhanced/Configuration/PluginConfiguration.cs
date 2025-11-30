@@ -120,6 +120,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             // Watchlist Settings
             AddRequestedMediaToWatchlist = false;
             SyncJellyseerrWatchlist = false;
+            SyncJellyseerrRequests = false;
         }
 
         // Jellyfin Enhanced Settings
@@ -211,5 +212,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         // Watchlist Settings
         public bool AddRequestedMediaToWatchlist { get; set; }
         public bool SyncJellyseerrWatchlist { get; set; }
+        public bool SyncJellyseerrRequests { get; set; }
     }
 }
