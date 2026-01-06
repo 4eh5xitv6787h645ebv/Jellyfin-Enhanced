@@ -15,6 +15,42 @@
             skipToastShown: false,
             pauseScreenClickTimer: null
          },
+        // Unified cache manager for tag systems
+        _cacheManager: {
+            callbacks: new Set(),
+            dirty: false,
+            scheduleId: null,
+            register(saveCallback) {
+                this.callbacks.add(saveCallback);
+            },
+            unregister(saveCallback) {
+                this.callbacks.delete(saveCallback);
+            },
+            markDirty() {
+                this.dirty = true;
+                if (!this.scheduleId) {
+                    // Use requestIdleCallback to defer cache saves
+                    if (typeof requestIdleCallback !== 'undefined') {
+                        this.scheduleId = requestIdleCallback(() => this._flush(), { timeout: 5000 });
+                    } else {
+                        this.scheduleId = setTimeout(() => this._flush(), 1000);
+                    }
+                }
+            },
+            _flush() {
+                if (this.dirty) {
+                    this.callbacks.forEach(cb => {
+                        try { cb(); } catch (e) { console.error('Cache save error:', e); }
+                    });
+                    this.dirty = false;
+                }
+                this.scheduleId = null;
+            },
+            forceSave() {
+                this.dirty = true;
+                this._flush();
+            }
+        },
         // Placeholder functions
         t: (key, params = {}) => { // Actual implementation defined later
             const translations = window.JellyfinEnhanced?.translations || {};
@@ -51,6 +87,43 @@
         }
         return camelCased;
     }
+    JE.toPascalCase = toPascalCase;
+    JE.toCamelCase = toCamelCase;
+    /**
+     * Converts object keys from camelCase to PascalCase (recursively).
+     * @param {object} obj - The object to convert.
+     * @returns {object} - A new object with PascalCase keys.
+     */
+    function toPascalCase(obj) {
+        if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
+            return obj; // Return primitives and arrays as-is
+        }
+        const pascalCased = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const pascalKey = key.charAt(0).toUpperCase() + key.slice(1);
+                pascalCased[pascalKey] = toPascalCase(obj[key]); // Recursive for nested objects
+            }
+        }
+        return pascalCased;
+    }
+
+    /**
+     * Injects Druidblack metadata icons CSS.
+     * @param {boolean} enabled
+     */
+    function injectMetadataIcons(enabled) {
+        const existing = document.getElementById('metadataIconsCss');
+        if (enabled && !existing) {
+            const link = document.createElement('link');
+            link.id = 'metadataIconsCss';
+            link.rel = 'stylesheet';
+            link.href = 'https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata/public-icon.css';
+            document.head.appendChild(link);
+        } else if (!enabled && existing) {
+            existing.remove();
+        }
+    }
 
     /**
      * Loads the appropriate language file based on the user's settings.
@@ -60,7 +133,7 @@
     async function loadTranslations() {
         const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/Jellyfin.Plugin.JellyfinEnhanced/js/locales';
         const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-        
+
         try {
             // Get plugin version first
             let pluginVersion = window.JellyfinEnhanced?.pluginVersion;
@@ -144,7 +217,7 @@
 
                 if (githubResponse.ok) {
                     const translations = await githubResponse.json();
-                    
+
                     // Cache the successful fetch
                     try {
                         localStorage.setItem(cacheKey, JSON.stringify(translations));
@@ -153,7 +226,7 @@
                     } catch (storageError) {
                         console.warn('🪼 Jellyfin Enhanced: Failed to cache translations (localStorage full?)', storageError);
                     }
-                    
+
                     return translations;
                 }
 
@@ -166,7 +239,7 @@
                         cache: 'no-cache',
                         headers: { 'Accept': 'application/json' }
                     });
-                    
+
                     if (englishResponse.ok) {
                         const translations = await englishResponse.json();
                         try {
@@ -185,7 +258,7 @@
                 } else if (githubResponse.status >= 500) {
                     console.warn(`🪼 Jellyfin Enhanced: GitHub server error (${githubResponse.status}), using bundled fallback`);
                 }
-                
+
                 throw new Error(`GitHub fetch failed with status ${githubResponse.status}`);
             } catch (githubError) {
                 console.warn('🪼 Jellyfin Enhanced: GitHub fetch failed, falling back to bundled translations:', githubError.message);
@@ -332,6 +405,13 @@
             JE.t = window.JellyfinEnhanced.t; // Ensure the real function is assigned
             await loadPrivateConfig();
 
+            // Inject metadata icons CSS if enabled
+            try {
+                injectMetadataIcons(!!JE.pluginConfig?.MetadataIconsEnabled);
+            } catch (e) {
+                console.warn('🪼 Jellyfin Enhanced: Failed to inject Metadata icons CSS', e);
+            }
+
             // Stage 2: Fetch user-specific settings
             const userId = ApiClient.getCurrentUserId();
 
@@ -342,9 +422,9 @@
                 ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/shortcuts.json`), dataType: 'json' })
                          .then(data => ({ name: 'shortcuts', status: 'fulfilled', value: data }))
                          .catch(e => ({ name: 'shortcuts', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/bookmarks.json`), dataType: 'json' })
-                         .then(data => ({ name: 'bookmarks', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'bookmarks', status: 'rejected', reason: e })),
+                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/bookmark.json`), dataType: 'json' })
+                         .then(data => ({ name: 'bookmark', status: 'fulfilled', value: data }))
+                         .catch(e => ({ name: 'bookmark', status: 'rejected', reason: e })),
                 ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/elsewhere.json`), dataType: 'json' })
                          .then(data => ({ name: 'elsewhere', status: 'fulfilled', value: data }))
                          .catch(e => ({ name: 'elsewhere', status: 'rejected', reason: e }))
@@ -352,32 +432,32 @@
             // Use allSettled to get results even if some fetches fail
             const results = await Promise.allSettled(fetchPromises);
 
-            JE.userConfig = { settings: {}, shortcuts: { Shortcuts: [] }, bookmarks: { Bookmarks: {} }, elsewhere: {} };
+            JE.userConfig = { settings: {}, shortcuts: { Shortcuts: [] }, bookmark: { bookmarks: {} }, elsewhere: {} };
             results.forEach(result => {
                 if (result.status === 'fulfilled' && result.value) {
                     const data = result.value;
                     if (data.status === 'fulfilled' && data.value && typeof data.value === 'object') {
                         // *** CONVERT PASCALCASE TO CAMELCASE ***
-                        if (data.name === 'settings') {
+                        if (data.name === 'settings' || data.name === 'bookmark') {
                             JE.userConfig[data.name] = toCamelCase(data.value);
                         } else {
                             JE.userConfig[data.name] = data.value;
                         }
                     } else if (data.status === 'rejected') {
                         if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                        else if (data.name === 'bookmarks') JE.userConfig.bookmarks = { Bookmarks: {} };
+                        else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
                         else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
                         else JE.userConfig[data.name] = {};
                     } else {
                         if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                        else if (data.name === 'bookmarks') JE.userConfig.bookmarks = { Bookmarks: {} };
+                        else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
                         else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
                         else JE.userConfig[data.name] = {};
                     }
                 } else {
                     const name = result.value?.name || result.reason?.name || '';
                     if (name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                    else if (name === 'bookmarks') JE.userConfig.bookmarks = { Bookmarks: {} };
+                    else if (name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
                     else if (name === 'elsewhere') JE.userConfig.elsewhere = {};
                     else if (name) JE.userConfig[name] = {};
                 }
@@ -395,14 +475,15 @@
             const allComponentScripts = [
                 'enhanced/helpers.js',
                 'enhanced/config.js', 'enhanced/themer.js', 'enhanced/subtitles.js', 'enhanced/ui.js',
-                'enhanced/playback.js', 'enhanced/features.js', 'enhanced/events.js', 'enhanced/osd-rating.js',
-                'migrate.js',
+                'enhanced/playback.js', 'enhanced/features.js', 'enhanced/bookmarks.js', 'enhanced/bookmarks-library.js', 'enhanced/events.js', 'enhanced/osd-rating.js',
                 'elsewhere.js',
                 'jellyseerr/api.js',
                 'jellyseerr/modal.js',
+                'jellyseerr/more-info-modal.js',
                 'jellyseerr/ui.js',
                 'jellyseerr/issue-reporter.js',
                 'jellyseerr/item-details.js',
+                'jellyseerr/network-discovery.js',
                 'jellyseerr/jellyseerr.js',
                 'pausescreen.js', 'reviews.js',
                 'qualitytags.js', 'genretags.js', 'languagetags.js', 'ratingtags.js', 'arr-links.js', 'arr-tag-links.js',
@@ -429,13 +510,18 @@
                 console.log('🪼 Jellyfin Enhanced: Theme system initialized.');
             }
 
+            // Register unified cache save on page unload
+            window.addEventListener('beforeunload', () => {
+                JE._cacheManager.forceSave();
+            });
+
             // Stage 6: Initialize feature modules
             if (typeof JE.initializeEnhancedScript === 'function') JE.initializeEnhancedScript();
-            if (typeof JE.initializeMigration === 'function') JE.initializeMigration();
             if (typeof JE.initializeElsewhereScript === 'function' && JE.pluginConfig?.ElsewhereEnabled) JE.initializeElsewhereScript();
             if (typeof JE.initializeJellyseerrScript === 'function' && JE.pluginConfig?.JellyseerrEnabled) JE.initializeJellyseerrScript();
             if (typeof JE.jellyseerrIssueReporter?.initialize === 'function' && JE.pluginConfig?.JellyseerrEnabled) JE.jellyseerrIssueReporter.initialize();
             if (typeof JE.initializePauseScreen === 'function') JE.initializePauseScreen();
+            if (typeof JE.initializeBookmarks === 'function') JE.initializeBookmarks();
             if (typeof JE.initializeQualityTags === 'function' && JE.currentSettings?.qualityTagsEnabled) JE.initializeQualityTags();
             if (typeof JE.initializeGenreTags === 'function' && JE.currentSettings?.genreTagsEnabled) JE.initializeGenreTags();
             if (typeof JE.initializeRatingTags === 'function' && JE.currentSettings?.ratingTagsEnabled) JE.initializeRatingTags();

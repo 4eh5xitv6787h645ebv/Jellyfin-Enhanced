@@ -361,6 +361,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/movie/{tmdbId}/recommendations?page={page}", HttpMethod.Get);
         }
 
+        [HttpGet("jellyseerr/movie/{tmdbId}/ratingscombined")]
+        [Authorize]
+        public Task<IActionResult> GetMovieRatingsCombined(int tmdbId)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/movie/{tmdbId}/ratingscombined", HttpMethod.Get);
+        }
+
         [HttpGet("jellyseerr/tv/{tmdbId}/seasons")]
         [Authorize]
         public Task<IActionResult> GetTvSeasons(int tmdbId)
@@ -382,11 +389,73 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/tv/{tmdbId}/recommendations?page={page}", HttpMethod.Get);
         }
 
+        [HttpGet("jellyseerr/tv/{tmdbId}/ratings")]
+        [Authorize]
+        public Task<IActionResult> GetTvRatingsCombined(int tmdbId)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/tv/{tmdbId}/ratings", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/tv/network/{networkId}")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTvByNetwork(int networkId, [FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/discover/tv/network/{networkId}?page={page}", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/movies/studio/{studioId}")]
+        [Authorize]
+        public Task<IActionResult> DiscoverMoviesByStudio(int studioId, [FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/discover/movies/studio/{studioId}?page={page}", HttpMethod.Get);
+        }
+
+        [HttpGet("studio/{studioId}")]
+        [Authorize]
+        public IActionResult GetStudioInfo(Guid studioId)
+        {
+            try
+            {
+                var studio = _libraryManager.GetItemById(studioId);
+                if (studio == null)
+                {
+                    return NotFound(new { message = "Studio not found" });
+                }
+
+                // Get TMDB ID from provider IDs if available
+                string? tmdbId = null;
+                if (studio.ProviderIds != null && studio.ProviderIds.TryGetValue("Tmdb", out var id))
+                {
+                    tmdbId = id;
+                }
+
+                return Ok(new
+                {
+                    id = studio.Id,
+                    name = studio.Name,
+                    tmdbId = tmdbId,
+                    type = studio.GetType().Name
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to get studio info for {studioId}: {ex.Message}");
+                return StatusCode(500, new { message = "Failed to get studio info" });
+            }
+        }
+
         [HttpGet("jellyseerr/overrideRule")]
         [Authorize]
         public Task<IActionResult> GetOverrideRules()
         {
             return ProxyJellyseerrRequest("/api/v1/overrideRule", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/collection/{collectionId}")]
+        [Authorize]
+        public Task<IActionResult> GetCollection(int collectionId)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/collection/{collectionId}", HttpMethod.Get);
         }
 
         [HttpGet("jellyseerr/user")]
@@ -491,20 +560,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             }
                             else
                             {
-                                // If not in library yet, add to pending watchlist so it will be picked up when it arrives
-                                var pending = _userConfigurationManager.GetUserConfiguration<PendingWatchlistItems>(user.Id.ToString(), "pending-watchlist.json");
-                                var alreadyPending = pending.Items.Any(i => i.TmdbId == item.TmdbId && i.MediaType == item.MediaType);
-                                if (!alreadyPending)
-                                {
-                                    pending.Items.Add(new PendingWatchlistItem
-                                    {
-                                        TmdbId = item.TmdbId,
-                                        MediaType = item.MediaType,
-                                        RequestedAt = DateTime.UtcNow
-                                    });
-                                    _userConfigurationManager.SaveUserConfiguration(user.Id.ToString(), "pending-watchlist.json", pending);
-                                    _logger.Info($"[Manual Watchlist Sync] Added TMDB {item.TmdbId} ({item.MediaType}) to pending watchlist for {user.Username}");
-                                }
+                                // Item not in library yet - WatchlistMonitor will automatically add it when it arrives
+                                _logger.Debug($"[Manual Watchlist Sync] Item TMDB {item.TmdbId} ({item.MediaType}) not in library yet for {user.Username} - will be auto-added by WatchlistMonitor when available");
                             }
                         }
                     }
@@ -960,14 +1017,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.JellyseerrEnabled,
                 config.JellyseerrShowReportButton,
                 config.JellyseerrEnable4KRequests,
+                config.ShowCollectionsInSearch,
                 config.JellyseerrShowAdvanced,
                 config.ShowElsewhereOnJellyseerr,
-                config.JellyseerrUseJellyseerrLinks,
+                config.JellyseerrUseMoreInfoModal,
                 config.AddRequestedMediaToWatchlist,
                 config.SyncJellyseerrWatchlist,
                 config.JellyseerrShowSimilar,
                 config.JellyseerrShowRecommended,
+                config.JellyseerrShowNetworkDiscovery,
                 config.JellyseerrExcludeLibraryItems,
+
+                // Bookmarks Settings
+                config.BookmarksEnabled,
 
                 // Arr Links Settings
                 config.ArrLinksEnabled,
@@ -983,6 +1045,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // Letterboxd Settings
                 config.LetterboxdEnabled,
                 config.ShowLetterboxdLinkAsText,
+                // Metadata Icons (Druidblack)
+                config.MetadataIconsEnabled,
 
             });
         }
@@ -1104,14 +1168,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return Ok(userConfig);
         }
 
-        [HttpGet("user-settings/{userId}/bookmarks.json")]
-        [Authorize]
-        public IActionResult GetUserSettingsBookmarks(string userId)
-        {
-            var userConfig = _userConfigurationManager.GetUserConfiguration<UserBookmarks>(userId, "bookmarks.json");
-            return Ok(userConfig);
-        }
-
         [HttpGet("user-settings/{userId}/elsewhere.json")]
         [Authorize]
         public IActionResult GetUserSettingsElsewhere(string userId)
@@ -1156,21 +1212,30 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
-        [HttpPost("user-settings/{userId}/bookmarks.json")]
+        [HttpGet("user-settings/{userId}/bookmark.json")]
         [Authorize]
         [Produces("application/json")]
-        public IActionResult SaveUserSettingsBookmarks(string userId, [FromBody] UserBookmarks userConfiguration)
+        public IActionResult GetUserBookmark(string userId)
+        {
+            var userConfig = _userConfigurationManager.GetUserConfiguration<UserBookmark>(userId, "bookmark.json");
+            return Ok(userConfig);
+        }
+
+        [HttpPost("user-settings/{userId}/bookmark.json")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult SaveUserBookmark(string userId, [FromBody] UserBookmark userConfiguration)
         {
             try
             {
-                _userConfigurationManager.SaveUserConfiguration(userId, "bookmarks.json", userConfiguration);
-                _logger.Info($"Saved user bookmarks for user {userId} to bookmarks.json");
-                return Ok(new { success = true, file = "bookmarks.json" });
+                _userConfigurationManager.SaveUserConfiguration(userId, "bookmark.json", userConfiguration);
+                _logger.Info($"Saved enhanced bookmarks for user {userId} to bookmark.json");
+                return Ok(new { success = true, file = "bookmark.json" });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save user bookmarks for user {userId}: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "Failed to save user bookmarks." });
+                _logger.Error($"Failed to save enhanced bookmarks for user {userId}: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to save enhanced bookmarks." });
             }
         }
 
@@ -1274,6 +1339,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         Parent = item,
                         Recursive = true
                     }).Items,
+                BaseItemKind.BoxSet or BaseItemKind.Playlist => item is Folder folder
+                    ? folder.GetChildren(user, true).ToList()
+                    : [item],
                 _ => [item]
             };
 
@@ -1307,6 +1375,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         Parent = item,
                         Recursive = true
                     }).Items,
+                BaseItemKind.BoxSet or BaseItemKind.Playlist => item is Folder folder
+                    ? folder.GetChildren(user, true).ToList()
+                    : [item],
                 _ => [item]
             };
 
@@ -1332,64 +1403,42 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return Ok(new { success = true, progress = formattedProgress });
         }
 
-        [HttpGet("user-settings/{userId}/pending-watchlist.json")]
+        [HttpGet("jellyseerr/issue")]
         [Authorize]
-        public IActionResult GetPendingWatchlistItems(string userId)
+        public Task<IActionResult> GetJellyseerrIssues(
+            [FromQuery] int? mediaId,
+            [FromQuery] int take = 20,
+            [FromQuery] int skip = 0,
+            [FromQuery] string? filter = "all",
+            [FromQuery] string? sort = "added")
         {
-            var items = _userConfigurationManager.GetUserConfiguration<PendingWatchlistItems>(userId, "pending-watchlist.json");
-            return Ok(items);
+            var queryParts = new List<string>
+            {
+                $"take={take}",
+                $"skip={skip}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                queryParts.Add($"filter={Uri.EscapeDataString(filter)}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(sort))
+            {
+                queryParts.Add($"sort={Uri.EscapeDataString(sort)}");
+            }
+
+            var queryString = string.Join("&", queryParts);
+            var apiPath = string.IsNullOrWhiteSpace(queryString) ? "/api/v1/issue" : $"/api/v1/issue?{queryString}";
+
+            return ProxyJellyseerrRequest(apiPath, HttpMethod.Get);
         }
 
-        [HttpPost("user-settings/{userId}/pending-watchlist/add")]
+        [HttpGet("jellyseerr/issue/{id}")]
         [Authorize]
-        [Produces("application/json")]
-        public IActionResult AddPendingWatchlistItem(string userId, [FromBody] PendingWatchlistItem item)
+        public Task<IActionResult> GetJellyseerrIssueById(int id)
         {
-            try
-            {
-                var pending = _userConfigurationManager.GetUserConfiguration<PendingWatchlistItems>(userId, "pending-watchlist.json");
-
-                // Check if item already exists
-                var exists = pending.Items.Any(i => i.TmdbId == item.TmdbId && i.MediaType == item.MediaType);
-                if (!exists)
-                {
-                    item.RequestedAt = DateTime.UtcNow;
-                    pending.Items.Add(item);
-                    _userConfigurationManager.SaveUserConfiguration(userId, "pending-watchlist.json", pending);
-                    _logger.Info($"Added pending watchlist item for user {userId}: TMDB {item.TmdbId} ({item.MediaType})");
-                }
-                else
-                {
-                    _logger.Debug($"Pending watchlist item already exists for user {userId}: TMDB {item.TmdbId} ({item.MediaType})");
-                }
-
-                return Ok(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Failed to add pending watchlist item for user {userId}: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "Failed to add pending watchlist item." });
-            }
-        }
-
-        [HttpPost("user-settings/{userId}/pending-watchlist/remove")]
-        [Authorize]
-        [Produces("application/json")]
-        public IActionResult RemovePendingWatchlistItem(string userId, [FromBody] PendingWatchlistItem item)
-        {
-            try
-            {
-                var pending = _userConfigurationManager.GetUserConfiguration<PendingWatchlistItems>(userId, "pending-watchlist.json");
-                pending.Items.RemoveAll(i => i.TmdbId == item.TmdbId && i.MediaType == item.MediaType);
-                _userConfigurationManager.SaveUserConfiguration(userId, "pending-watchlist.json", pending);
-                _logger.Info($"Removed pending watchlist item for user {userId}: TMDB {item.TmdbId} ({item.MediaType})");
-                return Ok(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Failed to remove pending watchlist item for user {userId}: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "Failed to remove pending watchlist item." });
-            }
+            return ProxyJellyseerrRequest($"/api/v1/issue/{id}", HttpMethod.Get);
         }
 
         [HttpPost("jellyseerr/issue")]

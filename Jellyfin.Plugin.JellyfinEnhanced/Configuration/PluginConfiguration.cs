@@ -71,7 +71,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 new Shortcut { Name = "GoToDashboard", Key = "D", Label = "Go to Dashboard", Category = "Global" },
                 new Shortcut { Name = "QuickConnect", Key = "Q", Label = "Quick Connect", Category = "Global" },
                 new Shortcut { Name = "PlayRandomItem", Key = "R", Label = "Play Random Item", Category = "Global" },
-                new Shortcut { Name = "ClearAllBookmarks", Key = "Ctrl+Shift+B", Label = "Clear All Bookmarks", Category = "Global" },
                 new Shortcut { Name = "CycleAspectRatio", Key = "A", Label = "Cycle Aspect Ratio", Category = "Player" },
                 new Shortcut { Name = "ShowPlaybackInfo", Key = "I", Label = "Show Playback Info", Category = "Player" },
                 new Shortcut { Name = "SubtitleMenu", Key = "S", Label = "Subtitle Menu", Category = "Player" },
@@ -81,7 +80,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 new Shortcut { Name = "DecreasePlaybackSpeed", Key = "-", Label = "Decrease Playback Speed", Category = "Player" },
                 new Shortcut { Name = "ResetPlaybackSpeed", Key = "R", Label = "Reset Playback Speed", Category = "Player" },
                 new Shortcut { Name = "BookmarkCurrentTime", Key = "B", Label = "Bookmark Current Time", Category = "Player" },
-                new Shortcut { Name = "GoToSavedBookmark", Key = "Shift+B", Label = "Go to Saved Bookmark", Category = "Player" },
                 new Shortcut { Name = "OpenEpisodePreview", Key = "P", Label = "Open Episode Preview", Category = "Player" }
             };
 
@@ -92,11 +90,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             JellyseerrShowAdvanced = false;
             JellyseerrShowSimilar = true;
             JellyseerrShowRecommended = true;
+            JellyseerrShowNetworkDiscovery = true;
             ShowElsewhereOnJellyseerr = false;
-            JellyseerrUseJellyseerrLinks = false;
+            JellyseerrUseMoreInfoModal = false;
             JellyseerrUrls = "";
             JellyseerrApiKey = "";
             JellyseerrUrlMappings = "";
+            ShowCollectionsInSearch = true;
 
             // Arr Links Settings
             ArrLinksEnabled = false;
@@ -119,13 +119,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             LetterboxdEnabled = false;
             ShowLetterboxdLinkAsText = false;
 
+            // Metadata Icons (Druidblack)
+            MetadataIconsEnabled = false;
+
             // Auto Season Request Settings
             AutoSeasonRequestEnabled = false;
             AutoSeasonRequestThresholdValue = 2; // Number of episodes remaining to trigger request
+            AutoSeasonRequestRequireAllWatched = false; // Require all episodes in current season to be watched
+
+            // Auto Movie Request Settings
+            AutoMovieRequestEnabled = false;
+            AutoMovieRequestTriggerType = "OnMinutesWatched"; // "OnStart", "OnMinutesWatched", or "Both"
+            AutoMovieRequestMinutesWatched = 20; // Minutes to watch before triggering request
+            AutoMovieRequestCheckReleaseDate = true; // Only request if movie is already released
 
             // Watchlist Settings
             AddRequestedMediaToWatchlist = false;
             SyncJellyseerrWatchlist = false;
+
+            // Bookmarks Settings
+            BookmarksEnabled = true;
         }
 
         // Jellyfin Enhanced Settings
@@ -188,12 +201,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool JellyseerrShowAdvanced { get; set; }
         public bool JellyseerrShowSimilar { get; set; }
         public bool JellyseerrShowRecommended { get; set; }
+        public bool JellyseerrShowNetworkDiscovery { get; set; }
         public bool JellyseerrExcludeLibraryItems { get; set; } = true;
         public bool ShowElsewhereOnJellyseerr { get; set; }
-        public bool JellyseerrUseJellyseerrLinks { get; set; }
+        public bool JellyseerrUseMoreInfoModal { get; set; } = false;
         public string JellyseerrUrls { get; set; }
         public string JellyseerrApiKey { get; set; }
         public string JellyseerrUrlMappings { get; set; }
+        public bool ShowCollectionsInSearch { get; set; }
 
         // Arr Links Settings
         public bool ArrLinksEnabled { get; set; }
@@ -216,12 +231,25 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool LetterboxdEnabled { get; set; }
         public bool ShowLetterboxdLinkAsText { get; set; }
 
+        // Metadata Icons (Druidblack)
+        public bool MetadataIconsEnabled { get; set; }
+
         // Auto Season Request Settings
         public bool AutoSeasonRequestEnabled { get; set; }
         public int AutoSeasonRequestThresholdValue { get; set; }
+        public bool AutoSeasonRequestRequireAllWatched { get; set; }
+
+        // Auto Movie Request Settings
+        public bool AutoMovieRequestEnabled { get; set; }
+        public string AutoMovieRequestTriggerType { get; set; } // "OnStart", "OnMinutesWatched", or "Both"
+        public int AutoMovieRequestMinutesWatched { get; set; } // Minutes to watch before triggering request
+        public bool AutoMovieRequestCheckReleaseDate { get; set; } // Only request if movie is already released
 
         // Watchlist Settings
         public bool AddRequestedMediaToWatchlist { get; set; }
         public bool SyncJellyseerrWatchlist { get; set; }
+
+        // Bookmarks Settings
+        public bool BookmarksEnabled { get; set; }
     }
 }

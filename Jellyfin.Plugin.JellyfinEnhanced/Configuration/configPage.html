@@ -22,7 +22,7 @@
                 <button class="jellyfin-tab-button active" data-tab="enhanced" style="background: none; border: none; color: var(--primary-accent-color, #fff); cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid var(--primary-accent-color, #fff);"><h3>Enhanced Settings</h3></button>
                 <button class="jellyfin-tab-button" data-tab="elsewhere" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3>Elsewhere Settings</h3></button>
                 <button class="jellyfin-tab-button" data-tab="jellyseerr" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3><img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/jellyseerr.svg" alt="Jellyseerr" style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle; filter: brightness(0.8);">Jellyseerr Settings</h3></button>
-                <button class="jellyfin-tab-button" data-tab="arr-links" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3>*arr Links</h3></button>
+                <button class="jellyfin-tab-button" data-tab="arr-links" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3>*arr Settings</h3></button>
                 <button class="jellyfin-tab-button" data-tab="extras" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3>Other Settings</h3></button>
             </div>
             <form id="JellyfinEnhancedForm">
@@ -150,7 +150,7 @@
                                     </div>
                                     <div class="checkboxContainer" style="margin-top: 1em;">
                                         <label><input id="showRatingInPlayer" is="emby-checkbox" type="checkbox"/><span>Show Rating in Video Player</span></label>
-                                        <div class="fieldDescription">Display IMDB rating after "Ends at" time in video player</div>
+                                        <div class="fieldDescription">Display TMDB and Rotten Tomatoes ratings before "Ends at" time in video player</div>
                                     </div>
                                     <div style="margin-top: 1em;">
                                         <button id="clearTagsCacheBtn" class="raised button-submit emby-button" is="emby-button" type="button">
@@ -159,7 +159,7 @@
                                         <div class="fieldDescription">Forces all clients to clear Language, Quality, Genre and Rating tag caches on next load<br> After the cache is cleared, the clients will re-fetch the tags data to build the cache again, which might cause some slowness on first load.</div>
                                     </div>
                                 </fieldset>
-                                <div class="checkboxContainer" style="margin-bottom: 0.5em;"><label style="line-height: 1.2em; align-self: flex-start;"><input id="disableTagsOnSearchPage" is="emby-checkbox" type="checkbox"/><span>Disable Tags on Search Page<div style="font-size: 0.8em;">Prevents quality/language/genre/rating tags from showing on search results. Recommended for compatibility with <b>Gelato</b> plugin.</div></span></label></div>
+                                <div class="checkboxContainer" style="margin-top: 1em;margin-bottom: 0.5em;"><label style="line-height: 1.2em; align-self: flex-start;"><input id="disableTagsOnSearchPage" is="emby-checkbox" type="checkbox"/><span>Disable Tags on Search Page<div style="font-size: 0.8em;">Prevents quality/language/genre/rating tags from showing on search results. Recommended for compatibility with <b>Gelato</b> plugin.</div></span></label></div>
                                 </div>
                             </details>
                             <div style="padding-top: 1em;">
@@ -211,6 +211,53 @@
                             </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Bookmarks</h3></legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                <label>
+                                    <input id="bookmarksEnabled" is="emby-checkbox" type="checkbox"/>
+                                    <span>Enable Bookmarks Feature</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 1.5em;">
+                                Save custom bookmarks/timestamps while watching videos to quickly jump back to your favorite scenes or moments.
+                            </div>
+                            <div style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0;">
+                                <div style="display: flex; align-items: flex-start; gap: 1em;">
+                                    <i class="material-icons" style="color: #00a4dc; font-size: 24px; margin-top: 2px;">info</i>
+                                    <div>
+                                        <h4 style="margin: 0 0 0.5em 0;">How to Use Bookmarks:</h4>
+                                        <ul class="fieldDescription" style="margin: 0.5em 0; padding-left: 1.5em;">
+                                            <li style="margin-bottom: 0.5em;"><strong>During Playback:</strong> Press <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px; font-family: monospace;">B</kbd> or click the bookmark icon <i class="material-icons" style="font-size: 16px; vertical-align: middle;">bookmark_add</i> in the video player controls to save a bookmark at the current time.</li>
+                                            <li style="margin-bottom: 0.5em;"><strong>Visual Markers:</strong> Bookmarks appear as location pins <i class="material-icons" style="font-size: 16px; vertical-align: middle; color: #00d4ff;">location_pin</i> on the video progress bar. Click a marker to jump to that timestamp.</li>
+                                            <li style="margin-bottom: 0.5em;"><strong>Multi-Version Support:</strong> Bookmarks track by TMDB/TVDB IDs, so they work across different file versions of the same content.</li>
+                                        </ul>
+                                        <h4 style="margin: 1em 0 0.5em 0;">To View & Manage All Your Bookmarks:</h4>
+                                        <p class="fieldDescription" style="margin: 0;">You need to create a custom view using the <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> plugin.</p>
+                                        <ol class="fieldDescription" style="margin: 1em 0; padding-left: 1.5em;">
+                                            <li style="margin-bottom: 0.5em;">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                            <li style="margin-bottom: 0.5em;">Navigate to Dashboard > General > Custom Tabs and add a new tab.</li>
+                                            <li style="margin-bottom: 0.5em;">Add "Display Text" according to your preference (e.g., "My Bookmarks").</li>
+                                            <li style="margin-bottom: 0.5em;">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                        </ol>
+                                        <div style="position: relative;">
+                                            <button type="button" id="copyBookmarksHtmlBtn" is="emby-button" class="raised raised-mini emby-button" style="position: absolute; top: 8px; right: 8px; background-color: rgba(255,255,255,0.1); border: none; padding: 4px 8px; min-width: 80px; transition: color 0.3s;">
+                                                <i class="material-icons" style="font-size: 16px; margin-right: 4px; vertical-align: middle;">content_copy</i>
+                                                <span id="copyBookmarksBtnText" style="vertical-align: middle;">Copy</span>
+                                            </button>
+                                            <pre style="background-color: rgba(0,0,0,0.3); padding: 1em; border-radius: 4px; white-space: pre-wrap; word-break: break-all; margin: 0; font-family: 'Courier New', Courier, monospace;"><code>&lt;div class="sections bookmarks"&gt;&lt;/div&gt;
+</code></pre>
+                                        </div>
+                                        <div class="fieldDescription" style="margin-top: 1em;">
+                                            Already have Custom Tabs installed?
+                                            <a class="sectionTitle" href="/web/#/configurationpage?name=Custom%20Tabs" style="text-decoration: underline;">Click here to configure it.</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Timeout Settings</h3></legend>
                         <div class="configSection">
                             <div class="inputContainer">
@@ -242,12 +289,12 @@
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
                                     <input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" style="flex-grow: 1;"/>
                                     <span id="tmdbStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
-                                    <button is="emby-button" type="button" id="testTmdbBtn" class="raised button-submit">
+                                    <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
                                         <span>Test</span>
                                     </button>
                                 </div>
                                 <div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" target="_blank" href="https://www.themoviedb.org/settings/api">How to?</a></div>
-                                <div class="fieldDescription">Leaving this blank will not load Jellyfin Elsewhere</div>
+                                <div class="fieldDescription"><br>Shared with Jellyseerr Settings</div>
                             </div>
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="DEFAULT_REGION">Default Region</label>
@@ -324,12 +371,32 @@
                                     • With base URL: <code>https://example.com/jellyfin|https://example.com/jellyseerr</code><br><br>
                                 </div>
                             </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="jellyseerr_TMDB_API_KEY">TMDB API Key</label>
+                                <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
+                                    <input id="jellyseerr_TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" style="flex-grow: 1;"/>
+                                    <span id="jellyseerrTmdbStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
+                                    <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
+                                        <span>Test</span>
+                                    </button>
+                                </div>
+                                <div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" target="_blank" href="https://www.themoviedb.org/settings/api">How to?</a><br>TMDB API key for automatic movie collection requests and Jellyseerr Collection Results. Shared with Elsewhere Settings</div>
+                            </div>
                             <div
                                 style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                                 <i class="material-icons" style="color: #00a4dc; font-size: 18px;">info</i>
                                 <div>
                                     "<b>Enable Jellyfin Sign-In</b>" must be enabled in Jellyseerr User Settings (/settings/users)<br><br>
                                     All users must be imported to Jellyseer as Jellyfin users for them to be able to request content.
+                                </div>
+                            </div>
+                            <div
+                                style="background-color: rgba(100, 50, 150, 0.08); border-left: 4px solid #9b59b6; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
+                                <i class="material-icons" style="color: #9b59b6; font-size: 18px;">favorite</i>
+                                <div>
+                                    <b>This plugin is not affiliated with Jellyseerr.</b><br><br>
+                                    Jellyseerr is an independent project, and this plugin simply integrates with it to enhance the Jellyfin experience, huge thanks to their API<br><br>
+                                    <b>Please report any issues with this plugin to the plugin repository, not to the Jellyseerr team.</b>
                                 </div>
                             </div>
                         </div>
@@ -346,11 +413,18 @@
                             <div class="fieldDescription" style="margin-bottom: 2em;">Enhance Jellyfin search by showing results from Jellyseerr.<br>This allows users to discover and request missing movies and shows directly from Jellyfin.</div>
                             <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
                                 <label>
-                                    <input id="jellyseerrUseJellyseerrLinks" is="emby-checkbox" type="checkbox"/>
-                                    <span>Link result titles to Jellyseerr instead of TMDB</span>
+                                    <input id="showCollectionsInSearch" is="emby-checkbox" type="checkbox" data-plugin-config/>
+                                    <span>Show Collections in Jellyseerr Search Results</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription" style="margin-bottom: 2em;">When enabled, clicking a Jellyseerr result title will open your Jellyseerr item page using the first configured Jellyseerr URL.</div>
+                            <div class="fieldDescription" style="margin-bottom: 2em;">Display TMDB collections (e.g., Harry Potter, Marvel Cinematic Universe) in Jellyseerr search results with an option to request the entire collection at once.<br><br><b>Requires TMDB API Key to be configured.</b></div>
+                            <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                <label>
+                                    <input id="jellyseerrUseMoreInfoModal" is="emby-checkbox" type="checkbox"/>
+                                    <span>Open result titles and posters in "More Info" modal</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 2em;">When enabled, clicking a Jellyseerr result title or poster opens an in-app More Info modal.<br>When disabled, clicking will open the item in Jellyseerr.</div>
                             <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
                                 <label>
                                     <input id="jellyseerrEnable4kRequests" is="emby-checkbox" type="checkbox"/>
@@ -378,7 +452,7 @@
                                     <span>Show Streaming Providers on Jellyseerr Posters</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription" style="margin-bottom: 2em;">Displays icons of available streaming services (from your default region) on Jellyseerr Posters.<br>Requires TMDB API Key to be configured in Elsewhere Settings</div>
+                            <div class="fieldDescription" style="margin-bottom: 2em;">Displays icons of available streaming services (from your default region) on Jellyseerr Posters.<br><br><b>Requires TMDB API Key to be configured in Elsewhere Settings</b></div>
                         </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
@@ -405,6 +479,13 @@
                                 </label>
                             </div>
                             <div class="fieldDescription" style="margin-bottom: 2em;">Hide similar/recommended items that already exist in your Jellyfin library from the results.<br>If disabled, the items that are available link to the media item in the library.</div>
+                            <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                <label>
+                                    <input id="jellyseerrShowNetworkDiscovery" is="emby-checkbox" type="checkbox"/>
+                                    <span>Show "More from [Network]" on studio/network pages</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 2em;">When viewing a network page (e.g., Netflix, HBO), displays additional content from that network available in Jellyseerr that isn't in your library yet. Uses the same display style as recommendations.</div>
                         </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
@@ -420,6 +501,15 @@
                                 Automatically request the next season in Jellyseerr when a user about to finish the current season.
                                 <br><br>
                             </div>
+                            <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                <label>
+                                    <input id="autoSeasonRequestRequireAllWatched" is="emby-checkbox" type="checkbox"/>
+                                    <span>Require All Prior Episodes Watched</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 2em;">
+                                Require all episodes before the threshold to be watched. For example, if threshold is 2 and there are 10 episodes, when watching episode 8, all episodes 1-7 must be watched or marked as watched. This prevents accidentally triggering requests by jumping to later episodes. <br> This might cause requests to not be triggered if users skip episodes.
+                            </div>
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="autoSeasonRequestThresholdValue">Episodes Remaining Threshold</label>
                                 <input id="autoSeasonRequestThresholdValue" is="emby-input" name="autoSeasonRequestThresholdValue" type="number" min="1" max="20" value="2"/>
@@ -433,6 +523,69 @@
                                     • Set threshold to 2-3 episodes to give time for downloading before users finish watching<br>
                                     • Example: With threshold set to 2, when user starts episode 8 of 10 of season 1, season 2 will be requested<br>
                                     • If a user has already triggered a request for the season, it will not be requested again even if another user reaches the threshold<br>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Automatic Movie Requests</h3></legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                <label>
+                                    <input id="autoMovieRequestEnabled" is="emby-checkbox" type="checkbox"/>
+                                    <span>Enable Automatic Movie Requests</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 2em;">
+                                Automatically request the next movie in a collection based on configured triggers.
+                                <br><br>
+                                <strong>Requirements:</strong> TMDB API key must be configured.
+                            </div>
+
+                            <div style="margin-bottom: 1.5em;">
+                                <label style="display: block; margin-bottom: 0.5em; font-weight: 500;">Request Triggers:</label>
+                                <div class="checkboxContainer" style="margin-bottom: 0.75em;">
+                                    <label>
+                                        <input id="autoMovieRequestTriggerOnStart" is="emby-checkbox" type="checkbox"/>
+                                        <span>When movie starts (within first 5 minutes)</span>
+                                    </label>
+                                </div>
+                                <div class="checkboxContainer" style="margin-bottom: 0.75em;">
+                                    <label>
+                                        <input id="autoMovieRequestTriggerOnMinutesWatched" is="emby-checkbox" type="checkbox"/>
+                                        <span>After watching for a certain amount of time</span>
+                                    </label>
+                                </div>
+                                <div class="fieldDescription" style="margin-top: 0.5em;">
+                                    Select one or both triggers. If both are selected, the request will be triggered if either condition is met.
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 1.5em;">
+                                <label for="autoMovieRequestMinutesWatched" style="display: block; margin-bottom: 0.5em; font-weight: 500;">Minutes Watched Before Auto-Request Check:</label>
+                                <input id="autoMovieRequestMinutesWatched" type="text" pattern="[0-9]+" style="width: 100px; padding: 0.5em; border: 1px solid #555; border-radius: 4px;" value="20" />
+                                <span style="margin-left: 0.5em;">minutes</span>
+                                <div class="fieldDescription" style="margin-top: 0.5em;">
+                                    How many minutes a user should watch before triggering a request? Must be between 1 and 180 minutes.
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer" style="margin-bottom: 1.5em;">
+                                <label>
+                                    <input id="autoMovieRequestCheckReleaseDate" is="emby-checkbox" type="checkbox"/>
+                                    <span>Only request if movie is already released</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-top: 0.5em;">
+                                When enabled, future releases will be skipped. Only movies that have already been released will be requested.
+                            </div>
+                            <div
+                                style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: flex-start; gap: 1em;">
+                                <i class="material-icons" style="color: #00a4dc; font-size: 18px; margin-top: 2px;">info</i>
+                                <div>
+                                    • Only works for movies that are part of a TMDB collection (e.g., <a href="https://www.themoviedb.org/collection/86311" target="_blank" style="text-decoration: underline; font-weight: bolder;">The Avengers Collection</a>, <a href="https://www.themoviedb.org/collection/10" target="_blank" style="text-decoration: underline; font-weight: bolder;">Star Wars Collection</a>, etc.)<br>
+                                    • Automatically requests the next movie in the collection based on release order<br>
+                                    • Movies already available or requested will be skipped<br>
                                 </div>
                             </div>
                         </div>
@@ -458,7 +611,7 @@
                                 </label>
                             </div>
                             <div class="fieldDescription" style="margin-bottom: 2em;">
-                                When enabled, items from each user's Jellyseerr watchlist will be automatically synced to their Jellyfin watchlist.
+                                When enabled, items from each user's Jellyseerr watchlist will be automatically synced to their Jellyfin watchlist. <br><br>
                                 Configure how often the sync should run in Jellyfin Dashboard &gt; Scheduled Tasks &gt; "Sync Watchlist from Jellyseerr to Jellyfin".
                             </div>
                         </div>
@@ -468,27 +621,43 @@
                     <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Configuration</h3></legend>
                         <div class="configSection">
+                            <div class="inputContainer"  style="margin-top: 1em;">
+                                <label class="inputLabel inputLabelUnfocused" for="sonarrUrl">Sonarr URL</label>
+                                <input id="sonarrUrl" is="emby-input" name="sonarrUrl" type="text" placeholder="e.g., http://192.168.100.100:8989"/>
+                            </div>
+                            <div class="inputContainer" style="margin-top: 1em;">
+                                <label class="inputLabel inputLabelUnfocused" for="radarrUrl">Radarr URL</label>
+                                <input id="radarrUrl" is="emby-input" name="radarrUrl" type="text" placeholder="e.g., http://192.168.100.100:7878"/>
+                            </div>
+                            <div class="inputContainer" style="margin-top: 1em;">
+                                <label class="inputLabel inputLabelUnfocused" for="bazarrUrl">Bazarr URL</label>
+                                <input id="bazarrUrl" is="emby-input" name="bazarrUrl" type="text" placeholder="e.g., http://192.168.100.100:6767"/>
+                                <div class="fieldDescription">Note: This links to the main movies/series page as Bazarr does not support direct links.</div>
+                            </div>
+                            <div class="inputContainer" style="margin-top: 1em;">
+                                <label class="inputLabel inputLabelUnfocused" for="radarrApiKey">Radarr API Key</label>
+                                <input id="radarrApiKey" is="emby-input" name="radarrApiKey" placeholder="Your Radarr API key"/>
+                                <div class="fieldDescription">Find this in Radarr under Settings > General > Security > API Key</div>
+                            </div>
+                            <div class="inputContainer" style="margin-top: 1em; margin-bottom: 2em;">
+                                <label class="inputLabel inputLabelUnfocused" for="sonarrApiKey">Sonarr API Key</label>
+                                <input id="sonarrApiKey" is="emby-input" name="sonarrApiKey" placeholder="Your Sonarr API key"/>
+                                <div class="fieldDescription">Find this in Sonarr under Settings > General > Security > API Key</div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>*arr Links</h3></legend>
+                        <div class="configSection">
                             <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
                                 <label>
                                     <input id="arrLinksEnabled" is="emby-checkbox" type="checkbox"/>
                                     <span>Enable *arr Links</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription" style="margin-bottom: 2em;">Show Sonarr, Radarr, and Bazarr links* of the items on item detail pages for quick access. Only for admins.<br> If no URL is added link is not shown.</div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="sonarrUrl">Sonarr URL</label>
-                                <input id="sonarrUrl" is="emby-input" name="sonarrUrl" type="text" placeholder="e.g., http://192.168.100.100:8989"/>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="radarrUrl">Radarr URL</label>
-                                <input id="radarrUrl" is="emby-input" name="radarrUrl" type="text" placeholder="e.g., http://192.168.100.100:7878"/>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="bazarrUrl">Bazarr URL</label>
-                                <input id="bazarrUrl" is="emby-input" name="bazarrUrl" type="text" placeholder="e.g., http://192.168.100.100:6767"/>
-                                <div class="fieldDescription">Note: This links to the main movies/series page as Bazarr does not support direct links.</div>
-                            </div>
-                            <div class="checkboxContainer" style="margin-top: 1em;">
+                            <div class="fieldDescription" style="margin-bottom: 2em;">Show Sonarr, Radarr, and Bazarr links of the items on item detail pages for quick access. Only for admins.<br> If no URL is added above, the links are not shown.</div>
+                            <div class="checkboxContainer" style="margin-top: 1em; margin-bottom: 2em;">
                                 <label>
                                     <input id="showArrLinksAsText" is="emby-checkbox" type="checkbox"/>
                                     <span>Show links as text instead of icons</span>
@@ -508,24 +677,14 @@
                             <div class="fieldDescription" style="margin-bottom: 2em;">
                                 Fetches all tags from Radarr and Sonarr instances defined above and adds them as Jellyfin tags.
                                 <br><br>
-                                <strong>Note:</strong> You need to configure the API keys below and run the sync task from Dashboard > Scheduled Tasks > "Sync Tags from *arr to Jellyfin"
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="radarrApiKey">Radarr API Key</label>
-                                <input id="radarrApiKey" is="emby-input" name="radarrApiKey" placeholder="Your Radarr API key"/>
-                                <div class="fieldDescription">Find this in Radarr under Settings > General > Security > API Key</div>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="sonarrApiKey">Sonarr API Key</label>
-                                <input id="sonarrApiKey" is="emby-input" name="sonarrApiKey" placeholder="Your Sonarr API key"/>
-                                <div class="fieldDescription">Find this in Sonarr under Settings > General > Security > API Key</div>
+                                <strong>Note:</strong> Run the sync task from Dashboard > Scheduled Tasks > "Sync Tags from *arr to Jellyfin" and configure how often it should run.
                             </div>
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="arrTagsPrefix">Tag Prefix</label>
                                 <input id="arrTagsPrefix" is="emby-input" name="arrTagsPrefix" type="text" placeholder="JE Arr Tag: "/>
                                 <div class="fieldDescription">Prefix to add before each tag (e.g., "JE Arr Tag: " will result in "JE Arr Tag: 1 - Jellyfish")</div>
                                 <br>
-                                <strong>Note:</strong> It is crucial to keep the tag prefix constant, it is used to remove old tags before re-adding fresh ones from the *arrs during the scheduled task. Having no prefix will remove all the tags from your items! <br> You can change it from the default, but make sure it is unique.
+                                <strong>Warning:</strong> Keep the tag prefix constant - it's used to remove old tags before syncing new ones. Having no prefix will remove ALL tags! You can change it, but make sure it's unique.
                             </div>
                             <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
                                 <label>
@@ -586,6 +745,16 @@
                                 </label>
                             </div>
                             <div class="fieldDescription" style="margin-bottom: 2em;">When enabled, shows "Letterboxd" as text instead of the Letterboxd icon.</div>
+                            <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                <label>
+                                    <input id="metadataIconsEnabled" is="emby-checkbox" type="checkbox"/>
+                                    <span>Enable Metadata Icons (by Druidblack)</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 1em;">
+                                Shows metadata icons instead of text. From <a class="sectionTitle" target="_blank" href="https://github.com/Druidblack/jellyfin-icon-metadata">Druidblack/jellyfin-icon-metadata</a>.<br>
+                                When enabled, links from the plugin will also use icons instead of text (Letterboxd, *arr Links.).
+                            </div>
                         </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
@@ -609,7 +778,6 @@
                                     If you are on Jellyfin version 10.11 and you want the default Jellyfin Banner - Change the splash screen URL to "<strong>/web/banner-light.b113d4d1c6c07fcb73f0.png</strong>"
                                 </div>
                             </div>
-                            </details>
                         </div>
                     </fieldset>
                 </div>
@@ -647,7 +815,6 @@
             const testJellyseerrBtn = document.getElementById('testJellyseerrBtn');
             const jellyseerrStatusIndicator = document.getElementById('jellyseerrStatusIndicator');
 
-            const testTmdbBtn = document.getElementById('testTmdbBtn');
             const tmdbStatusIndicator = document.getElementById('tmdbStatusIndicator');
 
             const style = document.createElement('style');
@@ -725,7 +892,6 @@
             { Name: "GoToDashboard", Key: "D", Label: "Go to Dashboard", Category: "Global" },
             { Name: "QuickConnect", Key: "Q", Label: "Quick Connect", Category: "Global" },
             { Name: "PlayRandomItem", Key: "R", Label: "Play Random Item", Category: "Global" },
-            { Name: "ClearAllBookmarks", Key: "Ctrl+Shift+B", Label: "Clear All Bookmarks", Category: "Global" },
             { Name: "CycleAspectRatio", Key: "A", Label: "Cycle Aspect Ratio", Category: "Player" },
             { Name: "ShowPlaybackInfo", Key: "I", Label: "Show Playback Info", Category: "Player" },
             { Name: "SubtitleMenu", Key: "S", Label: "Subtitle Menu", Category: "Player" },
@@ -735,7 +901,6 @@
             { Name: "DecreasePlaybackSpeed", Key: "-", Label: "Decrease Playback Speed", Category: "Player" },
             { Name: "ResetPlaybackSpeed", Key: "R", Label: "Reset Playback Speed", Category: "Player" },
             { Name: "BookmarkCurrentTime", Key: "B", Label: "Bookmark Current Time", Category: "Player" },
-            { Name: "GoToSavedBookmark", Key: "Shift+B", Label: "Go to Saved Bookmark", Category: "Player" },
             { Name: "OpenEpisodePreview", Key: "P", Label: "Open Episode Preview", Category: "Player" }
         ];
 
@@ -910,7 +1075,7 @@
             }
         }
 
-        async function testTmdbConnection() {
+        async function testTmdbConnection(event) {
             const apiKey = (document.querySelector('#TMDB_API_KEY').value || '').trim();
 
             if (!apiKey) {
@@ -918,17 +1083,24 @@
                 return;
             }
 
-            testTmdbBtn.disabled = true;
-            tmdbStatusIndicator.textContent = 'sync';
-            tmdbStatusIndicator.className = 'material-icons status-check';
-            tmdbStatusIndicator.style.color = '#00a4dc';
+            // Determine which status indicator to update based on button context
+            const button = event.target.closest('button');
+            const statusIndicator = button.parentElement.querySelector('.material-icons') || tmdbStatusIndicator;
+
+            // Disable all test buttons during the test
+            const allTestButtons = document.querySelectorAll('.testTmdbBtn');
+            allTestButtons.forEach(btn => btn.disabled = true);
+
+            statusIndicator.textContent = 'sync';
+            statusIndicator.className = 'material-icons status-check';
+            statusIndicator.style.color = '#00a4dc';
 
             try {
                 const validationUrl = ApiClient.getUrl(`/JellyfinEnhanced/tmdb/validate`, { apiKey: apiKey });
                 await ApiClient.ajax({ type: 'GET', url: validationUrl });
 
-                tmdbStatusIndicator.textContent = 'check_circle';
-                tmdbStatusIndicator.style.color = '#52b54b';
+                statusIndicator.textContent = 'check_circle';
+                statusIndicator.style.color = '#52b54b';
                 Dashboard.alert({ title: 'Success', message: 'Successfully connected to TMDB!' });
 
             } catch (e) {
@@ -937,13 +1109,13 @@
                     ? 'The API Key is invalid.'
                     : 'Could not connect to TMDB. Please check the key and your network.';
 
-                tmdbStatusIndicator.textContent = 'error';
-                tmdbStatusIndicator.style.color = '#dc3545';
+                statusIndicator.textContent = 'error';
+                statusIndicator.style.color = '#dc3545';
                 Dashboard.alert({ title: 'Connection Failed', message: errorMessage });
             } finally {
-                testTmdbBtn.disabled = false;
-                if (tmdbStatusIndicator) {
-                    tmdbStatusIndicator.classList.remove('status-check');
+                allTestButtons.forEach(btn => btn.disabled = false);
+                if (statusIndicator) {
+                    statusIndicator.classList.remove('status-check');
                 }
             }
         }
@@ -974,6 +1146,19 @@
                 document.querySelector('#IGNORE_PROVIDERS').value = config.IGNORE_PROVIDERS;
                 document.querySelector('#ElsewhereCustomBrandingText').value = config.ElsewhereCustomBrandingText || '';
                 document.querySelector('#ElsewhereCustomBrandingImageUrl').value = config.ElsewhereCustomBrandingImageUrl || '';
+                document.querySelector('#jellyseerr_TMDB_API_KEY').value = config.TMDB_API_KEY;
+
+                // Set up bidirectional sync between TMDB API key fields
+                const tmdbKeyField = document.querySelector('#TMDB_API_KEY');
+                const jellyseerrTmdbKeyField = document.querySelector('#jellyseerr_TMDB_API_KEY');
+
+                tmdbKeyField.addEventListener('input', function() {
+                    jellyseerrTmdbKeyField.value = this.value;
+                });
+
+                jellyseerrTmdbKeyField.addEventListener('input', function() {
+                    tmdbKeyField.value = this.value;
+                });
                 document.querySelector('#autoPauseEnabled').checked = config.AutoPauseEnabled;
                 document.querySelector('#autoResumeEnabled').checked = config.AutoResumeEnabled;
                 document.querySelector('#autoPipEnabled').checked = config.AutoPipEnabled;
@@ -1017,21 +1202,32 @@
                 document.querySelector('#showReviews').checked = config.ShowReviews;
                 document.querySelector('#reviewsExpandedByDefault').checked = config.ReviewsExpandedByDefault;
                 document.querySelector('#jellyseerrEnabled').checked = config.JellyseerrEnabled;
+                document.querySelector('#showCollectionsInSearch').checked = config.ShowCollectionsInSearch !== false;
                 document.querySelector('#jellyseerrEnable4kRequests').checked = !!config.JellyseerrEnable4KRequests;
-                document.querySelector('#jellyseerrUseJellyseerrLinks').checked = config.JellyseerrUseJellyseerrLinks;
+                document.querySelector('#jellyseerrUseMoreInfoModal').checked = !!config.JellyseerrUseMoreInfoModal;
                 document.querySelector('#jellyseerrShowAdvanced').checked = config.JellyseerrShowAdvanced;
                 document.querySelector('#jellyseerrShowSimilar').checked = config.JellyseerrShowSimilar !== false;
                 document.querySelector('#jellyseerrShowRecommended').checked = config.JellyseerrShowRecommended !== false;
                 document.querySelector('#jellyseerrExcludeLibraryItems').checked = config.JellyseerrExcludeLibraryItems !== false;
+                document.querySelector('#jellyseerrShowNetworkDiscovery').checked = config.JellyseerrShowNetworkDiscovery !== false;
                 document.querySelector('#jellyseerrShowReportButton').checked = !!config.JellyseerrShowReportButton;
                 document.querySelector('#showElsewhereOnJellyseerr').checked = config.ShowElsewhereOnJellyseerr;
                 document.querySelector('#jellyseerrUrls').value = config.JellyseerrUrls;
                 document.querySelector('#JellyseerrApiKey').value = config.JellyseerrApiKey;
                 document.querySelector('#jellyseerrUrlMappings').value = config.JellyseerrUrlMappings || '';
+                document.querySelector('#jellyseerr_TMDB_API_KEY').value = config.TMDB_API_KEY;
                 document.querySelector('#autoSeasonRequestEnabled').checked = config.AutoSeasonRequestEnabled || false;
+                document.querySelector('#autoSeasonRequestRequireAllWatched').checked = config.AutoSeasonRequestRequireAllWatched || false;
                 document.querySelector('#autoSeasonRequestThresholdValue').value = config.AutoSeasonRequestThresholdValue || 2;
+                document.querySelector('#autoMovieRequestEnabled').checked = config.AutoMovieRequestEnabled || false;
+                const triggerType = config.AutoMovieRequestTriggerType || 'OnMinutesWatched';
+                document.querySelector('#autoMovieRequestTriggerOnStart').checked = (triggerType === 'OnStart' || triggerType === 'Both');
+                document.querySelector('#autoMovieRequestTriggerOnMinutesWatched').checked = (triggerType === 'OnMinutesWatched' || triggerType === 'Both');
+                document.querySelector('#autoMovieRequestMinutesWatched').value = config.AutoMovieRequestMinutesWatched || 20;
+                document.querySelector('#autoMovieRequestCheckReleaseDate').checked = config.AutoMovieRequestCheckReleaseDate !== false;
                 document.querySelector('#addRequestedMediaToWatchlist').checked = config.AddRequestedMediaToWatchlist || false;
                 document.querySelector('#syncJellyseerrWatchlist').checked = config.SyncJellyseerrWatchlist || false;
+                document.querySelector('#bookmarksEnabled').checked = config.BookmarksEnabled !== false;
 
                 document.querySelector('#arrLinksEnabled').checked = config.ArrLinksEnabled;
                 document.querySelector('#sonarrUrl').value = config.SonarrUrl;
@@ -1052,6 +1248,16 @@
                 document.querySelector('#disableCustomSubtitleStyles').checked = config.DisableCustomSubtitleStyles;
                 document.querySelector('#letterboxdEnabled').checked = config.LetterboxdEnabled;
                 document.querySelector('#showLetterboxdLinkAsText').checked = config.ShowLetterboxdLinkAsText;
+                const metadataIconsChk = document.querySelector('#metadataIconsEnabled');
+                if (metadataIconsChk) metadataIconsChk.checked = !!config.MetadataIconsEnabled;
+                // Tie icon display settings
+                if (config.MetadataIconsEnabled) {
+                    // Force icon display where applicable
+                    const showLbText = document.querySelector('#showLetterboxdLinkAsText');
+                    const showArrText = document.querySelector('#showArrLinksAsText');
+                    if (showLbText) showLbText.checked = false;
+                    if (showArrText) showArrText.checked = false;
+                }
 
 
                 Dashboard.hideLoadingMsg();
@@ -1107,21 +1313,41 @@
             config.ShowReviews = document.querySelector('#showReviews').checked;
             config.ReviewsExpandedByDefault = document.querySelector('#reviewsExpandedByDefault').checked;
             config.JellyseerrEnabled = document.querySelector('#jellyseerrEnabled').checked;
+            config.ShowCollectionsInSearch = document.querySelector('#showCollectionsInSearch').checked;
             config.JellyseerrEnable4KRequests = document.querySelector('#jellyseerrEnable4kRequests').checked;
-            config.JellyseerrUseJellyseerrLinks = document.querySelector('#jellyseerrUseJellyseerrLinks').checked;
+            config.JellyseerrUseMoreInfoModal = document.querySelector('#jellyseerrUseMoreInfoModal').checked;
             config.JellyseerrShowAdvanced = document.querySelector('#jellyseerrShowAdvanced').checked;
             config.JellyseerrShowSimilar = document.querySelector('#jellyseerrShowSimilar').checked;
             config.JellyseerrShowRecommended = document.querySelector('#jellyseerrShowRecommended').checked;
             config.JellyseerrExcludeLibraryItems = document.querySelector('#jellyseerrExcludeLibraryItems').checked;
+            config.JellyseerrShowNetworkDiscovery = document.querySelector('#jellyseerrShowNetworkDiscovery').checked;
             config.JellyseerrShowReportButton = document.querySelector('#jellyseerrShowReportButton').checked;
             config.ShowElsewhereOnJellyseerr = document.querySelector('#showElsewhereOnJellyseerr').checked;
             config.JellyseerrUrls = (document.querySelector('#jellyseerrUrls').value || '').split('\n').map(u => u.trim()).filter(Boolean).join('\n');
             config.JellyseerrApiKey = (document.querySelector('#JellyseerrApiKey').value || '').trim();
             config.JellyseerrUrlMappings = (document.querySelector('#jellyseerrUrlMappings').value || '').split('\n').map(u => u.trim()).filter(Boolean).join('\n');
+            config.TMDB_API_KEY = document.querySelector('#jellyseerr_TMDB_API_KEY').value;
             config.AutoSeasonRequestEnabled = document.querySelector('#autoSeasonRequestEnabled').checked;
+            config.AutoSeasonRequestRequireAllWatched = document.querySelector('#autoSeasonRequestRequireAllWatched').checked;
             config.AutoSeasonRequestThresholdValue = parseInt(document.querySelector('#autoSeasonRequestThresholdValue').value, 10) || 2;
+            config.AutoMovieRequestEnabled = document.querySelector('#autoMovieRequestEnabled').checked;
+            const onStart = document.querySelector('#autoMovieRequestTriggerOnStart').checked;
+            const onMinutes = document.querySelector('#autoMovieRequestTriggerOnMinutesWatched').checked;
+            if (onStart && onMinutes) {
+                config.AutoMovieRequestTriggerType = 'Both';
+            } else if (onStart) {
+                config.AutoMovieRequestTriggerType = 'OnStart';
+            } else if (onMinutes) {
+                config.AutoMovieRequestTriggerType = 'OnMinutesWatched';
+            } else {
+                config.AutoMovieRequestTriggerType = 'OnMinutesWatched'; // Default to minutes watched if nothing selected
+            }
+            const minutesValue = parseInt(document.querySelector('#autoMovieRequestMinutesWatched').value, 10);
+            config.AutoMovieRequestMinutesWatched = isNaN(minutesValue) || minutesValue < 1 ? 20 : Math.min(minutesValue, 180);
+            config.AutoMovieRequestCheckReleaseDate = document.querySelector('#autoMovieRequestCheckReleaseDate').checked;
             config.AddRequestedMediaToWatchlist = document.querySelector('#addRequestedMediaToWatchlist').checked;
             config.SyncJellyseerrWatchlist = document.querySelector('#syncJellyseerrWatchlist').checked;
+            config.BookmarksEnabled = document.querySelector('#bookmarksEnabled').checked;
 
             config.ArrLinksEnabled = document.querySelector('#arrLinksEnabled').checked;
             config.SonarrUrl = document.querySelector('#sonarrUrl').value;
@@ -1142,6 +1368,12 @@
             config.DisableCustomSubtitleStyles = document.querySelector('#disableCustomSubtitleStyles').checked;
             config.LetterboxdEnabled = document.querySelector('#letterboxdEnabled').checked;
             config.ShowLetterboxdLinkAsText = document.querySelector('#showLetterboxdLinkAsText').checked;
+            config.MetadataIconsEnabled = document.querySelector('#metadataIconsEnabled').checked;
+            // If metadata icons are enabled, ensure icons are shown for Letterboxd and *arr links
+            if (config.MetadataIconsEnabled) {
+                config.ShowLetterboxdLinkAsText = false;
+                config.ShowArrLinksAsText = false;
+            }
 
             return config;
         }
@@ -1218,7 +1450,36 @@
             }
         });
         testJellyseerrBtn.addEventListener('click', testJellyseerrConnection);
-        testTmdbBtn.addEventListener('click', testTmdbConnection);
+
+        // click handlers to all TMDB test buttons
+        document.querySelectorAll('.testTmdbBtn').forEach(btn => {
+            btn.addEventListener('click', testTmdbConnection);
+        });
+
+        // Copy bookmarks HTML button
+        const copyBookmarksHtmlBtn = document.getElementById('copyBookmarksHtmlBtn');
+        if (copyBookmarksHtmlBtn) {
+            copyBookmarksHtmlBtn.addEventListener('click', function() {
+                const htmlCode = `<div class="sections bookmarks"></div>
+<style>
+  .sections.bookmarks {
+    padding-top: 20px; /* Adjust/remove this value as needed for your theme */
+  }
+</style>`;
+                navigator.clipboard.writeText(htmlCode).then(function() {
+                    const btnText = document.getElementById('copyBookmarksBtnText');
+                    btnText.textContent = 'Copied!';
+                    copyBookmarksHtmlBtn.style.color = '#4CAF50';
+                    setTimeout(function() {
+                        btnText.textContent = 'Copy';
+                        copyBookmarksHtmlBtn.style.color = '';
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy to clipboard');
+                });
+            });
+        }
     })();
 </script>
 </div>
