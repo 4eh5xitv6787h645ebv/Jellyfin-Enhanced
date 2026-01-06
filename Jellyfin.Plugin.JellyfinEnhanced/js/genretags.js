@@ -8,6 +8,14 @@
             return;
         }
 
+            const isVideoPage = () => {
+                if (typeof JE.isVideoPage === 'function') return JE.isVideoPage();
+                return !!document.querySelector('.videoPlayerContainer');
+            };
+            if (isVideoPage()) {
+                return;
+            }
+
         const logPrefix = '🪼 Jellyfin Enhanced: Genre Tags:';
         const containerClass = 'genre-overlay-container';
         const tagClass = 'genre-tag';
@@ -228,7 +236,7 @@
                     const genres = sourceItem.Genres.slice(0, 3);
                     genreCache[itemId] = { genres, timestamp: Date.now() };
                     Hot.genre.set(itemId, { genres, timestamp: Date.now() });
-                    saveCache();
+                    if (JE._cacheManager) JE._cacheManager.markDirty();
                     return genres;
                 }
                 return null;
@@ -242,10 +250,12 @@
             if (isProcessingQueue || requestQueue.length === 0) return;
             isProcessingQueue = true;
 
-            const batch = requestQueue.splice(0, 3);
-            const promises = batch.map(async ({ element, itemId, userId }) => {
-                try {
-                    const genres = await fetchItemGenres(userId, itemId);
+            // Use requestIdleCallback for initial batch to defer work
+            const processBatch = async () => {
+                const batch = requestQueue.splice(0, 3);
+                const promises = batch.map(async ({ element, itemId, userId }) => {
+                    try {
+                        const genres = await fetchItemGenres(userId, itemId);
                     if (genres) {
                         insertGenreTags(element, genres);
                     }
@@ -259,7 +269,18 @@
             isProcessingQueue = false;
 
             if (requestQueue.length > 0) {
-                setTimeout(processRequestQueue, 400);
+                if (typeof requestIdleCallback !== 'undefined') {
+                    requestIdleCallback(() => processRequestQueue(), { timeout: 400 });
+                } else {
+                    setTimeout(processRequestQueue, 400);
+                }
+            }
+            };
+
+            if (typeof requestIdleCallback !== 'undefined') {
+                requestIdleCallback(() => processBatch(), { timeout: 200 });
+            } else {
+                processBatch();
             }
         }
 
@@ -389,7 +410,8 @@
         }
 
         function scanAndProcess() {
-            const elements = Array.from(document.querySelectorAll(
+              if (isVideoPage()) return;
+              const elements = Array.from(document.querySelectorAll(
                 '.cardImageContainer, div.listItemImage'
             ));
             elements.forEach(el => {
@@ -442,8 +464,8 @@
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    height: clamp(26px, 5vw, 34px);
-                    width: clamp(26px, 5vw, 34px);
+                    height: clamp(22px, 4.5vw, 30px);
+                    width: clamp(22px, 4.5vw, 30px);
                     border-radius: 50%;
                     box-shadow: 0 1px 4px rgba(0,0,0,0.4);
                     overflow: hidden;
@@ -455,16 +477,16 @@
                     transition: all 0.2s ease;
                 }
                 .${tagClass} .material-symbols-outlined {
-                    font-size: clamp(1.1em, 3vw, 1.6em);
+                    font-size: clamp(1em, 2.8vw, 1.4em);
                     line-height: 1;
                 }
                 .${tagClass} .genre-text {
                     display: none;
                     white-space: nowrap;
-                    font-size: clamp(11px, 2vw, 13px);
+                    font-size: clamp(9px, 1.7vw, 11px);
                     font-weight: 500;
-                    margin-left: 6px;
-                    margin-right: 10px;
+                    margin-left: 5px;
+                    margin-right: 8px;
                     text-transform: capitalize;
                 }
                 .card:hover .${tagClass} {
@@ -475,14 +497,35 @@
                 .card:hover .${tagClass} .genre-text {
                     display: inline;
                 }
+                .layout-mobile .${containerClass} { gap: 2px; }
+                .layout-mobile .${tagClass} {
+                    height: clamp(20px, 4vw, 26px);
+                    width: clamp(20px, 4vw, 26px);
+                }
+                .layout-mobile .${tagClass} .material-symbols-outlined {
+                    font-size: clamp(0.95em, 2.4vw, 1.25em);
+                }
+                /* On mobile keep icons only — no expand/text */
+                .layout-mobile .card:hover .${tagClass} {
+                    width: clamp(20px, 4vw, 26px);
+                    border-radius: 50%;
+                    padding-left: 0;
+                }
+                .layout-mobile .card:hover .${tagClass} .genre-text { display: none; }
                 @media (max-width: 768px) {
                     .${containerClass} {
-                        gap: 3px;
+                        gap: 2px;
                     }
                     .${tagClass} {
-                        height: clamp(24px, 4.5vw, 30px);
-                        width: clamp(24px, 4.5vw, 30px);
+                        height: clamp(21px, 4vw, 26px);
+                        width: clamp(21px, 4vw, 26px);
                     }
+                    .card:hover .${tagClass} {
+                        width: clamp(21px, 4vw, 26px);
+                        border-radius: 50%;
+                        padding-left: 0;
+                    }
+                    .card:hover .${tagClass} .genre-text { display: none; }
                 }
                 @media (max-width: 480px) {
                     .${containerClass} {
@@ -490,13 +533,20 @@
                         max-height: 85%;
                     }
                     .${tagClass} {
-                        height: clamp(22px, 4vw, 26px);
-                        width: clamp(22px, 4vw, 26px);
+                        height: clamp(20px, 3.6vw, 24px);
+                        width: clamp(20px, 3.6vw, 24px);
                         box-shadow: 0 1px 3px rgba(0,0,0,0.4);
                     }
                     .${tagClass} .material-symbols-outlined {
-                        font-size: clamp(0.9em, 2.5vw, 1.2em);
+                        font-size: clamp(0.85em, 2.2vw, 1.1em);
                     }
+                    /* Ensure smallest view remains icon-only */
+                    .card:hover .${tagClass} {
+                        width: clamp(20px, 3.6vw, 24px);
+                        border-radius: 50%;
+                        padding-left: 0;
+                    }
+                    .card:hover .${tagClass} .genre-text { display: none; }
                 }
             `;
             document.head.appendChild(style);
@@ -522,7 +572,10 @@
                 mo.disconnect();
                 visibilityObserver.disconnect();
             });
-            setInterval(saveCache, 120000);
+            // Register with unified cache manager instead of setInterval
+            if (JE._cacheManager) {
+                JE._cacheManager.register(saveCache);
+            }
         }
 
         initialize();

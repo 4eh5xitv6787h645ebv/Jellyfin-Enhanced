@@ -187,8 +187,15 @@
                 }
             });
             await Promise.allSettled(promises);
+            if (JE._cacheManager) JE._cacheManager.markDirty();
             isProcessingQueue = false;
-            if (requestQueue.length > 0) setTimeout(processRequestQueue, 300);
+            if (requestQueue.length > 0) {
+                if (typeof requestIdleCallback !== 'undefined') {
+                    requestIdleCallback(() => processRequestQueue(), { timeout: 300 });
+                } else {
+                    setTimeout(processRequestQueue, 300);
+                }
+            }
         }
 
         function computePositionStyles(position) {
@@ -408,6 +415,10 @@
                     flex-shrink: 0;
                     object-fit: cover;
                 }
+                .layout-mobile .${flagClass} {
+                    width: clamp(20px, 5vw, 26px);
+                }
+                .layout-mobile .${containerClass} { gap: 2px; }
                 @media (max-width: 768px) {
                     .${flagClass} {
                         width: clamp(20px, 5vw, 26px);
@@ -443,7 +454,10 @@
                 mo.disconnect();
                 visibilityObserver.disconnect();
             });
-            setInterval(saveCache, 120000);
+            // Register with unified cache manager instead of setInterval
+            if (JE._cacheManager) {
+                JE._cacheManager.register(saveCache);
+            }
         }
 
         initialize();

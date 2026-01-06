@@ -478,7 +478,7 @@
                     qualityOverlayCache[itemId] = { qualities, timestamp: Date.now() };
                     // Seed hot cache
                     Hot.quality.set(itemId, { qualities, timestamp: Date.now() });
-                    saveCache();
+                    if (JE._cacheManager) JE._cacheManager.markDirty();
                     return qualities;
                 }
                 return null;
@@ -545,9 +545,13 @@
             await Promise.allSettled(promises);
             isProcessingQueue = false;
 
-            // If there are more items, schedule the next batch.
+            // If there are more items, schedule the next batch with deferred execution
             if (requestQueue.length > 0) {
-                setTimeout(processRequestQueue, config.QUEUE_PROCESS_INTERVAL);
+                if (typeof requestIdleCallback !== 'undefined') {
+                    requestIdleCallback(() => processRequestQueue(), { timeout: config.QUEUE_PROCESS_INTERVAL });
+                } else {
+                    setTimeout(processRequestQueue, config.QUEUE_PROCESS_INTERVAL);
+                }
             }
         }
 
@@ -811,6 +815,14 @@
                     flex-shrink: 0;
                     line-height: 1.2;
                 }
+                .layout-mobile .${overlayClass} {
+                    padding: 0px 6px;
+                    font-size: 0.65rem;
+                    border-radius: 3px;
+                }
+                .layout-mobile .${containerClass} {
+                    gap: 2px;
+                }
                 @media (min-width: 1440px) {
                     .${overlayClass} {
                         padding: 3px 12px;
@@ -878,7 +890,10 @@
                 mutationObserver.disconnect();
                 visibilityObserver.disconnect();
             });
-            setInterval(saveCache, 120000); // Periodically save cache every 2 minutes
+            // Register with unified cache manager instead of setInterval
+            if (JE._cacheManager) {
+                JE._cacheManager.register(saveCache);
+            }
         }
 
         // --- SCRIPT EXECUTION ---

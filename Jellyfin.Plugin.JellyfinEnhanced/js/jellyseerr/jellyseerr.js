@@ -34,7 +34,8 @@
         const {
             addMainStyles, addSeasonModalStyles, updateJellyseerrIcon,
             renderJellyseerrResults, showMovieRequestModal, showSeasonSelectionModal,
-            hideHoverPopover, toggleHoverPopoverLock, updateJellyseerrResults
+            showCollectionRequestModal, hideHoverPopover, toggleHoverPopoverLock, updateJellyseerrResults,
+            createJellyseerrCard
         } = JE.jellyseerrUI;
 
         /**
@@ -97,9 +98,68 @@
          */
         async function fetchAndRenderResults(query) {
             const data = await search(query);
-            if (data.results && data.results.length > 0) {
-                renderJellyseerrResults(data.results, query, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound);
+            const results = await prepareResultsWithCollections(data.results || []);
+            if (results.length > 0) {
+                renderJellyseerrResults(results, query, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound);
             }
+        }
+
+        /**
+         * Adds collection data and synthetic collection cards to a raw result set.
+         * @param {Array} rawResults Raw search results from Jellyseerr.
+         * @returns {Promise<Array>} Enriched results including collections and badges.
+         */
+        async function prepareResultsWithCollections(rawResults) {
+            let results = rawResults || [];
+            if (JE.pluginConfig.ShowCollectionsInSearch === false) {
+                return results;
+            }
+
+            try {
+                results = await JE.jellyseerrAPI.addCollections(results);
+            } catch (e) {
+                console.debug(`${logPrefix} Collection addition failed:`, e);
+            }
+
+            try {
+                const collectionsMap = new Map();
+                const collectionPositions = new Map();
+
+                for (let i = 0; i < results.length; i++) {
+                    const item = results[i];
+                    if (item.mediaType === 'movie' && item.collection && item.collection.id) {
+                        const key = String(item.collection.id);
+                        if (!collectionsMap.has(key)) {
+                            collectionsMap.set(key, {
+                                id: item.collection.id,
+                                mediaType: 'collection',
+                                title: item.collection.name,
+                                name: item.collection.name,
+                                posterPath: item.collection.posterPath || null,
+                                backdropPath: item.collection.backdropPath || null,
+                                overview: `${item.collection.name} Collection`,
+                                voteAverage: null,
+                                releaseDate: null
+                            });
+                            collectionPositions.set(key, i);
+                        }
+                    }
+                }
+
+                if (collectionsMap.size > 0) {
+                    const sortedCollections = Array.from(collectionPositions.entries())
+                        .sort((a, b) => b[1] - a[1]);
+
+                    for (const [collectionId, position] of sortedCollections) {
+                        const collectionCard = collectionsMap.get(collectionId);
+                        results.splice(position + 1, 0, collectionCard);
+                    }
+                }
+            } catch (e) {
+                console.debug(`${logPrefix} Failed injecting collections:`, e);
+            }
+
+            return results;
         }
 
         /**
@@ -108,14 +168,21 @@
          */
         // Manual refresh handler
         async function manualRefreshJellyseerrData(query) {
-            if (!query || !document.querySelector('.jellyseerr-section')) return;
+            const section = document.querySelector('.jellyseerr-section');
+            const itemsContainer = section?.querySelector('.itemsContainer');
+            if (!query || !itemsContainer) return;
 
             console.log(`${logPrefix} Refreshing data for query: "${query}"`);
             try {
                 const data = await search(query);
-                if (data.results) {
-                    updateJellyseerrResults(data.results, isJellyseerrActive, jellyseerrUserFound);
-                }
+                const results = await prepareResultsWithCollections(data.results || []);
+
+                itemsContainer.innerHTML = '';
+                results.forEach(item => {
+                    const card = createJellyseerrCard(item, isJellyseerrActive, jellyseerrUserFound);
+                    itemsContainer.appendChild(card);
+                });
+                updateJellyseerrResults(results, isJellyseerrActive, jellyseerrUserFound);
             } catch (error) {
                 console.warn(`${logPrefix} Failed to refresh Jellyseerr data:`, error);
             }
@@ -270,7 +337,12 @@
                             if (popup) popup.remove();
                             showMovieRequestModal(tmdbId, titleText, searchResultItem, true);
                         } else {
-                            await requestMedia(tmdbId, 'movie', {}, true, searchResultItem); // true for 4K, pass searchResultItem for override rules
+                            const response = await requestMedia(tmdbId, 'movie', {}, true, searchResultItem); // true for 4K, pass searchResultItem for override rules
+                            console.log('Jellyseerr 4K request response:', response);
+                            if (searchResultItem) {
+                                if (!searchResultItem.mediaInfo) searchResultItem.mediaInfo = {};
+                                searchResultItem.mediaInfo.status4k = 3;
+                            }
                             JE.toast('4K request submitted successfully!', 3000);
                             if (popup) popup.remove();
 
@@ -300,9 +372,15 @@
 
             const mediaType = button.dataset.mediaType;
             const tmdbId = button.dataset.tmdbId;
+            const collectionId = button.dataset.collectionId;
             const card = button.closest('.jellyseerr-card');
-            const titleText = card?.querySelector('.cardText-first bdi')?.textContent || (mediaType === 'movie' ? 'this movie' : 'this show');
+            const titleText = card?.querySelector('.cardText-first bdi')?.textContent || (mediaType === 'movie' ? 'this movie' : mediaType === 'collection' ? 'this collection' : 'this show');
             const searchResultItem = button.dataset.searchResultItem ? JSON.parse(button.dataset.searchResultItem) : null;
+
+            if (mediaType === 'collection' && collectionId) {
+                showCollectionRequestModal(collectionId, titleText, searchResultItem);
+                return;
+            }
 
             if (mediaType === 'tv') {
                 showSeasonSelectionModal(tmdbId, mediaType, titleText, searchResultItem);

@@ -121,14 +121,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                         _logger.Info($"[Jellyseerr Watchlist Sync] Found {watchlistItems.Count} watchlist items for user: {jellyfinUser.Username}");
                     }
 
-                    var requestItems = await GetJellyseerrRequests(httpClient, jellyseerrUrl, jellyseerrUserId) ?? new List<WatchlistItem>();
-                    if (requestItems.Count > 0)
+                    var requestItems = new List<WatchlistItem>();
+                    if (config.AddRequestedMediaToWatchlist)
                     {
-                        _logger.Info($"[Jellyseerr Watchlist Sync] Found {requestItems.Count} requests for user: {jellyfinUser.Username}");
+                        requestItems = await GetJellyseerrRequests(httpClient, jellyseerrUrl, jellyseerrUserId) ?? new List<WatchlistItem>();
+                        if (requestItems.Count > 0)
+                        {
+                            _logger.Info($"[Jellyseerr Watchlist Sync] Found {requestItems.Count} requests for user: {jellyfinUser.Username}");
+                        }
+                        else
+                        {
+                            _logger.Debug($"[Jellyseerr Watchlist Sync] No requests found for user: {jellyfinUser.Username}");
+                        }
                     }
                     else
                     {
-                        _logger.Debug($"[Jellyseerr Watchlist Sync] No requests found for user: {jellyfinUser.Username}");
+                        _logger.Debug($"[Jellyseerr Watchlist Sync] AddRequestedMediaToWatchlist is disabled, skipping requests for user: {jellyfinUser.Username}");
                     }
 
                     var combinedItems = watchlistItems.Concat(requestItems).ToList();
@@ -366,7 +374,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 }
             }
 
-            return true;
+            return false;
         }
 
         private WatchlistItem? ParseRequestItem(JsonElement requestElement)
@@ -467,26 +475,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 
                 if (item == null)
                 {
-                    _logger.Debug($"[Jellyseerr Watchlist Sync] Item not found in library: {watchlistItem.Title} (TMDB: {watchlistItem.TmdbId}), adding to pending watchlist");
-
-                    // Add to pending watchlist so it gets added when the item arrives
-                    var pending = _userConfigurationManager.GetUserConfiguration<Configuration.PendingWatchlistItems>(user.Id.ToString(), "pending-watchlist.json");
-
-                    // Check if already in pending list
-                    var alreadyPending = pending.Items.Any(i => i.TmdbId == watchlistItem.TmdbId && i.MediaType == watchlistItem.MediaType);
-                    if (!alreadyPending)
-                    {
-                        pending.Items.Add(new Configuration.PendingWatchlistItem
-                        {
-                            TmdbId = watchlistItem.TmdbId,
-                            MediaType = watchlistItem.MediaType,
-                            RequestedAt = DateTime.UtcNow
-                        });
-                        _userConfigurationManager.SaveUserConfiguration(user.Id.ToString(), "pending-watchlist.json", pending);
-                        _logger.Info($"[Jellyseerr Watchlist Sync] ✓ Added to pending watchlist: {watchlistItem.Title} (TMDB: {watchlistItem.TmdbId}) for user {user.Username}");
-                        return Task.FromResult(WatchlistItemResult.AddedToPending);
-                    }
-
+                    // Item not in library yet - WatchlistMonitor will automatically add it when it arrives
+                    _logger.Debug($"[Jellyseerr Watchlist Sync] Item not found in library: {watchlistItem.Title} (TMDB: {watchlistItem.TmdbId}) - will be auto-added by WatchlistMonitor when available");
                     return Task.FromResult(WatchlistItemResult.Skipped);
                 }
 

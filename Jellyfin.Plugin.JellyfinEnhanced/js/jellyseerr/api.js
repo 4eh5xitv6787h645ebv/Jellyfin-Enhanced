@@ -5,6 +5,18 @@
     const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr API:';
     const api = {};
 
+    // TMDB proxy helper
+    async function tmdbGet(path) {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl(`/JellyfinEnhanced/tmdb${path}`),
+            headers: {
+                'X-Jellyfin-User-Id': ApiClient.getCurrentUserId()
+            },
+            dataType: 'json'
+        });
+    }
+
     /**
      * Performs a GET request to the Jellyseerr proxy endpoint.
      * @param {string} path - The API path (e.g., '/search?query=...').
@@ -69,6 +81,50 @@
             console.error(`${logPrefix} Search failed for query "${query}":`, error);
             return { results: [] };
         }
+    };
+
+    /**
+     * Fetches collection information for a movie from TMDB via proxy
+     * @param {number} tmdbId
+     * @returns {Promise<{id:number,name:string,posterPath?:string,backdropPath?:string}|null>}
+     */
+    api.fetchMovieCollection = async function(tmdbId) {
+        try {
+            const res = await tmdbGet(`/movie/${tmdbId}`);
+            const belongs = res?.belongs_to_collection || res?.belongsToCollection;
+            if (belongs && (belongs.id || belongs.tmdbId)) {
+                return {
+                    id: belongs.id || belongs.tmdbId,
+                    name: belongs.name,
+                    posterPath: belongs.poster_path || belongs.posterPath,
+                    backdropPath: belongs.backdrop_path || belongs.backdropPath
+                };
+            }
+            return null;
+        } catch (error) {
+            console.debug(`${logPrefix} No collection found for movie ${tmdbId}:`, error);
+            return null;
+        }
+    };
+
+    /**
+     * Adds collection membership information to movie items in search results
+     * @param {Array} results
+     * @returns {Promise<Array>}
+     */
+    api.addCollections = async function(results) {
+        const movieResults = (results || []).filter(item => item.mediaType === 'movie');
+        await Promise.all(movieResults.map(async (movie) => {
+            try {
+                const collection = await api.fetchMovieCollection(movie.id);
+                if (collection) {
+                    movie.collection = collection;
+                }
+            } catch (e) {
+                // ignore per-movie errors
+            }
+        }));
+        return results;
     };
 
     /**
@@ -328,6 +384,58 @@
     };
 
     /**
+     * Fetches existing issues for a Jellyseerr media (by TMDB id + type).
+     * @param {number|string} tmdbId
+     * @param {'movie'|'tv'} mediaType
+     * @param {object} [options]
+     * @param {number} [options.take=20]
+     * @param {number} [options.skip=0]
+     * @param {'open'|'resolved'|'all'} [options.filter='open']
+     * @returns {Promise<{pageInfo?: object, results: Array}>}
+     */
+    api.fetchIssuesForMedia = async function(tmdbId, mediaType, options = {}) {
+        const { take = 20, skip = 0, filter = 'open', sort = 'added' } = options;
+        try {
+            const query = new URLSearchParams({
+                take: String(take),
+                skip: String(skip),
+                filter,
+                sort
+            });
+
+            const res = await get(`/issue?${query.toString()}`);
+            const issues = res && Array.isArray(res.results) ? res.results : [];
+
+            const filtered = issues.filter(issue => {
+                const media = issue.media || {};
+                const tmdbMatch = media.tmdbId && Number(media.tmdbId) === Number(tmdbId);
+                const typeMatch = (media.mediaType || '').toLowerCase() === (mediaType || '').toLowerCase();
+                return tmdbMatch && typeMatch;
+            });
+
+            return { ...res, results: filtered };
+        } catch (error) {
+            console.error(`${logPrefix} Failed to fetch issues for ${mediaType} ${tmdbId}:`, error);
+            return { results: [] };
+        }
+    };
+
+    /**
+     * Fetch a single issue by ID, including full comment details.
+     * @param {number} issueId
+     * @returns {Promise<object|null>}
+     */
+    api.fetchIssueById = async function(issueId) {
+        try {
+            const res = await get(`/issue/${issueId}`);
+            return res || null;
+        } catch (error) {
+            console.warn(`${logPrefix} Failed to fetch issue ${issueId}:`, error);
+            return null;
+        }
+    };
+
+    /**
      * Fetches the necessary data for advanced request options (servers, profiles, folders).
      * @param {string} mediaType - 'movie' for Radarr, 'tv' for Sonarr.
      * @returns {Promise<{servers: Array, tags: Array}>}
@@ -396,28 +504,9 @@
                 return false;
             }
 
-            const userId = ApiClient.getCurrentUserId();
-            if (!userId) {
-                console.warn(`${logPrefix} Could not get current user ID for watchlist`);
-                return false;
-            }
-
-            // Add to pending watchlist - it will be processed when the item appears in library
-            const response = await ApiClient.fetch({
-                type: 'POST',
-                url: ApiClient.getUrl(`JellyfinEnhanced/user-settings/${userId}/pending-watchlist/add`),
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    TmdbId: tmdbId,
-                    MediaType: mediaType
-                })
-            });
-
-            if (response && response.success) {
-                console.log(`${logPrefix} ✓ Queued TMDB ${tmdbId} (${mediaType}) for watchlist - will be added when it appears in library`);
-                return true;
-            }
-            return false;
+            // WatchlistMonitor service automatically handles adding requested items to watchlist
+            console.log(`${logPrefix} Request tracked - WatchlistMonitor will automatically add TMDB ${tmdbId} (${mediaType}) to watchlist when it appears in library`);
+            return true;
         } catch (error) {
             console.error(`${logPrefix} Error queuing item for watchlist:`, error);
             return false;
@@ -537,6 +626,73 @@
             console.error(`${logPrefix} Failed to fetch recommended TV shows for TMDB ID ${tmdbId}:`, error);
             return { results: [], page: 1, totalPages: 0, totalResults: 0 };
         }
+    };
+
+    /**
+     * Fetches detailed information for a specific movie from Jellyseerr.
+     * @param {number} tmdbId - The TMDB ID of the movie.
+     * @returns {Promise<object|null>}
+     */
+    api.fetchMovieDetails = async function(tmdbId) {
+        try {
+            return await get(`/movie/${tmdbId}`);
+        } catch (error) {
+            console.error(`${logPrefix} Failed to fetch movie details for TMDB ID ${tmdbId}:`, error);
+            return null;
+        }
+    };
+
+    /**
+     * Fetches collection details from Jellyseerr.
+     * @param {number} collectionId - The TMDB collection ID.
+     * @returns {Promise<object|null>}
+     */
+    api.fetchCollectionDetails = async function(collectionId) {
+        try {
+            return await get(`/collection/${collectionId}`);
+        } catch (error) {
+            console.error(`${logPrefix} Failed to fetch collection details for ID ${collectionId}:`, error);
+            return null;
+        }
+    };
+
+    /**
+     * Resolves the Jellyseerr base URL based on URL mappings or falls back to the default base URL.
+     * This function checks if there are URL mappings configured and matches the current Jellyfin server URL
+     * against the mappings to determine the appropriate Jellyseerr URL.
+     * @returns {string} - The resolved Jellyseerr base URL (without trailing slash), or empty string if none configured.
+     */
+    api.resolveJellyseerrBaseUrl = function() {
+        let baseUrl = '';
+
+        // Check if URL mappings are configured
+        if (JE?.pluginConfig?.JellyseerrUrlMappings) {
+            const serverAddress = (typeof ApiClient !== 'undefined' && ApiClient.serverAddress)
+                ? ApiClient.serverAddress()
+                : window.location.origin;
+
+            const currentUrl = serverAddress.replace(/\/+$/, '').toLowerCase();
+            const mappings = JE.pluginConfig.JellyseerrUrlMappings.toString().split('\n').map(line => line.trim()).filter(Boolean);
+
+            for (const mapping of mappings) {
+                const [jellyfinUrl, jellyseerrUrl] = mapping.split('|').map(s => s.trim());
+                if (!jellyfinUrl || !jellyseerrUrl) continue;
+
+                const normalizedJellyfinUrl = jellyfinUrl.replace(/\/+$/, '').toLowerCase();
+
+                if (currentUrl === normalizedJellyfinUrl) {
+                    baseUrl = jellyseerrUrl.replace(/\/$/, '');
+                    break;
+                }
+            }
+        }
+
+        // Fallback to the default base URL if no mapping matched
+        if (!baseUrl && JE?.pluginConfig?.JellyseerrBaseUrl) {
+            baseUrl = JE.pluginConfig.JellyseerrBaseUrl.toString().trim().replace(/\/$/, '');
+        }
+
+        return baseUrl;
     };
 
     // Expose the API module on the global JE object
