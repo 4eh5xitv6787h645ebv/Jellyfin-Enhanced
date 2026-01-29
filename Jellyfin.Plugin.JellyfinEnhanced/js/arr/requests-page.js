@@ -4,6 +4,10 @@
   "use strict";
 
   const JE = window.JellyfinEnhanced;
+  const sidebar = document.querySelector('.mainDrawer-scrollContainer');
+  const pluginPagesExists = !!sidebar?.querySelector(
+    'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.DownloadsPage"]',
+  );
 
   // State management
   const state = {
@@ -18,26 +22,7 @@
     previousPage: null,
     locationSignature: null,
     locationTimer: null,
-    // Cache for requests data - keyed by filter+page
-    requestsCache: {},
-    requestsCacheTime: {},
-    // Token for "last intent wins" - prevents stale async responses from overwriting newer data
-    tabSwitchToken: 0,
   };
-
-  // Cache settings
-  const CACHE_TTL_MS = 30000; // 30 seconds cache validity
-
-  // Render coalescing - ensures only one render per animation frame to avoid stutter
-  let renderQueued = false;
-  function scheduleRender() {
-    if (renderQueued) return;
-    renderQueued = true;
-    requestAnimationFrame(() => {
-      renderQueued = false;
-      renderPage();
-    });
-  }
 
   // Status color mapping - using theme-aware colors
   const getStatusColors = () => {
@@ -322,27 +307,6 @@
         .je-requests-status-chip.je-chip-requested { background: rgba(168, 85, 247, 0.25); color: #f0f9ff; border-color: rgba(168, 85, 247, 0.5); }
         .je-requests-status-chip.je-chip-rejected { background: rgba(248, 113, 113, 0.25); color: #f0f9ff; border-color: rgba(248, 113, 113, 0.5); }
         .je-requests-status-chip.je-chip-coming-soon { background: rgba(76, 175, 80, 0.25); color: #f0f9ff; border-color: rgba(76, 175, 80, 0.5); }
-        .je-coming-soon-badge {
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(56, 142, 60, 0.9));
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: 500;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            white-space: nowrap;
-            max-width: calc(100% - 16px);
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .je-request-poster-container {
-            position: relative;
-            flex-shrink: 0;
-        }
     `;
 
   /**
@@ -417,105 +381,18 @@
   }
 
   /**
-   * Apply client-side filters to raw requests data
-   */
-  function applyRequestsFilters(requests, filter) {
-    let filtered = [...requests];
-
-    // Client-side filtering for "Coming Soon" tab
-    if (filter === "coming-soon") {
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      const currentYear = now.getFullYear();
-      filtered = filtered.filter(req => {
-        const releaseDate = req.releaseDate || req.firstAirDate;
-        let isFutureRelease = false;
-
-        if (releaseDate) {
-          const date = new Date(releaseDate);
-          if (!isNaN(date.getTime())) {
-            date.setHours(0, 0, 0, 0);
-            isFutureRelease = date > now;
-          }
-        } else if (req.year && req.year >= currentYear) {
-          // Include current year releases when only year is available (likely still upcoming)
-          isFutureRelease = true;
-        }
-
-        if (!isFutureRelease) return false;
-
-        const status = (req.mediaStatus || '').toLowerCase();
-        const isApprovedOrProcessing = status === 'processing' || status === 'approved' ||
-                                        status === 'pending' || req.status === 2 || req.status === 3;
-        return isApprovedOrProcessing;
-      });
-      // Sort by release date (nearest first)
-      filtered.sort((a, b) => {
-        const getDate = (req) => {
-          if (req.releaseDate || req.firstAirDate) {
-            return new Date(req.releaseDate || req.firstAirDate);
-          }
-          return req.year ? new Date(req.year, 0, 1) : new Date(0);
-        };
-        return getDate(a) - getDate(b);
-      });
-    }
-
-    // Client-side filtering for "Processing" tab - exclude "Partially Available"
-    if (filter === "processing") {
-      filtered = filtered.filter(req => {
-        const status = (req.mediaStatus || '').toLowerCase();
-        return status !== 'partially available';
-      });
-    }
-
-    return filtered;
-  }
-
-  /**
-   * Get cache key for current filter/page
-   */
-  function getRequestsCacheKey(filter, page) {
-    const isComingSoon = filter === "coming-soon";
-    // Coming-soon uses "all" data with client-side filter
-    const apiFilter = isComingSoon ? "" : (filter !== "all" ? filter : "");
-    const apiPage = isComingSoon ? 0 : page;
-    return `${apiFilter}:${apiPage}`;
-  }
-
-  /**
-   * Check if cache is valid
-   */
-  function isCacheValid(cacheKey) {
-    const cacheTime = state.requestsCacheTime[cacheKey];
-    if (!cacheTime) return false;
-    return (Date.now() - cacheTime) < CACHE_TTL_MS;
-  }
-
-  /**
    * Fetch requests from backend
    */
-  async function fetchRequests(forceRefresh = false) {
-    const currentFilter = state.requestsFilter;
-    const currentPage = state.requestsPage;
-    const cacheKey = getRequestsCacheKey(currentFilter, currentPage);
-    const isComingSoon = currentFilter === "coming-soon";
-
-    // Check cache first (unless forcing refresh)
-    if (!forceRefresh && isCacheValid(cacheKey) && state.requestsCache[cacheKey]) {
-      const cached = state.requestsCache[cacheKey];
-      state.requests = applyRequestsFilters(cached.requests, currentFilter);
-      state.requestsTotalPages = isComingSoon ? 1 : (cached.totalPages || 1);
-      return cached;
-    }
+  async function fetchRequests() {
+    const isComingSoon = state.requestsFilter === "coming-soon";
 
     try {
-      const skip = (currentPage - 1) * 20;
-      const filter = isComingSoon ? "" : (currentFilter !== "all" ? currentFilter : "");
+      const skip = isComingSoon ? 0 : (state.requestsPage - 1) * 20;
+      const filter = (state.requestsFilter !== "all" && !isComingSoon) ? state.requestsFilter : "";
 
       const url = ApiClient.getUrl("/JellyfinEnhanced/arr/requests", {
         take: isComingSoon ? 100 : 20,
-        skip: isComingSoon ? 0 : skip,
+        skip: skip,
         filter: filter,
       });
 
@@ -525,17 +402,43 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
 
-      const rawRequests = data.requests || [];
+      let requests = data.requests || [];
 
-      // Store in cache
-      state.requestsCache[cacheKey] = {
-        requests: rawRequests,
-        totalPages: data.totalPages || 1,
-      };
-      state.requestsCacheTime[cacheKey] = Date.now();
+      // Apply Coming Soon filter client-side
+      if (isComingSoon) {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const currentYear = now.getFullYear();
 
-      // Apply filters and update state
-      state.requests = applyRequestsFilters(rawRequests, currentFilter);
+        requests = requests.filter(req => {
+          // Must be processing or approved status
+          const status = (req.mediaStatus || "").toLowerCase();
+          const isProcessing = status === "processing" || status === "approved" || status === "pending";
+          if (!isProcessing) return false;
+
+          // Check if future release date
+          const releaseDate = req.releaseDate || req.firstAirDate;
+          if (releaseDate) {
+            const date = new Date(releaseDate);
+            date.setHours(0, 0, 0, 0);
+            return date > now;
+          }
+          // Fallback: include current year items (likely upcoming)
+          if (req.year && req.year >= currentYear) {
+            return true;
+          }
+          return false;
+        });
+
+        // Sort by release date
+        requests.sort((a, b) => {
+          const dateA = new Date(a.releaseDate || a.firstAirDate || `${a.year}-12-31`);
+          const dateB = new Date(b.releaseDate || b.firstAirDate || `${b.year}-12-31`);
+          return dateA - dateB;
+        });
+      }
+
+      state.requests = requests;
       state.requestsTotalPages = isComingSoon ? 1 : (data.totalPages || 1);
 
       return data;
@@ -547,25 +450,13 @@
   }
 
   /**
-   * Clear requests cache
-   */
-  function clearRequestsCache() {
-    state.requestsCache = {};
-    state.requestsCacheTime = {};
-  }
-
-  /**
    * Load all data
    */
-  async function loadAllData(clearCache = false) {
-    if (clearCache) {
-      clearRequestsCache();
-    }
-
+  async function loadAllData() {
     state.isLoading = true;
     renderPage();
 
-    await Promise.all([fetchDownloads(), fetchRequests(clearCache)]);
+    await Promise.all([fetchDownloads(), fetchRequests()]);
 
     state.isLoading = false;
     renderPage();
@@ -643,12 +534,10 @@
   }
 
   /**
-   * Format relative release date for future dates
-   * Returns null for past dates or invalid dates
+   * Format relative release date for future dates (Coming Soon tab)
    */
   function formatRelativeReleaseDate(dateString) {
     if (!dateString) return null;
-
     const targetDate = new Date(dateString);
     if (isNaN(targetDate.getTime())) return null;
 
@@ -659,7 +548,7 @@
     const diffMs = targetDate.getTime() - now.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return null;
+    if (diffDays < 0) return null; // Past date
     if (diffDays === 0) return 'today';
     if (diffDays === 1) return 'tomorrow';
     if (diffDays <= 7) return 'in ' + diffDays + ' days';
@@ -668,17 +557,9 @@
       const weeks = Math.floor(diffDays / 7);
       return 'in ' + weeks + ' week' + (weeks > 1 ? 's' : '');
     }
-
-    // For dates more than 30 days out, show "on 28th February" format
+    // For dates > 30 days, show "on Xth Month"
     const day = targetDate.getDate();
-    // Handle ordinal suffixes: 11th, 12th, 13th are special cases (teen numbers always use 'th')
-    let suffix = 'th';
-    if (day < 11 || day > 13) {
-      const lastDigit = day % 10;
-      if (lastDigit === 1) suffix = 'st';
-      else if (lastDigit === 2) suffix = 'nd';
-      else if (lastDigit === 3) suffix = 'rd';
-    }
+    const suffix = ((day >= 11 && day <= 13) ? 'th' : ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][day % 10]);
     const month = targetDate.toLocaleDateString('en-US', { month: 'long' });
     return 'on ' + day + suffix + ' ' + month;
   }
@@ -780,7 +661,7 @@
       posterHtml = `<div class="je-request-poster placeholder"></div>`;
     }
 
-    // For Coming Soon view, calculate the release date text to show in status chip
+    // For Coming Soon view, show release date instead of status
     let statusChipHtml = "";
     if (showReleaseBadge) {
       const releaseDate = item.releaseDate || item.firstAirDate;
@@ -812,7 +693,7 @@
 
     return `
             <div class="je-request-card">
-                <div class="je-request-poster-container">${posterHtml}</div>
+                ${posterHtml}
                 <div class="je-request-info">
                     <div class="je-request-header">
                       <div>
@@ -999,8 +880,8 @@
         const labelAll = (JE.t && JE.t('jellyseerr_discover_all')) || 'All';
         const labelPending = (JE.t && JE.t('jellyseerr_btn_pending')) || 'Pending Approval';
         const labelProcessing = (JE.t && JE.t('jellyseerr_btn_processing')) || 'Processing';
-        const labelAvailable = (JE.t && JE.t('jellyseerr_btn_available')) || 'Available';
         const labelComingSoon = (JE.t && JE.t('requests_coming_soon')) || 'Coming Soon';
+        const labelAvailable = (JE.t && JE.t('jellyseerr_btn_available')) || 'Available';
 
         html += `
             <div class="je-requests-tabs">
@@ -1009,24 +890,15 @@
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "processing" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('processing')">${labelProcessing}</button>
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "coming-soon" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('coming-soon')">${labelComingSoon}</button>
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "available" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('available')">${labelAvailable}</button>
-              ${state.isLoading ? '<span style="margin-left:0.5em;opacity:0.6;font-size:0.9em;">Loading...</span>' : ''}
             </div>
           `;
 
-      // No-blanking: only show full loading state if there's no content to display
-      if (state.requests.length === 0 && state.isLoading) {
+      if (state.isLoading && state.requests.length === 0) {
         html += `<div class="je-loading">Loading...</div>`;
       } else if (state.requests.length === 0) {
-        let emptyMessage = 'No requests found';
-        if (state.requestsFilter === 'coming-soon') {
-          const translated = JE.t && JE.t('requests_coming_soon_empty');
-          emptyMessage = (translated && translated !== 'requests_coming_soon_empty')
-            ? translated
-            : 'No upcoming releases in your requests';
-        }
         html += `
                     <div class="je-empty-state">
-                        <div>${emptyMessage}</div>
+                        <div>No requests found</div>
                     </div>
                 `;
       } else {
@@ -1226,43 +1098,12 @@
   }
 
   /**
-   * Filter requests - optimized for fast tab switching
-   * Uses token-based "last intent wins" to prevent stale async responses from overwriting newer data
+   * Filter requests
    */
   function filterRequests(filter) {
-    if (state.requestsFilter === filter) return; // Already on this tab
-
-    // Increment token - any in-flight async with older token will be discarded
-    const token = ++state.tabSwitchToken;
-
     state.requestsFilter = filter;
     state.requestsPage = 1;
-
-    const cacheKey = getRequestsCacheKey(filter, 1);
-
-    // Check if we have valid cached data
-    if (isCacheValid(cacheKey) && state.requestsCache[cacheKey]) {
-      // Use cached data immediately - no loading state needed
-      const cached = state.requestsCache[cacheKey];
-      state.requests = applyRequestsFilters(cached.requests, filter);
-      state.requestsTotalPages = filter === "coming-soon" ? 1 : (cached.totalPages || 1);
-      state.isLoading = false;
-      scheduleRender();
-      // Refresh in background for freshness - guarded by token
-      fetchRequests(true).then(() => {
-        if (token !== state.tabSwitchToken) return; // Stale response, discard
-        scheduleRender();
-      });
-    } else {
-      // No cache - show loading indicator but keep previous content visible (no blanking)
-      state.isLoading = true;
-      scheduleRender(); // Shows tab as active + loading indicator, keeps previous list
-      fetchRequests().then(() => {
-        if (token !== state.tabSwitchToken) return; // Stale response, discard
-        state.isLoading = false;
-        scheduleRender();
-      });
-    }
+    fetchRequests().then(() => renderPage());
   }
 
   /**
@@ -1291,6 +1132,16 @@
   function injectNavigation() {
     const config = JE.pluginConfig || {};
     if (!config.DownloadsPageEnabled) return;
+    if (pluginPagesExists && config.DownloadsUsePluginPages) return;
+
+    // Hide plugin page link if it exists
+    const pluginPageItem = sidebar?.querySelector(
+      'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.DownloadsPage"]'
+    );
+
+    if (pluginPageItem) {
+      pluginPageItem.style.setProperty('display', 'none', 'important');
+    }
 
     // Check if already exists
     if (document.querySelector(".je-nav-downloads-item")) {
@@ -1328,6 +1179,7 @@
   function setupNavigationWatcher() {
     const config = JE.pluginConfig || {};
     if (!config.DownloadsPageEnabled) return;
+    if (pluginPagesExists && config.DownloadsUsePluginPages) return;
 
     // Use MutationObserver to watch for sidebar changes, but disconnect after re-injection
     const observer = new MutationObserver(() => {
@@ -1344,7 +1196,6 @@
     const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
     if (navDrawer) {
       observer.observe(navDrawer, { childList: true, subtree: true });
-      console.log(`${logPrefix} Navigation watcher setup`);
     }
   }
 
@@ -1371,8 +1222,12 @@
     console.log(`${logPrefix} Initializing downloads page module`);
 
     const config = JE.pluginConfig || {};
-    if (!config.DownloadsPageEnabled) {
-      console.log(`${logPrefix} Downloads page is disabled`);
+    if (!config.DownloadsPageEnabled || (pluginPagesExists && config.DownloadsUsePluginPages)) {
+      if (pluginPagesExists && config.DownloadsUsePluginPages) {
+        console.log(`${logPrefix} Downloads page is injected via Plugin Pages`);
+      } else {
+        console.log(`${logPrefix} Downloads page is disabled`);
+      }
       return;
     }
 
@@ -1483,10 +1338,12 @@
     initialize,
     showPage,
     hidePage,
-    refresh: () => loadAllData(true), // Clear cache on manual refresh
+    refresh: loadAllData,
     filterRequests,
     nextPage,
     prevPage,
+    renderPage,
+    injectStyles
   };
 
   JE.initializeDownloadsPage = initialize;
