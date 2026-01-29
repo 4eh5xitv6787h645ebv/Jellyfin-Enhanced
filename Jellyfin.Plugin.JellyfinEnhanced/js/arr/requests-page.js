@@ -21,10 +21,23 @@
     // Cache for requests data - keyed by filter+page
     requestsCache: {},
     requestsCacheTime: {},
+    // Token for "last intent wins" - prevents stale async responses from overwriting newer data
+    tabSwitchToken: 0,
   };
 
   // Cache settings
   const CACHE_TTL_MS = 30000; // 30 seconds cache validity
+
+  // Render coalescing - ensures only one render per animation frame to avoid stutter
+  let renderQueued = false;
+  function scheduleRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      renderPage();
+    });
+  }
 
   // Status color mapping - using theme-aware colors
   const getStatusColors = () => {
@@ -989,10 +1002,12 @@
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "processing" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('processing')">${labelProcessing}</button>
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "coming-soon" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('coming-soon')">${labelComingSoon}</button>
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "available" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('available')">${labelAvailable}</button>
+              ${state.isLoading ? '<span style="margin-left:0.5em;opacity:0.6;font-size:0.9em;">Loading...</span>' : ''}
             </div>
           `;
 
-      if (state.isLoading && state.requests.length === 0) {
+      // No-blanking: only show full loading state if there's no content to display
+      if (state.requests.length === 0 && state.isLoading) {
         html += `<div class="je-loading">Loading...</div>`;
       } else if (state.requests.length === 0) {
         let emptyMessage = 'No requests found';
@@ -1205,9 +1220,13 @@
 
   /**
    * Filter requests - optimized for fast tab switching
+   * Uses token-based "last intent wins" to prevent stale async responses from overwriting newer data
    */
   function filterRequests(filter) {
     if (state.requestsFilter === filter) return; // Already on this tab
+
+    // Increment token - any in-flight async with older token will be discarded
+    const token = ++state.tabSwitchToken;
 
     state.requestsFilter = filter;
     state.requestsPage = 1;
@@ -1220,17 +1239,21 @@
       const cached = state.requestsCache[cacheKey];
       state.requests = applyRequestsFilters(cached.requests, filter);
       state.requestsTotalPages = filter === "coming-soon" ? 1 : (cached.totalPages || 1);
-      renderPage();
-      // Refresh in background for freshness
-      fetchRequests(true).then(() => renderPage());
+      state.isLoading = false;
+      scheduleRender();
+      // Refresh in background for freshness - guarded by token
+      fetchRequests(true).then(() => {
+        if (token !== state.tabSwitchToken) return; // Stale response, discard
+        scheduleRender();
+      });
     } else {
-      // No cache - show loading state immediately, then fetch
-      state.requests = [];
+      // No cache - show loading indicator but keep previous content visible (no blanking)
       state.isLoading = true;
-      renderPage(); // Shows tab as active + loading indicator
+      scheduleRender(); // Shows tab as active + loading indicator, keeps previous list
       fetchRequests().then(() => {
+        if (token !== state.tabSwitchToken) return; // Stale response, discard
         state.isLoading = false;
-        renderPage();
+        scheduleRender();
       });
     }
   }
