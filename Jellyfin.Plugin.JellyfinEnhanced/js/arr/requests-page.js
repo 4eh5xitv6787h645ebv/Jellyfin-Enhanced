@@ -321,6 +321,7 @@
         .je-requests-status-chip.je-chip-processing { background: rgba(59, 130, 246, 0.25); color: #f0f9ff; border-color: rgba(59, 130, 246, 0.5); }
         .je-requests-status-chip.je-chip-requested { background: rgba(168, 85, 247, 0.25); color: #f0f9ff; border-color: rgba(168, 85, 247, 0.5); }
         .je-requests-status-chip.je-chip-rejected { background: rgba(248, 113, 113, 0.25); color: #f0f9ff; border-color: rgba(248, 113, 113, 0.5); }
+        .je-requests-status-chip.je-chip-coming-soon { background: rgba(76, 175, 80, 0.25); color: #f0f9ff; border-color: rgba(76, 175, 80, 0.5); }
         .je-coming-soon-badge {
             position: absolute;
             bottom: 8px;
@@ -329,10 +330,14 @@
             color: #fff;
             padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 500;
             backdrop-filter: blur(4px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            max-width: calc(100% - 16px);
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .je-request-poster-container {
             position: relative;
@@ -775,22 +780,23 @@
       posterHtml = `<div class="je-request-poster placeholder"></div>`;
     }
 
-    // Add release date badge for Coming Soon view
-    let releaseBadgeHtml = "";
+    // For Coming Soon view, calculate the release date text to show in status chip
+    let statusChipHtml = "";
     if (showReleaseBadge) {
       const releaseDate = item.releaseDate || item.firstAirDate;
-      let badgeText = formatRelativeReleaseDate(releaseDate);
+      let releaseDateText = formatRelativeReleaseDate(releaseDate);
       // Fall back to showing just the year if no full date available
-      if (!badgeText && item.year && item.year >= new Date().getFullYear()) {
-        badgeText = String(item.year);
+      if (!releaseDateText && item.year && item.year >= new Date().getFullYear()) {
+        releaseDateText = String(item.year);
       }
-      if (badgeText) {
-        releaseBadgeHtml = `<div class="je-coming-soon-badge">${badgeText}</div>`;
+      if (releaseDateText) {
+        statusChipHtml = `<span class="je-requests-status-chip je-chip-coming-soon">${releaseDateText}</span>`;
+      } else {
+        statusChipHtml = `<span class="je-requests-status-chip ${status.className}">${status.label}</span>`;
       }
+    } else {
+      statusChipHtml = `<span class="je-requests-status-chip ${status.className}">${status.label}</span>`;
     }
-
-    // Wrap poster in a container for badge positioning
-    const posterContainerHtml = `<div class="je-request-poster-container">${posterHtml}${releaseBadgeHtml}</div>`;
 
     let avatarHtml = "";
     if (item.requestedByAvatar) {
@@ -806,7 +812,7 @@
 
     return `
             <div class="je-request-card">
-                ${posterContainerHtml}
+                <div class="je-request-poster-container">${posterHtml}</div>
                 <div class="je-request-info">
                     <div class="je-request-header">
                       <div>
@@ -814,7 +820,7 @@
                           <div class="je-request-title">${item.title || "Unknown"}</div>
                           ${item.year ? `<span class="je-request-year">(${item.year})</span>` : ""}
                         </div>
-                        <span class="je-requests-status-chip ${status.className}">${status.label}</span>
+                        ${statusChipHtml}
                       </div>
                     </div>
                     <div class="je-request-meta">

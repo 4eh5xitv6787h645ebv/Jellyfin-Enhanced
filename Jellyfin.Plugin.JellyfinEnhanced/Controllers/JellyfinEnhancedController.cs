@@ -1987,6 +1987,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         string? title = null;
                         int? year = null;
                         string? posterUrl = null;
+                        string? releaseDate = null;
+                        string? firstAirDate = null;
 
                         if (tmdbId.HasValue && !string.IsNullOrEmpty(type))
                         {
@@ -1994,6 +1996,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             title = enrichedData.Title;
                             year = enrichedData.Year;
                             posterUrl = enrichedData.PosterUrl;
+                            releaseDate = enrichedData.ReleaseDate;
+                            firstAirDate = enrichedData.FirstAirDate;
                         }
 
                         // Fallback to media object if enrichment didn't work
@@ -2010,11 +2014,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                 title = "Unknown";
                         }
 
-                        // Fallback year from media object
+                        // Fallback release dates from media object
+                        if (string.IsNullOrEmpty(releaseDate))
+                            releaseDate = media?["releaseDate"]?.Value<string>();
+                        if (string.IsNullOrEmpty(firstAirDate))
+                            firstAirDate = media?["firstAirDate"]?.Value<string>();
+
+                        // Fallback year from release dates
                         if (!year.HasValue)
                         {
-                            string? releaseDate = media?["releaseDate"]?.Value<string>();
-                            string? firstAirDate = media?["firstAirDate"]?.Value<string>();
                             if (!string.IsNullOrEmpty(releaseDate) && releaseDate.Length >= 4)
                                 year = int.TryParse(releaseDate.Substring(0, 4), out var y) ? y : null;
                             else if (!string.IsNullOrEmpty(firstAirDate) && firstAirDate.Length >= 4)
@@ -2057,6 +2065,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             type = type,
                             title = title,
                             year = year,
+                            releaseDate = releaseDate,
+                            firstAirDate = firstAirDate,
                             posterUrl = posterUrl,
                             mediaStatus = mediaStatus,
                             requestedBy = displayName ?? username ?? "Unknown",
@@ -2573,7 +2583,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// <summary>
         /// Fetch title and poster from Jellyseerr's movie/tv endpoints using TMDB ID.
         /// </summary>
-        private async Task<(string? Title, int? Year, string? PosterUrl)> EnrichWithTmdbData(HttpClient client, int tmdbId, string type, string jellyseerrUrl)
+        private async Task<(string? Title, int? Year, string? PosterUrl, string? ReleaseDate, string? FirstAirDate)> EnrichWithTmdbData(HttpClient client, int tmdbId, string type, string jellyseerrUrl)
         {
             try
             {
@@ -2588,20 +2598,30 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     string? title = null;
                     int? year = null;
                     string? posterUrl = null;
+                    string? releaseDate = null;
+                    string? firstAirDate = null;
 
                     if (type == "movie")
                     {
                         if (data.TryGetProperty("title", out var titleProp))
                             title = titleProp.GetString();
-                        if (data.TryGetProperty("releaseDate", out var rd) && !string.IsNullOrEmpty(rd.GetString()) && rd.GetString()!.Length >= 4)
-                            year = int.TryParse(rd.GetString()!.Substring(0, 4), out var y) ? y : null;
+                        if (data.TryGetProperty("releaseDate", out var rd) && !string.IsNullOrEmpty(rd.GetString()))
+                        {
+                            releaseDate = rd.GetString();
+                            if (releaseDate!.Length >= 4)
+                                year = int.TryParse(releaseDate.Substring(0, 4), out var y) ? y : null;
+                        }
                     }
                     else
                     {
                         if (data.TryGetProperty("name", out var nameProp))
                             title = nameProp.GetString();
-                        if (data.TryGetProperty("firstAirDate", out var fad) && !string.IsNullOrEmpty(fad.GetString()) && fad.GetString()!.Length >= 4)
-                            year = int.TryParse(fad.GetString()!.Substring(0, 4), out var y) ? y : null;
+                        if (data.TryGetProperty("firstAirDate", out var fad) && !string.IsNullOrEmpty(fad.GetString()))
+                        {
+                            firstAirDate = fad.GetString();
+                            if (firstAirDate!.Length >= 4)
+                                year = int.TryParse(firstAirDate.Substring(0, 4), out var y) ? y : null;
+                        }
                     }
 
                     if (data.TryGetProperty("posterPath", out var poster) && poster.ValueKind != System.Text.Json.JsonValueKind.Null)
@@ -2609,7 +2629,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         posterUrl = $"https://image.tmdb.org/t/p/w300{poster.GetString()}";
                     }
 
-                    return (title, year, posterUrl);
+                    return (title, year, posterUrl, releaseDate, firstAirDate);
                 }
             }
             catch (Exception ex)
@@ -2617,7 +2637,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 _logger.Warning($"Failed to enrich request with TMDB data: {ex.Message}");
             }
 
-            return (null, null, null);
+            return (null, null, null, null, null);
         }
 
         private static string GetMediaStatus(int? requestStatus, int? mediaStatus)
