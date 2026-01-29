@@ -302,6 +302,23 @@
         .je-requests-status-chip.je-chip-processing { background: rgba(59, 130, 246, 0.25); color: #f0f9ff; border-color: rgba(59, 130, 246, 0.5); }
         .je-requests-status-chip.je-chip-requested { background: rgba(168, 85, 247, 0.25); color: #f0f9ff; border-color: rgba(168, 85, 247, 0.5); }
         .je-requests-status-chip.je-chip-rejected { background: rgba(248, 113, 113, 0.25); color: #f0f9ff; border-color: rgba(248, 113, 113, 0.5); }
+        .je-coming-soon-badge {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(56, 142, 60, 0.9));
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .je-request-poster-container {
+            position: relative;
+            flex-shrink: 0;
+        }
     `;
 
   /**
@@ -381,11 +398,13 @@
   async function fetchRequests() {
     try {
       const skip = (state.requestsPage - 1) * 20;
-      const filter = state.requestsFilter !== "all" ? state.requestsFilter : "";
+      // For coming-soon filter, we fetch all processing/approved items and filter client-side
+      const isComingSoon = state.requestsFilter === "coming-soon";
+      const filter = isComingSoon ? "" : (state.requestsFilter !== "all" ? state.requestsFilter : "");
 
       const url = ApiClient.getUrl("/JellyfinEnhanced/arr/requests", {
-        take: 20,
-        skip: skip,
+        take: isComingSoon ? 100 : 20, // Fetch more for client-side filtering
+        skip: isComingSoon ? 0 : skip,
         filter: filter,
       });
 
@@ -395,8 +414,61 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
 
-      state.requests = data.requests || [];
-      state.requestsTotalPages = data.totalPages || 1;
+      let requests = data.requests || [];
+
+      // Client-side filtering for "Coming Soon" tab
+      if (isComingSoon) {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const currentYear = now.getFullYear();
+        requests = requests.filter(req => {
+          // Check for full release date first, then fall back to year
+          const releaseDate = req.releaseDate || req.firstAirDate;
+          let isFutureRelease = false;
+
+          if (releaseDate) {
+            const date = new Date(releaseDate);
+            if (!isNaN(date.getTime())) {
+              date.setHours(0, 0, 0, 0);
+              isFutureRelease = date > now;
+            }
+          } else if (req.year && req.year > currentYear) {
+            // If only year is available and it's a future year
+            isFutureRelease = true;
+          }
+
+          if (!isFutureRelease) return false;
+
+          // Show items with future release dates that are approved/processing
+          // mediaStatus: "Processing", "Approved", or status 2/3
+          const status = (req.mediaStatus || '').toLowerCase();
+          const isApprovedOrProcessing = status === 'processing' || status === 'approved' ||
+                                          status === 'pending' || req.status === 2 || req.status === 3;
+          return isApprovedOrProcessing;
+        });
+        // Sort by release date (nearest first), using year as fallback
+        requests.sort((a, b) => {
+          const getDate = (req) => {
+            if (req.releaseDate || req.firstAirDate) {
+              return new Date(req.releaseDate || req.firstAirDate);
+            }
+            // Use January 1st of the year as fallback
+            return req.year ? new Date(req.year, 0, 1) : new Date(0);
+          };
+          return getDate(a) - getDate(b);
+        });
+      }
+
+      // Client-side filtering for "Processing" tab - exclude "Partially Available"
+      if (state.requestsFilter === "processing") {
+        requests = requests.filter(req => {
+          const status = (req.mediaStatus || '').toLowerCase();
+          return status !== 'partially available';
+        });
+      }
+
+      state.requests = requests;
+      state.requestsTotalPages = isComingSoon ? 1 : (data.totalPages || 1);
 
       return data;
     } catch (error) {
@@ -491,6 +563,47 @@
   }
 
   /**
+   * Format relative release date for future dates
+   * Returns null for past dates or invalid dates
+   */
+  function formatRelativeReleaseDate(dateString) {
+    if (!dateString) return null;
+
+    const targetDate = new Date(dateString);
+    if (isNaN(targetDate.getTime())) return null;
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const diffMs = targetDate.getTime() - now.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return null;
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return 'tomorrow';
+    if (diffDays <= 7) return 'in ' + diffDays + ' days';
+    if (diffDays <= 14) return 'in 2 weeks';
+    if (diffDays <= 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return 'in ' + weeks + ' week' + (weeks > 1 ? 's' : '');
+    }
+
+    // For dates more than 30 days out, show "on 28th February" format
+    const day = targetDate.getDate();
+    // Handle ordinal suffixes: 11th, 12th, 13th are special cases (teen numbers always use 'th')
+    let suffix = 'th';
+    if (day < 11 || day > 13) {
+      const lastDigit = day % 10;
+      if (lastDigit === 1) suffix = 'st';
+      else if (lastDigit === 2) suffix = 'nd';
+      else if (lastDigit === 3) suffix = 'rd';
+    }
+    const month = targetDate.toLocaleDateString('en-US', { month: 'long' });
+    return 'on ' + day + suffix + ' ' + month;
+  }
+
+  /**
    * Format downloaded/total stats with clamping
    */
   function formatDownloadStats(totalSize, sizeRemaining) {
@@ -577,7 +690,7 @@
   /**
    * Render a request card
    */
-  function renderRequestCard(item) {
+  function renderRequestCard(item, showReleaseBadge = false) {
     const status = resolveRequestStatus(item.mediaStatus);
 
     let posterHtml = "";
@@ -586,6 +699,23 @@
     } else {
       posterHtml = `<div class="je-request-poster placeholder"></div>`;
     }
+
+    // Add release date badge for Coming Soon view
+    let releaseBadgeHtml = "";
+    if (showReleaseBadge) {
+      const releaseDate = item.releaseDate || item.firstAirDate;
+      let badgeText = formatRelativeReleaseDate(releaseDate);
+      // Fall back to showing just the year if no full date available
+      if (!badgeText && item.year && item.year > new Date().getFullYear()) {
+        badgeText = String(item.year);
+      }
+      if (badgeText) {
+        releaseBadgeHtml = `<div class="je-coming-soon-badge">${badgeText}</div>`;
+      }
+    }
+
+    // Wrap poster in a container for badge positioning
+    const posterContainerHtml = `<div class="je-request-poster-container">${posterHtml}${releaseBadgeHtml}</div>`;
 
     let avatarHtml = "";
     if (item.requestedByAvatar) {
@@ -601,7 +731,7 @@
 
     return `
             <div class="je-request-card">
-                ${posterHtml}
+                ${posterContainerHtml}
                 <div class="je-request-info">
                     <div class="je-request-header">
                       <div>
@@ -789,12 +919,14 @@
         const labelPending = (JE.t && JE.t('jellyseerr_btn_pending')) || 'Pending Approval';
         const labelProcessing = (JE.t && JE.t('jellyseerr_btn_processing')) || 'Processing';
         const labelAvailable = (JE.t && JE.t('jellyseerr_btn_available')) || 'Available';
+        const labelComingSoon = (JE.t && JE.t('requests_coming_soon')) || 'Coming Soon';
 
         html += `
             <div class="je-requests-tabs">
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "all" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('all')">${labelAll}</button>
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "pending" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('pending')">${labelPending}</button>
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "processing" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('processing')">${labelProcessing}</button>
+              <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "coming-soon" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('coming-soon')">${labelComingSoon}</button>
               <button is="emby-button" type="button" class="je-requests-tab emby-button ${state.requestsFilter === "available" ? "active" : ""}" onclick="window.JellyfinEnhanced.downloadsPage.filterRequests('available')">${labelAvailable}</button>
             </div>
           `;
@@ -802,15 +934,23 @@
       if (state.isLoading && state.requests.length === 0) {
         html += `<div class="je-loading">Loading...</div>`;
       } else if (state.requests.length === 0) {
+        let emptyMessage = 'No requests found';
+        if (state.requestsFilter === 'coming-soon') {
+          const translated = JE.t && JE.t('requests_coming_soon_empty');
+          emptyMessage = (translated && translated !== 'requests_coming_soon_empty')
+            ? translated
+            : 'No upcoming releases in your requests';
+        }
         html += `
                     <div class="je-empty-state">
-                        <div>No requests found</div>
+                        <div>${emptyMessage}</div>
                     </div>
                 `;
       } else {
+        const showReleaseBadge = state.requestsFilter === 'coming-soon';
         html += `<div class="je-downloads-grid">`;
         state.requests.forEach((item) => {
-          html += renderRequestCard(item);
+          html += renderRequestCard(item, showReleaseBadge);
         });
         html += `</div>`;
 

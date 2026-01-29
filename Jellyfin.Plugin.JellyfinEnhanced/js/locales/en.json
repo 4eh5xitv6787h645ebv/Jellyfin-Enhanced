@@ -362,5 +362,7 @@
     "calendar_loading": "Loading calendar...",
     "calendar_no_releases": "No upcoming releases",
     "calendar_watchlist": "Watchlist",
-    "calendar_watched": "Watched"
+    "calendar_watched": "Watched",
+    "jellyseerr_tab_coming_soon": "Coming Soon",
+    "jellyseerr_coming_soon_empty": "No upcoming releases in your requests"
 }
