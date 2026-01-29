@@ -18,7 +18,13 @@
     previousPage: null,
     locationSignature: null,
     locationTimer: null,
+    // Cache for requests data - keyed by filter+page
+    requestsCache: {},
+    requestsCacheTime: {},
   };
+
+  // Cache settings
+  const CACHE_TTL_MS = 30000; // 30 seconds cache validity
 
   // Status color mapping - using theme-aware colors
   const getStatusColors = () => {
@@ -393,17 +399,103 @@
   }
 
   /**
+   * Apply client-side filters to raw requests data
+   */
+  function applyRequestsFilters(requests, filter) {
+    let filtered = [...requests];
+
+    // Client-side filtering for "Coming Soon" tab
+    if (filter === "coming-soon") {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const currentYear = now.getFullYear();
+      filtered = filtered.filter(req => {
+        const releaseDate = req.releaseDate || req.firstAirDate;
+        let isFutureRelease = false;
+
+        if (releaseDate) {
+          const date = new Date(releaseDate);
+          if (!isNaN(date.getTime())) {
+            date.setHours(0, 0, 0, 0);
+            isFutureRelease = date > now;
+          }
+        } else if (req.year && req.year > currentYear) {
+          isFutureRelease = true;
+        }
+
+        if (!isFutureRelease) return false;
+
+        const status = (req.mediaStatus || '').toLowerCase();
+        const isApprovedOrProcessing = status === 'processing' || status === 'approved' ||
+                                        status === 'pending' || req.status === 2 || req.status === 3;
+        return isApprovedOrProcessing;
+      });
+      // Sort by release date (nearest first)
+      filtered.sort((a, b) => {
+        const getDate = (req) => {
+          if (req.releaseDate || req.firstAirDate) {
+            return new Date(req.releaseDate || req.firstAirDate);
+          }
+          return req.year ? new Date(req.year, 0, 1) : new Date(0);
+        };
+        return getDate(a) - getDate(b);
+      });
+    }
+
+    // Client-side filtering for "Processing" tab - exclude "Partially Available"
+    if (filter === "processing") {
+      filtered = filtered.filter(req => {
+        const status = (req.mediaStatus || '').toLowerCase();
+        return status !== 'partially available';
+      });
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Get cache key for current filter/page
+   */
+  function getRequestsCacheKey(filter, page) {
+    const isComingSoon = filter === "coming-soon";
+    // Coming-soon uses "all" data with client-side filter
+    const apiFilter = isComingSoon ? "" : (filter !== "all" ? filter : "");
+    const apiPage = isComingSoon ? 0 : page;
+    return `${apiFilter}:${apiPage}`;
+  }
+
+  /**
+   * Check if cache is valid
+   */
+  function isCacheValid(cacheKey) {
+    const cacheTime = state.requestsCacheTime[cacheKey];
+    if (!cacheTime) return false;
+    return (Date.now() - cacheTime) < CACHE_TTL_MS;
+  }
+
+  /**
    * Fetch requests from backend
    */
-  async function fetchRequests() {
+  async function fetchRequests(forceRefresh = false) {
+    const currentFilter = state.requestsFilter;
+    const currentPage = state.requestsPage;
+    const cacheKey = getRequestsCacheKey(currentFilter, currentPage);
+    const isComingSoon = currentFilter === "coming-soon";
+
+    // Check cache first (unless forcing refresh)
+    if (!forceRefresh && isCacheValid(cacheKey) && state.requestsCache[cacheKey]) {
+      const cached = state.requestsCache[cacheKey];
+      state.requests = applyRequestsFilters(cached.requests, currentFilter);
+      state.requestsTotalPages = isComingSoon ? 1 : (cached.totalPages || 1);
+      return cached;
+    }
+
     try {
-      const skip = (state.requestsPage - 1) * 20;
-      // For coming-soon filter, we fetch all processing/approved items and filter client-side
-      const isComingSoon = state.requestsFilter === "coming-soon";
-      const filter = isComingSoon ? "" : (state.requestsFilter !== "all" ? state.requestsFilter : "");
+      const skip = (currentPage - 1) * 20;
+      const filter = isComingSoon ? "" : (currentFilter !== "all" ? currentFilter : "");
 
       const url = ApiClient.getUrl("/JellyfinEnhanced/arr/requests", {
-        take: isComingSoon ? 100 : 20, // Fetch more for client-side filtering
+        take: isComingSoon ? 100 : 20,
         skip: isComingSoon ? 0 : skip,
         filter: filter,
       });
@@ -414,60 +506,17 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
 
-      let requests = data.requests || [];
+      const rawRequests = data.requests || [];
 
-      // Client-side filtering for "Coming Soon" tab
-      if (isComingSoon) {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        const currentYear = now.getFullYear();
-        requests = requests.filter(req => {
-          // Check for full release date first, then fall back to year
-          const releaseDate = req.releaseDate || req.firstAirDate;
-          let isFutureRelease = false;
+      // Store in cache
+      state.requestsCache[cacheKey] = {
+        requests: rawRequests,
+        totalPages: data.totalPages || 1,
+      };
+      state.requestsCacheTime[cacheKey] = Date.now();
 
-          if (releaseDate) {
-            const date = new Date(releaseDate);
-            if (!isNaN(date.getTime())) {
-              date.setHours(0, 0, 0, 0);
-              isFutureRelease = date > now;
-            }
-          } else if (req.year && req.year > currentYear) {
-            // If only year is available and it's a future year
-            isFutureRelease = true;
-          }
-
-          if (!isFutureRelease) return false;
-
-          // Show items with future release dates that are approved/processing
-          // mediaStatus: "Processing", "Approved", or status 2/3
-          const status = (req.mediaStatus || '').toLowerCase();
-          const isApprovedOrProcessing = status === 'processing' || status === 'approved' ||
-                                          status === 'pending' || req.status === 2 || req.status === 3;
-          return isApprovedOrProcessing;
-        });
-        // Sort by release date (nearest first), using year as fallback
-        requests.sort((a, b) => {
-          const getDate = (req) => {
-            if (req.releaseDate || req.firstAirDate) {
-              return new Date(req.releaseDate || req.firstAirDate);
-            }
-            // Use January 1st of the year as fallback
-            return req.year ? new Date(req.year, 0, 1) : new Date(0);
-          };
-          return getDate(a) - getDate(b);
-        });
-      }
-
-      // Client-side filtering for "Processing" tab - exclude "Partially Available"
-      if (state.requestsFilter === "processing") {
-        requests = requests.filter(req => {
-          const status = (req.mediaStatus || '').toLowerCase();
-          return status !== 'partially available';
-        });
-      }
-
-      state.requests = requests;
+      // Apply filters and update state
+      state.requests = applyRequestsFilters(rawRequests, currentFilter);
       state.requestsTotalPages = isComingSoon ? 1 : (data.totalPages || 1);
 
       return data;
@@ -479,13 +528,25 @@
   }
 
   /**
+   * Clear requests cache
+   */
+  function clearRequestsCache() {
+    state.requestsCache = {};
+    state.requestsCacheTime = {};
+  }
+
+  /**
    * Load all data
    */
-  async function loadAllData() {
+  async function loadAllData(clearCache = false) {
+    if (clearCache) {
+      clearRequestsCache();
+    }
+
     state.isLoading = true;
     renderPage();
 
-    await Promise.all([fetchDownloads(), fetchRequests()]);
+    await Promise.all([fetchDownloads(), fetchRequests(clearCache)]);
 
     state.isLoading = false;
     renderPage();
@@ -1143,12 +1204,35 @@
   }
 
   /**
-   * Filter requests
+   * Filter requests - optimized for fast tab switching
    */
   function filterRequests(filter) {
+    if (state.requestsFilter === filter) return; // Already on this tab
+
     state.requestsFilter = filter;
     state.requestsPage = 1;
-    fetchRequests().then(() => renderPage());
+
+    const cacheKey = getRequestsCacheKey(filter, 1);
+
+    // Check if we have valid cached data
+    if (isCacheValid(cacheKey) && state.requestsCache[cacheKey]) {
+      // Use cached data immediately - no loading state needed
+      const cached = state.requestsCache[cacheKey];
+      state.requests = applyRequestsFilters(cached.requests, filter);
+      state.requestsTotalPages = filter === "coming-soon" ? 1 : (cached.totalPages || 1);
+      renderPage();
+      // Refresh in background for freshness
+      fetchRequests(true).then(() => renderPage());
+    } else {
+      // No cache - show loading state immediately, then fetch
+      state.requests = [];
+      state.isLoading = true;
+      renderPage(); // Shows tab as active + loading indicator
+      fetchRequests().then(() => {
+        state.isLoading = false;
+        renderPage();
+      });
+    }
   }
 
   /**
@@ -1369,7 +1453,7 @@
     initialize,
     showPage,
     hidePage,
-    refresh: loadAllData,
+    refresh: () => loadAllData(true), // Clear cache on manual refresh
     filterRequests,
     nextPage,
     prevPage,
