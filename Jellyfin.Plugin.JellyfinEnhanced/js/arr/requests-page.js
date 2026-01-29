@@ -432,7 +432,8 @@
             date.setHours(0, 0, 0, 0);
             isFutureRelease = date > now;
           }
-        } else if (req.year && req.year > currentYear) {
+        } else if (req.year && req.year >= currentYear) {
+          // Include current year releases when only year is available (likely still upcoming)
           isFutureRelease = true;
         }
 
@@ -780,7 +781,7 @@
       const releaseDate = item.releaseDate || item.firstAirDate;
       let badgeText = formatRelativeReleaseDate(releaseDate);
       // Fall back to showing just the year if no full date available
-      if (!badgeText && item.year && item.year > new Date().getFullYear()) {
+      if (!badgeText && item.year && item.year >= new Date().getFullYear()) {
         badgeText = String(item.year);
       }
       if (badgeText) {
