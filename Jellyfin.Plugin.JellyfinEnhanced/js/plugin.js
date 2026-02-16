@@ -99,6 +99,55 @@
     const JE = window.JellyfinEnhanced; // Alias for internal use
 
     /**
+     * Cache key derived from the plugin version attribute injected into the
+     * script tag by the C# backend (e.g. version="11.0.0.0").
+     * Falls back to a one-time Date.now() if the attribute is missing.
+     * Using a stable version string allows browsers to cache JS assets across
+     * page loads — cache is only busted when the plugin DLL is updated.
+     * @type {string}
+     */
+    const CACHE_VERSION = (() => {
+        try {
+            const tag = document.querySelector('script[plugin="Jellyfin Enhanced"]');
+            const version = tag && tag.getAttribute('version');
+            if (!version) {
+                console.warn('🪼 Jellyfin Enhanced: Version attribute missing from script tag — caching disabled for this session.');
+            }
+            return version || String(Date.now());
+        } catch (_) {
+            return String(Date.now());
+        }
+    })();
+
+    /**
+     * Shared promise for the public-config endpoint.
+     * Prevents duplicate fetches when both loadLoginImageEarly() and
+     * loadPluginData() need the same configuration data.
+     * @type {Promise<object>|null}
+     */
+    let sharedConfigPromise = null;
+
+    /**
+     * Returns a shared promise for the public plugin configuration.
+     * Creates the fetch on first call; subsequent calls reuse the same promise.
+     * @returns {Promise<object>} The public config object.
+     */
+    function getSharedPublicConfig() {
+        if (!sharedConfigPromise) {
+            sharedConfigPromise = ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl('/JellyfinEnhanced/public-config'),
+                dataType: 'json'
+            }).catch((e) => {
+                console.error("🪼 Jellyfin Enhanced: Failed to fetch public config", e);
+                sharedConfigPromise = null; // Clear so next caller can retry
+                return {}; // Return empty object for this call
+            });
+        }
+        return sharedConfigPromise;
+    }
+
+    /**
      * Converts PascalCase object keys to camelCase recursively.
      * @param {object} obj - The object to convert.
      * @returns {object} - A new object with camelCase keys.
@@ -162,7 +211,7 @@
         if (typeof JE.loadTranslations === 'function') return;
         await new Promise((resolve) => {
             const script = document.createElement('script');
-            script.src = ApiClient.getUrl(`/JellyfinEnhanced/js/enhanced/translations.js?v=${Date.now()}`);
+            script.src = ApiClient.getUrl(`/JellyfinEnhanced/js/enhanced/translations.js?v=${CACHE_VERSION}`);
             script.onload = () => resolve();
             script.onerror = (e) => {
                 console.error('🪼 Jellyfin Enhanced: Failed to load translations module', e);
@@ -187,17 +236,11 @@
 
      /**
      * Fetches plugin configuration and version from the server.
+     * Reuses the shared public-config promise to avoid duplicate requests.
      * @returns {Promise<[object, string]>} A promise that resolves with config and version.
      */
      function loadPluginData() {
-        const configPromise = ApiClient.ajax({
-            type: 'GET',
-            url: ApiClient.getUrl('/JellyfinEnhanced/public-config'),
-            dataType: 'json'
-        }).catch((e) => {
-            console.error("🪼 Jellyfin Enhanced: Failed to fetch public config", e);
-            return {}; // Return empty object on error
-        });
+        const configPromise = getSharedPublicConfig();
 
         const versionPromise = ApiClient.ajax({
             type: 'GET',
@@ -241,7 +284,7 @@
         const promises = scripts.map(scriptName => {
             return new Promise((resolve) => { // Always resolve so one failure doesn't stop others
                 const script = document.createElement('script');
-                script.src = ApiClient.getUrl(`${basePath}/${scriptName}?v=${Date.now()}`); // Cache-busting
+                script.src = ApiClient.getUrl(`${basePath}/${scriptName}?v=${CACHE_VERSION}`);
                 script.onload = () => {
                     resolve({ status: 'fulfilled', script: scriptName });
                 };
@@ -265,7 +308,7 @@
             return;
         }
         const splashScript = document.createElement('script');
-        splashScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/others/splashscreen.js?v=' + Date.now());
+        splashScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/others/splashscreen.js?v=' + CACHE_VERSION);
         splashScript.onload = () => {
             if (typeof JE.initializeSplashScreen === 'function') {
                 JE.initializeSplashScreen(); // Initialize if available
@@ -277,6 +320,7 @@
 
     /**
      * Loads the login image script early (checks config first).
+     * Uses the shared config promise to avoid a duplicate /public-config fetch.
      */
     function loadLoginImageEarly() {
         if (typeof ApiClient === 'undefined') {
@@ -284,16 +328,12 @@
             return;
         }
 
-        // Fetch the public config to check if login image is enabled
-        ApiClient.ajax({
-            type: 'GET',
-            url: ApiClient.getUrl('/JellyfinEnhanced/public-config'),
-            dataType: 'json'
-        }).then((config) => {
+        // Reuse the shared config promise instead of making a separate fetch
+        getSharedPublicConfig().then((config) => {
             // Only load if enabled (default to false)
             if (config?.EnableLoginImage === true) {
                 const loginImageScript = document.createElement('script');
-                loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + Date.now());
+                loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + CACHE_VERSION);
                 loginImageScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load login image script.');
                 document.head.appendChild(loginImageScript);
             }

@@ -1501,13 +1501,33 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return NotFound();
             }
 
+            // Locale files are embedded in the DLL — cache until plugin version changes
+            Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+            var version = JellyfinEnhanced.Instance?.Version?.ToString() ?? "unknown";
+            Response.Headers["ETag"] = $"\"{version}\"";
+
             return new FileStreamResult(stream, "application/json");
         }
 
+        /// <summary>
+        /// Serves an embedded JS resource with aggressive caching headers.
+        /// Scripts are embedded in the DLL and versioned via query string (?v=pluginVersion),
+        /// so they are immutable for a given version and safe to cache indefinitely.
+        /// </summary>
         private ActionResult GetScriptResource(string resourcePath)
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Jellyfin.Plugin.JellyfinEnhanced.{resourcePath.Replace('/', '.')}");
-            return stream == null ? NotFound() : new FileStreamResult(stream, "application/javascript");
+            if (stream == null)
+            {
+                return NotFound();
+            }
+
+            // Cache immutably — the client uses ?v={pluginVersion} to bust cache on updates
+            Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+            var version = JellyfinEnhanced.Instance?.Version?.ToString() ?? "unknown";
+            Response.Headers["ETag"] = $"\"{version}\"";
+
+            return new FileStreamResult(stream, "application/javascript");
         }
 
         private IActionResult? AuthorizeUserConfigAccess(string requestedUserId, out string authorizedUserId)
