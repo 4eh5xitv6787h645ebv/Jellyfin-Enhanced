@@ -882,35 +882,11 @@
             });
         }
 
-        /**
-         * Sets up handlers to detect page navigation and trigger a re-scan.
-         */
-        function setupNavigationHandlers() {
-            let currentUrl = window.location.href;
-            const handleNavigation = () => {
-                // Use a short delay to allow the new page's DOM to settle.
-                setTimeout(() => {
-                    if (window.location.href !== currentUrl) {
-                        currentUrl = window.location.href;
-                        // Check if feature is still enabled before processing
-                        if (!JE.currentSettings?.qualityTagsEnabled) {
-                            return;
-                        }
-                        processedElements = new WeakSet(); // Reset processed elements on navigation
-                        requestQueue.length = 0;
-                        debouncedRender();
-                    }
-                }, 500);
-            };
-
-            // Monkey-patch history API to detect SPA navigation
-            const originalPushState = history.pushState;
-            history.pushState = function (...args) {
-                originalPushState.apply(this, args);
-                handleNavigation();
-            };
-            window.addEventListener('popstate', handleNavigation);
-        }
+        // Navigation detection removed — the MutationObserver on document.body
+        // (registered in initialize()) already detects all DOM changes from SPA
+        // navigation and triggers debouncedRender(). The WeakSet for processedElements
+        // naturally releases references to GC'd DOM nodes after navigation.
+        // This matches the pattern used by genre, language, people, and rating tags.
 
         /**
          * Injects the necessary CSS for styling the tags into the document head.
@@ -1030,7 +1006,6 @@
         function initialize() {
             cleanupOldCaches();
             addEnhancedStyles();
-            setupNavigationHandlers();
             setTimeout(renderVisibleTags, 1000); // Initial run after page load
 
             // Use centralized observer management from helpers
