@@ -101,19 +101,20 @@
     /**
      * Cache key derived from the plugin version attribute injected into the
      * script tag by the C# backend (e.g. version="11.0.0.0").
-     * Falls back to a one-time Date.now() if the attribute is missing.
-     * Using a stable version string allows browsers to cache JS assets across
-     * page loads — cache is only busted when the plugin DLL is updated.
+     * Falls back to a one-time Date.now() if attributes are missing.
+     * Using version + instance keeps browser caches stable across page loads
+     * while still busting on plugin updates OR server restarts.
      * @type {string}
      */
     const CACHE_VERSION = (() => {
         try {
             const tag = document.querySelector('script[plugin="Jellyfin Enhanced"]');
             const version = tag && tag.getAttribute('version');
-            if (!version) {
-                console.warn('🪼 Jellyfin Enhanced: Version attribute missing from script tag — caching disabled for this session.');
+            const instance = tag && tag.getAttribute('instance');
+            if (!version || !instance) {
+                console.warn('🪼 Jellyfin Enhanced: Version/instance attributes missing from script tag — caching disabled for this session.');
             }
-            return version || String(Date.now());
+            return (version && instance) ? `${version}-${instance}` : String(Date.now());
         } catch (_) {
             return String(Date.now());
         }

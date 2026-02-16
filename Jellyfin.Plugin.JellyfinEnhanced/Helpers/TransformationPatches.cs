@@ -20,7 +20,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             var pluginVersion = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown";
 
             var scriptUrl = "../JellyfinEnhanced/script";
-            var scriptTag = $"<script plugin=\"{pluginName}\" version=\"{pluginVersion}\" src=\"{scriptUrl}\" defer></script>";
+            var startupToken = JellyfinEnhanced.StartupToken;
+            var scriptTag = $"<script plugin=\"{pluginName}\" version=\"{pluginVersion}\" instance=\"{startupToken}\" src=\"{scriptUrl}\" defer></script>";
 
             var regex = new Regex($"<script[^>]*plugin=[\"']{pluginName}[\"'][^>]*>\\s*</script>\\n?");
             var updatedContent = regex.Replace(content.Contents, string.Empty);

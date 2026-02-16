@@ -1504,7 +1504,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // Locale files are embedded in the DLL — cache until plugin version changes
             Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
             var version = JellyfinEnhanced.Instance?.Version?.ToString() ?? "unknown";
-            Response.Headers["ETag"] = $"\"{version}\"";
+            Response.Headers["ETag"] = $"\"{version}-{JellyfinEnhanced.StartupToken}\"";
 
             return new FileStreamResult(stream, "application/json");
         }
@@ -1525,7 +1525,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // Cache immutably — the client uses ?v={pluginVersion} to bust cache on updates
             Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
             var version = JellyfinEnhanced.Instance?.Version?.ToString() ?? "unknown";
-            Response.Headers["ETag"] = $"\"{version}\"";
+            Response.Headers["ETag"] = $"\"{version}-{JellyfinEnhanced.StartupToken}\"";
 
             return new FileStreamResult(stream, "application/javascript");
         }
