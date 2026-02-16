@@ -28,11 +28,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         private readonly Logger _logger;
         private const string PluginName = "Jellyfin Enhanced";
 
-        /// <summary>
-        /// Unix-second timestamp captured once when the plugin class is first loaded.
-        /// Appended to the script tag so browsers bust their cache on server restart
-        /// even when the plugin version hasn't changed.
-        /// </summary>
         public static readonly string StartupToken = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
 
         public JellyfinEnhanced(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, IXmlSerializer xmlSerializer, Logger logger) : base(applicationPaths, xmlSerializer)

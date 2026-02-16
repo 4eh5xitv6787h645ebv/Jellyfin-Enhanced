@@ -882,12 +882,6 @@
             });
         }
 
-        // Navigation detection removed — the MutationObserver on document.body
-        // (registered in initialize()) already detects all DOM changes from SPA
-        // navigation and triggers debouncedRender(). The WeakSet for processedElements
-        // naturally releases references to GC'd DOM nodes after navigation.
-        // This matches the pattern used by genre, language, people, and rating tags.
-
         /**
          * Injects the necessary CSS for styling the tags into the document head.
          */

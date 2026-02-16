@@ -98,14 +98,8 @@
 
     const JE = window.JellyfinEnhanced; // Alias for internal use
 
-    /**
-     * Cache key derived from the plugin version attribute injected into the
-     * script tag by the C# backend (e.g. version="11.0.0.0").
-     * Falls back to a one-time Date.now() if attributes are missing.
-     * Using version + instance keeps browser caches stable across page loads
-     * while still busting on plugin updates OR server restarts.
-     * @type {string}
-     */
+    // Stable cache key from the script tag's version + instance attributes.
+    // Busts on plugin update or server restart; falls back to Date.now().
     const CACHE_VERSION = (() => {
         try {
             const tag = document.querySelector('script[plugin="Jellyfin Enhanced"]');
@@ -120,17 +114,10 @@
         }
     })();
 
-    /**
-     * Shared promise for the public-config endpoint.
-     * Prevents duplicate fetches when both loadLoginImageEarly() and
-     * loadPluginData() need the same configuration data.
-     * @type {Promise<object>|null}
-     */
     let sharedConfigPromise = null;
 
     /**
      * Returns a shared promise for the public plugin configuration.
-     * Creates the fetch on first call; subsequent calls reuse the same promise.
      * @returns {Promise<object>} The public config object.
      */
     function getSharedPublicConfig() {
@@ -141,8 +128,8 @@
                 dataType: 'json'
             }).catch((e) => {
                 console.error("🪼 Jellyfin Enhanced: Failed to fetch public config", e);
-                sharedConfigPromise = null; // Clear so next caller can retry
-                return {}; // Return empty object for this call
+                sharedConfigPromise = null;
+                return {};
             });
         }
         return sharedConfigPromise;
@@ -237,7 +224,6 @@
 
      /**
      * Fetches plugin configuration and version from the server.
-     * Reuses the shared public-config promise to avoid duplicate requests.
      * @returns {Promise<[object, string]>} A promise that resolves with config and version.
      */
      function loadPluginData() {
@@ -321,7 +307,6 @@
 
     /**
      * Loads the login image script early (checks config first).
-     * Uses the shared config promise to avoid a duplicate /public-config fetch.
      */
     function loadLoginImageEarly() {
         if (typeof ApiClient === 'undefined') {
@@ -329,9 +314,7 @@
             return;
         }
 
-        // Reuse the shared config promise instead of making a separate fetch
         getSharedPublicConfig().then((config) => {
-            // Only load if enabled (default to false)
             if (config?.EnableLoginImage === true) {
                 const loginImageScript = document.createElement('script');
                 loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + CACHE_VERSION);
@@ -372,10 +355,6 @@
     let mismatchRetryCount = 0;
     const MAX_MISMATCH_RETRIES = 100; // ~30s at 300ms intervals
 
-    /**
-     * Default values for each user-settings file when a fetch fails or returns empty.
-     * @type {Object<string, object>}
-     */
     const USER_CONFIG_DEFAULTS = {
         settings: {},
         shortcuts: { Shortcuts: [] },
@@ -386,15 +365,12 @@
 
     /**
      * Fetches all user-specific settings files in parallel.
-     * Returns a merged userConfig object with defaults for any missing/failed fetches.
-     * User-settings are mutable and use Date.now() cache-busters to avoid stale data.
      * @param {string} userId - The Jellyfin user ID.
      * @returns {Promise<object>} The merged user configuration.
      */
     async function fetchUserSettings(userId) {
         const fileNames = ['settings', 'shortcuts', 'bookmark', 'elsewhere', 'hidden-content'];
         const configKeys = ['settings', 'shortcuts', 'bookmark', 'elsewhere', 'hiddenContent'];
-        // Keys that need PascalCase-to-camelCase conversion
         const camelCaseKeys = new Set(['settings', 'bookmark', 'hiddenContent']);
 
         const fetchPromises = fileNames.map((fileName, i) =>
@@ -416,7 +392,6 @@
             if (status === 'fulfilled' && value && typeof value === 'object') {
                 userConfig[key] = camelCaseKeys.has(key) ? toCamelCase(value) : value;
             }
-            // On rejection or missing data, defaults from USER_CONFIG_DEFAULTS apply
         });
 
         return userConfig;
@@ -424,15 +399,10 @@
 
     /**
      * Builds the component script list based on plugin configuration flags.
-     * Core modules (config, helpers, UI, playback, etc.) always load.
-     * Optional modules (Jellyseerr, arr, elsewhere, extras) only load when their
-     * server-side feature flags are enabled, avoiding unnecessary downloads.
-     * Tag scripts always load since they are gated by user-level settings at init time.
      * @param {object} cfg - The plugin configuration object (JE.pluginConfig).
      * @returns {string[]} Array of script paths relative to /JellyfinEnhanced/js/.
      */
     function buildScriptList(cfg) {
-        // Core scripts — always loaded (infrastructure + always-initialized features)
         const scripts = [
             'enhanced/config.js',
             'enhanced/helpers.js',
@@ -448,7 +418,6 @@
             'enhanced/osd-rating.js',
             'enhanced/pausescreen.js',
 
-            // Tags always load — gated at user-settings level during init, not here
             'tags/genretags.js',
             'tags/languagetags.js',
             'tags/peopletags.js',
@@ -456,7 +425,6 @@
             'tags/ratingtags.js',
         ];
 
-        // Hidden content — gated on server config
         if (cfg.HiddenContentEnabled) {
             scripts.push(
                 'enhanced/hidden-content.js',
@@ -465,7 +433,6 @@
             );
         }
 
-        // Elsewhere — gated on server config
         if (cfg.ElsewhereEnabled) {
             scripts.push('elsewhere/elsewhere.js');
         }
@@ -473,7 +440,6 @@
             scripts.push('elsewhere/reviews.js');
         }
 
-        // Jellyseerr — gated on server config (largest optional group: ~544 KB)
         if (cfg.JellyseerrEnabled) {
             scripts.push(
                 'jellyseerr/api.js',
@@ -494,7 +460,6 @@
             );
         }
 
-        // Arr links — gated individually
         if (cfg.ArrLinksEnabled) {
             scripts.push('arr/arr-links.js');
         }
@@ -502,7 +467,6 @@
             scripts.push('arr/arr-tag-links.js');
         }
 
-        // Arr calendar/requests pages
         if (cfg.CalendarPageEnabled) {
             scripts.push(
                 'arr/requests-page.js',
@@ -512,7 +476,6 @@
             );
         }
 
-        // Extras — each gated on its own flag
         if (cfg.ColoredActivityIconsEnabled) {
             scripts.push('extras/colored-activity-icons.js');
         }
@@ -526,7 +489,6 @@
             scripts.push('extras/theme-selector.js');
         }
 
-        // Others
         if (cfg.LetterboxdEnabled) {
             scripts.push('others/letterboxd-links.js');
         }
@@ -562,9 +524,6 @@
         try {
             const userId = ApiClient.getCurrentUserId();
 
-            // Stage 1 + Stage 2 run in parallel:
-            // - Stage 1 loads translations module, plugin config, and translations
-            // - Stage 2 fetches user-specific settings (only needs userId, not config)
             const userSettingsPromise = fetchUserSettings(userId);
 
             await loadTranslationsModule();
@@ -603,7 +562,6 @@
                 console.warn('🪼 Jellyfin Enhanced: Failed to inject Metadata icons CSS', e);
             }
 
-            // Await user settings (started in parallel with Stage 1)
             JE.userConfig = await userSettingsPromise;
 
             // Initialize splash screen
@@ -611,7 +569,6 @@
                 JE.initializeSplashScreen();
             }
 
-            // Stage 3: Load component scripts — only load modules for enabled features
             const basePath = '/JellyfinEnhanced/js';
             const componentScripts = buildScriptList(JE.pluginConfig);
             await loadScripts(componentScripts, basePath);
