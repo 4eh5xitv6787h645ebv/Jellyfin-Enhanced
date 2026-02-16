@@ -372,6 +372,168 @@
     const MAX_MISMATCH_RETRIES = 100; // ~30s at 300ms intervals
 
     /**
+     * Default values for each user-settings file when a fetch fails or returns empty.
+     * @type {Object<string, object>}
+     */
+    const USER_CONFIG_DEFAULTS = {
+        settings: {},
+        shortcuts: { Shortcuts: [] },
+        bookmark: { bookmarks: {} },
+        elsewhere: {},
+        hiddenContent: { items: {}, settings: {} }
+    };
+
+    /**
+     * Fetches all user-specific settings files in parallel.
+     * Returns a merged userConfig object with defaults for any missing/failed fetches.
+     * User-settings are mutable and use Date.now() cache-busters to avoid stale data.
+     * @param {string} userId - The Jellyfin user ID.
+     * @returns {Promise<object>} The merged user configuration.
+     */
+    async function fetchUserSettings(userId) {
+        const fileNames = ['settings', 'shortcuts', 'bookmark', 'elsewhere', 'hidden-content'];
+        const configKeys = ['settings', 'shortcuts', 'bookmark', 'elsewhere', 'hiddenContent'];
+        // Keys that need PascalCase-to-camelCase conversion
+        const camelCaseKeys = new Set(['settings', 'bookmark', 'hiddenContent']);
+
+        const fetchPromises = fileNames.map((fileName, i) =>
+            ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/${fileName}.json?_=${Date.now()}`),
+                dataType: 'json'
+            })
+            .then(data => ({ key: configKeys[i], status: 'fulfilled', value: data }))
+            .catch(() => ({ key: configKeys[i], status: 'rejected' }))
+        );
+
+        const results = await Promise.allSettled(fetchPromises);
+        const userConfig = { ...USER_CONFIG_DEFAULTS };
+
+        results.forEach(result => {
+            if (result.status !== 'fulfilled') return;
+            const { key, status, value } = result.value;
+            if (status === 'fulfilled' && value && typeof value === 'object') {
+                userConfig[key] = camelCaseKeys.has(key) ? toCamelCase(value) : value;
+            }
+            // On rejection or missing data, defaults from USER_CONFIG_DEFAULTS apply
+        });
+
+        return userConfig;
+    }
+
+    /**
+     * Builds the component script list based on plugin configuration flags.
+     * Core modules (config, helpers, UI, playback, etc.) always load.
+     * Optional modules (Jellyseerr, arr, elsewhere, extras) only load when their
+     * server-side feature flags are enabled, avoiding unnecessary downloads.
+     * Tag scripts always load since they are gated by user-level settings at init time.
+     * @param {object} cfg - The plugin configuration object (JE.pluginConfig).
+     * @returns {string[]} Array of script paths relative to /JellyfinEnhanced/js/.
+     */
+    function buildScriptList(cfg) {
+        // Core scripts — always loaded (infrastructure + always-initialized features)
+        const scripts = [
+            'enhanced/config.js',
+            'enhanced/helpers.js',
+            'enhanced/icons.js',
+            'enhanced/features.js',
+            'enhanced/events.js',
+            'enhanced/playback.js',
+            'enhanced/subtitles.js',
+            'enhanced/themer.js',
+            'enhanced/ui.js',
+            'enhanced/bookmarks.js',
+            'enhanced/bookmarks-library.js',
+            'enhanced/osd-rating.js',
+            'enhanced/pausescreen.js',
+
+            // Tags always load — gated at user-settings level during init, not here
+            'tags/genretags.js',
+            'tags/languagetags.js',
+            'tags/peopletags.js',
+            'tags/qualitytags.js',
+            'tags/ratingtags.js',
+        ];
+
+        // Hidden content — gated on server config
+        if (cfg.HiddenContentEnabled) {
+            scripts.push(
+                'enhanced/hidden-content.js',
+                'enhanced/hidden-content-page.js',
+                'enhanced/hidden-content-custom-tab.js'
+            );
+        }
+
+        // Elsewhere — gated on server config
+        if (cfg.ElsewhereEnabled) {
+            scripts.push('elsewhere/elsewhere.js');
+        }
+        if (cfg.ShowReviews) {
+            scripts.push('elsewhere/reviews.js');
+        }
+
+        // Jellyseerr — gated on server config (largest optional group: ~544 KB)
+        if (cfg.JellyseerrEnabled) {
+            scripts.push(
+                'jellyseerr/api.js',
+                'jellyseerr/jellyseerr.js',
+                'jellyseerr/request-manager.js',
+                'jellyseerr/ui.js',
+                'jellyseerr/modal.js',
+                'jellyseerr/more-info-modal.js',
+                'jellyseerr/hss-discovery-handler.js',
+                'jellyseerr/item-details.js',
+                'jellyseerr/issue-reporter.js',
+                'jellyseerr/seamless-scroll.js',
+                'jellyseerr/discovery-filter-utils.js',
+                'jellyseerr/network-discovery.js',
+                'jellyseerr/person-discovery.js',
+                'jellyseerr/genre-discovery.js',
+                'jellyseerr/tag-discovery.js'
+            );
+        }
+
+        // Arr links — gated individually
+        if (cfg.ArrLinksEnabled) {
+            scripts.push('arr/arr-links.js');
+        }
+        if (cfg.ArrTagsShowAsLinks) {
+            scripts.push('arr/arr-tag-links.js');
+        }
+
+        // Arr calendar/requests pages
+        if (cfg.CalendarPageEnabled) {
+            scripts.push(
+                'arr/requests-page.js',
+                'arr/calendar-page.js',
+                'arr/requests-custom-tab.js',
+                'arr/calendar-custom-tab.js'
+            );
+        }
+
+        // Extras — each gated on its own flag
+        if (cfg.ColoredActivityIconsEnabled) {
+            scripts.push('extras/colored-activity-icons.js');
+        }
+        if (cfg.ColoredRatingsEnabled) {
+            scripts.push('extras/colored-ratings.js');
+        }
+        if (cfg.PluginIconsEnabled) {
+            scripts.push('extras/plugin-icons.js');
+        }
+        if (cfg.ThemeSelectorEnabled) {
+            scripts.push('extras/theme-selector.js');
+        }
+
+        // Others
+        if (cfg.LetterboxdEnabled) {
+            scripts.push('others/letterboxd-links.js');
+        }
+
+        return scripts;
+    }
+
+    /**
      * Main initialization function.
      */
     async function initialize() {
@@ -397,11 +559,17 @@
         mismatchRetryCount = 0;
 
         try {
-            // Stage 1: Load base configs and translations
+            const userId = ApiClient.getCurrentUserId();
+
+            // Stage 1 + Stage 2 run in parallel:
+            // - Stage 1 loads translations module, plugin config, and translations
+            // - Stage 2 fetches user-specific settings (only needs userId, not config)
+            const userSettingsPromise = fetchUserSettings(userId);
+
             await loadTranslationsModule();
             const [[config, version], translations] = await Promise.all([
                 loadPluginData(),
-                loadTranslations() // Load translations first
+                loadTranslations()
             ]);
 
             JE.pluginConfig = config && typeof config === 'object' ? config : {};
@@ -434,137 +602,19 @@
                 console.warn('🪼 Jellyfin Enhanced: Failed to inject Metadata icons CSS', e);
             }
 
-            // Stage 2: Fetch user-specific settings
-            const userId = ApiClient.getCurrentUserId();
-
-            const fetchPromises = [
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/settings.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'settings', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'settings', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/shortcuts.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'shortcuts', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'shortcuts', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/bookmark.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'bookmark', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'bookmark', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/elsewhere.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'elsewhere', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'elsewhere', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/hidden-content.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'hiddenContent', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'hiddenContent', status: 'rejected', reason: e }))
-            ];
-            // Use allSettled to get results even if some fetches fail
-            const results = await Promise.allSettled(fetchPromises);
-
-            JE.userConfig = { settings: {}, shortcuts: { Shortcuts: [] }, bookmark: { bookmarks: {} }, elsewhere: {}, hiddenContent: { items: {}, settings: {} } };
-            results.forEach(result => {
-                if (result.status === 'fulfilled' && result.value) {
-                    const data = result.value;
-                    if (data.status === 'fulfilled' && data.value && typeof data.value === 'object') {
-                        // *** CONVERT PASCALCASE TO CAMELCASE ***
-                        if (data.name === 'settings' || data.name === 'bookmark' || data.name === 'hiddenContent') {
-                            JE.userConfig[data.name] = toCamelCase(data.value);
-                        } else {
-                            JE.userConfig[data.name] = data.value;
-                        }
-                    } else if (data.status === 'rejected') {
-                        if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                        else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
-                        else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
-                        else if (data.name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
-                        else JE.userConfig[data.name] = {};
-                    } else {
-                        if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                        else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
-                        else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
-                        else if (data.name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
-                        else JE.userConfig[data.name] = {};
-                    }
-                } else {
-                    const name = result.value?.name || result.reason?.name || '';
-                    if (name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                    else if (name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
-                    else if (name === 'elsewhere') JE.userConfig.elsewhere = {};
-                    else if (name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
-                    else if (name) JE.userConfig[name] = {};
-                }
-            });
-
+            // Await user settings (started in parallel with Stage 1)
+            JE.userConfig = await userSettingsPromise;
 
             // Initialize splash screen
             if (typeof JE.initializeSplashScreen === 'function') {
                 JE.initializeSplashScreen();
             }
 
-            // Stage 3: Load ALL component scripts
+            // Stage 3: Load component scripts — only load modules for enabled features
             const basePath = '/JellyfinEnhanced/js';
-            const allComponentScripts = [
-                // enhanced
-                'enhanced/config.js',
-                'enhanced/helpers.js',
-                'enhanced/icons.js',
-                'enhanced/features.js',
-                'enhanced/events.js',
-                'enhanced/playback.js',
-                'enhanced/hidden-content.js',
-                'enhanced/hidden-content-page.js',
-                'enhanced/hidden-content-custom-tab.js',
-                'enhanced/subtitles.js',
-                'enhanced/themer.js',
-                'enhanced/ui.js',
-                'enhanced/bookmarks.js',
-                'enhanced/bookmarks-library.js',
-                'enhanced/osd-rating.js',
-                'enhanced/pausescreen.js',
-
-                // elsewhere
-                'elsewhere/elsewhere.js',
-                'elsewhere/reviews.js',
-
-                // jellyseerr
-                'jellyseerr/api.js',
-                'jellyseerr/jellyseerr.js',
-                'jellyseerr/request-manager.js',
-                'jellyseerr/ui.js',
-                'jellyseerr/modal.js',
-                'jellyseerr/more-info-modal.js',
-                'jellyseerr/hss-discovery-handler.js',
-                'jellyseerr/item-details.js',
-                'jellyseerr/issue-reporter.js',
-                'jellyseerr/seamless-scroll.js',
-                'jellyseerr/discovery-filter-utils.js',
-                'jellyseerr/network-discovery.js',
-                'jellyseerr/person-discovery.js',
-                'jellyseerr/genre-discovery.js',
-                'jellyseerr/tag-discovery.js',
-
-                // tags
-                'tags/genretags.js',
-                'tags/languagetags.js',
-                'tags/peopletags.js',
-                'tags/qualitytags.js',
-                'tags/ratingtags.js',
-
-                // arr
-                'arr/arr-links.js',
-                'arr/arr-tag-links.js',
-                'arr/requests-page.js',
-                'arr/calendar-page.js',
-                'arr/requests-custom-tab.js',
-                'arr/calendar-custom-tab.js',
-
-                // extras
-                'extras/colored-activity-icons.js',
-                'extras/colored-ratings.js',
-                'extras/plugin-icons.js',
-                'extras/theme-selector.js',
-
-                // others
-                'others/letterboxd-links.js',
-            ];
-            await loadScripts(allComponentScripts, basePath);
-            console.log('🪼 Jellyfin Enhanced: All component scripts loaded.');
+            const componentScripts = buildScriptList(JE.pluginConfig);
+            await loadScripts(componentScripts, basePath);
+            console.log(`🪼 Jellyfin Enhanced: ${componentScripts.length} component scripts loaded.`);
 
             // Stage 4: Initialize core settings/shortcuts using potentially defined functions
             if (typeof JE.loadSettings === 'function' && typeof JE.initializeShortcuts === 'function') {
