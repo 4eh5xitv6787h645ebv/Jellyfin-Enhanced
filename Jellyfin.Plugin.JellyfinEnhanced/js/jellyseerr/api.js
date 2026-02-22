@@ -125,6 +125,7 @@
      */
     api.clearUserStatusCache = function() {
         cachedUserStatus = null;
+        cachedJellyseerrUserId = undefined;
     };
 
     /**
@@ -222,26 +223,36 @@
         }
     };
 
+    // Cache for current Jellyseerr user ID (avoids repeated user list fetches)
+    let cachedJellyseerrUserId = undefined; // undefined = not fetched, null = not found
+
     /**
      * Gets the current Jellyseerr user ID from the user status.
+     * Caches the result to avoid repeated API calls.
      * @returns {Promise<string|null>} - Jellyseerr user ID or null if not found.
      */
     api.getCurrentJellyseerrUserId = async function() {
+        // Return cached result if available
+        if (cachedJellyseerrUserId !== undefined) {
+            return cachedJellyseerrUserId;
+        }
+
         try {
-            // We can get this from the existing user-status endpoint
             const status = await get('/user-status');
             if (status && status.userFound) {
-                // We need to fetch the actual user ID - let's get it from the users endpoint
                 const users = await get('/user?take=1000');
                 if (users && users.results) {
                     const jellyfinUserId = ApiClient.getCurrentUserId();
                     const matchingUser = users.results.find(u => u.jellyfinUserId === jellyfinUserId);
-                    return matchingUser ? matchingUser.id.toString() : null;
+                    cachedJellyseerrUserId = matchingUser ? matchingUser.id.toString() : null;
+                    return cachedJellyseerrUserId;
                 }
             }
+            cachedJellyseerrUserId = null;
             return null;
         } catch (error) {
             console.warn(`${logPrefix} Failed to get current Jellyseerr user ID:`, error);
+            cachedJellyseerrUserId = null;
             return null;
         }
     };
@@ -512,22 +523,23 @@
         try {
             const servers = await get(`/${serverType}`);
             const serverList = Array.isArray(servers) ? servers : [servers];
-            const validServers = [];
+            const validServerCandidates = serverList.filter(s => s && typeof s.id === 'number');
 
-            for (const server of serverList) {
-                if (!server || typeof server.id !== 'number') continue;
+            // Fetch all server details in parallel instead of sequentially
+            const detailPromises = validServerCandidates.map(async (server) => {
                 try {
                     const details = await get(`/${serverType}/${server.id}`);
                     server.qualityProfiles = details.profiles || [];
                     server.rootFolders = details.rootFolders || [];
-                    validServers.push(server);
                 } catch (e) {
                     console.error(`${logPrefix} Could not fetch details for ${serverType} server ID ${server.id}:`, e);
                     server.qualityProfiles = [];
                     server.rootFolders = [];
-                    validServers.push(server);
                 }
-            }
+                return server;
+            });
+
+            const validServers = await Promise.all(detailPromises);
             return { servers: validServers, tags: [] };
         } catch (error) {
             console.error(`${logPrefix} Failed to fetch ${serverType} servers:`, error);

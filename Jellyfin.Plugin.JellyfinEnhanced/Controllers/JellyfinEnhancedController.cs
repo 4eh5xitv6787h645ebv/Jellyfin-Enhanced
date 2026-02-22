@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -25,6 +26,7 @@ using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
@@ -48,6 +50,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly UserConfigurationManager _userConfigurationManager;
         private readonly IItemRepository _itemRepository;
         private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
+        private readonly JellyseerrUserCacheService _userCacheService;
+
+        // Server-side response cache for proxied GET requests
+        private static readonly ConcurrentDictionary<string, (string Content, DateTime Expiry)> _proxyResponseCache = new();
+        private static readonly TimeSpan ServiceCacheTtl = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan MediaDetailsCacheTtl = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan SettingsCacheTtl = TimeSpan.FromMinutes(10);
+
         private static readonly HashSet<string> BrandingFileNames = new(new[]
         {
             "icon-transparent.png",
@@ -66,7 +76,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             IDtoService dtoService,
             UserConfigurationManager userConfigurationManager,
             IItemRepository itemRepository,
-            IDbContextFactory<JellyfinDbContext> dbContextFactory)
+            IDbContextFactory<JellyfinDbContext> dbContextFactory,
+            JellyseerrUserCacheService userCacheService)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -77,6 +88,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _userConfigurationManager = userConfigurationManager;
             _itemRepository = itemRepository;
             _dbContextFactory = dbContextFactory;
+            _userCacheService = userCacheService;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId)
@@ -88,54 +100,27 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return null;
             }
 
-            // _logger.Info($"Attempting to find Jellyseerr user for Jellyfin User ID: {jellyfinUserId}");
-            var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = _httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
-
-            foreach (var url in urls)
+            var jellyseerrUrl = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
+            if (string.IsNullOrEmpty(jellyseerrUrl))
             {
-                try
-                {
-                    var requestUri = $"{url.Trim().TrimEnd('/')}/api/v1/user?take=1000"; // Fetch all users to find a match
-                    // _logger.Info($"Requesting users from Jellyseerr URL: {requestUri}");
-                    var response = await httpClient.GetAsync(requestUri);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var content = await response.Content.ReadAsStringAsync();
-                        var usersResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
-                        if (usersResponse.TryGetProperty("results", out var usersArray))
-                        {
-                            var users = System.Text.Json.JsonSerializer.Deserialize<List<JellyseerrUser>>(usersArray.ToString());
-                            // _logger.Info($"Found {users?.Count ?? 0} users at {url.Trim()}");
-                            var normalizedJellyfinUserId = jellyfinUserId.Replace("-", "");
-                            var user = users?.FirstOrDefault(u => string.Equals(u.JellyfinUserId, normalizedJellyfinUserId, StringComparison.OrdinalIgnoreCase));
-                            if (user != null)
-                            {
-                                // _logger.Info($"Found Jellyseerr user ID {user.Id} for Jellyfin user ID {jellyfinUserId} at {url.Trim()}");
-                                return user;
-                            }
-                            else
-                            {
-                                _logger.Info($"No matching Jellyfin User ID found in the {users?.Count ?? 0} users from {url.Trim()}");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        var errorContent = await response.Content.ReadAsStringAsync();
-                        _logger.Warning($"Failed to fetch users from Jellyseerr at {url}. Status: {response.StatusCode}. Response: {errorContent}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error($"Exception while trying to get Jellyseerr user ID from {url}: {ex.Message}");
-                }
+                return null;
             }
 
-            _logger.Warning($"Could not find a matching Jellyseerr user for Jellyfin User ID {jellyfinUserId} after checking all URLs.");
-            return null;
+            // Use the shared user cache instead of making a direct API call
+            var cachedUser = await _userCacheService.GetJellyseerrUserAsync(jellyseerrUrl, config.JellyseerrApiKey, jellyfinUserId);
+            if (cachedUser == null)
+            {
+                _logger.Warning($"Could not find a matching Jellyseerr user for Jellyfin User ID {jellyfinUserId}.");
+                return null;
+            }
+
+            // Convert CachedJellyseerrUser to JellyseerrUser model
+            return new JellyseerrUser
+            {
+                Id = cachedUser.JellyseerrId,
+                JellyfinUserId = cachedUser.JellyfinUserId,
+                Permissions = (JellyseerrPermission)cachedUser.Permissions
+            };
         }
 
         private async Task<string?> GetJellyseerrUserId(string jellyfinUserId)
@@ -236,6 +221,43 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             return StatusCode(lastStatusCode, lastErrorContent);
+        }
+
+        // Cached version of ProxyJellyseerrRequest for GET-only semi-static data.
+        // Uses a shared ConcurrentDictionary cache with configurable TTL.
+        private async Task<IActionResult> CachedProxyJellyseerrRequest(string apiPath, TimeSpan cacheTtl)
+        {
+            var cacheKey = $"proxy:{apiPath}";
+
+            // Check cache
+            if (_proxyResponseCache.TryGetValue(cacheKey, out var cached) && DateTime.UtcNow < cached.Expiry)
+            {
+                return Content(cached.Content, "application/json");
+            }
+
+            // Cache miss - make the actual request
+            var result = await ProxyJellyseerrRequest(apiPath, HttpMethod.Get);
+
+            // Cache successful responses
+            if (result is ContentResult contentResult && contentResult.StatusCode is null or >= 200 and < 300)
+            {
+                _proxyResponseCache[cacheKey] = (contentResult.Content ?? "", DateTime.UtcNow.Add(cacheTtl));
+
+                // Evict expired entries periodically (every ~50 entries)
+                if (_proxyResponseCache.Count > 50)
+                {
+                    var now = DateTime.UtcNow;
+                    foreach (var key in _proxyResponseCache.Keys.ToArray())
+                    {
+                        if (_proxyResponseCache.TryGetValue(key, out var entry) && now >= entry.Expiry)
+                        {
+                            _proxyResponseCache.TryRemove(key, out _);
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
 
         [HttpGet("jellyseerr/status")]
@@ -345,21 +367,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> GetSonarrInstances()
         {
-            return ProxyJellyseerrRequest("/api/v1/service/sonarr", HttpMethod.Get);
+            return CachedProxyJellyseerrRequest("/api/v1/service/sonarr", ServiceCacheTtl);
         }
 
         [HttpGet("jellyseerr/radarr")]
         [Authorize]
         public Task<IActionResult> GetRadarrInstances()
         {
-            return ProxyJellyseerrRequest("/api/v1/service/radarr", HttpMethod.Get);
+            return CachedProxyJellyseerrRequest("/api/v1/service/radarr", ServiceCacheTtl);
         }
 
         [HttpGet("jellyseerr/{type}/{serverId}")]
         [Authorize]
         public Task<IActionResult> GetServiceDetails(string type, int serverId)
         {
-            return ProxyJellyseerrRequest($"/api/v1/service/{type}/{serverId}", HttpMethod.Get);
+            return CachedProxyJellyseerrRequest($"/api/v1/service/{type}/{serverId}", ServiceCacheTtl);
         }
 
         [HttpPost("jellyseerr/request")]
@@ -801,7 +823,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> GetOverrideRules()
         {
-            return ProxyJellyseerrRequest("/api/v1/overrideRule", HttpMethod.Get);
+            return CachedProxyJellyseerrRequest("/api/v1/overrideRule", TimeSpan.FromMinutes(5));
         }
 
         [HttpGet("jellyseerr/collection/{collectionId}")]
@@ -1174,6 +1196,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             public string MediaType { get; set; } = "movie";
         }
 
+        // Cached partial requests setting
+        private static bool? _cachedPartialRequestsSetting;
+        private static DateTime _partialRequestsCacheExpiry = DateTime.MinValue;
+
         [HttpGet("jellyseerr/settings/partial-requests")]
         [Authorize]
         public async Task<IActionResult> GetJellyseerrPartialRequestsSetting()
@@ -1183,6 +1209,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 _logger.Warning("Jellyseerr integration is not configured or enabled.");
                 return Ok(new { partialRequestsEnabled = false });
+            }
+
+            // Check cache first
+            if (_cachedPartialRequestsSetting.HasValue && DateTime.UtcNow < _partialRequestsCacheExpiry)
+            {
+                return Ok(new { partialRequestsEnabled = _cachedPartialRequestsSetting.Value });
             }
 
             var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1202,13 +1234,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                     if (response.IsSuccessStatusCode)
                     {
-                        // Parse the full settings response but only extract the partialRequestsEnabled field
                         var settings = JsonDocument.Parse(responseContent);
                         var partialRequestsEnabled = false;
                         if (settings.RootElement.TryGetProperty("partialRequestsEnabled", out var prop))
                         {
                             partialRequestsEnabled = prop.GetBoolean();
                         }
+
+                        // Cache the result
+                        _cachedPartialRequestsSetting = partialRequestsEnabled;
+                        _partialRequestsCacheExpiry = DateTime.UtcNow.Add(SettingsCacheTtl);
 
                         _logger.Info($"Jellyseerr partial requests setting: {partialRequestsEnabled}");
                         return Ok(new { partialRequestsEnabled });

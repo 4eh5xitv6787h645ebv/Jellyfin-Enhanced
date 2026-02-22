@@ -14,6 +14,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<StartupService>();
             serviceCollection.AddHttpClient();
             serviceCollection.AddSingleton<Logger>();
+            serviceCollection.AddSingleton<JellyseerrUserCacheService>();
             serviceCollection.AddSingleton<UserConfigurationManager>();
             serviceCollection.AddSingleton<AutoSeasonRequestService>();
             serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();

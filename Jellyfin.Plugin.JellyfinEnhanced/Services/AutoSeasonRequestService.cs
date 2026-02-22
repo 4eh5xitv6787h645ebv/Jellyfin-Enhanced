@@ -20,19 +20,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
+        private readonly JellyseerrUserCacheService _userCacheService;
+
+        // Cache for TV show data from Jellyseerr to avoid duplicate fetches
+        private readonly Dictionary<string, (JsonDocument Doc, DateTime Expiry)> _tvShowCache = new();
+        private static readonly TimeSpan TvShowCacheTtl = TimeSpan.FromMinutes(5);
 
         public AutoSeasonRequestService(
             IHttpClientFactory httpClientFactory,
             Logger logger,
             IUserManager userManager,
             IUserDataManager userDataManager,
-            ILibraryManager libraryManager)
+            ILibraryManager libraryManager,
+            JellyseerrUserCacheService userCacheService)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _userManager = userManager;
             _userDataManager = userDataManager;
             _libraryManager = libraryManager;
+            _userCacheService = userCacheService;
         }
 
         // Checks a completed episode to determine if next season should be requested.
@@ -207,78 +214,112 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
         }
 
-        // Gets the total number of episodes in a season from TMDB
-        private async Task<int?> GetTotalEpisodesInSeasonFromTmdb(string tmdbId, int seasonNumber)
+        // Fetches TV show data from Jellyseerr with caching to prevent duplicate requests.
+        private async Task<JsonElement?> GetCachedTvShowData(string tmdbId)
         {
+            // Check cache first
+            if (_tvShowCache.TryGetValue(tmdbId, out var cached) && DateTime.UtcNow < cached.Expiry)
+            {
+                return cached.Doc.RootElement.Clone();
+            }
+
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
             {
                 return null;
             }
 
-            try
+            var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Clear();
+            httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
+
+            foreach (var url in urls)
             {
-                var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var httpClient = _httpClientFactory.CreateClient();
-                httpClient.DefaultRequestHeaders.Clear();
-                httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
+                var trimmedUrl = url.Trim().TrimEnd('/');
+                var requestUrl = $"{trimmedUrl}/api/v1/tv/{tmdbId}";
 
-                foreach (var url in urls)
+                try
                 {
-                    var trimmedUrl = url.Trim().TrimEnd('/');
-                    var requestUrl = $"{trimmedUrl}/api/v1/tv/{tmdbId}";
-
-                    try
+                    var response = await httpClient.GetAsync(requestUrl);
+                    if (!response.IsSuccessStatusCode)
                     {
-                        var response = await httpClient.GetAsync(requestUrl);
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            _logger.Debug($"[Auto-Season-Request] Jellyseerr returned {response.StatusCode} for TMDB {tmdbId}");
-                            continue;
-                        }
-
-                        var content = await response.Content.ReadAsStringAsync();
-                        using (JsonDocument doc = JsonDocument.Parse(content))
-                        {
-                            var root = doc.RootElement;
-
-                            // Log TMDB's reported number of seasons
-                            if (root.TryGetProperty("numberOfSeasons", out var totalSeasonsProp))
-                            {
-                                var totalSeasons = totalSeasonsProp.GetInt32();
-                                _logger.Info($"[Auto-Season-Request] TMDB reports {totalSeasons} total seasons for TMDB ID {tmdbId}");
-                            }
-
-                            // Look for the season in the response
-                            if (root.TryGetProperty("seasons", out var seasonsArray))
-                            {
-                                foreach (var season in seasonsArray.EnumerateArray())
-                                {
-                                    if (season.TryGetProperty("seasonNumber", out var seasonNumProp) &&
-                                        seasonNumProp.GetInt32() == seasonNumber)
-                                    {
-                                        // Get episode count for this season
-                                        if (season.TryGetProperty("episodeCount", out var episodeCountProp))
-                                        {
-                                            var episodeCount = episodeCountProp.GetInt32();
-                                            _logger.Info($"[Auto-Season-Request] TMDB reports {episodeCount} episodes in season {seasonNumber}");
-                                            return episodeCount;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Season not found in response
-                        _logger.Info($"[Auto-Season-Request] Season {seasonNumber} not found in TMDB data (season does not exist on TMDB)");
-                        return null;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Debug($"[Auto-Season-Request] Error checking TMDB data at {trimmedUrl}: {ex.Message}");
+                        _logger.Debug($"[Auto-Season-Request] Jellyseerr returned {response.StatusCode} for TMDB {tmdbId}");
                         continue;
                     }
+
+                    var content = await response.Content.ReadAsStringAsync();
+                    var doc = JsonDocument.Parse(content);
+
+                    // Evict expired entries before adding new one
+                    var expiredKeys = _tvShowCache.Where(kv => DateTime.UtcNow >= kv.Value.Expiry).Select(kv => kv.Key).ToList();
+                    foreach (var key in expiredKeys)
+                    {
+                        _tvShowCache[key].Doc.Dispose();
+                        _tvShowCache.Remove(key);
+                    }
+
+                    // Dispose old entry if replacing
+                    if (_tvShowCache.TryGetValue(tmdbId, out var old))
+                    {
+                        old.Doc.Dispose();
+                    }
+
+                    _tvShowCache[tmdbId] = (doc, DateTime.UtcNow.Add(TvShowCacheTtl));
+                    return doc.RootElement.Clone();
                 }
+                catch (Exception ex)
+                {
+                    _logger.Debug($"[Auto-Season-Request] Error fetching TV data at {trimmedUrl}: {ex.Message}");
+                    continue;
+                }
+            }
+
+            return null;
+        }
+
+        // Gets the total number of episodes in a season from TMDB (uses cached TV show data)
+        private async Task<int?> GetTotalEpisodesInSeasonFromTmdb(string tmdbId, int seasonNumber)
+        {
+            try
+            {
+                var root = await GetCachedTvShowData(tmdbId);
+                if (root == null)
+                {
+                    return null;
+                }
+
+                var rootElement = root.Value;
+
+                // Log TMDB's reported number of seasons
+                if (rootElement.TryGetProperty("numberOfSeasons", out var totalSeasonsProp))
+                {
+                    var totalSeasons = totalSeasonsProp.GetInt32();
+                    _logger.Info($"[Auto-Season-Request] TMDB reports {totalSeasons} total seasons for TMDB ID {tmdbId}");
+                }
+
+                // Look for the season in the response
+                if (rootElement.TryGetProperty("seasons", out var seasonsArray))
+                {
+                    foreach (var season in seasonsArray.EnumerateArray())
+                    {
+                        if (season.TryGetProperty("seasonNumber", out var seasonNumProp) &&
+                            seasonNumProp.GetInt32() == seasonNumber)
+                        {
+                            // Get episode count for this season
+                            if (season.TryGetProperty("episodeCount", out var episodeCountProp))
+                            {
+                                var episodeCount = episodeCountProp.GetInt32();
+                                _logger.Info($"[Auto-Season-Request] TMDB reports {episodeCount} episodes in season {seasonNumber}");
+                                return episodeCount;
+                            }
+                        }
+                    }
+                }
+
+                // Season not found in response
+                _logger.Info($"[Auto-Season-Request] Season {seasonNumber} not found in TMDB data (season does not exist on TMDB)");
+                return null;
             }
             catch (Exception ex)
             {
@@ -295,121 +336,85 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             public bool IsRequested { get; set; }
         }
 
-        // Gets season status from Jellyseerr
+        // Gets season status from Jellyseerr (uses cached TV show data)
         private async Task<SeasonStatus?> GetSeasonStatusFromJellyseerr(string tmdbId, int seasonNumber)
         {
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            if (config == null || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
-            {
-                return null;
-            }
-
             try
             {
-                var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var httpClient = _httpClientFactory.CreateClient();
-                httpClient.DefaultRequestHeaders.Clear();
-                httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
-
-                foreach (var url in urls)
+                var root = await GetCachedTvShowData(tmdbId);
+                if (root == null)
                 {
-                    var trimmedUrl = url.Trim().TrimEnd('/');
-                    var requestUrl = $"{trimmedUrl}/api/v1/tv/{tmdbId}";
+                    return null;
+                }
 
-                    try
+                var rootElement = root.Value;
+
+                // Check if the show has this many seasons in TMDB
+                if (rootElement.TryGetProperty("numberOfSeasons", out var totalSeasonsProp))
+                {
+                    var totalSeasons = totalSeasonsProp.GetInt32();
+                    _logger.Info($"[Auto-Season-Request] Jellyseerr reports {totalSeasons} total seasons for TMDB ID {tmdbId}");
+                    if (seasonNumber > totalSeasons)
                     {
-                        var response = await httpClient.GetAsync(requestUrl);
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            _logger.Debug($"[Auto-Season-Request] Jellyseerr returned {response.StatusCode} for TMDB {tmdbId}");
-                            continue;
-                        }
-
-                        var content = await response.Content.ReadAsStringAsync();
-                        using (JsonDocument doc = JsonDocument.Parse(content))
-                        {
-                            var root = doc.RootElement;
-
-                            // Check if the show has this many seasons in TMDB
-                            // numberOfSeasons tells us how many seasons exist/have aired
-                            if (root.TryGetProperty("numberOfSeasons", out var totalSeasonsProp))
-                            {
-                                var totalSeasons = totalSeasonsProp.GetInt32();
-                                _logger.Info($"[Auto-Season-Request] Jellyseerr reports {totalSeasons} total seasons for TMDB ID {tmdbId}");
-                                if (seasonNumber > totalSeasons)
-                                {
-                                    _logger.Info($"[Auto-Season-Request] Season {seasonNumber} does not exist on TMDB - show only has {totalSeasons} season(s)");
-                                    return null; // Season doesn't exist
-                                }
-                            }
-
-                            // First, check if there are any requests for this season
-                            bool hasRequest = false;
-                            if (root.TryGetProperty("requests", out var requestsArray))
-                            {
-                                _logger.Info($"[Auto-Season-Request] Jellyseerr reports {requestsArray.GetArrayLength()} request(s) for TMDB ID {tmdbId}");
-                                foreach (var request in requestsArray.EnumerateArray())
-                                {
-                                    // Check if this request contains the season we're looking for
-                                    if (request.TryGetProperty("seasons", out var requestSeasons))
-                                    {
-                                        foreach (var requestSeason in requestSeasons.EnumerateArray())
-                                        {
-                                            if (requestSeason.TryGetProperty("seasonNumber", out var requestSeasonNum) &&
-                                                requestSeasonNum.GetInt32() == seasonNumber)
-                                            {
-                                                hasRequest = true;
-                                                _logger.Info($"[Auto-Season-Request] Found existing request for season {seasonNumber}");
-                                                break;
-                                            }
-                                        }
-                                        if (hasRequest) break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                _logger.Info($"[Auto-Season-Request] Jellyseerr reports no requests for TMDB ID {tmdbId}");
-                            }
-
-                            // Look for the season in the response to check availability
-                            if (root.TryGetProperty("seasons", out var seasonsArray))
-                            {
-                                foreach (var season in seasonsArray.EnumerateArray())
-                                {
-                                    if (season.TryGetProperty("seasonNumber", out var seasonNumProp) &&
-                                        seasonNumProp.GetInt32() == seasonNumber)
-                                    {
-                                        var status = new SeasonStatus();
-
-                                        // Check if season is available (status 5 = available)
-                                        if (season.TryGetProperty("status", out var statusProp))
-                                        {
-                                            var statusValue = statusProp.GetInt32();
-                                            status.IsAvailable = statusValue == 5;
-                                            _logger.Info($"[Auto-Season-Request] Jellyseerr Season {seasonNumber} raw status code: {statusValue} (5 = available)");
-                                        }
-
-                                        // Set IsRequested based on whether we found a request for this season
-                                        status.IsRequested = hasRequest;
-
-                                        _logger.Info($"[Auto-Season-Request] Season {seasonNumber} final status from Jellyseerr: Available={status.IsAvailable}, Requested={status.IsRequested}");
-                                        return status;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Season not found in Jellyseerr response - it doesn't exist
-                        _logger.Info($"[Auto-Season-Request] Season {seasonNumber} not found in Jellyseerr response");
+                        _logger.Info($"[Auto-Season-Request] Season {seasonNumber} does not exist on TMDB - show only has {totalSeasons} season(s)");
                         return null;
                     }
-                    catch (Exception ex)
+                }
+
+                // Check if there are any requests for this season
+                bool hasRequest = false;
+                if (rootElement.TryGetProperty("requests", out var requestsArray))
+                {
+                    _logger.Info($"[Auto-Season-Request] Jellyseerr reports {requestsArray.GetArrayLength()} request(s) for TMDB ID {tmdbId}");
+                    foreach (var request in requestsArray.EnumerateArray())
                     {
-                        _logger.Debug($"[Auto-Season-Request] Error checking Jellyseerr at {trimmedUrl}: {ex.Message}");
-                        continue;
+                        if (request.TryGetProperty("seasons", out var requestSeasons))
+                        {
+                            foreach (var requestSeason in requestSeasons.EnumerateArray())
+                            {
+                                if (requestSeason.TryGetProperty("seasonNumber", out var requestSeasonNum) &&
+                                    requestSeasonNum.GetInt32() == seasonNumber)
+                                {
+                                    hasRequest = true;
+                                    _logger.Info($"[Auto-Season-Request] Found existing request for season {seasonNumber}");
+                                    break;
+                                }
+                            }
+                            if (hasRequest) break;
+                        }
                     }
                 }
+                else
+                {
+                    _logger.Info($"[Auto-Season-Request] Jellyseerr reports no requests for TMDB ID {tmdbId}");
+                }
+
+                // Look for the season in the response to check availability
+                if (rootElement.TryGetProperty("seasons", out var seasonsArray))
+                {
+                    foreach (var season in seasonsArray.EnumerateArray())
+                    {
+                        if (season.TryGetProperty("seasonNumber", out var seasonNumProp) &&
+                            seasonNumProp.GetInt32() == seasonNumber)
+                        {
+                            var status = new SeasonStatus();
+
+                            if (season.TryGetProperty("status", out var statusProp))
+                            {
+                                var statusValue = statusProp.GetInt32();
+                                status.IsAvailable = statusValue == 5;
+                                _logger.Info($"[Auto-Season-Request] Jellyseerr Season {seasonNumber} raw status code: {statusValue} (5 = available)");
+                            }
+
+                            status.IsRequested = hasRequest;
+                            _logger.Info($"[Auto-Season-Request] Season {seasonNumber} final status from Jellyseerr: Available={status.IsAvailable}, Requested={status.IsRequested}");
+                            return status;
+                        }
+                    }
+                }
+
+                _logger.Info($"[Auto-Season-Request] Season {seasonNumber} not found in Jellyseerr response");
+                return null;
             }
             catch (Exception ex)
             {
@@ -510,7 +515,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             return false;
         }
 
-        // Gets the Jellyseerr user ID for a Jellyfin user
+        // Gets the Jellyseerr user ID for a Jellyfin user (uses shared cache)
         private async Task<string?> GetJellyseerrUserId(string jellyfinUserId)
         {
             var config = JellyfinEnhanced.Instance?.Configuration;
@@ -519,60 +524,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return null;
             }
 
-            // Normalize the Jellyfin user ID (remove dashes for comparison)
-            var normalizedJellyfinUserId = jellyfinUserId.Replace("-", "").ToLowerInvariant();
-
-            var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = _httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
-
-            foreach (var url in urls)
+            var jellyseerrUrl = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
+            if (string.IsNullOrEmpty(jellyseerrUrl))
             {
-                try
-                {
-                    var requestUri = $"{url.Trim().TrimEnd('/')}/api/v1/user?take=1000";
-                    var response = await httpClient.GetAsync(requestUri);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var content = await response.Content.ReadAsStringAsync();
-                        var usersResponse = JsonSerializer.Deserialize<JsonElement>(content);
-
-                        if (usersResponse.TryGetProperty("results", out var usersArray))
-                        {
-                            foreach (var userElement in usersArray.EnumerateArray())
-                            {
-                                if (userElement.TryGetProperty("jellyfinUserId", out var jfUserId) &&
-                                    userElement.TryGetProperty("id", out var id))
-                                {
-                                    var jellyseerrJfUserId = jfUserId.GetString();
-                                    if (!string.IsNullOrEmpty(jellyseerrJfUserId))
-                                    {
-                                        // Normalize both IDs for comparison (remove dashes)
-                                        var normalizedJellyseerrId = jellyseerrJfUserId.Replace("-", "").ToLowerInvariant();
-
-                                        if (normalizedJellyseerrId == normalizedJellyfinUserId)
-                                        {
-                                            return id.GetInt32().ToString();
-                                        }
-                                    }
-                                }
-                            }
-                            _logger.Warning($"[Auto-Season-Request] No Jellyseerr user found for Jellyfin user {jellyfinUserId}");
-                        }
-                    }
-                    else
-                    {
-                        _logger.Warning($"[Auto-Season-Request] Failed to fetch users from Jellyseerr: {response.StatusCode}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error($"[Auto-Season-Request] Exception while trying to get Jellyseerr user ID from {url}: {ex.Message}");
-                }
+                return null;
             }
 
-            return null;
+            var result = await _userCacheService.GetJellyseerrUserIdAsync(jellyseerrUrl, config.JellyseerrApiKey, jellyfinUserId);
+            if (result == null)
+            {
+                _logger.Warning($"[Auto-Season-Request] No Jellyseerr user found for Jellyfin user {jellyfinUserId}");
+            }
+            return result;
         }
     }
 }

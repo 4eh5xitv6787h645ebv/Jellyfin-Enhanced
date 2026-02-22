@@ -20,6 +20,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly Logger _logger;
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
+        private readonly JellyseerrUserCacheService _userCacheService;
 
         // Track which movies have already been requested to avoid duplicates (with timestamps for expiry)
         private readonly Dictionary<string, Dictionary<string, DateTime>> _requestedMovies = new();
@@ -28,12 +29,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             IHttpClientFactory httpClientFactory,
             Logger logger,
             IUserManager userManager,
-            ILibraryManager libraryManager)
+            ILibraryManager libraryManager,
+            JellyseerrUserCacheService userCacheService)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _userManager = userManager;
             _libraryManager = libraryManager;
+            _userCacheService = userCacheService;
         }
 
         // Checks a movie to determine if the next movie in collection should be requested.
@@ -385,7 +388,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             return false;
         }
 
-        // Gets the Jellyseerr user ID for a Jellyfin user
+        // Gets the Jellyseerr user ID for a Jellyfin user (uses shared cache)
         private async Task<string?> GetJellyseerrUserId(string jellyfinUserId)
         {
             var config = JellyfinEnhanced.Instance?.Configuration;
@@ -394,60 +397,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return null;
             }
 
-            // Normalize the Jellyfin user ID (remove dashes for comparison)
-            var normalizedJellyfinUserId = jellyfinUserId.Replace("-", "").ToLowerInvariant();
-
-            var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = _httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
-
-            foreach (var url in urls)
+            var jellyseerrUrl = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
+            if (string.IsNullOrEmpty(jellyseerrUrl))
             {
-                try
-                {
-                    var requestUri = $"{url.Trim().TrimEnd('/')}/api/v1/user?take=1000";
-                    var response = await httpClient.GetAsync(requestUri);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var content = await response.Content.ReadAsStringAsync();
-                        var usersResponse = JsonSerializer.Deserialize<JsonElement>(content);
-
-                        if (usersResponse.TryGetProperty("results", out var usersArray))
-                        {
-                            foreach (var userElement in usersArray.EnumerateArray())
-                            {
-                                if (userElement.TryGetProperty("jellyfinUserId", out var jfUserId) &&
-                                    userElement.TryGetProperty("id", out var id))
-                                {
-                                    var jellyseerrJfUserId = jfUserId.GetString();
-                                    if (!string.IsNullOrEmpty(jellyseerrJfUserId))
-                                    {
-                                        // Normalize both IDs for comparison (remove dashes)
-                                        var normalizedJellyseerrId = jellyseerrJfUserId.Replace("-", "").ToLowerInvariant();
-
-                                        if (normalizedJellyseerrId == normalizedJellyfinUserId)
-                                        {
-                                            return id.GetInt32().ToString();
-                                        }
-                                    }
-                                }
-                            }
-                            _logger.Warning($"[Auto-Movie-Request] No Jellyseerr user found for Jellyfin user {jellyfinUserId}");
-                        }
-                    }
-                    else
-                    {
-                        _logger.Warning($"[Auto-Movie-Request] Failed to fetch users from Jellyseerr: {response.StatusCode}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error($"[Auto-Movie-Request] Exception while trying to get Jellyseerr user ID from {url}: {ex.Message}");
-                }
+                return null;
             }
 
-            return null;
+            var result = await _userCacheService.GetJellyseerrUserIdAsync(jellyseerrUrl, config.JellyseerrApiKey, jellyfinUserId);
+            if (result == null)
+            {
+                _logger.Warning($"[Auto-Movie-Request] No Jellyseerr user found for Jellyfin user {jellyfinUserId}");
+            }
+            return result;
         }
 
         // Clears the request cache (useful for testing or resetting)

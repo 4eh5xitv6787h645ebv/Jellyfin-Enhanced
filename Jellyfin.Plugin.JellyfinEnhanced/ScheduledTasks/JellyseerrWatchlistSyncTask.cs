@@ -96,6 +96,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
 
+            // Fetch ALL Jellyseerr users ONCE upfront instead of per-user
+            var jellyseerrUserMap = await GetAllJellyseerrUsers(httpClient, jellyseerrUrl);
+            _logger.Info($"[Jellyseerr Watchlist Sync] Fetched {jellyseerrUserMap.Count} Jellyseerr users");
+
             // Get all Jellyfin users
             var jellyfinUsers = _userManager.Users.ToList();
             _logger.Info($"[Jellyseerr Watchlist Sync] Found {jellyfinUsers.Count} Jellyfin users");
@@ -121,8 +125,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                         _userConfigurationManager.CleanupOldProcessedWatchlistItems(jellyfinUser.Id, config.WatchlistMemoryRetentionDays);
                     }
 
-                    // Get Jellyseerr user ID for this Jellyfin user
-                    var jellyseerrUserId = await GetJellyseerrUserId(httpClient, jellyseerrUrl, jellyfinUser.Id.ToString());
+                    // Look up Jellyseerr user ID from pre-fetched map
+                    var normalizedJellyfinId = jellyfinUser.Id.ToString().Replace("-", "").ToLowerInvariant();
+                    jellyseerrUserMap.TryGetValue(normalizedJellyfinId, out var jellyseerrUserId);
 
                     if (string.IsNullOrEmpty(jellyseerrUserId))
                     {
@@ -229,8 +234,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             progress?.Report(100);
         }
 
-        private async Task<string?> GetJellyseerrUserId(HttpClient httpClient, string jellyseerrUrl, string jellyfinUserId)
+        // Fetch all Jellyseerr users once and return a lookup map: normalizedJellyfinId -> jellyseerrUserId
+        private async Task<Dictionary<string, string>> GetAllJellyseerrUsers(HttpClient httpClient, string jellyseerrUrl)
         {
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
             try
             {
                 var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user?take=1000";
@@ -243,35 +251,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 
                     if (usersResponse.TryGetProperty("results", out var usersArray))
                     {
-                        var userCount = usersArray.GetArrayLength();
-                        // _logger.Info($"[Jellyseerr Watchlist Sync] Found {userCount} Jellyseerr users");
-
-                        // Normalize Jellyfin user ID by removing hyphens for comparison
-                        var normalizedJellyfinUserId = jellyfinUserId.Replace("-", "");
-
                         foreach (var user in usersArray.EnumerateArray())
                         {
-                            if (user.TryGetProperty("jellyfinUserId", out var jfUserId))
+                            if (user.TryGetProperty("jellyfinUserId", out var jfUserId) &&
+                                user.TryGetProperty("id", out var id))
                             {
                                 var jfUserIdStr = jfUserId.GetString();
-                                // _logger.Info($"[Jellyseerr Watchlist Sync] Checking Jellyseerr user with jellyfinUserId: {jfUserIdStr}");
-
-                                // Normalize both IDs by removing hyphens before comparison
-                                var normalizedJellyseerrUserId = jfUserIdStr?.Replace("-", "") ?? "";
-
-                                if (string.Equals(normalizedJellyseerrUserId, normalizedJellyfinUserId, StringComparison.OrdinalIgnoreCase))
+                                if (!string.IsNullOrEmpty(jfUserIdStr))
                                 {
-                                    if (user.TryGetProperty("id", out var id))
-                                    {
-                                        var jellyseerrUserId = id.GetInt32().ToString();
-                                        _logger.Info($"[Jellyseerr Watchlist Sync] Found matching Jellyseerr user ID: {jellyseerrUserId}");
-                                        return jellyseerrUserId;
-                                    }
+                                    var normalizedId = jfUserIdStr.Replace("-", "").ToLowerInvariant();
+                                    result[normalizedId] = id.GetInt32().ToString();
                                 }
                             }
                         }
-
-                        _logger.Warning($"[Jellyseerr Watchlist Sync] No Jellyseerr user found with jellyfinUserId matching: {jellyfinUserId}");
                     }
                 }
                 else
@@ -281,10 +273,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             }
             catch (Exception ex)
             {
-                _logger.Error($"[Jellyseerr Watchlist Sync] Error getting Jellyseerr user ID: {ex.Message}");
+                _logger.Error($"[Jellyseerr Watchlist Sync] Error getting Jellyseerr users: {ex.Message}");
             }
 
-            return null;
+            return result;
         }
 
         private async Task<List<WatchlistItem>?> GetJellyseerrWatchlist(HttpClient httpClient, string jellyseerrUrl, string jellyseerrUserId)

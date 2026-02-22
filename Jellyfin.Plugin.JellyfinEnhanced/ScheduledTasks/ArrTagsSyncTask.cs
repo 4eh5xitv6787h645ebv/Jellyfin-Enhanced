@@ -67,32 +67,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             Dictionary<int, List<string>> radarrTags = new Dictionary<int, List<string>>();
             Dictionary<string, List<string>> sonarrTags = new Dictionary<string, List<string>>();
 
-            // Fetch Radarr tags if configured
+            // Fetch Radarr and Sonarr tags in parallel for faster execution
+            var radarrTask = Task.FromResult(new Dictionary<int, List<string>>());
+            var sonarrTask = Task.FromResult(new Dictionary<string, List<string>>());
+
             if (!string.IsNullOrWhiteSpace(config.RadarrUrl) && !string.IsNullOrWhiteSpace(config.RadarrApiKey))
             {
                 _logger.Info("Fetching tags from Radarr...");
-                radarrTags = await radarrService.GetMovieTagsByTmdbId(config.RadarrUrl, config.RadarrApiKey);
-                _logger.Info($"Fetched {radarrTags.Count} movie tag mappings from Radarr");
+                radarrTask = radarrService.GetMovieTagsByTmdbId(config.RadarrUrl, config.RadarrApiKey);
             }
             else
             {
                 _logger.Info("Radarr URL or API key not configured, skipping Radarr sync");
             }
 
-            progress?.Report(25);
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Fetch Sonarr tags if configured
             if (!string.IsNullOrWhiteSpace(config.SonarrUrl) && !string.IsNullOrWhiteSpace(config.SonarrApiKey))
             {
                 _logger.Info("Fetching tags from Sonarr...");
-                sonarrTags = await sonarrService.GetSeriesTagsByTvdbId(config.SonarrUrl, config.SonarrApiKey);
-                _logger.Info($"Fetched {sonarrTags.Count} series tag mappings from Sonarr");
+                sonarrTask = sonarrService.GetSeriesTagsByTvdbId(config.SonarrUrl, config.SonarrApiKey);
             }
             else
             {
                 _logger.Info("Sonarr URL or API key not configured, skipping Sonarr sync");
             }
+
+            // Wait for both to complete
+            await Task.WhenAll(radarrTask, sonarrTask);
+            radarrTags = await radarrTask;
+            sonarrTags = await sonarrTask;
+
+            _logger.Info($"Fetched {radarrTags.Count} movie tag mappings from Radarr, {sonarrTags.Count} series tag mappings from Sonarr");
 
             progress?.Report(50);
             cancellationToken.ThrowIfCancellationRequested();
