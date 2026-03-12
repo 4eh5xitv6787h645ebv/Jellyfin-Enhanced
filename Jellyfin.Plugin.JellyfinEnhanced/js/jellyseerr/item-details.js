@@ -497,6 +497,109 @@
             // Prevent duplicate button
             if (activePage.querySelector(`.${REQUEST_MORE_BTN_CLASS}`)) return;
 
+            // Insert after the seasons list (#childrenCollapsible) and before Cast & Crew (#castCollapsible)
+            const childrenSection = activePage.querySelector('#childrenCollapsible');
+            const castSection = activePage.querySelector('#castCollapsible');
+            if (!childrenSection && !castSection) return;
+
+            // Create a container section for the button
+            const section = document.createElement('div');
+            section.className = `verticalSection ${REQUEST_MORE_BTN_CLASS}`;
+            section.style.padding = '0 1em 0.5em';
+
+            const button = document.createElement('button');
+            button.setAttribute('is', 'emby-button');
+            button.className = 'raised button-submit emby-button';
+            button.type = 'button';
+            button.style.display = 'inline-flex';
+            button.style.alignItems = 'center';
+            button.style.gap = '0.4em';
+
+            const icon = document.createElement('span');
+            icon.className = 'material-icons';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = 'download';
+            icon.style.fontSize = '1.2em';
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = JE.t('jellyseerr_btn_request_more') || 'Request More';
+
+            button.appendChild(icon);
+            button.appendChild(textSpan);
+            section.appendChild(button);
+
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (JE.jellyseerrUI?.showSeasonSelectionModal) {
+                    JE.jellyseerrUI.showSeasonSelectionModal(parseInt(tmdbId), 'tv', item.Name, tvDetails);
+                }
+            });
+
+            // Place after seasons list, or before cast if seasons section not found
+            if (childrenSection) {
+                childrenSection.after(section);
+            } else if (castSection) {
+                castSection.before(section);
+            }
+
+            processedMissingSeasons.add(itemId);
+            console.debug(`${missingSeasonsLogPrefix} Added "Request More" button for "${item.Name}"`);
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error(`${missingSeasonsLogPrefix} Error rendering missing seasons button:`, error);
+        }
+    }
+
+    const REQUEST_EPISODE_BTN_CLASS = 'je-request-episode-btn';
+    const processedMissingEpisodes = new Set();
+
+    /**
+     * Renders a "Request Season" button on virtual/missing episode detail pages.
+     * When "Display missing episodes within their series" is enabled in Jellyfin,
+     * virtual episodes appear in the UI. This adds a request button so users can
+     * request the season containing the missing episode via Jellyseerr.
+     * @param {string} itemId - Jellyfin item ID
+     * @param {AbortSignal} [signal] - Optional abort signal for cancellation on navigation
+     */
+    async function renderMissingEpisodeRequestButton(itemId, signal) {
+        try {
+            if (processedMissingEpisodes.has(itemId)) return;
+            if (!JE.pluginConfig?.JellyseerrEnabled) return;
+
+            const status = await JE.jellyseerrAPI.checkUserStatus();
+            if (signal?.aborted) return;
+            if (!status?.active) return;
+
+            const userId = ApiClient.getCurrentUserId();
+            const item = await ApiClient.getItem(userId, itemId);
+            if (signal?.aborted) return;
+            if (!item || item.Type !== 'Episode') return;
+
+            // Only show on virtual/missing episodes
+            if (item.LocationType !== 'Virtual') return;
+
+            // Skip specials (season 0)
+            const seasonNumber = parseInt(item.ParentIndexNumber) || 0;
+            if (seasonNumber <= 0) return;
+
+            // Get the series TMDB ID from the parent series
+            const seriesId = item.SeriesId;
+            if (!seriesId) return;
+
+            const series = await ApiClient.getItem(userId, seriesId);
+            if (signal?.aborted) return;
+            if (!series) return;
+
+            const tmdbId = series.ProviderIds?.Tmdb;
+            if (!tmdbId) return;
+
+            const activePage = document.querySelector('.libraryPage:not(.hide)') ||
+                               document.querySelector('#itemDetailPage:not(.hide)');
+            if (!activePage) return;
+
+            if (activePage.querySelector(`.${REQUEST_EPISODE_BTN_CLASS}`)) return;
+
             // Find the detail page button container
             const buttonSelectors = ['.detailButtons', '.mainDetailButtons', '.detailButtonsContainer'];
             let buttonContainer = null;
@@ -509,12 +612,15 @@
             }
             if (!buttonContainer) return;
 
+            const requestLabel = JE.t('jellyseerr_btn_request') || 'Request';
+            const seasonLabel = `${requestLabel} S${String(seasonNumber).padStart(2, '0')}`;
+
             // Create button matching Jellyfin's native detail button style
             const button = document.createElement('button');
             button.setAttribute('is', 'emby-button');
-            button.className = `button-flat detailButton emby-button ${REQUEST_MORE_BTN_CLASS}`;
+            button.className = `button-flat detailButton emby-button ${REQUEST_EPISODE_BTN_CLASS}`;
             button.type = 'button';
-            button.title = JE.t('jellyseerr_btn_request_more') || 'Request More';
+            button.title = seasonLabel;
 
             const content = document.createElement('div');
             content.className = 'detailButton-content';
@@ -526,17 +632,29 @@
 
             const textSpan = document.createElement('span');
             textSpan.className = 'detailButton-icon-text';
-            textSpan.textContent = JE.t('jellyseerr_btn_request_more') || 'Request More';
+            textSpan.textContent = seasonLabel;
 
             content.appendChild(icon);
             content.appendChild(textSpan);
             button.appendChild(content);
 
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (JE.jellyseerrUI?.showSeasonSelectionModal) {
-                    JE.jellyseerrUI.showSeasonSelectionModal(parseInt(tmdbId), 'tv', item.Name, tvDetails);
+
+                button.disabled = true;
+                textSpan.textContent = JE.t('jellyseerr_btn_requesting') || 'Requesting...';
+
+                try {
+                    await JE.jellyseerrAPI.requestTvSeasons(parseInt(tmdbId), [seasonNumber]);
+                    textSpan.textContent = JE.t('jellyseerr_btn_requested') || 'Requested';
+                    icon.textContent = 'check';
+                    JE.toast?.(JE.t('jellyseerr_modal_toast_request_success', { count: 1, title: series.Name }) || `Requested Season ${seasonNumber}`, 4000);
+                } catch (error) {
+                    textSpan.textContent = requestLabel;
+                    button.disabled = false;
+                    console.error(`${missingSeasonsLogPrefix} Failed to request season ${seasonNumber}:`, error);
+                    JE.toast?.(JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed', 4000);
                 }
             });
 
@@ -548,11 +666,11 @@
                 buttonContainer.appendChild(button);
             }
 
-            processedMissingSeasons.add(itemId);
-            console.debug(`${missingSeasonsLogPrefix} Added "Request More" button for "${item.Name}"`);
+            processedMissingEpisodes.add(itemId);
+            console.debug(`${missingSeasonsLogPrefix} Added "Request Season ${seasonNumber}" button for missing episode "${item.Name}"`);
         } catch (error) {
             if (error.name === 'AbortError') return;
-            console.error(`${missingSeasonsLogPrefix} Error rendering missing seasons button:`, error);
+            console.error(`${missingSeasonsLogPrefix} Error rendering missing episode request button:`, error);
         }
     }
 
@@ -572,8 +690,10 @@
                 // Use requestAnimationFrame instead of fixed timeout
                 // This ensures we're in sync with the rendering cycle
                 requestAnimationFrame(() => {
+                    const signal = currentAbortController?.signal;
                     renderSimilarAndRecommended(itemId);
-                    renderMissingSeasonsButton(itemId, currentAbortController?.signal);
+                    renderMissingSeasonsButton(itemId, signal);
+                    renderMissingEpisodeRequestButton(itemId, signal);
                 });
             }
         } catch (error) {
@@ -593,6 +713,7 @@
         // Clear processed items cache
         processedItems.clear();
         processedMissingSeasons.clear();
+        processedMissingEpisodes.clear();
     }
 
     /**
