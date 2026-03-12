@@ -406,6 +406,7 @@
 
     const missingSeasonsLogPrefix = '🪼 Jellyfin Enhanced: Missing Seasons:';
     const REQUEST_MORE_BTN_CLASS = 'je-request-more-btn';
+    const processedMissingSeasons = new Set();
 
     /**
      * Checks if a TV show has missing released seasons that can be requested.
@@ -458,22 +459,27 @@
      * Renders a "Request More" button on the Series detail page
      * when the show has missing released seasons that can be requested via Jellyseerr.
      * @param {string} itemId - Jellyfin item ID
+     * @param {AbortSignal} [signal] - Optional abort signal for cancellation on navigation
      */
-    async function renderMissingSeasonsButton(itemId) {
+    async function renderMissingSeasonsButton(itemId, signal) {
         try {
+            if (processedMissingSeasons.has(itemId)) return;
             if (!JE.pluginConfig?.JellyseerrEnabled) return;
 
             const status = await JE.jellyseerrAPI.checkUserStatus();
+            if (signal?.aborted) return;
             if (!status?.active) return;
 
             const userId = ApiClient.getCurrentUserId();
             const item = await ApiClient.getItem(userId, itemId);
+            if (signal?.aborted) return;
             if (!item || item.Type !== 'Series') return;
 
             const tmdbId = item.ProviderIds?.Tmdb;
             if (!tmdbId) return;
 
             const tvDetails = await JE.jellyseerrAPI.fetchTvShowDetails(parseInt(tmdbId));
+            if (signal?.aborted) return;
             if (!tvDetails) return;
 
             if (!hasMissingReleasedSeasons(tvDetails)) {
@@ -482,6 +488,8 @@
             }
 
             console.debug(`${missingSeasonsLogPrefix} Found missing released seasons for "${item.Name}"`);
+
+            if (signal?.aborted) return;
 
             const activePage = document.querySelector('.libraryPage:not(.hide)');
             if (!activePage) return;
@@ -540,8 +548,10 @@
                 buttonContainer.appendChild(button);
             }
 
+            processedMissingSeasons.add(itemId);
             console.debug(`${missingSeasonsLogPrefix} Added "Request More" button for "${item.Name}"`);
         } catch (error) {
+            if (error.name === 'AbortError') return;
             console.error(`${missingSeasonsLogPrefix} Error rendering missing seasons button:`, error);
         }
     }
@@ -563,7 +573,7 @@
                 // This ensures we're in sync with the rendering cycle
                 requestAnimationFrame(() => {
                     renderSimilarAndRecommended(itemId);
-                    renderMissingSeasonsButton(itemId);
+                    renderMissingSeasonsButton(itemId, currentAbortController?.signal);
                 });
             }
         } catch (error) {
@@ -582,6 +592,7 @@
         }
         // Clear processed items cache
         processedItems.clear();
+        processedMissingSeasons.clear();
     }
 
     /**
