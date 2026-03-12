@@ -21,6 +21,12 @@
         const escapeHtml = JE.escapeHtml;
         console.log(`${logPrefix} Initializing...`);
 
+        // Guard: required modules must be loaded before we can proceed
+        if (!JE.jellyseerrAPI || !JE.jellyseerrUI) {
+            console.error(`${logPrefix} Required modules not loaded (API: ${!!JE.jellyseerrAPI}, UI: ${!!JE.jellyseerrUI}). Search integration disabled.`);
+            return;
+        }
+
         // ================================
         // STATE MANAGEMENT VARIABLES
         // ================================
@@ -32,6 +38,10 @@
         let hiddenSections = [];
         let jellyseerrOriginalPosition = null;
         let refreshInterval = null;
+
+        // Status re-check state: when initial status check fails, allow periodic retries
+        let lastStatusRecheckTime = 0;
+        const STATUS_RECHECK_COOLDOWN_MS = 60000; // 1 minute between re-checks
 
         // Infinite scroll pagination state
         let searchCurrentPage = 0;
@@ -322,7 +332,26 @@
 
                 if (isSearchPage && currentQuery?.trim()) {
                     clearTimeout(debounceTimeout);
-                    debounceTimeout = setTimeout(() => {
+                    debounceTimeout = setTimeout(async () => {
+                        // If status was inactive, periodically re-check (recovers from transient failures)
+                        if (!isJellyseerrActive) {
+                            const now = Date.now();
+                            if (now - lastStatusRecheckTime > STATUS_RECHECK_COOLDOWN_MS) {
+                                lastStatusRecheckTime = now;
+                                try {
+                                    JE.jellyseerrAPI.clearUserStatusCache();
+                                    const freshStatus = await checkUserStatus();
+                                    if (freshStatus.active) {
+                                        console.log(`${logPrefix} Status recovered - Seerr is now active`);
+                                        isJellyseerrActive = true;
+                                        jellyseerrUserFound = freshStatus.userFound;
+                                        updateJellyseerrIcon(isJellyseerrActive, jellyseerrUserFound, isJellyseerrOnlyMode, toggleJellyseerrOnlyMode);
+                                    }
+                                } catch (e) {
+                                    console.debug(`${logPrefix} Status re-check failed:`, e);
+                                }
+                            }
+                        }
                         if (!isJellyseerrActive) {
                             document.querySelectorAll('.jellyseerr-section').forEach(el => el.remove());
                             return;
