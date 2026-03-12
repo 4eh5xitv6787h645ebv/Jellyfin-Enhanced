@@ -400,6 +400,152 @@
         }
     }
 
+    // ================================
+    // MISSING SEASONS "REQUEST MORE" BUTTON
+    // ================================
+
+    const missingSeasonsLogPrefix = '🪼 Jellyfin Enhanced: Missing Seasons:';
+    const REQUEST_MORE_BTN_CLASS = 'je-request-more-btn';
+
+    /**
+     * Checks if a TV show has missing released seasons that can be requested.
+     * A season is "missing" if it has aired, has episodes, is not a special (season 0),
+     * and has not been requested or made available in Jellyseerr.
+     * @param {object} tvDetails - TV show details from Jellyseerr API
+     * @returns {boolean} - True if there are unrequested released seasons
+     */
+    function hasMissingReleasedSeasons(tvDetails) {
+        if (!tvDetails?.seasons) return false;
+
+        const now = new Date();
+        const seasonStatusMap = {};
+
+        // Build status map from mediaInfo seasons
+        tvDetails.mediaInfo?.seasons?.forEach(s => {
+            if (!seasonStatusMap[s.seasonNumber] || s.status > seasonStatusMap[s.seasonNumber]) {
+                seasonStatusMap[s.seasonNumber] = s.status;
+            }
+        });
+
+        // Also include request statuses (may have higher status than mediaInfo)
+        tvDetails.mediaInfo?.requests?.forEach(r => {
+            r.seasons?.forEach(sr => {
+                if (!seasonStatusMap[sr.seasonNumber] || sr.status > seasonStatusMap[sr.seasonNumber]) {
+                    seasonStatusMap[sr.seasonNumber] = sr.status;
+                }
+            });
+        });
+
+        for (const season of tvDetails.seasons) {
+            if (season.seasonNumber <= 0) continue;
+            if (!season.episodeCount || season.episodeCount <= 0) continue;
+
+            // Only consider released seasons
+            if (!season.airDate) continue;
+            if (new Date(season.airDate) > now) continue;
+
+            // Status 1 or undefined = not requested; anything higher means requested/available
+            const status = seasonStatusMap[season.seasonNumber];
+            if (!status || status === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Renders a "Request More" button on the Series detail page
+     * when the show has missing released seasons that can be requested via Jellyseerr.
+     * @param {string} itemId - Jellyfin item ID
+     */
+    async function renderMissingSeasonsButton(itemId) {
+        try {
+            if (!JE.pluginConfig?.JellyseerrEnabled) return;
+
+            const status = await JE.jellyseerrAPI.checkUserStatus();
+            if (!status?.active) return;
+
+            const userId = ApiClient.getCurrentUserId();
+            const item = await ApiClient.getItem(userId, itemId);
+            if (!item || item.Type !== 'Series') return;
+
+            const tmdbId = item.ProviderIds?.Tmdb;
+            if (!tmdbId) return;
+
+            const tvDetails = await JE.jellyseerrAPI.fetchTvShowDetails(parseInt(tmdbId));
+            if (!tvDetails) return;
+
+            if (!hasMissingReleasedSeasons(tvDetails)) {
+                console.debug(`${missingSeasonsLogPrefix} No missing released seasons for "${item.Name}"`);
+                return;
+            }
+
+            console.debug(`${missingSeasonsLogPrefix} Found missing released seasons for "${item.Name}"`);
+
+            const activePage = document.querySelector('.libraryPage:not(.hide)');
+            if (!activePage) return;
+
+            // Prevent duplicate button
+            if (activePage.querySelector(`.${REQUEST_MORE_BTN_CLASS}`)) return;
+
+            // Find the detail page button container
+            const buttonSelectors = ['.detailButtons', '.mainDetailButtons', '.detailButtonsContainer'];
+            let buttonContainer = null;
+            for (const sel of buttonSelectors) {
+                const found = activePage.querySelector(sel);
+                if (found) {
+                    buttonContainer = found;
+                    break;
+                }
+            }
+            if (!buttonContainer) return;
+
+            // Create button matching Jellyfin's native detail button style
+            const button = document.createElement('button');
+            button.setAttribute('is', 'emby-button');
+            button.className = `button-flat detailButton emby-button ${REQUEST_MORE_BTN_CLASS}`;
+            button.type = 'button';
+            button.title = JE.t('jellyseerr_btn_request_more') || 'Request More';
+
+            const content = document.createElement('div');
+            content.className = 'detailButton-content';
+
+            const icon = document.createElement('span');
+            icon.className = 'material-icons detailButton-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = 'download';
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'detailButton-icon-text';
+            textSpan.textContent = JE.t('jellyseerr_btn_request_more') || 'Request More';
+
+            content.appendChild(icon);
+            content.appendChild(textSpan);
+            button.appendChild(content);
+
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (JE.jellyseerrUI?.showSeasonSelectionModal) {
+                    JE.jellyseerrUI.showSeasonSelectionModal(parseInt(tmdbId), 'tv', item.Name, tvDetails);
+                }
+            });
+
+            // Insert before the "more" button if present, otherwise append
+            const moreButton = buttonContainer.querySelector('.btnMoreCommands');
+            if (moreButton) {
+                buttonContainer.insertBefore(button, moreButton);
+            } else {
+                buttonContainer.appendChild(button);
+            }
+
+            console.debug(`${missingSeasonsLogPrefix} Added "Request More" button for "${item.Name}"`);
+        } catch (error) {
+            console.error(`${missingSeasonsLogPrefix} Error rendering missing seasons button:`, error);
+        }
+    }
+
     /**
      * Handles item details page navigation
      */
@@ -417,6 +563,7 @@
                 // This ensures we're in sync with the rendering cycle
                 requestAnimationFrame(() => {
                     renderSimilarAndRecommended(itemId);
+                    renderMissingSeasonsButton(itemId);
                 });
             }
         } catch (error) {
