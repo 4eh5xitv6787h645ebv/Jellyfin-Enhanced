@@ -406,7 +406,117 @@
 
     const missingSeasonsLogPrefix = '🪼 Jellyfin Enhanced: Missing Seasons:';
     const REQUEST_MORE_BTN_CLASS = 'je-request-more-btn';
+    const REQUEST_SEASON_BTN_CLASS = 'je-request-season-btn';
     const processedMissingSeasons = new Set();
+    const processedMissingSeasonPages = new Set();
+
+    // Separate abort controller for missing seasons (independent of similar/recommended)
+    let missingSeasonsAbortController = null;
+
+    /**
+     * Builds a map of season number to highest Jellyseerr status from mediaInfo and requests.
+     * Status codes: 1=Not Requested, 2=Pending Approval, 3=Processing, 4=Partially Available, 5=Available
+     * @param {object} tvDetails - TV show details from Jellyseerr API
+     * @returns {Object<number, number>} Map of seasonNumber to status
+     */
+    function buildSeasonStatusMap(tvDetails) {
+        const statusMap = {};
+        tvDetails.mediaInfo?.seasons?.forEach(s => {
+            if (!statusMap[s.seasonNumber] || s.status > statusMap[s.seasonNumber]) {
+                statusMap[s.seasonNumber] = s.status;
+            }
+        });
+        tvDetails.mediaInfo?.requests?.forEach(r => {
+            r.seasons?.forEach(sr => {
+                if (!statusMap[sr.seasonNumber] || sr.status > statusMap[sr.seasonNumber]) {
+                    statusMap[sr.seasonNumber] = sr.status;
+                }
+            });
+        });
+        return statusMap;
+    }
+
+    /**
+     * Checks if a specific season is missing (not requested and released).
+     * @param {object} tvDetails - TV show details from Jellyseerr API
+     * @param {number} seasonNumber - Season number to check
+     * @returns {boolean} True if the season is missing and can be requested
+     */
+    function isSeasonMissing(tvDetails, seasonNumber) {
+        if (!tvDetails?.seasons || seasonNumber <= 0) return false;
+        const season = tvDetails.seasons.find(s => s.seasonNumber === seasonNumber);
+        if (!season || !season.episodeCount || season.episodeCount <= 0) return false;
+        if (!season.airDate || new Date(season.airDate) > new Date()) return false;
+        const statusMap = buildSeasonStatusMap(tvDetails);
+        const status = statusMap[seasonNumber];
+        return !status || status === 1;
+    }
+
+    /**
+     * Gets the currently active detail page element.
+     * Uses the same selector pattern as issue-reporter for reliable SPA detection.
+     * @returns {HTMLElement|null}
+     */
+    function getActivePage() {
+        return document.querySelector('#itemDetailPage:not(.hide)') ||
+               document.querySelector('.libraryPage:not(.hide)');
+    }
+
+    /**
+     * Creates a Jellyseerr-styled request button using DOM APIs.
+     * Matches the style from the more-info modal's request button.
+     * @param {string} label - Button text
+     * @returns {HTMLButtonElement}
+     */
+    function createJellyseerrRequestButton(label) {
+        const button = document.createElement('button');
+        button.className = 'jellyseerr-request-button jellyseerr-button-request';
+
+        const iconSvg = JE.jellyseerrUI?.icons?.request;
+        if (iconSvg) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(iconSvg, 'image/svg+xml');
+                const svg = doc.documentElement;
+                if (svg && svg.tagName === 'svg') {
+                    button.appendChild(document.importNode(svg, true));
+                }
+            } catch (_) {
+                const fallback = document.createElement('span');
+                fallback.className = 'material-icons';
+                fallback.textContent = 'download';
+                button.appendChild(fallback);
+            }
+        } else {
+            const icon = document.createElement('span');
+            icon.className = 'material-icons';
+            icon.textContent = 'download';
+            button.appendChild(icon);
+        }
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = label;
+        button.appendChild(textSpan);
+
+        return button;
+    }
+
+    /**
+     * Resolves the TMDB ID for a series from a Series, Season, or Episode item.
+     * @param {object} item - Jellyfin item (Series, Season, or Episode)
+     * @returns {Promise<{tmdbId: string|null, seriesName: string, seriesItem: object|null}>}
+     */
+    async function resolveSeriesTmdbId(item) {
+        if (item.Type === 'Series') {
+            return { tmdbId: item.ProviderIds?.Tmdb || null, seriesName: item.Name, seriesItem: item };
+        }
+        const userId = ApiClient.getCurrentUserId();
+        const seriesId = item.SeriesId;
+        if (!seriesId) return { tmdbId: null, seriesName: '', seriesItem: null };
+        const series = await ApiClient.getItem(userId, seriesId);
+        if (!series) return { tmdbId: null, seriesName: '', seriesItem: null };
+        return { tmdbId: series.ProviderIds?.Tmdb || null, seriesName: series.Name, seriesItem: series };
+    }
 
     /**
      * Checks if a TV show has missing released seasons that can be requested.
@@ -419,33 +529,14 @@
         if (!tvDetails?.seasons) return false;
 
         const now = new Date();
-        const seasonStatusMap = {};
-
-        // Build status map from mediaInfo seasons
-        tvDetails.mediaInfo?.seasons?.forEach(s => {
-            if (!seasonStatusMap[s.seasonNumber] || s.status > seasonStatusMap[s.seasonNumber]) {
-                seasonStatusMap[s.seasonNumber] = s.status;
-            }
-        });
-
-        // Also include request statuses (may have higher status than mediaInfo)
-        tvDetails.mediaInfo?.requests?.forEach(r => {
-            r.seasons?.forEach(sr => {
-                if (!seasonStatusMap[sr.seasonNumber] || sr.status > seasonStatusMap[sr.seasonNumber]) {
-                    seasonStatusMap[sr.seasonNumber] = sr.status;
-                }
-            });
-        });
+        const seasonStatusMap = buildSeasonStatusMap(tvDetails);
 
         for (const season of tvDetails.seasons) {
             if (season.seasonNumber <= 0) continue;
             if (!season.episodeCount || season.episodeCount <= 0) continue;
-
-            // Only consider released seasons
             if (!season.airDate) continue;
             if (new Date(season.airDate) > now) continue;
 
-            // Status 1 or undefined = not requested; anything higher means requested/available
             const status = seasonStatusMap[season.seasonNumber];
             if (!status || status === 1) {
                 return true;
@@ -460,20 +551,11 @@
      * when the show has missing released seasons that can be requested via Jellyseerr.
      * @param {string} itemId - Jellyfin item ID
      * @param {AbortSignal} [signal] - Optional abort signal for cancellation on navigation
+     * @param {object} item - Pre-fetched Jellyfin item from dispatcher
      */
-    async function renderMissingSeasonsButton(itemId, signal) {
+    async function renderMissingSeasonsButton(itemId, signal, item) {
         try {
             if (processedMissingSeasons.has(itemId)) return;
-            if (!JE.pluginConfig?.JellyseerrEnabled) return;
-
-            const status = await JE.jellyseerrAPI.checkUserStatus();
-            if (signal?.aborted) return;
-            if (!status?.active) return;
-
-            const userId = ApiClient.getCurrentUserId();
-            const item = await ApiClient.getItem(userId, itemId);
-            if (signal?.aborted) return;
-            if (!item || item.Type !== 'Series') return;
 
             const tmdbId = item.ProviderIds?.Tmdb;
             if (!tmdbId) return;
@@ -491,7 +573,7 @@
 
             if (signal?.aborted) return;
 
-            const activePage = document.querySelector('.libraryPage:not(.hide)');
+            const activePage = getActivePage();
             if (!activePage) return;
 
             // Prevent duplicate button
@@ -507,26 +589,9 @@
             section.className = `verticalSection ${REQUEST_MORE_BTN_CLASS}`;
             section.style.padding = '0 1em 0.5em';
 
-            const button = document.createElement('button');
-            button.setAttribute('is', 'emby-button');
-            button.className = 'raised button-submit emby-button';
-            button.type = 'button';
-            button.style.display = 'inline-flex';
-            button.style.alignItems = 'center';
-            button.style.gap = '0.4em';
-
-            const icon = document.createElement('span');
-            icon.className = 'material-icons';
-            icon.setAttribute('aria-hidden', 'true');
-            icon.textContent = 'download';
-            icon.style.fontSize = '1.2em';
-
-            const textSpan = document.createElement('span');
-            textSpan.textContent = JE.t('jellyseerr_btn_request_more') || 'Request More';
-
-            button.appendChild(icon);
-            button.appendChild(textSpan);
-            section.appendChild(button);
+            const button = createJellyseerrRequestButton(
+                JE.t('jellyseerr_btn_request_more') || 'Request More'
+            );
 
             button.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -535,6 +600,8 @@
                     JE.jellyseerrUI.showSeasonSelectionModal(parseInt(tmdbId), 'tv', item.Name, tvDetails);
                 }
             });
+
+            section.appendChild(button);
 
             // Place after seasons list, or before cast if seasons section not found
             if (childrenSection) {
@@ -561,20 +628,11 @@
      * request the season containing the missing episode via Jellyseerr.
      * @param {string} itemId - Jellyfin item ID
      * @param {AbortSignal} [signal] - Optional abort signal for cancellation on navigation
+     * @param {object} item - Pre-fetched Jellyfin item from dispatcher
      */
-    async function renderMissingEpisodeRequestButton(itemId, signal) {
+    async function renderMissingEpisodeRequestButton(itemId, signal, item) {
         try {
             if (processedMissingEpisodes.has(itemId)) return;
-            if (!JE.pluginConfig?.JellyseerrEnabled) return;
-
-            const status = await JE.jellyseerrAPI.checkUserStatus();
-            if (signal?.aborted) return;
-            if (!status?.active) return;
-
-            const userId = ApiClient.getCurrentUserId();
-            const item = await ApiClient.getItem(userId, itemId);
-            if (signal?.aborted) return;
-            if (!item || item.Type !== 'Episode') return;
 
             // Only show on virtual/missing episodes
             if (item.LocationType !== 'Virtual') return;
@@ -587,15 +645,14 @@
             const seriesId = item.SeriesId;
             if (!seriesId) return;
 
-            const series = await ApiClient.getItem(userId, seriesId);
+            const series = await ApiClient.getItem(ApiClient.getCurrentUserId(), seriesId);
             if (signal?.aborted) return;
             if (!series) return;
 
             const tmdbId = series.ProviderIds?.Tmdb;
             if (!tmdbId) return;
 
-            const activePage = document.querySelector('.libraryPage:not(.hide)') ||
-                               document.querySelector('#itemDetailPage:not(.hide)');
+            const activePage = getActivePage();
             if (!activePage) return;
 
             if (activePage.querySelector(`.${REQUEST_EPISODE_BTN_CLASS}`)) return;
@@ -675,30 +732,187 @@
     }
 
     /**
-     * Handles item details page navigation
+     * Renders a "Request Season" button on Season detail pages when the season
+     * is missing/not requested in Jellyseerr.
+     * @param {string} itemId - Jellyfin item ID
+     * @param {AbortSignal} [signal] - Optional abort signal for cancellation on navigation
      */
-    function handleItemDetailsPage() {
-        // Get item ID from URL
-        const hash = window.location.hash;
-        if (!hash.includes('/details?id=')) {
-            return;
-        }
-
+    async function renderMissingSeasonPageButton(itemId, signal, item) {
         try {
-            const itemId = new URLSearchParams(hash.split('?')[1]).get('id');
-            if (itemId) {
-                // Use requestAnimationFrame instead of fixed timeout
-                // This ensures we're in sync with the rendering cycle
-                requestAnimationFrame(() => {
-                    const signal = currentAbortController?.signal;
-                    renderSimilarAndRecommended(itemId);
-                    renderMissingSeasonsButton(itemId, signal);
-                    renderMissingEpisodeRequestButton(itemId, signal);
-                });
+            if (processedMissingSeasonPages.has(itemId)) return;
+
+            const seasonNumber = item.IndexNumber;
+            if (!seasonNumber || seasonNumber <= 0) return;
+
+            const { tmdbId, seriesName } = await resolveSeriesTmdbId(item);
+            if (signal?.aborted) return;
+            if (!tmdbId) return;
+
+            const tvDetails = await JE.jellyseerrAPI.fetchTvShowDetails(parseInt(tmdbId));
+            if (signal?.aborted) return;
+            if (!tvDetails) return;
+
+            if (!isSeasonMissing(tvDetails, seasonNumber)) {
+                console.debug(`${missingSeasonsLogPrefix} Season ${seasonNumber} of "${seriesName}" is not missing`);
+                return;
+            }
+
+            const activePage = getActivePage();
+            if (!activePage) return;
+
+            // Prevent duplicate button
+            if (activePage.querySelector(`.${REQUEST_SEASON_BTN_CLASS}`)) return;
+
+            // Find the detail buttons container
+            const buttonSelectors = ['.detailButtons', '.mainDetailButtons', '.detailButtonsContainer'];
+            let buttonContainer = null;
+            for (const sel of buttonSelectors) {
+                const found = activePage.querySelector(sel);
+                if (found) {
+                    buttonContainer = found;
+                    break;
+                }
+            }
+            if (!buttonContainer) return;
+
+            const requestLabel = JE.t('jellyseerr_btn_request') || 'Request';
+            const seasonLabel = `${requestLabel} S${String(seasonNumber).padStart(2, '0')}`;
+
+            // Create Jellyfin-native detail button style (matches existing button row)
+            const button = document.createElement('button');
+            button.setAttribute('is', 'emby-button');
+            button.className = `button-flat detailButton emby-button ${REQUEST_SEASON_BTN_CLASS}`;
+            button.type = 'button';
+            button.title = seasonLabel;
+
+            const content = document.createElement('div');
+            content.className = 'detailButton-content';
+
+            const icon = document.createElement('span');
+            icon.className = 'material-icons detailButton-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = 'download';
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'detailButton-icon-text';
+            textSpan.textContent = seasonLabel;
+
+            content.appendChild(icon);
+            content.appendChild(textSpan);
+            button.appendChild(content);
+
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                button.disabled = true;
+                textSpan.textContent = JE.t('jellyseerr_btn_requesting') || 'Requesting...';
+
+                try {
+                    await JE.jellyseerrAPI.requestTvSeasons(parseInt(tmdbId), [seasonNumber]);
+                    textSpan.textContent = JE.t('jellyseerr_btn_requested') || 'Requested';
+                    icon.textContent = 'check';
+                    JE.toast?.(JE.t('jellyseerr_modal_toast_request_success', { count: 1, title: seriesName }) || `Requested Season ${seasonNumber}`, 4000);
+                } catch (error) {
+                    textSpan.textContent = seasonLabel;
+                    button.disabled = false;
+                    console.error(`${missingSeasonsLogPrefix} Failed to request season ${seasonNumber}:`, error);
+                    JE.toast?.(JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed', 4000);
+                }
+            });
+
+            // Insert before the "more" button if present, otherwise append
+            const moreButton = buttonContainer.querySelector('.btnMoreCommands');
+            if (moreButton) {
+                buttonContainer.insertBefore(button, moreButton);
+            } else {
+                buttonContainer.appendChild(button);
+            }
+
+            processedMissingSeasonPages.add(itemId);
+            console.debug(`${missingSeasonsLogPrefix} Added "Request Season ${seasonNumber}" button for "${seriesName}"`);
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error(`${missingSeasonsLogPrefix} Error rendering season request button:`, error);
+        }
+    }
+
+    /**
+     * Extracts the item ID from the current URL hash.
+     * @returns {string|null} Item ID or null if not on a detail page
+     */
+    function getItemIdFromHash() {
+        const hash = window.location.hash;
+        if (!hash.includes('/details?id=')) return null;
+        try {
+            return new URLSearchParams(hash.split('?')[1]).get('id');
+        } catch (_) {
+            return null;
+        }
+    }
+
+    /**
+     * Handles similar/recommended sections (has its own abort controller).
+     */
+    function handleSimilarRecommended() {
+        const itemId = getItemIdFromHash();
+        if (!itemId) return;
+        renderSimilarAndRecommended(itemId);
+    }
+
+    /**
+     * Fetches the item once and dispatches to the correct render function based on type.
+     * Eliminates redundant getItem calls from running all three renderers in parallel.
+     * @param {string} itemId - Jellyfin item ID
+     * @param {AbortSignal} signal - Abort signal for cancellation
+     */
+    async function dispatchMissingSeasonsHandler(itemId, signal) {
+        try {
+            if (!JE.pluginConfig?.JellyseerrEnabled) return;
+
+            const status = await JE.jellyseerrAPI.checkUserStatus();
+            if (signal?.aborted) return;
+            if (!status?.active) return;
+
+            const userId = ApiClient.getCurrentUserId();
+            const item = await ApiClient.getItem(userId, itemId);
+            if (signal?.aborted) return;
+            if (!item) return;
+
+            switch (item.Type) {
+                case 'Series':
+                    return renderMissingSeasonsButton(itemId, signal, item);
+                case 'Season':
+                    return renderMissingSeasonPageButton(itemId, signal, item);
+                case 'Episode':
+                    return renderMissingEpisodeRequestButton(itemId, signal, item);
             }
         } catch (error) {
-            console.error(`${logPrefix} Error parsing item ID from URL:`, error);
+            if (error.name === 'AbortError') return;
+            console.error(`${missingSeasonsLogPrefix} Error dispatching missing seasons handler:`, error);
         }
+    }
+
+    /**
+     * Handles missing seasons buttons (Series, Season, Episode pages).
+     * Uses setTimeout(150) pattern from issue-reporter for reliable SPA timing.
+     */
+    function handleMissingSeasonsPage() {
+        const itemId = getItemIdFromHash();
+        if (!itemId) return;
+
+        // Cancel previous missing seasons requests
+        if (missingSeasonsAbortController) {
+            missingSeasonsAbortController.abort();
+        }
+        missingSeasonsAbortController = new AbortController();
+        const signal = missingSeasonsAbortController.signal;
+
+        // Use setTimeout like issue-reporter for reliable SPA timing
+        setTimeout(() => {
+            if (signal.aborted) return;
+            dispatchMissingSeasonsHandler(itemId, signal);
+        }, 150);
     }
 
     /**
@@ -710,31 +924,43 @@
             currentAbortController.abort();
             currentAbortController = null;
         }
+        if (missingSeasonsAbortController) {
+            missingSeasonsAbortController.abort();
+            missingSeasonsAbortController = null;
+        }
         // Clear processed items cache
         processedItems.clear();
         processedMissingSeasons.clear();
+        processedMissingSeasonPages.clear();
         processedMissingEpisodes.clear();
     }
 
     /**
-     * Initializes the item details handler
+     * Initializes the item details handler.
+     * hashchange only cleans up state; viewshow handles rendering after Jellyfin
+     * finishes its own DOM updates, avoiding double-fire on every navigation.
      */
     function initialize() {
-        console.debug(`${logPrefix} Initializing Recommendations and Similar sections`);
+        if (initialize._done) return;
+        initialize._done = true;
 
-        // Listen for hash changes (navigation)
-        window.addEventListener('hashchange', () => {
-            cleanup();
-            handleItemDetailsPage();
-        });
+        console.debug(`${logPrefix} Initializing Recommendations, Similar, and Missing Seasons`);
 
-        // Check current page on load
-        handleItemDetailsPage();
+        // hashchange fires first on navigation - just reset state
+        window.addEventListener('hashchange', cleanup);
 
-        // Also listen for viewshow events (Jellyfin's custom event)
-        document.addEventListener('viewshow', () => {
-            handleItemDetailsPage();
-        });
+        // viewshow fires after Jellyfin renders the view - do actual work here
+        const handleViewShow = () => {
+            setTimeout(() => {
+                handleSimilarRecommended();
+                handleMissingSeasonsPage();
+            }, 100);
+        };
+        document.addEventListener('viewshow', handleViewShow);
+
+        // Initial page load (no viewshow fires for the first page)
+        handleSimilarRecommended();
+        setTimeout(handleMissingSeasonsPage, 500);
     }
 
     // Initialize when DOM is ready
