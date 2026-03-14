@@ -49,6 +49,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly UserConfigurationManager _userConfigurationManager;
         private readonly IItemRepository _itemRepository;
         private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
+        private readonly IServerApplicationPaths _applicationPaths;
 
         // Cache for Seerr user ID lookups (JellyfinUserId -> SeerrUserId)
         private static readonly Dictionary<string, (string JellyseerrUserId, DateTime CachedAt)> _userIdCache = new();
@@ -66,6 +67,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private static readonly Dictionary<string, (TmdbEnrichmentResult Data, DateTime CachedAt)> _tmdbEnrichmentCache = new();
         private static readonly object _tmdbEnrichmentCacheLock = new();
         private static readonly ConcurrentDictionary<string, Task<TmdbEnrichmentResult>> _tmdbEnrichmentInFlight = new();
+
+        // Cache for SmartList config scan results (boxsetId -> SmartListInfo)
+        private static readonly Dictionary<string, (SmartListInfo? Info, DateTime CachedAt)> _smartListCache = new();
+        private static readonly object _smartListCacheLock = new();
+        private static readonly TimeSpan _smartListCacheTtl = TimeSpan.FromMinutes(30);
 
         private static TimeSpan GetResponseCacheTtl()
         {
@@ -114,7 +120,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             IDtoService dtoService,
             UserConfigurationManager userConfigurationManager,
             IItemRepository itemRepository,
-            IDbContextFactory<JellyfinDbContext> dbContextFactory)
+            IDbContextFactory<JellyfinDbContext> dbContextFactory,
+            IServerApplicationPaths applicationPaths)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -125,6 +132,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _userConfigurationManager = userConfigurationManager;
             _itemRepository = itemRepository;
             _dbContextFactory = dbContextFactory;
+            _applicationPaths = applicationPaths;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId)
@@ -670,18 +678,133 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     tmdbId = id;
                 }
 
+                // If no TMDB ID, check if this is a SmartList collection
+                string? smartListSource = null;
+                string? smartListExternalUrl = null;
+                string? smartListMediaType = null;
+                if (string.IsNullOrEmpty(tmdbId))
+                {
+                    var smartListInfo = FindSmartListForBoxSet(boxsetId);
+                    if (smartListInfo != null)
+                    {
+                        smartListSource = smartListInfo.Source;
+                        smartListExternalUrl = smartListInfo.ExternalUrl;
+                        smartListMediaType = smartListInfo.MediaType;
+                    }
+                }
+
                 return Ok(new
                 {
                     id = boxset.Id,
                     name = boxset.Name,
                     tmdbId = tmdbId,
-                    type = boxset.GetType().Name
+                    type = boxset.GetType().Name,
+                    smartListSource = smartListSource,
+                    smartListExternalUrl = smartListExternalUrl,
+                    smartListMediaType = smartListMediaType
                 });
             }
             catch (Exception ex)
             {
                 _logger.Error($"Failed to get boxset info for {boxsetId}: {ex.Message}");
                 return StatusCode(500, new { message = "Failed to get boxset info" });
+            }
+        }
+
+        [HttpGet("smartlist/{boxsetId}/external-items")]
+        [Authorize]
+        public async Task<IActionResult> GetSmartListExternalItems(Guid boxsetId)
+        {
+            try
+            {
+                var smartListInfo = FindSmartListForBoxSet(boxsetId);
+                if (smartListInfo == null)
+                {
+                    return NotFound(new { message = "No SmartList found for this BoxSet" });
+                }
+
+                if (smartListInfo.Source == "unsupported")
+                {
+                    return Ok(new { source = "unsupported", items = Array.Empty<object>(), totalItems = 0 });
+                }
+
+                if (smartListInfo.Source == "tmdb")
+                {
+                    // Frontend handles TMDB sources via Seerr discover endpoints
+                    return Ok(new
+                    {
+                        source = "tmdb",
+                        discoverType = smartListInfo.MediaType ?? "tv",
+                        externalUrl = smartListInfo.ExternalUrl
+                    });
+                }
+
+                // MDBList source — check cache first
+                var cacheKey = $"smartlist-external-{smartListInfo.ExternalUrl}";
+                lock (_responseCacheLock)
+                {
+                    if (_responseCache.TryGetValue(cacheKey, out var cached) &&
+                        DateTime.UtcNow - cached.CachedAt < _smartListCacheTtl)
+                    {
+                        return Content(cached.Content, "application/json");
+                    }
+                }
+
+                // Fetch from MDBList
+                var jsonUrl = smartListInfo.ExternalUrl.TrimEnd('/') + "/json";
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(15);
+                var response = await client.GetAsync(jsonUrl, HttpCompletionOption.ResponseHeadersRead);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Warning($"MDBList API returned {response.StatusCode} for {jsonUrl}");
+                    return StatusCode(502, new { message = "Failed to fetch external list" });
+                }
+
+                // Reject responses larger than 5MB to prevent memory exhaustion
+                if (response.Content.Headers.ContentLength > 5_000_000)
+                {
+                    _logger.Warning($"MDBList response too large ({response.Content.Headers.ContentLength} bytes) for {jsonUrl}");
+                    return StatusCode(502, new { message = "External list response too large" });
+                }
+
+                var rawJson = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(rawJson);
+                var items = new List<object>();
+
+                foreach (var item in doc.RootElement.EnumerateArray())
+                {
+                    var tmdbId = item.TryGetProperty("id", out var idEl) ? idEl.GetInt32() : 0;
+                    if (tmdbId == 0) continue;
+
+                    var rawMediaType = item.TryGetProperty("mediatype", out var mtEl) ? mtEl.GetString() : null;
+                    // Map MDBList types: "show" -> "tv", "movie" -> "movie"
+                    var mediaType = rawMediaType == "show" ? "tv" : rawMediaType ?? "movie";
+
+                    var title = item.TryGetProperty("title", out var titleEl) ? titleEl.GetString() : null;
+                    var rank = item.TryGetProperty("rank", out var rankEl) ? rankEl.GetInt32() : 0;
+
+                    items.Add(new { tmdbId, mediaType, title, rank });
+                }
+
+                var resultJson = JsonSerializer.Serialize(new
+                {
+                    source = "mdblist",
+                    items,
+                    totalItems = items.Count
+                });
+
+                lock (_responseCacheLock)
+                {
+                    _responseCache[cacheKey] = (resultJson, DateTime.UtcNow);
+                }
+
+                return Content(resultJson, "application/json");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to get SmartList external items for {boxsetId}: {ex.Message}");
+                return StatusCode(500, new { message = "Failed to get SmartList external items" });
             }
         }
 
@@ -1015,6 +1138,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public Task<IActionResult> GetTvGenreSlider()
         {
             return ProxyJellyseerrRequest("/api/v1/discover/genreslider/tv", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/tv")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTv([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/tv?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/movies")]
+        [Authorize]
+        public Task<IActionResult> DiscoverMovies([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies?page={page}"), HttpMethod.Get);
         }
 
         [HttpGet("jellyseerr/overrideRule")]
@@ -3777,7 +3914,179 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
             return File(stream, MimeTypes.GetMimeType(view.EmbeddedResourcePath));
         }
+
+        private SmartListInfo? FindSmartListForBoxSet(Guid boxsetId)
+        {
+            var boxsetIdStr = boxsetId.ToString("N");
+
+            lock (_smartListCacheLock)
+            {
+                if (_smartListCache.TryGetValue(boxsetIdStr, out var cached) &&
+                    DateTime.UtcNow - cached.CachedAt < _smartListCacheTtl)
+                {
+                    return cached.Info;
+                }
+            }
+
+            SmartListInfo? result = null;
+            try
+            {
+                var smartListsDir = Path.Combine(_applicationPaths.DataPath, "smartlists");
+                if (!Directory.Exists(smartListsDir))
+                {
+                    _logger.Warning("SmartLists directory not found at: " + smartListsDir);
+                    lock (_smartListCacheLock)
+                    {
+                        _smartListCache[boxsetIdStr] = (null, DateTime.UtcNow);
+                    }
+                    return null;
+                }
+
+                foreach (var configPath in Directory.EnumerateFiles(smartListsDir, "config.json", SearchOption.AllDirectories))
+                {
+                    try
+                    {
+                        var json = System.IO.File.ReadAllText(configPath);
+                        using var doc = JsonDocument.Parse(json);
+                        var root = doc.RootElement;
+
+                        // Only match Collection type SmartLists (not Playlists)
+                        if (!root.TryGetProperty("Type", out var typeEl) ||
+                            typeEl.GetString() != "Collection")
+                        {
+                            continue;
+                        }
+
+                        if (!root.TryGetProperty("JellyfinCollectionId", out var collIdEl))
+                        {
+                            continue;
+                        }
+
+                        var collId = collIdEl.GetString();
+                        if (!string.Equals(collId, boxsetIdStr, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        // Found matching SmartList — extract external list URL
+                        string? externalUrl = null;
+                        if (root.TryGetProperty("ExpressionSets", out var sets))
+                        {
+                            foreach (var set in sets.EnumerateArray())
+                            {
+                                if (!set.TryGetProperty("Expressions", out var exprs)) continue;
+                                foreach (var expr in exprs.EnumerateArray())
+                                {
+                                    if (expr.TryGetProperty("MemberName", out var mn) &&
+                                        mn.GetString() == "ExternalList" &&
+                                        expr.TryGetProperty("TargetValue", out var tv))
+                                    {
+                                        externalUrl = tv.GetString();
+                                        break;
+                                    }
+                                }
+                                if (externalUrl != null) break;
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(externalUrl))
+                        {
+                            continue;
+                        }
+
+                        // Determine source type via proper URI host validation
+                        string sourceType;
+                        if (Uri.TryCreate(externalUrl, UriKind.Absolute, out var externalUri) &&
+                            (externalUri.Scheme == "https" || externalUri.Scheme == "http"))
+                        {
+                            var host = externalUri.Host;
+                            if (host.Equals("mdblist.com", StringComparison.OrdinalIgnoreCase) ||
+                                host.EndsWith(".mdblist.com", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sourceType = "mdblist";
+                            }
+                            else if (host.Equals("themoviedb.org", StringComparison.OrdinalIgnoreCase) ||
+                                     host.EndsWith(".themoviedb.org", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sourceType = "tmdb";
+                            }
+                            else
+                            {
+                                sourceType = "unsupported";
+                            }
+                        }
+                        else
+                        {
+                            sourceType = "unsupported";
+                        }
+
+                        // Determine media type from SmartList config
+                        string? mediaType = null;
+                        if (root.TryGetProperty("MediaTypes", out var mediaTypes))
+                        {
+                            var types = new List<string>();
+                            foreach (var mt in mediaTypes.EnumerateArray())
+                            {
+                                types.Add(mt.GetString() ?? "");
+                            }
+                            if (types.Contains("Series") && !types.Contains("Movie"))
+                            {
+                                mediaType = "tv";
+                            }
+                            else if (types.Contains("Movie") && !types.Contains("Series"))
+                            {
+                                mediaType = "movie";
+                            }
+                        }
+
+                        result = new SmartListInfo
+                        {
+                            Source = sourceType,
+                            ExternalUrl = externalUrl,
+                            MediaType = mediaType
+                        };
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning($"Failed to parse SmartList config {configPath}: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to scan SmartList configs: {ex.Message}");
+            }
+
+            lock (_smartListCacheLock)
+            {
+                _smartListCache[boxsetIdStr] = (result, DateTime.UtcNow);
+
+                // Evict stale entries periodically
+                if (_smartListCache.Count > 50)
+                {
+                    var staleKeys = _smartListCache
+                        .Where(kv => DateTime.UtcNow - kv.Value.CachedAt > _smartListCacheTtl)
+                        .Select(kv => kv.Key)
+                        .ToList();
+                    foreach (var key in staleKeys)
+                    {
+                        _smartListCache.Remove(key);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private sealed class SmartListInfo
+        {
+            public string Source { get; init; } = string.Empty;
+            public string ExternalUrl { get; init; } = string.Empty;
+            public string? MediaType { get; init; }
+        }
     }
+
     /// <summary>
     /// Helper class for TMDB person data enrichment
     /// </summary>
