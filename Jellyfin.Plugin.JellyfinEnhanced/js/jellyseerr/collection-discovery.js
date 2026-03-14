@@ -1115,7 +1115,8 @@
                 await renderTmdbCollection(boxsetInfo, signal, pageReadyPromise);
             } else if (boxsetInfo?.smartListSource && boxsetInfo.smartListSource !== 'unsupported') {
                 console.debug(`${logPrefix} SmartList detected: source=${boxsetInfo.smartListSource}, url=${boxsetInfo.smartListExternalUrl}`);
-                if (boxsetInfo.smartListSource === 'mdblist' || boxsetInfo.smartListSource === 'imdb') {
+                const listSources = ['mdblist', 'imdb', 'trakt', 'letterboxd'];
+                if (listSources.includes(boxsetInfo.smartListSource)) {
                     await renderMdblistSmartList(boxsetInfo, itemId, signal, pageReadyPromise);
                 } else if (boxsetInfo.smartListSource === 'tmdb') {
                     await renderTmdbSmartList(boxsetInfo, itemId, signal, pageReadyPromise);

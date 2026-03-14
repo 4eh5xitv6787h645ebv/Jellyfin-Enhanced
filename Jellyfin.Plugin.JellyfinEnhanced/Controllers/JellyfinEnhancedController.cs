@@ -739,9 +739,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     });
                 }
 
-                if (smartListInfo.Source == "imdb")
+                if (smartListInfo.Source == "imdb" || smartListInfo.Source == "trakt" || smartListInfo.Source == "letterboxd")
                 {
-                    return await GetImdbListExternalItems(smartListInfo);
+                    // All three use HTML scraping to extract IDs, then TMDB find API to resolve
+                    return await GetScrapedListExternalItems(smartListInfo);
                 }
 
                 // MDBList source — check cache first
@@ -3930,7 +3931,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return File(stream, MimeTypes.GetMimeType(view.EmbeddedResourcePath));
         }
 
-        private async Task<IActionResult> GetImdbListExternalItems(SmartListInfo smartListInfo)
+        /// <summary>
+        /// Fetches external items from HTML-scrapable list sources (IMDb, Trakt, Letterboxd).
+        /// Extracts IMDb IDs from the page HTML, then resolves each to a TMDB ID via the TMDB find API.
+        /// Returns items in the same format as MDBList for frontend compatibility.
+        /// </summary>
+        private async Task<IActionResult> GetScrapedListExternalItems(SmartListInfo smartListInfo)
         {
             var cacheKey = $"smartlist-external-{smartListInfo.ExternalUrl}";
             lock (_responseCacheLock)
@@ -3945,55 +3951,141 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrEmpty(config.TMDB_API_KEY))
             {
-                _logger.Warning("TMDB API key not configured — cannot resolve IMDb IDs");
-                return StatusCode(503, new { message = "TMDB API key required for IMDb list discovery" });
+                _logger.Warning("TMDB API key not configured — cannot resolve external list IDs");
+                return StatusCode(503, new { message = "TMDB API key required for external list discovery" });
             }
 
-            // Scrape IMDb list page for tt IDs
+            // Fetch the list page HTML
             var client = _httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(15);
             client.DefaultRequestHeaders.Add("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
             client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
 
             var response = await client.GetAsync(smartListInfo.ExternalUrl, HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.Warning($"IMDb returned {response.StatusCode} for {smartListInfo.ExternalUrl}");
-                return StatusCode(502, new { message = "Failed to fetch IMDb list" });
+                _logger.Warning($"{smartListInfo.Source} returned {response.StatusCode} for {smartListInfo.ExternalUrl}");
+                return StatusCode(502, new { message = $"Failed to fetch {smartListInfo.Source} list" });
             }
 
             if (response.Content.Headers.ContentLength > 10_000_000)
             {
-                return StatusCode(502, new { message = "IMDb list response too large" });
+                return StatusCode(502, new { message = "External list response too large" });
             }
 
             var html = await response.Content.ReadAsStringAsync();
             if (html.Length > 10_000_000)
             {
-                return StatusCode(502, new { message = "IMDb list response too large" });
+                return StatusCode(502, new { message = "External list response too large" });
             }
 
-            // Extract IMDb IDs (tt followed by 7+ digits)
+            // Extract identifiers from HTML
+            // 1. IMDb IDs (tt followed by 7+ digits) — works for IMDb, Trakt, Letterboxd
             var imdbIdPattern = new System.Text.RegularExpressions.Regex(@"tt\d{7,}");
-            var matches = imdbIdPattern.Matches(html);
+            var imdbMatches = imdbIdPattern.Matches(html);
             var imdbIds = new List<string>();
-            var seenIds = new HashSet<string>();
+            var seenImdbIds = new HashSet<string>();
 
-            foreach (System.Text.RegularExpressions.Match match in matches)
+            foreach (System.Text.RegularExpressions.Match match in imdbMatches)
             {
-                if (seenIds.Add(match.Value))
+                if (seenImdbIds.Add(match.Value))
                 {
                     imdbIds.Add(match.Value);
                 }
             }
 
-            // Resolve IMDb IDs → TMDB IDs via TMDB find API
+            // 2. Direct TMDB IDs from data attributes (Letterboxd uses data-tmdb-id)
+            var tmdbIdPattern = new System.Text.RegularExpressions.Regex(@"data-tmdb-id=""(\d+)""");
+            var tmdbMatches = tmdbIdPattern.Matches(html);
+            var directTmdbIds = new List<int>();
+            var seenTmdbIds = new HashSet<int>();
+
+            foreach (System.Text.RegularExpressions.Match match in tmdbMatches)
+            {
+                if (int.TryParse(match.Groups[1].Value, out var id) && seenTmdbIds.Add(id))
+                {
+                    directTmdbIds.Add(id);
+                }
+            }
+
+            // 3. TMDB IDs from themoviedb.org links (Letterboxd film pages link to TMDB)
+            var tmdbLinkPattern = new System.Text.RegularExpressions.Regex(@"themoviedb\.org/(?:movie|tv)/(\d+)");
+            foreach (System.Text.RegularExpressions.Match match in tmdbLinkPattern.Matches(html))
+            {
+                if (int.TryParse(match.Groups[1].Value, out var id) && seenTmdbIds.Add(id))
+                {
+                    directTmdbIds.Add(id);
+                }
+            }
+
+            if (imdbIds.Count == 0 && directTmdbIds.Count == 0)
+            {
+                _logger.Warning($"No IMDb or TMDB IDs found in {smartListInfo.Source} page: {smartListInfo.ExternalUrl}");
+                return Ok(new { source = smartListInfo.Source, items = Array.Empty<object>(), totalItems = 0 });
+            }
+
             var tmdbClient = _httpClientFactory.CreateClient();
             tmdbClient.Timeout = TimeSpan.FromSeconds(10);
             var items = new List<object>();
             var rank = 0;
+            var resolvedTmdbIds = new HashSet<int>(seenTmdbIds);
 
+            // First, add any directly found TMDB IDs (need to look up details)
+            foreach (var tmdbId in directTmdbIds)
+            {
+                try
+                {
+                    // Try movie first, then TV
+                    var movieUrl = $"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={config.TMDB_API_KEY}";
+                    var movieResponse = await tmdbClient.GetAsync(movieUrl);
+                    if (movieResponse.IsSuccessStatusCode)
+                    {
+                        var json = await movieResponse.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(json);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("id", out _))
+                        {
+                            rank++;
+                            items.Add(new
+                            {
+                                tmdbId,
+                                mediaType = "movie",
+                                title = root.TryGetProperty("title", out var t) ? t.GetString() : null,
+                                rank,
+                                release_year = root.TryGetProperty("release_date", out var rd) && rd.GetString()?.Length >= 4
+                                    ? int.TryParse(rd.GetString()![..4], out var y) ? y : 0 : 0
+                            });
+                            continue;
+                        }
+                    }
+
+                    var tvUrl = $"https://api.themoviedb.org/3/tv/{tmdbId}?api_key={config.TMDB_API_KEY}";
+                    var tvResponse = await tmdbClient.GetAsync(tvUrl);
+                    if (tvResponse.IsSuccessStatusCode)
+                    {
+                        var json = await tvResponse.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(json);
+                        var root = doc.RootElement;
+                        rank++;
+                        items.Add(new
+                        {
+                            tmdbId,
+                            mediaType = "tv",
+                            title = root.TryGetProperty("name", out var n) ? n.GetString() : null,
+                            rank,
+                            release_year = root.TryGetProperty("first_air_date", out var fad) && fad.GetString()?.Length >= 4
+                                ? int.TryParse(fad.GetString()![..4], out var y2) ? y2 : 0 : 0
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Failed to look up TMDB ID {tmdbId}: {ex.Message}");
+                }
+            }
+
+            // Then resolve IMDb IDs → TMDB IDs (skip any already resolved)
             foreach (var imdbId in imdbIds)
             {
                 try
@@ -4006,37 +4098,38 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     using var findDoc = JsonDocument.Parse(findJson);
                     var findRoot = findDoc.RootElement;
 
-                    // Check movie_results first, then tv_results
                     if (findRoot.TryGetProperty("movie_results", out var movieResults) &&
                         movieResults.GetArrayLength() > 0)
                     {
                         var movie = movieResults[0];
+                        var tmdbId = movie.GetProperty("id").GetInt32();
+                        if (!resolvedTmdbIds.Add(tmdbId)) continue;
                         rank++;
                         items.Add(new
                         {
-                            tmdbId = movie.GetProperty("id").GetInt32(),
+                            tmdbId,
                             mediaType = "movie",
                             title = movie.TryGetProperty("title", out var t) ? t.GetString() : null,
                             rank,
                             release_year = movie.TryGetProperty("release_date", out var rd) && rd.GetString()?.Length >= 4
-                                ? int.TryParse(rd.GetString()![..4], out var y) ? y : 0
-                                : 0
+                                ? int.TryParse(rd.GetString()![..4], out var y) ? y : 0 : 0
                         });
                     }
                     else if (findRoot.TryGetProperty("tv_results", out var tvResults) &&
                              tvResults.GetArrayLength() > 0)
                     {
                         var show = tvResults[0];
+                        var tmdbId = show.GetProperty("id").GetInt32();
+                        if (!resolvedTmdbIds.Add(tmdbId)) continue;
                         rank++;
                         items.Add(new
                         {
-                            tmdbId = show.GetProperty("id").GetInt32(),
+                            tmdbId,
                             mediaType = "tv",
                             title = show.TryGetProperty("name", out var n) ? n.GetString() : null,
                             rank,
                             release_year = show.TryGetProperty("first_air_date", out var fad) && fad.GetString()?.Length >= 4
-                                ? int.TryParse(fad.GetString()![..4], out var y2) ? y2 : 0
-                                : 0
+                                ? int.TryParse(fad.GetString()![..4], out var y2) ? y2 : 0 : 0
                         });
                     }
                 }
@@ -4048,7 +4141,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
             var resultJson = JsonSerializer.Serialize(new
             {
-                source = "imdb",
+                source = smartListInfo.Source,
                 items,
                 totalItems = items.Count
             });
@@ -4161,6 +4254,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                      host.Equals("m.imdb.com", StringComparison.OrdinalIgnoreCase))
                             {
                                 sourceType = "imdb";
+                            }
+                            else if (host.Equals("trakt.tv", StringComparison.OrdinalIgnoreCase) ||
+                                     host.EndsWith(".trakt.tv", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sourceType = "trakt";
+                            }
+                            else if (host.Equals("letterboxd.com", StringComparison.OrdinalIgnoreCase) ||
+                                     host.EndsWith(".letterboxd.com", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sourceType = "letterboxd";
                             }
                             else
                             {
