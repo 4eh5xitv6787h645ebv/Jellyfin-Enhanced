@@ -661,7 +661,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         [HttpGet("boxset/{boxsetId}")]
         [Authorize]
-        public IActionResult GetBoxSetInfo(Guid boxsetId)
+        public async Task<IActionResult> GetBoxSetInfo(Guid boxsetId)
         {
             try
             {
@@ -684,7 +684,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 string? smartListMediaType = null;
                 if (string.IsNullOrEmpty(tmdbId))
                 {
-                    var smartListInfo = FindSmartListForBoxSet(boxsetId);
+                    var smartListInfo = await FindSmartListForBoxSetAsync(boxsetId);
                     if (smartListInfo != null)
                     {
                         smartListSource = smartListInfo.Source;
@@ -717,7 +717,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         {
             try
             {
-                var smartListInfo = FindSmartListForBoxSet(boxsetId);
+                var smartListInfo = await FindSmartListForBoxSetAsync(boxsetId);
                 if (smartListInfo == null)
                 {
                     return NotFound(new { message = "No SmartList found for this BoxSet" });
@@ -762,6 +762,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
 
                 // Reject responses larger than 5MB to prevent memory exhaustion
+                // Check Content-Length header first (may be null for chunked responses)
                 if (response.Content.Headers.ContentLength > 5_000_000)
                 {
                     _logger.Warning($"MDBList response too large ({response.Content.Headers.ContentLength} bytes) for {jsonUrl}");
@@ -769,6 +770,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
 
                 var rawJson = await response.Content.ReadAsStringAsync();
+
+                // Also check actual size (Content-Length may be absent with chunked encoding)
+                if (rawJson.Length > 5_000_000)
+                {
+                    _logger.Warning($"MDBList response too large ({rawJson.Length} chars) for {jsonUrl}");
+                    return StatusCode(502, new { message = "External list response too large" });
+                }
                 using var doc = JsonDocument.Parse(rawJson);
                 var items = new List<object>();
 
@@ -1144,6 +1152,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> DiscoverTv([FromQuery] int page = 1)
         {
+            if (page < 1) page = 1;
             return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/tv?page={page}"), HttpMethod.Get);
         }
 
@@ -1151,6 +1160,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> DiscoverMovies([FromQuery] int page = 1)
         {
+            if (page < 1) page = 1;
             return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies?page={page}"), HttpMethod.Get);
         }
 
@@ -3915,7 +3925,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return File(stream, MimeTypes.GetMimeType(view.EmbeddedResourcePath));
         }
 
-        private SmartListInfo? FindSmartListForBoxSet(Guid boxsetId)
+        private async Task<SmartListInfo?> FindSmartListForBoxSetAsync(Guid boxsetId)
         {
             var boxsetIdStr = boxsetId.ToString("N");
 
@@ -3946,7 +3956,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 {
                     try
                     {
-                        var json = System.IO.File.ReadAllText(configPath);
+                        var json = await System.IO.File.ReadAllTextAsync(configPath);
                         using var doc = JsonDocument.Parse(json);
                         var root = doc.RootElement;
 

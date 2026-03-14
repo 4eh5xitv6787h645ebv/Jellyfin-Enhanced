@@ -246,15 +246,14 @@
      * @returns {Promise<Array>} Results array (nulls filtered out)
      */
     async function processWithConcurrency(items, processFn, concurrency, signal) {
-        const results = [];
+        const results = new Array(items.length).fill(null);
         let index = 0;
 
         async function worker() {
             while (index < items.length) {
                 if (signal?.aborted) return;
                 const currentIndex = index++;
-                const result = await processFn(items[currentIndex]);
-                if (result) results.push(result);
+                results[currentIndex] = await processFn(items[currentIndex]);
             }
         }
 
@@ -263,7 +262,7 @@
             () => worker()
         );
         await Promise.all(workers);
-        return results;
+        return results.filter(Boolean);
     }
 
     // ── MDBList SmartList ──────────────────────────────────────────────
@@ -277,7 +276,8 @@
     async function processNextMdblistBatch(signal) {
         if (mdblistPendingItems.length === 0) return [];
 
-        const batch = mdblistPendingItems.splice(0, MDBLIST_BATCH_SIZE);
+        const batch = mdblistPendingItems.slice(0, MDBLIST_BATCH_SIZE);
+        mdblistPendingItems = mdblistPendingItems.slice(MDBLIST_BATCH_SIZE);
 
         const results = await processWithConcurrency(
             batch,
@@ -305,6 +305,9 @@
     async function loadMoreMdblistItems() {
         if (isLoading || !hasMorePages) return;
         isLoading = true;
+
+        // Snapshot pending items before consuming so we can restore on failure
+        const pendingSnapshot = mdblistPendingItems;
 
         try {
             const signal = currentAbortController?.signal;
@@ -349,6 +352,8 @@
                 }
             }
         } catch (error) {
+            // Restore pending items so retry can re-fetch the same batch
+            mdblistPendingItems = pendingSnapshot;
             if (error.name === 'AbortError') return;
             console.error(`${logPrefix} Error loading more MDBList items:`, error);
             throw error;
@@ -395,9 +400,7 @@
 
             // Apply client-side sort based on current sort mode
             const sortMode = JE.discoveryFilter?.getSortMode(MODULE_NAME) || '';
-            sortMdblistItems(missingItems, sortMode);
-
-            mdblistPendingItems = missingItems;
+            mdblistPendingItems = sortMdblistItems(missingItems, sortMode);
             hasMorePages = mdblistPendingItems.length > 0;
 
             // Process first batch
@@ -438,28 +441,31 @@
     }
 
     /**
-     * Sorts MDBList items based on sort mode (client-side)
-     * @param {Array} items - Items to sort (mutates in-place)
+     * Returns a new array of MDBList items sorted by the given mode
+     * @param {Array} items - Items to sort
      * @param {string} sortMode - Sort mode value
+     * @returns {Array} New sorted array
      */
     function sortMdblistItems(items, sortMode) {
+        const sorted = [...items];
         switch (sortMode) {
             case 'release_date.desc':
-                items.sort((a, b) => (b.release_year || 0) - (a.release_year || 0));
+                sorted.sort((a, b) => (b.release_year || 0) - (a.release_year || 0));
                 break;
             case 'release_date.asc':
-                items.sort((a, b) => (a.release_year || 0) - (b.release_year || 0));
+                sorted.sort((a, b) => (a.release_year || 0) - (b.release_year || 0));
                 break;
             case 'vote_average.desc':
                 // MDBList rank is already a quality ordering; sort by it ascending
                 // (rank 1 = best). For "Top Rated" we reverse rank order.
-                items.sort((a, b) => (a.rank || 0) - (b.rank || 0));
+                sorted.sort((a, b) => (a.rank || 0) - (b.rank || 0));
                 break;
             default:
                 // Popular (default) — preserve MDBList rank order
-                items.sort((a, b) => (a.rank || 0) - (b.rank || 0));
+                sorted.sort((a, b) => (a.rank || 0) - (b.rank || 0));
                 break;
         }
+        return sorted;
     }
 
     /**
@@ -505,11 +511,8 @@
         JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
         JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
 
-        // Apply default sort (MDBList rank order)
-        sortMdblistItems(missingItems, '');
-
-        // Store pending items for batch processing
-        mdblistPendingItems = missingItems;
+        // Store pending items sorted by default MDBList rank order
+        mdblistPendingItems = sortMdblistItems(missingItems, '');
 
         // Initialize deduplicator
         itemDeduplicator = JE.seamlessScroll?.createDeduplicator() || null;
