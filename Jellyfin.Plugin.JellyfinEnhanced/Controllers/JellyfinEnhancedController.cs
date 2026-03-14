@@ -739,6 +739,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     });
                 }
 
+                if (smartListInfo.Source == "imdb")
+                {
+                    return await GetImdbListExternalItems(smartListInfo);
+                }
+
                 // MDBList source — check cache first
                 var cacheKey = $"smartlist-external-{smartListInfo.ExternalUrl}";
                 lock (_responseCacheLock)
@@ -3925,6 +3930,137 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return File(stream, MimeTypes.GetMimeType(view.EmbeddedResourcePath));
         }
 
+        private async Task<IActionResult> GetImdbListExternalItems(SmartListInfo smartListInfo)
+        {
+            var cacheKey = $"smartlist-external-{smartListInfo.ExternalUrl}";
+            lock (_responseCacheLock)
+            {
+                if (_responseCache.TryGetValue(cacheKey, out var cached) &&
+                    DateTime.UtcNow - cached.CachedAt < _smartListCacheTtl)
+                {
+                    return Content(cached.Content, "application/json");
+                }
+            }
+
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null || string.IsNullOrEmpty(config.TMDB_API_KEY))
+            {
+                _logger.Warning("TMDB API key not configured — cannot resolve IMDb IDs");
+                return StatusCode(503, new { message = "TMDB API key required for IMDb list discovery" });
+            }
+
+            // Scrape IMDb list page for tt IDs
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(15);
+            client.DefaultRequestHeaders.Add("User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+            client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+
+            var response = await client.GetAsync(smartListInfo.ExternalUrl, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.Warning($"IMDb returned {response.StatusCode} for {smartListInfo.ExternalUrl}");
+                return StatusCode(502, new { message = "Failed to fetch IMDb list" });
+            }
+
+            if (response.Content.Headers.ContentLength > 10_000_000)
+            {
+                return StatusCode(502, new { message = "IMDb list response too large" });
+            }
+
+            var html = await response.Content.ReadAsStringAsync();
+            if (html.Length > 10_000_000)
+            {
+                return StatusCode(502, new { message = "IMDb list response too large" });
+            }
+
+            // Extract IMDb IDs (tt followed by 7+ digits)
+            var imdbIdPattern = new System.Text.RegularExpressions.Regex(@"tt\d{7,}");
+            var matches = imdbIdPattern.Matches(html);
+            var imdbIds = new List<string>();
+            var seenIds = new HashSet<string>();
+
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                if (seenIds.Add(match.Value))
+                {
+                    imdbIds.Add(match.Value);
+                }
+            }
+
+            // Resolve IMDb IDs → TMDB IDs via TMDB find API
+            var tmdbClient = _httpClientFactory.CreateClient();
+            tmdbClient.Timeout = TimeSpan.FromSeconds(10);
+            var items = new List<object>();
+            var rank = 0;
+
+            foreach (var imdbId in imdbIds)
+            {
+                try
+                {
+                    var findUrl = $"https://api.themoviedb.org/3/find/{imdbId}?external_source=imdb_id&api_key={config.TMDB_API_KEY}";
+                    var findResponse = await tmdbClient.GetAsync(findUrl);
+                    if (!findResponse.IsSuccessStatusCode) continue;
+
+                    var findJson = await findResponse.Content.ReadAsStringAsync();
+                    using var findDoc = JsonDocument.Parse(findJson);
+                    var findRoot = findDoc.RootElement;
+
+                    // Check movie_results first, then tv_results
+                    if (findRoot.TryGetProperty("movie_results", out var movieResults) &&
+                        movieResults.GetArrayLength() > 0)
+                    {
+                        var movie = movieResults[0];
+                        rank++;
+                        items.Add(new
+                        {
+                            tmdbId = movie.GetProperty("id").GetInt32(),
+                            mediaType = "movie",
+                            title = movie.TryGetProperty("title", out var t) ? t.GetString() : null,
+                            rank,
+                            release_year = movie.TryGetProperty("release_date", out var rd) && rd.GetString()?.Length >= 4
+                                ? int.TryParse(rd.GetString()![..4], out var y) ? y : 0
+                                : 0
+                        });
+                    }
+                    else if (findRoot.TryGetProperty("tv_results", out var tvResults) &&
+                             tvResults.GetArrayLength() > 0)
+                    {
+                        var show = tvResults[0];
+                        rank++;
+                        items.Add(new
+                        {
+                            tmdbId = show.GetProperty("id").GetInt32(),
+                            mediaType = "tv",
+                            title = show.TryGetProperty("name", out var n) ? n.GetString() : null,
+                            rank,
+                            release_year = show.TryGetProperty("first_air_date", out var fad) && fad.GetString()?.Length >= 4
+                                ? int.TryParse(fad.GetString()![..4], out var y2) ? y2 : 0
+                                : 0
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Failed to resolve IMDb ID {imdbId}: {ex.Message}");
+                }
+            }
+
+            var resultJson = JsonSerializer.Serialize(new
+            {
+                source = "imdb",
+                items,
+                totalItems = items.Count
+            });
+
+            lock (_responseCacheLock)
+            {
+                _responseCache[cacheKey] = (resultJson, DateTime.UtcNow);
+            }
+
+            return Content(resultJson, "application/json");
+        }
+
         private async Task<SmartListInfo?> FindSmartListForBoxSetAsync(Guid boxsetId)
         {
             var boxsetIdStr = boxsetId.ToString("N");
@@ -4019,6 +4155,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                      host.EndsWith(".themoviedb.org", StringComparison.OrdinalIgnoreCase))
                             {
                                 sourceType = "tmdb";
+                            }
+                            else if (host.Equals("www.imdb.com", StringComparison.OrdinalIgnoreCase) ||
+                                     host.Equals("imdb.com", StringComparison.OrdinalIgnoreCase) ||
+                                     host.Equals("m.imdb.com", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sourceType = "imdb";
                             }
                             else
                             {
