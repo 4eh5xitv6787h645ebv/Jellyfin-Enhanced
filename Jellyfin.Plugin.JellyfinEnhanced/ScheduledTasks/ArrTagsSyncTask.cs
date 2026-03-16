@@ -73,6 +73,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             {
                 foreach (var instance in radarrInstances)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     _logger.Info($"Fetching tags from Radarr instance: {instance.Name}");
                     var instanceTags = await radarrService.GetMovieTagsByTmdbId(instance.Url, instance.ApiKey);
                     _logger.Info($"Fetched {instanceTags.Count} movie tag mappings from {instance.Name}");
@@ -107,6 +108,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             {
                 foreach (var instance in sonarrInstances)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     _logger.Info($"Fetching tags from Sonarr instance: {instance.Name}");
                     var instanceTags = await sonarrService.GetSeriesTagsByTvdbId(instance.Url, instance.ApiKey);
                     _logger.Info($"Fetched {instanceTags.Count} series tag mappings from {instance.Name}");

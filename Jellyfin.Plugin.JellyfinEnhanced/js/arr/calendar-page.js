@@ -2200,7 +2200,7 @@
     const color = getEventColor(event);
     const releaseTypeLabel = formatReleaseLabel(event);
     const typeIcon = event.type === "Series" ? SONARR_ICON_URL : RADARR_ICON_URL;
-    const sourceLabel = event.source;
+    const sourceLabel = escapeHtml(event.instanceName || event.source);
     const iconClass = event.source === "Sonarr" ? "je-sonarr-icon" : "je-radarr-icon";
     const subtitle = event.subtitle || "";
     const timeLabel = formatEventTime(event.releaseDate);
