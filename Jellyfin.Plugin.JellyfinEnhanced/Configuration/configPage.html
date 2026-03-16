@@ -972,31 +972,71 @@
                     </fieldset>
                 </div>
                 <div id="arr-links" class="jellyfin-tab-content" style="display: none; font-family: inherit;">
+                    <style>
+                        .arr-instance-card {
+                            border: 1px solid rgba(255,255,255,0.1);
+                            border-radius: 8px;
+                            padding: 1em;
+                            margin-bottom: 1em;
+                            background: rgba(255,255,255,0.03);
+                        }
+                        .arr-instance-card .arr-instance-header {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5em;
+                            margin-bottom: 0.5em;
+                        }
+                        .arr-instance-card .arr-instance-header input {
+                            flex: 1;
+                        }
+                        .arr-instance-remove {
+                            background: transparent;
+                            border: 1px solid rgba(255,80,80,0.5);
+                            color: #ff5050;
+                            border-radius: 4px;
+                            padding: 0.3em 0.6em;
+                            cursor: pointer;
+                            font-size: 0.85em;
+                        }
+                        .arr-instance-remove:hover {
+                            background: rgba(255,80,80,0.15);
+                        }
+                        .arr-add-btn {
+                            margin-top: 0.5em;
+                            margin-bottom: 1em;
+                        }
+                    </style>
+
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Configuration</h3></legend>
+                        <legend class="sectionTitle"><h3>Sonarr Instances</h3></legend>
                         <div class="configSection">
-                            <div class="inputContainer"  style="margin-top: 1em;">
-                                <label class="inputLabel inputLabelUnfocused" for="sonarrUrl">Sonarr URL</label>
-                                <input id="sonarrUrl" is="emby-input" name="sonarrUrl" type="text" placeholder="e.g., http://192.168.100.100:8989"/>
-                            </div>
-                            <div class="inputContainer" style="margin-top: 1em;">
-                                <label class="inputLabel inputLabelUnfocused" for="radarrUrl">Radarr URL</label>
-                                <input id="radarrUrl" is="emby-input" name="radarrUrl" type="text" placeholder="e.g., http://192.168.100.100:7878"/>
-                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 1em;">Configure one or more Sonarr instances. Each instance needs a URL and API key. The name helps identify instances when multiple are configured.</div>
+                            <div id="sonarrInstancesList"></div>
+                            <button id="addSonarrInstance" class="emby-button raised arr-add-btn" type="button">+ Add Sonarr Instance</button>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Radarr Instances</h3></legend>
+                        <div class="configSection">
+                            <div class="fieldDescription" style="margin-bottom: 1em;">Configure one or more Radarr instances. Each instance needs a URL and API key.</div>
+                            <div id="radarrInstancesList"></div>
+                            <button id="addRadarrInstance" class="emby-button raised arr-add-btn" type="button">+ Add Radarr Instance</button>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Bazarr</h3></legend>
+                        <div class="configSection">
                             <div class="inputContainer" style="margin-top: 1em;">
                                 <label class="inputLabel inputLabelUnfocused" for="bazarrUrl">Bazarr URL</label>
                                 <input id="bazarrUrl" is="emby-input" name="bazarrUrl" type="text" placeholder="e.g., http://192.168.100.100:6767"/>
                                 <div class="fieldDescription">Note: This links to the main movies/series page as Bazarr does not support direct links.</div>
                             </div>
-                            <div class="inputContainer" style="margin-top: 1em;">
-                                <label class="inputLabel inputLabelUnfocused" for="sonarrApiKey">Sonarr API Key</label>
-                                <input id="sonarrApiKey" is="emby-input" name="sonarrApiKey" placeholder="Your Sonarr API key"/>
-                                <div class="fieldDescription">Find this in Sonarr under Settings > General > Security > API Key</div>
-                            </div>
-                            <div class="inputContainer" style="margin-top: 1em; margin-bottom: 2em;">
-                                <label class="inputLabel inputLabelUnfocused" for="radarrApiKey">Radarr API Key</label>
-                                <input id="radarrApiKey" is="emby-input" name="radarrApiKey" placeholder="Your Radarr API key"/>
-                                <div class="fieldDescription">Find this in Radarr under Settings > General > Security > API Key</div>
+                            <div style="margin-top: 1em;">
+                                <label class="sectionTitle" style="margin-bottom: 5px;" for="bazarrUrlMappings">Bazarr URL Mappings</label>
+                                <textarea style="display:block; height: 12vh !important;" class="emby-textarea emby-input" id="bazarrUrlMappings" name="bazarrUrlMappings" placeholder="http://192.168.1.10:8096|http://192.168.1.10:6767&#10;https://jellyfin.example.com|https://bazarr.example.com"></textarea>
+                                <div class="fieldDescription">Map Jellyfin access URLs to Bazarr URLs. Format: <code>jellyfin_url|bazarr_url</code> (one per line).</div>
                             </div>
                         </div>
                     </fieldset>
@@ -1010,22 +1050,7 @@
                                     <span>Enable *arr Links</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription" style="margin-bottom: 2em;">Show Sonarr, Radarr, and Bazarr links of the items on item detail pages for quick access. Only for admins.<br> If no URL is added for a service below, links for that service are not shown.</div>
-                            <div>
-                                <label class="sectionTitle" style="margin-bottom: 5px;" for="sonarrUrlMappings">Sonarr URL Mappings</label>
-                                <textarea style="display:block; height: 12vh !important;" class="emby-textarea emby-input" id="sonarrUrlMappings" name="sonarrUrlMappings" placeholder="http://192.168.1.10:8096|http://192.168.1.10:8989&#10;https://jellyfin.example.com|https://sonarr.example.com"></textarea>
-                                <div class="fieldDescription">Map Jellyfin access URLs to Sonarr URLs. Format: <code>jellyfin_url|sonarr_url</code> (one per line).</div>
-                            </div>
-                            <div style="margin-top: 1em;">
-                                <label class="sectionTitle" style="margin-bottom: 5px;" for="radarrUrlMappings">Radarr URL Mappings</label>
-                                <textarea style="display:block; height: 12vh !important;" class="emby-textarea emby-input" id="radarrUrlMappings" name="radarrUrlMappings" placeholder="http://192.168.1.10:8096|http://192.168.1.10:7878&#10;https://jellyfin.example.com|https://radarr.example.com"></textarea>
-                                <div class="fieldDescription">Map Jellyfin access URLs to Radarr URLs. Format: <code>jellyfin_url|radarr_url</code> (one per line).</div>
-                            </div>
-                            <div style="margin-top: 1em;">
-                                <label class="sectionTitle" style="margin-bottom: 5px;" for="bazarrUrlMappings">Bazarr URL Mappings</label>
-                                <textarea style="display:block; height: 12vh !important;" class="emby-textarea emby-input" id="bazarrUrlMappings" name="bazarrUrlMappings" placeholder="http://192.168.1.10:8096|http://192.168.1.10:6767&#10;https://jellyfin.example.com|https://bazarr.example.com"></textarea>
-                                <div class="fieldDescription">Map Jellyfin access URLs to Bazarr URLs. Format: <code>jellyfin_url|bazarr_url</code> (one per line).<br>These mappings are useful when accessing Jellyfin via different URLs (e.g., internal network vs. public domain) and you need *arr links to use the appropriate corresponding URL.</div>
-                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 2em;">Show Sonarr, Radarr, and Bazarr links of the items on item detail pages for quick access. Only for admins.<br> If no URL is added for a service, links for that service are not shown.</div>
                             <div class="checkboxContainer" style="margin-top: 1em; margin-bottom: 2em;">
                                 <label>
                                     <input id="showArrLinksAsText" is="emby-checkbox" type="checkbox"/>
@@ -1936,6 +1961,159 @@
             }
         }
 
+        // ==================== Multi-Instance Arr Management ====================
+
+        function createEl(tag, attrs, children) {
+            var el = document.createElement(tag);
+            if (attrs) {
+                Object.keys(attrs).forEach(function(k) {
+                    if (k === 'textContent') el.textContent = attrs[k];
+                    else if (k === 'style') el.setAttribute('style', attrs[k]);
+                    else if (k === 'className') el.className = attrs[k];
+                    else el.setAttribute(k, attrs[k]);
+                });
+            }
+            if (children) {
+                children.forEach(function(c) { if (c) el.appendChild(c); });
+            }
+            return el;
+        }
+
+        function createInstanceCard(type, instance) {
+            var namePlaceholder = type === 'sonarr' ? 'e.g., TV Shows, Anime' : 'e.g., Movies, 4K Movies';
+            var urlPlaceholder = type === 'sonarr' ? 'e.g., http://192.168.1.100:8989' : 'e.g., http://192.168.1.100:7878';
+
+            var nameInput = createEl('input', { className: 'arr-instance-name emby-input', type: 'text', placeholder: namePlaceholder, value: instance.Name || '', style: 'flex:1' });
+            var removeBtn = createEl('button', { className: 'arr-instance-remove', type: 'button', title: 'Remove instance', textContent: 'Remove' });
+            var header = createEl('div', { className: 'arr-instance-header' }, [nameInput, removeBtn]);
+
+            var urlLabel = createEl('label', { className: 'inputLabel inputLabelUnfocused', textContent: 'URL' });
+            var urlInput = createEl('input', { className: 'arr-instance-url emby-input', type: 'text', placeholder: urlPlaceholder, value: instance.Url || '' });
+            var urlContainer = createEl('div', { className: 'inputContainer', style: 'margin-top: 0.5em;' }, [urlLabel, urlInput]);
+
+            var apiLabel = createEl('label', { className: 'inputLabel inputLabelUnfocused', textContent: 'API Key' });
+            var apiInput = createEl('input', { className: 'arr-instance-apikey emby-input', type: 'password', placeholder: 'API key (find in Settings > General > Security)', value: instance.ApiKey || '' });
+            var apiContainer = createEl('div', { className: 'inputContainer', style: 'margin-top: 0.5em;' }, [apiLabel, apiInput]);
+
+            var mappingsTextarea = createEl('textarea', { className: 'arr-instance-urlmappings emby-textarea emby-input', style: 'display:block; height: 8vh !important; margin-top: 0.5em;', placeholder: 'jellyfin_url|arr_url (one per line)' });
+            mappingsTextarea.value = instance.UrlMappings || '';
+            var mappingsDesc = createEl('div', { className: 'fieldDescription', textContent: 'Map Jellyfin access URLs to this instance\'s URL. Useful for reverse proxy setups.' });
+            var summary = createEl('summary', { style: 'cursor:pointer; color: rgba(255,255,255,0.6); font-size: 0.9em;', textContent: 'URL Mappings (optional)' });
+            var details = createEl('details', { style: 'margin-top: 0.5em;' }, [summary, mappingsTextarea, mappingsDesc]);
+
+            var card = createEl('div', { className: 'arr-instance-card' }, [header, urlContainer, apiContainer, details]);
+            card.dataset.type = type;
+
+            removeBtn.addEventListener('click', function() { card.remove(); });
+            return card;
+        }
+
+        function loadArrInstances(config) {
+            var sonarrList = document.querySelector('#sonarrInstancesList');
+            var radarrList = document.querySelector('#radarrInstancesList');
+            sonarrList.textContent = '';
+            radarrList.textContent = '';
+
+            var sonarrInstances = [];
+            var radarrInstances = [];
+
+            try { sonarrInstances = JSON.parse(config.SonarrInstances || '[]'); } catch(e) {}
+            try { radarrInstances = JSON.parse(config.RadarrInstances || '[]'); } catch(e) {}
+
+            // Migration: if no instances but legacy fields are set, create one from legacy
+            if (sonarrInstances.length === 0 && config.SonarrUrl && config.SonarrApiKey) {
+                sonarrInstances.push({
+                    Name: 'Sonarr',
+                    Url: config.SonarrUrl,
+                    ApiKey: config.SonarrApiKey,
+                    UrlMappings: config.SonarrUrlMappings || ''
+                });
+            }
+            if (radarrInstances.length === 0 && config.RadarrUrl && config.RadarrApiKey) {
+                radarrInstances.push({
+                    Name: 'Radarr',
+                    Url: config.RadarrUrl,
+                    ApiKey: config.RadarrApiKey,
+                    UrlMappings: config.RadarrUrlMappings || ''
+                });
+            }
+
+            sonarrInstances.forEach(function(inst) {
+                sonarrList.appendChild(createInstanceCard('sonarr', inst));
+            });
+            radarrInstances.forEach(function(inst) {
+                radarrList.appendChild(createInstanceCard('radarr', inst));
+            });
+        }
+
+        function saveArrInstances(config) {
+            var sonarrInstances = [];
+            var radarrInstances = [];
+
+            document.querySelectorAll('#sonarrInstancesList .arr-instance-card').forEach(function(card) {
+                var url = card.querySelector('.arr-instance-url').value.trim();
+                var apiKey = card.querySelector('.arr-instance-apikey').value.trim();
+                if (url && apiKey) {
+                    sonarrInstances.push({
+                        Name: card.querySelector('.arr-instance-name').value.trim() || 'Sonarr',
+                        Url: url,
+                        ApiKey: apiKey,
+                        UrlMappings: card.querySelector('.arr-instance-urlmappings').value || ''
+                    });
+                }
+            });
+
+            document.querySelectorAll('#radarrInstancesList .arr-instance-card').forEach(function(card) {
+                var url = card.querySelector('.arr-instance-url').value.trim();
+                var apiKey = card.querySelector('.arr-instance-apikey').value.trim();
+                if (url && apiKey) {
+                    radarrInstances.push({
+                        Name: card.querySelector('.arr-instance-name').value.trim() || 'Radarr',
+                        Url: url,
+                        ApiKey: apiKey,
+                        UrlMappings: card.querySelector('.arr-instance-urlmappings').value || ''
+                    });
+                }
+            });
+
+            config.SonarrInstances = JSON.stringify(sonarrInstances);
+            config.RadarrInstances = JSON.stringify(radarrInstances);
+
+            // Write first instance to legacy fields for backward compat / downgrade safety
+            if (sonarrInstances.length > 0) {
+                config.SonarrUrl = sonarrInstances[0].Url;
+                config.SonarrApiKey = sonarrInstances[0].ApiKey;
+                config.SonarrUrlMappings = sonarrInstances[0].UrlMappings;
+            } else {
+                config.SonarrUrl = '';
+                config.SonarrApiKey = '';
+                config.SonarrUrlMappings = '';
+            }
+            if (radarrInstances.length > 0) {
+                config.RadarrUrl = radarrInstances[0].Url;
+                config.RadarrApiKey = radarrInstances[0].ApiKey;
+                config.RadarrUrlMappings = radarrInstances[0].UrlMappings;
+            } else {
+                config.RadarrUrl = '';
+                config.RadarrApiKey = '';
+                config.RadarrUrlMappings = '';
+            }
+        }
+
+        // Bind add-instance buttons
+        document.querySelector('#addSonarrInstance').addEventListener('click', function() {
+            document.querySelector('#sonarrInstancesList').appendChild(
+                createInstanceCard('sonarr', { Name: '', Url: '', ApiKey: '', UrlMappings: '' })
+            );
+        });
+        document.querySelector('#addRadarrInstance').addEventListener('click', function() {
+            document.querySelector('#radarrInstancesList').appendChild(
+                createInstanceCard('radarr', { Name: '', Url: '', ApiKey: '', UrlMappings: '' })
+            );
+        });
+
+        // ==================== End Multi-Instance Arr Management ====================
+
         function loadConfig() {
             Dashboard.showLoadingMsg();
             checkFileTransformationPlugin();
@@ -2065,16 +2243,13 @@
                 document.querySelector('#useIcons').checked = config.UseIcons !== false;
                 document.querySelector('#iconStyle').value = config.IconStyle || 'emoji';
                 document.querySelector('#arrLinksEnabled').checked = config.ArrLinksEnabled;
-                document.querySelector('#sonarrUrlMappings').value = config.SonarrUrlMappings || '';
-                document.querySelector('#radarrUrlMappings').value = config.RadarrUrlMappings || '';
                 document.querySelector('#bazarrUrlMappings').value = config.BazarrUrlMappings || '';
-                document.querySelector('#sonarrUrl').value = config.SonarrUrl;
-                document.querySelector('#radarrUrl').value = config.RadarrUrl;
                 document.querySelector('#bazarrUrl').value = config.BazarrUrl;
                 document.querySelector('#showArrLinksAsText').checked = config.ShowArrLinksAsText;
                 document.querySelector('#arrTagsSyncEnabled').checked = config.ArrTagsSyncEnabled;
-                document.querySelector('#radarrApiKey').value = config.RadarrApiKey;
-                document.querySelector('#sonarrApiKey').value = config.SonarrApiKey;
+
+                // Load multi-instance Sonarr/Radarr
+                loadArrInstances(config);
                 document.querySelector('#arrTagsPrefix').value = config.ArrTagsPrefix || 'Requested by: ';
                 document.querySelector('#arrTagsClearOldTags').checked = config.ArrTagsClearOldTags !== false;
                 document.querySelector('#arrTagsShowAsLinks').checked = config.ArrTagsShowAsLinks !== false;
@@ -2261,16 +2436,13 @@
             config.IconStyle = document.querySelector('#iconStyle').value;
 
             config.ArrLinksEnabled = document.querySelector('#arrLinksEnabled').checked;
-            config.SonarrUrlMappings = document.querySelector('#sonarrUrlMappings').value || '';
-            config.RadarrUrlMappings = document.querySelector('#radarrUrlMappings').value || '';
             config.BazarrUrlMappings = document.querySelector('#bazarrUrlMappings').value || '';
-            config.SonarrUrl = document.querySelector('#sonarrUrl').value;
-            config.RadarrUrl = document.querySelector('#radarrUrl').value;
             config.BazarrUrl = document.querySelector('#bazarrUrl').value;
             config.ShowArrLinksAsText = document.querySelector('#showArrLinksAsText').checked;
             config.ArrTagsSyncEnabled = document.querySelector('#arrTagsSyncEnabled').checked;
-            config.RadarrApiKey = document.querySelector('#radarrApiKey').value;
-            config.SonarrApiKey = document.querySelector('#sonarrApiKey').value;
+
+            // Save multi-instance Sonarr/Radarr
+            saveArrInstances(config);
             config.ArrTagsPrefix = document.querySelector('#arrTagsPrefix').value || 'Requested by: ';
             config.ArrTagsClearOldTags = document.querySelector('#arrTagsClearOldTags').checked;
             config.ArrTagsShowAsLinks = document.querySelector('#arrTagsShowAsLinks').checked;

@@ -117,15 +117,42 @@
             const RADARR_ICON_URL = 'https://cdn.jsdelivr.net/gh/selfhst/icons/svg/radarr-light-hybrid-light.svg';
             const BAZARR_ICON_URL = 'https://cdn.jsdelivr.net/gh/selfhst/icons/svg/bazarr.svg';
 
-            // Parse the URL mappings from config for each service
-            const sonarrMappings = parseUrlMappings(JE.pluginConfig.SonarrUrlMappings || '');
-            const radarrMappings = parseUrlMappings(JE.pluginConfig.RadarrUrlMappings || '');
-            const bazarrMappings = parseUrlMappings(JE.pluginConfig.BazarrUrlMappings || '');
+            // Multi-instance support: read instance arrays from private-config, fall back to legacy single fields
+            const sonarrInstances = (JE.pluginConfig.SonarrInstances || []).map(i => ({
+                name: i.Name || 'Sonarr',
+                url: getMappedUrl(parseUrlMappings(i.UrlMappings || ''), i.Url),
+                rawUrl: i.Url,
+                urlMappings: i.UrlMappings || ''
+            })).filter(i => i.url);
 
-            // Get the URL for each service based on current Jellyfin URL
-            const sonarrUrl = getMappedUrl(sonarrMappings, JE.pluginConfig.SonarrUrl);
-            const radarrUrl = getMappedUrl(radarrMappings, JE.pluginConfig.RadarrUrl);
+            const radarrInstances = (JE.pluginConfig.RadarrInstances || []).map(i => ({
+                name: i.Name || 'Radarr',
+                url: getMappedUrl(parseUrlMappings(i.UrlMappings || ''), i.Url),
+                rawUrl: i.Url,
+                urlMappings: i.UrlMappings || ''
+            })).filter(i => i.url);
+
+            // Fall back to legacy single-instance config if no instances available
+            if (sonarrInstances.length === 0 && JE.pluginConfig.SonarrUrl) {
+                const legacyMappings = parseUrlMappings(JE.pluginConfig.SonarrUrlMappings || '');
+                const legacyUrl = getMappedUrl(legacyMappings, JE.pluginConfig.SonarrUrl);
+                if (legacyUrl) {
+                    sonarrInstances.push({ name: 'Sonarr', url: legacyUrl, rawUrl: JE.pluginConfig.SonarrUrl, urlMappings: '' });
+                }
+            }
+            if (radarrInstances.length === 0 && JE.pluginConfig.RadarrUrl) {
+                const legacyMappings = parseUrlMappings(JE.pluginConfig.RadarrUrlMappings || '');
+                const legacyUrl = getMappedUrl(legacyMappings, JE.pluginConfig.RadarrUrl);
+                if (legacyUrl) {
+                    radarrInstances.push({ name: 'Radarr', url: legacyUrl, rawUrl: JE.pluginConfig.RadarrUrl, urlMappings: '' });
+                }
+            }
+
+            const bazarrMappings = parseUrlMappings(JE.pluginConfig.BazarrUrlMappings || '');
             const bazarrUrl = getMappedUrl(bazarrMappings, JE.pluginConfig.BazarrUrl);
+
+            const hasMultipleSonarr = sonarrInstances.length > 1;
+            const hasMultipleRadarr = radarrInstances.length > 1;
 
             const styleId = 'arr-links-styles';
             if (!document.getElementById(styleId)) {
@@ -190,41 +217,54 @@
             }
 
             /**
-             * Resolves the Sonarr URL slug for a series.
-             * Queries the backend endpoint (which proxies to Sonarr's API) using the
-             * series' TVDB ID to get the actual titleSlug. Results are cached per session.
-             * Falls back to generating a slug from OriginalTitle or translated Name.
+             * Resolves the Sonarr URL slugs across all configured instances.
+             * Returns an array of { instanceName, instanceUrl, titleSlug } matches.
+             * Falls back to the legacy single-instance endpoint if the multi-instance
+             * endpoint is unavailable.
              * @param {Object} item - Jellyfin item object with Name, OriginalTitle, and ProviderIds
-             * @returns {Promise<string>} The resolved Sonarr slug
+             * @returns {Promise<Array>} Array of { instanceName, instanceUrl, titleSlug } matches
              */
-            async function getSonarrSlug(item) {
+            async function getSonarrSlugs(item) {
                 const tvdbId = String(item.ProviderIds?.Tvdb || '');
+                const cacheKey = `slugs-${tvdbId}`;
+
+                if (tvdbId && slugCache.has(cacheKey)) {
+                    return slugCache.get(cacheKey);
+                }
 
                 if (tvdbId) {
-                    // Check session cache first to avoid redundant API calls
-                    if (slugCache.has(tvdbId)) {
-                        return slugCache.get(tvdbId);
-                    }
-
                     try {
-                        const slugResp = await fetch(ApiClient.getUrl(`/JellyfinEnhanced/arr/series-slug?tvdbId=${encodeURIComponent(tvdbId)}`), {
+                        // Try multi-instance endpoint first
+                        const resp = await fetch(ApiClient.getUrl(`/JellyfinEnhanced/arr/series-slugs?tvdbId=${encodeURIComponent(tvdbId)}`), {
                             headers: { 'X-MediaBrowser-Token': ApiClient.accessToken() }
                         });
-                        if (slugResp.ok) {
-                            const slugData = await slugResp.json();
-                            if (slugData.titleSlug) {
-                                slugCache.set(tvdbId, slugData.titleSlug);
-                                return slugData.titleSlug;
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (data.matches && data.matches.length > 0) {
+                                // Resolve mapped URLs for each match
+                                const results = data.matches.map(m => ({
+                                    instanceName: m.instanceName,
+                                    instanceUrl: getMappedUrl(parseUrlMappings(m.urlMappings || ''), m.instanceUrl),
+                                    titleSlug: m.titleSlug
+                                }));
+                                slugCache.set(cacheKey, results);
+                                return results;
                             }
                         }
                     } catch (e) {
-                        console.warn(`${logPrefix} Failed to fetch Sonarr slug, using fallback`, e);
+                        console.warn(`${logPrefix} Failed to fetch series slugs from multi-instance endpoint`, e);
                     }
                 }
 
-                // Fallback: generate slug from original title (or translated title).
-                // May not match Sonarr's actual slug for disambiguated series (e.g., "modern-love-2019").
-                return slugify(item.OriginalTitle || item.Name);
+                // Fallback: use configured instances with generated slug
+                const fallbackSlug = slugify(item.OriginalTitle || item.Name);
+                const results = sonarrInstances.map(inst => ({
+                    instanceName: inst.name,
+                    instanceUrl: inst.url,
+                    titleSlug: fallbackSlug
+                }));
+                if (tvdbId) slugCache.set(cacheKey, results);
+                return results;
             }
 
             async function addArrLinks() {
@@ -268,17 +308,25 @@
                         return;
                     }
 
-                    if (item.Type === 'Series' && item.Name && sonarrUrl) {
-                        const seriesSlug = await getSonarrSlug(item);
-                        const url = `${sonarrUrl}/series/${seriesSlug}`;
-                        anchorElement.appendChild(document.createTextNode(' '));
-                        anchorElement.appendChild(createLinkButton("Sonarr", url, "arr-link-sonarr"));
+                    if (item.Type === 'Series' && item.Name && sonarrInstances.length > 0) {
+                        const slugMatches = await getSonarrSlugs(item);
+                        for (const match of slugMatches) {
+                            if (match.instanceUrl) {
+                                const url = `${match.instanceUrl.replace(/\/$/, '')}/series/${match.titleSlug}`;
+                                const label = hasMultipleSonarr ? match.instanceName : 'Sonarr';
+                                anchorElement.appendChild(document.createTextNode(' '));
+                                anchorElement.appendChild(createLinkButton(label, url, "arr-link-sonarr"));
+                            }
+                        }
                     }
 
-                    if (item.Type === 'Movie' && ids.tmdb && radarrUrl) {
-                        const url = `${radarrUrl}/movie/${ids.tmdb}`;
-                        anchorElement.appendChild(document.createTextNode(' '));
-                        anchorElement.appendChild(createLinkButton("Radarr", url, "arr-link-radarr"));
+                    if (item.Type === 'Movie' && ids.tmdb && radarrInstances.length > 0) {
+                        for (const inst of radarrInstances) {
+                            const url = `${inst.url.replace(/\/$/, '')}/movie/${ids.tmdb}`;
+                            const label = hasMultipleRadarr ? inst.name : 'Radarr';
+                            anchorElement.appendChild(document.createTextNode(' '));
+                            anchorElement.appendChild(createLinkButton(label, url, "arr-link-radarr"));
+                        }
                     }
 
                     if (item.Type === 'Series' && bazarrUrl) {

@@ -143,6 +143,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr {
         public int? TmdbId { get; set; }
 
         /// <summary>
+        /// User-assigned instance name (e.g., "Anime", "4K Movies").
+        /// Used to differentiate items from multiple Sonarr/Radarr instances.
+        /// </summary>
+        [JsonPropertyName("instanceName")]
+        public string? InstanceName { get; set; }
+
+        /// <summary>
         /// Root folder path from Sonarr/Radarr (used server-side for library access fallback).
         /// Not serialized to clients to avoid exposing server filesystem paths.
         /// </summary>

@@ -64,34 +64,72 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             var radarrService = new RadarrService(_httpClientFactory, _logger);
             var sonarrService = new SonarrService(_httpClientFactory, _logger);
 
-            Dictionary<int, List<string>> radarrTags = new Dictionary<int, List<string>>();
-            Dictionary<string, List<string>> sonarrTags = new Dictionary<string, List<string>>();
+            var radarrTags = new Dictionary<int, List<string>>();
+            var sonarrTags = new Dictionary<string, List<string>>();
 
-            // Fetch Radarr tags if configured
-            if (!string.IsNullOrWhiteSpace(config.RadarrUrl) && !string.IsNullOrWhiteSpace(config.RadarrApiKey))
+            // Fetch tags from all configured Radarr instances
+            var radarrInstances = config.GetRadarrInstances();
+            if (radarrInstances.Count > 0)
             {
-                _logger.Info("Fetching tags from Radarr...");
-                radarrTags = await radarrService.GetMovieTagsByTmdbId(config.RadarrUrl, config.RadarrApiKey);
-                _logger.Info($"Fetched {radarrTags.Count} movie tag mappings from Radarr");
+                foreach (var instance in radarrInstances)
+                {
+                    _logger.Info($"Fetching tags from Radarr instance: {instance.Name}");
+                    var instanceTags = await radarrService.GetMovieTagsByTmdbId(instance.Url, instance.ApiKey);
+                    _logger.Info($"Fetched {instanceTags.Count} movie tag mappings from {instance.Name}");
+                    foreach (var kvp in instanceTags)
+                    {
+                        if (radarrTags.TryGetValue(kvp.Key, out var existing))
+                        {
+                            foreach (var tag in kvp.Value)
+                            {
+                                if (!existing.Contains(tag, StringComparer.OrdinalIgnoreCase))
+                                    existing.Add(tag);
+                            }
+                        }
+                        else
+                        {
+                            radarrTags[kvp.Key] = new List<string>(kvp.Value);
+                        }
+                    }
+                }
             }
             else
             {
-                _logger.Info("Radarr URL or API key not configured, skipping Radarr sync");
+                _logger.Info("No Radarr instances configured, skipping Radarr sync");
             }
 
             progress?.Report(25);
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Fetch Sonarr tags if configured
-            if (!string.IsNullOrWhiteSpace(config.SonarrUrl) && !string.IsNullOrWhiteSpace(config.SonarrApiKey))
+            // Fetch tags from all configured Sonarr instances
+            var sonarrInstances = config.GetSonarrInstances();
+            if (sonarrInstances.Count > 0)
             {
-                _logger.Info("Fetching tags from Sonarr...");
-                sonarrTags = await sonarrService.GetSeriesTagsByTvdbId(config.SonarrUrl, config.SonarrApiKey);
-                _logger.Info($"Fetched {sonarrTags.Count} series tag mappings from Sonarr");
+                foreach (var instance in sonarrInstances)
+                {
+                    _logger.Info($"Fetching tags from Sonarr instance: {instance.Name}");
+                    var instanceTags = await sonarrService.GetSeriesTagsByTvdbId(instance.Url, instance.ApiKey);
+                    _logger.Info($"Fetched {instanceTags.Count} series tag mappings from {instance.Name}");
+                    foreach (var kvp in instanceTags)
+                    {
+                        if (sonarrTags.TryGetValue(kvp.Key, out var existing))
+                        {
+                            foreach (var tag in kvp.Value)
+                            {
+                                if (!existing.Contains(tag, StringComparer.OrdinalIgnoreCase))
+                                    existing.Add(tag);
+                            }
+                        }
+                        else
+                        {
+                            sonarrTags[kvp.Key] = new List<string>(kvp.Value);
+                        }
+                    }
+                }
             }
             else
             {
-                _logger.Info("Sonarr URL or API key not configured, skipping Sonarr sync");
+                _logger.Info("No Sonarr instances configured, skipping Sonarr sync");
             }
 
             progress?.Report(50);

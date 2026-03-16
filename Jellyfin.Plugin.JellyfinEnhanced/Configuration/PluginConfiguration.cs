@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
@@ -121,6 +123,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             SonarrUrlMappings = "";
             RadarrUrlMappings = "";
             BazarrUrlMappings = "";
+
+            // Multi-Instance Sonarr/Radarr Support
+            SonarrInstances = "[]";
+            RadarrInstances = "[]";
 
             // Arr Tags Sync Settings
             ArrTagsSyncEnabled = false;
@@ -293,6 +299,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string RadarrUrlMappings { get; set; }
         public string BazarrUrlMappings { get; set; }
 
+        // Multi-Instance Sonarr/Radarr Support (JSON arrays of ArrInstance)
+        public string SonarrInstances { get; set; } = "[]";
+        public string RadarrInstances { get; set; } = "[]";
+
         // Arr Tags Sync Settings
         public bool ArrTagsSyncEnabled { get; set; }
         public string SonarrApiKey { get; set; }
@@ -369,5 +379,68 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool HiddenContentEnabled { get; set; }
         public bool HiddenContentUsePluginPages { get; set; }
         public bool HiddenContentUseCustomTabs { get; set; }
+
+        /// <summary>
+        /// Returns configured Sonarr instances, falling back to legacy single-instance fields for migration.
+        /// </summary>
+        public List<ArrInstance> GetSonarrInstances()
+        {
+            var instances = DeserializeInstances(SonarrInstances);
+            if (instances.Count == 0
+                && !string.IsNullOrWhiteSpace(SonarrUrl)
+                && !string.IsNullOrWhiteSpace(SonarrApiKey))
+            {
+                instances.Add(new ArrInstance
+                {
+                    Name = "Sonarr",
+                    Url = SonarrUrl,
+                    ApiKey = SonarrApiKey,
+                    UrlMappings = SonarrUrlMappings ?? ""
+                });
+            }
+
+            return instances;
+        }
+
+        /// <summary>
+        /// Returns configured Radarr instances, falling back to legacy single-instance fields for migration.
+        /// </summary>
+        public List<ArrInstance> GetRadarrInstances()
+        {
+            var instances = DeserializeInstances(RadarrInstances);
+            if (instances.Count == 0
+                && !string.IsNullOrWhiteSpace(RadarrUrl)
+                && !string.IsNullOrWhiteSpace(RadarrApiKey))
+            {
+                instances.Add(new ArrInstance
+                {
+                    Name = "Radarr",
+                    Url = RadarrUrl,
+                    ApiKey = RadarrApiKey,
+                    UrlMappings = RadarrUrlMappings ?? ""
+                });
+            }
+
+            return instances;
+        }
+
+        private static List<ArrInstance> DeserializeInstances(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json) || json == "[]")
+            {
+                return new List<ArrInstance>();
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<ArrInstance>>(json) ?? new List<ArrInstance>();
+            }
+            catch (JsonException)
+            {
+                // Malformed JSON in config — fall back to empty list.
+                // The legacy single-instance fields will be used instead via GetSonarrInstances/GetRadarrInstances.
+                return new List<ArrInstance>();
+            }
+        }
     }
 }

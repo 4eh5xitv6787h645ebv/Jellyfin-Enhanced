@@ -24,12 +24,12 @@ using Newtonsoft.Json.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Database.Implementations;
 using Microsoft.EntityFrameworkCore;
@@ -1525,13 +1525,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // For Jellyfin Elsewhere & Reviews (only whether configured)
                 TmdbEnabled = tmdbEnabled,
 
-                // For Arr Links
+                // For Arr Links (legacy single-instance fields, kept for backward compat)
                 config.SonarrUrl,
                 config.RadarrUrl,
                 config.BazarrUrl,
                 config.SonarrUrlMappings,
                 config.RadarrUrlMappings,
                 config.BazarrUrlMappings,
+
+                // Multi-instance Sonarr/Radarr (no API keys exposed)
+                SonarrInstances = config.GetSonarrInstances().Select(i => new { i.Name, i.Url, i.UrlMappings }),
+                RadarrInstances = config.GetRadarrInstances().Select(i => new { i.Name, i.Url, i.UrlMappings }),
+
                 JellyseerrBaseUrl = jellyseerrBaseUrl,
                 config.JellyseerrUrlMappings
             });
@@ -2430,11 +2435,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         // ==================== Arr Links ====================
 
         /// <summary>
-        /// Look up a series' titleSlug in Sonarr by its TVDB ID.
-        /// Used by the frontend to generate accurate Sonarr series links,
-        /// avoiding slug mismatches caused by translated titles.
+        /// Look up a series' titleSlug in the first configured Sonarr instance by its TVDB ID.
+        /// Kept for backward compatibility. Use /arr/series-slugs for multi-instance support.
         /// </summary>
-        /// <param name="tvdbId">The TVDB ID of the series to look up.</param>
         [HttpGet("arr/series-slug")]
         [Authorize]
         public async Task<IActionResult> GetSeriesSlug([FromQuery] int tvdbId)
@@ -2449,56 +2452,89 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (config == null)
                 return StatusCode(500, new { error = "Plugin configuration not available" });
 
-            if (string.IsNullOrWhiteSpace(config.SonarrUrl) || string.IsNullOrWhiteSpace(config.SonarrApiKey))
+            var instances = config.GetSonarrInstances();
+            if (instances.Count == 0)
                 return NotFound(new { error = "Sonarr is not configured" });
 
+            var instance = instances[0];
+            var result = await FetchSeriesSlugFromInstance(instance, tvdbId);
+            if (result == null)
+                return NotFound(new { error = "Series not found in Sonarr" });
+
+            return Ok(new { titleSlug = result });
+        }
+
+        /// <summary>
+        /// Look up a series' titleSlug across all configured Sonarr instances.
+        /// Returns an array of matches with instance details for multi-instance link generation.
+        /// </summary>
+        [HttpGet("arr/series-slugs")]
+        [Authorize]
+        public async Task<IActionResult> GetSeriesSlugs([FromQuery] int tvdbId)
+        {
+            if (!IsAdminUser())
+                return Forbid();
+
+            if (tvdbId <= 0)
+                return BadRequest(new { error = "tvdbId must be a positive integer" });
+
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+                return StatusCode(500, new { error = "Plugin configuration not available" });
+
+            var instances = config.GetSonarrInstances();
+            if (instances.Count == 0)
+                return Ok(new { matches = Array.Empty<object>() });
+
+            var tasks = instances.Select(async instance =>
+            {
+                var slug = await FetchSeriesSlugFromInstance(instance, tvdbId);
+                return slug != null
+                    ? new { instanceName = instance.Name, instanceUrl = instance.Url, titleSlug = slug, urlMappings = instance.UrlMappings }
+                    : null;
+            });
+
+            var results = await Task.WhenAll(tasks);
+            var matches = results.Where(r => r != null).ToList();
+
+            return Ok(new { matches });
+        }
+
+        private async Task<string?> FetchSeriesSlugFromInstance(ArrInstance instance, int tvdbId)
+        {
             try
             {
-                var sonarrUrl = config.SonarrUrl.TrimEnd('/');
+                var url = instance.Url.TrimEnd('/');
                 var client = _httpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Add("X-Api-Key", config.SonarrApiKey);
+                client.DefaultRequestHeaders.Add("X-Api-Key", instance.ApiKey);
                 client.Timeout = TimeSpan.FromSeconds(10);
 
-                var response = await client.GetAsync($"{sonarrUrl}/api/v3/series?tvdbId={tvdbId}");
-
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
-                    response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                    return StatusCode(502, new { error = "Sonarr authentication failed" });
+                var response = await client.GetAsync($"{url}/api/v3/series?tvdbId={tvdbId}");
 
                 if (!response.IsSuccessStatusCode)
-                    return StatusCode(502, new { error = "Sonarr returned an error" });
+                    return null;
 
                 var json = await response.Content.ReadAsStringAsync();
                 var series = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
 
-                // Sonarr returns an array when filtering by tvdbId
-                string? titleSlug = null;
                 if (series is Newtonsoft.Json.Linq.JArray arr && arr.Count > 0)
-                {
-                    titleSlug = (string?)arr[0]["titleSlug"];
-                }
-                else if (series != null)
-                {
-                    // Single object response
-                    titleSlug = (string?)series.titleSlug;
-                }
+                    return (string?)arr[0]["titleSlug"];
 
-                if (string.IsNullOrEmpty(titleSlug))
-                    return NotFound(new { error = "Series not found in Sonarr" });
-
-                return Ok(new { titleSlug });
+                if (series != null)
+                    return (string?)series.titleSlug;
             }
             catch (Exception ex)
             {
-                _logger.Warning($"Failed to fetch Sonarr series slug for TVDB ID {tvdbId}: {ex.Message}");
-                return StatusCode(502, new { error = "Failed to query Sonarr" });
+                _logger.Warning($"Failed to fetch Sonarr series slug from {instance.Name} for TVDB ID {tvdbId}: {ex.Message}");
             }
+
+            return null;
         }
 
         // ==================== Requests Page (Sonarr/Radarr Queue) ====================
 
         /// <summary>
-        /// Get combined download queue from Sonarr and Radarr.
+        /// Get combined download queue from all configured Sonarr and Radarr instances.
         /// </summary>
         [HttpGet("arr/queue")]
         [Authorize]
@@ -2508,133 +2544,149 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (config == null)
                 return StatusCode(500, "Plugin configuration not available");
 
+            var sonarrInstances = config.GetSonarrInstances();
+            var radarrInstances = config.GetRadarrInstances();
+
+            var tasks = new List<Task<List<object>>>();
+            foreach (var instance in sonarrInstances)
+                tasks.Add(FetchSonarrQueue(instance));
+            foreach (var instance in radarrInstances)
+                tasks.Add(FetchRadarrQueue(instance));
+
+            var results = await Task.WhenAll(tasks);
+            var items = results.SelectMany(r => r).ToList();
+
+            return Ok(new { items });
+        }
+
+        private async Task<List<object>> FetchSonarrQueue(ArrInstance instance)
+        {
             var items = new List<object>();
-
-            // Fetch Sonarr queue
-            if (!string.IsNullOrWhiteSpace(config.SonarrUrl) && !string.IsNullOrWhiteSpace(config.SonarrApiKey))
+            try
             {
-                try
+                var url = instance.Url.TrimEnd('/');
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("X-Api-Key", instance.ApiKey);
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                var response = await client.GetAsync(
+                    $"{url}/api/v3/queue?" +
+                    $"includeEpisode=true&" +
+                    $"includeSeries=true&" +
+                    $"sortKey=timeleft&" +
+                    $"sortDirection=ascending&" +
+                    $"pageSize=1000"
+                );
+
+                if (response.IsSuccessStatusCode)
                 {
-                    var sonarrUrl = config.SonarrUrl.TrimEnd('/');
-                    var client = _httpClientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Add("X-Api-Key", config.SonarrApiKey);
-                    client.Timeout = TimeSpan.FromSeconds(10);
+                    var json = await response.Content.ReadAsStringAsync();
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
 
-                    var response = await client.GetAsync(
-                        $"{sonarrUrl}/api/v3/queue?" +
-                        $"includeEpisode=true&" +
-                        $"includeSeries=true&" +
-                        $"sortKey=timeleft&" +
-                        $"sortDirection=ascending&" +
-                        $"pageSize=1000"
-                    );
-
-                    if (response.IsSuccessStatusCode)
+                    if (data?.records != null)
                     {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
-
-                        if (data?.records != null)
+                        foreach (var record in data.records)
                         {
-                            foreach (var record in data.records)
+                            string? posterUrl = null;
+                            if (record.series?.images != null)
                             {
-                                string? posterUrl = null;
-                                if (record.series?.images != null)
+                                foreach (var img in record.series.images)
                                 {
-                                    foreach (var img in record.series.images)
+                                    if ((string?)img.coverType == "poster")
                                     {
-                                        if ((string?)img.coverType == "poster")
-                                        {
-                                            posterUrl = (string?)img.remoteUrl ?? (string?)img.url;
-                                            break;
-                                        }
+                                        posterUrl = (string?)img.remoteUrl ?? (string?)img.url;
+                                        break;
                                     }
                                 }
-
-                                items.Add(new
-                                {
-                                    id = (string?)record.id?.ToString(),
-                                    source = nameof(ArrType.Sonarr),
-                                    title = (string?)record.series?.title ?? "Unknown",
-                                    subtitle = $"S{record.episode?.seasonNumber:D2}E{record.episode?.episodeNumber:D2} - {record.episode?.title}",
-                                    seasonNumber = (int?)record.episode?.seasonNumber,
-                                    episodeNumber = (int?)record.episode?.episodeNumber,
-                                    status = (string?)record.status ?? "Unknown",
-                                    progress = CalculateProgress((double?)record.size, (double?)record.sizeleft),
-                                    totalSize = (long?)record.size,
-                                    sizeRemaining = (long?)record.sizeleft,
-                                    timeRemaining = (string?)record.timeleft,
-                                    posterUrl = posterUrl
-                                });
                             }
+
+                            items.Add(new
+                            {
+                                id = (string?)record.id?.ToString(),
+                                source = nameof(ArrType.Sonarr),
+                                instanceName = instance.Name,
+                                title = (string?)record.series?.title ?? "Unknown",
+                                subtitle = $"S{record.episode?.seasonNumber:D2}E{record.episode?.episodeNumber:D2} - {record.episode?.title}",
+                                seasonNumber = (int?)record.episode?.seasonNumber,
+                                episodeNumber = (int?)record.episode?.episodeNumber,
+                                status = (string?)record.status ?? "Unknown",
+                                progress = CalculateProgress((double?)record.size, (double?)record.sizeleft),
+                                totalSize = (long?)record.size,
+                                sizeRemaining = (long?)record.sizeleft,
+                                timeRemaining = (string?)record.timeleft,
+                                posterUrl = posterUrl
+                            });
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.Warning($"Failed to fetch Sonarr queue: {ex.Message}");
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Failed to fetch Sonarr queue from {instance.Name}: {ex.Message}");
             }
 
-            // Fetch Radarr queue
-            if (!string.IsNullOrWhiteSpace(config.RadarrUrl) && !string.IsNullOrWhiteSpace(config.RadarrApiKey))
+            return items;
+        }
+
+        private async Task<List<object>> FetchRadarrQueue(ArrInstance instance)
+        {
+            var items = new List<object>();
+            try
             {
-                try
+                var url = instance.Url.TrimEnd('/');
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("X-Api-Key", instance.ApiKey);
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                var response = await client.GetAsync($"{url}/api/v3/queue?includeMovie=true");
+                if (response.IsSuccessStatusCode)
                 {
-                    var radarrUrl = config.RadarrUrl.TrimEnd('/');
-                    var client = _httpClientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Add("X-Api-Key", config.RadarrApiKey);
-                    client.Timeout = TimeSpan.FromSeconds(10);
+                    var json = await response.Content.ReadAsStringAsync();
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
 
-                    var response = await client.GetAsync($"{radarrUrl}/api/v3/queue?includeMovie=true");
-                    if (response.IsSuccessStatusCode)
+                    if (data?.records != null)
                     {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
-
-                        if (data?.records != null)
+                        foreach (var record in data.records)
                         {
-                            foreach (var record in data.records)
+                            string? posterUrl = null;
+                            if (record.movie?.images != null)
                             {
-                                string? posterUrl = null;
-                                if (record.movie?.images != null)
+                                foreach (var img in record.movie.images)
                                 {
-                                    foreach (var img in record.movie.images)
+                                    if ((string?)img.coverType == "poster")
                                     {
-                                        if ((string?)img.coverType == "poster")
-                                        {
-                                            posterUrl = (string?)img.remoteUrl ?? (string?)img.url;
-                                            break;
-                                        }
+                                        posterUrl = (string?)img.remoteUrl ?? (string?)img.url;
+                                        break;
                                     }
                                 }
-
-                                items.Add(new
-                                {
-                                    id = (string?)record.id?.ToString(),
-                                    source = nameof(ArrType.Radarr),
-                                    title = (string?)record.movie?.title ?? "Unknown",
-                                    subtitle = (string?)record.movie?.year?.ToString(),
-                                    seasonNumber = (int?)null,
-                                    episodeNumber = (int?)null,
-                                    status = (string?)record.status ?? "Unknown",
-                                    progress = CalculateProgress((double?)record.size, (double?)record.sizeleft),
-                                    totalSize = (long?)record.size,
-                                    sizeRemaining = (long?)record.sizeleft,
-                                    timeRemaining = (string?)record.timeleft,
-                                    posterUrl = posterUrl
-                                });
                             }
+
+                            items.Add(new
+                            {
+                                id = (string?)record.id?.ToString(),
+                                source = nameof(ArrType.Radarr),
+                                instanceName = instance.Name,
+                                title = (string?)record.movie?.title ?? "Unknown",
+                                subtitle = (string?)record.movie?.year?.ToString(),
+                                seasonNumber = (int?)null,
+                                episodeNumber = (int?)null,
+                                status = (string?)record.status ?? "Unknown",
+                                progress = CalculateProgress((double?)record.size, (double?)record.sizeleft),
+                                totalSize = (long?)record.size,
+                                sizeRemaining = (long?)record.sizeleft,
+                                timeRemaining = (string?)record.timeleft,
+                                posterUrl = posterUrl
+                            });
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.Warning($"Failed to fetch Radarr queue: {ex.Message}");
-                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Failed to fetch Radarr queue from {instance.Name}: {ex.Message}");
             }
 
-            return Ok(new { items = items });
+            return items;
         }
 
         private static double CalculateProgress(double? size, double? sizeleft)
@@ -3028,228 +3080,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
-            // Fetch Sonarr calendar events
-            if (!string.IsNullOrWhiteSpace(config.SonarrUrl) && !string.IsNullOrWhiteSpace(config.SonarrApiKey))
-            {
-                try
-                {
-                    var sonarrUrl = config.SonarrUrl.TrimEnd('/');
-                    var client = _httpClientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Add("X-Api-Key", config.SonarrApiKey);
-                    client.Timeout = TimeSpan.FromSeconds(30);
+            // Fetch calendar events from all configured instances in parallel
+            var sonarrInstances = config.GetSonarrInstances();
+            var radarrInstances = config.GetRadarrInstances();
 
-                    var response = await client.GetAsync($"{sonarrUrl}/api/v3/calendar?includeSeries=true&unmonitored=true&start={startIso}&end={endIso}");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
+            var calendarTasks = new List<Task<List<ArrItem>>>();
+            foreach (var instance in sonarrInstances)
+                calendarTasks.Add(FetchSonarrCalendar(instance, startIso, endIso, ParseDate));
+            foreach (var instance in radarrInstances)
+                calendarTasks.Add(FetchRadarrCalendar(instance, startIso, endIso, startDate, endDate, ParseDate, AddRelease));
 
-                        if (data != null)
-                        {
-                            foreach (var episode in data)
-                            {
-                                var airDate = ParseDate((string?)episode.airDateUtc ?? (string?)episode.airDate);
-                                if (!airDate.HasValue)
-                                {
-                                    continue;
-                                }
-
-                                var seriesId = (int?)episode.seriesId;
-                                var seriesTitle = "Unknown Series";
-                                int? seriesTvdbId = null;
-                                string? seriesImdbId = null;
-                                string? seriesPosterUrl = null;
-                                string? seriesBackdropUrl = null;
-
-                                seriesTitle = episode.series.title;
-                                seriesTvdbId = episode.series.tvdbId;
-                                seriesImdbId = episode.series.imdbId;
-
-                                if (episode.series.images != null)
-                                {
-                                    foreach (var img in episode.series.images)
-                                    {
-                                        var coverType = (string?)img.coverType;
-                                        var imageUrl = (string?)img.remoteUrl ?? (string?)img.url;
-                                        if (string.IsNullOrWhiteSpace(imageUrl))
-                                        {
-                                            continue;
-                                        }
-
-                                        if (seriesBackdropUrl == null && (coverType == "fanart" || coverType == "banner"))
-                                        {
-                                            seriesBackdropUrl = imageUrl;
-                                        }
-                                        else if (seriesPosterUrl == null && coverType == "poster")
-                                        {
-                                            seriesPosterUrl = imageUrl;
-                                        }
-                                    }
-                                }
-
-                                var seasonNumber = (int?)episode.seasonNumber ?? 0;
-                                var episodeNumber = (int?)episode.episodeNumber ?? 0;
-                                var episodeTitle = (string?)episode.title ?? "Unknown Episode";
-
-                                events.Add(new ArrItem
-                                {
-                                    Id = (string?)episode.id?.ToString(),
-                                    Source = nameof(ArrType.Sonarr),
-                                    Type = "Series",
-                                    Title = seriesTitle,
-                                    Subtitle = $"S{seasonNumber:D2}E{episodeNumber:D2} - {episodeTitle}",
-                                    ReleaseDate = airDate.Value.ToUniversalTime().ToString("o"),
-                                    ReleaseType = "Episode",
-                                    HasFile = (bool?)episode.hasFile ?? false,
-                                    Monitored = (bool?)episode.monitored ?? false,
-                                    SeriesId = seriesId,
-                                    SeasonNumber = seasonNumber,
-                                    EpisodeNumber = episodeNumber,
-                                    EpisodeTitle = episodeTitle,
-                                    Overview = (string?)episode.overview,
-                                    TvdbId = seriesTvdbId,
-                                    ImdbId = seriesImdbId,
-                                    TmdbId = (int?)episode.series.tmdbId,
-                                    PosterUrl = seriesPosterUrl,
-                                    BackdropUrl = seriesBackdropUrl,
-                                    EpisodeTvdbId = (int?)episode.tvdbId,
-                                    EpisodeImdbId = (string?)episode.imdbId,
-                                    RootFolderPath = GetRootFolderFromPath((string?)episode.series.path)
-                                });
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Warning($"Failed to fetch Sonarr calendar: {ex.Message}");
-                }
-            }
-
-            // Fetch Radarr calendar events
-            if (!string.IsNullOrWhiteSpace(config.RadarrUrl) && !string.IsNullOrWhiteSpace(config.RadarrApiKey))
-            {
-                try
-                {
-                    var radarrUrl = config.RadarrUrl.TrimEnd('/');
-                    var client = _httpClientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Add("X-Api-Key", config.RadarrApiKey);
-                    client.Timeout = TimeSpan.FromSeconds(10);
-
-                    var response = await client.GetAsync($"{radarrUrl}/api/v3/calendar?unmonitored=true&start={startIso}&end={endIso}");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
-
-                        if (data != null)
-                        {
-                            foreach (var movie in data)
-                            {
-                                var releaseDates = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-
-                                string? posterUrl = null;
-                                string? backdropUrl = null;
-                                if (movie.images != null)
-                                {
-                                    foreach (var img in movie.images)
-                                    {
-                                        var coverType = (string?)img.coverType;
-                                        var imageUrl = (string?)img.remoteUrl ?? (string?)img.url;
-                                        if (string.IsNullOrWhiteSpace(imageUrl))
-                                        {
-                                            continue;
-                                        }
-
-                                        if (posterUrl == null && coverType == "poster")
-                                        {
-                                            posterUrl = imageUrl;
-                                            continue;
-                                        }
-
-                                        if (backdropUrl == null && (coverType == "fanart" || coverType == "backdrop"))
-                                        {
-                                            backdropUrl = imageUrl;
-                                        }
-                                    }
-                                }
-
-                                AddRelease(releaseDates, "CinemaRelease", (string?)movie.inCinemas);
-                                AddRelease(releaseDates, "PhysicalRelease", (string?)movie.physicalRelease);
-                                AddRelease(releaseDates, "DigitalRelease", (string?)movie.digitalRelease);
-
-                                if (movie.releases != null)
-                                {
-                                    foreach (var release in movie.releases)
-                                    {
-                                        var releaseDate = (object?)release.releaseDate ?? release.date;
-                                        var type = Convert.ToString(release.type)?.ToLowerInvariant();
-                                        var isPhysical = (bool?)release.isPhysical ?? false;
-
-                                        if (isPhysical)
-                                        {
-                                            AddRelease(releaseDates, "PhysicalRelease", releaseDate);
-                                        }
-                                        else if (type == "digital")
-                                        {
-                                            AddRelease(releaseDates, "DigitalRelease", releaseDate);
-                                        }
-                                        else if (type == "theatrical" || type == "cinema" || type == "theater")
-                                        {
-                                            AddRelease(releaseDates, "CinemaRelease", releaseDate);
-                                        }
-                                    }
-                                }
-
-                                if (releaseDates.Count == 0)
-                                {
-                                    continue;
-                                }
-
-                                var movieTitle = (string?)movie.title ?? (string?)movie.originalTitle ?? "Unknown";
-                                string? movieYear = null;
-                                var yearValue = (object?)movie.year;
-                                if (yearValue != null)
-                                {
-                                    movieYear = Convert.ToString(yearValue);
-                                }
-
-                                foreach (var kvp in releaseDates)
-                                {
-                                    // Only include releases within the requested date range
-                                    var releaseUtc = kvp.Value.ToUniversalTime();
-                                    if (releaseUtc < startDate || releaseUtc > endDate)
-                                    {
-                                        continue;
-                                    }
-
-                                    events.Add(new ArrItem
-                                    {
-                                        Id = $"{movie.id}-{kvp.Key}",
-                                        Source = nameof(ArrType.Radarr),
-                                        Type = "Movie",
-                                        Title = movieTitle,
-                                        Subtitle = movieYear,
-                                        ReleaseDate = releaseUtc.ToString("o"),
-                                        ReleaseType = kvp.Key,
-                                        HasFile = (bool?)movie.hasFile ?? false,
-                                        Monitored = (bool?)movie.monitored ?? false,
-                                        PosterUrl = posterUrl,
-                                        BackdropUrl = backdropUrl,
-                                        TmdbId = (int?)movie.tmdbId,
-                                        ImdbId = (string?)movie.imdbId,
-                                        RootFolderPath = GetRootFolderFromPath((string?)movie.path)
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.Warning($"Failed to fetch Radarr calendar: {ex.Message}");
-                }
-            }
+            var calendarResults = await Task.WhenAll(calendarTasks);
+            foreach (var result in calendarResults)
+                events.AddRange(result);
 
             var providerKeys = events
                 .SelectMany(ProviderHelper.GetAllProviders)
@@ -3323,6 +3166,212 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             return Ok(new { events });
+        }
+
+        private async Task<List<ArrItem>> FetchSonarrCalendar(
+            ArrInstance instance, string startIso, string endIso,
+            Func<object?, DateTime?> parseDate)
+        {
+            var items = new List<ArrItem>();
+            try
+            {
+                var url = instance.Url.TrimEnd('/');
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("X-Api-Key", instance.ApiKey);
+                client.Timeout = TimeSpan.FromSeconds(30);
+
+                var response = await client.GetAsync($"{url}/api/v3/calendar?includeSeries=true&unmonitored=true&start={startIso}&end={endIso}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
+
+                    if (data != null)
+                    {
+                        foreach (var episode in data)
+                        {
+                            var airDate = parseDate((string?)episode.airDateUtc ?? (string?)episode.airDate);
+                            if (!airDate.HasValue)
+                                continue;
+
+                            var seriesId = (int?)episode.seriesId;
+                            var seriesTitle = (string?)episode.series?.title ?? "Unknown Series";
+                            int? seriesTvdbId = (int?)episode.series?.tvdbId;
+                            string? seriesImdbId = (string?)episode.series?.imdbId;
+                            string? seriesPosterUrl = null;
+                            string? seriesBackdropUrl = null;
+
+                            if (episode.series?.images != null)
+                            {
+                                foreach (var img in episode.series.images)
+                                {
+                                    var coverType = (string?)img.coverType;
+                                    var imageUrl = (string?)img.remoteUrl ?? (string?)img.url;
+                                    if (string.IsNullOrWhiteSpace(imageUrl))
+                                        continue;
+
+                                    if (seriesBackdropUrl == null && (coverType == "fanart" || coverType == "banner"))
+                                        seriesBackdropUrl = imageUrl;
+                                    else if (seriesPosterUrl == null && coverType == "poster")
+                                        seriesPosterUrl = imageUrl;
+                                }
+                            }
+
+                            var seasonNumber = (int?)episode.seasonNumber ?? 0;
+                            var episodeNumber = (int?)episode.episodeNumber ?? 0;
+                            var episodeTitle = (string?)episode.title ?? "Unknown Episode";
+
+                            items.Add(new ArrItem
+                            {
+                                Id = (string?)episode.id?.ToString(),
+                                Source = nameof(ArrType.Sonarr),
+                                InstanceName = instance.Name,
+                                Type = "Series",
+                                Title = seriesTitle,
+                                Subtitle = $"S{seasonNumber:D2}E{episodeNumber:D2} - {episodeTitle}",
+                                ReleaseDate = airDate.Value.ToUniversalTime().ToString("o"),
+                                ReleaseType = "Episode",
+                                HasFile = (bool?)episode.hasFile ?? false,
+                                Monitored = (bool?)episode.monitored ?? false,
+                                SeriesId = seriesId,
+                                SeasonNumber = seasonNumber,
+                                EpisodeNumber = episodeNumber,
+                                EpisodeTitle = episodeTitle,
+                                Overview = (string?)episode.overview,
+                                TvdbId = seriesTvdbId,
+                                ImdbId = seriesImdbId,
+                                TmdbId = (int?)episode.series?.tmdbId,
+                                PosterUrl = seriesPosterUrl,
+                                BackdropUrl = seriesBackdropUrl,
+                                EpisodeTvdbId = (int?)episode.tvdbId,
+                                EpisodeImdbId = (string?)episode.imdbId,
+                                RootFolderPath = GetRootFolderFromPath((string?)episode.series?.path)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Failed to fetch Sonarr calendar from {instance.Name}: {ex.Message}");
+            }
+
+            return items;
+        }
+
+        private async Task<List<ArrItem>> FetchRadarrCalendar(
+            ArrInstance instance, string startIso, string endIso,
+            DateTime startDate, DateTime endDate,
+            Func<object?, DateTime?> parseDate,
+            Action<Dictionary<string, DateTime>, string, object?> addRelease)
+        {
+            var items = new List<ArrItem>();
+            try
+            {
+                var url = instance.Url.TrimEnd('/');
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("X-Api-Key", instance.ApiKey);
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                var response = await client.GetAsync($"{url}/api/v3/calendar?unmonitored=true&start={startIso}&end={endIso}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
+
+                    if (data != null)
+                    {
+                        foreach (var movie in data)
+                        {
+                            var releaseDates = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+
+                            string? posterUrl = null;
+                            string? backdropUrl = null;
+                            if (movie.images != null)
+                            {
+                                foreach (var img in movie.images)
+                                {
+                                    var coverType = (string?)img.coverType;
+                                    var imageUrl = (string?)img.remoteUrl ?? (string?)img.url;
+                                    if (string.IsNullOrWhiteSpace(imageUrl))
+                                        continue;
+
+                                    if (posterUrl == null && coverType == "poster")
+                                    {
+                                        posterUrl = imageUrl;
+                                        continue;
+                                    }
+
+                                    if (backdropUrl == null && (coverType == "fanart" || coverType == "backdrop"))
+                                        backdropUrl = imageUrl;
+                                }
+                            }
+
+                            addRelease(releaseDates, "CinemaRelease", (string?)movie.inCinemas);
+                            addRelease(releaseDates, "PhysicalRelease", (string?)movie.physicalRelease);
+                            addRelease(releaseDates, "DigitalRelease", (string?)movie.digitalRelease);
+
+                            if (movie.releases != null)
+                            {
+                                foreach (var release in movie.releases)
+                                {
+                                    var releaseDate = (object?)release.releaseDate ?? release.date;
+                                    var type = Convert.ToString(release.type)?.ToLowerInvariant();
+                                    var isPhysical = (bool?)release.isPhysical ?? false;
+
+                                    if (isPhysical)
+                                        addRelease(releaseDates, "PhysicalRelease", releaseDate);
+                                    else if (type == "digital")
+                                        addRelease(releaseDates, "DigitalRelease", releaseDate);
+                                    else if (type == "theatrical" || type == "cinema" || type == "theater")
+                                        addRelease(releaseDates, "CinemaRelease", releaseDate);
+                                }
+                            }
+
+                            if (releaseDates.Count == 0)
+                                continue;
+
+                            var movieTitle = (string?)movie.title ?? (string?)movie.originalTitle ?? "Unknown";
+                            string? movieYear = null;
+                            var yearValue = (object?)movie.year;
+                            if (yearValue != null)
+                                movieYear = Convert.ToString(yearValue);
+
+                            foreach (var kvp in releaseDates)
+                            {
+                                var releaseUtc = kvp.Value.ToUniversalTime();
+                                if (releaseUtc < startDate || releaseUtc > endDate)
+                                    continue;
+
+                                items.Add(new ArrItem
+                                {
+                                    Id = $"{movie.id}-{kvp.Key}",
+                                    Source = nameof(ArrType.Radarr),
+                                    InstanceName = instance.Name,
+                                    Type = "Movie",
+                                    Title = movieTitle,
+                                    Subtitle = movieYear,
+                                    ReleaseDate = releaseUtc.ToString("o"),
+                                    ReleaseType = kvp.Key,
+                                    HasFile = (bool?)movie.hasFile ?? false,
+                                    Monitored = (bool?)movie.monitored ?? false,
+                                    PosterUrl = posterUrl,
+                                    BackdropUrl = backdropUrl,
+                                    TmdbId = (int?)movie.tmdbId,
+                                    ImdbId = (string?)movie.imdbId,
+                                    RootFolderPath = GetRootFolderFromPath((string?)movie.path)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Failed to fetch Radarr calendar from {instance.Name}: {ex.Message}");
+            }
+
+            return items;
         }
 
         /// <summary>
