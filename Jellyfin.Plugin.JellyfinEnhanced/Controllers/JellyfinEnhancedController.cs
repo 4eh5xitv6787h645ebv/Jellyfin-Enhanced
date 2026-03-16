@@ -2531,6 +2531,71 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return null;
         }
 
+        /// <summary>
+        /// Look up which Radarr instances have a movie by its TMDB ID.
+        /// Returns an array of matches with instance details for multi-instance link generation.
+        /// </summary>
+        [HttpGet("arr/movie-instances")]
+        [Authorize]
+        public async Task<IActionResult> GetMovieInstances([FromQuery] int tmdbId)
+        {
+            if (!IsAdminUser())
+                return Forbid();
+
+            if (tmdbId <= 0)
+                return BadRequest(new { error = "tmdbId must be a positive integer" });
+
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+                return StatusCode(500, new { error = "Plugin configuration not available" });
+
+            var instances = config.GetRadarrInstances();
+            if (instances.Count == 0)
+                return Ok(new { matches = Array.Empty<object>() });
+
+            var tasks = instances.Select(async instance =>
+            {
+                var found = await CheckMovieInRadarrInstance(instance, tmdbId);
+                return found
+                    ? new { instanceName = instance.Name, instanceUrl = instance.Url, urlMappings = instance.UrlMappings }
+                    : null;
+            });
+
+            var results = await Task.WhenAll(tasks);
+            var matches = results.Where(r => r != null).ToList();
+
+            return Ok(new { matches });
+        }
+
+        private async Task<bool> CheckMovieInRadarrInstance(ArrInstance instance, int tmdbId)
+        {
+            try
+            {
+                var url = instance.Url.TrimEnd('/');
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("X-Api-Key", instance.ApiKey);
+                client.Timeout = TimeSpan.FromSeconds(10);
+
+                var response = await client.GetAsync($"{url}/api/v3/movie?tmdbId={tmdbId}");
+
+                if (!response.IsSuccessStatusCode)
+                    return false;
+
+                var json = await response.Content.ReadAsStringAsync();
+                var movies = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
+
+                if (movies is Newtonsoft.Json.Linq.JArray arr)
+                    return arr.Count > 0;
+
+                return movies != null;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Failed to check movie in Radarr {instance.Name} for TMDB ID {tmdbId}: {ex.Message}");
+                return false;
+            }
+        }
+
         // ==================== Requests Page (Sonarr/Radarr Queue) ====================
 
         /// <summary>

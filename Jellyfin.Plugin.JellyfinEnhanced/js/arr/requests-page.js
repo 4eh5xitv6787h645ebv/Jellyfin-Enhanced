@@ -945,7 +945,8 @@
       const query = state.downloadsSearchQuery.toLowerCase();
       filtered = filtered.filter(d =>
         (d.title && d.title.toLowerCase().includes(query)) ||
-        (d.subtitle && d.subtitle.toLowerCase().includes(query))
+        (d.subtitle && d.subtitle.toLowerCase().includes(query)) ||
+        (d.instanceName && d.instanceName.toLowerCase().includes(query))
       );
     }
 

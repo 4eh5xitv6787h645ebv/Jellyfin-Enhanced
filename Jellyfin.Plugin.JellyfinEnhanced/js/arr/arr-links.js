@@ -267,6 +267,46 @@
                 return results;
             }
 
+            /**
+             * Looks up which Radarr instances have a given movie by TMDB ID.
+             * Returns an array of { instanceName, instanceUrl } for instances that have it.
+             * Falls back to all configured instances if the lookup endpoint fails.
+             * @param {string} tmdbId - TMDB ID of the movie
+             * @returns {Promise<Array>} Array of matching instances
+             */
+            async function getRadarrInstances(tmdbId) {
+                const cacheKey = `radarr-${tmdbId}`;
+                if (slugCache.has(cacheKey)) {
+                    return slugCache.get(cacheKey);
+                }
+
+                if (tmdbId) {
+                    try {
+                        const resp = await fetch(ApiClient.getUrl(`/JellyfinEnhanced/arr/movie-instances?tmdbId=${encodeURIComponent(tmdbId)}`), {
+                            headers: { 'X-MediaBrowser-Token': ApiClient.accessToken() }
+                        });
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (data.matches) {
+                                const results = data.matches.map(m => ({
+                                    name: m.instanceName,
+                                    url: getMappedUrl(parseUrlMappings(m.urlMappings || ''), m.instanceUrl)
+                                }));
+                                slugCache.set(cacheKey, results);
+                                return results;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`${logPrefix} Failed to fetch Radarr movie instances`, e);
+                    }
+                }
+
+                // Fallback: return all Radarr instances
+                const results = radarrInstances.map(i => ({ name: i.name, url: i.url }));
+                if (tmdbId) slugCache.set(cacheKey, results);
+                return results;
+            }
+
             async function addArrLinks() {
                 if (isAddingLinks) {
                     return;
@@ -321,11 +361,14 @@
                     }
 
                     if (item.Type === 'Movie' && ids.tmdb && radarrInstances.length > 0) {
-                        for (const inst of radarrInstances) {
-                            const url = `${inst.url.replace(/\/$/, '')}/movie/${ids.tmdb}`;
-                            const label = hasMultipleRadarr ? inst.name : 'Radarr';
-                            anchorElement.appendChild(document.createTextNode(' '));
-                            anchorElement.appendChild(createLinkButton(label, url, "arr-link-radarr"));
+                        const matchingRadarrs = await getRadarrInstances(ids.tmdb);
+                        for (const inst of matchingRadarrs) {
+                            if (inst.url) {
+                                const url = `${inst.url.replace(/\/$/, '')}/movie/${ids.tmdb}`;
+                                const label = hasMultipleRadarr ? inst.name : 'Radarr';
+                                anchorElement.appendChild(document.createTextNode(' '));
+                                anchorElement.appendChild(createLinkButton(label, url, "arr-link-radarr"));
+                            }
                         }
                     }
 
