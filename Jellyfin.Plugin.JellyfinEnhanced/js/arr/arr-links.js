@@ -240,8 +240,9 @@
                         });
                         if (resp.ok) {
                             const data = await resp.json();
-                            if (data.matches && data.matches.length > 0) {
-                                // Resolve mapped URLs for each match
+                            if (data.matches) {
+                                // Endpoint responded successfully — trust the result even if empty.
+                                // Empty means the series is not in any instance.
                                 const results = data.matches.map(m => ({
                                     instanceName: m.instanceName,
                                     instanceUrl: getMappedUrl(parseUrlMappings(m.urlMappings || ''), m.instanceUrl),
