@@ -1538,6 +1538,27 @@
                         </div>
                     </fieldset>
                 </div>
+
+                <!-- GitHub Issue Reporter Config (visible on all tabs) -->
+                <fieldset class="verticalSection-extrabottompadding" style="margin-top:1em;">
+                    <legend class="sectionTitle"><h3>GitHub Issue Reporter</h3></legend>
+                    <div class="configSection">
+                        <div class="fieldDescription" style="margin-bottom:1em;">
+                            Configure a GitHub Personal Access Token to submit bug reports and feature requests directly from JE.
+                            Create a <a class="sectionTitle" target="_blank" href="https://github.com/settings/tokens?type=beta">fine-grained token</a> scoped to the target repo with "Issues: Write" permission only.
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="gitHubIssueRepo">GitHub Repository (owner/repo)</label>
+                            <input id="gitHubIssueRepo" is="emby-input" type="text" placeholder="n00bcodr/Jellyfin-Enhanced" />
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="gitHubIssueToken">GitHub Personal Access Token</label>
+                            <input id="gitHubIssueToken" is="emby-input" type="password" placeholder="github_pat_..." />
+                            <div class="fieldDescription">Stored server-side only. Never sent to the browser.</div>
+                        </div>
+                    </div>
+                </fieldset>
+
                 <div
                     style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
@@ -2203,6 +2224,10 @@
                 document.querySelector('#loginImageEnabled').checked = config.EnableLoginImage || false;
                 document.querySelector('#customPluginLinks').value = config.CustomPluginLinks || '';
 
+                // GitHub Issue Reporter
+                document.querySelector('#gitHubIssueRepo').value = config.GitHubIssueRepo || 'n00bcodr/Jellyfin-Enhanced';
+                document.querySelector('#gitHubIssueToken').value = config.GitHubIssueToken || '';
+
                 // Set up event handler for watchlist prevention checkbox
                 function toggleWatchlistRetentionVisibility() {
                     const preventionEnabled = document.querySelector('#preventWatchlistReAddition').checked;
@@ -2395,6 +2420,10 @@
 
             config.EnableLoginImage = document.querySelector('#loginImageEnabled').checked;
             config.CustomPluginLinks = document.querySelector('#customPluginLinks').value || '';
+
+            // GitHub Issue Reporter
+            config.GitHubIssueRepo = (document.querySelector('#gitHubIssueRepo').value || '').trim();
+            config.GitHubIssueToken = (document.querySelector('#gitHubIssueToken').value || '').trim();
 
             return config;
         }
@@ -3350,6 +3379,16 @@
         jeLogsCheck.addEventListener('change', updateLogTimeVisibility);
         jfLogsCheck.addEventListener('change', updateLogTimeVisibility);
 
+        // Check if direct GitHub submission is configured and update button text
+        var githubApiConfigured = false;
+        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/github-issue-configured'), dataType: 'json' }).then(function(result) {
+            if (result && result.configured) {
+                githubApiConfigured = true;
+                submitBtn.textContent = 'Submit to GitHub';
+                submitBtn.style.background = 'rgba(80,180,80,0.35)';
+            }
+        }).catch(function() { /* ignore, fallback to URL mode */ });
+
         // Submit to GitHub
         submitBtn.addEventListener('click', function() {
             var title = getIssueTitle();
@@ -3358,43 +3397,73 @@
                 return;
             }
 
-            submitBtn.textContent = 'Preparing...';
+            submitBtn.textContent = 'Submitting...';
             submitBtn.disabled = true;
             collectDiagnostics().then(function(diagnostics) {
                 var body = buildReportBody(diagnostics);
                 var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
                 var labels = type === 'bug' ? 'bug' : 'enhancement';
 
-                var params = new URLSearchParams({ title: title, body: body, labels: labels });
-                var url = GITHUB_BASE + '?' + params.toString();
-
-                if (url.length > 7500) {
-                    var copyPromise = navigator.clipboard && navigator.clipboard.writeText
-                        ? navigator.clipboard.writeText(body)
-                        : Promise.reject('no clipboard');
-                    copyPromise.then(function() {
-                        Dashboard.alert({
-                            title: 'Report Too Large',
-                            message: 'The report body has been copied to your clipboard. GitHub will open with just the title \u2014 please paste the body manually.'
-                        });
-                        var shortParams = new URLSearchParams({ title: title, labels: labels });
-                        window.open(GITHUB_BASE + '?' + shortParams.toString(), '_blank');
-                    }).catch(function() {
-                        Dashboard.alert({
-                            title: 'Report Too Large',
-                            message: 'The report is too large for a URL. Please use "Copy to Clipboard" and paste it manually on GitHub.'
-                        });
+                // If API token is configured, submit directly via backend
+                if (githubApiConfigured) {
+                    return ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/submit-issue'),
+                        data: JSON.stringify({ title: title, body: body, labels: labels }),
+                        contentType: 'application/json',
+                        dataType: 'json'
+                    }).then(function(result) {
+                        if (result && result.url) {
+                            Dashboard.alert({
+                                title: 'Issue Created',
+                                message: 'Issue #' + result.number + ' created successfully.'
+                            });
+                            window.open(result.url, '_blank');
+                            closeModal();
+                        }
+                    }).catch(function(err) {
+                        var msg = 'Failed to create issue.';
+                        try { msg = JSON.parse(err.responseText || '{}').error || msg; } catch(e) {}
+                        Dashboard.alert({ title: 'Submission Failed', message: msg + ' Falling back to URL mode.' });
+                        // Fallback to URL mode
+                        openViaUrl(title, body, labels);
                     });
-                } else {
-                    window.open(url, '_blank');
                 }
+
+                // Fallback: open via URL
+                openViaUrl(title, body, labels);
             }).catch(function(e) {
-                Dashboard.alert({ title: 'Error', message: 'Failed to prepare report: ' + e.message });
+                Dashboard.alert({ title: 'Error', message: 'Failed to prepare report: ' + (e.message || e) });
             }).finally(function() {
-                submitBtn.textContent = 'Open on GitHub';
+                submitBtn.textContent = githubApiConfigured ? 'Submit to GitHub' : 'Open on GitHub';
                 submitBtn.disabled = false;
             });
         });
+
+        function openViaUrl(title, body, labels) {
+            var params = new URLSearchParams({ title: title, body: body, labels: labels });
+            var url = GITHUB_BASE + '?' + params.toString();
+            if (url.length > 7500) {
+                var copyPromise = navigator.clipboard && navigator.clipboard.writeText
+                    ? navigator.clipboard.writeText(body)
+                    : Promise.reject('no clipboard');
+                copyPromise.then(function() {
+                    Dashboard.alert({
+                        title: 'Report Too Large',
+                        message: 'The report body has been copied to your clipboard. GitHub will open with just the title \u2014 please paste the body manually.'
+                    });
+                    var shortParams = new URLSearchParams({ title: title, labels: labels });
+                    window.open(GITHUB_BASE + '?' + shortParams.toString(), '_blank');
+                }).catch(function() {
+                    Dashboard.alert({
+                        title: 'Report Too Large',
+                        message: 'The report is too large for a URL. Please use "Copy to Clipboard" and paste it manually on GitHub.'
+                    });
+                });
+            } else {
+                window.open(url, '_blank');
+            }
+        }
 
         // Copy to clipboard
         copyBtn.addEventListener('click', function() {

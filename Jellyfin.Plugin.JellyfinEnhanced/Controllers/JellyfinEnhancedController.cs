@@ -1492,6 +1492,114 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
         /// <summary>
+        /// Creates a GitHub issue using the configured token. Admin-only.
+        /// Returns the URL of the created issue or an error message.
+        /// </summary>
+        [HttpPost("submit-issue")]
+        [Authorize]
+        public async Task<ActionResult> SubmitGitHubIssue([FromBody] JsonElement body)
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null || string.IsNullOrWhiteSpace(config.GitHubIssueToken))
+            {
+                return BadRequest(new { error = "GitHub token not configured. Set it in Other Settings." });
+            }
+
+            var repo = config.GitHubIssueRepo;
+            if (string.IsNullOrWhiteSpace(repo))
+            {
+                return BadRequest(new { error = "GitHub repository not configured." });
+            }
+
+            // Validate repo format (owner/name)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(repo.Trim(), @"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$"))
+            {
+                return BadRequest(new { error = "Invalid repository format. Use owner/repo." });
+            }
+
+            var title = body.TryGetProperty("title", out var t) ? t.GetString() : null;
+            var issueBody = body.TryGetProperty("body", out var b) ? b.GetString() : null;
+            var labels = body.TryGetProperty("labels", out var l) ? l.GetString() : null;
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return BadRequest(new { error = "Title is required." });
+            }
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + config.GitHubIssueToken.Trim());
+                client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
+                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+                var payload = new Dictionary<string, object>
+                {
+                    { "title", title }
+                };
+                if (!string.IsNullOrWhiteSpace(issueBody))
+                {
+                    // GitHub API limit is 65536 characters for issue body
+                    if (issueBody.Length > 64000)
+                    {
+                        issueBody = issueBody.Substring(0, 64000) + "\n\n---\n_Report truncated (exceeded GitHub's 65536 character limit)_";
+                    }
+                    payload["body"] = issueBody;
+                }
+                if (!string.IsNullOrWhiteSpace(labels))
+                {
+                    payload["labels"] = labels.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+                }
+
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(
+                    $"https://api.github.com/repos/{repo.Trim()}/issues", content);
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Error("GitHub issue creation failed: " + response.StatusCode + " " + responseBody);
+                    return StatusCode((int)response.StatusCode, new { error = "GitHub API error: " + response.StatusCode, details = responseBody });
+                }
+
+                // Extract the issue URL from the response
+                using var doc = JsonDocument.Parse(responseBody);
+                var issueUrl = doc.RootElement.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
+                var issueNumber = doc.RootElement.TryGetProperty("number", out var numProp) ? numProp.GetInt32() : 0;
+
+                _logger.Info("GitHub issue created: #" + issueNumber + " " + issueUrl);
+                return new JsonResult(new { url = issueUrl, number = issueNumber });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to create GitHub issue: " + ex.Message);
+                return StatusCode(500, new { error = "Failed to create issue: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Returns whether GitHub issue submission is configured (token present). No sensitive data returned.
+        /// </summary>
+        [HttpGet("github-issue-configured")]
+        [Authorize]
+        public ActionResult IsGitHubIssueConfigured()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            return new JsonResult(new
+            {
+                configured = config != null && !string.IsNullOrWhiteSpace(config.GitHubIssueToken),
+                repo = config?.GitHubIssueRepo ?? ""
+            });
+        }
+
+        /// <summary>
         /// Returns recent log entries for the issue reporter. Admin-only.
         /// Sanitizes sensitive data (IPs, URLs, API keys, tokens) before returning.
         /// </summary>

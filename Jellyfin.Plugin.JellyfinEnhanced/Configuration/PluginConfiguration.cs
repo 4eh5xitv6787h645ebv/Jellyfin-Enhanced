@@ -198,6 +198,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             HiddenContentEnabled = false;
             HiddenContentUsePluginPages = false;
             HiddenContentUseCustomTabs = false;
+
+            // GitHub Issue Reporter Settings
+            GitHubIssueToken = "";
+            GitHubIssueRepo = "n00bcodr/Jellyfin-Enhanced";
         }
 
         // Jellyfin Enhanced Settings
@@ -369,5 +373,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool HiddenContentEnabled { get; set; }
         public bool HiddenContentUsePluginPages { get; set; }
         public bool HiddenContentUseCustomTabs { get; set; }
+
+        // GitHub Issue Reporter Settings
+        public string GitHubIssueToken { get; set; }
+        public string GitHubIssueRepo { get; set; }
     }
 }
