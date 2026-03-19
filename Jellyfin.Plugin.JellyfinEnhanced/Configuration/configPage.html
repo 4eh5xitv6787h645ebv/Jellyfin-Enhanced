@@ -1589,6 +1589,7 @@
                         <div style="display:flex; gap:1em;">
                             <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="bug" checked style="margin-right:0.3em;"> Bug Report</label>
                             <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="feature" style="margin-right:0.3em;"> Feature Request</label>
+                            <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="performance" style="margin-right:0.3em;"> Performance Issue</label>
                         </div>
                     </div>
 
@@ -1598,8 +1599,27 @@
                     </div>
 
                     <div style="margin-bottom:1.2em;">
+                        <label for="jeReportComponent" style="font-weight:bold; display:block; margin-bottom:0.4em;">Related Component</label>
+                        <select id="jeReportComponent" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
+                            <option value="">-- Select Component (optional) --</option>
+                            <option value="General">General</option>
+                            <option value="Jellyseerr">Jellyseerr Integration</option>
+                            <option value="Calendar">Calendar</option>
+                            <option value="Arr Links">*arr Links / Tags</option>
+                            <option value="Tags">Tags (Quality/Genre/Language/Rating/People)</option>
+                            <option value="Bookmarks">Bookmarks</option>
+                            <option value="Elsewhere">Elsewhere</option>
+                            <option value="Playback">Playback (Pause Screen, Auto-Skip, PiP)</option>
+                            <option value="Subtitles">Subtitles</option>
+                            <option value="Hidden Content">Hidden Content</option>
+                            <option value="UI/Theme">UI / Theme</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:1.2em;">
                         <label for="jeReportDescription" style="font-weight:bold; display:block; margin-bottom:0.4em;">Description</label>
-                        <textarea id="jeReportDescription" rows="5" placeholder="Describe the issue in detail. For bugs: steps to reproduce, expected vs actual behavior." style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; resize:vertical; box-sizing:border-box; font-family:inherit;"></textarea>
+                        <textarea id="jeReportDescription" rows="5" placeholder="Describe the issue in detail." style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; resize:vertical; box-sizing:border-box; font-family:inherit;"></textarea>
                     </div>
 
                     <div style="margin-bottom:1.2em; background:rgba(255,255,255,0.04); padding:1em; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
@@ -1612,6 +1632,7 @@
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeFeatures" style="margin-right:0.4em;"> Enabled features list</label>
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJeLogs" style="margin-right:0.4em;"> JE plugin logs (sanitized)</label>
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJfLogs" style="margin-right:0.4em;"> Jellyfin server logs (sanitized)</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConsoleErrors" style="margin-right:0.4em;"> Browser console errors &amp; warnings</label>
                             <div id="jeLogTimeRangeContainer" style="display:none; margin-top:0.4em; margin-left:1.6em;">
                                 <label for="jeLogTimeRange" style="font-size:0.9em; color:#aaa;">Log time range:</label>
                                 <select id="jeLogTimeRange" style="margin-left:0.4em; padding:0.3em 0.5em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:#eee; font-size:0.9em;">
@@ -1634,12 +1655,25 @@
                         <strong>Privacy:</strong> This opens GitHub in your browser where you can review the full report before submitting. No data is sent automatically. All URLs, IPs, API keys, tokens, and hostnames are stripped from diagnostic data.
                     </div>
 
+                    <div id="jeDuplicateResults" style="display:none; margin-bottom:1em; padding:0.8em; background:rgba(255,200,50,0.1); border:1px solid rgba(255,200,50,0.3); border-radius:6px; font-size:0.9em;">
+                        <strong style="color:#ffcc88;">Similar open issues found:</strong>
+                        <ul id="jeDuplicateList" style="margin:0.5em 0 0 1.2em; padding:0; list-style:disc;"></ul>
+                        <p style="margin:0.5em 0 0; color:#999; font-size:0.85em;">You can still submit if none of these match.</p>
+                    </div>
+
                     <div style="display:flex; gap:0.8em; flex-wrap:wrap;">
                         <button id="jeReportSubmitBtn" type="button" style="flex:1; min-width:150px; padding:0.7em 1.2em; background:rgba(80,180,80,0.25); border:1px solid rgba(80,180,80,0.5); color:#88ff88; border-radius:6px; cursor:pointer; font-size:0.95em; font-weight:bold;">Open on GitHub</button>
                         <button id="jeReportCopyBtn" type="button" style="flex:1; min-width:150px; padding:0.7em 1.2em; background:rgba(100,150,255,0.15); border:1px solid rgba(100,150,255,0.4); color:#aaccff; border-radius:6px; cursor:pointer; font-size:0.95em;">Copy to Clipboard</button>
                         <button id="jeReportCancelBtn" type="button" style="padding:0.7em 1.2em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#ccc; border-radius:6px; cursor:pointer; font-size:0.95em;">Cancel</button>
                     </div>
                     </fieldset>
+
+                    <div id="jeReportSuccess" style="display:none; text-align:center; padding:2em;">
+                        <div style="font-size:3em; margin-bottom:0.5em; color:#88ff88;">&#10003;</div>
+                        <h3 style="color:#88ff88; margin:0 0 0.5em;">Issue Created Successfully</h3>
+                        <p id="jeReportSuccessLink" style="margin:0 0 1em;"></p>
+                        <p id="jeReportSuccessCountdown" style="color:#999; font-size:0.9em; margin:0;"></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3052,6 +3086,24 @@
     (function() {
         'use strict';
 
+        // Console error/warn ring buffer — captures errors from page load
+        var JE_CONSOLE_BUFFER_MAX = 50;
+        var jeConsoleBuffer = [];
+        var _origConsoleError = console.error;
+        var _origConsoleWarn = console.warn;
+        function captureConsole(level, origFn, args) {
+            var parts = [];
+            for (var i = 0; i < args.length; i++) {
+                try { parts.push(typeof args[i] === 'object' ? JSON.stringify(args[i]) : String(args[i])); }
+                catch(e) { parts.push('[unserializable]'); }
+            }
+            jeConsoleBuffer.push({ level: level, time: new Date().toISOString(), message: parts.join(' ') });
+            if (jeConsoleBuffer.length > JE_CONSOLE_BUFFER_MAX) jeConsoleBuffer.shift();
+            origFn.apply(console, args);
+        }
+        console.error = function() { captureConsole('error', _origConsoleError, arguments); };
+        console.warn = function() { captureConsole('warn', _origConsoleWarn, arguments); };
+
         // Target repo for issue submission (user's fork for testing)
         var GITHUB_BASE = 'https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced/issues/new';
 
@@ -3242,6 +3294,22 @@
                     );
                 }
 
+                // Console errors (client-side only, no API call)
+                if (document.getElementById('jeIncludeConsoleErrors').checked && jeConsoleBuffer.length > 0) {
+                    data.consoleErrors = jeConsoleBuffer.map(function(e) {
+                        return '[' + e.time + '] [' + e.level.toUpperCase() + '] ' + sanitizeText(e.message);
+                    }).join('\n');
+                }
+
+                // Extensible diagnostic sections (from registered server-side modules)
+                if (needsConfig || needsFeatures) {
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-sections'), dataType: 'json' }).then(function(result) {
+                            if (result && result.sections) data.diagnosticSections = sanitizeObject(result.sections);
+                        }).catch(function() { /* silent fail */ })
+                    );
+                }
+
                 Promise.all(pending).then(function() { resolve(data); });
             });
         }
@@ -3256,14 +3324,25 @@
             var desc = sanitizeText(descInput.value.trim());
             var parts = [];
 
+            var component = (document.getElementById('jeReportComponent') || {}).value || '';
+
             if (type === 'bug') {
                 parts.push('## Bug Report\n');
+                if (component) parts.push('**Component:** ' + component + '\n');
                 parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
                 parts.push('### Steps to Reproduce\n1. \n2. \n3. \n');
                 parts.push('### Expected Behavior\n_What should happen?_\n');
                 parts.push('### Actual Behavior\n_What actually happens?_\n');
+            } else if (type === 'performance') {
+                parts.push('## Performance Issue\n');
+                if (component) parts.push('**Component:** ' + component + '\n');
+                parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
+                parts.push('### When does it happen?\n_Describe the scenario (e.g., browsing library, playing media, opening a specific page)_\n');
+                parts.push('### How often?\n_Always / Sometimes / Rarely_\n');
+                parts.push('### Performance Impact\n_Describe the impact (e.g., page load takes 10s, UI freezes, high CPU usage)_\n');
             } else {
                 parts.push('## Feature Request\n');
+                if (component) parts.push('**Component:** ' + component + '\n');
                 parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
                 parts.push('### Use Case\n_Why would this be useful?_\n');
             }
@@ -3320,6 +3399,18 @@
                 }
             }
 
+            if (diagnostics.consoleErrors) {
+                parts.push('<details><summary>Browser Console Errors/Warnings (' + jeConsoleBuffer.length + ' entries)</summary>\n');
+                parts.push('```\n' + diagnostics.consoleErrors + '\n```\n');
+                parts.push('</details>\n');
+            }
+
+            if (diagnostics.diagnosticSections && typeof diagnostics.diagnosticSections === 'object') {
+                parts.push('<details><summary>Feature Diagnostics</summary>\n');
+                parts.push('```json\n' + JSON.stringify(diagnostics.diagnosticSections, null, 2) + '\n```\n');
+                parts.push('</details>\n');
+            }
+
             parts.push('\n\n<!-- generated by JE issue reporter -->');
 
             return parts.join('\n');
@@ -3333,6 +3424,7 @@
             var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
             var title = titleInput.value.trim();
             if (!title) return '';
+            if (type === 'performance') return '[Performance] ' + title;
             return type === 'bug' ? '[BUG] ' + title : '[Feature] ' + title;
         }
 
@@ -3357,6 +3449,7 @@
             previewEl.textContent = 'Check the boxes above and click "Preview Report" to see what will be included.';
             document.querySelectorAll('#jeReportModal input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
             document.querySelector('input[name="jeReportType"][value="bug"]').checked = true;
+            document.getElementById('jeReportComponent').value = '';
         });
 
         // Close modal
@@ -3365,6 +3458,82 @@
         cancelBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.style.display !== 'none') closeModal(); });
+
+        // Success state after API submission
+        var successCountdownId = null;
+        function showSuccessState(issueUrl, issueNumber) {
+            document.getElementById('jeReportFieldset').style.display = 'none';
+            var successDiv = document.getElementById('jeReportSuccess');
+            successDiv.style.display = 'block';
+            var linkEl = document.getElementById('jeReportSuccessLink');
+            linkEl.textContent = '';
+            var a = document.createElement('a');
+            a.href = issueUrl;
+            a.target = '_blank';
+            a.style.color = '#aaccff';
+            a.textContent = '#' + issueNumber + ' - View on GitHub';
+            linkEl.appendChild(a);
+            var countdown = 3;
+            var countdownEl = document.getElementById('jeReportSuccessCountdown');
+            countdownEl.textContent = 'Closing in ' + countdown + '...';
+            successCountdownId = setInterval(function() {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(successCountdownId);
+                    successCountdownId = null;
+                    closeModal();
+                } else {
+                    countdownEl.textContent = 'Closing in ' + countdown + '...';
+                }
+            }, 1000);
+        }
+
+        // Cleanup success state on modal close
+        var origCloseModal = closeModal;
+        closeModal = function() {
+            if (successCountdownId) { clearInterval(successCountdownId); successCountdownId = null; }
+            document.getElementById('jeReportSuccess').style.display = 'none';
+            document.getElementById('jeReportFieldset').style.display = '';
+            document.getElementById('jeReportFieldset').disabled = false;
+            origCloseModal();
+        };
+
+        // Duplicate check — searches existing issues when title is entered
+        var dupCheckTimer = null;
+        function checkDuplicates() {
+            var title = titleInput.value.trim();
+            var resultsDiv = document.getElementById('jeDuplicateResults');
+            var listEl = document.getElementById('jeDuplicateList');
+            if (!githubApiConfigured || title.length < 5) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/search-issues', { query: title }), dataType: 'json' }).then(function(data) {
+                if (data && data.results && data.results.length > 0) {
+                    listEl.textContent = '';
+                    for (var i = 0; i < data.results.length; i++) {
+                        var r = data.results[i];
+                        var li = document.createElement('li');
+                        li.style.marginBottom = '0.3em';
+                        var link = document.createElement('a');
+                        link.href = r.url;
+                        link.target = '_blank';
+                        link.style.color = '#aaccff';
+                        link.textContent = '#' + r.number;
+                        li.appendChild(link);
+                        li.appendChild(document.createTextNode(' ' + (r.title || '')));
+                        listEl.appendChild(li);
+                    }
+                    resultsDiv.style.display = 'block';
+                } else {
+                    resultsDiv.style.display = 'none';
+                }
+            }).catch(function() { resultsDiv.style.display = 'none'; });
+        }
+        titleInput.addEventListener('input', function() {
+            if (dupCheckTimer) clearTimeout(dupCheckTimer);
+            dupCheckTimer = setTimeout(checkDuplicates, 1000);
+        });
 
         // Update preview when the details element is opened
         var previewDetails = previewEl.closest('details');
@@ -3408,7 +3577,9 @@
             collectDiagnostics().then(function(diagnostics) {
                 var body = buildReportBody(diagnostics);
                 var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
-                var labels = type === 'bug' ? 'bug' : 'enhancement';
+                var labels = type === 'performance' ? 'bug,performance' : (type === 'bug' ? 'bug' : 'enhancement');
+                var component = (document.getElementById('jeReportComponent') || {}).value;
+                if (component) labels = labels + ',' + component;
 
                 // If API token is configured, submit directly via backend
                 if (githubApiConfigured) {
@@ -3420,12 +3591,7 @@
                         dataType: 'json'
                     }).then(function(result) {
                         if (result && result.url) {
-                            Dashboard.alert({
-                                title: 'Issue Created',
-                                message: 'Issue #' + result.number + ' created successfully.'
-                            });
-                            window.open(result.url, '_blank');
-                            closeModal();
+                            showSuccessState(result.url, result.number);
                         }
                     }).catch(function(err) {
                         var msg = 'Failed to create issue.';

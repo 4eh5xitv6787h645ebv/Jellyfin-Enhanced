@@ -1632,6 +1632,63 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         /// <summary>
+        /// Searches GitHub issues for duplicates. Admin-only.
+        /// </summary>
+        [HttpGet("search-issues")]
+        [Authorize]
+        public async Task<ActionResult> SearchGitHubIssues([FromQuery] string query)
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null || string.IsNullOrWhiteSpace(config.GitHubIssueToken))
+                return new JsonResult(new { results = Array.Empty<object>() });
+
+            var repo = config.GitHubIssueRepo?.Trim();
+            if (string.IsNullOrWhiteSpace(repo))
+                return new JsonResult(new { results = Array.Empty<object>() });
+
+            query = (query ?? "").Trim();
+            if (query.Length < 3)
+                return new JsonResult(new { results = Array.Empty<object>() });
+            if (query.Length > 128)
+                query = query.Substring(0, 128);
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + config.GitHubIssueToken.Trim());
+                client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
+                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+                var searchQuery = Uri.EscapeDataString(query + " repo:" + repo + " is:issue is:open");
+                var response = await client.GetAsync("https://api.github.com/search/issues?q=" + searchQuery + "&per_page=5");
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return new JsonResult(new { results = Array.Empty<object>() });
+
+                using var doc = JsonDocument.Parse(responseBody);
+                var items = doc.RootElement.GetProperty("items");
+                var results = new List<object>();
+                foreach (var item in items.EnumerateArray())
+                {
+                    results.Add(new
+                    {
+                        number = item.GetProperty("number").GetInt32(),
+                        title = item.GetProperty("title").GetString(),
+                        url = item.GetProperty("html_url").GetString()
+                    });
+                }
+                return new JsonResult(new { results });
+            }
+            catch
+            {
+                return new JsonResult(new { results = Array.Empty<object>() });
+            }
+        }
+
+        /// <summary>
         /// Returns recent log entries for the issue reporter. Admin-only.
         /// Sanitizes sensitive data (IPs, URLs, API keys, tokens) before returning.
         /// </summary>
