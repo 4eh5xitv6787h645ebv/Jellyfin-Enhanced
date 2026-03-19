@@ -1828,12 +1828,42 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             catch { /* skip unreadable files */ }
         }
 
+        private static bool IsPrivateIp(string ip)
+        {
+            var parts = ip.Split('.');
+            if (parts.Length != 4) return false;
+            if (!int.TryParse(parts[0], out var a) || !int.TryParse(parts[1], out var b)) return false;
+            return a == 10                              // 10.0.0.0/8
+                || (a == 172 && b >= 16 && b <= 31)     // 172.16.0.0/12
+                || (a == 192 && b == 168)                // 192.168.0.0/16
+                || a == 127                              // 127.0.0.0/8 loopback
+                || (a == 169 && b == 254);               // 169.254.0.0/16 link-local
+        }
+
+        private static bool IsLocalHost(string host)
+        {
+            if (string.IsNullOrEmpty(host)) return false;
+            var h = host.Split(':')[0].ToLowerInvariant();
+            if (h == "localhost") return true;
+            if (System.Text.RegularExpressions.Regex.IsMatch(h, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$") && IsPrivateIp(h)) return true;
+            if (h.EndsWith(".local") || h.EndsWith(".lan") || h.EndsWith(".home")
+                || h.EndsWith(".internal") || h.EndsWith(".intranet") || h.EndsWith(".localdomain")
+                || h.EndsWith(".test")) return true;
+            if (!h.Contains('.')) return true; // single-word hostname = local
+            return false;
+        }
+
         private static string SanitizeLogOutput(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
-            // Redact URLs (keep path structure, strip hostnames)
+            // Redact URLs — keep local/private hostnames, redact public ones
             text = System.Text.RegularExpressions.Regex.Replace(text,
-                @"(https?://|wss?://|ftp://)([^\s/""']+)(:\d+)?", "$1[HOST_REDACTED]$3");
+                @"(https?://|wss?://|ftp://)([^\s/""']+)(:\d+)?",
+                m => {
+                    var host = m.Groups[2].Value;
+                    if (IsLocalHost(host)) return m.Value; // keep local
+                    return m.Groups[1].Value + "[HOST_REDACTED]" + (m.Groups[3].Success ? m.Groups[3].Value : "");
+                });
             // Redact API key/token query params
             text = System.Text.RegularExpressions.Regex.Replace(text,
                 @"([?&](?:api_?key|apikey|key|token|access_token|auth|password|secret)=)[^&\s""']+",
@@ -1842,9 +1872,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             text = System.Text.RegularExpressions.Regex.Replace(text,
                 @"((?:Bearer|Basic|Token)\s+)[^\s""']+", "$1[REDACTED]",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            // Redact IPv4 addresses
+            // Redact public IPv4 addresses, keep private/local
             text = System.Text.RegularExpressions.Regex.Replace(text,
-                @"\b(\d{1,3}\.){3}\d{1,3}(:\d+)?\b", "[IP_REDACTED]");
+                @"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?\b",
+                m => {
+                    var ip = m.Groups[1].Value;
+                    if (IsPrivateIp(ip)) return m.Value; // keep private IPs
+                    return "[IP_REDACTED]" + (m.Groups[2].Success ? m.Groups[2].Value : "");
+                });
             // Redact email addresses
             text = System.Text.RegularExpressions.Regex.Replace(text,
                 @"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", "[EMAIL_REDACTED]");
