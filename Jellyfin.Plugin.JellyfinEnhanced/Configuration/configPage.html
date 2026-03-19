@@ -1572,7 +1572,7 @@
 
                     <div style="margin-bottom:1.2em;">
                         <label for="jeReportTitle" style="font-weight:bold; display:block; margin-bottom:0.4em;">Title</label>
-                        <input id="jeReportTitle" type="text" placeholder="Brief summary of the issue or request" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
+                        <input id="jeReportTitle" type="text" maxlength="200" placeholder="Brief summary of the issue or request" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
                     </div>
 
                     <div style="margin-bottom:1.2em;">
@@ -3032,7 +3032,7 @@
         function sanitizeText(text) {
             if (!text || typeof text !== 'string') return text || '';
             var s = text;
-            s = s.replace(/(https?:\/\/)([^\s\/"']+)(:\d+)?/gi, '$1[HOST_REDACTED]$3');
+            s = s.replace(/((?:https?|wss?|ftp):\/\/)([^\s\/"']+)(:\d+)?/gi, '$1[HOST_REDACTED]$3');
             s = s.replace(/([?&](?:api_?key|apikey|key|token|access_token|auth|password|secret|pwd)=)[^&\s"']+/gi, '$1[REDACTED]');
             s = s.replace(/((?:Bearer|Basic|Token)\s+)[^\s"']+/gi, '$1[REDACTED]');
             s = s.replace(/\b(\d{1,3}\.){3}\d{1,3}(:\d+)?\b/g, '[IP_REDACTED]');
@@ -3138,50 +3138,48 @@
                     };
                 }
 
-                if (document.getElementById('jeIncludeConfig').checked) {
+                var needsConfig = document.getElementById('jeIncludeConfig').checked;
+                var needsFeatures = document.getElementById('jeIncludeFeatures').checked;
+                if (needsConfig || needsFeatures) {
                     pending.push(
                         ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(config) {
-                            data.pluginConfig = sanitizeObject(config || {});
-                        }).catch(function() {
-                            data.pluginConfig = 'Could not retrieve';
-                        })
-                    );
-                }
-
-                if (document.getElementById('jeIncludeFeatures').checked) {
-                    pending.push(
-                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(config) {
-                            data.enabledFeatures = [];
-                            var featureMap = {
-                                ElsewhereEnabled: 'Elsewhere',
-                                JellyseerrEnabled: 'Jellyseerr Integration',
-                                JellyseerrShowSearchResults: 'Jellyseerr Search Results',
-                                JellyseerrShowReportButton: 'Jellyseerr Issue Reporter',
-                                ArrLinksEnabled: '*arr Links',
-                                ArrTagsShowAsLinks: '*arr Tag Links',
-                                LetterboxdEnabled: 'Letterboxd Links',
-                                QualityTagsEnabled: 'Quality Tags',
-                                GenreTagsEnabled: 'Genre Tags',
-                                LanguageTagsEnabled: 'Language Tags',
-                                RatingTagsEnabled: 'Rating Tags',
-                                PeopleTagsEnabled: 'People Tags',
-                                ShowWatchProgress: 'Watch Progress',
-                                ShowFileSizes: 'File Sizes',
-                                ShowAudioLanguages: 'Audio Languages',
-                                RemoveContinueWatchingEnabled: 'Remove Continue Watching',
-                                RandomButtonEnabled: 'Random Button',
-                                PauseScreenEnabled: 'Custom Pause Screen',
-                                ShowReviews: 'TMDB Reviews',
-                                EnableCustomSplashScreen: 'Custom Splash Screen',
-                                MetadataIconsEnabled: 'Metadata Icons',
-                                EnableLoginImage: 'Custom Login Image'
-                            };
-                            var keys = Object.keys(featureMap);
-                            for (var i = 0; i < keys.length; i++) {
-                                if (config && config[keys[i]]) data.enabledFeatures.push(featureMap[keys[i]]);
+                            if (needsConfig) {
+                                data.pluginConfig = sanitizeObject(config || {});
+                            }
+                            if (needsFeatures) {
+                                data.enabledFeatures = [];
+                                var featureMap = {
+                                    ElsewhereEnabled: 'Elsewhere',
+                                    JellyseerrEnabled: 'Jellyseerr Integration',
+                                    JellyseerrShowSearchResults: 'Jellyseerr Search Results',
+                                    JellyseerrShowReportButton: 'Jellyseerr Issue Reporter',
+                                    ArrLinksEnabled: '*arr Links',
+                                    ArrTagsShowAsLinks: '*arr Tag Links',
+                                    LetterboxdEnabled: 'Letterboxd Links',
+                                    QualityTagsEnabled: 'Quality Tags',
+                                    GenreTagsEnabled: 'Genre Tags',
+                                    LanguageTagsEnabled: 'Language Tags',
+                                    RatingTagsEnabled: 'Rating Tags',
+                                    PeopleTagsEnabled: 'People Tags',
+                                    ShowWatchProgress: 'Watch Progress',
+                                    ShowFileSizes: 'File Sizes',
+                                    ShowAudioLanguages: 'Audio Languages',
+                                    RemoveContinueWatchingEnabled: 'Remove Continue Watching',
+                                    RandomButtonEnabled: 'Random Button',
+                                    PauseScreenEnabled: 'Custom Pause Screen',
+                                    ShowReviews: 'TMDB Reviews',
+                                    EnableCustomSplashScreen: 'Custom Splash Screen',
+                                    MetadataIconsEnabled: 'Metadata Icons',
+                                    EnableLoginImage: 'Custom Login Image'
+                                };
+                                var keys = Object.keys(featureMap);
+                                for (var i = 0; i < keys.length; i++) {
+                                    if (config && config[keys[i]]) data.enabledFeatures.push(featureMap[keys[i]]);
+                                }
                             }
                         }).catch(function() {
-                            data.enabledFeatures = ['Could not retrieve'];
+                            if (needsConfig) data.pluginConfig = 'Could not retrieve';
+                            if (needsFeatures) data.enabledFeatures = ['Could not retrieve'];
                         })
                     );
                 }
@@ -3197,7 +3195,7 @@
          */
         function buildReportBody(diagnostics) {
             var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
-            var desc = descInput.value.trim();
+            var desc = sanitizeText(descInput.value.trim());
             var parts = [];
 
             if (type === 'bug') {
