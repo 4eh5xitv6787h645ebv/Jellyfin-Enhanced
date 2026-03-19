@@ -14,6 +14,9 @@
                             <i class="md-icon button-icon button-icon-left secondaryText"></i>
                             <span>Help</span>
                         </a>
+                        <button id="jeReportIssueBtn" type="button" class="raised raised-mini emby-button" style="margin-left: 0.5em; background: rgba(200,120,50,0.2); border: 1px solid rgba(200,120,50,0.4); color: #ffcc88; cursor: pointer;">
+                            <span>Report Issue</span>
+                        </button>
                 </div>
             </div>
             <hr>
@@ -1550,6 +1553,60 @@
                 </div>
 
             </form>
+
+            <!-- GitHub Issue Reporter Modal -->
+            <div id="jeReportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; overflow-y:auto; padding:2em;">
+                <div style="max-width:700px; margin:2em auto; background:#1a1a2e; border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:2em; color:#eee; font-family:inherit;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5em;">
+                        <h2 style="margin:0; font-size:1.4em;">Report Issue / Request Feature</h2>
+                        <button id="jeReportCloseBtn" type="button" style="background:none; border:none; color:#aaa; font-size:1.5em; cursor:pointer; padding:0.2em;">&times;</button>
+                    </div>
+
+                    <div style="margin-bottom:1.2em;">
+                        <label style="font-weight:bold; display:block; margin-bottom:0.4em;">Report Type</label>
+                        <div style="display:flex; gap:1em;">
+                            <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="bug" checked style="margin-right:0.3em;"> Bug Report</label>
+                            <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="feature" style="margin-right:0.3em;"> Feature Request</label>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1.2em;">
+                        <label for="jeReportTitle" style="font-weight:bold; display:block; margin-bottom:0.4em;">Title</label>
+                        <input id="jeReportTitle" type="text" placeholder="Brief summary of the issue or request" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
+                    </div>
+
+                    <div style="margin-bottom:1.2em;">
+                        <label for="jeReportDescription" style="font-weight:bold; display:block; margin-bottom:0.4em;">Description</label>
+                        <textarea id="jeReportDescription" rows="5" placeholder="Describe the issue in detail. For bugs: steps to reproduce, expected vs actual behavior." style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; resize:vertical; box-sizing:border-box; font-family:inherit;"></textarea>
+                    </div>
+
+                    <div style="margin-bottom:1.2em; background:rgba(255,255,255,0.04); padding:1em; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                        <label style="font-weight:bold; display:block; margin-bottom:0.6em;">Include Diagnostic Data (opt-in)</label>
+                        <p style="font-size:0.85em; color:#999; margin:0 0 0.8em 0;">All diagnostic data is optional. Check the boxes below to include information that helps debug the issue. All data is sanitized to remove personal info (IPs, API keys, domains, tokens).</p>
+                        <div style="display:flex; flex-direction:column; gap:0.5em;">
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeVersions" style="margin-right:0.4em;"> JE version &amp; Jellyfin server version</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeDevice" style="margin-right:0.4em;"> Device &amp; browser information</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConfig" style="margin-right:0.4em;"> JE plugin configuration (sanitized, no keys/URLs)</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeFeatures" style="margin-right:0.4em;"> Enabled features list</label>
+                        </div>
+                    </div>
+
+                    <details style="margin-bottom:1.2em; background:rgba(255,255,255,0.04); padding:1em; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                        <summary style="cursor:pointer; font-weight:bold; font-size:0.95em; color:#ffcc88;">Preview Report</summary>
+                        <pre id="jeReportPreview" style="margin-top:0.8em; padding:1em; background:rgba(0,0,0,0.4); border-radius:6px; white-space:pre-wrap; word-wrap:break-word; font-size:0.85em; color:#ccc; max-height:300px; overflow-y:auto; border:1px solid rgba(255,255,255,0.08);"></pre>
+                    </details>
+
+                    <div style="padding:0.8em; background:rgba(100,150,255,0.1); border:1px solid rgba(100,150,255,0.3); border-radius:6px; margin-bottom:1.5em; font-size:0.85em; color:#aaccff;">
+                        <strong>Privacy:</strong> This opens GitHub in your browser where you can review the full report before submitting. No data is sent automatically. All URLs, IPs, API keys, tokens, and hostnames are stripped from diagnostic data.
+                    </div>
+
+                    <div style="display:flex; gap:0.8em; flex-wrap:wrap;">
+                        <button id="jeReportSubmitBtn" type="button" style="flex:1; min-width:150px; padding:0.7em 1.2em; background:rgba(80,180,80,0.25); border:1px solid rgba(80,180,80,0.5); color:#88ff88; border-radius:6px; cursor:pointer; font-size:0.95em; font-weight:bold;">Open on GitHub</button>
+                        <button id="jeReportCopyBtn" type="button" style="flex:1; min-width:150px; padding:0.7em 1.2em; background:rgba(100,150,255,0.15); border:1px solid rgba(100,150,255,0.4); color:#aaccff; border-radius:6px; cursor:pointer; font-size:0.95em;">Copy to Clipboard</button>
+                        <button id="jeReportCancelBtn" type="button" style="padding:0.7em 1.2em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#ccc; border-radius:6px; cursor:pointer; font-size:0.95em;">Cancel</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 <script type="text/javascript">
@@ -2940,6 +2997,396 @@
             }
             document.body.removeChild(textarea);
         }
+    })();
+</script>
+<script type="text/javascript">
+    /**
+     * GitHub Issue Reporter for Jellyfin Enhanced.
+     * Collects opt-in diagnostic data, sanitizes it, and opens a pre-filled GitHub issue.
+     * NOTE: Avoids template literals (backtick strings with ${}) because the Jellyfin
+     * plugin HTML serving pipeline processes ${} patterns before the browser receives them.
+     */
+    (function() {
+        'use strict';
+
+        // Target repo for issue submission (user's fork for testing)
+        var GITHUB_BASE = 'https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced/issues/new';
+
+        var modal = document.getElementById('jeReportModal');
+        var openBtn = document.getElementById('jeReportIssueBtn');
+        var closeBtn = document.getElementById('jeReportCloseBtn');
+        var cancelBtn = document.getElementById('jeReportCancelBtn');
+        var submitBtn = document.getElementById('jeReportSubmitBtn');
+        var copyBtn = document.getElementById('jeReportCopyBtn');
+        var previewEl = document.getElementById('jeReportPreview');
+        var titleInput = document.getElementById('jeReportTitle');
+        var descInput = document.getElementById('jeReportDescription');
+
+        if (!modal || !openBtn) return;
+
+        /**
+         * Sanitizes text by removing sensitive information.
+         * @param {string} text - The text to sanitize.
+         * @returns {string} Sanitized text with sensitive data redacted.
+         */
+        function sanitizeText(text) {
+            if (!text || typeof text !== 'string') return text || '';
+            var s = text;
+            s = s.replace(/(https?:\/\/)([^\s\/"']+)(:\d+)?/gi, '$1[HOST_REDACTED]$3');
+            s = s.replace(/([?&](?:api_?key|apikey|key|token|access_token|auth|password|secret|pwd)=)[^&\s"']+/gi, '$1[REDACTED]');
+            s = s.replace(/((?:Bearer|Basic|Token)\s+)[^\s"']+/gi, '$1[REDACTED]');
+            s = s.replace(/\b(\d{1,3}\.){3}\d{1,3}(:\d+)?\b/g, '[IP_REDACTED]');
+            s = s.replace(/\b([0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}\b/g, '[IP_REDACTED]');
+            s = s.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL_REDACTED]');
+            return s;
+        }
+
+        /**
+         * Deep-sanitizes a JSON object, redacting sensitive keys entirely.
+         * @param {*} obj - The object to sanitize.
+         * @returns {*} A new sanitized copy of the object.
+         */
+        function sanitizeObject(obj) {
+            if (obj === null || obj === undefined) return obj;
+            if (typeof obj === 'string') return sanitizeText(obj);
+            if (typeof obj !== 'object') return obj;
+            if (Array.isArray(obj)) return obj.map(sanitizeObject);
+
+            var sensitiveKeys = /^(.*url.*|.*key.*|.*token.*|.*secret.*|.*password.*|.*apikey.*|.*api_key.*|.*auth.*|.*credential.*|.*host.*)$/i;
+            var result = {};
+            for (var k in obj) {
+                if (!obj.hasOwnProperty(k)) continue;
+                var value = obj[k];
+                if (sensitiveKeys.test(k) && typeof value === 'string' && value.length > 0) {
+                    result[k] = '[REDACTED]';
+                } else if (typeof value === 'object') {
+                    result[k] = sanitizeObject(value);
+                } else {
+                    result[k] = value;
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Detects OS from user agent string.
+         * @returns {string} The detected operating system name.
+         */
+        function detectOS() {
+            var ua = navigator.userAgent;
+            if (/Windows/i.test(ua)) return 'Windows';
+            if (/Android/i.test(ua)) return 'Android';
+            if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
+            if (/Mac/i.test(ua)) return 'macOS';
+            if (/Linux/i.test(ua)) return 'Linux';
+            if (/CrOS/i.test(ua)) return 'ChromeOS';
+            if (/webOS|Tizen|SMART-TV|SmartTV/i.test(ua)) return 'Smart TV';
+            return 'Unknown';
+        }
+
+        /**
+         * Detects browser name and version.
+         * @returns {string} Browser name and version.
+         */
+        function detectBrowser() {
+            var ua = navigator.userAgent;
+            if (/Edg\//i.test(ua)) return 'Edge ' + ((ua.match(/Edg\/([\d.]+)/) || [])[1] || '');
+            if (/OPR\//i.test(ua)) return 'Opera ' + ((ua.match(/OPR\/([\d.]+)/) || [])[1] || '');
+            if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) return 'Chrome ' + ((ua.match(/Chrome\/([\d.]+)/) || [])[1] || '');
+            if (/Firefox\//i.test(ua)) return 'Firefox ' + ((ua.match(/Firefox\/([\d.]+)/) || [])[1] || '');
+            if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) return 'Safari ' + ((ua.match(/Version\/([\d.]+)/) || [])[1] || '');
+            return 'Unknown';
+        }
+
+        /**
+         * Collects all selected diagnostic data.
+         * @returns {Promise<object>} An object with each diagnostic section.
+         */
+        function collectDiagnostics() {
+            return new Promise(function(resolve) {
+                var data = {};
+                var pending = [];
+
+                if (document.getElementById('jeIncludeVersions').checked) {
+                    data.versions = {};
+                    pending.push(
+                        ApiClient.getPublicSystemInfo().then(function(info) {
+                            data.versions.jellyfinVersion = (info && info.Version) || 'Unknown';
+                            data.versions.os = (info && info.OperatingSystem) || 'Unknown';
+                        }).catch(function() {
+                            data.versions.jellyfinVersion = 'Could not retrieve';
+                        })
+                    );
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/version'), dataType: 'text' }).then(function(ver) {
+                            data.versions.jeVersion = ver || 'Unknown';
+                        }).catch(function() {
+                            data.versions.jeVersion = 'Could not retrieve';
+                        })
+                    );
+                }
+
+                if (document.getElementById('jeIncludeDevice').checked) {
+                    data.device = {
+                        os: detectOS(),
+                        browser: detectBrowser(),
+                        screenResolution: screen.width + 'x' + screen.height,
+                        viewportSize: window.innerWidth + 'x' + window.innerHeight,
+                        devicePixelRatio: window.devicePixelRatio || 1,
+                        touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+                        language: navigator.language || 'Unknown'
+                    };
+                }
+
+                if (document.getElementById('jeIncludeConfig').checked) {
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(config) {
+                            data.pluginConfig = sanitizeObject(config || {});
+                        }).catch(function() {
+                            data.pluginConfig = 'Could not retrieve';
+                        })
+                    );
+                }
+
+                if (document.getElementById('jeIncludeFeatures').checked) {
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(config) {
+                            data.enabledFeatures = [];
+                            var featureMap = {
+                                ElsewhereEnabled: 'Elsewhere',
+                                JellyseerrEnabled: 'Jellyseerr Integration',
+                                JellyseerrShowSearchResults: 'Jellyseerr Search Results',
+                                JellyseerrShowReportButton: 'Jellyseerr Issue Reporter',
+                                ArrLinksEnabled: '*arr Links',
+                                ArrTagsShowAsLinks: '*arr Tag Links',
+                                LetterboxdEnabled: 'Letterboxd Links',
+                                QualityTagsEnabled: 'Quality Tags',
+                                GenreTagsEnabled: 'Genre Tags',
+                                LanguageTagsEnabled: 'Language Tags',
+                                RatingTagsEnabled: 'Rating Tags',
+                                PeopleTagsEnabled: 'People Tags',
+                                ShowWatchProgress: 'Watch Progress',
+                                ShowFileSizes: 'File Sizes',
+                                ShowAudioLanguages: 'Audio Languages',
+                                RemoveContinueWatchingEnabled: 'Remove Continue Watching',
+                                RandomButtonEnabled: 'Random Button',
+                                PauseScreenEnabled: 'Custom Pause Screen',
+                                ShowReviews: 'TMDB Reviews',
+                                EnableCustomSplashScreen: 'Custom Splash Screen',
+                                MetadataIconsEnabled: 'Metadata Icons',
+                                EnableLoginImage: 'Custom Login Image'
+                            };
+                            var keys = Object.keys(featureMap);
+                            for (var i = 0; i < keys.length; i++) {
+                                if (config && config[keys[i]]) data.enabledFeatures.push(featureMap[keys[i]]);
+                            }
+                        }).catch(function() {
+                            data.enabledFeatures = ['Could not retrieve'];
+                        })
+                    );
+                }
+
+                Promise.all(pending).then(function() { resolve(data); });
+            });
+        }
+
+        /**
+         * Builds a markdown-formatted report body.
+         * @param {object} diagnostics - Collected diagnostic data.
+         * @returns {string} Markdown formatted report.
+         */
+        function buildReportBody(diagnostics) {
+            var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
+            var desc = descInput.value.trim();
+            var parts = [];
+
+            if (type === 'bug') {
+                parts.push('## Bug Report\n');
+                parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
+                parts.push('### Steps to Reproduce\n1. \n2. \n3. \n');
+                parts.push('### Expected Behavior\n_What should happen?_\n');
+                parts.push('### Actual Behavior\n_What actually happens?_\n');
+            } else {
+                parts.push('## Feature Request\n');
+                parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
+                parts.push('### Use Case\n_Why would this be useful?_\n');
+            }
+
+            if (diagnostics.versions) {
+                parts.push('### Version Information');
+                parts.push('- **JE Version:** ' + (diagnostics.versions.jeVersion || 'Unknown'));
+                parts.push('- **Jellyfin Version:** ' + (diagnostics.versions.jellyfinVersion || 'Unknown'));
+                if (diagnostics.versions.os) parts.push('- **Server OS:** ' + diagnostics.versions.os);
+                parts.push('');
+            }
+
+            if (diagnostics.device) {
+                var d = diagnostics.device;
+                parts.push('### Device Information');
+                parts.push('- **OS:** ' + d.os);
+                parts.push('- **Browser:** ' + d.browser);
+                parts.push('- **Screen:** ' + d.screenResolution + ' (viewport: ' + d.viewportSize + ', DPR: ' + d.devicePixelRatio + ')');
+                parts.push('- **Touch:** ' + (d.touchSupport ? 'Yes' : 'No'));
+                parts.push('- **Language:** ' + d.language);
+                parts.push('');
+            }
+
+            if (diagnostics.enabledFeatures) {
+                parts.push('### Enabled Features');
+                if (diagnostics.enabledFeatures.length > 0) {
+                    parts.push(diagnostics.enabledFeatures.map(function(f) { return '- ' + f; }).join('\n'));
+                } else {
+                    parts.push('_No features enabled_');
+                }
+                parts.push('');
+            }
+
+            if (diagnostics.pluginConfig && typeof diagnostics.pluginConfig === 'object') {
+                parts.push('<details><summary>Plugin Configuration (sanitized)</summary>\n');
+                parts.push('```json\n' + JSON.stringify(diagnostics.pluginConfig, null, 2) + '\n```\n');
+                parts.push('</details>\n');
+            }
+
+            return parts.join('\n');
+        }
+
+        /**
+         * Formats the issue title with a prefix.
+         * @returns {string} Formatted issue title.
+         */
+        function getIssueTitle() {
+            var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
+            var title = titleInput.value.trim();
+            if (!title) return '';
+            return type === 'bug' ? '[BUG] ' + title : '[Feature] ' + title;
+        }
+
+        /** Updates the preview pane with the current report content. */
+        function updatePreview() {
+            previewEl.textContent = 'Collecting data...';
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                previewEl.textContent = getIssueTitle() + '\n\n' + body;
+            }).catch(function(e) {
+                previewEl.textContent = 'Error generating preview: ' + e.message;
+            });
+        }
+
+        // Open modal
+        openBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.style.display = 'block';
+            titleInput.value = '';
+            descInput.value = '';
+            previewEl.textContent = 'Check the boxes above and click "Preview Report" to see what will be included.';
+            document.querySelectorAll('#jeReportModal input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+            document.querySelector('input[name="jeReportType"][value="bug"]').checked = true;
+        });
+
+        // Close modal
+        function closeModal() { modal.style.display = 'none'; }
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+        // Update preview when the details element is opened
+        var previewDetails = previewEl.closest('details');
+        if (previewDetails) {
+            previewDetails.addEventListener('toggle', function() {
+                if (previewDetails.open) updatePreview();
+            });
+        }
+
+        // Submit to GitHub
+        submitBtn.addEventListener('click', function() {
+            var title = getIssueTitle();
+            if (!title) {
+                Dashboard.alert({ title: 'Missing Title', message: 'Please enter a title for the report.' });
+                return;
+            }
+
+            submitBtn.textContent = 'Preparing...';
+            submitBtn.disabled = true;
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
+                var labels = type === 'bug' ? 'bug' : 'enhancement';
+
+                var params = new URLSearchParams({ title: title, body: body, labels: labels });
+                var url = GITHUB_BASE + '?' + params.toString();
+
+                if (url.length > 7500) {
+                    var copyPromise = navigator.clipboard && navigator.clipboard.writeText
+                        ? navigator.clipboard.writeText(body)
+                        : Promise.reject('no clipboard');
+                    copyPromise.then(function() {
+                        Dashboard.alert({
+                            title: 'Report Too Large',
+                            message: 'The report body has been copied to your clipboard. GitHub will open with just the title \u2014 please paste the body manually.'
+                        });
+                        var shortParams = new URLSearchParams({ title: title, labels: labels });
+                        window.open(GITHUB_BASE + '?' + shortParams.toString(), '_blank');
+                    }).catch(function() {
+                        Dashboard.alert({
+                            title: 'Report Too Large',
+                            message: 'The report is too large for a URL. Please use "Copy to Clipboard" and paste it manually on GitHub.'
+                        });
+                    });
+                } else {
+                    window.open(url, '_blank');
+                }
+            }).catch(function(e) {
+                Dashboard.alert({ title: 'Error', message: 'Failed to prepare report: ' + e.message });
+            }).finally(function() {
+                submitBtn.textContent = 'Open on GitHub';
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Copy to clipboard
+        copyBtn.addEventListener('click', function() {
+            var title = getIssueTitle();
+            if (!title) {
+                Dashboard.alert({ title: 'Missing Title', message: 'Please enter a title for the report.' });
+                return;
+            }
+
+            copyBtn.textContent = 'Copying...';
+            copyBtn.disabled = true;
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                var fullReport = '# ' + title + '\n\n' + body;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(fullReport);
+                } else {
+                    var textarea = document.createElement('textarea');
+                    textarea.value = fullReport;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    return Promise.resolve();
+                }
+            }).then(function() {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.style.color = '#4CAF50';
+                copyBtn.style.borderColor = '#4CAF50';
+                setTimeout(function() {
+                    copyBtn.textContent = 'Copy to Clipboard';
+                    copyBtn.style.color = '';
+                    copyBtn.style.borderColor = '';
+                    copyBtn.disabled = false;
+                }, 2000);
+            }).catch(function(e) {
+                Dashboard.alert({ title: 'Error', message: 'Failed to copy: ' + (e.message || e) });
+                copyBtn.textContent = 'Copy to Clipboard';
+                copyBtn.disabled = false;
+            });
+        });
     })();
 </script>
 </div>
