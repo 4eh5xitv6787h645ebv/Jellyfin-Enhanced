@@ -1588,8 +1588,18 @@
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeDevice" style="margin-right:0.4em;"> Device &amp; browser information</label>
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConfig" style="margin-right:0.4em;"> JE plugin configuration (sanitized, no keys/URLs)</label>
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeFeatures" style="margin-right:0.4em;"> Enabled features list</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJeLogs" style="margin-right:0.4em;"> JE plugin logs (last 50 lines, sanitized)</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJfLogs" style="margin-right:0.4em;"> Jellyfin server logs (last 50 lines, sanitized)</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJeLogs" style="margin-right:0.4em;"> JE plugin logs (sanitized)</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJfLogs" style="margin-right:0.4em;"> Jellyfin server logs (sanitized)</label>
+                            <div id="jeLogTimeRangeContainer" style="display:none; margin-top:0.4em; margin-left:1.6em;">
+                                <label for="jeLogTimeRange" style="font-size:0.9em; color:#aaa;">Log time range:</label>
+                                <select id="jeLogTimeRange" style="margin-left:0.4em; padding:0.3em 0.5em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:#eee; font-size:0.9em;">
+                                    <option value="5">Last 5 minutes</option>
+                                    <option value="30">Last 30 minutes</option>
+                                    <option value="60" selected>Last 1 hour</option>
+                                    <option value="1440">Last 24 hours</option>
+                                    <option value="10080">Last 7 days</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -3189,8 +3199,9 @@
                 var needsJeLogs = document.getElementById('jeIncludeJeLogs').checked;
                 var needsJfLogs = document.getElementById('jeIncludeJfLogs').checked;
                 if (needsJeLogs || needsJfLogs) {
+                    var logMinutes = parseInt(document.getElementById('jeLogTimeRange').value, 10) || 60;
                     pending.push(
-                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { lines: 50 }), dataType: 'json' }).then(function(logs) {
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { minutes: logMinutes }), dataType: 'json' }).then(function(logs) {
                             if (needsJeLogs && logs && logs.jeLogs) data.jeLogs = logs.jeLogs;
                             if (needsJfLogs && logs && logs.jellyfinLogs) data.jellyfinLogs = logs.jellyfinLogs;
                         }).catch(function() {
@@ -3261,16 +3272,21 @@
                 parts.push('</details>\n');
             }
 
-            if (diagnostics.jeLogs) {
-                parts.push('<details><summary>JE Plugin Logs (sanitized, last 50 lines)</summary>\n');
-                parts.push('```\n' + diagnostics.jeLogs + '\n```\n');
-                parts.push('</details>\n');
-            }
+            if (diagnostics.jeLogs || diagnostics.jellyfinLogs) {
+                var sel = document.getElementById('jeLogTimeRange');
+                var rangeLabel = sel ? sel.options[sel.selectedIndex].text : 'selected range';
 
-            if (diagnostics.jellyfinLogs) {
-                parts.push('<details><summary>Jellyfin Server Logs (sanitized, last 50 lines)</summary>\n');
-                parts.push('```\n' + diagnostics.jellyfinLogs + '\n```\n');
-                parts.push('</details>\n');
+                if (diagnostics.jeLogs) {
+                    parts.push('<details><summary>JE Plugin Logs (sanitized, ' + rangeLabel + ')</summary>\n');
+                    parts.push('```\n' + diagnostics.jeLogs + '\n```\n');
+                    parts.push('</details>\n');
+                }
+
+                if (diagnostics.jellyfinLogs) {
+                    parts.push('<details><summary>Jellyfin Server Logs (sanitized, ' + rangeLabel + ')</summary>\n');
+                    parts.push('```\n' + diagnostics.jellyfinLogs + '\n```\n');
+                    parts.push('</details>\n');
+                }
             }
 
             return parts.join('\n');
@@ -3323,6 +3339,16 @@
                 if (previewDetails.open) updatePreview();
             });
         }
+
+        // Show/hide log time range dropdown when log checkboxes change
+        var logTimeContainer = document.getElementById('jeLogTimeRangeContainer');
+        var jeLogsCheck = document.getElementById('jeIncludeJeLogs');
+        var jfLogsCheck = document.getElementById('jeIncludeJfLogs');
+        function updateLogTimeVisibility() {
+            logTimeContainer.style.display = (jeLogsCheck.checked || jfLogsCheck.checked) ? 'block' : 'none';
+        }
+        jeLogsCheck.addEventListener('change', updateLogTimeVisibility);
+        jfLogsCheck.addEventListener('change', updateLogTimeVisibility);
 
         // Submit to GitHub
         submitBtn.addEventListener('click', function() {

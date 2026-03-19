@@ -1497,35 +1497,50 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// </summary>
         [HttpGet("diagnostic-logs")]
         [Authorize]
-        public ActionResult GetDiagnosticLogs([FromQuery] int lines = 50)
+        public ActionResult GetDiagnosticLogs([FromQuery] int minutes = 5)
         {
             if (!IsAdminUser())
             {
                 return Forbid();
             }
 
-            lines = Math.Clamp(lines, 10, 200);
-            var result = new { jeLogs = "", jellyfinLogs = "" };
+            // Allowed values: 5, 30, 60, 1440 (1 day), 10080 (1 week)
+            minutes = Math.Clamp(minutes, 1, 10080);
+            var cutoff = DateTime.Now.AddMinutes(-minutes);
+            const int maxLines = 500;
 
             try
             {
-                // Read JE plugin log (today's file)
-                var jeLogPath = _logger.CurrentLogFilePath;
-                var jeLogs = ReadTailLines(jeLogPath, lines);
+                // Read JE plugin logs — may span multiple daily files
+                var logDir = _appPaths.LogDirectoryPath;
+                var jeLogs = ReadJeLogsSince(logDir, cutoff, maxLines);
                 var jellyfinLogs = "";
 
-                // Read Jellyfin main log (most recent log_ file)
-                var logDir = _appPaths.LogDirectoryPath;
+                // Read Jellyfin main logs — check recent log_ files
                 if (Directory.Exists(logDir))
                 {
-                    var mainLog = Directory.GetFiles(logDir, "log_*.log")
+                    var logFiles = Directory.GetFiles(logDir, "log_*.log")
                         .Select(f => new FileInfo(f))
-                        .OrderByDescending(f => f.LastWriteTime)
-                        .FirstOrDefault();
-                    if (mainLog != null)
+                        .Where(f => f.LastWriteTime >= cutoff)
+                        .OrderBy(f => f.LastWriteTime)
+                        .ToList();
+                    if (logFiles.Count == 0)
                     {
-                        jellyfinLogs = ReadTailLines(mainLog.FullName, lines);
+                        // Fallback to most recent file
+                        var latest = Directory.GetFiles(logDir, "log_*.log")
+                            .Select(f => new FileInfo(f))
+                            .OrderByDescending(f => f.LastWriteTime)
+                            .FirstOrDefault();
+                        if (latest != null) logFiles.Add(latest);
                     }
+
+                    var jfLines = new System.Collections.Generic.List<string>();
+                    foreach (var logFile in logFiles)
+                    {
+                        ReadLinesSince(logFile.FullName, cutoff, @"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", jfLines, maxLines);
+                        if (jfLines.Count >= maxLines) break;
+                    }
+                    jellyfinLogs = string.Join("\n", jfLines);
                 }
 
                 return new JsonResult(new
@@ -1544,27 +1559,76 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
-        private static string ReadTailLines(string filePath, int lineCount)
+        /// <summary>
+        /// Reads JE plugin log files (daily rotation) since the cutoff time.
+        /// </summary>
+        private static string ReadJeLogsSince(string logDir, DateTime cutoff, int maxLines)
         {
-            if (!System.IO.File.Exists(filePath)) return "(log file not found)";
+            if (!Directory.Exists(logDir)) return "(log directory not found)";
+
+            // JE logs are named JellyfinEnhanced_YYYY-MM-DD.log
+            var jeFiles = Directory.GetFiles(logDir, "JellyfinEnhanced_*.log")
+                .Select(f => new FileInfo(f))
+                .Where(f => f.LastWriteTime >= cutoff)
+                .OrderBy(f => f.Name)
+                .ToList();
+
+            if (jeFiles.Count == 0)
+            {
+                // Fallback to today's file
+                var todayFile = Path.Combine(logDir, $"JellyfinEnhanced_{DateTime.Now:yyyy-MM-dd}.log");
+                if (System.IO.File.Exists(todayFile)) jeFiles.Add(new FileInfo(todayFile));
+                else return "(no JE log files found)";
+            }
+
+            var lines = new System.Collections.Generic.List<string>();
+            // JE log timestamp format: [YYYY-MM-DD HH:mm:ss]
+            foreach (var file in jeFiles)
+            {
+                ReadLinesSince(file.FullName, cutoff, @"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]", lines, maxLines);
+                if (lines.Count >= maxLines) break;
+            }
+
+            return lines.Count > 0 ? string.Join("\n", lines) : "(no log entries in selected time range)";
+        }
+
+        /// <summary>
+        /// Reads lines from a log file that have timestamps after the cutoff.
+        /// Lines without a parseable timestamp are included if the previous line was after cutoff.
+        /// </summary>
+        private static void ReadLinesSince(string filePath, DateTime cutoff, string timestampPattern, System.Collections.Generic.List<string> output, int maxLines)
+        {
+            if (!System.IO.File.Exists(filePath)) return;
             try
             {
-                // Read with sharing so we don't block the active log writer
+                var regex = new System.Text.RegularExpressions.Regex(timestampPattern);
                 using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var reader = new StreamReader(fs);
-                var allLines = new System.Collections.Generic.List<string>();
+                bool lastLineMatched = false;
                 string? line;
-                while ((line = reader.ReadLine()) != null)
+                while ((line = reader.ReadLine()) != null && output.Count < maxLines)
                 {
-                    allLines.Add(line);
+                    var match = regex.Match(line);
+                    if (match.Success && DateTime.TryParse(match.Groups[1].Value, out var ts))
+                    {
+                        if (ts >= cutoff)
+                        {
+                            output.Add(line);
+                            lastLineMatched = true;
+                        }
+                        else
+                        {
+                            lastLineMatched = false;
+                        }
+                    }
+                    else if (lastLineMatched)
+                    {
+                        // Continuation line (stack trace, multi-line message)
+                        output.Add(line);
+                    }
                 }
-                var start = Math.Max(0, allLines.Count - lineCount);
-                return string.Join("\n", allLines.GetRange(start, allLines.Count - start));
             }
-            catch (Exception ex)
-            {
-                return "(could not read log: " + ex.Message + ")";
-            }
+            catch { /* skip unreadable files */ }
         }
 
         private static string SanitizeLogOutput(string text)
