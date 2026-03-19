@@ -1576,13 +1576,31 @@
             </form>
 
             <!-- GitHub Issue Reporter Modal -->
+            <style>
+                .je-report-columns { display:flex; gap:1.5em; }
+                .je-report-form { flex:1; min-width:0; }
+                .je-report-live-preview { flex:0 0 380px; position:sticky; top:1em; align-self:flex-start; max-height:calc(100vh - 8em); overflow-y:auto; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:1em; }
+                .je-report-live-preview pre { margin:0; white-space:pre-wrap; word-wrap:break-word; font-size:0.8em; color:#ccc; line-height:1.4; }
+                .je-report-live-preview .je-preview-label { font-size:0.85em; font-weight:bold; color:#ffcc88; margin-bottom:0.5em; }
+                @media (max-width: 900px) {
+                    .je-report-columns { flex-direction:column; }
+                    .je-report-live-preview { position:static; max-height:300px; flex:none; }
+                }
+                .je-diag-row { display:flex; align-items:center; gap:0.3em; }
+                .je-diag-row label { flex:1; }
+                .je-diag-peek { background:none; border:none; color:#666; font-size:0.8em; cursor:pointer; padding:0.1em 0.3em; }
+                .je-diag-peek:hover { color:#ffcc88; }
+                .je-diag-inline { display:none; margin:0.2em 0 0.4em 1.6em; padding:0.5em; background:rgba(0,0,0,0.3); border-radius:4px; font-size:0.8em; color:#aaa; max-height:120px; overflow-y:auto; white-space:pre-wrap; word-wrap:break-word; }
+            </style>
             <div id="jeReportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; overflow-y:auto; padding:2em;">
-                <div style="max-width:700px; margin:2em auto; background:#1a1a2e; border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:2em; color:#eee; font-family:inherit;">
+                <div style="max-width:1100px; margin:2em auto; background:#1a1a2e; border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:2em; color:#eee; font-family:inherit;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5em;">
                         <h2 style="margin:0; font-size:1.4em;">Report Issue / Request Feature</h2>
                         <button id="jeReportCloseBtn" type="button" style="background:none; border:none; color:#aaa; font-size:1.5em; cursor:pointer; padding:0.2em;">&times;</button>
                     </div>
+                    <div class="je-report-columns">
 
+                    <div class="je-report-form">
                     <fieldset id="jeReportFieldset" style="border:none;padding:0;margin:0;">
                     <div style="margin-bottom:1.2em;">
                         <label style="font-weight:bold; display:block; margin-bottom:0.4em;">Report Type</label>
@@ -1625,14 +1643,21 @@
                     <div style="margin-bottom:1.2em; background:rgba(255,255,255,0.04); padding:1em; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
                         <label style="font-weight:bold; display:block; margin-bottom:0.6em;">Include Diagnostic Data (opt-in)</label>
                         <p style="font-size:0.85em; color:#999; margin:0 0 0.8em 0;">All diagnostic data is optional. Check the boxes below to include information that helps debug the issue. All data is sanitized to remove personal info (IPs, API keys, domains, tokens).</p>
-                        <div style="display:flex; flex-direction:column; gap:0.5em;">
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeVersions" style="margin-right:0.4em;"> JE version &amp; Jellyfin server version</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeDevice" style="margin-right:0.4em;"> Device &amp; browser information</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConfig" style="margin-right:0.4em;"> JE plugin configuration (sanitized, no keys/URLs)</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeFeatures" style="margin-right:0.4em;"> Enabled features list</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJeLogs" style="margin-right:0.4em;"> JE plugin logs (sanitized)</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJfLogs" style="margin-right:0.4em;"> Jellyfin server logs (sanitized)</label>
-                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConsoleErrors" style="margin-right:0.4em;"> Browser console errors &amp; warnings</label>
+                        <div style="display:flex; flex-direction:column; gap:0.3em;">
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeVersions" style="margin-right:0.4em;"> JE version &amp; Jellyfin server version</label><button type="button" class="je-diag-peek" data-section="versions">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-versions"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeDevice" style="margin-right:0.4em;"> Device &amp; browser information</label><button type="button" class="je-diag-peek" data-section="device">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-device"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConfig" style="margin-right:0.4em;"> JE plugin configuration (sanitized)</label><button type="button" class="je-diag-peek" data-section="config">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-config"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeFeatures" style="margin-right:0.4em;"> Enabled features list</label><button type="button" class="je-diag-peek" data-section="features">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-features"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJeLogs" style="margin-right:0.4em;"> JE plugin logs (sanitized)</label><button type="button" class="je-diag-peek" data-section="jeLogs">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-jeLogs"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJfLogs" style="margin-right:0.4em;"> Jellyfin server logs (sanitized)</label><button type="button" class="je-diag-peek" data-section="jfLogs">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-jfLogs"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConsoleErrors" style="margin-right:0.4em;"> Browser console errors &amp; warnings</label><button type="button" class="je-diag-peek" data-section="console">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-console"></div>
                             <div id="jeLogTimeRangeContainer" style="display:none; margin-top:0.4em; margin-left:1.6em;">
                                 <label for="jeLogTimeRange" style="font-size:0.9em; color:#aaa;">Log time range:</label>
                                 <select id="jeLogTimeRange" style="margin-left:0.4em; padding:0.3em 0.5em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:#eee; font-size:0.9em;">
@@ -1646,13 +1671,8 @@
                         </div>
                     </div>
 
-                    <details style="margin-bottom:1.2em; background:rgba(255,255,255,0.04); padding:1em; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
-                        <summary style="cursor:pointer; font-weight:bold; font-size:0.95em; color:#ffcc88;">Preview Report</summary>
-                        <pre id="jeReportPreview" style="margin-top:0.8em; padding:1em; background:rgba(0,0,0,0.4); border-radius:6px; white-space:pre-wrap; word-wrap:break-word; font-size:0.85em; color:#ccc; max-height:300px; overflow-y:auto; border:1px solid rgba(255,255,255,0.08);"></pre>
-                    </details>
-
                     <div style="padding:0.8em; background:rgba(100,150,255,0.1); border:1px solid rgba(100,150,255,0.3); border-radius:6px; margin-bottom:1.5em; font-size:0.85em; color:#aaccff;">
-                        <strong>Privacy:</strong> This opens GitHub in your browser where you can review the full report before submitting. No data is sent automatically. All URLs, IPs, API keys, tokens, and hostnames are stripped from diagnostic data.
+                        <strong>Privacy:</strong> All URLs, IPs, API keys, tokens, and hostnames are stripped from diagnostic data.
                     </div>
 
                     <div id="jeDuplicateResults" style="display:none; margin-bottom:1em; padding:0.8em; background:rgba(255,200,50,0.1); border:1px solid rgba(255,200,50,0.3); border-radius:6px; font-size:0.9em;">
@@ -1674,6 +1694,13 @@
                         <p id="jeReportSuccessLink" style="margin:0 0 1em;"></p>
                         <p id="jeReportSuccessCountdown" style="color:#999; font-size:0.9em; margin:0;"></p>
                     </div>
+                    </div><!-- /je-report-form -->
+
+                    <div class="je-report-live-preview" id="jeReportLivePreview">
+                        <div class="je-preview-label">Live Preview</div>
+                        <pre id="jeReportPreview">Fill in the form to see a live preview of your report.</pre>
+                    </div>
+                    </div><!-- /je-report-columns -->
                 </div>
             </div>
         </div>
@@ -3450,6 +3477,11 @@
             document.querySelectorAll('#jeReportModal input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
             document.querySelector('input[name="jeReportType"][value="bug"]').checked = true;
             document.getElementById('jeReportComponent').value = '';
+            // Hide all peek panels
+            document.querySelectorAll('.je-diag-inline').forEach(function(d) { d.style.display = 'none'; });
+            document.querySelectorAll('.je-diag-peek').forEach(function(b) { b.textContent = '(peek)'; });
+            // Trigger initial live preview
+            setTimeout(scheduleLivePreview, 300);
         });
 
         // Close modal
@@ -3535,13 +3567,116 @@
             dupCheckTimer = setTimeout(checkDuplicates, 1000);
         });
 
-        // Update preview when the details element is opened
-        var previewDetails = previewEl.closest('details');
-        if (previewDetails) {
-            previewDetails.addEventListener('toggle', function() {
-                if (previewDetails.open) updatePreview();
-            });
+        // Live preview — debounced auto-update on any form change
+        var livePreviewTimer = null;
+        var livePreviewCache = null;
+        var livePreviewCacheTime = 0;
+        function scheduleLivePreview() {
+            if (livePreviewTimer) clearTimeout(livePreviewTimer);
+            livePreviewTimer = setTimeout(function() {
+                var now = Date.now();
+                // Use cache if less than 3s old to avoid hammering APIs
+                if (livePreviewCache && (now - livePreviewCacheTime) < 3000) {
+                    previewEl.textContent = livePreviewCache;
+                    return;
+                }
+                updatePreview();
+            }, 400);
         }
+        // Store preview in cache when updatePreview runs
+        var origUpdatePreview = updatePreview;
+        updatePreview = function() {
+            previewEl.textContent = 'Updating preview...';
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                var text = getIssueTitle() + '\n\n' + body;
+                previewEl.textContent = text;
+                livePreviewCache = text;
+                livePreviewCacheTime = Date.now();
+            }).catch(function(e) {
+                previewEl.textContent = 'Error: ' + (e.message || e);
+            });
+        };
+
+        // Attach live preview to all form inputs
+        titleInput.addEventListener('input', scheduleLivePreview);
+        descInput.addEventListener('input', scheduleLivePreview);
+        document.getElementById('jeReportComponent').addEventListener('change', scheduleLivePreview);
+        document.querySelectorAll('input[name="jeReportType"]').forEach(function(r) { r.addEventListener('change', scheduleLivePreview); });
+        document.querySelectorAll('#jeReportModal input[type="checkbox"]').forEach(function(cb) { cb.addEventListener('change', scheduleLivePreview); });
+        document.getElementById('jeLogTimeRange').addEventListener('change', scheduleLivePreview);
+
+        // Per-section peek buttons
+        document.querySelectorAll('.je-diag-peek').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var section = btn.getAttribute('data-section');
+                var peekDiv = document.getElementById('jePeek-' + section);
+                if (!peekDiv) return;
+                if (peekDiv.style.display === 'block') {
+                    peekDiv.style.display = 'none';
+                    btn.textContent = '(peek)';
+                    return;
+                }
+                peekDiv.textContent = 'Loading...';
+                peekDiv.style.display = 'block';
+                btn.textContent = '(hide)';
+
+                // Collect just this section's data
+                var sectionCollectors = {
+                    versions: function() {
+                        return Promise.all([
+                            ApiClient.getPublicSystemInfo().catch(function() { return {}; }),
+                            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/version'), dataType: 'text' }).catch(function() { return '?'; })
+                        ]).then(function(r) {
+                            return 'JE Version: ' + (r[1] || '?') + '\nJellyfin: ' + ((r[0] && r[0].Version) || '?') + '\nOS: ' + ((r[0] && r[0].OperatingSystem) || '?');
+                        });
+                    },
+                    device: function() {
+                        return Promise.resolve('OS: ' + detectOS() + '\nBrowser: ' + detectBrowser() + '\nScreen: ' + screen.width + 'x' + screen.height + '\nViewport: ' + window.innerWidth + 'x' + window.innerHeight + '\nTouch: ' + ('ontouchstart' in window) + '\nLanguage: ' + navigator.language);
+                    },
+                    config: function() {
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(c) {
+                            return JSON.stringify(sanitizeObject(c || {}), null, 2);
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    features: function() {
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(c) {
+                            var feats = [];
+                            var fm = {ElsewhereEnabled:'Elsewhere',JellyseerrEnabled:'Jellyseerr',ArrLinksEnabled:'*arr Links',QualityTagsEnabled:'Quality Tags',GenreTagsEnabled:'Genre Tags',RatingTagsEnabled:'Rating Tags',PeopleTagsEnabled:'People Tags',ShowWatchProgress:'Watch Progress',RandomButtonEnabled:'Random Button',PauseScreenEnabled:'Pause Screen',ShowReviews:'Reviews'};
+                            for (var k in fm) { if (c && c[k]) feats.push(fm[k]); }
+                            return feats.length > 0 ? feats.join(', ') : '(none enabled)';
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    jeLogs: function() {
+                        var mins = parseInt(document.getElementById('jeLogTimeRange').value, 10) || 60;
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { minutes: mins }), dataType: 'json' }).then(function(d) {
+                            var log = (d && d.jeLogs) || '(empty)';
+                            return log.length > 500 ? log.substring(0, 500) + '\n... (' + log.split('\n').length + ' total lines)' : log;
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    jfLogs: function() {
+                        var mins = parseInt(document.getElementById('jeLogTimeRange').value, 10) || 60;
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { minutes: mins }), dataType: 'json' }).then(function(d) {
+                            var log = (d && d.jellyfinLogs) || '(empty)';
+                            return log.length > 500 ? log.substring(0, 500) + '\n... (' + log.split('\n').length + ' total lines)' : log;
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    console: function() {
+                        if (jeConsoleBuffer.length === 0) return Promise.resolve('(no console errors/warnings captured)');
+                        return Promise.resolve(jeConsoleBuffer.slice(-10).map(function(e) {
+                            return '[' + e.level.toUpperCase() + '] ' + e.message.substring(0, 120);
+                        }).join('\n') + (jeConsoleBuffer.length > 10 ? '\n... (' + jeConsoleBuffer.length + ' total)' : ''));
+                    }
+                };
+
+                var collector = sectionCollectors[section];
+                if (collector) {
+                    collector().then(function(text) { peekDiv.textContent = text; }).catch(function() { peekDiv.textContent = '(error)'; });
+                } else {
+                    peekDiv.textContent = '(unknown section)';
+                }
+            });
+        });
 
         // Show/hide log time range dropdown when log checkboxes change
         var logTimeContainer = document.getElementById('jeLogTimeRangeContainer');
