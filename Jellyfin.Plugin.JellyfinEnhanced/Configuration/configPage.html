@@ -1588,6 +1588,8 @@
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeDevice" style="margin-right:0.4em;"> Device &amp; browser information</label>
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConfig" style="margin-right:0.4em;"> JE plugin configuration (sanitized, no keys/URLs)</label>
                             <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeFeatures" style="margin-right:0.4em;"> Enabled features list</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJeLogs" style="margin-right:0.4em;"> JE plugin logs (last 50 lines, sanitized)</label>
+                            <label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJfLogs" style="margin-right:0.4em;"> Jellyfin server logs (last 50 lines, sanitized)</label>
                         </div>
                     </div>
 
@@ -3184,6 +3186,20 @@
                     );
                 }
 
+                var needsJeLogs = document.getElementById('jeIncludeJeLogs').checked;
+                var needsJfLogs = document.getElementById('jeIncludeJfLogs').checked;
+                if (needsJeLogs || needsJfLogs) {
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { lines: 50 }), dataType: 'json' }).then(function(logs) {
+                            if (needsJeLogs && logs && logs.jeLogs) data.jeLogs = logs.jeLogs;
+                            if (needsJfLogs && logs && logs.jellyfinLogs) data.jellyfinLogs = logs.jellyfinLogs;
+                        }).catch(function() {
+                            if (needsJeLogs) data.jeLogs = 'Could not retrieve JE logs';
+                            if (needsJfLogs) data.jellyfinLogs = 'Could not retrieve Jellyfin logs';
+                        })
+                    );
+                }
+
                 Promise.all(pending).then(function() { resolve(data); });
             });
         }
@@ -3242,6 +3258,18 @@
             if (diagnostics.pluginConfig && typeof diagnostics.pluginConfig === 'object') {
                 parts.push('<details><summary>Plugin Configuration (sanitized)</summary>\n');
                 parts.push('```json\n' + JSON.stringify(diagnostics.pluginConfig, null, 2) + '\n```\n');
+                parts.push('</details>\n');
+            }
+
+            if (diagnostics.jeLogs) {
+                parts.push('<details><summary>JE Plugin Logs (sanitized, last 50 lines)</summary>\n');
+                parts.push('```\n' + diagnostics.jeLogs + '\n```\n');
+                parts.push('</details>\n');
+            }
+
+            if (diagnostics.jellyfinLogs) {
+                parts.push('<details><summary>Jellyfin Server Logs (sanitized, last 50 lines)</summary>\n');
+                parts.push('```\n' + diagnostics.jellyfinLogs + '\n```\n');
                 parts.push('</details>\n');
             }
 

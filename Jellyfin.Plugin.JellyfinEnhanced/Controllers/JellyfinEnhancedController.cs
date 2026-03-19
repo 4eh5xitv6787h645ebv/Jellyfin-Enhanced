@@ -17,6 +17,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Querying;
+using MediaBrowser.Common.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -105,6 +106,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             "apple-touch-icon.png"
         }, StringComparer.OrdinalIgnoreCase);
 
+        private readonly IApplicationPaths _appPaths;
+
         public JellyfinEnhancedController(
             IHttpClientFactory httpClientFactory,
             Logger logger,
@@ -114,7 +117,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             IDtoService dtoService,
             UserConfigurationManager userConfigurationManager,
             IItemRepository itemRepository,
-            IDbContextFactory<JellyfinDbContext> dbContextFactory)
+            IDbContextFactory<JellyfinDbContext> dbContextFactory,
+            IApplicationPaths appPaths)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -125,6 +129,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _userConfigurationManager = userConfigurationManager;
             _itemRepository = itemRepository;
             _dbContextFactory = dbContextFactory;
+            _appPaths = appPaths;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId)
@@ -1485,6 +1490,105 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public ActionResult GetScript(string path) => GetScriptResource($"js/{path}");
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
+
+        /// <summary>
+        /// Returns recent log entries for the issue reporter. Admin-only.
+        /// Sanitizes sensitive data (IPs, URLs, API keys, tokens) before returning.
+        /// </summary>
+        [HttpGet("diagnostic-logs")]
+        [Authorize]
+        public ActionResult GetDiagnosticLogs([FromQuery] int lines = 50)
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            lines = Math.Clamp(lines, 10, 200);
+            var result = new { jeLogs = "", jellyfinLogs = "" };
+
+            try
+            {
+                // Read JE plugin log (today's file)
+                var jeLogPath = _logger.CurrentLogFilePath;
+                var jeLogs = ReadTailLines(jeLogPath, lines);
+                var jellyfinLogs = "";
+
+                // Read Jellyfin main log (most recent log_ file)
+                var logDir = _appPaths.LogDirectoryPath;
+                if (Directory.Exists(logDir))
+                {
+                    var mainLog = Directory.GetFiles(logDir, "log_*.log")
+                        .Select(f => new FileInfo(f))
+                        .OrderByDescending(f => f.LastWriteTime)
+                        .FirstOrDefault();
+                    if (mainLog != null)
+                    {
+                        jellyfinLogs = ReadTailLines(mainLog.FullName, lines);
+                    }
+                }
+
+                return new JsonResult(new
+                {
+                    jeLogs = SanitizeLogOutput(jeLogs),
+                    jellyfinLogs = SanitizeLogOutput(jellyfinLogs)
+                });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new
+                {
+                    jeLogs = "Error reading JE logs: " + ex.Message,
+                    jellyfinLogs = "Error reading Jellyfin logs"
+                });
+            }
+        }
+
+        private static string ReadTailLines(string filePath, int lineCount)
+        {
+            if (!System.IO.File.Exists(filePath)) return "(log file not found)";
+            try
+            {
+                // Read with sharing so we don't block the active log writer
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(fs);
+                var allLines = new System.Collections.Generic.List<string>();
+                string? line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    allLines.Add(line);
+                }
+                var start = Math.Max(0, allLines.Count - lineCount);
+                return string.Join("\n", allLines.GetRange(start, allLines.Count - start));
+            }
+            catch (Exception ex)
+            {
+                return "(could not read log: " + ex.Message + ")";
+            }
+        }
+
+        private static string SanitizeLogOutput(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            // Redact URLs (keep path structure, strip hostnames)
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"(https?://|wss?://|ftp://)([^\s/""']+)(:\d+)?", "$1[HOST_REDACTED]$3");
+            // Redact API key/token query params
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"([?&](?:api_?key|apikey|key|token|access_token|auth|password|secret)=)[^&\s""']+",
+                "$1[REDACTED]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            // Redact Bearer/Basic tokens
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"((?:Bearer|Basic|Token)\s+)[^\s""']+", "$1[REDACTED]",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            // Redact IPv4 addresses
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"\b(\d{1,3}\.){3}\d{1,3}(:\d+)?\b", "[IP_REDACTED]");
+            // Redact email addresses
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", "[EMAIL_REDACTED]");
+            return text;
+        }
 
         [HttpGet("private-config")]
         [Authorize]
