@@ -3174,7 +3174,7 @@
             if (typeof obj !== 'object') return obj;
             if (Array.isArray(obj)) return obj.map(sanitizeObject);
 
-            var sensitiveKeys = /^(.*url.*|.*key.*|.*token.*|.*secret.*|.*password.*|.*apikey.*|.*api_key.*|.*auth.*|.*credential.*|.*host.*)$/i;
+            var sensitiveKeys = /^(.*url.*|.*api.?key.*|.*apikey.*|.*token.*|.*secret.*|.*password.*|.*credential.*|.*hostname.*)$/i;
             var result = {};
             for (var k in obj) {
                 if (!obj.hasOwnProperty(k)) continue;
