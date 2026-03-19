@@ -31,6 +31,7 @@ using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
+using Jellyfin.Plugin.JellyfinEnhanced.Diagnostics;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Database.Implementations;
 using Microsoft.EntityFrameworkCore;
@@ -1597,6 +1598,37 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 configured = config != null && !string.IsNullOrWhiteSpace(config.GitHubIssueToken),
                 repo = config?.GitHubIssueRepo ?? ""
             });
+        }
+
+        /// <summary>
+        /// Returns diagnostic data from all registered diagnostic sections.
+        /// Each section provides a lightweight, config-only snapshot. Admin-only.
+        /// </summary>
+        [HttpGet("diagnostic-sections")]
+        [Authorize]
+        public async Task<ActionResult> GetDiagnosticSections()
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            var sections = DiagnosticRegistry.Instance.GetSections();
+            var results = new Dictionary<string, object>();
+
+            foreach (var section in sections)
+            {
+                try
+                {
+                    results[section.SectionId] = await section.CollectAsync();
+                }
+                catch (Exception ex)
+                {
+                    results[section.SectionId] = new { error = ex.Message };
+                }
+            }
+
+            return new JsonResult(new { sections = results });
         }
 
         /// <summary>

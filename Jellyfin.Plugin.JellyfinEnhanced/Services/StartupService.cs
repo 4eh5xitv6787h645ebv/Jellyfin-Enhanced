@@ -7,6 +7,7 @@ using System.Runtime.Loader;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Diagnostics;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Tasks;
@@ -52,6 +53,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 // Initialize watchlist monitoring
                 _watchlistMonitor.Initialize();
+
+                // Register diagnostic sections for the issue reporter
+                RegisterDiagnosticSections();
 
                 _logger.Info("Jellyfin Enhanced Startup Task completed successfully.");
             }, cancellationToken);
@@ -182,6 +186,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
         }
 
+
+        private void RegisterDiagnosticSections()
+        {
+            var registry = DiagnosticRegistry.Instance;
+            registry.Register(new JellyseerrDiagnosticSection());
+            registry.Register(new ArrDiagnosticSection());
+            registry.Register(new CalendarDiagnosticSection());
+            registry.Register(new ThemeDiagnosticSection());
+            _logger.Info("Registered diagnostic sections for issue reporter.");
+        }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
