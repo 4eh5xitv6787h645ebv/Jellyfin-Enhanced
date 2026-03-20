@@ -1690,6 +1690,12 @@
                         <strong>Privacy:</strong> Public IPs, external hostnames, API keys, and tokens are stripped. Local/private IPs and internal URLs are preserved for debugging.
                     </div>
 
+                    <div id="jeDeviceFlowStatus" style="display:none; margin-bottom:1em; padding:1em; background:rgba(80,180,80,0.1); border:1px solid rgba(80,180,80,0.3); border-radius:8px; text-align:center;">
+                        <p style="margin:0 0 0.5em; font-size:0.95em; color:#ccc;">Go to <a id="jeDeviceFlowLink" href="https://github.com/login/device" target="_blank" style="color:#aaccff; font-weight:bold;">github.com/login/device</a> and enter this code:</p>
+                        <div id="jeDeviceFlowCode" style="font-size:2em; font-weight:bold; letter-spacing:0.15em; color:#88ff88; margin:0.3em 0; font-family:monospace;"></div>
+                        <p id="jeDeviceFlowMsg" style="margin:0.5em 0 0; font-size:0.85em; color:#999;">Waiting for authorization...</p>
+                    </div>
+
                     <div id="jeDuplicateResults" style="display:none; margin-bottom:1em; padding:0.8em; background:rgba(255,200,50,0.1); border:1px solid rgba(255,200,50,0.3); border-radius:6px; font-size:0.9em;">
                         <strong style="color:#ffcc88;">Similar open issues found:</strong>
                         <ul id="jeDuplicateList" style="margin:0.5em 0 0 1.2em; padding:0; list-style:disc;"></ul>
@@ -3612,7 +3618,10 @@
         var origCloseModal = closeModal;
         closeModal = function() {
             if (successCountdownId) { clearInterval(successCountdownId); successCountdownId = null; }
+            if (deviceFlowPollTimer) { clearInterval(deviceFlowPollTimer); deviceFlowPollTimer = null; }
+            pendingReportData = null;
             document.getElementById('jeReportSuccess').style.display = 'none';
+            document.getElementById('jeDeviceFlowStatus').style.display = 'none';
             document.getElementById('jeReportFieldset').style.display = '';
             document.getElementById('jeReportFieldset').disabled = false;
             origCloseModal();
@@ -3788,13 +3797,118 @@
 
         // Check if direct GitHub submission is configured and update button text
         var githubApiConfigured = false;
+        var githubDeviceFlowAvailable = true; // Device Flow always available as fallback
         ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/github-issue-configured'), dataType: 'json' }).then(function(result) {
             if (result && result.configured) {
                 githubApiConfigured = true;
                 submitBtn.textContent = 'Submit to GitHub';
                 submitBtn.style.background = 'rgba(80,180,80,0.35)';
+            } else {
+                // No admin PAT — show device flow option
+                submitBtn.textContent = 'Login & Submit to GitHub';
+                submitBtn.style.background = 'rgba(80,180,80,0.25)';
             }
         }).catch(function() { /* ignore, fallback to URL mode */ });
+
+        // Device Flow state
+        var deviceFlowPollTimer = null;
+        var pendingReportData = null; // { title, body, labels }
+
+        function startDeviceFlow(reportData) {
+            pendingReportData = reportData;
+            var statusDiv = document.getElementById('jeDeviceFlowStatus');
+            var codeDiv = document.getElementById('jeDeviceFlowCode');
+            var msgDiv = document.getElementById('jeDeviceFlowMsg');
+
+            submitBtn.textContent = 'Authenticating...';
+            statusDiv.style.display = 'block';
+            codeDiv.textContent = '...';
+            msgDiv.textContent = 'Starting GitHub login...';
+
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('/JellyfinEnhanced/github-device/start'),
+                contentType: 'application/json',
+                data: '{}',
+                dataType: 'json'
+            }).then(function(data) {
+                codeDiv.textContent = data.user_code;
+                msgDiv.textContent = 'Waiting for you to authorize...';
+                document.getElementById('jeDeviceFlowLink').href = data.verification_uri;
+                window.open(data.verification_uri, '_blank');
+
+                // Start polling
+                var interval = (data.interval || 5) * 1000;
+                var deviceCode = data.device_code;
+                deviceFlowPollTimer = setInterval(function() {
+                    ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/github-device/poll'),
+                        data: JSON.stringify({ device_code: deviceCode }),
+                        contentType: 'application/json',
+                        dataType: 'json'
+                    }).then(function(poll) {
+                        if (poll.status === 'success' && poll.access_token) {
+                            clearInterval(deviceFlowPollTimer);
+                            deviceFlowPollTimer = null;
+                            msgDiv.textContent = 'Authorized! Creating issue...';
+                            submitIssueWithToken(poll.access_token);
+                        } else if (poll.status === 'expired_token') {
+                            clearInterval(deviceFlowPollTimer);
+                            deviceFlowPollTimer = null;
+                            msgDiv.textContent = 'Code expired. Please try again.';
+                            msgDiv.style.color = '#ff8888';
+                            resetSubmitButton();
+                        } else if (poll.status === 'slow_down') {
+                            // GitHub wants us to slow down — skip this cycle
+                        }
+                        // authorization_pending = keep waiting
+                    }).catch(function() {
+                        clearInterval(deviceFlowPollTimer);
+                        deviceFlowPollTimer = null;
+                        msgDiv.textContent = 'Error checking authorization.';
+                        msgDiv.style.color = '#ff8888';
+                        resetSubmitButton();
+                    });
+                }, interval);
+            }).catch(function(err) {
+                var msg = 'Failed to start login.';
+                try { msg = JSON.parse(err.responseText || '{}').error || msg; } catch(e) {}
+                msgDiv.textContent = msg;
+                msgDiv.style.color = '#ff8888';
+                resetSubmitButton();
+            });
+        }
+
+        function submitIssueWithToken(accessToken) {
+            var rd = pendingReportData;
+            if (!rd) return;
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('/JellyfinEnhanced/github-device/submit'),
+                data: JSON.stringify({ access_token: accessToken, title: rd.title, body: rd.body, labels: rd.labels }),
+                contentType: 'application/json',
+                dataType: 'json'
+            }).then(function(result) {
+                if (result && result.url) {
+                    document.getElementById('jeDeviceFlowStatus').style.display = 'none';
+                    showSuccessState(result.url, result.number);
+                }
+            }).catch(function(err) {
+                var msg = 'Failed to create issue.';
+                try { msg = JSON.parse(err.responseText || '{}').error || msg; } catch(e) {}
+                Dashboard.alert({ title: 'Submission Failed', message: msg });
+                document.getElementById('jeDeviceFlowStatus').style.display = 'none';
+                resetSubmitButton();
+            });
+            pendingReportData = null;
+        }
+
+        function resetSubmitButton() {
+            document.getElementById('jeReportFieldset').disabled = false;
+            submitBtn.textContent = githubApiConfigured ? 'Submit to GitHub' : 'Login & Submit to GitHub';
+            submitBtn.disabled = false;
+        }
 
         // Submit to GitHub
         submitBtn.addEventListener('click', function() {
@@ -3805,7 +3919,7 @@
             }
 
             document.getElementById('jeReportFieldset').disabled = true;
-            submitBtn.textContent = 'Submitting...';
+            submitBtn.textContent = 'Preparing...';
             submitBtn.disabled = true;
             collectDiagnostics().then(function(diagnostics) {
                 var body = buildReportBody(diagnostics);
@@ -3814,7 +3928,7 @@
                 var component = (document.getElementById('jeReportComponent') || {}).value;
                 if (component) labels = labels + ',' + component;
 
-                // If API token is configured, submit directly via backend
+                // Priority 1: Admin PAT configured — submit directly
                 if (githubApiConfigured) {
                     return ApiClient.ajax({
                         type: 'POST',
@@ -3829,20 +3943,16 @@
                     }).catch(function(err) {
                         var msg = 'Failed to create issue.';
                         try { msg = JSON.parse(err.responseText || '{}').error || msg; } catch(e) {}
-                        Dashboard.alert({ title: 'Submission Failed', message: msg + ' Falling back to URL mode.' });
-                        // Fallback to URL mode
-                        openViaUrl(title, body, labels);
+                        Dashboard.alert({ title: 'Submission Failed', message: msg + ' Falling back to GitHub login.' });
+                        startDeviceFlow({ title: title, body: body, labels: labels });
                     });
                 }
 
-                // Fallback: open via URL
-                openViaUrl(title, body, labels);
+                // Priority 2: Device Flow — user authenticates with GitHub
+                startDeviceFlow({ title: title, body: body, labels: labels });
             }).catch(function(e) {
                 Dashboard.alert({ title: 'Error', message: 'Failed to prepare report: ' + (e.message || e) });
-            }).finally(function() {
-                document.getElementById('jeReportFieldset').disabled = false;
-                submitBtn.textContent = githubApiConfigured ? 'Submit to GitHub' : 'Open on GitHub';
-                submitBtn.disabled = false;
+                resetSubmitButton();
             });
         });
 

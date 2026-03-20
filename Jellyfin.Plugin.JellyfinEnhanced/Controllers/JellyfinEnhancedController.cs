@@ -1600,6 +1600,175 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             });
         }
 
+        // GitHub Device Flow OAuth — allows users to authenticate without admin PAT
+        private const string GitHubDeviceFlowClientId = "Ov23likf6n8R5TydNYei";
+
+        /// <summary>
+        /// Starts the GitHub Device Flow. Returns a user_code and verification_uri for the user.
+        /// </summary>
+        [HttpPost("github-device/start")]
+        [Authorize]
+        public async Task<ActionResult> StartGitHubDeviceFlow()
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("client_id", GitHubDeviceFlowClientId),
+                    new KeyValuePair<string, string>("scope", "public_repo")
+                });
+
+                var response = await client.PostAsync("https://github.com/login/device/code", content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Error("GitHub device flow start failed: " + responseBody);
+                    return StatusCode((int)response.StatusCode, new { error = "Failed to start device flow" });
+                }
+
+                using var doc = JsonDocument.Parse(responseBody);
+                return new JsonResult(new
+                {
+                    device_code = doc.RootElement.GetProperty("device_code").GetString(),
+                    user_code = doc.RootElement.GetProperty("user_code").GetString(),
+                    verification_uri = doc.RootElement.GetProperty("verification_uri").GetString(),
+                    expires_in = doc.RootElement.GetProperty("expires_in").GetInt32(),
+                    interval = doc.RootElement.GetProperty("interval").GetInt32()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("GitHub device flow start error: " + ex.Message);
+                return StatusCode(500, new { error = "Device flow error: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Polls GitHub to check if the user has completed the Device Flow authorization.
+        /// Returns the access_token on success, or a status indicating to keep polling.
+        /// </summary>
+        [HttpPost("github-device/poll")]
+        [Authorize]
+        public async Task<ActionResult> PollGitHubDeviceFlow([FromBody] JsonElement body)
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            var deviceCode = body.TryGetProperty("device_code", out var dc) ? dc.GetString() : null;
+            if (string.IsNullOrWhiteSpace(deviceCode))
+                return BadRequest(new { error = "device_code required" });
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("client_id", GitHubDeviceFlowClientId),
+                    new KeyValuePair<string, string>("device_code", deviceCode),
+                    new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
+                });
+
+                var response = await client.PostAsync("https://github.com/login/oauth/access_token", content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                using var doc = JsonDocument.Parse(responseBody);
+
+                // Check for error (authorization_pending, slow_down, expired_token, etc.)
+                if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                {
+                    var error = errorProp.GetString();
+                    return new JsonResult(new { status = error }); // "authorization_pending", "slow_down", etc.
+                }
+
+                // Success — got access token
+                if (doc.RootElement.TryGetProperty("access_token", out var tokenProp))
+                {
+                    return new JsonResult(new { status = "success", access_token = tokenProp.GetString() });
+                }
+
+                return new JsonResult(new { status = "unknown" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Poll error: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Creates a GitHub issue using a Device Flow access token (ephemeral, not stored).
+        /// </summary>
+        [HttpPost("github-device/submit")]
+        [Authorize]
+        public async Task<ActionResult> SubmitWithDeviceToken([FromBody] JsonElement body)
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            var accessToken = body.TryGetProperty("access_token", out var at) ? at.GetString() : null;
+            var title = body.TryGetProperty("title", out var t) ? t.GetString() : null;
+            var issueBody = body.TryGetProperty("body", out var b) ? b.GetString() : null;
+            var labels = body.TryGetProperty("labels", out var l) ? l.GetString() : null;
+            var repo = body.TryGetProperty("repo", out var r) ? r.GetString() : null;
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+                return BadRequest(new { error = "access_token required" });
+            if (string.IsNullOrWhiteSpace(title))
+                return BadRequest(new { error = "title required" });
+
+            // Use configured repo as default, allow override
+            if (string.IsNullOrWhiteSpace(repo))
+                repo = JellyfinEnhanced.Instance?.Configuration?.GitHubIssueRepo ?? "n00bcodr/Jellyfin-Enhanced";
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(repo.Trim(), @"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$"))
+                return BadRequest(new { error = "Invalid repository format" });
+
+            try
+            {
+                // Truncate body if needed
+                if (!string.IsNullOrEmpty(issueBody) && issueBody.Length > 64000)
+                    issueBody = issueBody.Substring(0, 64000) + "\n\n---\n_Report truncated (exceeded GitHub's 65536 character limit)_";
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken.Trim());
+                client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
+                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+                var payload = new Dictionary<string, object> { { "title", title } };
+                if (!string.IsNullOrWhiteSpace(issueBody)) payload["body"] = issueBody;
+                if (!string.IsNullOrWhiteSpace(labels))
+                    payload["labels"] = labels.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("https://api.github.com/repos/" + repo.Trim() + "/issues", content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Error("GitHub device flow issue creation failed: " + response.StatusCode + " " + responseBody);
+                    return StatusCode((int)response.StatusCode, new { error = "GitHub API error: " + response.StatusCode });
+                }
+
+                using var doc = JsonDocument.Parse(responseBody);
+                var issueUrl = doc.RootElement.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
+                var issueNumber = doc.RootElement.TryGetProperty("number", out var numProp) ? numProp.GetInt32() : 0;
+
+                _logger.Info("GitHub issue created via device flow: #" + issueNumber + " " + issueUrl);
+                return new JsonResult(new { url = issueUrl, number = issueNumber });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("GitHub device flow submit error: " + ex.Message);
+                return StatusCode(500, new { error = "Failed to create issue: " + ex.Message });
+            }
+        }
+
         /// <summary>
         /// Returns diagnostic data from all registered diagnostic sections.
         /// Each section provides a lightweight, config-only snapshot. Admin-only.

@@ -201,7 +201,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
             // GitHub Issue Reporter Settings
             GitHubIssueToken = "";
-            GitHubIssueRepo = "n00bcodr/Jellyfin-Enhanced";
+            GitHubIssueRepo = "4eh5xitv6787h645ebv/Jellyfin-Enhanced";
         }
 
         // Jellyfin Enhanced Settings
