@@ -3841,35 +3841,45 @@
                 var interval = (data.interval || 5) * 1000;
                 var deviceCode = data.device_code;
                 deviceFlowPollTimer = setInterval(function() {
-                    ApiClient.ajax({
-                        type: 'POST',
-                        url: ApiClient.getUrl('/JellyfinEnhanced/github-device/poll'),
-                        data: JSON.stringify({ device_code: deviceCode }),
-                        contentType: 'application/json',
-                        dataType: 'json'
-                    }).then(function(poll) {
-                        if (poll.status === 'success' && poll.access_token) {
-                            clearInterval(deviceFlowPollTimer);
-                            deviceFlowPollTimer = null;
-                            msgDiv.textContent = 'Authorized! Creating issue...';
-                            submitIssueWithToken(poll.access_token);
-                        } else if (poll.status === 'expired_token') {
-                            clearInterval(deviceFlowPollTimer);
-                            deviceFlowPollTimer = null;
-                            msgDiv.textContent = 'Code expired. Please try again.';
-                            msgDiv.style.color = '#ff8888';
-                            resetSubmitButton();
-                        } else if (poll.status === 'slow_down') {
-                            // GitHub wants us to slow down — skip this cycle
+                    try {
+                        var pollReq = ApiClient.ajax({
+                            type: 'POST',
+                            url: ApiClient.getUrl('/JellyfinEnhanced/github-device/poll'),
+                            data: JSON.stringify({ device_code: deviceCode }),
+                            contentType: 'application/json',
+                            dataType: 'json'
+                        });
+                        // ApiClient.ajax may return undefined in some contexts — use fetch as fallback
+                        if (!pollReq || typeof pollReq.then !== 'function') {
+                            pollReq = fetch(ApiClient.getUrl('/JellyfinEnhanced/github-device/poll'), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Emby-Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
+                                },
+                                body: JSON.stringify({ device_code: deviceCode })
+                            }).then(function(r) { return r.json(); });
                         }
-                        // authorization_pending = keep waiting
-                    }).catch(function() {
-                        clearInterval(deviceFlowPollTimer);
-                        deviceFlowPollTimer = null;
-                        msgDiv.textContent = 'Error checking authorization.';
-                        msgDiv.style.color = '#ff8888';
-                        resetSubmitButton();
-                    });
+                        pollReq.then(function(poll) {
+                            if (poll.status === 'success' && poll.access_token) {
+                                clearInterval(deviceFlowPollTimer);
+                                deviceFlowPollTimer = null;
+                                msgDiv.textContent = 'Authorized! Creating issue...';
+                                submitIssueWithToken(poll.access_token);
+                            } else if (poll.status === 'expired_token') {
+                                clearInterval(deviceFlowPollTimer);
+                                deviceFlowPollTimer = null;
+                                msgDiv.textContent = 'Code expired. Please try again.';
+                                msgDiv.style.color = '#ff8888';
+                                resetSubmitButton();
+                            }
+                            // authorization_pending or slow_down = keep waiting
+                        }).catch(function() {
+                            // Silently retry on next interval
+                        });
+                    } catch(e) {
+                        // Catch sync errors from ApiClient.ajax
+                    }
                 }, interval);
             }).catch(function(err) {
                 var msg = 'Failed to start login.';
@@ -3883,13 +3893,25 @@
         function submitIssueWithToken(accessToken) {
             var rd = pendingReportData;
             if (!rd) return;
-            ApiClient.ajax({
+            var payload = JSON.stringify({ access_token: accessToken, title: rd.title, body: rd.body, labels: rd.labels });
+            var submitReq = ApiClient.ajax({
                 type: 'POST',
                 url: ApiClient.getUrl('/JellyfinEnhanced/github-device/submit'),
-                data: JSON.stringify({ access_token: accessToken, title: rd.title, body: rd.body, labels: rd.labels }),
+                data: payload,
                 contentType: 'application/json',
                 dataType: 'json'
-            }).then(function(result) {
+            });
+            if (!submitReq || typeof submitReq.then !== 'function') {
+                submitReq = fetch(ApiClient.getUrl('/JellyfinEnhanced/github-device/submit'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Emby-Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
+                    },
+                    body: payload
+                }).then(function(r) { return r.json(); });
+            }
+            submitReq.then(function(result) {
                 if (result && result.url) {
                     document.getElementById('jeDeviceFlowStatus').style.display = 'none';
                     showSuccessState(result.url, result.number);
