@@ -3940,10 +3940,8 @@
                         if (result && result.url) {
                             showSuccessState(result.url, result.number);
                         }
-                    }).catch(function(err) {
-                        var msg = 'Failed to create issue.';
-                        try { msg = JSON.parse(err.responseText || '{}').error || msg; } catch(e) {}
-                        Dashboard.alert({ title: 'Submission Failed', message: msg + ' Falling back to GitHub login.' });
+                    }).catch(function() {
+                        // PAT failed — silently fall back to Device Flow
                         startDeviceFlow({ title: title, body: body, labels: labels });
                     });
                 }
