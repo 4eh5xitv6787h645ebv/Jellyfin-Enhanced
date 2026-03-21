@@ -894,12 +894,8 @@
   var pluginPagesExists = !!sidebarEl?.querySelector(
     'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]'
   );
-  var LOCATION_WATCH_INTERVAL_MS = 200;
   var pageState = {
     pageVisible: false,
-    previousPage: null,
-    locationTimer: null,
-    locationSignature: null,
   };
 
   // ============================================================
@@ -908,9 +904,9 @@
   // ============================================================
 
   /**
-   * Creates the bookmarks standalone page container.
-   * Includes a .sections.bookmarks div that the existing render
-   * logic will automatically populate via MutationObserver.
+   * Creates the bookmarks overlay container.
+   * Uses a full-screen overlay instead of injecting into Jellyfin's
+   * page system to avoid conflicts with Jellyfin's page management.
    * @returns {HTMLElement}
    */
   function createPageContainer() {
@@ -918,38 +914,23 @@
     if (!page) {
       page = document.createElement('div');
       page.id = 'je-bookmarks-page';
-      page.className = 'page type-interior mainAnimatedPage hide';
-      page.setAttribute('data-title', 'Bookmarks');
-      page.setAttribute('data-backbutton', 'true');
-      page.setAttribute('data-url', '#/bookmarks');
-      page.setAttribute('data-type', 'custom');
-
-      var contentWrapper = document.createElement('div');
-      contentWrapper.setAttribute('data-role', 'content');
-
-      var contentPrimary = document.createElement('div');
-      contentPrimary.className = 'content-primary je-bookmarks-page-content';
+      page.style.cssText =
+        'display:none; position:fixed; top:0; left:0; right:0; bottom:0;' +
+        'z-index:999; background:rgb(var(--theme-background-rgb, 0,0,0));' +
+        'overflow-y:auto; overflow-x:hidden;';
 
       var bookmarksContainer = document.createElement('div');
       bookmarksContainer.className = 'sections bookmarks';
-      bookmarksContainer.style.cssText = 'padding-top: 5em;';
+      bookmarksContainer.style.cssText = 'padding: 5em 0.5em 2em 0.5em;';
 
-      contentPrimary.appendChild(bookmarksContainer);
-      contentWrapper.appendChild(contentPrimary);
-      page.appendChild(contentWrapper);
-
-      var mainContent = document.querySelector('.mainAnimatedPages');
-      if (mainContent) {
-        mainContent.appendChild(page);
-      } else {
-        document.body.appendChild(page);
-      }
+      page.appendChild(bookmarksContainer);
+      document.body.appendChild(page);
     }
     return page;
   }
 
   /**
-   * Show the bookmarks standalone page.
+   * Show the bookmarks overlay page.
    */
   function showPage() {
     if (pageState.pageVisible) return;
@@ -959,146 +940,42 @@
     if (config.BookmarksUseCustomTabs) return;
 
     pageState.pageVisible = true;
-    startLocationWatcher();
-
     var page = createPageContainer();
-
-    if (window.location.hash !== '#/bookmarks') {
-      history.pushState({ page: 'bookmarks' }, 'Bookmarks', '#/bookmarks');
-    }
-
-    var activePage = document.querySelector(
-      '.mainAnimatedPage:not(.hide):not(#je-bookmarks-page)'
-    );
-    if (activePage) {
-      pageState.previousPage = activePage;
-      activePage.classList.add('hide');
-      activePage.dispatchEvent(
-        new CustomEvent('viewhide', {
-          bubbles: true,
-          detail: { type: 'interior' },
-        })
-      );
-    }
-
-    page.classList.remove('hide');
-
-    page.dispatchEvent(
-      new CustomEvent('viewshow', {
-        bubbles: true,
-        detail: { type: 'custom', isRestored: false, options: {} },
-      })
-    );
-
-    page.dispatchEvent(
-      new CustomEvent('pageshow', {
-        bubbles: true,
-        detail: {},
-      })
-    );
+    page.style.display = '';
   }
 
   /**
-   * Hide the bookmarks standalone page and restore the previous page.
+   * Hide the bookmarks overlay page.
    */
   function hidePage() {
     if (!pageState.pageVisible) return;
 
     var page = document.getElementById('je-bookmarks-page');
     if (page) {
-      page.classList.add('hide');
-      page.dispatchEvent(
-        new CustomEvent('viewhide', {
-          bubbles: true,
-          detail: { type: 'custom' },
-        })
-      );
-    }
-
-    if (
-      pageState.previousPage &&
-      !document.querySelector('.mainAnimatedPage:not(.hide):not(#je-bookmarks-page)')
-    ) {
-      pageState.previousPage.classList.remove('hide');
-      pageState.previousPage.dispatchEvent(
-        new CustomEvent('viewshow', {
-          bubbles: true,
-          detail: { type: 'interior', isRestored: true },
-        })
-      );
+      page.style.display = 'none';
     }
 
     pageState.pageVisible = false;
-    pageState.previousPage = null;
-    stopLocationWatcher();
   }
 
   /**
-   * Intercepts hash/popstate for the bookmarks route before Jellyfin's router.
-   * @param {HashChangeEvent|PopStateEvent} e
-   */
-  function interceptNavigation(e) {
-    var url = e?.newURL ? new URL(e.newURL) : window.location;
-    var hash = url.hash;
-    var path = url.pathname;
-    if (hash.startsWith('#/bookmarks') || path === '/bookmarks') {
-      if (e?.stopImmediatePropagation) e.stopImmediatePropagation();
-      if (e?.preventDefault) e.preventDefault();
-      showPage();
-    }
-  }
-
-  /** Start polling for pushState-based navigation changes. */
-  function startLocationWatcher() {
-    if (pageState.locationTimer) return;
-    pageState.locationSignature = window.location.pathname + window.location.hash;
-    pageState.locationTimer = setInterval(function () {
-      var sig = window.location.pathname + window.location.hash;
-      if (sig !== pageState.locationSignature) {
-        pageState.locationSignature = sig;
-        handleNavigation();
-      }
-    }, LOCATION_WATCH_INTERVAL_MS);
-  }
-
-  /** Stop location polling. */
-  function stopLocationWatcher() {
-    if (pageState.locationTimer) {
-      clearInterval(pageState.locationTimer);
-      pageState.locationTimer = null;
-    }
-  }
-
-  /** Handle URL hash changes — show or hide the bookmarks page. */
-  function handleNavigation() {
-    var hash = window.location.hash;
-    var path = window.location.pathname;
-    if (hash.startsWith('#/bookmarks') || path === '/bookmarks') {
-      showPage();
-    } else if (pageState.pageVisible) {
-      hidePage();
-    }
-  }
-
-  /**
-   * Hide our page when Jellyfin shows a different page.
-   * @param {CustomEvent} e
-   */
-  function handleViewShow(e) {
-    var targetPage = e.target;
-    if (pageState.pageVisible && targetPage && targetPage.id !== 'je-bookmarks-page') {
-      hidePage();
-    }
-  }
-
-  /**
-   * Hide our page when user clicks a nav button that isn't ours.
-   * @param {MouseEvent} e
+   * Hide overlay when user navigates via Jellyfin UI (hash changes)
+   * or clicks a nav button that isn't ours.
    */
   function handleNavClick(e) {
     if (!pageState.pageVisible) return;
     var btn = e.target.closest('.headerTabs button, .navMenuOption, .headerButton');
     if (btn && !btn.classList.contains('je-nav-bookmarks-item')) {
+      hidePage();
+    }
+  }
+
+  /** Hide overlay when Jellyfin shows a different page (e.g. programmatic navigation). */
+  function handleViewShow(e) {
+    if (!pageState.pageVisible) return;
+    // Only hide if Jellyfin is showing a real page (not our overlay)
+    var target = e.target;
+    if (target && target.id !== 'je-bookmarks-page' && target.classList && target.classList.contains('mainAnimatedPage')) {
       hidePage();
     }
   }
@@ -1250,13 +1127,7 @@
         if (!usingPluginPages && !cfg.BookmarksUseCustomTabs) {
           injectNavigation();
           setupNavigationWatcher();
-          window.addEventListener('hashchange', interceptNavigation, true);
-          window.addEventListener('popstate', interceptNavigation, true);
-          document.addEventListener('viewshow', handleViewShow);
           document.addEventListener('click', handleNavClick);
-          window.addEventListener('hashchange', handleNavigation);
-          window.addEventListener('popstate', handleNavigation);
-          handleNavigation();
         }
 
         // Try immediate render in case tab is already visible
