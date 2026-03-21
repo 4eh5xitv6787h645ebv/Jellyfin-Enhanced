@@ -1862,10 +1862,28 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     jellyfinLogs = string.Join("\n", jfLines);
                 }
 
+                // Build GUID→username map for consistent anonymization
+                var guidMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                try
+                {
+                    var users = _userManager.Users;
+                    foreach (var u in users)
+                    {
+                        var id = u.Id.ToString();
+                        var name = u.Username;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            guidMap[id] = name;
+                            guidMap[id.Replace("-", "")] = name;
+                        }
+                    }
+                }
+                catch { /* non-critical */ }
+
                 return new JsonResult(new
                 {
-                    jeLogs = SanitizeLogOutput(jeLogs),
-                    jellyfinLogs = SanitizeLogOutput(jellyfinLogs)
+                    jeLogs = SanitizeLogOutput(jeLogs, guidMap),
+                    jellyfinLogs = SanitizeLogOutput(jellyfinLogs, guidMap)
                 });
             }
             catch (Exception ex)
@@ -1975,7 +1993,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return false;
         }
 
-        private static string SanitizeLogOutput(string text)
+        /// <summary>
+        /// Sanitizes log output, anonymizing usernames/GUIDs and redacting sensitive data.
+        /// </summary>
+        /// <param name="text">Raw log text.</param>
+        /// <param name="guidToUsername">Optional GUID→username mapping for consistent anonymization.</param>
+        private static string SanitizeLogOutput(string text, Dictionary<string, string>? guidToUsername = null)
         {
             if (string.IsNullOrEmpty(text)) return text;
 
@@ -1987,6 +2010,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 var key = realName.Trim();
                 if (string.IsNullOrEmpty(key)) return key;
+                // If this is a GUID, resolve to username first for consistent mapping
+                if (guidToUsername != null)
+                {
+                    var normalized = key.Replace("-", "");
+                    foreach (var kvp in guidToUsername)
+                    {
+                        if (kvp.Key.Equals(key, StringComparison.OrdinalIgnoreCase)
+                            || kvp.Key.Replace("-", "").Equals(normalized, StringComparison.OrdinalIgnoreCase))
+                        {
+                            key = kvp.Value; // resolve GUID to username
+                            break;
+                        }
+                    }
+                }
                 if (!userMap.TryGetValue(key, out var anon))
                 {
                     userCounter++;
