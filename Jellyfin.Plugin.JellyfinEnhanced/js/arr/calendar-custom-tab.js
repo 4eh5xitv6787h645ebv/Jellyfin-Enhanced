@@ -93,14 +93,17 @@
   }
 
   /**
-   * Persistent watcher -- observes .mainAnimatedPages for DOM rebuilds and
-   * remounts the calendar when a new active container appears. Suspends
-   * checks when not on the home page.
+   * Persistent watcher -- uses a self-healing MutationObserver that re-attaches
+   * when Jellyfin's SPA replaces .mainAnimatedPages during page transitions.
+   * Also listens for viewshow events as a secondary trigger.
    * @param {Object} JE - The JellyfinEnhanced global object.
    */
   function watchForContainer(JE) {
+    var currentTarget = null;
+    var observer = null;
+    var mountPending = false;
+
     function tryMount() {
-      // Skip work entirely when not on the home page
       if (!isOnHomePage()) return;
 
       var container = findActiveContainer();
@@ -118,21 +121,33 @@
       }
     }
 
+    /** Re-attach observer if .mainAnimatedPages was replaced. */
+    function ensureObserver() {
+      var target = document.querySelector('.mainAnimatedPages') || document.body;
+      if (target !== currentTarget) {
+        if (observer) observer.disconnect();
+        currentTarget = target;
+        observer = new MutationObserver(function () {
+          if (!mountPending) {
+            mountPending = true;
+            requestAnimationFrame(function () {
+              mountPending = false;
+              ensureObserver();
+              tryMount();
+            });
+          }
+        });
+        observer.observe(currentTarget, { childList: true, subtree: true });
+      }
+    }
+
+    ensureObserver();
     tryMount();
 
-    // Observe the narrowest stable parent available
-    var observeTarget = document.querySelector('.mainAnimatedPages') || document.body;
-    var mountPending = false;
-    var observer = new MutationObserver(function () {
-      if (!mountPending) {
-        mountPending = true;
-        requestAnimationFrame(function () {
-          mountPending = false;
-          tryMount();
-        });
-      }
+    document.addEventListener('viewshow', function () {
+      ensureObserver();
+      tryMount();
     });
-    observer.observe(observeTarget, { childList: true, subtree: true });
   }
 
   waitForCalendar(function (JE) {
