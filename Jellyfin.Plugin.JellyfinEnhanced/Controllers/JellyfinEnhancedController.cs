@@ -1979,28 +1979,42 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            // Redact Jellyfin usernames from log patterns like "user: Name", "for user: Name", "Processing user: Name"
-            text = System.Text.RegularExpressions.Regex.Replace(text,
-                @"((?:user|User)[: ]+)([A-Za-z][A-Za-z0-9 _.-]{1,}?)(?=[\r\n:,""']|$)",
-                "$1[USER_REDACTED]");
+            // Build anonymous user mapping for consistent anonymization
+            var userMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            int userCounter = 0;
 
-            // Redact Jellyfin user GUIDs (32 hex or 8-4-4-4-12 format)
-            text = System.Text.RegularExpressions.Regex.Replace(text,
-                @"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b",
-                "[GUID_REDACTED]");
-            text = System.Text.RegularExpressions.Regex.Replace(text,
-                @"(?<=/user-settings/|user[ /])[0-9a-f]{32}\b",
-                "[GUID_REDACTED]");
+            string AnonymizeUser(string realName)
+            {
+                var key = realName.Trim();
+                if (string.IsNullOrEmpty(key)) return key;
+                if (!userMap.TryGetValue(key, out var anon))
+                {
+                    userCounter++;
+                    anon = "User-" + userCounter;
+                    userMap[key] = anon;
+                }
+                return anon;
+            }
 
-            // Redact watchlist/media item lists (TMDB IDs per user reveal viewing habits)
+            // Anonymize Jellyfin usernames (preserves relationships: same name → same User-N)
+            // Matches: "user: Name", "for user: Name", "user Name", "by Name," (after started/requested)
             text = System.Text.RegularExpressions.Regex.Replace(text,
-                @"(Items (?:already in watchlist|not in library)[^:]*: )TMDB:.*",
-                "$1[MEDIA_LIST_REDACTED]");
+                @"((?:user|User)[: ]+)([A-Za-z][A-Za-z0-9 _.-]{1,}?)(?=[\r\n:,""'()\[\]]|$)",
+                m => m.Groups[1].Value + AnonymizeUser(m.Groups[2].Value));
+            // "started by X", "for X" at end of line, and similar patterns in JE logs
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"((?:started by|requested by|Requested .+ for|watchlist for|Added .+ for) )([A-Za-z][A-Za-z0-9 _.-]{1,}?)(?=[\r\n,""'()\[\]]|$)",
+                m => m.Groups[1].Value + AnonymizeUser(m.Groups[2].Value));
 
-            // Redact search queries from URLs (?query=...)
+            // Anonymize Jellyfin user GUIDs (8-4-4-4-12 format) — only in user-related contexts
             text = System.Text.RegularExpressions.Regex.Replace(text,
-                @"([?&]query=)[^&\s""']+",
-                "$1[QUERY_REDACTED]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                @"((?:user|User|userId|user-settings/)[\s/:]+)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b",
+                m => m.Groups[1].Value + AnonymizeUser(m.Groups[2].Value));
+
+            // Anonymize 32-char hex GUIDs in user paths
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"(?<=/user-settings/|user[ /])([0-9a-f]{32})\b",
+                m => AnonymizeUser(m.Groups[1].Value));
 
             // Redact URLs — keep local/private hostnames, redact public ones
             text = System.Text.RegularExpressions.Regex.Replace(text,
