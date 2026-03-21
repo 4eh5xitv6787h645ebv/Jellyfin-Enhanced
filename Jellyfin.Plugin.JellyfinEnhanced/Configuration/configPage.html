@@ -3377,10 +3377,14 @@
                 }
 
                 // Console errors (client-side only, no API call)
-                if (document.getElementById('jeIncludeConsoleErrors').checked && jeConsoleBuffer.length > 0) {
-                    data.consoleErrors = jeConsoleBuffer.map(function(e) {
-                        return '[' + e.time + '] [' + e.level.toUpperCase() + '] ' + sanitizeText(e.message);
-                    }).join('\n');
+                if (document.getElementById('jeIncludeConsoleErrors').checked) {
+                    if (jeConsoleBuffer.length > 0) {
+                        data.consoleErrors = jeConsoleBuffer.map(function(e) {
+                            return '[' + e.time + '] [' + e.level.toUpperCase() + '] ' + sanitizeText(e.message);
+                        }).join('\n');
+                    } else {
+                        data.consoleErrors = '(no console errors or warnings captured during this session)';
+                    }
                 }
 
                 // Extensible diagnostic sections (from registered server-side modules)
