@@ -488,6 +488,7 @@
                 'enhanced/ui.js',
                 'enhanced/bookmarks.js',
                 'enhanced/bookmarks-library.js',
+                'enhanced/bookmarks-custom-tab.js',
                 'enhanced/osd-rating.js',
                 'enhanced/pausescreen.js',
 

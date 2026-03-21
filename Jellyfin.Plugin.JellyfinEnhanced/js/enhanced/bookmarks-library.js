@@ -889,6 +889,308 @@
   let lastRenderTs = 0;
   let lastMountedContainer = null;
 
+  // Sidebar / standalone page state
+  var sidebarEl = document.querySelector('.mainDrawer-scrollContainer');
+  var pluginPagesExists = !!sidebarEl?.querySelector(
+    'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]'
+  );
+  var LOCATION_WATCH_INTERVAL_MS = 200;
+  var pageState = {
+    pageVisible: false,
+    previousPage: null,
+    locationTimer: null,
+    locationSignature: null,
+  };
+
+  // ============================================================
+  // Standalone Page — shown via sidebar link when neither
+  // Plugin Pages nor Custom Tabs is active
+  // ============================================================
+
+  /**
+   * Creates the bookmarks standalone page container.
+   * Includes a .sections.bookmarks div that the existing render
+   * logic will automatically populate via MutationObserver.
+   * @returns {HTMLElement}
+   */
+  function createPageContainer() {
+    var page = document.getElementById('je-bookmarks-page');
+    if (!page) {
+      page = document.createElement('div');
+      page.id = 'je-bookmarks-page';
+      page.className = 'page type-interior mainAnimatedPage hide';
+      page.setAttribute('data-title', 'Bookmarks');
+      page.setAttribute('data-backbutton', 'true');
+      page.setAttribute('data-url', '#/bookmarks');
+      page.setAttribute('data-type', 'custom');
+
+      var contentWrapper = document.createElement('div');
+      contentWrapper.setAttribute('data-role', 'content');
+
+      var contentPrimary = document.createElement('div');
+      contentPrimary.className = 'content-primary je-bookmarks-page-content';
+
+      var bookmarksContainer = document.createElement('div');
+      bookmarksContainer.className = 'sections bookmarks';
+      bookmarksContainer.style.cssText = 'padding-top: 5em;';
+
+      contentPrimary.appendChild(bookmarksContainer);
+      contentWrapper.appendChild(contentPrimary);
+      page.appendChild(contentWrapper);
+
+      var mainContent = document.querySelector('.mainAnimatedPages');
+      if (mainContent) {
+        mainContent.appendChild(page);
+      } else {
+        document.body.appendChild(page);
+      }
+    }
+    return page;
+  }
+
+  /**
+   * Show the bookmarks standalone page.
+   */
+  function showPage() {
+    if (pageState.pageVisible) return;
+
+    var config = JE?.pluginConfig || {};
+    if (pluginPagesExists && config.BookmarksUsePluginPages) return;
+    if (config.BookmarksUseCustomTabs) return;
+
+    pageState.pageVisible = true;
+    startLocationWatcher();
+
+    var page = createPageContainer();
+
+    if (window.location.hash !== '#/bookmarks') {
+      history.pushState({ page: 'bookmarks' }, 'Bookmarks', '#/bookmarks');
+    }
+
+    var activePage = document.querySelector(
+      '.mainAnimatedPage:not(.hide):not(#je-bookmarks-page)'
+    );
+    if (activePage) {
+      pageState.previousPage = activePage;
+      activePage.classList.add('hide');
+      activePage.dispatchEvent(
+        new CustomEvent('viewhide', {
+          bubbles: true,
+          detail: { type: 'interior' },
+        })
+      );
+    }
+
+    page.classList.remove('hide');
+
+    page.dispatchEvent(
+      new CustomEvent('viewshow', {
+        bubbles: true,
+        detail: { type: 'custom', isRestored: false, options: {} },
+      })
+    );
+
+    page.dispatchEvent(
+      new CustomEvent('pageshow', {
+        bubbles: true,
+        detail: {},
+      })
+    );
+  }
+
+  /**
+   * Hide the bookmarks standalone page and restore the previous page.
+   */
+  function hidePage() {
+    if (!pageState.pageVisible) return;
+
+    var page = document.getElementById('je-bookmarks-page');
+    if (page) {
+      page.classList.add('hide');
+      page.dispatchEvent(
+        new CustomEvent('viewhide', {
+          bubbles: true,
+          detail: { type: 'custom' },
+        })
+      );
+    }
+
+    if (
+      pageState.previousPage &&
+      !document.querySelector('.mainAnimatedPage:not(.hide):not(#je-bookmarks-page)')
+    ) {
+      pageState.previousPage.classList.remove('hide');
+      pageState.previousPage.dispatchEvent(
+        new CustomEvent('viewshow', {
+          bubbles: true,
+          detail: { type: 'interior', isRestored: true },
+        })
+      );
+    }
+
+    pageState.pageVisible = false;
+    pageState.previousPage = null;
+    stopLocationWatcher();
+  }
+
+  /**
+   * Intercepts hash/popstate for the bookmarks route before Jellyfin's router.
+   * @param {HashChangeEvent|PopStateEvent} e
+   */
+  function interceptNavigation(e) {
+    var url = e?.newURL ? new URL(e.newURL) : window.location;
+    var hash = url.hash;
+    var path = url.pathname;
+    if (hash.startsWith('#/bookmarks') || path === '/bookmarks') {
+      if (e?.stopImmediatePropagation) e.stopImmediatePropagation();
+      if (e?.preventDefault) e.preventDefault();
+      showPage();
+    }
+  }
+
+  /** Start polling for pushState-based navigation changes. */
+  function startLocationWatcher() {
+    if (pageState.locationTimer) return;
+    pageState.locationSignature = window.location.pathname + window.location.hash;
+    pageState.locationTimer = setInterval(function () {
+      var sig = window.location.pathname + window.location.hash;
+      if (sig !== pageState.locationSignature) {
+        pageState.locationSignature = sig;
+        handleNavigation();
+      }
+    }, LOCATION_WATCH_INTERVAL_MS);
+  }
+
+  /** Stop location polling. */
+  function stopLocationWatcher() {
+    if (pageState.locationTimer) {
+      clearInterval(pageState.locationTimer);
+      pageState.locationTimer = null;
+    }
+  }
+
+  /** Handle URL hash changes — show or hide the bookmarks page. */
+  function handleNavigation() {
+    var hash = window.location.hash;
+    var path = window.location.pathname;
+    if (hash.startsWith('#/bookmarks') || path === '/bookmarks') {
+      showPage();
+    } else if (pageState.pageVisible) {
+      hidePage();
+    }
+  }
+
+  /**
+   * Hide our page when Jellyfin shows a different page.
+   * @param {CustomEvent} e
+   */
+  function handleViewShow(e) {
+    var targetPage = e.target;
+    if (pageState.pageVisible && targetPage && targetPage.id !== 'je-bookmarks-page') {
+      hidePage();
+    }
+  }
+
+  /**
+   * Hide our page when user clicks a nav button that isn't ours.
+   * @param {MouseEvent} e
+   */
+  function handleNavClick(e) {
+    if (!pageState.pageVisible) return;
+    var btn = e.target.closest('.headerTabs button, .navMenuOption, .headerButton');
+    if (btn && !btn.classList.contains('je-nav-bookmarks-item')) {
+      hidePage();
+    }
+  }
+
+  /**
+   * Inject "Bookmarks" navigation item into the sidebar.
+   * Skips if plugin pages or custom tabs is active.
+   */
+  function injectNavigation() {
+    var config = JE?.pluginConfig || {};
+    if (!config.BookmarksEnabled) return;
+    if (pluginPagesExists && config.BookmarksUsePluginPages) return;
+    if (config.BookmarksUseCustomTabs) return;
+
+    // Hide plugin page link if it exists
+    var pluginPageItem = sidebarEl?.querySelector(
+      'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]'
+    );
+    if (pluginPageItem) {
+      pluginPageItem.style.setProperty('display', 'none', 'important');
+    }
+
+    // Check if already injected
+    if (document.querySelector('.je-nav-bookmarks-item')) return;
+
+    var jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
+    if (jellyfinEnhancedSection) {
+      var navItem = document.createElement('a');
+      navItem.setAttribute('is', 'emby-linkbutton');
+      navItem.className =
+        'navMenuOption lnkMediaFolder emby-button je-nav-bookmarks-item';
+      navItem.href = '#';
+
+      var iconSpan = document.createElement('span');
+      iconSpan.className = 'navMenuOptionIcon material-icons';
+      iconSpan.textContent = 'bookmark';
+      navItem.appendChild(iconSpan);
+
+      var textSpan = document.createElement('span');
+      textSpan.className = 'sectionName navMenuOptionText';
+      textSpan.textContent = (JE.t && JE.t('bookmarks_title')) || 'Bookmarks';
+      navItem.appendChild(textSpan);
+
+      navItem.addEventListener('click', function (e) {
+        e.preventDefault();
+        showPage();
+      });
+
+      // Insert after hidden content nav if present, otherwise append
+      var hiddenContentNav = jellyfinEnhancedSection.querySelector('.je-nav-hidden-content-item');
+      if (hiddenContentNav && hiddenContentNav.nextSibling) {
+        jellyfinEnhancedSection.insertBefore(navItem, hiddenContentNav.nextSibling);
+      } else if (hiddenContentNav) {
+        jellyfinEnhancedSection.appendChild(navItem);
+      } else {
+        jellyfinEnhancedSection.appendChild(navItem);
+      }
+      console.log(logPrefix + ' Navigation item injected');
+    } else {
+      console.log(logPrefix + ' jellyfinEnhancedSection not found, will wait for it');
+    }
+  }
+
+  /**
+   * Watch for sidebar DOM rebuilds and re-inject the navigation item.
+   */
+  function setupNavigationWatcher() {
+    var config = JE?.pluginConfig || {};
+    if (!config.BookmarksEnabled) return;
+    if (pluginPagesExists && config.BookmarksUsePluginPages) return;
+    if (config.BookmarksUseCustomTabs) return;
+
+    var observer = new MutationObserver(function () {
+      var currentConfig = JE?.pluginConfig || {};
+      if (currentConfig.BookmarksUseCustomTabs) return;
+      if (pluginPagesExists && currentConfig.BookmarksUsePluginPages) return;
+
+      if (!document.querySelector('.je-nav-bookmarks-item')) {
+        var jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
+        if (jellyfinEnhancedSection) {
+          console.log(logPrefix + ' Sidebar rebuilt, re-injecting navigation');
+          injectNavigation();
+        }
+      }
+    });
+
+    var navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
+    if (navDrawer) {
+      observer.observe(navDrawer, { childList: true, subtree: true });
+    }
+  }
+
   function getJE() {
     // Try common globals first
     if (window.JE) return window.JE;
@@ -941,6 +1243,21 @@
           }
         });
         sectionObserver.observe(observeTarget, { childList: true, subtree: true });
+
+        // Sidebar navigation — when neither Plugin Pages nor Custom Tabs is active
+        var cfg = je.pluginConfig || {};
+        var usingPluginPages = pluginPagesExists && cfg.BookmarksUsePluginPages;
+        if (!usingPluginPages && !cfg.BookmarksUseCustomTabs) {
+          injectNavigation();
+          setupNavigationWatcher();
+          window.addEventListener('hashchange', interceptNavigation, true);
+          window.addEventListener('popstate', interceptNavigation, true);
+          document.addEventListener('viewshow', handleViewShow);
+          document.addEventListener('click', handleNavClick);
+          window.addEventListener('hashchange', handleNavigation);
+          window.addEventListener('popstate', handleNavigation);
+          handleNavigation();
+        }
 
         // Try immediate render in case tab is already visible
         renderIfSectionExists();
