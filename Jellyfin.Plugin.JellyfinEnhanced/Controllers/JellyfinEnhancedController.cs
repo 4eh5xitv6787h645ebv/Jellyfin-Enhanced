@@ -1978,12 +1978,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private static string SanitizeLogOutput(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
+
+            // Redact Jellyfin usernames from log patterns like "user: Name", "for user: Name", "Processing user: Name"
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"((?:user|User)[: ]+)([A-Za-z][A-Za-z0-9 _.-]{1,}?)(?=[\r\n:,""']|$)",
+                "$1[USER_REDACTED]");
+
+            // Redact Jellyfin user GUIDs (32 hex or 8-4-4-4-12 format)
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b",
+                "[GUID_REDACTED]");
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"(?<=/user-settings/|user[ /])[0-9a-f]{32}\b",
+                "[GUID_REDACTED]");
+
+            // Redact watchlist/media item lists (TMDB IDs per user reveal viewing habits)
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"(Items (?:already in watchlist|not in library)[^:]*: )TMDB:.*",
+                "$1[MEDIA_LIST_REDACTED]");
+
+            // Redact search queries from URLs (?query=...)
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"([?&]query=)[^&\s""']+",
+                "$1[QUERY_REDACTED]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
             // Redact URLs — keep local/private hostnames, redact public ones
             text = System.Text.RegularExpressions.Regex.Replace(text,
                 @"(https?://|wss?://|ftp://)([^\s/""']+)(:\d+)?",
                 m => {
                     var host = m.Groups[2].Value;
-                    if (IsLocalHost(host)) return m.Value; // keep local
+                    if (IsLocalHost(host)) return m.Value;
                     return m.Groups[1].Value + "[HOST_REDACTED]" + (m.Groups[3].Success ? m.Groups[3].Value : "");
                 });
             // Redact API key/token query params
@@ -1999,7 +2023,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 @"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?\b",
                 m => {
                     var ip = m.Groups[1].Value;
-                    if (IsPrivateIp(ip)) return m.Value; // keep private IPs
+                    if (IsPrivateIp(ip)) return m.Value;
                     return "[IP_REDACTED]" + (m.Groups[2].Success ? m.Groups[2].Value : "");
                 });
             // Redact email addresses
