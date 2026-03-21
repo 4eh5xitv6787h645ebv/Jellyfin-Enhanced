@@ -1661,7 +1661,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("client_id", GitHubDeviceFlowClientId),
-                    new KeyValuePair<string, string>("scope", "public_repo")
+                    new KeyValuePair<string, string>("scope", "public_repo gist")
                 });
 
                 var response = await client.PostAsync("https://github.com/login/device/code", content);
