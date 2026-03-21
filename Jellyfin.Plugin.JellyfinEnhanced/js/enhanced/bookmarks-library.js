@@ -914,17 +914,27 @@
     if (!page) {
       page = document.createElement('div');
       page.id = 'je-bookmarks-page';
+      // Overlay inside the content area — sits on top of Jellyfin's pages
+      // but below the header and sidebar so navigation stays accessible
       page.style.cssText =
-        'display:none; position:fixed; top:0; left:0; right:0; bottom:0;' +
-        'z-index:999; background:rgb(var(--theme-background-rgb, 0,0,0));' +
+        'display:none; position:absolute; top:0; left:0; right:0; bottom:0;' +
+        'z-index:99; background:rgb(var(--theme-background-rgb, 0,0,0));' +
         'overflow-y:auto; overflow-x:hidden;';
 
       var bookmarksContainer = document.createElement('div');
       bookmarksContainer.className = 'sections bookmarks';
-      bookmarksContainer.style.cssText = 'padding: 5em 0.5em 2em 0.5em;';
+      bookmarksContainer.style.cssText = 'padding: 3.2em 0.5em 2em 0.5em;';
 
       page.appendChild(bookmarksContainer);
-      document.body.appendChild(page);
+
+      // Append inside the content area, not document.body
+      var mainContent = document.querySelector('.mainAnimatedPages');
+      if (mainContent) {
+        mainContent.style.position = mainContent.style.position || 'relative';
+        mainContent.appendChild(page);
+      } else {
+        document.body.appendChild(page);
+      }
     }
     return page;
   }
