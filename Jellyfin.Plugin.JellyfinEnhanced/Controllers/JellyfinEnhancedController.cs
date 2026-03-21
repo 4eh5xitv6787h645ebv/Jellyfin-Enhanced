@@ -1496,87 +1496,128 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// Creates a GitHub issue using the configured token. Admin-only.
         /// Returns the URL of the created issue or an error message.
         /// </summary>
+        /// <summary>
+        /// Uploads logs as a GitHub Gist and returns the URL.
+        /// </summary>
+        private async Task<string?> CreateLogsGist(System.Net.Http.HttpClient client, string title, string? jeLogs, string? jfLogs)
+        {
+            if (string.IsNullOrWhiteSpace(jeLogs) && string.IsNullOrWhiteSpace(jfLogs)) return null;
+
+            try
+            {
+                var files = new Dictionary<string, object>();
+                if (!string.IsNullOrWhiteSpace(jeLogs))
+                    files["je-plugin-logs.txt"] = new { content = jeLogs };
+                if (!string.IsNullOrWhiteSpace(jfLogs))
+                    files["jellyfin-server-logs.txt"] = new { content = jfLogs };
+
+                var gistPayload = new Dictionary<string, object>
+                {
+                    { "description", "JE Issue Reporter Logs: " + title },
+                    { "public", false },
+                    { "files", files }
+                };
+
+                var json = JsonSerializer.Serialize(gistPayload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("https://api.github.com/gists", content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    using var doc = JsonDocument.Parse(responseBody);
+                    var gistUrl = doc.RootElement.TryGetProperty("html_url", out var u) ? u.GetString() : null;
+                    _logger.Info("Created logs Gist: " + gistUrl);
+                    return gistUrl;
+                }
+                _logger.Warning("Failed to create Gist: " + response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Gist creation error: " + ex.Message);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Creates a GitHub issue + optional logs Gist using the provided auth token.
+        /// Shared logic for both admin PAT and Device Flow submission.
+        /// </summary>
+        private async Task<(string? url, int number, string? error)> CreateGitHubIssue(
+            string token, string repo, string title, string? issueBody,
+            string? labels, string? jeLogs, string? jfLogs)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
+            client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
+            client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+            // Upload logs as Gist if present
+            var gistUrl = await CreateLogsGist(client, title, jeLogs, jfLogs);
+            if (gistUrl != null && !string.IsNullOrEmpty(issueBody))
+            {
+                issueBody += "\n\n### Logs\n[View full logs on GitHub Gist](" + gistUrl + ")";
+            }
+
+            // Truncate body if still too long (shouldn't happen without inline logs)
+            if (!string.IsNullOrEmpty(issueBody) && issueBody.Length > 64000)
+            {
+                issueBody = issueBody.Substring(0, 64000) + "\n\n---\n_Report truncated_";
+            }
+
+            var payload = new Dictionary<string, object> { { "title", title } };
+            if (!string.IsNullOrWhiteSpace(issueBody)) payload["body"] = issueBody;
+            if (!string.IsNullOrWhiteSpace(labels))
+                payload["labels"] = labels.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("https://api.github.com/repos/" + repo.Trim() + "/issues", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.Error("GitHub issue creation failed: " + response.StatusCode + " " + responseBody);
+                return (null, 0, "GitHub API error: " + response.StatusCode);
+            }
+
+            using var doc = JsonDocument.Parse(responseBody);
+            var issueUrl = doc.RootElement.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
+            var issueNumber = doc.RootElement.TryGetProperty("number", out var numProp) ? numProp.GetInt32() : 0;
+            _logger.Info("GitHub issue created: #" + issueNumber + " " + issueUrl);
+            return (issueUrl, issueNumber, null);
+        }
+
         [HttpPost("submit-issue")]
         [Authorize]
         public async Task<ActionResult> SubmitGitHubIssue([FromBody] JsonElement body)
         {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
+            if (!IsAdminUser()) return Forbid();
 
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrWhiteSpace(config.GitHubIssueToken))
-            {
-                return BadRequest(new { error = "GitHub token not configured. Set it in Other Settings." });
-            }
+                return BadRequest(new { error = "GitHub token not configured." });
 
-            var repo = config.GitHubIssueRepo;
-            if (string.IsNullOrWhiteSpace(repo))
-            {
-                return BadRequest(new { error = "GitHub repository not configured." });
-            }
-
-            // Validate repo format (owner/name)
-            if (!System.Text.RegularExpressions.Regex.IsMatch(repo.Trim(), @"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$"))
-            {
-                return BadRequest(new { error = "Invalid repository format. Use owner/repo." });
-            }
+            var repo = config.GitHubIssueRepo?.Trim() ?? "";
+            if (!System.Text.RegularExpressions.Regex.IsMatch(repo, @"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$"))
+                return BadRequest(new { error = "Invalid repository format." });
 
             var title = body.TryGetProperty("title", out var t) ? t.GetString() : null;
             var issueBody = body.TryGetProperty("body", out var b) ? b.GetString() : null;
             var labels = body.TryGetProperty("labels", out var l) ? l.GetString() : null;
+            var jeLogs = body.TryGetProperty("jeLogs", out var jl) ? jl.GetString() : null;
+            var jfLogs = body.TryGetProperty("jfLogs", out var jfl) ? jfl.GetString() : null;
 
             if (string.IsNullOrWhiteSpace(title))
-            {
                 return BadRequest(new { error = "Title is required." });
-            }
 
             try
             {
-                var client = _httpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + config.GitHubIssueToken.Trim());
-                client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
-                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
-
-                var payload = new Dictionary<string, object>
-                {
-                    { "title", title }
-                };
-                if (!string.IsNullOrWhiteSpace(issueBody))
-                {
-                    // GitHub API limit is 65536 characters for issue body
-                    if (issueBody.Length > 64000)
-                    {
-                        issueBody = issueBody.Substring(0, 64000) + "\n\n---\n_Report truncated (exceeded GitHub's 65536 character limit)_";
-                    }
-                    payload["body"] = issueBody;
-                }
-                if (!string.IsNullOrWhiteSpace(labels))
-                {
-                    payload["labels"] = labels.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
-                }
-
-                var json = JsonSerializer.Serialize(payload);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(
-                    $"https://api.github.com/repos/{repo.Trim()}/issues", content);
-
-                var responseBody = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.Error("GitHub issue creation failed: " + response.StatusCode + " " + responseBody);
-                    return StatusCode((int)response.StatusCode, new { error = "GitHub API error: " + response.StatusCode, details = responseBody });
-                }
-
-                // Extract the issue URL from the response
-                using var doc = JsonDocument.Parse(responseBody);
-                var issueUrl = doc.RootElement.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
-                var issueNumber = doc.RootElement.TryGetProperty("number", out var numProp) ? numProp.GetInt32() : 0;
-
-                _logger.Info("GitHub issue created: #" + issueNumber + " " + issueUrl);
-                return new JsonResult(new { url = issueUrl, number = issueNumber });
+                var (url, number, error) = await CreateGitHubIssue(
+                    config.GitHubIssueToken.Trim(), repo, title, issueBody, labels, jeLogs, jfLogs);
+                if (error != null)
+                    return StatusCode(422, new { error });
+                return new JsonResult(new { url, number });
             }
             catch (Exception ex)
             {
@@ -1715,13 +1756,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var issueBody = body.TryGetProperty("body", out var b) ? b.GetString() : null;
             var labels = body.TryGetProperty("labels", out var l) ? l.GetString() : null;
             var repo = body.TryGetProperty("repo", out var r) ? r.GetString() : null;
+            var jeLogs = body.TryGetProperty("jeLogs", out var jl) ? jl.GetString() : null;
+            var jfLogs = body.TryGetProperty("jfLogs", out var jfl) ? jfl.GetString() : null;
 
             if (string.IsNullOrWhiteSpace(accessToken))
                 return BadRequest(new { error = "access_token required" });
             if (string.IsNullOrWhiteSpace(title))
                 return BadRequest(new { error = "title required" });
 
-            // Use configured repo as default, allow override
             if (string.IsNullOrWhiteSpace(repo))
                 repo = JellyfinEnhanced.Instance?.Configuration?.GitHubIssueRepo ?? "n00bcodr/Jellyfin-Enhanced";
 
@@ -1730,37 +1772,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
             try
             {
-                // Truncate body if needed
-                if (!string.IsNullOrEmpty(issueBody) && issueBody.Length > 64000)
-                    issueBody = issueBody.Substring(0, 64000) + "\n\n---\n_Report truncated (exceeded GitHub's 65536 character limit)_";
-
-                var client = _httpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken.Trim());
-                client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
-                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
-
-                var payload = new Dictionary<string, object> { { "title", title } };
-                if (!string.IsNullOrWhiteSpace(issueBody)) payload["body"] = issueBody;
-                if (!string.IsNullOrWhiteSpace(labels))
-                    payload["labels"] = labels.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
-
-                var json = JsonSerializer.Serialize(payload);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("https://api.github.com/repos/" + repo.Trim() + "/issues", content);
-                var responseBody = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.Error("GitHub device flow issue creation failed: " + response.StatusCode + " " + responseBody);
-                    return StatusCode((int)response.StatusCode, new { error = "GitHub API error: " + response.StatusCode });
-                }
-
-                using var doc = JsonDocument.Parse(responseBody);
-                var issueUrl = doc.RootElement.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
-                var issueNumber = doc.RootElement.TryGetProperty("number", out var numProp) ? numProp.GetInt32() : 0;
-
-                _logger.Info("GitHub issue created via device flow: #" + issueNumber + " " + issueUrl);
-                return new JsonResult(new { url = issueUrl, number = issueNumber });
+                var (url, number, error) = await CreateGitHubIssue(
+                    accessToken.Trim(), repo.Trim(), title, issueBody, labels, jeLogs, jfLogs);
+                if (error != null)
+                    return StatusCode(422, new { error });
+                return new JsonResult(new { url, number });
             }
             catch (Exception ex)
             {
