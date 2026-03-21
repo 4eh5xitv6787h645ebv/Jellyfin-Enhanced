@@ -1889,7 +1889,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // Allowed values: 5, 30, 60, 1440 (1 day), 10080 (1 week)
             minutes = Math.Clamp(minutes, 1, 10080);
             var cutoff = DateTime.Now.AddMinutes(-minutes);
-            const int maxLines = 500;
+            const int maxLines = 10000;
 
             try
             {
