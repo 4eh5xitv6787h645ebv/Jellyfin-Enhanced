@@ -1145,7 +1145,7 @@
 
       var textSpan = document.createElement('span');
       textSpan.className = 'sectionName navMenuOptionText';
-      textSpan.textContent = (JE.t && JE.t('bookmarks_title')) || 'Bookmarks';
+      textSpan.textContent = 'Bookmarks';
       navItem.appendChild(textSpan);
 
       navItem.addEventListener('click', function (e) {
