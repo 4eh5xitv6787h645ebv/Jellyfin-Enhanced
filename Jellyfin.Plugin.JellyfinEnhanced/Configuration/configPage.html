@@ -3601,7 +3601,7 @@
         var origCloseModal = closeModal;
         closeModal = function() {
             if (successCountdownId) { clearInterval(successCountdownId); successCountdownId = null; }
-            if (deviceFlowPollTimer) { clearInterval(deviceFlowPollTimer); deviceFlowPollTimer = null; }
+            if (deviceFlowPollTimer) { clearTimeout(deviceFlowPollTimer); deviceFlowPollTimer = null; }
             pendingReportData = null;
             document.getElementById('jeReportSuccess').style.display = 'none';
             document.getElementById('jeDeviceFlowStatus').style.display = 'none';
@@ -3835,27 +3835,36 @@
                 document.getElementById('jeDeviceFlowLink').href = data.verification_uri;
                 window.open(data.verification_uri, '_blank');
 
-                var interval = (data.interval || 5) * 1000;
+                var pollInterval = (data.interval || 5) * 1000;
                 var deviceCode = data.device_code;
-                console.log('[JE-DeviceFlow] Starting poll timer every ' + interval + 'ms');
-                deviceFlowPollTimer = setInterval(function() {
-                    console.log('[JE-DeviceFlow] Poll tick');
-                    jePost('/JellyfinEnhanced/github-device/poll', { device_code: deviceCode }).then(function(poll) {
-                        console.log('[JE-DeviceFlow] Poll result: status=' + poll.status);
-                        if (poll.status === 'success' && poll.access_token) {
-                            clearInterval(deviceFlowPollTimer);
-                            deviceFlowPollTimer = null;
-                            msgDiv.textContent = 'Authorized! Creating issue...';
-                            submitIssueWithToken(poll.access_token);
-                        } else if (poll.status === 'expired_token') {
-                            clearInterval(deviceFlowPollTimer);
-                            deviceFlowPollTimer = null;
-                            msgDiv.textContent = 'Code expired. Please try again.';
-                            msgDiv.style.color = '#ff8888';
-                            resetSubmitButton();
-                        }
-                    }).catch(function() { /* retry next interval */ });
-                }, interval);
+                console.log('[JE-DeviceFlow] Starting poll with interval ' + pollInterval + 'ms');
+
+                function schedulePoll() {
+                    deviceFlowPollTimer = setTimeout(function() {
+                        console.log('[JE-DeviceFlow] Poll tick (interval=' + pollInterval + 'ms)');
+                        jePost('/JellyfinEnhanced/github-device/poll', { device_code: deviceCode }).then(function(poll) {
+                            console.log('[JE-DeviceFlow] Poll result: status=' + poll.status);
+                            if (poll.status === 'success' && poll.access_token) {
+                                deviceFlowPollTimer = null;
+                                msgDiv.textContent = 'Authorized! Creating issue...';
+                                submitIssueWithToken(poll.access_token);
+                            } else if (poll.status === 'expired_token') {
+                                deviceFlowPollTimer = null;
+                                msgDiv.textContent = 'Code expired. Please try again.';
+                                msgDiv.style.color = '#ff8888';
+                                resetSubmitButton();
+                            } else if (poll.status === 'slow_down') {
+                                pollInterval += 5000; // GitHub requires +5s on slow_down
+                                console.log('[JE-DeviceFlow] Slowing down to ' + pollInterval + 'ms');
+                                schedulePoll();
+                            } else {
+                                // authorization_pending — keep polling
+                                schedulePoll();
+                            }
+                        }).catch(function() { schedulePoll(); });
+                    }, pollInterval);
+                }
+                schedulePoll();
             }).catch(function() {
                 msgDiv.textContent = 'Failed to start GitHub login.';
                 msgDiv.style.color = '#ff8888';
