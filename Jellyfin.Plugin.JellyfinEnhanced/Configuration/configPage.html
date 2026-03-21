@@ -3816,6 +3816,7 @@
 
         // Helper: POST to JE endpoint using fetch (ApiClient.ajax returns undefined for POST)
         function jePost(path, data) {
+            console.log('[JE-DeviceFlow] POST ' + path);
             return fetch(ApiClient.getUrl(path), {
                 method: 'POST',
                 headers: {
@@ -3823,7 +3824,13 @@
                     'X-Emby-Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
                 },
                 body: JSON.stringify(data || {})
-            }).then(function(r) { return r.json(); });
+            }).then(function(r) {
+                console.log('[JE-DeviceFlow] Response ' + path + ' status=' + r.status);
+                return r.json();
+            }).catch(function(e) {
+                console.error('[JE-DeviceFlow] Error ' + path + ': ' + e.message);
+                throw e;
+            });
         }
 
         function startDeviceFlow(reportData) {
@@ -3839,6 +3846,7 @@
             msgDiv.style.color = '#999';
 
             jePost('/JellyfinEnhanced/github-device/start').then(function(data) {
+                console.log('[JE-DeviceFlow] Start OK: code=' + data.user_code + ' interval=' + data.interval);
                 codeDiv.textContent = data.user_code;
                 msgDiv.textContent = 'Waiting for you to authorize...';
                 document.getElementById('jeDeviceFlowLink').href = data.verification_uri;
@@ -3846,8 +3854,11 @@
 
                 var interval = (data.interval || 5) * 1000;
                 var deviceCode = data.device_code;
+                console.log('[JE-DeviceFlow] Starting poll timer every ' + interval + 'ms');
                 deviceFlowPollTimer = setInterval(function() {
+                    console.log('[JE-DeviceFlow] Poll tick');
                     jePost('/JellyfinEnhanced/github-device/poll', { device_code: deviceCode }).then(function(poll) {
+                        console.log('[JE-DeviceFlow] Poll result: status=' + poll.status);
                         if (poll.status === 'success' && poll.access_token) {
                             clearInterval(deviceFlowPollTimer);
                             deviceFlowPollTimer = null;
