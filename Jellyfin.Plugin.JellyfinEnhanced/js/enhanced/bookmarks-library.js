@@ -1031,6 +1031,12 @@
     pageState.pageVisible = false;
     pageState.previousPage = null;
     stopLocationWatcher();
+
+    // Undo the pushState we did in showPage() so the URL reflects
+    // the page the user actually sees (e.g. #/home instead of #/bookmarks)
+    if (window.location.hash === '#/bookmarks') {
+      history.back();
+    }
   }
 
   /**
