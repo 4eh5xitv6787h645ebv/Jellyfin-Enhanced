@@ -1493,10 +1493,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
         /// <summary>
-        /// Creates a GitHub issue using the configured token. Admin-only.
-        /// Returns the URL of the created issue or an error message.
-        /// </summary>
-        /// <summary>
         /// Uploads logs as a GitHub Gist and returns the URL.
         /// </summary>
         private async Task<string?> CreateLogsGist(System.Net.Http.HttpClient client, string title, string? jeLogs, string? jfLogs)
@@ -1541,7 +1537,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         /// <summary>
         /// Creates a GitHub issue + optional logs Gist using the provided auth token.
-        /// Shared logic for both admin PAT and Device Flow submission.
         /// </summary>
         private async Task<(string? url, int number, string? error)> CreateGitHubIssue(
             string token, string repo, string title, string? issueBody,
@@ -1588,60 +1583,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return (issueUrl, issueNumber, null);
         }
 
-        [HttpPost("submit-issue")]
-        [Authorize]
-        public async Task<ActionResult> SubmitGitHubIssue([FromBody] JsonElement body)
-        {
-            if (!IsAdminUser()) return Forbid();
-
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            if (config == null || string.IsNullOrWhiteSpace(config.GitHubIssueToken))
-                return BadRequest(new { error = "GitHub token not configured." });
-
-            var repo = config.GitHubIssueRepo?.Trim() ?? "";
-            if (!System.Text.RegularExpressions.Regex.IsMatch(repo, @"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$"))
-                return BadRequest(new { error = "Invalid repository format." });
-
-            var title = body.TryGetProperty("title", out var t) ? t.GetString() : null;
-            var issueBody = body.TryGetProperty("body", out var b) ? b.GetString() : null;
-            var labels = body.TryGetProperty("labels", out var l) ? l.GetString() : null;
-            var jeLogs = body.TryGetProperty("jeLogs", out var jl) ? jl.GetString() : null;
-            var jfLogs = body.TryGetProperty("jfLogs", out var jfl) ? jfl.GetString() : null;
-
-            if (string.IsNullOrWhiteSpace(title))
-                return BadRequest(new { error = "Title is required." });
-
-            try
-            {
-                var (url, number, error) = await CreateGitHubIssue(
-                    config.GitHubIssueToken.Trim(), repo, title, issueBody, labels, jeLogs, jfLogs);
-                if (error != null)
-                    return StatusCode(422, new { error });
-                return new JsonResult(new { url, number });
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("Failed to create GitHub issue: " + ex.Message);
-                return StatusCode(500, new { error = "Failed to create issue: " + ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Returns whether GitHub issue submission is configured (token present). No sensitive data returned.
-        /// </summary>
-        [HttpGet("github-issue-configured")]
-        [Authorize]
-        public ActionResult IsGitHubIssueConfigured()
-        {
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            return new JsonResult(new
-            {
-                configured = config != null && !string.IsNullOrWhiteSpace(config.GitHubIssueToken),
-                repo = config?.GitHubIssueRepo ?? ""
-            });
-        }
-
-        // GitHub Device Flow OAuth — allows users to authenticate without admin PAT
+        // GitHub Device Flow OAuth
         private const string GitHubDeviceFlowClientId = "Ov23likf6n8R5TydNYei";
 
         /// <summary>
@@ -1765,7 +1707,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return BadRequest(new { error = "title required" });
 
             if (string.IsNullOrWhiteSpace(repo))
-                repo = JellyfinEnhanced.Instance?.Configuration?.GitHubIssueRepo ?? "n00bcodr/Jellyfin-Enhanced";
+                repo = JellyfinEnhanced.Instance?.Configuration?.GitHubIssueRepo ?? "4eh5xitv6787h645ebv/Jellyfin-Enhanced";
 
             if (!System.Text.RegularExpressions.Regex.IsMatch(repo.Trim(), @"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$"))
                 return BadRequest(new { error = "Invalid repository format" });
@@ -1825,11 +1767,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         {
             if (!IsAdminUser()) return Forbid();
 
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            if (config == null || string.IsNullOrWhiteSpace(config.GitHubIssueToken))
-                return new JsonResult(new { results = Array.Empty<object>() });
-
-            var repo = config.GitHubIssueRepo?.Trim();
+            var repo = JellyfinEnhanced.Instance?.Configuration?.GitHubIssueRepo?.Trim();
             if (string.IsNullOrWhiteSpace(repo))
                 return new JsonResult(new { results = Array.Empty<object>() });
 
@@ -1842,7 +1780,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + config.GitHubIssueToken.Trim());
                 client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
                 client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
 

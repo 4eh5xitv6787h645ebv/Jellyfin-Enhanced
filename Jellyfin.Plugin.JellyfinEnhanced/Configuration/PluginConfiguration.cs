@@ -200,7 +200,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             HiddenContentUseCustomTabs = false;
 
             // GitHub Issue Reporter Settings
-            GitHubIssueToken = "";
             GitHubIssueRepo = "4eh5xitv6787h645ebv/Jellyfin-Enhanced";
         }
 
@@ -375,7 +374,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool HiddenContentUseCustomTabs { get; set; }
 
         // GitHub Issue Reporter Settings
-        public string GitHubIssueToken { get; set; }
         public string GitHubIssueRepo { get; set; }
     }
 }

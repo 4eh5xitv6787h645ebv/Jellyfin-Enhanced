@@ -1539,27 +1539,6 @@
                     </fieldset>
                 </div>
 
-                <!-- GitHub Issue Reporter Config (visible on all tabs) -->
-                <fieldset class="verticalSection-extrabottompadding" style="margin-top:1em;">
-                    <legend class="sectionTitle"><h3>GitHub Issue Reporter</h3></legend>
-                    <div class="configSection">
-                        <div class="fieldDescription" style="margin-bottom:1em;">
-                            <strong>Optional.</strong> Users can already submit issues by logging in with their own GitHub account (Device Flow).
-                            Setting a PAT here skips that login step — submissions happen instantly for all users on this server.
-                            Create a <a class="sectionTitle" target="_blank" href="https://github.com/settings/tokens?type=beta">fine-grained token</a> scoped to the target repo with "Issues: Write" and "Gists: Write" permissions.
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="gitHubIssueRepo">GitHub Repository (owner/repo)</label>
-                            <input id="gitHubIssueRepo" is="emby-input" type="text" placeholder="n00bcodr/Jellyfin-Enhanced" />
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="gitHubIssueToken">GitHub Personal Access Token</label>
-                            <input id="gitHubIssueToken" is="emby-input" type="password" placeholder="github_pat_..." />
-                            <div class="fieldDescription">Stored server-side only. Never sent to the browser.</div>
-                        </div>
-                    </div>
-                </fieldset>
-
                 <div
                     style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
@@ -2310,9 +2289,6 @@
                 document.querySelector('#loginImageEnabled').checked = config.EnableLoginImage || false;
                 document.querySelector('#customPluginLinks').value = config.CustomPluginLinks || '';
 
-                // GitHub Issue Reporter
-                document.querySelector('#gitHubIssueRepo').value = config.GitHubIssueRepo || 'n00bcodr/Jellyfin-Enhanced';
-                document.querySelector('#gitHubIssueToken').value = config.GitHubIssueToken || '';
 
                 // Set up event handler for watchlist prevention checkbox
                 function toggleWatchlistRetentionVisibility() {
@@ -2506,10 +2482,6 @@
 
             config.EnableLoginImage = document.querySelector('#loginImageEnabled').checked;
             config.CustomPluginLinks = document.querySelector('#customPluginLinks').value || '';
-
-            // GitHub Issue Reporter
-            config.GitHubIssueRepo = (document.querySelector('#gitHubIssueRepo').value || '').trim();
-            config.GitHubIssueToken = (document.querySelector('#gitHubIssueToken').value || '').trim();
 
             return config;
         }
@@ -3154,9 +3126,6 @@
         console.error = function() { captureConsole('error', _origConsoleError, arguments); };
         console.warn = function() { captureConsole('warn', _origConsoleWarn, arguments); };
 
-        // Target repo for issue submission (user's fork for testing)
-        var GITHUB_BASE = 'https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced/issues/new';
-
         var modal = document.getElementById('jeReportModal');
         var openBtn = document.getElementById('jeReportIssueBtn');
         var closeBtn = document.getElementById('jeReportCloseBtn');
@@ -3608,7 +3577,7 @@
             var title = titleInput.value.trim();
             var resultsDiv = document.getElementById('jeDuplicateResults');
             var listEl = document.getElementById('jeDuplicateList');
-            if (!githubApiConfigured || title.length < 5) {
+            if (title.length < 5) {
                 resultsDiv.style.display = 'none';
                 return;
             }
@@ -3770,20 +3739,7 @@
         jeLogsCheck.addEventListener('change', updateLogTimeVisibility);
         jfLogsCheck.addEventListener('change', updateLogTimeVisibility);
 
-        // Check if direct GitHub submission is configured and update button text
-        var githubApiConfigured = false;
-        var githubDeviceFlowAvailable = true; // Device Flow always available as fallback
-        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/github-issue-configured'), dataType: 'json' }).then(function(result) {
-            if (result && result.configured) {
-                githubApiConfigured = true;
-                submitBtn.textContent = 'Submit to GitHub';
-                submitBtn.style.background = 'rgba(80,180,80,0.35)';
-            } else {
-                // No admin PAT — show device flow option
-                submitBtn.textContent = 'Login & Submit to GitHub';
-                submitBtn.style.background = 'rgba(80,180,80,0.25)';
-            }
-        }).catch(function() { /* ignore, fallback to URL mode */ });
+        submitBtn.textContent = 'Login & Submit to GitHub';
 
         // Device Flow state
         var deviceFlowPollTimer = null;
@@ -3791,7 +3747,6 @@
 
         // Helper: POST to JE endpoint using fetch (ApiClient.ajax returns undefined for POST)
         function jePost(path, data) {
-            console.log('[JE-DeviceFlow] POST ' + path);
             return fetch(ApiClient.getUrl(path), {
                 method: 'POST',
                 headers: {
@@ -3800,10 +3755,8 @@
                 },
                 body: JSON.stringify(data || {})
             }).then(function(r) {
-                console.log('[JE-DeviceFlow] Response ' + path + ' status=' + r.status);
                 return r.json();
             }).catch(function(e) {
-                console.error('[JE-DeviceFlow] Error ' + path + ': ' + e.message);
                 throw e;
             });
         }
@@ -3821,7 +3774,6 @@
             msgDiv.style.color = '#999';
 
             jePost('/JellyfinEnhanced/github-device/start').then(function(data) {
-                console.log('[JE-DeviceFlow] Start OK: code=' + data.user_code + ' interval=' + data.interval);
                 codeDiv.textContent = data.user_code;
                 msgDiv.textContent = 'Waiting for you to authorize...';
                 document.getElementById('jeDeviceFlowLink').href = data.verification_uri;
@@ -3829,13 +3781,10 @@
 
                 var pollInterval = (data.interval || 5) * 1000;
                 var deviceCode = data.device_code;
-                console.log('[JE-DeviceFlow] Starting poll with interval ' + pollInterval + 'ms');
 
                 function schedulePoll() {
                     deviceFlowPollTimer = setTimeout(function() {
-                        console.log('[JE-DeviceFlow] Poll tick (interval=' + pollInterval + 'ms)');
                         jePost('/JellyfinEnhanced/github-device/poll', { device_code: deviceCode }).then(function(poll) {
-                            console.log('[JE-DeviceFlow] Poll result: status=' + poll.status);
                             if (poll.status === 'success' && poll.access_token) {
                                 deviceFlowPollTimer = null;
                                 msgDiv.textContent = 'Authorized! Creating issue...';
@@ -3847,7 +3796,6 @@
                                 resetSubmitButton();
                             } else if (poll.status === 'slow_down') {
                                 pollInterval += 5000; // GitHub requires +5s on slow_down
-                                console.log('[JE-DeviceFlow] Slowing down to ' + pollInterval + 'ms');
                                 schedulePoll();
                             } else {
                                 // authorization_pending — keep polling
@@ -3887,7 +3835,7 @@
 
         function resetSubmitButton() {
             document.getElementById('jeReportFieldset').disabled = false;
-            submitBtn.textContent = githubApiConfigured ? 'Submit to GitHub' : 'Login & Submit to GitHub';
+            submitBtn.textContent = 'Login & Submit to GitHub';
             submitBtn.disabled = false;
         }
 
@@ -3909,25 +3857,6 @@
                 var component = (document.getElementById('jeReportComponent') || {}).value;
                 if (component) labels = labels + ',' + component;
 
-                // Priority 1: Admin PAT configured — submit directly
-                if (githubApiConfigured) {
-                    return ApiClient.ajax({
-                        type: 'POST',
-                        url: ApiClient.getUrl('/JellyfinEnhanced/submit-issue'),
-                        data: JSON.stringify({ title: title, body: body, labels: labels, jeLogs: diagnostics.jeLogs || '', jfLogs: diagnostics.jellyfinLogs || '' }),
-                        contentType: 'application/json',
-                        dataType: 'json'
-                    }).then(function(result) {
-                        if (result && result.url) {
-                            showSuccessState(result.url, result.number);
-                        }
-                    }).catch(function() {
-                        // PAT failed — silently fall back to Device Flow
-                        startDeviceFlow({ title: title, body: body, labels: labels, jeLogs: diagnostics.jeLogs || '', jfLogs: diagnostics.jellyfinLogs || '' });
-                    });
-                }
-
-                // Priority 2: Device Flow — user authenticates with GitHub
                 startDeviceFlow({ title: title, body: body, labels: labels, jeLogs: diagnostics.jeLogs || '', jfLogs: diagnostics.jellyfinLogs || '' });
             }).catch(function(e) {
                 Dashboard.alert({ title: 'Error', message: 'Failed to prepare report: ' + (e.message || e) });
@@ -3935,30 +3864,6 @@
             });
         });
 
-        function openViaUrl(title, body, labels) {
-            var params = new URLSearchParams({ title: title, body: body, labels: labels });
-            var url = GITHUB_BASE + '?' + params.toString();
-            if (url.length > 7500) {
-                var copyPromise = navigator.clipboard && navigator.clipboard.writeText
-                    ? navigator.clipboard.writeText(body)
-                    : Promise.reject('no clipboard');
-                copyPromise.then(function() {
-                    Dashboard.alert({
-                        title: 'Report Too Large',
-                        message: 'The report body has been copied to your clipboard. GitHub will open with just the title \u2014 please paste the body manually.'
-                    });
-                    var shortParams = new URLSearchParams({ title: title, labels: labels });
-                    window.open(GITHUB_BASE + '?' + shortParams.toString(), '_blank');
-                }).catch(function() {
-                    Dashboard.alert({
-                        title: 'Report Too Large',
-                        message: 'The report is too large for a URL. Please use "Copy to Clipboard" and paste it manually on GitHub.'
-                    });
-                });
-            } else {
-                window.open(url, '_blank');
-            }
-        }
 
         // Copy to clipboard
         copyBtn.addEventListener('click', function() {
