@@ -1544,8 +1544,9 @@
                     <legend class="sectionTitle"><h3>GitHub Issue Reporter</h3></legend>
                     <div class="configSection">
                         <div class="fieldDescription" style="margin-bottom:1em;">
-                            Configure a GitHub Personal Access Token to submit bug reports and feature requests directly from JE.
-                            Create a <a class="sectionTitle" target="_blank" href="https://github.com/settings/tokens?type=beta">fine-grained token</a> scoped to the target repo with "Issues: Write" permission only.
+                            <strong>Optional.</strong> Users can already submit issues by logging in with their own GitHub account (Device Flow).
+                            Setting a PAT here skips that login step — submissions happen instantly for all users on this server.
+                            Create a <a class="sectionTitle" target="_blank" href="https://github.com/settings/tokens?type=beta">fine-grained token</a> scoped to the target repo with "Issues: Write" and "Gists: Write" permissions.
                         </div>
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="gitHubIssueRepo">GitHub Repository (owner/repo)</label>
