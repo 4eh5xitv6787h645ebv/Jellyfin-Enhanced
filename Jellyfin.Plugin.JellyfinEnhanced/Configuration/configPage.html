@@ -1714,6 +1714,7 @@
                         <h3 style="color:#88ff88; margin:0 0 0.5em;">Issue Created Successfully</h3>
                         <p id="jeReportSuccessLink" style="margin:0 0 1em;"></p>
                         <p id="jeReportSuccessCountdown" style="color:#999; font-size:0.9em; margin:0;"></p>
+                        <button id="jeReportSuccessClose" type="button" style="margin-top:1em; padding:0.6em 2em; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:#ccc; border-radius:6px; cursor:pointer; font-size:0.95em;">Close</button>
                     </div>
                     </div><!-- /je-report-form -->
 
@@ -3572,6 +3573,7 @@
         var successCountdownId = null;
         function showSuccessState(issueUrl, issueNumber) {
             document.getElementById('jeReportFieldset').style.display = 'none';
+            document.getElementById('jeDeviceFlowStatus').style.display = 'none';
             var successDiv = document.getElementById('jeReportSuccess');
             successDiv.style.display = 'block';
             var linkEl = document.getElementById('jeReportSuccessLink');
@@ -3582,19 +3584,8 @@
             a.style.color = '#aaccff';
             a.textContent = '#' + issueNumber + ' - View on GitHub';
             linkEl.appendChild(a);
-            var countdown = 3;
-            var countdownEl = document.getElementById('jeReportSuccessCountdown');
-            countdownEl.textContent = 'Closing in ' + countdown + '...';
-            successCountdownId = setInterval(function() {
-                countdown--;
-                if (countdown <= 0) {
-                    clearInterval(successCountdownId);
-                    successCountdownId = null;
-                    closeModal();
-                } else {
-                    countdownEl.textContent = 'Closing in ' + countdown + '...';
-                }
-            }, 1000);
+            document.getElementById('jeReportSuccessCountdown').textContent = '';
+            document.getElementById('jeReportSuccessClose').onclick = closeModal;
         }
 
         // Cleanup success state on modal close
@@ -3864,7 +3855,8 @@
                         }).catch(function() { schedulePoll(); });
                     }, pollInterval);
                 }
-                schedulePoll();
+                // Delay first poll 15s to give user time to authorize
+                deviceFlowPollTimer = setTimeout(schedulePoll, 15000);
             }).catch(function() {
                 msgDiv.textContent = 'Failed to start GitHub login.';
                 msgDiv.style.color = '#ff8888';
