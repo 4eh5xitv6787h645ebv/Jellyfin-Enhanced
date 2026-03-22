@@ -3494,12 +3494,12 @@
                 parts.push('</details>\n');
             }
 
-            // Screenshot placeholders (actual images uploaded to Gist)
+            // Screenshot references (actual images embedded by server in issue body)
             if (jeScreenshots.length > 0) {
                 parts.push('### Screenshots');
                 for (var si = 0; si < jeScreenshots.length; si++) {
                     var ssTitle = jeScreenshots[si].title || ('Screenshot ' + (si + 1));
-                    parts.push('**' + ssTitle + ':** _(see attached Gist)_');
+                    parts.push('**' + ssTitle + '** _(embedded below)_');
                 }
                 parts.push('');
             }

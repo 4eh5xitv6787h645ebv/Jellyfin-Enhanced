@@ -1496,11 +1496,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// Uploads logs as a GitHub Gist and returns the URL.
         /// </summary>
         private async Task<string?> CreateLogsGist(System.Net.Http.HttpClient client, string title,
-            string? jeLogs, string? jfLogs, List<(string title, string dataUrl)>? screenshots = null)
+            string? jeLogs, string? jfLogs)
         {
-            var hasLogs = !string.IsNullOrWhiteSpace(jeLogs) || !string.IsNullOrWhiteSpace(jfLogs);
-            var hasScreenshots = screenshots != null && screenshots.Count > 0;
-            if (!hasLogs && !hasScreenshots) return null;
+            if (string.IsNullOrWhiteSpace(jeLogs) && string.IsNullOrWhiteSpace(jfLogs)) return null;
 
             try
             {
@@ -1510,24 +1508,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 if (!string.IsNullOrWhiteSpace(jfLogs))
                     files["jellyfin-server-logs.txt"] = new { content = jfLogs };
 
-                // Add screenshots as a markdown file with embedded images
-                if (hasScreenshots)
-                {
-                    var sb = new StringBuilder();
-                    sb.AppendLine("# Screenshots");
-                    sb.AppendLine();
-                    for (int i = 0; i < screenshots!.Count; i++)
-                    {
-                        var ss = screenshots[i];
-                        sb.AppendLine("## " + (string.IsNullOrWhiteSpace(ss.title) ? "Screenshot " + (i + 1) : ss.title));
-                        sb.AppendLine();
-                        sb.AppendLine("![" + (ss.title ?? "screenshot") + "](" + ss.dataUrl + ")");
-                        sb.AppendLine();
-                    }
-                    files["screenshots.md"] = new { content = sb.ToString() };
-                }
-
-                var description = "JE Issue Reporter" + (hasLogs ? " Logs" : "") + (hasScreenshots ? " + Screenshots" : "") + ": " + title;
+                var description = "JE Issue Reporter Logs: " + title;
                 var gistPayload = new Dictionary<string, object>
                 {
                     { "description", description },
@@ -1569,14 +1550,27 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
 
-            // Upload logs + screenshots as Gist
-            var gistUrl = await CreateLogsGist(client, title, jeLogs, jfLogs, screenshots);
+            // Upload logs as Gist (screenshots go inline in issue body instead)
+            var gistUrl = await CreateLogsGist(client, title, jeLogs, jfLogs);
             if (gistUrl != null && !string.IsNullOrEmpty(issueBody))
             {
-                var hasLogs = !string.IsNullOrWhiteSpace(jeLogs) || !string.IsNullOrWhiteSpace(jfLogs);
-                var hasScreenshots = screenshots != null && screenshots.Count > 0;
-                var attachLabel = (hasLogs && hasScreenshots) ? "Logs & Screenshots" : hasScreenshots ? "Screenshots" : "Logs";
-                issueBody += "\n\n### " + attachLabel + "\n[View on GitHub Gist](" + gistUrl + ")";
+                issueBody += "\n\n### Logs\n[View full logs on GitHub Gist](" + gistUrl + ")";
+            }
+
+            // Embed screenshots directly in issue body (GitHub renders base64 images)
+            if (screenshots != null && screenshots.Count > 0 && !string.IsNullOrEmpty(issueBody))
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("\n\n### Screenshots");
+                for (int i = 0; i < screenshots.Count; i++)
+                {
+                    var ss = screenshots[i];
+                    var ssTitle = string.IsNullOrWhiteSpace(ss.title) ? "Screenshot " + (i + 1) : ss.title;
+                    sb.AppendLine("**" + ssTitle + "**");
+                    sb.AppendLine("![](" + ss.dataUrl + ")");
+                    sb.AppendLine();
+                }
+                issueBody += sb.ToString();
             }
 
             // Truncate body if still too long (shouldn't happen without inline logs)
