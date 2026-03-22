@@ -1493,6 +1493,116 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
         /// <summary>
+        /// Uploads screenshots to a 'screenshots' branch in the repo via the Contents API.
+        /// Returns a list of (title, raw URL) pairs for embedding in the issue body.
+        /// </summary>
+        private async Task<List<(string title, string url)>> UploadScreenshots(
+            System.Net.Http.HttpClient client, string repo,
+            List<(string title, string dataUrl)> screenshots)
+        {
+            var results = new List<(string title, string url)>();
+            var branch = "screenshots";
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+
+            // Ensure the screenshots branch exists
+            await EnsureBranchExists(client, repo, branch);
+
+            for (int i = 0; i < screenshots.Count; i++)
+            {
+                try
+                {
+                    var ss = screenshots[i];
+                    // Extract base64 content from data URL (strip "data:image/png;base64," prefix)
+                    var base64Data = ss.dataUrl;
+                    var commaIdx = base64Data.IndexOf(',');
+                    if (commaIdx >= 0) base64Data = base64Data.Substring(commaIdx + 1);
+
+                    // Determine file extension from data URL
+                    var ext = "jpg";
+                    if (ss.dataUrl.Contains("image/png")) ext = "png";
+                    else if (ss.dataUrl.Contains("image/gif")) ext = "gif";
+                    else if (ss.dataUrl.Contains("image/webp")) ext = "webp";
+
+                    var safeName = System.Text.RegularExpressions.Regex.Replace(
+                        ss.title ?? "screenshot", @"[^a-zA-Z0-9_-]", "_");
+                    var path = timestamp + "/" + safeName + "-" + (i + 1) + "." + ext;
+
+                    var uploadPayload = new Dictionary<string, object>
+                    {
+                        { "message", "Screenshot: " + (ss.title ?? "screenshot") },
+                        { "content", base64Data },
+                        { "branch", branch }
+                    };
+
+                    var json = JsonSerializer.Serialize(uploadPayload);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = await client.PutAsync(
+                        "https://api.github.com/repos/" + repo + "/contents/" + path, content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var rawUrl = "https://raw.githubusercontent.com/" + repo + "/" + branch + "/" + path;
+                        results.Add((ss.title ?? "Screenshot " + (i + 1), rawUrl));
+                        _logger.Info("Uploaded screenshot: " + rawUrl);
+                    }
+                    else
+                    {
+                        var err = await response.Content.ReadAsStringAsync();
+                        _logger.Warning("Screenshot upload failed: " + response.StatusCode + " " + err);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning("Screenshot upload error: " + ex.Message);
+                }
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// Ensures the 'screenshots' orphan branch exists in the repo.
+        /// Creates it with an empty README if it doesn't exist.
+        /// </summary>
+        private async Task EnsureBranchExists(System.Net.Http.HttpClient client, string repo, string branch)
+        {
+            try
+            {
+                // Check if branch exists
+                var checkResponse = await client.GetAsync(
+                    "https://api.github.com/repos/" + repo + "/branches/" + branch);
+                if (checkResponse.IsSuccessStatusCode) return; // branch exists
+
+                // Get the default branch's latest commit SHA to use as base
+                var repoResponse = await client.GetAsync("https://api.github.com/repos/" + repo);
+                if (!repoResponse.IsSuccessStatusCode) return;
+                var repoBody = await repoResponse.Content.ReadAsStringAsync();
+                using var repoDoc = JsonDocument.Parse(repoBody);
+                var defaultBranch = repoDoc.RootElement.GetProperty("default_branch").GetString() ?? "main";
+
+                var refResponse = await client.GetAsync(
+                    "https://api.github.com/repos/" + repo + "/git/ref/heads/" + defaultBranch);
+                if (!refResponse.IsSuccessStatusCode) return;
+                var refBody = await refResponse.Content.ReadAsStringAsync();
+                using var refDoc = JsonDocument.Parse(refBody);
+                var sha = refDoc.RootElement.GetProperty("object").GetProperty("sha").GetString();
+
+                // Create the branch
+                var createPayload = JsonSerializer.Serialize(new
+                {
+                    @ref = "refs/heads/" + branch,
+                    sha
+                });
+                var createContent = new StringContent(createPayload, Encoding.UTF8, "application/json");
+                await client.PostAsync("https://api.github.com/repos/" + repo + "/git/refs", createContent);
+                _logger.Info("Created screenshots branch in " + repo);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Failed to ensure screenshots branch: " + ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Uploads logs as a GitHub Gist and returns the URL.
         /// </summary>
         private async Task<string?> CreateLogsGist(System.Net.Http.HttpClient client, string title,
@@ -1557,20 +1667,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 issueBody += "\n\n### Logs\n[View full logs on GitHub Gist](" + gistUrl + ")";
             }
 
-            // Embed screenshots directly in issue body (GitHub renders base64 images)
+            // Upload screenshots to repo's 'screenshots' branch via Contents API
             if (screenshots != null && screenshots.Count > 0 && !string.IsNullOrEmpty(issueBody))
             {
-                var sb = new StringBuilder();
-                sb.AppendLine("\n\n### Screenshots");
-                for (int i = 0; i < screenshots.Count; i++)
+                var imageUrls = await UploadScreenshots(client, repo, screenshots);
+                if (imageUrls.Count > 0)
                 {
-                    var ss = screenshots[i];
-                    var ssTitle = string.IsNullOrWhiteSpace(ss.title) ? "Screenshot " + (i + 1) : ss.title;
-                    sb.AppendLine("**" + ssTitle + "**");
-                    sb.AppendLine("![](" + ss.dataUrl + ")");
-                    sb.AppendLine();
+                    var sb = new StringBuilder();
+                    sb.AppendLine("\n\n### Screenshots");
+                    for (int i = 0; i < imageUrls.Count; i++)
+                    {
+                        sb.AppendLine("**" + imageUrls[i].title + "**");
+                        sb.AppendLine("![" + imageUrls[i].title + "](" + imageUrls[i].url + ")");
+                        sb.AppendLine();
+                    }
+                    issueBody += sb.ToString();
                 }
-                issueBody += sb.ToString();
             }
 
             // Truncate body if still too long (shouldn't happen without inline logs)
