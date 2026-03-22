@@ -3679,22 +3679,52 @@
             screenshotFileInput.click();
         });
 
+        // Compress image via canvas — max 1280px wide, JPEG quality 0.7
+        // Keeps total base64 under ~40KB per image for GitHub body limit
+        function compressImage(file, callback) {
+            var img = new Image();
+            img.onload = function() {
+                var maxWidth = 1280;
+                var maxHeight = 960;
+                var w = img.width;
+                var h = img.height;
+                if (w > maxWidth || h > maxHeight) {
+                    var ratio = Math.min(maxWidth / w, maxHeight / h);
+                    w = Math.round(w * ratio);
+                    h = Math.round(h * ratio);
+                }
+                var canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                callback(dataUrl);
+            };
+            img.onerror = function() {
+                // Fallback to raw file if canvas fails
+                var reader = new FileReader();
+                reader.onload = function(e) { callback(e.target.result); };
+                reader.readAsDataURL(file);
+            };
+            var reader = new FileReader();
+            reader.onload = function(e) { img.src = e.target.result; };
+            reader.readAsDataURL(file);
+        }
+
         screenshotFileInput.addEventListener('change', function() {
             var files = screenshotFileInput.files;
             for (var i = 0; i < files.length; i++) {
                 (function(file) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        var screenshot = {
+                    compressImage(file, function(dataUrl) {
+                        jeScreenshots.push({
                             title: file.name.replace(/\.[^.]+$/, ''),
-                            dataUrl: e.target.result,
+                            dataUrl: dataUrl,
                             fileName: file.name
-                        };
-                        jeScreenshots.push(screenshot);
+                        });
                         renderScreenshots();
                         scheduleLivePreview();
-                    };
-                    reader.readAsDataURL(file);
+                    });
                 })(files[i]);
             }
             screenshotFileInput.value = '';
