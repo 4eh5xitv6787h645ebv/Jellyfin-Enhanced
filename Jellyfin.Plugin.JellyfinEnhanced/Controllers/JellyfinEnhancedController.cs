@@ -1495,9 +1495,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// <summary>
         /// Uploads logs as a GitHub Gist and returns the URL.
         /// </summary>
-        private async Task<string?> CreateLogsGist(System.Net.Http.HttpClient client, string title, string? jeLogs, string? jfLogs)
+        private async Task<string?> CreateLogsGist(System.Net.Http.HttpClient client, string title,
+            string? jeLogs, string? jfLogs, List<(string title, string dataUrl)>? screenshots = null)
         {
-            if (string.IsNullOrWhiteSpace(jeLogs) && string.IsNullOrWhiteSpace(jfLogs)) return null;
+            var hasLogs = !string.IsNullOrWhiteSpace(jeLogs) || !string.IsNullOrWhiteSpace(jfLogs);
+            var hasScreenshots = screenshots != null && screenshots.Count > 0;
+            if (!hasLogs && !hasScreenshots) return null;
 
             try
             {
@@ -1507,9 +1510,27 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 if (!string.IsNullOrWhiteSpace(jfLogs))
                     files["jellyfin-server-logs.txt"] = new { content = jfLogs };
 
+                // Add screenshots as a markdown file with embedded images
+                if (hasScreenshots)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("# Screenshots");
+                    sb.AppendLine();
+                    for (int i = 0; i < screenshots!.Count; i++)
+                    {
+                        var ss = screenshots[i];
+                        sb.AppendLine("## " + (string.IsNullOrWhiteSpace(ss.title) ? "Screenshot " + (i + 1) : ss.title));
+                        sb.AppendLine();
+                        sb.AppendLine("![" + (ss.title ?? "screenshot") + "](" + ss.dataUrl + ")");
+                        sb.AppendLine();
+                    }
+                    files["screenshots.md"] = new { content = sb.ToString() };
+                }
+
+                var description = "JE Issue Reporter" + (hasLogs ? " Logs" : "") + (hasScreenshots ? " + Screenshots" : "") + ": " + title;
                 var gistPayload = new Dictionary<string, object>
                 {
-                    { "description", "JE Issue Reporter Logs: " + title },
+                    { "description", description },
                     { "public", false },
                     { "files", files }
                 };
@@ -1540,18 +1561,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// </summary>
         private async Task<(string? url, int number, string? error)> CreateGitHubIssue(
             string token, string repo, string title, string? issueBody,
-            string? labels, string? jeLogs, string? jfLogs)
+            string? labels, string? jeLogs, string? jfLogs,
+            List<(string title, string dataUrl)>? screenshots = null)
         {
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
             client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
             client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
 
-            // Upload logs as Gist if present
-            var gistUrl = await CreateLogsGist(client, title, jeLogs, jfLogs);
+            // Upload logs + screenshots as Gist
+            var gistUrl = await CreateLogsGist(client, title, jeLogs, jfLogs, screenshots);
             if (gistUrl != null && !string.IsNullOrEmpty(issueBody))
             {
-                issueBody += "\n\n### Logs\n[View full logs on GitHub Gist](" + gistUrl + ")";
+                var hasLogs = !string.IsNullOrWhiteSpace(jeLogs) || !string.IsNullOrWhiteSpace(jfLogs);
+                var hasScreenshots = screenshots != null && screenshots.Count > 0;
+                var attachLabel = (hasLogs && hasScreenshots) ? "Logs & Screenshots" : hasScreenshots ? "Screenshots" : "Logs";
+                issueBody += "\n\n### " + attachLabel + "\n[View on GitHub Gist](" + gistUrl + ")";
             }
 
             // Truncate body if still too long (shouldn't happen without inline logs)
@@ -1701,6 +1726,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var jeLogs = body.TryGetProperty("jeLogs", out var jl) ? jl.GetString() : null;
             var jfLogs = body.TryGetProperty("jfLogs", out var jfl) ? jfl.GetString() : null;
 
+            // Parse screenshots array
+            List<(string title, string dataUrl)>? screenshots = null;
+            if (body.TryGetProperty("screenshots", out var ssArr) && ssArr.ValueKind == JsonValueKind.Array)
+            {
+                screenshots = new List<(string, string)>();
+                foreach (var ss in ssArr.EnumerateArray())
+                {
+                    var ssTitle = ss.TryGetProperty("title", out var st) ? st.GetString() ?? "" : "";
+                    var ssData = ss.TryGetProperty("dataUrl", out var sd) ? sd.GetString() ?? "" : "";
+                    if (!string.IsNullOrEmpty(ssData))
+                        screenshots.Add((ssTitle, ssData));
+                }
+            }
+
             if (string.IsNullOrWhiteSpace(accessToken))
                 return BadRequest(new { error = "access_token required" });
             if (string.IsNullOrWhiteSpace(title))
@@ -1715,7 +1754,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             try
             {
                 var (url, number, error) = await CreateGitHubIssue(
-                    accessToken.Trim(), repo.Trim(), title, issueBody, labels, jeLogs, jfLogs);
+                    accessToken.Trim(), repo.Trim(), title, issueBody, labels, jeLogs, jfLogs, screenshots);
                 if (error != null)
                     return StatusCode(422, new { error });
                 return new JsonResult(new { url, number });
