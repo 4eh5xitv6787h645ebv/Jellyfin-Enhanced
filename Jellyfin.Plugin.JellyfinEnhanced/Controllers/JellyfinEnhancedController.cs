@@ -1750,6 +1750,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return Forbid();
             }
 
+            // Throttle GitHub API calls to avoid hitting rate limits (60/hour unauthenticated)
+            lock (_updateCheckThrottleLock)
+            {
+                if ((DateTime.UtcNow - _lastUpdateCheck).TotalSeconds < 30)
+                {
+                    return StatusCode(429, "Please wait at least 30 seconds between update checks");
+                }
+                _lastUpdateCheck = DateTime.UtcNow;
+            }
+
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null)
             {
@@ -1772,10 +1782,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
-                var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, _githubJsonOptions);
 
                 if (releases == null)
                 {
@@ -2040,10 +2047,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     if (response.IsSuccessStatusCode)
                     {
                         var json = await response.Content.ReadAsStringAsync();
-                        var release = JsonSerializer.Deserialize<GitHubRelease>(json, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
+                        var release = JsonSerializer.Deserialize<GitHubRelease>(json, _githubJsonOptions);
                         if (release?.TagName != null)
                         {
                             config.StableVersionAtChannelSwitch = release.TagName.TrimStart('v');
@@ -2083,6 +2087,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             return 0;
         }
+
+        private static readonly JsonSerializerOptions _githubJsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        private static DateTime _lastUpdateCheck = DateTime.MinValue;
+        private static readonly object _updateCheckThrottleLock = new();
 
         private sealed class GitHubRelease
         {
