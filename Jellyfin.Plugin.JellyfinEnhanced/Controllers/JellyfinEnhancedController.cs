@@ -1750,16 +1750,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return Forbid();
             }
 
-            // Throttle GitHub API calls to avoid hitting rate limits (60/hour unauthenticated)
-            lock (_updateCheckThrottleLock)
-            {
-                if ((DateTime.UtcNow - _lastUpdateCheck).TotalSeconds < 30)
-                {
-                    return StatusCode(429, "Please wait at least 30 seconds between update checks");
-                }
-                _lastUpdateCheck = DateTime.UtcNow;
-            }
-
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null)
             {
@@ -1771,18 +1761,31 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
             try
             {
-                var httpClient = _httpClientFactory.CreateClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(15);
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-Plugin");
-
-                var response = await httpClient.GetAsync("https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/releases");
-                if (!response.IsSuccessStatusCode)
+                // Use cached releases if available and fresh
+                List<GitHubRelease>? releases;
+                if (_releasesCache != null && (DateTime.UtcNow - _releasesCacheTime) < _releasesCacheTtl)
                 {
-                    return StatusCode((int)response.StatusCode, "Failed to fetch releases from GitHub");
+                    releases = _releasesCache;
                 }
+                else
+                {
+                    var httpClient = _httpClientFactory.CreateClient();
+                    httpClient.Timeout = TimeSpan.FromSeconds(15);
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-Plugin");
 
-                var json = await response.Content.ReadAsStringAsync();
-                var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, _githubJsonOptions);
+                    var response = await httpClient.GetAsync("https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/releases");
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return StatusCode((int)response.StatusCode, "Failed to fetch releases from GitHub");
+                    }
+
+                    var json = await response.Content.ReadAsStringAsync();
+                    releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, _githubJsonOptions);
+
+                    // Cache the result
+                    _releasesCache = releases;
+                    _releasesCacheTime = DateTime.UtcNow;
+                }
 
                 if (releases == null)
                 {
@@ -2093,8 +2096,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             PropertyNameCaseInsensitive = true
         };
 
-        private static DateTime _lastUpdateCheck = DateTime.MinValue;
-        private static readonly object _updateCheckThrottleLock = new();
+        private static List<GitHubRelease>? _releasesCache = null;
+        private static DateTime _releasesCacheTime = DateTime.MinValue;
+        private static readonly TimeSpan _releasesCacheTtl = TimeSpan.FromMinutes(2);
 
         private sealed class GitHubRelease
         {
