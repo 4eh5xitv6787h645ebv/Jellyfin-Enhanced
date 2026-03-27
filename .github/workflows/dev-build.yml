@@ -1,0 +1,47 @@
+name: Dev Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build plugin
+        run: dotnet build Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj -c Release
+
+      - name: Package plugin
+        run: |
+          mkdir -p release
+          cd Jellyfin.Plugin.JellyfinEnhanced/bin/Release/net9.0
+          zip -j ../../../../release/Jellyfin.Plugin.JellyfinEnhanced_dev.zip \
+            Jellyfin.Plugin.JellyfinEnhanced.dll
+          cd ../../../..
+
+      - name: Update dev-latest release
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: dev-latest
+          name: "Development Build"
+          body: |
+            Automated development build from the latest `main` branch.
+
+            > This is a pre-release build intended for testing. Use at your own risk.
+          artifacts: "release/Jellyfin.Plugin.JellyfinEnhanced_dev.zip"
+          prerelease: true
+          allowUpdates: true
+          removeArtifacts: true
+          makeLatest: false

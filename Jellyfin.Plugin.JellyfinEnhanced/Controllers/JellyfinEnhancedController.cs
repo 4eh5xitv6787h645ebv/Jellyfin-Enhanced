@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.IO.Compression;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -1735,6 +1736,347 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public ActionResult GetScript(string path) => GetScriptResource($"js/{path}");
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
+
+        /// <summary>
+        /// Checks GitHub for available plugin versions based on the configured update channel.
+        /// Returns a list of releases (stable and/or dev) along with the current version and channel info.
+        /// </summary>
+        [HttpGet("updates/check")]
+        [Authorize]
+        public async Task<IActionResult> CheckForUpdates()
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+            {
+                return StatusCode(503, "Plugin not initialized");
+            }
+
+            var currentVersion = JellyfinEnhanced.Instance?.Version?.ToString() ?? "0.0.0.0";
+            var channel = config.UpdateChannel ?? "Stable";
+
+            try
+            {
+                var httpClient = _httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(15);
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-Plugin");
+
+                var response = await httpClient.GetAsync("https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/releases");
+                if (!response.IsSuccessStatusCode)
+                {
+                    return StatusCode((int)response.StatusCode, "Failed to fetch releases from GitHub");
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (releases == null)
+                {
+                    return StatusCode(502, "Failed to parse GitHub releases");
+                }
+
+                var versions = new List<object>();
+                string? latestStableVersion = null;
+
+                foreach (var release in releases)
+                {
+                    var tagName = release.TagName ?? "";
+                    var isDev = release.Prerelease;
+                    var isDevLatest = tagName == "dev-latest";
+                    var versionString = tagName.TrimStart('v');
+
+                    // Find the download URL for the zip asset
+                    var asset = release.Assets?.FirstOrDefault(a =>
+                        a.Name != null && a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+                    var downloadUrl = asset?.BrowserDownloadUrl ?? "";
+
+                    if (isDevLatest)
+                    {
+                        versions.Add(new
+                        {
+                            version = "dev-latest",
+                            displayName = "Development (latest from main)",
+                            tag = tagName,
+                            isDevelopment = true,
+                            publishedAt = release.PublishedAt,
+                            downloadUrl
+                        });
+                    }
+                    else if (!string.IsNullOrEmpty(versionString))
+                    {
+                        if (latestStableVersion == null && !isDev)
+                        {
+                            latestStableVersion = versionString;
+                        }
+
+                        versions.Add(new
+                        {
+                            version = versionString,
+                            displayName = $"v{versionString}" + (isDev ? " (pre-release)" : ""),
+                            tag = tagName,
+                            isDevelopment = isDev,
+                            publishedAt = release.PublishedAt,
+                            downloadUrl
+                        });
+                    }
+                }
+
+                // Handle DevUntilNextStable auto-switch
+                var effectiveChannel = channel;
+                if (channel == "DevUntilNextStable" && !string.IsNullOrEmpty(config.StableVersionAtChannelSwitch) && latestStableVersion != null)
+                {
+                    if (CompareVersionStrings(latestStableVersion, config.StableVersionAtChannelSwitch) > 0)
+                    {
+                        // A newer stable release exists — signal the client to switch back
+                        effectiveChannel = "SwitchingToStable";
+                    }
+                }
+
+                return new JsonResult(new
+                {
+                    currentVersion,
+                    channel = effectiveChannel,
+                    stableVersionAtSwitch = config.StableVersionAtChannelSwitch ?? "",
+                    latestStableVersion = latestStableVersion ?? "",
+                    versions
+                });
+            }
+            catch (TaskCanceledException)
+            {
+                return StatusCode(504, "Request to GitHub timed out");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to check for updates: {ex.Message}");
+                return StatusCode(500, "Failed to check for updates");
+            }
+        }
+
+        /// <summary>
+        /// Downloads and installs a specific plugin version from GitHub releases.
+        /// Replaces the current plugin DLL; a server restart is required afterward.
+        /// </summary>
+        [HttpPost("updates/install")]
+        [Authorize]
+        public async Task<IActionResult> InstallUpdate([FromQuery] string downloadUrl)
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            if (string.IsNullOrWhiteSpace(downloadUrl))
+            {
+                return BadRequest("downloadUrl is required");
+            }
+
+            // Only allow downloads from the official GitHub releases
+            if (!downloadUrl.StartsWith("https://github.com/n00bcodr/Jellyfin-Enhanced/releases/", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Download URL must be from the official Jellyfin-Enhanced GitHub releases");
+            }
+
+            try
+            {
+                var httpClient = _httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(60);
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-Plugin");
+
+                var zipBytes = await httpClient.GetByteArrayAsync(downloadUrl);
+
+                // Find the plugin directory
+                var pluginInstance = JellyfinEnhanced.Instance;
+                if (pluginInstance == null)
+                {
+                    return StatusCode(503, "Plugin not initialized");
+                }
+
+                var assemblyPath = pluginInstance.GetType().Assembly.Location;
+                var pluginDir = Path.GetDirectoryName(assemblyPath);
+
+                if (string.IsNullOrEmpty(pluginDir) || !Directory.Exists(pluginDir))
+                {
+                    return StatusCode(500, "Could not determine plugin directory");
+                }
+
+                // Extract zip to a temp directory first
+                var tempDir = Path.Combine(Path.GetTempPath(), $"je-update-{Guid.NewGuid():N}");
+                Directory.CreateDirectory(tempDir);
+
+                try
+                {
+                    var tempZipPath = Path.Combine(tempDir, "update.zip");
+                    await System.IO.File.WriteAllBytesAsync(tempZipPath, zipBytes);
+
+                    // Extract with zip-slip protection
+                    using (var archive = ZipFile.OpenRead(tempZipPath))
+                    {
+                        foreach (var entry in archive.Entries)
+                        {
+                            if (string.IsNullOrEmpty(entry.Name)) continue; // skip directories
+                            var destPath = Path.GetFullPath(Path.Combine(tempDir, entry.FullName));
+                            if (!destPath.StartsWith(Path.GetFullPath(tempDir) + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                                && destPath != Path.GetFullPath(tempDir))
+                            {
+                                throw new InvalidOperationException("Zip entry has a path outside the target directory");
+                            }
+                            var entryDir = Path.GetDirectoryName(destPath);
+                            if (!string.IsNullOrEmpty(entryDir)) Directory.CreateDirectory(entryDir);
+                            entry.ExtractToFile(destPath, overwrite: true);
+                        }
+                    }
+
+                    // Find the DLL in the extracted files
+                    var dllFiles = Directory.GetFiles(tempDir, "*.dll", SearchOption.AllDirectories);
+                    var pluginDll = dllFiles.FirstOrDefault(f =>
+                        Path.GetFileName(f).Equals("Jellyfin.Plugin.JellyfinEnhanced.dll", StringComparison.OrdinalIgnoreCase));
+
+                    if (pluginDll == null)
+                    {
+                        return StatusCode(422, "Could not find plugin DLL in the downloaded archive");
+                    }
+
+                    // Copy the new DLL over the existing one
+                    var targetPath = Path.Combine(pluginDir, "Jellyfin.Plugin.JellyfinEnhanced.dll");
+                    System.IO.File.Copy(pluginDll, targetPath, overwrite: true);
+
+                    _logger.Info($"Plugin update installed successfully from: {downloadUrl}");
+
+                    return new JsonResult(new
+                    {
+                        success = true,
+                        message = "Update installed successfully. Please restart Jellyfin to apply the changes."
+                    });
+                }
+                finally
+                {
+                    // Clean up temp directory
+                    try { Directory.Delete(tempDir, true); }
+                    catch { /* best effort cleanup */ }
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                return StatusCode(504, "Download timed out");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to install update: {ex.Message}");
+                return StatusCode(500, $"Failed to install update: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Updates the update channel setting and records the current stable version for DevUntilNextStable tracking.
+        /// </summary>
+        [HttpPost("updates/channel")]
+        [Authorize]
+        public async Task<IActionResult> SetUpdateChannel([FromQuery] string channel)
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            var validChannels = new[] { "Stable", "Development", "DevUntilNextStable" };
+            if (string.IsNullOrWhiteSpace(channel) || !validChannels.Contains(channel))
+            {
+                return BadRequest("Invalid channel. Must be one of: Stable, Development, DevUntilNextStable");
+            }
+
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+            {
+                return StatusCode(503, "Plugin not initialized");
+            }
+
+            config.UpdateChannel = channel;
+
+            // When switching to a dev channel, record the current latest stable version
+            if (channel == "Development" || channel == "DevUntilNextStable")
+            {
+                try
+                {
+                    var httpClient = _httpClientFactory.CreateClient();
+                    httpClient.Timeout = TimeSpan.FromSeconds(10);
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-Plugin");
+
+                    var response = await httpClient.GetAsync("https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/releases/latest");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        var release = JsonSerializer.Deserialize<GitHubRelease>(json, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                        if (release?.TagName != null)
+                        {
+                            config.StableVersionAtChannelSwitch = release.TagName.TrimStart('v');
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Could not fetch latest stable version for channel switch tracking: {ex.Message}");
+                }
+            }
+            else
+            {
+                config.StableVersionAtChannelSwitch = "";
+            }
+
+            JellyfinEnhanced.Instance?.SaveConfiguration(config);
+
+            return new JsonResult(new
+            {
+                success = true,
+                channel = config.UpdateChannel,
+                stableVersionAtSwitch = config.StableVersionAtChannelSwitch
+            });
+        }
+
+        private static int CompareVersionStrings(string a, string b)
+        {
+            var partsA = a.Split('.').Select(p => int.TryParse(p, out var n) ? n : 0).ToArray();
+            var partsB = b.Split('.').Select(p => int.TryParse(p, out var n) ? n : 0).ToArray();
+            var maxLen = Math.Max(partsA.Length, partsB.Length);
+            for (int i = 0; i < maxLen; i++)
+            {
+                var va = i < partsA.Length ? partsA[i] : 0;
+                var vb = i < partsB.Length ? partsB[i] : 0;
+                if (va != vb) return va.CompareTo(vb);
+            }
+            return 0;
+        }
+
+        private sealed class GitHubRelease
+        {
+            [JsonPropertyName("tag_name")]
+            public string? TagName { get; set; }
+            [JsonPropertyName("name")]
+            public string? Name { get; set; }
+            [JsonPropertyName("prerelease")]
+            public bool Prerelease { get; set; }
+            [JsonPropertyName("published_at")]
+            public string? PublishedAt { get; set; }
+            [JsonPropertyName("assets")]
+            public List<GitHubAsset>? Assets { get; set; }
+        }
+
+        private sealed class GitHubAsset
+        {
+            [JsonPropertyName("name")]
+            public string? Name { get; set; }
+            [JsonPropertyName("browser_download_url")]
+            public string? BrowserDownloadUrl { get; set; }
+        }
 
         [HttpGet("private-config")]
         [Authorize]

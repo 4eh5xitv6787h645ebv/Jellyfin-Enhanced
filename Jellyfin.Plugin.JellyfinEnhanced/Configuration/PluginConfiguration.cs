@@ -205,6 +205,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             HiddenContentEnabled = false;
             HiddenContentUsePluginPages = false;
             HiddenContentUseCustomTabs = false;
+
+            // Plugin Update Settings
+            UpdateChannel = "Stable";
+            StableVersionAtChannelSwitch = "";
         }
 
         // Jellyfin Enhanced Settings
@@ -387,5 +391,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool HiddenContentEnabled { get; set; }
         public bool HiddenContentUsePluginPages { get; set; }
         public bool HiddenContentUseCustomTabs { get; set; }
+
+        // Plugin Update Settings
+        /// <summary>"Stable", "Development", or "DevUntilNextStable"</summary>
+        public string UpdateChannel { get; set; }
+        /// <summary>Records the latest stable version at the time the user switched to Dev/DevUntilNextStable.
+        /// Used by DevUntilNextStable to detect when a newer stable release is available.</summary>
+        public string StableVersionAtChannelSwitch { get; set; }
     }
 }

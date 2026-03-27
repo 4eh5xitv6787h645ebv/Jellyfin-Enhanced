@@ -42,6 +42,7 @@
                 <button class="jellyfin-tab-button" data-tab="jellyseerr" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3><img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/seerr.svg" alt="Seerr" style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle; filter: brightness(0.8);">Seerr Settings</h3></button>
                 <button class="jellyfin-tab-button" data-tab="arr-links" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3>*arr Settings</h3></button>
                 <button class="jellyfin-tab-button" data-tab="extras" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3>Other Settings</h3></button>
+                <button class="jellyfin-tab-button" data-tab="updates" style="background: none; border: none; color: #ccc; cursor: pointer; transition: color 0.3s, border-bottom 0.3s; border-bottom: 2px solid transparent;"><h3>Updates</h3></button>
             </div>
             <form id="JellyfinEnhancedForm">
                 <div id="enhanced" class="jellyfin-tab-content active" style="display: block; font-family: inherit;">
@@ -1670,6 +1671,59 @@
                         </div>
                     </fieldset>
                 </div>
+                <div id="updates" class="jellyfin-tab-content" style="display: none; font-family: inherit;">
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Plugin Updates</h3></legend>
+                        <div class="configSection" style="background-color: rgba(255,255,255,0.05); padding: 1.5em; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 1em; margin-bottom: 1.5em; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 200px;">
+                                    <label style="display: block; margin-bottom: 0.4em; font-weight: bold; font-size: 0.9em;">Update Channel</label>
+                                    <select id="updateChannel" is="emby-select" style="width: 100%;">
+                                        <option value="Stable">Stable</option>
+                                        <option value="Development">Development (latest from main)</option>
+                                        <option value="DevUntilNextStable">Development until next stable release</option>
+                                    </select>
+                                </div>
+                                <div style="padding-top: 1.4em;">
+                                    <button id="checkUpdatesBtn" type="button" class="raised emby-button" style="padding: 0.5em 1.2em;">
+                                        <i class="material-icons" style="font-size: 1.1em; vertical-align: middle; margin-right: 0.3em;">refresh</i>
+                                        <span>Check for Updates</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="updateChannelInfo" style="display: none; margin-bottom: 1.2em; padding: 0.8em 1em; background-color: rgba(0, 164, 220, 0.1); border: 1px solid rgba(0, 164, 220, 0.3); border-radius: 6px; font-size: 0.9em; line-height: 1.5;">
+                            </div>
+
+                            <div id="updateCurrentVersion" style="margin-bottom: 1em; font-size: 0.95em;">
+                                <span style="color: rgba(255,255,255,0.6);">Current version:</span>
+                                <span id="updateCurrentVersionValue" style="font-weight: bold;">--</span>
+                                <span id="updateChannelBadge" style="display: none; margin-left: 0.5em; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;"></span>
+                            </div>
+
+                            <div id="updateStatus" style="display: none; margin-bottom: 1em; padding: 0.8em 1em; border-radius: 6px; font-size: 0.9em;">
+                            </div>
+
+                            <div id="updateVersionList" style="display: none; margin-bottom: 1.2em;">
+                                <label style="display: block; margin-bottom: 0.5em; font-weight: bold; font-size: 0.9em;">Available Versions</label>
+                                <div id="updateVersionListItems" style="max-height: 300px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
+                                </div>
+                            </div>
+
+                            <div id="updateActions" style="display: none; display: flex; gap: 0.8em; align-items: center; flex-wrap: wrap;">
+                                <button id="installUpdateBtn" type="button" class="raised button-submit emby-button" style="padding: 0.5em 1.5em;" disabled>
+                                    <i class="material-icons" style="font-size: 1.1em; vertical-align: middle; margin-right: 0.3em;">download</i>
+                                    <span>Install Selected Version</span>
+                                </button>
+                                <span id="updateRestartNotice" style="display: none; color: #ffcc00; font-size: 0.85em;">
+                                    <i class="material-icons" style="font-size: 1em; vertical-align: middle;">warning</i>
+                                    Server restart required after install
+                                </span>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
                 <div
                     style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
@@ -4268,6 +4322,276 @@
             }
             document.body.removeChild(textarea);
         }
+        // ==================== Plugin Updates ====================
+        (function initPluginUpdates() {
+            const channelSelect = document.getElementById('updateChannel');
+            const checkBtn = document.getElementById('checkUpdatesBtn');
+            const installBtn = document.getElementById('installUpdateBtn');
+            const versionList = document.getElementById('updateVersionList');
+            const versionListItems = document.getElementById('updateVersionListItems');
+            const currentVersionEl = document.getElementById('updateCurrentVersionValue');
+            const channelBadge = document.getElementById('updateChannelBadge');
+            const channelInfo = document.getElementById('updateChannelInfo');
+            const statusEl = document.getElementById('updateStatus');
+            const actionsEl = document.getElementById('updateActions');
+            const restartNotice = document.getElementById('updateRestartNotice');
+
+            let selectedDownloadUrl = null;
+            let selectedVersionName = null;
+
+            function showStatus(message, type) {
+                statusEl.style.display = 'block';
+                statusEl.textContent = message;
+                if (type === 'success') {
+                    statusEl.style.backgroundColor = 'rgba(76, 175, 80, 0.15)';
+                    statusEl.style.border = '1px solid rgba(76, 175, 80, 0.4)';
+                    statusEl.style.color = '#81c784';
+                } else if (type === 'error') {
+                    statusEl.style.backgroundColor = 'rgba(244, 67, 54, 0.15)';
+                    statusEl.style.border = '1px solid rgba(244, 67, 54, 0.4)';
+                    statusEl.style.color = '#ef9a9a';
+                } else {
+                    statusEl.style.backgroundColor = 'rgba(0, 164, 220, 0.1)';
+                    statusEl.style.border = '1px solid rgba(0, 164, 220, 0.3)';
+                    statusEl.style.color = '#90caf9';
+                }
+            }
+
+            function updateChannelInfo() {
+                const channel = channelSelect.value;
+                channelInfo.style.display = 'block';
+                channelInfo.textContent = '';
+                if (channel === 'Stable') {
+                    channelInfo.textContent = 'Only official tagged releases will be shown. This is the recommended setting for most users.';
+                } else if (channel === 'Development') {
+                    channelInfo.textContent = 'Development builds are built automatically from the latest code on the main branch. They may contain untested changes. Use at your own risk.';
+                } else if (channel === 'DevUntilNextStable') {
+                    channelInfo.textContent = 'Dev until next stable will use development builds temporarily. When a new stable release is published, the channel will automatically switch back to Stable and you will be prompted to update to the stable version.';
+                }
+            }
+
+            function setBadge(text, color) {
+                channelBadge.style.display = 'inline';
+                channelBadge.textContent = text;
+                channelBadge.style.backgroundColor = color;
+                channelBadge.style.color = '#fff';
+            }
+
+            async function checkForUpdates() {
+                checkBtn.disabled = true;
+                checkBtn.querySelector('span').textContent = 'Checking...';
+                statusEl.style.display = 'none';
+                versionList.style.display = 'none';
+                actionsEl.style.display = 'none';
+                selectedDownloadUrl = null;
+                selectedVersionName = null;
+
+                try {
+                    const response = await ApiClient.ajax({
+                        type: 'GET',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/updates/check'),
+                        dataType: 'json'
+                    });
+
+                    currentVersionEl.textContent = 'v' + response.currentVersion;
+
+                    // Show channel badge
+                    const ch = response.channel;
+                    if (ch === 'Development' || ch === 'DevUntilNextStable') {
+                        setBadge(ch === 'DevUntilNextStable' ? 'Dev (until stable)' : 'Development', '#e65100');
+                    } else if (ch === 'SwitchingToStable') {
+                        setBadge('New stable available!', '#2e7d32');
+                        showStatus('A new stable release is available! Your channel has been switched back to Stable. Select the latest stable version below to update.', 'success');
+                        channelSelect.value = 'Stable';
+                        updateChannelInfo();
+                        await ApiClient.ajax({
+                            type: 'POST',
+                            url: ApiClient.getUrl('/JellyfinEnhanced/updates/channel') + '?channel=Stable'
+                        });
+                    } else {
+                        setBadge('Stable', '#1565c0');
+                    }
+
+                    // Filter versions based on channel
+                    const channel = channelSelect.value;
+                    const versions = response.versions || [];
+                    const filteredVersions = channel === 'Stable'
+                        ? versions.filter(function(v) { return !v.isDevelopment; })
+                        : versions;
+
+                    if (filteredVersions.length === 0) {
+                        showStatus('No versions found for the selected channel.', 'info');
+                    } else {
+                        renderVersionList(filteredVersions, response.currentVersion);
+                        versionList.style.display = 'block';
+                        actionsEl.style.display = 'flex';
+                    }
+                } catch (err) {
+                    console.error('[JE Updates] Check failed:', err);
+                    showStatus('Failed to check for updates. Please try again later.', 'error');
+                } finally {
+                    checkBtn.disabled = false;
+                    checkBtn.querySelector('span').textContent = 'Check for Updates';
+                }
+            }
+
+            function renderVersionList(versions, currentVersion) {
+                versionListItems.textContent = '';
+                versions.forEach(function(v) {
+                    var isCurrent = v.version === currentVersion;
+                    var row = document.createElement('div');
+                    row.style.cssText = 'display:flex;align-items:center;padding:0.7em 1em;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:background 0.15s;';
+                    if (isCurrent) row.style.backgroundColor = 'rgba(0, 164, 220, 0.1)';
+
+                    row.addEventListener('mouseenter', function() { if (!isCurrent && !row.classList.contains('selected')) row.style.backgroundColor = 'rgba(255,255,255,0.05)'; });
+                    row.addEventListener('mouseleave', function() { if (!row.classList.contains('selected')) row.style.backgroundColor = isCurrent ? 'rgba(0, 164, 220, 0.1)' : ''; });
+
+                    var radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'updateVersion';
+                    radio.value = v.downloadUrl || '';
+                    radio.disabled = isCurrent || !v.downloadUrl;
+                    radio.style.marginRight = '0.8em';
+                    radio.dataset.versionName = v.displayName;
+
+                    var info = document.createElement('div');
+                    info.style.flex = '1';
+
+                    var nameSpan = document.createElement('strong');
+                    nameSpan.textContent = v.displayName;
+                    info.appendChild(nameSpan);
+
+                    if (isCurrent) {
+                        var installedSpan = document.createElement('span');
+                        installedSpan.style.cssText = 'color:#00a4dc;font-size:0.85em;margin-left:0.4em;';
+                        installedSpan.textContent = '(installed)';
+                        info.appendChild(installedSpan);
+                    }
+
+                    if (v.publishedAt) {
+                        var dateSpan = document.createElement('span');
+                        dateSpan.style.cssText = 'color:rgba(255,255,255,0.4);font-size:0.82em;margin-left:0.5em;';
+                        dateSpan.textContent = getRelativeTime(new Date(v.publishedAt));
+                        info.appendChild(dateSpan);
+                    }
+
+                    if (v.isDevelopment && v.version !== 'dev-latest') {
+                        var preBadge = document.createElement('span');
+                        preBadge.textContent = 'pre-release';
+                        preBadge.style.cssText = 'margin-left:0.5em;padding:1px 6px;border-radius:3px;font-size:0.75em;background:rgba(255,165,0,0.2);color:#ffa726;';
+                        info.appendChild(preBadge);
+                    }
+
+                    row.addEventListener('click', function() {
+                        if (!radio.disabled) {
+                            radio.checked = true;
+                            selectedDownloadUrl = radio.value;
+                            selectedVersionName = radio.dataset.versionName;
+                            installBtn.disabled = false;
+                            var allRows = versionListItems.querySelectorAll('div');
+                            for (var i = 0; i < allRows.length; i++) {
+                                allRows[i].classList.remove('selected');
+                                allRows[i].style.backgroundColor = '';
+                            }
+                            row.classList.add('selected');
+                            row.style.backgroundColor = 'rgba(76, 175, 80, 0.15)';
+                        }
+                    });
+
+                    row.appendChild(radio);
+                    row.appendChild(info);
+                    versionListItems.appendChild(row);
+                });
+            }
+
+            function getRelativeTime(date) {
+                var now = new Date();
+                var diff = now - date;
+                var minutes = Math.floor(diff / 60000);
+                var hours = Math.floor(diff / 3600000);
+                var days = Math.floor(diff / 86400000);
+                if (minutes < 1) return 'just now';
+                if (minutes < 60) return minutes + 'm ago';
+                if (hours < 24) return hours + 'h ago';
+                if (days < 30) return days + 'd ago';
+                return date.toLocaleDateString();
+            }
+
+            async function installUpdate() {
+                if (!selectedDownloadUrl) return;
+
+                if (!confirm('Install ' + selectedVersionName + '?\n\nThe plugin DLL will be replaced. You will need to restart Jellyfin for changes to take effect.')) {
+                    return;
+                }
+
+                installBtn.disabled = true;
+                installBtn.querySelector('span').textContent = 'Installing...';
+                statusEl.style.display = 'none';
+
+                try {
+                    var response = await ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/updates/install') + '?downloadUrl=' + encodeURIComponent(selectedDownloadUrl),
+                        dataType: 'json'
+                    });
+
+                    showStatus(response.message || 'Update installed successfully. Please restart Jellyfin.', 'success');
+                    restartNotice.style.display = 'inline';
+                } catch (err) {
+                    console.error('[JE Updates] Install failed:', err);
+                    showStatus('Failed to install update. Check server logs for details.', 'error');
+                } finally {
+                    installBtn.disabled = false;
+                    installBtn.querySelector('span').textContent = 'Install Selected Version';
+                }
+            }
+
+            async function onChannelChange() {
+                updateChannelInfo();
+                var channel = channelSelect.value;
+                try {
+                    await ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/updates/channel') + '?channel=' + encodeURIComponent(channel)
+                    });
+                } catch (err) {
+                    console.error('[JE Updates] Failed to save channel:', err);
+                }
+                await checkForUpdates();
+            }
+
+            async function initUpdatesTab() {
+                try {
+                    var config = await ApiClient.getPluginConfiguration(pluginId);
+                    channelSelect.value = config.UpdateChannel || 'Stable';
+                    updateChannelInfo();
+
+                    var versionResponse = await ApiClient.ajax({
+                        type: 'GET',
+                        url: ApiClient.getUrl('/JellyfinEnhanced/version'),
+                        dataType: 'text'
+                    });
+                    currentVersionEl.textContent = 'v' + (versionResponse || '--');
+                } catch (err) {
+                    console.error('[JE Updates] Init failed:', err);
+                }
+            }
+
+            if (checkBtn) checkBtn.addEventListener('click', checkForUpdates);
+            if (installBtn) installBtn.addEventListener('click', installUpdate);
+            if (channelSelect) channelSelect.addEventListener('change', onChannelChange);
+
+            var tabButtons = document.querySelectorAll('.jellyfin-tab-button');
+            tabButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (btn.dataset.tab === 'updates') {
+                        initUpdatesTab();
+                    }
+                });
+            });
+        })();
+        // ==================== End Plugin Updates ====================
+
     })();
 </script>
 </div>
