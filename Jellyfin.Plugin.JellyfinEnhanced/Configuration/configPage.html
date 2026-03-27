@@ -4566,16 +4566,17 @@
                     channelSelect.value = config.UpdateChannel || 'Stable';
                     updateChannelInfo();
 
-                    var versionResponse = await ApiClient.ajax({
-                        type: 'GET',
-                        url: ApiClient.getUrl('/JellyfinEnhanced/version'),
-                        dataType: 'text'
-                    });
-                    currentVersionEl.textContent = 'v' + (versionResponse || '--');
+                    // Fetch version via plain fetch since ApiClient.ajax doesn't handle plain text well
+                    var versionResponse = await fetch(ApiClient.getUrl('/JellyfinEnhanced/version'));
+                    var versionText = await versionResponse.text();
+                    currentVersionEl.textContent = 'v' + (versionText.trim() || '--');
                 } catch (err) {
                     console.error('[JE Updates] Init failed:', err);
                 }
             }
+
+            // Set version immediately on page load
+            initUpdatesTab();
 
             if (checkBtn) checkBtn.addEventListener('click', checkForUpdates);
             if (installBtn) installBtn.addEventListener('click', installUpdate);
