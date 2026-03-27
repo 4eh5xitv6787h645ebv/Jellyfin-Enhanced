@@ -1878,10 +1878,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             // Only allow downloads from the official GitHub releases
-            if (!downloadUrl.StartsWith("https://github.com/n00bcodr/Jellyfin-Enhanced/releases/", StringComparison.OrdinalIgnoreCase))
+            if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var downloadUri)
+                || downloadUri.Scheme != "https"
+                || !downloadUri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+                || !downloadUri.AbsolutePath.StartsWith("/n00bcodr/Jellyfin-Enhanced/releases/download/", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest("Download URL must be from the official Jellyfin-Enhanced GitHub releases");
             }
+
+            const long MaxDownloadBytes = 20 * 1024 * 1024; // 20 MB
 
             try
             {
@@ -1889,7 +1894,30 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 httpClient.Timeout = TimeSpan.FromSeconds(60);
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-Plugin");
 
-                var zipBytes = await httpClient.GetByteArrayAsync(downloadUrl);
+                // Stream the download with a size limit to prevent memory exhaustion
+                using var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+
+                if (response.Content.Headers.ContentLength > MaxDownloadBytes)
+                {
+                    return BadRequest("Download exceeds maximum allowed size");
+                }
+
+                using var downloadStream = await response.Content.ReadAsStreamAsync();
+                using var memoryStream = new MemoryStream();
+                var buffer = new byte[81920];
+                long totalRead = 0;
+                int bytesRead;
+                while ((bytesRead = await downloadStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    totalRead += bytesRead;
+                    if (totalRead > MaxDownloadBytes)
+                    {
+                        return BadRequest("Download exceeds maximum allowed size");
+                    }
+                    memoryStream.Write(buffer, 0, bytesRead);
+                }
+                var zipBytes = memoryStream.ToArray();
 
                 // Find the plugin directory
                 var pluginInstance = JellyfinEnhanced.Instance;
@@ -1969,7 +1997,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             catch (Exception ex)
             {
                 _logger.Error($"Failed to install update: {ex.Message}");
-                return StatusCode(500, $"Failed to install update: {ex.Message}");
+                return StatusCode(500, "Failed to install update. Check server logs for details.");
             }
         }
 
