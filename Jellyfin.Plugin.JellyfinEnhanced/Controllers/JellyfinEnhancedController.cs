@@ -1981,17 +1981,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         return StatusCode(422, "Could not find plugin DLL in the downloaded archive");
                     }
 
+                    // Build the response JSON before overwriting the DLL, since the
+                    // runtime may have trouble serializing after its own assembly changes.
+                    var successJson = "{\"success\":true,\"message\":\"Update installed successfully. Please restart Jellyfin to apply the changes.\"}";
+
                     // Copy the new DLL over the existing one
                     var targetPath = Path.Combine(pluginDir, "Jellyfin.Plugin.JellyfinEnhanced.dll");
                     System.IO.File.Copy(pluginDll, targetPath, overwrite: true);
 
                     _logger.Info($"Plugin update installed successfully from: {downloadUrl}");
 
-                    return new JsonResult(new
-                    {
-                        success = true,
-                        message = "Update installed successfully. Please restart Jellyfin to apply the changes."
-                    });
+                    return Content(successJson, "application/json");
                 }
                 finally
                 {
