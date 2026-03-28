@@ -230,10 +230,12 @@
                     if (skipButton && !JE.state.skipToastShown) {
                         const buttonText = skipButton.textContent || '';
                         if (JE.currentSettings.autoSkipIntro && buttonText.includes('Skip Intro')) {
+                            skipButton.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
                             skipButton.click();
                             JE.toast(JE.t('toast_auto_skipped_intro'));
                             JE.state.skipToastShown = true;
                         } else if (JE.currentSettings.autoSkipOutro && buttonText.includes('Skip Outro')) {
+                            skipButton.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
                             skipButton.click();
                             JE.toast(JE.t('toast_auto_skipped_outro'));
                             JE.state.skipToastShown = true;
