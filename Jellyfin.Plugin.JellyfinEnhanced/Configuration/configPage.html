@@ -436,7 +436,8 @@
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="TMDB_API_KEY">TMDB API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" style="flex-grow: 1;"/>
+                                    <div class="je-api-key-wrap"><input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" class="je-api-key-field" style="width: 100%;" autocomplete="off"/><div class="je-api-key-overlay" aria-hidden="true"><div class="je-api-key-overlay-inner"><span class="je-api-key-mask-prefix"></span><span class="je-api-key-mask-suffix"></span></div></div></div>
+                                    <button type="button" class="je-api-key-toggle" data-target="TMDB_API_KEY" title="Show/hide API key" ><span class="material-icons" style="font-size: 1.3em;">visibility</span></button>
                                     <span id="tmdbStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
                                         <span>Test</span>
@@ -504,7 +505,8 @@
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="JellyseerrApiKey">Seerr API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="JellyseerrApiKey" is="emby-input" name="JellyseerrApiKey" type="text" style="flex-grow: 1;"/>
+                                    <div class="je-api-key-wrap"><input id="JellyseerrApiKey" is="emby-input" name="JellyseerrApiKey" type="text" class="je-api-key-field" style="width: 100%;" autocomplete="off"/><div class="je-api-key-overlay" aria-hidden="true"><div class="je-api-key-overlay-inner"><span class="je-api-key-mask-prefix"></span><span class="je-api-key-mask-suffix"></span></div></div></div>
+                                    <button type="button" class="je-api-key-toggle" data-target="JellyseerrApiKey" title="Show/hide API key" ><span class="material-icons" style="font-size: 1.3em;">visibility</span></button>
                                     <span id="jellyseerrStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" id="testJellyseerrBtn" class="raised button-submit">
                                         <span>Test</span>
@@ -515,7 +517,8 @@
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="jellyseerr_TMDB_API_KEY">TMDB API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="jellyseerr_TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" style="flex-grow: 1;"/>
+                                    <div class="je-api-key-wrap"><input id="jellyseerr_TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" class="je-api-key-field" style="width: 100%;" autocomplete="off"/><div class="je-api-key-overlay" aria-hidden="true"><div class="je-api-key-overlay-inner"><span class="je-api-key-mask-prefix"></span><span class="je-api-key-mask-suffix"></span></div></div></div>
+                                    <button type="button" class="je-api-key-toggle" data-target="jellyseerr_TMDB_API_KEY" title="Show/hide API key" ><span class="material-icons" style="font-size: 1.3em;">visibility</span></button>
                                     <span id="jellyseerrTmdbStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
                                         <span>Test</span>
@@ -1111,7 +1114,8 @@
                             <div class="inputContainer" style="margin-top: 1em;">
                                 <label class="inputLabel inputLabelUnfocused" for="sonarrApiKey">Sonarr API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="sonarrApiKey" is="emby-input" name="sonarrApiKey" placeholder="Your Sonarr API key" style="flex-grow: 1;"/>
+                                    <div class="je-api-key-wrap"><input id="sonarrApiKey" is="emby-input" name="sonarrApiKey" type="text" class="je-api-key-field" placeholder="Your Sonarr API key" style="width: 100%;" autocomplete="off"/><div class="je-api-key-overlay" aria-hidden="true"><div class="je-api-key-overlay-inner"><span class="je-api-key-mask-prefix"></span><span class="je-api-key-mask-suffix"></span></div></div></div>
+                                    <button type="button" class="je-api-key-toggle" data-target="sonarrApiKey" title="Show/hide API key" ><span class="material-icons" style="font-size: 1.3em;">visibility</span></button>
                                     <span id="sonarrStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" id="testSonarrBtn" class="raised button-submit">
                                         <span>Test</span>
@@ -1127,7 +1131,8 @@
                             <div class="inputContainer" style="margin-top: 1em;">
                                 <label class="inputLabel inputLabelUnfocused" for="radarrApiKey">Radarr API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="radarrApiKey" is="emby-input" name="radarrApiKey" placeholder="Your Radarr API key" style="flex-grow: 1;"/>
+                                    <div class="je-api-key-wrap"><input id="radarrApiKey" is="emby-input" name="radarrApiKey" type="text" class="je-api-key-field" placeholder="Your Radarr API key" style="width: 100%;" autocomplete="off"/><div class="je-api-key-overlay" aria-hidden="true"><div class="je-api-key-overlay-inner"><span class="je-api-key-mask-prefix"></span><span class="je-api-key-mask-suffix"></span></div></div></div>
+                                    <button type="button" class="je-api-key-toggle" data-target="radarrApiKey" title="Show/hide API key" ><span class="material-icons" style="font-size: 1.3em;">visibility</span></button>
                                     <span id="radarrStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" id="testRadarrBtn" class="raised button-submit">
                                         <span>Test</span>
@@ -2214,7 +2219,7 @@
 
         async function testJellyseerrConnection() {
             const urls = (document.querySelector('#jellyseerrUrls').value || '').split('\n').map(u => u.trim()).filter(Boolean);
-            const apiKey = (document.querySelector('#JellyseerrApiKey').value || '').trim();
+            const apiKey = getApiKeyValue('JellyseerrApiKey').trim();
 
             if (!urls.length || !apiKey) {
                 Dashboard.alert({ title: 'Missing Information', message: 'Please provide at least one Seerr URL and an API key to test the connection.' });
@@ -2261,7 +2266,7 @@
         }
 
         async function testTmdbConnection(event) {
-            const apiKey = (document.querySelector('#TMDB_API_KEY').value || '').trim();
+            const apiKey = getApiKeyValue('TMDB_API_KEY').trim();
 
             if (!apiKey) {
                 Dashboard.alert({ title: 'Missing Information', message: 'Please provide a TMDB API key to test the connection.' });
@@ -2477,6 +2482,198 @@
             });
         }
 
+        /**
+         * API key masking: displays masked value (last 5 chars visible) directly
+         * in the input field, with a toggle to reveal the full key.
+         * Real values are stored in data-real-key; use getApiKeyValue(id) to read.
+         */
+        var API_KEY_IDS = ['TMDB_API_KEY', 'JellyseerrApiKey', 'jellyseerr_TMDB_API_KEY', 'sonarrApiKey', 'radarrApiKey'];
+        var _apiKeyTogglesInitialized = false;
+        var _apiKeyStylesInjected = false;
+        var _apiKeyUpdating = false;
+
+        function injectApiKeyStyles() {
+            if (_apiKeyStylesInjected) return;
+            _apiKeyStylesInjected = true;
+            var style = document.createElement('style');
+            style.textContent = [
+                '.je-api-key-toggle { background: none; border: none; cursor: pointer; padding: 4px; color: rgba(255,255,255,0.5); display: flex; align-items: center; }',
+                '.je-api-key-toggle:hover { color: rgba(255,255,255,0.85); }',
+                '.je-api-key-wrap { position: relative; flex: 1 1 auto; min-width: 0; }',
+                '.je-api-key-field.je-masked { color: transparent !important; caret-color: transparent; }',
+                '.je-api-key-field.je-masked::selection { background: transparent; color: transparent; }',
+                '.je-api-key-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; pointer-events: none; overflow: hidden; white-space: nowrap; opacity: 0; min-width: 0; }',
+                '.je-api-key-field.je-masked ~ .je-api-key-overlay { opacity: 1; }',
+                '.je-api-key-overlay-inner { display: flex; align-items: center; width: 100%; min-width: 0; }',
+                '.je-api-key-mask-prefix { flex: 1 1 auto; min-width: 1.5em; height: 0.7em; margin-right: 0.45em; border-radius: 999px; opacity: 0.45; align-self: center; background: repeating-linear-gradient(90deg, currentColor 0 0.42em, transparent 0.42em 0.72em); }',
+                '.je-api-key-mask-suffix { flex: 0 0 auto; min-width: 0; }'
+            ].join('\n');
+            document.head.appendChild(style);
+        }
+
+        function getApiKeyValue(id) {
+            var input = document.getElementById(id);
+            if (!input) return '';
+            return input.getAttribute('data-real-key') || '';
+        }
+
+        function getApiKeyOverlay(id) {
+            var input = document.getElementById(id);
+            if (!input) return null;
+            var wrap = input.closest('.je-api-key-wrap');
+            return wrap ? wrap.querySelector('.je-api-key-overlay') : null;
+        }
+
+        function syncApiKeyOverlayStyles(input, overlay) {
+            var cs = getComputedStyle(input);
+            overlay.style.paddingLeft = cs.paddingLeft;
+            overlay.style.paddingRight = cs.paddingRight;
+            overlay.style.font = cs.font;
+            overlay.style.letterSpacing = cs.letterSpacing;
+            overlay.style.lineHeight = cs.lineHeight;
+            // Don't copy color from input (it's transparent when masked).
+            // Read from the page body or use the label color instead.
+            var label = input.closest('.inputContainer');
+            var labelColor = label ? getComputedStyle(label).color : null;
+            overlay.style.color = labelColor || '#eee';
+        }
+
+        function renderApiKeyOverlay(id) {
+            var input = document.getElementById(id);
+            var overlay = getApiKeyOverlay(id);
+            if (!input || !overlay) return;
+            var realValue = input.getAttribute('data-real-key') || '';
+            var hiddenCount = Math.max(0, realValue.length - 5);
+            var prefix = overlay.querySelector('.je-api-key-mask-prefix');
+            var suffix = overlay.querySelector('.je-api-key-mask-suffix');
+            suffix.textContent = hiddenCount ? realValue.slice(-5) : realValue;
+            prefix.style.display = hiddenCount ? '' : 'none';
+        }
+
+        function setApiKeyValue(id, value) {
+            if (_apiKeyUpdating) return;
+            _apiKeyUpdating = true;
+            var input = document.getElementById(id);
+            if (input) {
+                input.setAttribute('data-real-key', value || '');
+                input.value = value || '';
+                renderApiKeyOverlay(id);
+            }
+            _apiKeyUpdating = false;
+        }
+
+        function applyApiKeyMask(id) {
+            if (_apiKeyUpdating) return;
+            _apiKeyUpdating = true;
+            var input = document.getElementById(id);
+            if (input) {
+                input.classList.add('je-masked');
+                input.value = input.getAttribute('data-real-key') || '';
+                renderApiKeyOverlay(id);
+            }
+            _apiKeyUpdating = false;
+            var btn = document.querySelector('.je-api-key-toggle[data-target="' + id + '"]');
+            if (btn) {
+                var icon = btn.querySelector('.material-icons');
+                if (icon) icon.textContent = 'visibility';
+                btn.title = 'Show API key';
+            }
+        }
+
+        function revealApiKey(id) {
+            var input = document.getElementById(id);
+            if (!input) return;
+            input.value = input.getAttribute('data-real-key') || '';
+            input.classList.remove('je-masked');
+            var btn = document.querySelector('.je-api-key-toggle[data-target="' + id + '"]');
+            if (btn) {
+                var icon = btn.querySelector('.material-icons');
+                if (icon) icon.textContent = 'visibility_off';
+                btn.title = 'Hide API key';
+            }
+        }
+
+        function resetApiKeyToggleState() {
+            API_KEY_IDS.forEach(function(id) {
+                var input = document.getElementById(id);
+                if (input) input.removeAttribute('data-pinned');
+                applyApiKeyMask(id);
+            });
+        }
+
+        function initApiKeyToggles() {
+            if (_apiKeyTogglesInitialized) return;
+            _apiKeyTogglesInitialized = true;
+            injectApiKeyStyles();
+
+            // Sync overlay styles once at init (matches input font/padding to overlay)
+            API_KEY_IDS.forEach(function(id) {
+                var input = document.getElementById(id);
+                var overlay = getApiKeyOverlay(id);
+                if (input && overlay) syncApiKeyOverlayStyles(input, overlay);
+            });
+
+            document.querySelectorAll('.je-api-key-toggle').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var targetId = btn.getAttribute('data-target');
+                    var input = document.getElementById(targetId);
+                    if (!input) return;
+                    if (input.classList.contains('je-masked')) {
+                        revealApiKey(targetId);
+                        input.setAttribute('data-pinned', 'true');
+                    } else {
+                        input.removeAttribute('data-pinned');
+                        applyApiKeyMask(targetId);
+                    }
+                });
+            });
+
+            API_KEY_IDS.forEach(function(id) {
+                var input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('focus', function() {
+                    if (input.classList.contains('je-masked')) {
+                        revealApiKey(id);
+                    }
+                });
+                input.addEventListener('blur', function() {
+                    if (!input.classList.contains('je-masked') && !input.hasAttribute('data-pinned')) {
+                        input.setAttribute('data-real-key', input.value);
+                        applyApiKeyMask(id);
+                    }
+                });
+                input.addEventListener('input', function() {
+                    if (!input.classList.contains('je-masked')) {
+                        input.setAttribute('data-real-key', input.value);
+                    }
+                });
+            });
+
+            // Bidirectional sync between TMDB API key fields (guarded here to prevent stacking)
+            var tmdbKeyField = document.getElementById('TMDB_API_KEY');
+            var jellyseerrTmdbKeyField = document.getElementById('jellyseerr_TMDB_API_KEY');
+            if (tmdbKeyField && jellyseerrTmdbKeyField) {
+                tmdbKeyField.addEventListener('input', function() {
+                    if (!tmdbKeyField.classList.contains('je-masked')) {
+                        setApiKeyValue('jellyseerr_TMDB_API_KEY', tmdbKeyField.value);
+                    }
+                });
+                jellyseerrTmdbKeyField.addEventListener('input', function() {
+                    if (!jellyseerrTmdbKeyField.classList.contains('je-masked')) {
+                        setApiKeyValue('TMDB_API_KEY', jellyseerrTmdbKeyField.value);
+                    }
+                });
+            }
+
+            window.addEventListener('resize', function() {
+                API_KEY_IDS.forEach(function(id) {
+                    var input = document.getElementById(id);
+                    var overlay = getApiKeyOverlay(id);
+                    if (input && overlay) syncApiKeyOverlayStyles(input, overlay);
+                });
+            });
+        }
+
         function loadConfig() {
             Dashboard.showLoadingMsg();
             checkInstalledPlugins();
@@ -2505,17 +2702,6 @@
                 document.querySelector('#ElsewhereCustomBrandingImageUrl').value = config.ElsewhereCustomBrandingImageUrl || '';
                 document.querySelector('#jellyseerr_TMDB_API_KEY').value = config.TMDB_API_KEY;
 
-                // Set up bidirectional sync between TMDB API key fields
-                const tmdbKeyField = document.querySelector('#TMDB_API_KEY');
-                const jellyseerrTmdbKeyField = document.querySelector('#jellyseerr_TMDB_API_KEY');
-
-                tmdbKeyField.addEventListener('input', function() {
-                    jellyseerrTmdbKeyField.value = this.value;
-                });
-
-                jellyseerrTmdbKeyField.addEventListener('input', function() {
-                    tmdbKeyField.value = this.value;
-                });
                 document.querySelector('#autoPauseEnabled').checked = config.AutoPauseEnabled;
                 document.querySelector('#autoResumeEnabled').checked = config.AutoResumeEnabled;
                 document.querySelector('#autoPipEnabled').checked = config.AutoPipEnabled;
@@ -2705,6 +2891,14 @@
                 // Update TMDB-dependent settings after config is loaded
                 updateAllDependencies();
 
+                // Initialize API key masking and apply masked display
+                initApiKeyToggles();
+                API_KEY_IDS.forEach(function(id) {
+                    var input = document.getElementById(id);
+                    if (input) input.setAttribute('data-real-key', input.value);
+                });
+                resetApiKeyToggleState();
+
                 Dashboard.hideLoadingMsg();
             });
         }
@@ -2723,7 +2917,6 @@
             config.ToastDuration = parseInt(document.querySelector('#ToastDuration').value, 10);
             config.HelpPanelAutocloseDelay = parseInt(document.querySelector('#HelpPanelAutocloseDelay').value, 10);
             config.ElsewhereEnabled = document.querySelector('#elsewhereEnabled').checked;
-            config.TMDB_API_KEY = document.querySelector('#TMDB_API_KEY').value;
             config.DEFAULT_REGION = document.querySelector('#DEFAULT_REGION').value;
             config.DEFAULT_PROVIDERS = document.querySelector('#DEFAULT_PROVIDERS').value;
             config.IGNORE_PROVIDERS = document.querySelector('#IGNORE_PROVIDERS').value;
@@ -2783,9 +2976,9 @@
             config.JellyseerrShowIssueIndicator = document.querySelector('#jellyseerrShowIssueIndicator').checked;
             config.ShowElsewhereOnJellyseerr = document.querySelector('#showElsewhereOnJellyseerr').checked;
             config.JellyseerrUrls = (document.querySelector('#jellyseerrUrls').value || '').split('\n').map(u => u.trim()).filter(Boolean).join('\n');
-            config.JellyseerrApiKey = (document.querySelector('#JellyseerrApiKey').value || '').trim();
+            config.JellyseerrApiKey = getApiKeyValue('JellyseerrApiKey').trim();
             config.JellyseerrUrlMappings = (document.querySelector('#jellyseerrUrlMappings').value || '').split('\n').map(u => u.trim()).filter(Boolean).join('\n');
-            config.TMDB_API_KEY = document.querySelector('#jellyseerr_TMDB_API_KEY').value;
+            config.TMDB_API_KEY = getApiKeyValue('jellyseerr_TMDB_API_KEY') || getApiKeyValue('TMDB_API_KEY');
             config.AutoSeasonRequestEnabled = document.querySelector('#autoSeasonRequestEnabled').checked;
             config.AutoSeasonRequestRequireAllWatched = document.querySelector('#autoSeasonRequestRequireAllWatched').checked;
             config.AutoSeasonRequestThresholdValue = parseInt(document.querySelector('#autoSeasonRequestThresholdValue').value, 10) || 2;
@@ -2835,8 +3028,8 @@
             config.BazarrUrl = document.querySelector('#bazarrUrl').value;
             config.ShowArrLinksAsText = document.querySelector('#showArrLinksAsText').checked;
             config.ArrTagsSyncEnabled = document.querySelector('#arrTagsSyncEnabled').checked;
-            config.RadarrApiKey = document.querySelector('#radarrApiKey').value;
-            config.SonarrApiKey = document.querySelector('#sonarrApiKey').value;
+            config.RadarrApiKey = getApiKeyValue('radarrApiKey');
+            config.SonarrApiKey = getApiKeyValue('sonarrApiKey');
             config.ArrTagsPrefix = document.querySelector('#arrTagsPrefix').value || 'Requested by: ';
             config.ArrTagsClearOldTags = document.querySelector('#arrTagsClearOldTags').checked;
             config.ArrTagsShowAsLinks = document.querySelector('#arrTagsShowAsLinks').checked;
@@ -3316,8 +3509,8 @@
          * @returns {boolean} True if a non-empty TMDB key exists
          */
         function hasTmdbKey() {
-            return document.querySelector('#TMDB_API_KEY').value.trim().length > 0
-                || document.querySelector('#jellyseerr_TMDB_API_KEY').value.trim().length > 0;
+            return getApiKeyValue('TMDB_API_KEY').trim().length > 0
+                || getApiKeyValue('jellyseerr_TMDB_API_KEY').trim().length > 0;
         }
 
         /**
@@ -3327,7 +3520,7 @@
         function hasJellyseerrConfigured() {
             return document.querySelector('#jellyseerrEnabled').checked
                 && document.querySelector('#jellyseerrUrls').value.trim().length > 0
-                && document.querySelector('#JellyseerrApiKey').value.trim().length > 0;
+                && getApiKeyValue('JellyseerrApiKey').trim().length > 0;
         }
 
         /**
@@ -3336,9 +3529,9 @@
          */
         function hasAnyArrService() {
             var sonarrUrl = document.querySelector('#sonarrUrl').value.trim();
-            var sonarrKey = document.querySelector('#sonarrApiKey').value.trim();
+            var sonarrKey = getApiKeyValue('sonarrApiKey').trim();
             var radarrUrl = document.querySelector('#radarrUrl').value.trim();
-            var radarrKey = document.querySelector('#radarrApiKey').value.trim();
+            var radarrKey = getApiKeyValue('radarrApiKey').trim();
             return (sonarrUrl.length > 0 && sonarrKey.length > 0)
                 || (radarrUrl.length > 0 && radarrKey.length > 0);
         }
@@ -3686,7 +3879,7 @@
          */
         async function testArrConnection(serviceName, endpoint, urlInputId, apiKeyInputId, statusId, btnId) {
             var urlVal = (document.querySelector('#' + urlInputId).value || '').trim();
-            var apiKeyVal = (document.querySelector('#' + apiKeyInputId).value || '').trim();
+            var apiKeyVal = getApiKeyValue(apiKeyInputId).trim();
 
             if (!urlVal || !apiKeyVal) {
                 Dashboard.alert({ title: 'Missing Information', message: 'Please provide both a ' + serviceName + ' URL and API key to test the connection.' });
