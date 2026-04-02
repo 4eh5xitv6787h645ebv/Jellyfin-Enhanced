@@ -2722,7 +2722,8 @@
             config.ToastDuration = parseInt(document.querySelector('#ToastDuration').value, 10);
             config.HelpPanelAutocloseDelay = parseInt(document.querySelector('#HelpPanelAutocloseDelay').value, 10);
             config.ElsewhereEnabled = document.querySelector('#elsewhereEnabled').checked;
-            config.TMDB_API_KEY = document.querySelector('#TMDB_API_KEY').value;
+            config.TMDB_API_KEY = document.querySelector('#TMDB_API_KEY').value.trim()
+                || document.querySelector('#jellyseerr_TMDB_API_KEY').value.trim();
             config.DEFAULT_REGION = document.querySelector('#DEFAULT_REGION').value;
             config.DEFAULT_PROVIDERS = document.querySelector('#DEFAULT_PROVIDERS').value;
             config.IGNORE_PROVIDERS = document.querySelector('#IGNORE_PROVIDERS').value;
