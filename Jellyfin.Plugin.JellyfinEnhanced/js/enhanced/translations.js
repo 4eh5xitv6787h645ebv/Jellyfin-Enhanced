@@ -7,6 +7,9 @@
 
     function normalizeLangCode(code) {
         if (!code) return code;
+        // Reject codes that don't look like valid BCP 47 language tags
+        // to prevent arbitrary strings in fetch URLs and localStorage keys.
+        if (!/^[a-zA-Z]{2,3}(-[a-zA-Z]{2,4})?$/.test(code)) return null;
         const parts = code.split('-');
         if (parts.length === 1) return parts[0].toLowerCase();
         if (parts.length === 2) return `${parts[0].toLowerCase()}-${parts[1].toUpperCase()}`;
@@ -125,24 +128,10 @@
                 return { translations, usedLang: code };
             }
 
-            if (githubResponse.status === 404 && code !== 'en') {
-                console.warn(`🪼 Jellyfin Enhanced: Language ${code} not found on GitHub, falling back to English`);
-                const englishResponse = await fetch(`${GITHUB_RAW_BASE}/en.json`, {
-                    method: 'GET',
-                    cache: 'no-cache',
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                if (englishResponse.ok) {
-                    const translations = await englishResponse.json();
-                    try {
-                        const enCacheKey = `JE_translation_en_${pluginVersion}`;
-                        const enTimestampKey = `JE_translation_ts_en_${pluginVersion}`;
-                        localStorage.setItem(enCacheKey, JSON.stringify(translations));
-                        localStorage.setItem(enTimestampKey, Date.now().toString());
-                    } catch (e) { /* ignore */ }
-                    return { translations, usedLang: 'en' };
-                }
+            if (githubResponse.status === 404) {
+                console.warn(`🪼 Jellyfin Enhanced: Language ${code} not found on GitHub`);
+                // Don't fall back to English here -- the merge loop in
+                // loadTranslations already loads English as the base layer.
             }
 
             if (githubResponse.status === 403) {
@@ -168,13 +157,11 @@
             return { translations, usedLang: code };
         }
 
-        console.warn(`🪼 Jellyfin Enhanced: Bundled ${code} not found, falling back to bundled English`);
-        response = await fetch(ApiClient.getUrl('/JellyfinEnhanced/locales/en.json'));
-        if (response.ok) {
-            return { translations: await response.json(), usedLang: 'en' };
-        }
-
-        throw new Error('Failed to load English fallback translations');
+        // Language not available from any source. The merge loop in
+        // loadTranslations already loads English as the base layer, so
+        // returning null here is safe -- missing keys fall back to English.
+        console.warn(`🪼 Jellyfin Enhanced: Language ${code} not available from any source`);
+        return null;
     }
 
     JE.loadTranslations = async function() {
@@ -207,20 +194,31 @@
 
             cleanOldTranslationCache(pluginVersion);
 
+            // Build chain e.g. [pt-BR, pt, en] and load ALL files in
+            // parallel, then merge in priority order (English base,
+            // regional variant wins). This gives key-level fallback:
+            // missing keys in the user's language automatically resolve
+            // to the English string instead of showing raw key names.
             const langCodes = buildLanguageChain(lang);
-            for (const code of langCodes) {
-                try {
-                    const result = await tryLoadSingleLanguage(code, pluginVersion);
-                    if (result && result.translations) {
-                        return result.translations;
-                    }
-                } catch (e) {
-                    console.warn(`🪼 Jellyfin Enhanced: Failed to load translations for ${code}`, e);
+            const results = await Promise.allSettled(
+                langCodes.map(code => tryLoadSingleLanguage(code, pluginVersion))
+            );
+
+            // Merge in reverse order (English first, user's language last)
+            const merged = {};
+            for (let i = results.length - 1; i >= 0; i--) {
+                const r = results[i];
+                if (r.status === 'fulfilled' && r.value?.translations) {
+                    Object.assign(merged, r.value.translations);
+                } else if (r.status === 'rejected') {
+                    console.warn(`🪼 Jellyfin Enhanced: Failed to load translations for ${langCodes[i]}`, r.reason);
                 }
             }
 
-            console.error('🪼 Jellyfin Enhanced: Failed to load translations from any source');
-            return {};
+            if (Object.keys(merged).length === 0) {
+                console.error('🪼 Jellyfin Enhanced: Failed to load translations from any source');
+            }
+            return merged;
         } catch (error) {
             console.error('🪼 Jellyfin Enhanced: Failed to load translations:', error);
             return {};
