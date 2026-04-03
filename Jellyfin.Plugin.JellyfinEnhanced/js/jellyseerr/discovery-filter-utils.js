@@ -12,6 +12,19 @@
     const runtimeSortModes = new Map();
     const runtimeDiscoverFilters = new Map();
 
+    /**
+     * Translate with fallback. JE.t() returns the key itself when no translation
+     * is found, which is truthy and defeats the `|| fallback` pattern.
+     * @param {string} key - Translation key
+     * @param {string} fallback - Fallback text
+     * @returns {string}
+     */
+    function t(key, fallback) {
+        if (!JE.t) return fallback;
+        const val = JE.t(key);
+        return (val && val !== key) ? val : fallback;
+    }
+
     const SORT_OPTIONS = [
         { value: '', labelKey: 'discovery_sort_popular', fallback: 'Popular' },
         { value: 'vote_average.desc', labelKey: 'discovery_sort_top_rated', fallback: 'Top Rated' },
@@ -266,13 +279,13 @@
         container.style.cssText = 'display:inline-flex;align-items:center;gap:0.4em;font-size:0.85em;margin-left:auto;';
 
         const label = document.createElement('span');
-        label.textContent = JE.t ? (JE.t('discovery_sort_label') || 'Sort:') : 'Sort:';
+        label.textContent = t('discovery_sort_label', 'Sort:');
         label.style.cssText = 'color:rgba(255,255,255,0.5);';
         container.appendChild(label);
 
         const select = document.createElement('select');
         select.className = 'jellyseerr-sort-select';
-        select.setAttribute('aria-label', JE.t ? (JE.t('discovery_sort_label') || 'Sort') : 'Sort');
+        select.setAttribute('aria-label', t('discovery_sort_label', 'Sort'));
         select.style.cssText = `
             background: rgba(255,255,255,0.08);
             color: rgba(255,255,255,0.85);
@@ -288,7 +301,7 @@
         SORT_OPTIONS.forEach(opt => {
             const option = document.createElement('option');
             option.value = opt.value;
-            option.textContent = JE.t ? (JE.t(opt.labelKey) || opt.fallback) : opt.fallback;
+            option.textContent = t(opt.labelKey, opt.fallback);
             option.style.cssText = 'background:#1a1a2e;color:#fff;';
             if (currentSort === opt.value) option.selected = true;
             select.appendChild(option);
@@ -359,7 +372,6 @@
      */
     function createDiscoverFilterControl(moduleName, onFiltersChange) {
         const filters = getDiscoverFilters(moduleName);
-        const t = (key, fallback) => JE.t ? (JE.t(key) || fallback) : fallback;
 
         const container = document.createElement('div');
         container.className = 'jellyseerr-discover-filters';
