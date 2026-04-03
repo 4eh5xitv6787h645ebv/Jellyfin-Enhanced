@@ -368,16 +368,17 @@
 
             const domStart = performance.now();
 
-            // Insert sections in order after the anchor element, tracking the
-            // last inserted node so Similar always appears after Recommended
-            let lastInserted = insertAfter;
+            // Build all sections off-DOM first, then insert in a single operation
+            // to trigger only one forced reflow instead of one per section.
+            // Each .after() triggers emby-scroller's connectedCallback which
+            // synchronously reads layout properties (offsetWidth, scrollWidth).
+            const sectionsToInsert = [];
 
             if (filteredRecommended.length > 0) {
                 const recommendedTitle = JE.t ? (JE.t('jellyseerr_recommended_title') || 'Recommended') : 'Recommended';
                 const recommendedSection = createJellyseerrSection(filteredRecommended, recommendedTitle);
                 if (recommendedSection) {
-                    lastInserted.after(recommendedSection);
-                    lastInserted = recommendedSection;
+                    sectionsToInsert.push(recommendedSection);
                 }
             }
 
@@ -385,8 +386,13 @@
                 const similarTitle = JE.t ? (JE.t('jellyseerr_similar_title') || 'Similar') : 'Similar';
                 const similarSection = createJellyseerrSection(filteredSimilar, similarTitle);
                 if (similarSection) {
-                    lastInserted.after(similarSection);
+                    sectionsToInsert.push(similarSection);
                 }
+            }
+
+            // Single DOM insertion: .after() accepts multiple nodes
+            if (sectionsToInsert.length > 0) {
+                insertAfter.after(...sectionsToInsert);
             }
 
             const domMs = (performance.now() - domStart).toFixed(1);
