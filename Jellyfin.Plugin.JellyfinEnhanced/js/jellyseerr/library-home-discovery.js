@@ -288,6 +288,42 @@
     }
 
     /**
+     * Waits for the emby-tabs element to be present in the DOM.
+     * Jellyfin rebuilds this element on every library page view via setTabs().
+     * @param {AbortSignal} signal
+     * @returns {Promise<boolean>}
+     */
+    function waitForTabs(signal) {
+        return new Promise(resolve => {
+            if (signal.aborted) { resolve(false); return; }
+
+            const check = () => !!document.querySelector('[is="emby-tabs"] .emby-tab-button');
+            if (check()) { resolve(true); return; }
+
+            let observerHandle = null;
+            let timeoutId = null;
+
+            const done = (result) => {
+                if (observerHandle) { observerHandle.unsubscribe(); observerHandle = null; }
+                if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+                resolve(result);
+            };
+
+            if (signal) {
+                signal.addEventListener('abort', () => done(false), { once: true });
+            }
+
+            if (JE.helpers?.onBodyMutation) {
+                observerHandle = JE.helpers.onBodyMutation('library-home-tabs-detect', () => {
+                    if (check()) done(true);
+                });
+            }
+
+            timeoutId = setTimeout(() => done(check()), 3000);
+        });
+    }
+
+    /**
      * Main handler for library page detection
      */
     async function handleLibraryPage() {
@@ -301,11 +337,13 @@
 
         if (currentAbortController) currentAbortController.abort();
         currentAbortController = new AbortController();
+        const signal = currentAbortController.signal;
 
         console.debug(`${logPrefix} Detected ${libraryType} library page`);
 
-        // Wait a frame for Jellyfin to finish rendering tabs
-        await new Promise(resolve => requestAnimationFrame(resolve));
+        // Wait for Jellyfin to finish rendering tabs (setTabs rebuilds on every view)
+        const tabsReady = await waitForTabs(signal);
+        if (!tabsReady || signal.aborted) return;
 
         // Set up tab change listener
         setupTabListener();
