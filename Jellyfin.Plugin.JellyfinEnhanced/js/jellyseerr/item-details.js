@@ -19,7 +19,6 @@
      */
     async function getTmdbIdFromItem(itemId, signal) {
         try {
-            // Check for abort before making request
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
             }
@@ -29,7 +28,6 @@
                 ? await JE.helpers.getItemCached(itemId, { userId })
                 : await ApiClient.getItem(userId, itemId);
 
-            // Check for abort after request
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
             }
@@ -39,13 +37,11 @@
                 return { tmdbId: null, type: null };
             }
 
-            // Check if item is Movie or Series
             const itemType = item.Type;
             if (itemType !== 'Movie' && itemType !== 'Series') {
                 return { tmdbId: null, type: null };
             }
 
-            // Get TMDB ID from provider IDs
             const tmdbId = item.ProviderIds?.Tmdb;
             if (!tmdbId) {
                 console.warn(`${logPrefix} No TMDB ID found for item:`, item.Name);
@@ -64,11 +60,10 @@
     /**
      * Wait for the detail page content to be ready
      * @param {AbortSignal} [signal] - Optional abort signal
-     * @returns {Promise<HTMLElement|null>}
+     * @returns {Promise<{detailPageContent: HTMLElement, moreLikeThisSection: HTMLElement}|null>}
      */
     function waitForDetailPageReady(signal) {
         return new Promise((resolve) => {
-            // Check for abort
             if (signal?.aborted) {
                 resolve(null);
                 return;
@@ -87,14 +82,12 @@
                 return null;
             };
 
-            // Try immediately
             const immediate = checkPage();
             if (immediate) {
                 resolve(immediate);
                 return;
             }
 
-            // Set up observer
             let observerHandle = null;
             let timeoutId = null;
 
@@ -109,7 +102,6 @@
                 }
             };
 
-            // Handle abort
             if (signal) {
                 signal.addEventListener('abort', () => {
                     cleanup();
@@ -125,7 +117,6 @@
                 }
             });
 
-            // Timeout fallback (3 seconds)
             timeoutId = setTimeout(() => {
                 cleanup();
                 const result = checkPage();
@@ -135,28 +126,46 @@
     }
 
     /**
-     * Creates a Jellyseerr section similar to search results
-     * @param {Array} results - Array of Jellyseerr items
+     * Applies all configured filters to a results array.
+     * Consolidates library exclusion, blocklist exclusion, and hidden content filtering.
+     * @param {Array} results - Raw Seerr results
+     * @param {boolean} excludeLibraryItems - Whether to exclude items already in Jellyfin library
+     * @param {boolean} excludeBlocklistedItems - Whether to exclude blocklisted items (status 6)
+     * @returns {Array} Filtered results
+     */
+    function applyFilters(results, excludeLibraryItems, excludeBlocklistedItems) {
+        let filtered = results.filter(item => {
+            if (excludeLibraryItems && item.mediaInfo?.jellyfinMediaId) return false;
+            if (excludeBlocklistedItems && item.mediaInfo?.status === 6) return false;
+            return true;
+        });
+        if (JE.hiddenContent) {
+            filtered = JE.hiddenContent.filterJellyseerrResults(filtered, 'recommendations');
+        }
+        return filtered;
+    }
+
+    /**
+     * Removes items from the second array that already appear in the first.
+     * Uses item.id which is the TMDB ID in Seerr similar/recommendations responses.
+     * @param {Array} primary - The primary results (kept as-is)
+     * @param {Array} secondary - The secondary results (duplicates removed)
+     * @returns {Array} Deduplicated secondary results
+     */
+    function deduplicateAgainst(primary, secondary) {
+        const primaryIds = new Set(primary.map(item => item.id));
+        return secondary.filter(item => !primaryIds.has(item.id));
+    }
+
+    /**
+     * Creates a Jellyseerr section for the detail page.
+     * Expects pre-filtered results (no internal filtering).
+     * @param {Array} results - Pre-filtered array of Seerr items
      * @param {string} title - Section title (already translated)
-     * @returns {HTMLElement} - Section element
+     * @returns {HTMLElement|null} Section element, or null if no cards
      */
     function createJellyseerrSection(results, title) {
         if (!results || results.length === 0) {
-            return null;
-        }
-
-        // Filter out library items if configured
-        const excludeLibraryItems = JE.pluginConfig?.JellyseerrExcludeLibraryItems === true;
-        let filteredResults = results;
-
-        if (excludeLibraryItems) {
-            filteredResults = results.filter(item => !item.mediaInfo?.jellyfinMediaId);
-        }
-        if (JE.hiddenContent) {
-            filteredResults = JE.hiddenContent.filterJellyseerrResults(filteredResults, 'recommendations');
-        }
-
-        if (filteredResults.length === 0) {
             return null;
         }
 
@@ -176,7 +185,6 @@
         scrollerContainer.dataset.centerfocus = "card";
         scrollerContainer.dataset.scrollModeX = "custom";
 
-        // Enable smooth native horizontal touch scrolling (from KefinTweaks)
         scrollerContainer.style.scrollSnapType = 'none';
         scrollerContainer.style.touchAction = 'auto';
         scrollerContainer.style.overscrollBehaviorX = 'contain';
@@ -188,24 +196,17 @@
         itemsContainer.className = 'focuscontainer-x itemsContainer scrollSlider animatedScrollX';
         itemsContainer.style.whiteSpace = 'nowrap';
 
-        // Use DocumentFragment for batch DOM insertion
         const fragment = document.createDocumentFragment();
 
-        // Add items to container
-        for (const item of filteredResults) {
-            const card = JE.jellyseerrUI && JE.jellyseerrUI.createJellyseerrCard
-                ? JE.jellyseerrUI.createJellyseerrCard(item, true, true)
-                : null;
+        for (const item of results) {
+            const card = JE.jellyseerrUI?.createJellyseerrCard?.(item, true, true);
             if (card) {
-                const titleLink = card.querySelector('.cardText-first a');
-
-                // If item exists in library, link to library item
                 const jellyfinMediaId = item.mediaInfo?.jellyfinMediaId;
                 if (jellyfinMediaId) {
                     card.setAttribute('data-library-item', 'true');
                     card.setAttribute('data-jellyfin-media-id', jellyfinMediaId);
                     card.classList.add('jellyseerr-card-in-library');
-                    // Update title link to point to library item
+                    const titleLink = card.querySelector('.cardText-first a');
                     if (titleLink) {
                         const itemName = item.title || item.name;
                         titleLink.textContent = itemName;
@@ -220,6 +221,9 @@
         }
 
         itemsContainer.appendChild(fragment);
+        if (itemsContainer.children.length === 0) {
+            return null;
+        }
         scrollerContainer.appendChild(itemsContainer);
         section.appendChild(scrollerContainer);
         return section;
@@ -230,25 +234,23 @@
      * @param {string} itemId - Jellyfin item ID
      */
     async function renderSimilarAndRecommended(itemId) {
-        // Prevent duplicate renders (check only - add after success)
         if (processedItems.has(itemId)) {
             return;
         }
 
-        // Cancel any previous in-flight requests
         if (currentAbortController) {
             currentAbortController.abort();
         }
         currentAbortController = new AbortController();
         const signal = currentAbortController.signal;
 
-        // Start metrics if enabled
+        const perfStart = performance.now();
+
         if (JE.requestManager?.metrics?.enabled) {
             JE.requestManager.startMeasurement('similar-recommended');
         }
 
         try {
-            // Check configuration settings early
             const showSimilar = JE.pluginConfig?.JellyseerrShowSimilar === true;
             const showRecommended = JE.pluginConfig?.JellyseerrShowRecommended === true;
 
@@ -257,7 +259,6 @@
                 return;
             }
 
-            // Check if Jellyseerr is active
             const status = await JE.jellyseerrAPI.checkUserStatus();
             if (signal.aborted) return;
 
@@ -266,7 +267,6 @@
                 return;
             }
 
-            // Get TMDB ID and type
             const { tmdbId, type } = await getTmdbIdFromItem(itemId, signal);
             if (signal.aborted) return;
 
@@ -275,9 +275,9 @@
                 return;
             }
 
+            const fetchStart = performance.now();
             console.debug(`${logPrefix} Fetching similar and recommended content for TMDB ID ${tmdbId} (${type})`);
 
-            // Fetch only the data that's enabled, passing signal for cancellation
             const fetchOptions = { signal };
             const promises = [];
 
@@ -301,13 +301,14 @@
                 promises.push(Promise.resolve({ results: [] }));
             }
 
-            // Wait for page to be ready in parallel with data fetch
             const [similarData, recommendedData, pageReady] = await Promise.all([
                 ...promises,
                 waitForDetailPageReady(signal)
             ]);
 
             if (signal.aborted) return;
+
+            const fetchMs = (performance.now() - fetchStart).toFixed(1);
 
             const similarResults = similarData?.results || [];
             const recommendedResults = recommendedData?.results || [];
@@ -317,7 +318,6 @@
                 return;
             }
 
-            // Check page readiness
             if (!pageReady) {
                 console.warn(`${logPrefix} Page not ready for insertion`);
                 return;
@@ -325,52 +325,48 @@
 
             const { detailPageContent, moreLikeThisSection } = pageReady;
 
-            // Filter items if configured to exclude library items or blocklisted items (status 6)
+            // Single-pass filtering for both arrays
             const excludeLibraryItems = JE.pluginConfig?.JellyseerrExcludeLibraryItems === true;
             const excludeBlocklistedItems = JE.pluginConfig?.JellyseerrExcludeBlocklistedItems === true;
 
-            const filteredSimilarResults = similarResults.filter(item => {
-                if (excludeLibraryItems && item.mediaInfo?.jellyfinMediaId) return false;
-                if (excludeBlocklistedItems && item.mediaInfo?.status === 6) return false; // Status 6 = Blocklisted
-                return true;
-            });
+            let filteredRecommended = applyFilters(recommendedResults, excludeLibraryItems, excludeBlocklistedItems);
+            let filteredSimilar = applyFilters(similarResults, excludeLibraryItems, excludeBlocklistedItems);
 
-            const filteredRecommendedResults = recommendedResults.filter(item => {
-                if (excludeLibraryItems && item.mediaInfo?.jellyfinMediaId) return false;
-                if (excludeBlocklistedItems && item.mediaInfo?.status === 6) return false; // Status 6 = Blocklisted
-                return true;
-            });
+            // Cap Recommended first, then deduplicate Similar against only visible items
+            filteredRecommended = filteredRecommended.slice(0, 20);
 
-            if (filteredSimilarResults.length === 0 && filteredRecommendedResults.length === 0) {
-                console.debug(`${logPrefix} No content to display after filtering library items`);
+            const preDedupeCount = filteredSimilar.length;
+            if (filteredRecommended.length > 0 && filteredSimilar.length > 0) {
+                filteredSimilar = deduplicateAgainst(filteredRecommended, filteredSimilar);
+            }
+            const removedDupes = preDedupeCount - filteredSimilar.length;
+
+            filteredSimilar = filteredSimilar.slice(0, 20);
+
+            if (filteredSimilar.length === 0 && filteredRecommended.length === 0) {
+                console.debug(`${logPrefix} No content to display after filtering`);
                 return;
             }
 
-            // Final abort check before DOM manipulation
             if (signal.aborted) return;
 
-            // Remove any existing Jellyseerr sections to avoid duplicates
+            // Remove existing sections before inserting new ones
             detailPageContent.querySelectorAll('.jellyseerr-details-section').forEach(el => el.remove());
 
-            // Create and insert sections
-            if (filteredRecommendedResults.length > 0) {
+            const domStart = performance.now();
+
+            // Build sections off-DOM, then insert
+            if (filteredRecommended.length > 0) {
                 const recommendedTitle = JE.t ? (JE.t('jellyseerr_recommended_title') || 'Recommended') : 'Recommended';
-                const recommendedSection = createJellyseerrSection(
-                    filteredRecommendedResults.slice(0, 20),
-                    recommendedTitle
-                );
+                const recommendedSection = createJellyseerrSection(filteredRecommended, recommendedTitle);
                 if (recommendedSection) {
                     moreLikeThisSection.after(recommendedSection);
-                    console.debug(`${logPrefix} Added Recommended section with ${filteredRecommendedResults.length} items`);
                 }
             }
 
-            if (filteredSimilarResults.length > 0) {
+            if (filteredSimilar.length > 0) {
                 const similarTitle = JE.t ? (JE.t('jellyseerr_similar_title') || 'Similar') : 'Similar';
-                const similarSection = createJellyseerrSection(
-                    filteredSimilarResults.slice(0, 20),
-                    similarTitle
-                );
+                const similarSection = createJellyseerrSection(filteredSimilar, similarTitle);
                 if (similarSection) {
                     const lastJellyseerrSection = detailPageContent.querySelector('.jellyseerr-details-section:last-of-type');
                     if (lastJellyseerrSection) {
@@ -378,20 +374,25 @@
                     } else {
                         moreLikeThisSection.after(similarSection);
                     }
-                    console.debug(`${logPrefix} Added Similar section with ${filteredSimilarResults.length} items`);
                 }
             }
 
-            // Mark as successfully processed AFTER successful render
+            const domMs = (performance.now() - domStart).toFixed(1);
+            const totalMs = (performance.now() - perfStart).toFixed(1);
+
             processedItems.add(itemId);
 
-            // End metrics
             if (JE.requestManager?.metrics?.enabled) {
                 JE.requestManager.endMeasurement('similar-recommended');
             }
 
+            console.debug(
+                `${logPrefix} Rendered: ${filteredRecommended.length} recommended + ${filteredSimilar.length} similar` +
+                ` (${removedDupes} cross-section dupes removed)` +
+                ` | fetch=${fetchMs}ms dom=${domMs}ms total=${totalMs}ms`
+            );
+
         } catch (error) {
-            // Silently ignore abort errors (don't mark as processed so retry is possible)
             if (error.name === 'AbortError') {
                 console.debug(`${logPrefix} Request aborted for item ${itemId}`);
                 return;
@@ -404,7 +405,6 @@
      * Handles item details page navigation
      */
     function handleItemDetailsPage() {
-        // Get item ID from URL
         const hash = window.location.hash;
         if (!hash.includes('/details?id=')) {
             return;
@@ -413,8 +413,6 @@
         try {
             const itemId = new URLSearchParams(hash.split('?')[1]).get('id');
             if (itemId) {
-                // Use requestAnimationFrame instead of fixed timeout
-                // This ensures we're in sync with the rendering cycle
                 requestAnimationFrame(() => {
                     renderSimilarAndRecommended(itemId);
                 });
@@ -428,12 +426,10 @@
      * Cleanup function for navigation
      */
     function cleanup() {
-        // Abort any in-flight requests
         if (currentAbortController) {
             currentAbortController.abort();
             currentAbortController = null;
         }
-        // Clear processed items cache
         processedItems.clear();
     }
 
@@ -443,22 +439,18 @@
     function initialize() {
         console.debug(`${logPrefix} Initializing Recommendations and Similar sections`);
 
-        // Listen for hash changes (navigation)
         window.addEventListener('hashchange', () => {
             cleanup();
             handleItemDetailsPage();
         });
 
-        // Check current page on load
         handleItemDetailsPage();
 
-        // Also listen for viewshow events (Jellyfin's custom event)
         document.addEventListener('viewshow', () => {
             handleItemDetailsPage();
         });
     }
 
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initialize);
     } else {
