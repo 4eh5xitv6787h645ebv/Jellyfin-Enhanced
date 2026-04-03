@@ -405,11 +405,13 @@
             font-family: inherit;
         `;
 
+        const maxYear = String(new Date().getFullYear() + 5);
+
         const yearFrom = document.createElement('input');
         yearFrom.type = 'number';
         yearFrom.placeholder = t('discovery_filter_year_from', 'Year from');
         yearFrom.min = '1900';
-        yearFrom.max = '2030';
+        yearFrom.max = maxYear;
         yearFrom.value = filters.yearFrom;
         yearFrom.style.cssText = inputStyle;
         yearFrom.setAttribute('aria-label', t('discovery_filter_year_from', 'Year from'));
@@ -422,7 +424,7 @@
         yearTo.type = 'number';
         yearTo.placeholder = t('discovery_filter_year_to', 'Year to');
         yearTo.min = '1900';
-        yearTo.max = '2030';
+        yearTo.max = maxYear;
         yearTo.value = filters.yearTo;
         yearTo.style.cssText = inputStyle;
         yearTo.setAttribute('aria-label', t('discovery_filter_year_to', 'Year to'));
@@ -442,7 +444,6 @@
         panel.appendChild(yearTo);
         panel.appendChild(ratingMin);
 
-        // Mark toggle as active when filters are set
         const hasActiveFilters = filters.yearFrom || filters.yearTo || filters.ratingMin;
         if (hasActiveFilters) {
             toggle.style.borderColor = '#7b68ee';
@@ -455,10 +456,21 @@
             panel.style.display = isVisible ? 'none' : 'inline-flex';
         });
 
+        let debounceTimer = null;
         const applyFilters = () => {
+            // Swap yearFrom/yearTo if inverted
+            let yFrom = yearFrom.value;
+            let yTo = yearTo.value;
+            if (yFrom && yTo && parseInt(yFrom) > parseInt(yTo)) {
+                yearFrom.value = yTo;
+                yearTo.value = yFrom;
+                yFrom = yearFrom.value;
+                yTo = yearTo.value;
+            }
+
             const newFilters = {
-                yearFrom: yearFrom.value,
-                yearTo: yearTo.value,
+                yearFrom: yFrom,
+                yearTo: yTo,
                 ratingMin: ratingMin.value
             };
             setDiscoverFilters(moduleName, newFilters);
@@ -470,9 +482,16 @@
             if (onFiltersChange) onFiltersChange(newFilters);
         };
 
-        yearFrom.addEventListener('change', applyFilters);
-        yearTo.addEventListener('change', applyFilters);
-        ratingMin.addEventListener('change', applyFilters);
+        // Use debounced input event so filters apply as the user types
+        // without requiring blur. Debounce prevents re-fetching on every keystroke.
+        const debouncedApply = () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(applyFilters, 500);
+        };
+
+        yearFrom.addEventListener('input', debouncedApply);
+        yearTo.addEventListener('input', debouncedApply);
+        ratingMin.addEventListener('input', debouncedApply);
 
         container.appendChild(toggle);
         container.appendChild(panel);
