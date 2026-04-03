@@ -400,7 +400,7 @@
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 4px;
             padding: 3px 6px;
-            width: 4.5em;
+            width: 6.5em;
             font-size: inherit;
             font-family: inherit;
         `;
@@ -434,7 +434,7 @@
         ratingMin.max = '10';
         ratingMin.step = '0.5';
         ratingMin.value = filters.ratingMin;
-        ratingMin.style.cssText = inputStyle + 'width:5em;';
+        ratingMin.style.cssText = inputStyle + 'width:6.5em;';
         ratingMin.setAttribute('aria-label', t('discovery_filter_rating_min', 'Min rating'));
 
         panel.appendChild(yearFrom);
