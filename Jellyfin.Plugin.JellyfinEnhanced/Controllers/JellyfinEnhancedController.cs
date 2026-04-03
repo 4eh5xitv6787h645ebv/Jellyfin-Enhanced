@@ -1170,18 +1170,39 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/search/keyword?query={Uri.EscapeDataString(query)}", HttpMethod.Get);
         }
 
+        [HttpGet("tmdb/search/company")]
+        [Authorize]
+        public Task<IActionResult> SearchTmdbCompany([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Task.FromResult<IActionResult>(BadRequest(new { message = "Query cannot be empty" }));
+            }
+            return ProxyJellyseerrRequest($"/api/v1/search/company?query={Uri.EscapeDataString(query)}", HttpMethod.Get);
+        }
+
         [HttpGet("tmdb/genres/movie")]
         [Authorize]
-        public Task<IActionResult> GetTmdbMovieGenres()
+        public Task<IActionResult> GetTmdbMovieGenres([FromQuery] string? language = null)
         {
-            return ProxyJellyseerrRequest("/api/v1/genres/movie", HttpMethod.Get);
+            var path = "/api/v1/genres/movie";
+            if (!string.IsNullOrEmpty(language))
+            {
+                path += $"?language={Uri.EscapeDataString(language)}";
+            }
+            return ProxyJellyseerrRequest(path, HttpMethod.Get);
         }
 
         [HttpGet("tmdb/genres/tv")]
         [Authorize]
-        public Task<IActionResult> GetTmdbTvGenres()
+        public Task<IActionResult> GetTmdbTvGenres([FromQuery] string? language = null)
         {
-            return ProxyJellyseerrRequest("/api/v1/genres/tv", HttpMethod.Get);
+            var path = "/api/v1/genres/tv";
+            if (!string.IsNullOrEmpty(language))
+            {
+                path += $"?language={Uri.EscapeDataString(language)}";
+            }
+            return ProxyJellyseerrRequest(path, HttpMethod.Get);
         }
 
         [HttpGet("jellyseerr/discover/genreslider/movie")]
@@ -1196,6 +1217,27 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public Task<IActionResult> GetTvGenreSlider()
         {
             return ProxyJellyseerrRequest("/api/v1/discover/genreslider/tv", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/trending")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTrending([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/discover/trending?page={page}", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/movies/upcoming")]
+        [Authorize]
+        public Task<IActionResult> DiscoverUpcomingMovies([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies/upcoming?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/tv/upcoming")]
+        [Authorize]
+        public Task<IActionResult> DiscoverUpcomingTv([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/tv/upcoming?page={page}"), HttpMethod.Get);
         }
 
         [HttpGet("jellyseerr/overrideRule")]

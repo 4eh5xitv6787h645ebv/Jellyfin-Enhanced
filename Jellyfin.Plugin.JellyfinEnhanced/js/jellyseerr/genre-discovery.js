@@ -55,28 +55,47 @@
                 throw new DOMException('Aborted', 'AbortError');
             }
 
+            // Fetch genre lists in the user's browser language so names match
+            // Jellyfin's display language. Falls back to Seerr's default if
+            // the language param is not supported.
+            const lang = (navigator.language || 'en').split('-')[0];
             const fetchOptions = { signal };
+            const langParam = lang !== 'en' ? `?language=${lang}` : '';
+
             const [tvResponse, movieResponse] = await Promise.all([
-                fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/tv', fetchOptions).catch(() => []),
-                fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/movie', fetchOptions).catch(() => [])
+                fetchWithManagedRequest(`/JellyfinEnhanced/tmdb/genres/tv${langParam}`, fetchOptions).catch(() => []),
+                fetchWithManagedRequest(`/JellyfinEnhanced/tmdb/genres/movie${langParam}`, fetchOptions).catch(() => [])
             ]);
 
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
             }
 
-            // Build lookup map by genre name (lowercase for matching)
+            // Build lookup map by genre name (lowercase for matching).
+            // Also fetch English genres as fallback for locale mismatches.
             tmdbGenreCache = {};
-            (tvResponse || []).forEach(g => {
-                const key = g.name.toLowerCase();
-                if (!tmdbGenreCache[key]) tmdbGenreCache[key] = { tv: null, movie: null };
-                tmdbGenreCache[key].tv = g.id;
-            });
-            (movieResponse || []).forEach(g => {
-                const key = g.name.toLowerCase();
-                if (!tmdbGenreCache[key]) tmdbGenreCache[key] = { tv: null, movie: null };
-                tmdbGenreCache[key].movie = g.id;
-            });
+
+            const addGenres = (list, type) => {
+                (list || []).forEach(g => {
+                    const key = g.name.toLowerCase();
+                    if (!tmdbGenreCache[key]) tmdbGenreCache[key] = { tv: null, movie: null };
+                    tmdbGenreCache[key][type] = g.id;
+                });
+            };
+
+            addGenres(tvResponse, 'tv');
+            addGenres(movieResponse, 'movie');
+
+            // If the user's language is not English, also load English genres
+            // as fallback so both locale and English genre names match.
+            if (lang !== 'en') {
+                const [tvEn, movieEn] = await Promise.all([
+                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/tv', fetchOptions).catch(() => []),
+                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/movie', fetchOptions).catch(() => [])
+                ]);
+                addGenres(tvEn, 'tv');
+                addGenres(movieEn, 'movie');
+            }
 
             return tmdbGenreCache;
         } catch (error) {
@@ -181,6 +200,7 @@
             const sortBy = JE.discoveryFilter?.getTvSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/tv/genre/${genreId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (JE.discoveryFilter?.appendFilterParams) path = JE.discoveryFilter.appendFilterParams(path, MODULE_NAME, 'tv');
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -206,6 +226,7 @@
             const sortBy = JE.discoveryFilter?.getSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/movies/genre/${genreId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (JE.discoveryFilter?.appendFilterParams) path = JE.discoveryFilter.appendFilterParams(path, MODULE_NAME, 'movie');
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -256,15 +277,17 @@
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-genre-discovery-section padded-left padded-right';
         section.setAttribute('data-jellyseerr-genre-discovery', 'true');
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-label', title);
         section.style.cssText = 'margin-top:2em;padding-top:1em;border-top:1px solid rgba(255,255,255,0.1)';
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange);
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -663,7 +686,7 @@
             if (existing) existing.remove();
 
             const sectionTitle = JE.t('discovery_more_with_genre', { genre: genreInfo.name });
-            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
+            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange, handleSortChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 
             const fragment = createCardsFragment(displayResults);

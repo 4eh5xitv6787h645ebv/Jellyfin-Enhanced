@@ -113,6 +113,7 @@
             const sortBy = JE.discoveryFilter?.getTvSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/tv/keyword/${keywordId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (JE.discoveryFilter?.appendFilterParams) path = JE.discoveryFilter.appendFilterParams(path, MODULE_NAME, 'tv');
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -138,6 +139,7 @@
             const sortBy = JE.discoveryFilter?.getSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/movies/keyword/${keywordId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (JE.discoveryFilter?.appendFilterParams) path = JE.discoveryFilter.appendFilterParams(path, MODULE_NAME, 'movie');
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -188,15 +190,17 @@
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-tag-discovery-section padded-left padded-right';
         section.setAttribute('data-jellyseerr-tag-discovery', 'true');
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-label', title);
         section.style.cssText = 'margin-top:2em;padding-top:1em;border-top:1px solid rgba(255,255,255,0.1)';
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange);
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -564,7 +568,7 @@
             if (existing) existing.remove();
 
             const sectionTitle = JE.t('discovery_more_with_tag', { tag: tagName });
-            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
+            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange, handleSortChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 
             const fragment = createCardsFragment(displayResults);

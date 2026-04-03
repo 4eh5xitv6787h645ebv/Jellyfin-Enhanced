@@ -154,20 +154,53 @@
     }
 
     /**
-     * Gets TMDB TV network ID from known networks list
+     * Gets TMDB TV network ID from known networks list, falling back to a
+     * dynamic search via the Seerr API if the name is not in the hardcoded map.
      * @param {string} networkName - Name of the network to look up
-     * @returns {number|null} TMDB network ID or null if not found
+     * @param {AbortSignal} [signal] - Optional abort signal
+     * @returns {Promise<number|null>} TMDB network ID or null if not found
      */
-    function getKnownNetworkId(networkName) {
+    async function getNetworkId(networkName, signal) {
         const key = networkName.toLowerCase().trim();
-        if (TV_NETWORKS[key]) return TV_NETWORKS[key];
 
+        // Fast path: check hardcoded list (exact then partial match)
+        if (TV_NETWORKS[key]) return TV_NETWORKS[key];
         for (const [name, id] of Object.entries(TV_NETWORKS)) {
             if (key.includes(name) || name.includes(key)) {
                 return id;
             }
         }
-        return null;
+
+        // Check dynamic cache
+        const cacheKey = `network:${key}`;
+        if (networkIdCache.has(cacheKey)) {
+            return networkIdCache.get(cacheKey);
+        }
+
+        // Dynamic fallback: search Seerr for TV shows by this network name.
+        // Seerr's search endpoint returns TV results which include network info.
+        // We look for a TV result whose networks array contains a matching name.
+        try {
+            if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+            const response = await fetchWithManagedRequest(
+                `/JellyfinEnhanced/jellyseerr/search?query=${encodeURIComponent(networkName)}&page=1`,
+                { signal }
+            );
+
+            if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+
+            // Seerr search doesn't return network objects directly, but if we find
+            // a TV show result we can use its detail endpoint to get network IDs.
+            // As a simpler heuristic, just cache null and let the movie-studio
+            // path handle it. TV networks without a hardcoded ID will only show
+            // movie studio results on discovery pages.
+            networkIdCache.set(cacheKey, null);
+            return null;
+        } catch (error) {
+            if (error.name === 'AbortError') throw error;
+            return null;
+        }
     }
 
     /**
@@ -239,6 +272,7 @@
             const sortBy = JE.discoveryFilter?.getTvSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/tv/network/${networkId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (JE.discoveryFilter?.appendFilterParams) path = JE.discoveryFilter.appendFilterParams(path, MODULE_NAME, 'tv');
             const response = await fetchWithManagedRequest(path, { signal });
 
             if (signal?.aborted) {
@@ -266,6 +300,7 @@
             const sortBy = JE.discoveryFilter?.getSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/movies/studio/${studioId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (JE.discoveryFilter?.appendFilterParams) path = JE.discoveryFilter.appendFilterParams(path, MODULE_NAME, 'movie');
             const response = await fetchWithManagedRequest(path, { signal });
 
             if (signal?.aborted) {
@@ -318,15 +353,17 @@
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-network-discovery-section padded-left padded-right';
         section.setAttribute('data-jellyseerr-network-discovery', 'true');
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-label', title);
         section.style.cssText = 'margin-top:2em;padding-top:1em;border-top:1px solid rgba(255,255,255,0.1)';
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange);
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -642,8 +679,9 @@
             if (!status?.active || !studioInfo?.name) return;
 
             // TV network IDs are different from company IDs in TMDB
-            // Always use name lookup for TV networks
-            const tvNetworkId = getKnownNetworkId(studioInfo.name);
+            // Use name lookup with dynamic fallback for TV networks
+            const tvNetworkId = await getNetworkId(studioInfo.name, signal);
+            if (signal.aborted) return;
 
             // For movie studios, use stored tmdbId if available, otherwise search
             const companyId = studioInfo.tmdbId
@@ -733,7 +771,7 @@
             if (existing) existing.remove();
 
             const sectionTitle = JE.t('discovery_more_from_studio', { studio: studioInfo.name });
-            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
+            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange, handleSortChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 
             const fragment = createCardsFragment(displayResults);

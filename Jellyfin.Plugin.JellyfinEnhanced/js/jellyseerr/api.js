@@ -819,6 +819,48 @@
     api.fetchRecommendedTvShows = (tmdbId, pageOrOptions) => fetchRelated('tv', tmdbId, 'recommendations', pageOrOptions);
 
     /**
+     * Fetches trending content from Seerr (mixed movies and TV).
+     * @param {object} [options] - Options including signal for cancellation
+     * @returns {Promise<{results: Array, page: number, totalPages: number}>}
+     */
+    api.fetchTrending = async function(options = {}) {
+        try {
+            return await get('/discover/trending?page=1', options);
+        } catch (error) {
+            if (error.name === 'AbortError') throw error;
+            return { results: [], page: 1, totalPages: 0 };
+        }
+    };
+
+    /**
+     * Fetches upcoming movies from Seerr.
+     * @param {object} [options] - Options including signal for cancellation
+     * @returns {Promise<{results: Array, page: number, totalPages: number}>}
+     */
+    api.fetchUpcomingMovies = async function(options = {}) {
+        try {
+            return await get('/discover/movies/upcoming?page=1', options);
+        } catch (error) {
+            if (error.name === 'AbortError') throw error;
+            return { results: [], page: 1, totalPages: 0 };
+        }
+    };
+
+    /**
+     * Fetches upcoming TV shows from Seerr.
+     * @param {object} [options] - Options including signal for cancellation
+     * @returns {Promise<{results: Array, page: number, totalPages: number}>}
+     */
+    api.fetchUpcomingTv = async function(options = {}) {
+        try {
+            return await get('/discover/tv/upcoming?page=1', options);
+        } catch (error) {
+            if (error.name === 'AbortError') throw error;
+            return { results: [], page: 1, totalPages: 0 };
+        }
+    };
+
+    /**
      * Fetches detailed information for a specific movie from Seerr.
      * @param {number} tmdbId - The TMDB ID of the movie.
      * @returns {Promise<object|null>}

@@ -10,12 +10,13 @@
     };
     const runtimeFilterModes = new Map();
     const runtimeSortModes = new Map();
+    const runtimeDiscoverFilters = new Map();
 
     const SORT_OPTIONS = [
-        { value: '', label: 'Popular' },
-        { value: 'vote_average.desc', label: 'Top Rated' },
-        { value: 'release_date.desc', label: 'Newest' },
-        { value: 'release_date.asc', label: 'Oldest' }
+        { value: '', labelKey: 'discovery_sort_popular', fallback: 'Popular' },
+        { value: 'vote_average.desc', labelKey: 'discovery_sort_top_rated', fallback: 'Top Rated' },
+        { value: 'release_date.desc', labelKey: 'discovery_sort_newest', fallback: 'Newest' },
+        { value: 'release_date.asc', labelKey: 'discovery_sort_oldest', fallback: 'Oldest' }
     ];
 
     /**
@@ -265,12 +266,13 @@
         container.style.cssText = 'display:inline-flex;align-items:center;gap:0.4em;font-size:0.85em;margin-left:auto;';
 
         const label = document.createElement('span');
-        label.textContent = 'Sort:';
+        label.textContent = JE.t ? (JE.t('discovery_sort_label') || 'Sort:') : 'Sort:';
         label.style.cssText = 'color:rgba(255,255,255,0.5);';
         container.appendChild(label);
 
         const select = document.createElement('select');
         select.className = 'jellyseerr-sort-select';
+        select.setAttribute('aria-label', JE.t ? (JE.t('discovery_sort_label') || 'Sort') : 'Sort');
         select.style.cssText = `
             background: rgba(255,255,255,0.08);
             color: rgba(255,255,255,0.85);
@@ -286,7 +288,7 @@
         SORT_OPTIONS.forEach(opt => {
             const option = document.createElement('option');
             option.value = opt.value;
-            option.textContent = opt.label;
+            option.textContent = JE.t ? (JE.t(opt.labelKey) || opt.fallback) : opt.fallback;
             option.style.cssText = 'background:#1a1a2e;color:#fff;';
             if (currentSort === opt.value) option.selected = true;
             select.appendChild(option);
@@ -303,15 +305,179 @@
     }
 
     /**
-     * Creates a section header with title, optional filter control, and sort dropdown
+     * Gets the current discover filters for a module.
+     * @param {string} moduleName
+     * @returns {{yearFrom: string, yearTo: string, ratingMin: string}}
+     */
+    function getDiscoverFilters(moduleName) {
+        return runtimeDiscoverFilters.get(moduleName) || { yearFrom: '', yearTo: '', ratingMin: '' };
+    }
+
+    /**
+     * Sets discover filters for a module.
+     * @param {string} moduleName
+     * @param {{yearFrom?: string, yearTo?: string, ratingMin?: string}} filters
+     */
+    function setDiscoverFilters(moduleName, filters) {
+        runtimeDiscoverFilters.set(moduleName, { ...getDiscoverFilters(moduleName), ...filters });
+    }
+
+    /**
+     * Appends discover filter query params to a URL path.
+     * Maps filter state to the backend's AppendDiscoverFilters params.
+     * @param {string} path - Base API path
+     * @param {string} moduleName - Module name for filter lookup
+     * @param {'tv'|'movie'} mediaType - Determines date field names
+     * @returns {string} Path with filter params appended
+     */
+    function appendFilterParams(path, moduleName, mediaType) {
+        const filters = getDiscoverFilters(moduleName);
+        const params = [];
+
+        if (filters.yearFrom) {
+            const dateParam = mediaType === 'tv' ? 'firstAirDateGte' : 'primaryReleaseDateGte';
+            params.push(`${dateParam}=${filters.yearFrom}-01-01`);
+        }
+        if (filters.yearTo) {
+            const dateParam = mediaType === 'tv' ? 'firstAirDateLte' : 'primaryReleaseDateLte';
+            params.push(`${dateParam}=${filters.yearTo}-12-31`);
+        }
+        if (filters.ratingMin) {
+            params.push(`voteAverageGte=${filters.ratingMin}`);
+        }
+
+        if (params.length === 0) return path;
+        const separator = path.includes('?') ? '&' : '?';
+        return path + separator + params.join('&');
+    }
+
+    /**
+     * Creates a compact filter control with year range and minimum rating inputs.
+     * @param {string} moduleName
+     * @param {Function} onFiltersChange - Callback: (filters) => void
+     * @returns {HTMLElement}
+     */
+    function createDiscoverFilterControl(moduleName, onFiltersChange) {
+        const filters = getDiscoverFilters(moduleName);
+        const t = (key, fallback) => JE.t ? (JE.t(key) || fallback) : fallback;
+
+        const container = document.createElement('div');
+        container.className = 'jellyseerr-discover-filters';
+        container.style.cssText = 'display:inline-flex;align-items:center;gap:0.4em;font-size:0.85em;';
+
+        const btnLabel = t('discovery_filter_btn', 'Filters');
+        const toggle = document.createElement('button');
+        toggle.textContent = btnLabel;
+        toggle.style.cssText = `
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 3px 10px;
+            font-size: inherit;
+            font-family: inherit;
+            cursor: pointer;
+        `;
+
+        const panel = document.createElement('div');
+        panel.style.cssText = 'display:none;align-items:center;gap:0.5em;';
+
+        const inputStyle = `
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.85);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 3px 6px;
+            width: 4.5em;
+            font-size: inherit;
+            font-family: inherit;
+        `;
+
+        const yearFrom = document.createElement('input');
+        yearFrom.type = 'number';
+        yearFrom.placeholder = t('discovery_filter_year_from', 'Year from');
+        yearFrom.min = '1900';
+        yearFrom.max = '2030';
+        yearFrom.value = filters.yearFrom;
+        yearFrom.style.cssText = inputStyle;
+        yearFrom.setAttribute('aria-label', t('discovery_filter_year_from', 'Year from'));
+
+        const dash = document.createElement('span');
+        dash.textContent = '-';
+        dash.style.color = 'rgba(255,255,255,0.4)';
+
+        const yearTo = document.createElement('input');
+        yearTo.type = 'number';
+        yearTo.placeholder = t('discovery_filter_year_to', 'Year to');
+        yearTo.min = '1900';
+        yearTo.max = '2030';
+        yearTo.value = filters.yearTo;
+        yearTo.style.cssText = inputStyle;
+        yearTo.setAttribute('aria-label', t('discovery_filter_year_to', 'Year to'));
+
+        const ratingMin = document.createElement('input');
+        ratingMin.type = 'number';
+        ratingMin.placeholder = t('discovery_filter_rating_min', 'Min rating');
+        ratingMin.min = '0';
+        ratingMin.max = '10';
+        ratingMin.step = '0.5';
+        ratingMin.value = filters.ratingMin;
+        ratingMin.style.cssText = inputStyle + 'width:5em;';
+        ratingMin.setAttribute('aria-label', t('discovery_filter_rating_min', 'Min rating'));
+
+        panel.appendChild(yearFrom);
+        panel.appendChild(dash);
+        panel.appendChild(yearTo);
+        panel.appendChild(ratingMin);
+
+        // Mark toggle as active when filters are set
+        const hasActiveFilters = filters.yearFrom || filters.yearTo || filters.ratingMin;
+        if (hasActiveFilters) {
+            toggle.style.borderColor = '#7b68ee';
+            toggle.style.color = '#7b68ee';
+            panel.style.display = 'inline-flex';
+        }
+
+        toggle.addEventListener('click', () => {
+            const isVisible = panel.style.display !== 'none';
+            panel.style.display = isVisible ? 'none' : 'inline-flex';
+        });
+
+        const applyFilters = () => {
+            const newFilters = {
+                yearFrom: yearFrom.value,
+                yearTo: yearTo.value,
+                ratingMin: ratingMin.value
+            };
+            setDiscoverFilters(moduleName, newFilters);
+
+            const active = newFilters.yearFrom || newFilters.yearTo || newFilters.ratingMin;
+            toggle.style.borderColor = active ? '#7b68ee' : 'rgba(255,255,255,0.2)';
+            toggle.style.color = active ? '#7b68ee' : 'rgba(255,255,255,0.7)';
+
+            if (onFiltersChange) onFiltersChange(newFilters);
+        };
+
+        yearFrom.addEventListener('change', applyFilters);
+        yearTo.addEventListener('change', applyFilters);
+        ratingMin.addEventListener('change', applyFilters);
+
+        container.appendChild(toggle);
+        container.appendChild(panel);
+        return container;
+    }
+
+    /**
+     * Creates a section header with title, optional filter control, sort dropdown, and discover filters
      * @param {string} title - Section title text
      * @param {string} moduleName - Module name for filter persistence
-     * @param {boolean} showFilter - Whether to show the filter control
-     * @param {Function} onFilterChange - Callback when filter changes
+     * @param {boolean} showFilter - Whether to show the content type filter control
+     * @param {Function} onFilterChange - Callback when content type filter changes
      * @param {Function} [onSortChange] - Callback when sort changes
+     * @param {Function} [onDiscoverFilterChange] - Callback when discover filters (year/rating) change
      * @returns {HTMLElement} - The header element
      */
-    function createSectionHeader(title, moduleName, showFilter, onFilterChange, onSortChange) {
+    function createSectionHeader(title, moduleName, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange) {
         const header = document.createElement('div');
         header.className = 'jellyseerr-discovery-header';
         header.style.cssText = 'display:flex;align-items:baseline;gap:1em;margin-bottom:1em;flex-wrap:wrap;width:100%;';
@@ -330,6 +496,11 @@
         if (onSortChange) {
             const sortControl = createSortControl(moduleName, onSortChange);
             header.appendChild(sortControl);
+        }
+
+        if (onDiscoverFilterChange) {
+            const discoverFilterControl = createDiscoverFilterControl(moduleName, onDiscoverFilterChange);
+            header.appendChild(discoverFilterControl);
         }
 
         return header;
@@ -591,12 +762,16 @@
         getTvSortMode,
         setSortMode,
         resetSortMode,
+        getDiscoverFilters,
+        setDiscoverFilters,
+        appendFilterParams,
         interleaveArrays,
         filterByMediaType,
         hasBothTypes,
         resultHasBothTypes,
         createFilterControl,
         createSortControl,
+        createDiscoverFilterControl,
         createSectionHeader,
         // Shared utilities
         fetchWithManagedRequest,

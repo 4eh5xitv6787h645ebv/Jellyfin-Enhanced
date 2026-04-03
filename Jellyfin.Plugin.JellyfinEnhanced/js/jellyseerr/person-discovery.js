@@ -269,15 +269,17 @@
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-person-discovery-section';
         section.setAttribute('data-jellyseerr-person-discovery', 'true');
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-label', title);
         section.style.cssText = 'margin-top:2em;padding-top:1em;border-top:1px solid rgba(255,255,255,0.1)';
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange, onDiscoverFilterChange);
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -532,6 +534,8 @@
 
             // Create and insert section
             const sectionTitle = JE.t('discovery_more_from_person', { person: personInfo.name });
+            // Person discovery uses client-side credit data, not the discover API,
+            // so year/rating discover filters don't apply here (no onDiscoverFilterChange)
             const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 

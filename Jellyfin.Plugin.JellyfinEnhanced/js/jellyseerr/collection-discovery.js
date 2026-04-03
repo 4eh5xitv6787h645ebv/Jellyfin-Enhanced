@@ -111,6 +111,8 @@
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-collection-discovery-section';
         section.setAttribute('data-jellyseerr-collection-discovery', 'true');
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-label', title);
         section.style.cssText = 'margin-top:2em;padding-top:1em;border-top:1px solid rgba(255,255,255,0.1)';
 
         const titleElement = document.createElement('h2');
