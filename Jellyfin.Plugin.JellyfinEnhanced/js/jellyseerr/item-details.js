@@ -11,6 +11,10 @@
     // Current abort controller for cancellation
     let currentAbortController = null;
 
+    // Track the last item ID scheduled via rAF to prevent duplicate calls
+    // when both hashchange and viewshow fire for the same navigation
+    let pendingItemId = null;
+
     /**
      * Gets the TMDB ID from a Jellyfin item
      * @param {string} itemId - Jellyfin item ID
@@ -58,9 +62,12 @@
     }
 
     /**
-     * Wait for the detail page content to be ready
+     * Wait for the detail page content to be ready.
+     * Returns the detail page container and an anchor element to insert sections after.
+     * Prefers #similarCollapsible but falls back to the last .verticalSection in the
+     * detail page, so sections still render even if Jellyfin's "More Like This" is disabled.
      * @param {AbortSignal} [signal] - Optional abort signal
-     * @returns {Promise<{detailPageContent: HTMLElement, moreLikeThisSection: HTMLElement}|null>}
+     * @returns {Promise<{detailPageContent: HTMLElement, insertAfter: HTMLElement}|null>}
      */
     function waitForDetailPageReady(signal) {
         return new Promise((resolve) => {
@@ -74,10 +81,14 @@
                 if (!activePage) return null;
 
                 const detailPageContent = activePage.querySelector('.detailPageContent');
-                const moreLikeThisSection = detailPageContent?.querySelector('#similarCollapsible');
+                if (!detailPageContent) return null;
 
-                if (detailPageContent && moreLikeThisSection) {
-                    return { detailPageContent, moreLikeThisSection };
+                // Prefer #similarCollapsible as anchor, fall back to last vertical section
+                const moreLikeThis = detailPageContent.querySelector('#similarCollapsible');
+                const insertAfter = moreLikeThis || detailPageContent.querySelector('.verticalSection:last-of-type');
+
+                if (insertAfter) {
+                    return { detailPageContent, insertAfter };
                 }
                 return null;
             };
@@ -172,9 +183,11 @@
         const section = document.createElement('div');
         section.className = 'verticalSection emby-scroller-container jellyseerr-details-section';
         section.setAttribute('data-jellyseerr-section', 'true');
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-label', title || 'Recommended');
 
         const titleElement = document.createElement('h2');
-        titleElement.className = 'sectionTitle sectionTitle-cards focuscontainer-x padded-right';
+        titleElement.className = 'sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right';
         titleElement.textContent = title || 'Recommended';
         section.appendChild(titleElement);
 
@@ -323,7 +336,7 @@
                 return;
             }
 
-            const { detailPageContent, moreLikeThisSection } = pageReady;
+            const { detailPageContent, insertAfter } = pageReady;
 
             // Single-pass filtering for both arrays
             const excludeLibraryItems = JE.pluginConfig?.JellyseerrExcludeLibraryItems === true;
@@ -355,12 +368,16 @@
 
             const domStart = performance.now();
 
-            // Build sections off-DOM, then insert
+            // Insert sections in order after the anchor element, tracking the
+            // last inserted node so Similar always appears after Recommended
+            let lastInserted = insertAfter;
+
             if (filteredRecommended.length > 0) {
                 const recommendedTitle = JE.t ? (JE.t('jellyseerr_recommended_title') || 'Recommended') : 'Recommended';
                 const recommendedSection = createJellyseerrSection(filteredRecommended, recommendedTitle);
                 if (recommendedSection) {
-                    moreLikeThisSection.after(recommendedSection);
+                    lastInserted.after(recommendedSection);
+                    lastInserted = recommendedSection;
                 }
             }
 
@@ -368,12 +385,7 @@
                 const similarTitle = JE.t ? (JE.t('jellyseerr_similar_title') || 'Similar') : 'Similar';
                 const similarSection = createJellyseerrSection(filteredSimilar, similarTitle);
                 if (similarSection) {
-                    const lastJellyseerrSection = detailPageContent.querySelector('.jellyseerr-details-section:last-of-type');
-                    if (lastJellyseerrSection) {
-                        lastJellyseerrSection.after(similarSection);
-                    } else {
-                        moreLikeThisSection.after(similarSection);
-                    }
+                    lastInserted.after(similarSection);
                 }
             }
 
@@ -412,11 +424,17 @@
 
         try {
             const itemId = new URLSearchParams(hash.split('?')[1]).get('id');
-            if (itemId) {
-                requestAnimationFrame(() => {
-                    renderSimilarAndRecommended(itemId);
-                });
-            }
+            if (!itemId) return;
+
+            // Deduplicate: both hashchange and viewshow may fire for the same
+            // navigation. Only schedule one rAF per item ID.
+            if (pendingItemId === itemId) return;
+            pendingItemId = itemId;
+
+            requestAnimationFrame(() => {
+                pendingItemId = null;
+                renderSimilarAndRecommended(itemId);
+            });
         } catch (error) {
             console.error(`${logPrefix} Error parsing item ID from URL:`, error);
         }

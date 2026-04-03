@@ -6,7 +6,11 @@
     const api = {};
 
     // Cache for user status (shared across all modules)
+    // Successful results are cached indefinitely (cleared on logout/page refresh).
+    // Failed results use a TTL so Seerr coming back online is detected.
     let cachedUserStatus = null;
+    let userStatusCachedAt = 0;
+    const USER_STATUS_FAILURE_TTL = 60 * 1000; // retry failed status after 60 seconds
 
     // Cache for override rules
     let cachedOverrideRules = null;
@@ -196,17 +200,26 @@
      */
     api.checkUserStatus = async function() {
         if (cachedUserStatus !== null) {
-            return cachedUserStatus;
+            // Successful results are cached indefinitely. Failed results expire
+            // after USER_STATUS_FAILURE_TTL so we retry when Seerr comes back online.
+            const isFailure = !cachedUserStatus.active;
+            if (!isFailure || (Date.now() - userStatusCachedAt) < USER_STATUS_FAILURE_TTL) {
+                return cachedUserStatus;
+            }
+            // Failure TTL expired, retry
+            cachedUserStatus = null;
         }
 
         try {
             const status = await get('/user-status');
             cachedUserStatus = status;
+            userStatusCachedAt = Date.now();
             return status;
         } catch (error) {
             console.warn(`${logPrefix} Status check failed:`, error);
             const fallback = { active: false, userFound: false };
             cachedUserStatus = fallback;
+            userStatusCachedAt = Date.now();
             return fallback;
         }
     };
@@ -216,6 +229,7 @@
      */
     api.clearUserStatusCache = function() {
         cachedUserStatus = null;
+        userStatusCachedAt = 0;
     };
 
     /**
