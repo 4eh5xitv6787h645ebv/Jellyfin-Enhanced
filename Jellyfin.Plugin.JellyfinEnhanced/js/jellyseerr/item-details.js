@@ -187,7 +187,7 @@
         section.setAttribute('aria-label', title || 'Recommended');
 
         const titleElement = document.createElement('h2');
-        titleElement.className = 'sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right';
+        titleElement.className = 'sectionTitle sectionTitle-cards focuscontainer-x padded-right';
         titleElement.textContent = title || 'Recommended';
         section.appendChild(titleElement);
 
