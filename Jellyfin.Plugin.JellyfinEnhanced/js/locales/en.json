@@ -367,6 +367,8 @@
     "discovery_filter_rating_min": "Min rating",
     "discovery_filter_btn": "Filters",
     "discovery_trending_title": "Trending",
+    "discovery_trending_tv": "Trending TV Shows",
+    "discovery_trending_movies": "Trending Movies",
     "discovery_upcoming_movies_title": "Upcoming Movies",
     "discovery_upcoming_tv_title": "Upcoming TV Shows",
     "requests_downloads": "Downloads",
