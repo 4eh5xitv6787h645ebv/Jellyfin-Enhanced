@@ -446,7 +446,11 @@
 
         handleItemDetailsPage();
 
+        // viewshow fires on Jellyfin SPA navigation (pushState), which does NOT
+        // trigger hashchange. Must also cleanup here to clear processedItems,
+        // otherwise revisiting a detail page via "More Like This" skips rendering.
         document.addEventListener('viewshow', () => {
+            cleanup();
             handleItemDetailsPage();
         });
     }
