@@ -31,7 +31,7 @@
     function cacheSet(mediaType, tmdbId, data) {
         const key = `${mediaType}:${tmdbId}`;
         _detailsCache.delete(key); // Remove if exists (for LRU reorder)
-        _detailsCache.set(key, { data, ts: Date.now() });
+        _detailsCache.set(key, { data: structuredClone(data), ts: Date.now() });
         // Evict oldest if over capacity
         if (_detailsCache.size > CACHE_MAX) {
             const oldest = _detailsCache.keys().next().value;
@@ -816,7 +816,7 @@ function buildModalContent(data, mediaType) {
                     </svg>
                 </button>
 
-                <div class="modal-backdrop" style="background-image: url('${backdropUrl}');">
+                <div class="modal-backdrop" style="background-image: url('${escapeHtml(backdropUrl)}');">
                     <div class="je-modal-backdrop-overlay"></div>
                 </div>
 
@@ -825,7 +825,7 @@ function buildModalContent(data, mediaType) {
                         <div class="modal-left">
                             <div class="header-section">
                                 <div class="header-poster">
-                                    ${posterLo ? `<img src="${posterLo}" alt="${escapeHtml(title)}"${posterHi ? ` data-src-hires="${posterHi}"` : ''} />` : ''}
+                                    ${posterLo ? `<img src="${escapeHtml(posterLo)}" alt="${escapeHtml(title)}"${posterHi ? ` data-src-hires="${escapeHtml(posterHi)}"` : ''} />` : ''}
                                 </div>
                                 <div class="header-info">
                                     <div class="title-row">
@@ -2069,7 +2069,7 @@ function buildCastSection(data) {
                     return `
                         <div class="cast-member">
                             <div class="person-avatar">
-                                ${imageLo ? `<img src="${imageLo}" alt="${escapeHtml(person.name)}" loading="lazy" data-src-hires="${imageHi}" />` : buildPersonPlaceholder()}
+                                ${imageLo ? `<img src="${escapeHtml(imageLo)}" alt="${escapeHtml(person.name)}" loading="lazy" data-src-hires="${escapeHtml(imageHi)}" />` : buildPersonPlaceholder()}
                             </div>
                             <div class="person-name">${escapeHtml(person.name)}</div>
                             <div class="person-character">${escapeHtml(person.character || '')}</div>
