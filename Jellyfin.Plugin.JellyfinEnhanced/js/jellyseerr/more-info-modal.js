@@ -795,9 +795,8 @@ function buildModalContent(data, mediaType) {
     const budget = data.budget ? formatCurrency(data.budget) : null;
     const revenue = data.revenue ? formatCurrency(data.revenue) : null;
 
-    // w780 is sufficient for the backdrop — it sits behind a gradient overlay
     const backdropUrl = data.backdropPath
-        ? `https://image.tmdb.org/t/p/w780${data.backdropPath}`
+        ? `https://image.tmdb.org/t/p/original${data.backdropPath}`
         : '';
 
     const posterLo = data.posterPath
