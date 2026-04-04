@@ -3427,6 +3427,16 @@ function injectStyles() {
     // Inject styles when module loads
     injectStyles();
 
+    // Invalidate frontend cache when a request is made (so next open gets fresh status)
+    document.addEventListener('jellyseerr-media-requested', function(e) {
+        const tmdbId = e.detail?.tmdbId;
+        const mediaType = e.detail?.mediaType;
+        if (tmdbId && mediaType) {
+            const key = `${mediaType}:${tmdbId}`;
+            _detailsCache.delete(key);
+        }
+    });
+
     // Close modal on page navigation
     document.addEventListener('viewshow', function() {
         if (currentModal) {
