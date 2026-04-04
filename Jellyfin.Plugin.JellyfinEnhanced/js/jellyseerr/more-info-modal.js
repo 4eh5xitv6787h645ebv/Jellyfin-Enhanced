@@ -787,11 +787,9 @@ function buildModalContent(data, mediaType) {
     const budget = data.budget ? formatCurrency(data.budget) : null;
     const revenue = data.revenue ? formatCurrency(data.revenue) : null;
 
-    const backdropLo = data.backdropPath
+    // w780 is sufficient for the backdrop — it sits behind a gradient overlay
+    const backdropUrl = data.backdropPath
         ? `https://image.tmdb.org/t/p/w780${data.backdropPath}`
-        : '';
-    const backdropHi = data.backdropPath
-        ? `https://image.tmdb.org/t/p/original${data.backdropPath}`
         : '';
 
     const posterLo = data.posterPath
@@ -818,7 +816,7 @@ function buildModalContent(data, mediaType) {
                     </svg>
                 </button>
 
-                <div class="modal-backdrop" style="background-image: url('${backdropLo}');"${backdropHi ? ` data-bg-hires="${backdropHi}"` : ''}>
+                <div class="modal-backdrop" style="background-image: url('${backdropUrl}');">
                     <div class="je-modal-backdrop-overlay"></div>
                 </div>
 
@@ -2172,24 +2170,6 @@ function upgradeImages(modal) {
         });
     }
 
-    // Upgrade backdrop background-image
-    const backdrop = modal.querySelector('.modal-backdrop[data-bg-hires]');
-    if (backdrop) {
-        const hires = backdrop.dataset.bgHires;
-        if (hires) {
-            const preload = new Image();
-            preload.src = hires;
-            preload.decode().then(() => {
-                if (backdrop.isConnected) {
-                    backdrop.style.backgroundImage = `url('${hires}')`;
-                }
-            }).catch(() => {
-                if (backdrop.isConnected) {
-                    backdrop.style.backgroundImage = `url('${hires}')`;
-                }
-            });
-        }
-    }
 }
 
 /**
