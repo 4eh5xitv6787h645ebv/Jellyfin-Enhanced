@@ -211,17 +211,15 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
             return;
         }
 
-        // No cache - show skeleton immediately, fetch in parallel
+        // No cache - show skeleton immediately, fetch details + ratings in parallel
         showSkeletonModal(mediaType, tmdbId);
         const skeletonOpenId = `${mediaType}:${tmdbId}`;
 
-        // Fire details + ratings in parallel.
-        // Use a sentinel to distinguish "fetch error" from "API returned no ratings".
-        const RATINGS_FAILED = Symbol('ratings-failed');
-        const [data, ratingsResult] = await Promise.all([
-            fetchMediaDetails(tmdbId, mediaType).catch(() => null),
-            fetchRatings(tmdbId, mediaType).catch(() => RATINGS_FAILED)
-        ]);
+        // Start ratings fetch in background (don't block content rendering)
+        const ratingsPromise = fetchRatings(tmdbId, mediaType).catch(() => null);
+
+        // Await only the details - show content as soon as it arrives
+        const data = await fetchMediaDetails(tmdbId, mediaType).catch(() => null);
 
         if (!data) {
             closeImmediate();
@@ -232,10 +230,7 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
         // Bail if the modal was closed or a different item was opened while we were fetching
         if (!currentModal || currentModal.dataset?.skeletonId !== skeletonOpenId) return;
 
-        // Pre-attach ratings (even null means "no ratings available" -- clears skeleton)
-        if (ratingsResult !== RATINGS_FAILED) data.ratings = ratingsResult;
-
-        // Replace skeleton with full content
+        // Replace skeleton with full content immediately (ratings will fill in later)
         showModal(data, mediaType);
 
         // Background: backfill season metadata for TV
@@ -243,12 +238,15 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
             backfillSeasonMetadata(tmdbId, data);
         }
 
-        // Only retry ratings if the fetch actually failed (not if API returned null/empty)
-        if (ratingsResult === RATINGS_FAILED) {
-            fetchRatings(tmdbId, mediaType)
-                .then((r) => applyRatings(r, data, mediaType, tmdbId))
-                .catch(() => clearRatingsMount());
-        }
+        // Apply ratings when they arrive (already in-flight from above)
+        ratingsPromise.then((ratings) => {
+            if (ratings) {
+                applyRatings(ratings, data, mediaType, tmdbId);
+            } else {
+                // null = no ratings available, clear skeleton badges
+                clearRatingsMount();
+            }
+        });
     } catch (error) {
         console.error('Error opening more info modal:', error);
         closeImmediate();
