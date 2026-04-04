@@ -13,8 +13,12 @@
     const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
     const _detailsCache = new Map(); // key: "movie:123" or "tv:456" → { data, ts }
 
+    function cacheKey(mediaType, tmdbId) {
+        return `${ApiClient.getCurrentUserId()}:${mediaType}:${tmdbId}`;
+    }
+
     function cacheGet(mediaType, tmdbId) {
-        const key = `${mediaType}:${tmdbId}`;
+        const key = cacheKey(mediaType, tmdbId);
         const entry = _detailsCache.get(key);
         if (!entry) return null;
         if (Date.now() - entry.ts > CACHE_TTL_MS) {
@@ -29,7 +33,7 @@
     }
 
     function cacheSet(mediaType, tmdbId, data) {
-        const key = `${mediaType}:${tmdbId}`;
+        const key = cacheKey(mediaType, tmdbId);
         _detailsCache.delete(key); // Remove if exists (for LRU reorder)
         _detailsCache.set(key, { data: structuredClone(data), ts: Date.now() });
         // Evict oldest if over capacity
@@ -40,7 +44,7 @@
     }
 
     function cacheHas(mediaType, tmdbId) {
-        const key = `${mediaType}:${tmdbId}`;
+        const key = cacheKey(mediaType, tmdbId);
         const entry = _detailsCache.get(key);
         if (!entry) return false;
         if (Date.now() - entry.ts > CACHE_TTL_MS) {
@@ -3432,8 +3436,7 @@ function injectStyles() {
         const tmdbId = e.detail?.tmdbId;
         const mediaType = e.detail?.mediaType;
         if (tmdbId && mediaType) {
-            const key = `${mediaType}:${tmdbId}`;
-            _detailsCache.delete(key);
+            _detailsCache.delete(cacheKey(mediaType, tmdbId));
         }
     });
 
