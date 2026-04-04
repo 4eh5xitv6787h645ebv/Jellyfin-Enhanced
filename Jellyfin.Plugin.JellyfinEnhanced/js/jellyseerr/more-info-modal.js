@@ -1497,7 +1497,7 @@ function buildSingle4kButton(data) {
     return button;
 }
 
-function buildMovieActions(data, actionMount, chipMount, show4kOption) {
+function buildMovieActions(data, show4kOption) {
     const status = data.mediaInfo ? data.mediaInfo.status : 1;
     const status4k = data.mediaInfo ? data.mediaInfo.status4k : 1;
     const canRequestMain = !status || status === 1 || status === 7;
@@ -1733,7 +1733,7 @@ function buildDownloadBars(downloads = [], downloads4k = []) {
             <div class="je-download-meta">
                 <span>${pct}%</span>
                 <span>${escapeHtml((dl.status || 'Downloading').toString())}</span>
-                ${etaText ? `<span class="je-download-eta">${etaText}</span>` : ''}
+                ${etaText ? `<span class="je-download-eta">${escapeHtml(etaText)}</span>` : ''}
             </div>
         `;
         wrapper.appendChild(row);
@@ -2000,7 +2000,7 @@ function renderActions(data, mediaType) {
             return;
         }
 
-        const actions = buildMovieActions(data, actionMount, chipMount, show4k);
+        const actions = buildMovieActions(data, show4k);
         if (actions && actionMount) actionMount.appendChild(actions);
     } else {
         const mediaInfo = data.mediaInfo || {};
