@@ -42,29 +42,6 @@
         }, true);
     }
 
-    // Prefetch on hover: when user hovers over a discover card, start loading
-    // the media details into the cache so click-to-open is near-instant.
-    let prefetchTimer = null;
-    document.addEventListener('mouseover', function(e) {
-        const card = e.target.closest('.discover-card');
-        if (!card) return;
-
-        const tmdbId = card.dataset.tmdbId;
-        const mediaType = card.dataset.mediaType;
-        if (!tmdbId || !mediaType || !JE?.jellyseerrMoreInfo?.prefetch) return;
-
-        // Debounce: only prefetch after 150ms hover to avoid wasted requests
-        clearTimeout(prefetchTimer);
-        prefetchTimer = setTimeout(() => {
-            JE.jellyseerrMoreInfo.prefetch(parseInt(tmdbId, 10), mediaType);
-        }, 150);
-    }, true);
-
-    document.addEventListener('mouseout', function(e) {
-        const card = e.target.closest('.discover-card');
-        if (card) clearTimeout(prefetchTimer);
-    }, true);
-
     initDiscoveryHandler();
 
 })(window.JellyfinEnhanced || {});

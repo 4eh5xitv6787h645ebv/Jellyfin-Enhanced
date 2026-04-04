@@ -266,20 +266,24 @@ function showSkeletonModal(mediaType, tmdbId) {
     // Skeleton HTML is entirely static/hardcoded with no user-controlled values
     modal.innerHTML = buildSkeletonHtml();
 
-    // Close button
+    // Use AbortController so all skeleton listeners can be bulk-removed
+    // when showModal replaces the skeleton content in-place.
+    const skeletonAC = new AbortController();
+    modal._skeletonAbort = skeletonAC;
+
     const closeBtn = modal.querySelector('.modal-close');
     if (closeBtn) {
         closeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             moreInfoModal.close();
-        });
+        }, { signal: skeletonAC.signal });
     }
     modal.addEventListener('click', (e) => {
         if (e.target === modal) moreInfoModal.close();
-    });
+    }, { signal: skeletonAC.signal });
 
-    // Escape key
+    // Escape key (document-level, cleaned up via _cleanupEscapeListener)
     const handleEscape = (e) => {
         if (e.key === 'Escape') moreInfoModal.close();
     };
@@ -625,6 +629,11 @@ function showModal(data, mediaType) {
     if (existingSkeleton && currentModal && document.body.contains(currentModal)) {
         // Reuse the existing skeleton modal - swap content in-place for smooth transition
         modal = currentModal;
+        // Abort skeleton-phase listeners before replacing content
+        if (modal._skeletonAbort) {
+            modal._skeletonAbort.abort();
+            delete modal._skeletonAbort;
+        }
         // Content is built from API data with escapeHtml applied to all user-visible strings
         modal.innerHTML = buildModalContent(data, mediaType);
         delete modal.dataset.skeletonId;
@@ -2113,20 +2122,26 @@ moreInfoModal.close = function() {
         if (currentModal._isClosing) return;
         currentModal._isClosing = true;
 
+        // Capture reference so the deferred removal only clears currentModal
+        // if no new modal was opened during the fade-out animation.
+        const closingModal = currentModal;
+
         // Clean up TV request listener if exists
-        if (currentModal._cleanupTvListener) {
-            currentModal._cleanupTvListener();
+        if (closingModal._cleanupTvListener) {
+            closingModal._cleanupTvListener();
         }
         // Clean up Escape key listener if exists
-        if (currentModal._cleanupEscapeListener) {
-            currentModal._cleanupEscapeListener();
+        if (closingModal._cleanupEscapeListener) {
+            closingModal._cleanupEscapeListener();
         }
-        currentModal.classList.remove('active');
+        closingModal.classList.remove('active');
         setTimeout(() => {
-            if (document.body.contains(currentModal)) {
-                document.body.removeChild(currentModal);
+            if (document.body.contains(closingModal)) {
+                document.body.removeChild(closingModal);
             }
-            currentModal = null;
+            if (currentModal === closingModal) {
+                currentModal = null;
+            }
         }, 300);
     }
 }
