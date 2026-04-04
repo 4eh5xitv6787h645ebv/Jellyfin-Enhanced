@@ -196,10 +196,25 @@ async function backfillSeasonMetadata(tmdbId, data) {
  */
 moreInfoModal.open = async function(tmdbId, mediaType) {
     try {
-        // Check cache first - if we have data, skip skeleton and show full modal instantly
+        // Stale-while-revalidate: show cached data instantly, then refresh in background
         const cached = cacheGet(mediaType, tmdbId);
         if (cached) {
             showModal(cached, mediaType);
+
+            // Background: revalidate details and update request status if changed
+            fetchMediaDetails(tmdbId, mediaType, { skipCache: true }).then((fresh) => {
+                if (!fresh || !currentModal) return;
+                if (String(currentModal.dataset?.tmdbId) !== String(tmdbId)) return;
+                // Update request status chips/buttons if mediaInfo changed
+                if (JSON.stringify(fresh.mediaInfo) !== JSON.stringify(cached.mediaInfo)) {
+                    cached.mediaInfo = fresh.mediaInfo;
+                    renderActions(cached, mediaType);
+                    if (mediaType === 'tv') {
+                        enrichSeasonCardsWithJellyfinLinks(cached, currentModal);
+                    }
+                }
+            }).catch(() => {});
+
             // Background: refresh ratings
             fetchRatings(tmdbId, mediaType)
                 .then((ratings) => applyRatings(ratings, cached, mediaType, tmdbId))
