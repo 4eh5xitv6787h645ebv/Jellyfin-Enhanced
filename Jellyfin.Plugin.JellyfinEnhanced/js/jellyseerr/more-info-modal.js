@@ -201,16 +201,17 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
         if (cached) {
             showModal(cached, mediaType);
 
-            // Background: revalidate details and update request status if changed
+            // Background: revalidate details silently (updates cache for next open).
+            // Don't call renderActions here - the TV request event handler handles
+            // immediate status updates, and racing renderActions causes duplicate buttons.
             fetchMediaDetails(tmdbId, mediaType, { skipCache: true }).then((fresh) => {
                 if (!fresh || !currentModal) return;
                 if (String(currentModal.dataset?.tmdbId) !== String(tmdbId)) return;
-                // Update request status chips/buttons if mediaInfo changed
                 if (JSON.stringify(fresh.mediaInfo) !== JSON.stringify(cached.mediaInfo)) {
                     cached.mediaInfo = fresh.mediaInfo;
-                    renderActions(cached, mediaType);
-                    if (mediaType === 'tv') {
-                        enrichSeasonCardsWithJellyfinLinks(cached, currentModal);
+                    // For non-TV (movies), safe to update inline since no async race
+                    if (mediaType !== 'tv') {
+                        renderActions(cached, mediaType);
                     }
                 }
             }).catch(() => {});
@@ -766,8 +767,8 @@ function showModal(data, mediaType) {
             if (!e.detail?.tmdbId || String(e.detail.tmdbId) !== String(data.id)) return;
 
             try {
-                // Refresh details to pull latest status/progress
-                const fresh = await fetchMediaDetails(data.id, 'tv');
+                // Refresh details to pull latest status/progress (skip cache for fresh data)
+                const fresh = await fetchMediaDetails(data.id, 'tv', { skipCache: true });
                 if (fresh?.mediaInfo) {
                     data.mediaInfo = fresh.mediaInfo;
                 } else {
