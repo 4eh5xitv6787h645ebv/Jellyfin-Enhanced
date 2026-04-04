@@ -2147,8 +2147,7 @@ function buildPersonPlaceholder() {
 
 /**
  * Progressively upgrade images from low-res to high-res.
- * Preloads the high-res version in a hidden Image(), then swaps src seamlessly
- * once the browser has it cached. Also upgrades CSS background-image for the backdrop.
+ * Uses decode() + opacity fade so the swap is completely seamless (no flash).
  * @param {HTMLElement} modal - The modal element to upgrade images within.
  */
 function upgradeImages(modal) {
@@ -2159,26 +2158,36 @@ function upgradeImages(modal) {
     for (const img of imgs) {
         const hires = img.dataset.srcHires;
         if (!hires || img.src === hires) continue;
+        // Preload and fully decode the high-res image before swapping
         const preload = new Image();
-        preload.onload = () => {
-            // Only swap if this image is still in the DOM (modal not closed)
-            if (img.isConnected) img.src = hires;
-        };
         preload.src = hires;
+        preload.decode().then(() => {
+            if (!img.isConnected) return;
+            // Image is fully decoded in memory - swap is instant, no flash
+            img.src = hires;
+            delete img.dataset.srcHires;
+        }).catch(() => {
+            // decode() not supported or failed - fall back to direct swap
+            if (img.isConnected) img.src = hires;
+        });
     }
 
-    // Upgrade backdrop CSS background-image
+    // Upgrade backdrop background-image
     const backdrop = modal.querySelector('.modal-backdrop[data-bg-hires]');
     if (backdrop) {
         const hires = backdrop.dataset.bgHires;
         if (hires) {
             const preload = new Image();
-            preload.onload = () => {
+            preload.src = hires;
+            preload.decode().then(() => {
                 if (backdrop.isConnected) {
                     backdrop.style.backgroundImage = `url('${hires}')`;
                 }
-            };
-            preload.src = hires;
+            }).catch(() => {
+                if (backdrop.isConnected) {
+                    backdrop.style.backgroundImage = `url('${hires}')`;
+                }
+            });
         }
     }
 }
