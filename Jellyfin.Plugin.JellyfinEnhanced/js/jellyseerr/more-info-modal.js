@@ -768,6 +768,9 @@ function showModal(data, mediaType) {
     if (!modal.classList.contains('active')) {
         setTimeout(() => modal.classList.add('active'), 10);
     }
+
+    // Progressively upgrade images from low-res to high-res
+    upgradeImages(modal);
 }
 
 /**
@@ -784,11 +787,17 @@ function buildModalContent(data, mediaType) {
     const budget = data.budget ? formatCurrency(data.budget) : null;
     const revenue = data.revenue ? formatCurrency(data.revenue) : null;
 
-    const backdropUrl = data.backdropPath
+    const backdropLo = data.backdropPath
+        ? `https://image.tmdb.org/t/p/w780${data.backdropPath}`
+        : '';
+    const backdropHi = data.backdropPath
         ? `https://image.tmdb.org/t/p/original${data.backdropPath}`
         : '';
 
-    const posterUrl = data.posterPath
+    const posterLo = data.posterPath
+        ? `https://image.tmdb.org/t/p/w154${data.posterPath}`
+        : '';
+    const posterHi = data.posterPath
         ? `https://image.tmdb.org/t/p/w500${data.posterPath}`
         : '';
 
@@ -809,7 +818,7 @@ function buildModalContent(data, mediaType) {
                     </svg>
                 </button>
 
-                <div class="modal-backdrop" style="background-image: url('${backdropUrl}');">
+                <div class="modal-backdrop" style="background-image: url('${backdropLo}');"${backdropHi ? ` data-bg-hires="${backdropHi}"` : ''}>
                     <div class="je-modal-backdrop-overlay"></div>
                 </div>
 
@@ -818,7 +827,7 @@ function buildModalContent(data, mediaType) {
                         <div class="modal-left">
                             <div class="header-section">
                                 <div class="header-poster">
-                                    ${posterUrl ? `<img src="${posterUrl}" alt="${escapeHtml(title)}" />` : ''}
+                                    ${posterLo ? `<img src="${posterLo}" alt="${escapeHtml(title)}"${posterHi ? ` data-src-hires="${posterHi}"` : ''} />` : ''}
                                 </div>
                                 <div class="header-info">
                                     <div class="title-row">
@@ -2052,14 +2061,17 @@ function buildCastSection(data) {
             <h3>${JE.t('jellyseerr_modal_cast')}</h3>
             <div class="cast-scroll">
                 ${cast.map(person => {
-                    const imageUrl = person.profilePath
+                    const imageLo = person.profilePath
+                        ? `https://image.tmdb.org/t/p/w45${person.profilePath}`
+                        : '';
+                    const imageHi = person.profilePath
                         ? `https://image.tmdb.org/t/p/w185${person.profilePath}`
                         : '';
 
                     return `
                         <div class="cast-member">
                             <div class="person-avatar">
-                                ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(person.name)}" loading="lazy" />` : buildPersonPlaceholder()}
+                                ${imageLo ? `<img src="${imageLo}" alt="${escapeHtml(person.name)}" loading="lazy" data-src-hires="${imageHi}" />` : buildPersonPlaceholder()}
                             </div>
                             <div class="person-name">${escapeHtml(person.name)}</div>
                             <div class="person-character">${escapeHtml(person.character || '')}</div>
@@ -2087,7 +2099,10 @@ function buildSeasonsSection(data) {
                     const seasonJellyfinId4k = getSeasonJellyfinId(seasonInfo, true);
                     const seasonPosterPath = season.posterPath
                         || (data.posterPath && isValidPosterPath(data.posterPath) ? data.posterPath : null);
-                    const posterUrl = seasonPosterPath
+                    const posterLo = seasonPosterPath
+                        ? `https://image.tmdb.org/t/p/w92${seasonPosterPath}`
+                        : '';
+                    const posterHi = seasonPosterPath
                         ? `https://image.tmdb.org/t/p/w185${seasonPosterPath}`
                         : '';
 
@@ -2104,7 +2119,7 @@ function buildSeasonsSection(data) {
                     return `
                         <div class="season-card" data-season-number="${escapeHtml(String(sNum))}">
                             <div class="season-poster">
-                                ${posterUrl ? `<img src="${escapeHtml(posterUrl)}" alt="${escapeHtml(displayName)}" loading="lazy" />` : ''}
+                                ${posterLo ? `<img src="${escapeHtml(posterLo)}" alt="${escapeHtml(displayName)}" loading="lazy"${posterHi ? ` data-src-hires="${escapeHtml(posterHi)}"` : ''} />` : ''}
                             </div>
                             <div class="season-info">
                                 <div class="season-name">${escapeHtml(displayName)}</div>
@@ -2128,6 +2143,44 @@ function buildSeasonsSection(data) {
  */
 function buildPersonPlaceholder() {
     return SVG_PERSON_PLACEHOLDER;
+}
+
+/**
+ * Progressively upgrade images from low-res to high-res.
+ * Preloads the high-res version in a hidden Image(), then swaps src seamlessly
+ * once the browser has it cached. Also upgrades CSS background-image for the backdrop.
+ * @param {HTMLElement} modal - The modal element to upgrade images within.
+ */
+function upgradeImages(modal) {
+    if (!modal) return;
+
+    // Upgrade <img> elements with data-src-hires
+    const imgs = modal.querySelectorAll('img[data-src-hires]');
+    for (const img of imgs) {
+        const hires = img.dataset.srcHires;
+        if (!hires || img.src === hires) continue;
+        const preload = new Image();
+        preload.onload = () => {
+            // Only swap if this image is still in the DOM (modal not closed)
+            if (img.isConnected) img.src = hires;
+        };
+        preload.src = hires;
+    }
+
+    // Upgrade backdrop CSS background-image
+    const backdrop = modal.querySelector('.modal-backdrop[data-bg-hires]');
+    if (backdrop) {
+        const hires = backdrop.dataset.bgHires;
+        if (hires) {
+            const preload = new Image();
+            preload.onload = () => {
+                if (backdrop.isConnected) {
+                    backdrop.style.backgroundImage = `url('${hires}')`;
+                }
+            };
+            preload.src = hires;
+        }
+    }
 }
 
 /**
