@@ -1934,8 +1934,10 @@ function buildTvRequestMoreButton(data, show4kOption = false, canRequest4k = fal
     return container;
 }
 
+let _renderActionsGen = 0;
 function renderActions(data, mediaType) {
     if (!currentModal) return;
+    const gen = ++_renderActionsGen;
 
     const actionMount = currentModal.querySelector('[data-mount="je-actions"]');
     const chipMount = currentModal.querySelector('[data-mount="je-status-chip"]');
@@ -2052,6 +2054,8 @@ function renderActions(data, mediaType) {
                 return;
             }
             checkForUnrequestedSeasons(data).then(hasUnrequestedSeasons => {
+                // Skip if a newer renderActions call has since cleared and repopulated the mount
+                if (gen !== _renderActionsGen) return;
                 if (hasUnrequestedSeasons && actionMount) {
                     const requestMoreButton = buildTvRequestMoreButton(data, show4kTv, canRequest4k);
                     if (requestMoreButton) actionMount.appendChild(requestMoreButton);
