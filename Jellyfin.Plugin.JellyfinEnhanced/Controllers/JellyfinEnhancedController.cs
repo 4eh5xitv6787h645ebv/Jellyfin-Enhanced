@@ -446,7 +446,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                    apiPath.Contains("/recommendations") ||
                    apiPath.Contains("/person/") ||
                    apiPath.Contains("/collection/") ||
-                   apiPath.Contains("/search?");
+                   apiPath.Contains("/search?") ||
+                   apiPath.Contains("/api/v1/movie/") ||
+                   apiPath.Contains("/api/v1/tv/");
         }
 
         private async Task<IActionResult> ProxyJellyseerrRequest(string apiPath, HttpMethod method, string? content = null)

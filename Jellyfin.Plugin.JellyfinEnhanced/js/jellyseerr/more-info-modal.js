@@ -8,6 +8,40 @@
 
     let currentModal = null;
 
+    // --- LRU Cache for media details (avoids redundant API calls) ---
+    const CACHE_MAX = 30;
+    const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+    const _detailsCache = new Map(); // key: "movie:123" or "tv:456" → { data, ts }
+
+    function cacheGet(mediaType, tmdbId) {
+        const key = `${mediaType}:${tmdbId}`;
+        const entry = _detailsCache.get(key);
+        if (!entry) return null;
+        if (Date.now() - entry.ts > CACHE_TTL_MS) {
+            _detailsCache.delete(key);
+            return null;
+        }
+        // Move to end (most recently used)
+        _detailsCache.delete(key);
+        _detailsCache.set(key, entry);
+        // Return a deep clone so callers can mutate without corrupting the cache
+        return structuredClone(entry.data);
+    }
+
+    function cacheSet(mediaType, tmdbId, data) {
+        const key = `${mediaType}:${tmdbId}`;
+        _detailsCache.delete(key); // Remove if exists (for LRU reorder)
+        _detailsCache.set(key, { data, ts: Date.now() });
+        // Evict oldest if over capacity
+        if (_detailsCache.size > CACHE_MAX) {
+            const oldest = _detailsCache.keys().next().value;
+            _detailsCache.delete(oldest);
+        }
+    }
+
+    // In-flight request deduplication (prevents duplicate fetches from hover + click)
+    const _inflightRequests = new Map(); // key → Promise
+
     /**
      * Validates that a string starts with an ISO date format (YYYY-MM-DD).
      * @param {string} d - The date string to validate.
@@ -132,51 +166,198 @@ async function backfillSeasonMetadata(tmdbId, data) {
 }
 
 /**
- * Open the more info modal for a movie or TV show
+ * Open the more info modal for a movie or TV show.
+ * Shows a skeleton modal immediately, then populates with data when API responds.
  * @param {number} tmdbId - The TMDB ID
  * @param {string} mediaType - 'movie' or 'tv'
  */
 moreInfoModal.open = async function(tmdbId, mediaType) {
     try {
-        // Fetch details first so the modal can open immediately
-        const data = await fetchMediaDetails(tmdbId, mediaType);
+        // Check cache first - if we have data, skip skeleton and show full modal instantly
+        const cached = cacheGet(mediaType, tmdbId);
+        if (cached) {
+            showModal(cached, mediaType);
+            // Background: refresh ratings
+            fetchRatings(tmdbId, mediaType)
+                .then((ratings) => applyRatings(ratings, cached, mediaType, tmdbId))
+                .catch(() => {});
+            // Background: backfill season metadata for TV
+            if (mediaType === 'tv' && cached.seasons?.some(s => s.episodeCount > 0 && (!s.airDate || !s.posterPath))) {
+                backfillSeasonMetadata(tmdbId, cached);
+            }
+            return;
+        }
+
+        // No cache - show skeleton immediately, fetch in parallel
+        showSkeletonModal(mediaType, tmdbId);
+        const skeletonOpenId = `${mediaType}:${tmdbId}`;
+
+        // Fire details + ratings in parallel
+        const [data, ratings] = await Promise.all([
+            fetchMediaDetails(tmdbId, mediaType).catch(() => null),
+            fetchRatings(tmdbId, mediaType).catch(() => null)
+        ]);
+
         if (!data) {
+            closeSkeletonOrModal();
             showError('Failed to load media information');
             return;
         }
 
-        // Render modal immediately
+        // Bail if the modal was closed or a different item was opened while we were fetching
+        if (!currentModal || currentModal.dataset?.skeletonId !== skeletonOpenId) return;
+
+        // Pre-attach ratings to data so buildModalContent can render them inline
+        if (ratings) data.ratings = ratings;
+
+        // Replace skeleton with full content
         showModal(data, mediaType);
 
-        // For TV shows, backfill missing season metadata (poster, overview, airDate) from TMDB/episodes
+        // Background: backfill season metadata for TV
         if (mediaType === 'tv' && data.seasons?.some(s => s.episodeCount > 0 && (!s.airDate || !s.posterPath))) {
             backfillSeasonMetadata(tmdbId, data);
         }
 
-        // Fetch ratings in the background and populate when ready
-        fetchRatings(tmdbId, mediaType)
-            .then((ratings) => {
-                // Modal might have been closed or replaced; ensure we're updating the correct one
-                if (!currentModal) return;
-                const modalTmdbId = currentModal?.dataset?.tmdbId;
-                const modalMediaType = currentModal?.dataset?.mediaType;
-                if (String(modalTmdbId) !== String(data.id) || modalMediaType !== mediaType) return;
-
-                data.ratings = ratings;
-                const mount = currentModal.querySelector('[data-mount="ratings"]');
-                if (mount) {
-                    const logos = buildRatingLogos(ratings, data, mediaType, tmdbId);
-                    mount.innerHTML = logos || '';
-                }
-            })
-            .catch((error) => {
-                console.error(`${logPrefix} Failed to fetch ratings for TMDB ID ${tmdbId}:`, error);
-                // Silently fail; modal is already shown without ratings
-            });
+        // If ratings weren't ready yet (unlikely since parallel), handle late arrival
+        if (!ratings) {
+            fetchRatings(tmdbId, mediaType)
+                .then((r) => applyRatings(r, data, mediaType, tmdbId))
+                .catch(() => {});
+        }
     } catch (error) {
         console.error('Error opening more info modal:', error);
+        closeSkeletonOrModal();
         showError('Failed to load media information');
     }
+}
+
+/**
+ * Apply ratings to the current modal (used for late-arriving or background-fetched ratings).
+ * Rating logos are built from validated API data (not user input), safe for innerHTML.
+ */
+function applyRatings(ratings, data, mediaType, tmdbId) {
+    if (!ratings || !currentModal) return;
+    const modalTmdbId = currentModal?.dataset?.tmdbId;
+    const modalMediaType = currentModal?.dataset?.mediaType;
+    if (String(modalTmdbId) !== String(data.id) || modalMediaType !== mediaType) return;
+
+    data.ratings = ratings;
+    const mount = currentModal.querySelector('[data-mount="ratings"]');
+    if (mount) {
+        const logos = buildRatingLogos(ratings, data, mediaType, tmdbId);
+        // Rating logos HTML is built from hardcoded SVGs and validated numeric scores - safe
+        mount.innerHTML = logos || '';
+    }
+}
+
+/**
+ * Show a skeleton loading modal immediately (before API data arrives).
+ * All content is hardcoded static HTML with no user input - safe for innerHTML.
+ * @param {string} mediaType - 'movie' or 'tv'
+ * @param {number} tmdbId - The TMDB ID (used as skeleton identifier)
+ */
+function showSkeletonModal(mediaType, tmdbId) {
+    // Close existing modal instantly (skip animation for fast replacement)
+    closeImmediate();
+
+    const modal = document.createElement('div');
+    modal.className = 'je-more-info-modal';
+    modal.dataset.skeletonId = `${mediaType}:${tmdbId}`;
+    // Skeleton HTML is entirely static/hardcoded with no user-controlled values
+    modal.innerHTML = buildSkeletonHtml();
+
+    // Close button
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            moreInfoModal.close();
+        });
+    }
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) moreInfoModal.close();
+    });
+
+    // Escape key
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') moreInfoModal.close();
+    };
+    document.addEventListener('keydown', handleEscape);
+    modal._cleanupEscapeListener = () => document.removeEventListener('keydown', handleEscape);
+
+    document.body.appendChild(modal);
+    currentModal = modal;
+
+    // Trigger animation
+    setTimeout(() => modal.classList.add('active'), 10);
+}
+
+/**
+ * Build skeleton HTML. Returns a static string with no user-controlled values.
+ * @returns {string} Static skeleton HTML
+ */
+function buildSkeletonHtml() {
+    return '<div class="modal-overlay">'
+        + '<div class="modal-container">'
+        + '<button class="modal-close" aria-label="Close">'
+        + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+        + '<line x1="18" y1="6" x2="6" y2="18"></line>'
+        + '<line x1="6" y1="6" x2="18" y2="18"></line>'
+        + '</svg></button>'
+        + '<div class="modal-backdrop je-skeleton-shimmer" style="background: #1e293b;">'
+        + '<div class="je-modal-backdrop-overlay"></div></div>'
+        + '<div class="modal-content"><div class="modal-main"><div class="modal-left">'
+        + '<div class="header-section">'
+        + '<div class="header-poster"><div class="je-skel-poster je-skeleton-shimmer"></div></div>'
+        + '<div class="header-info">'
+        + '<div class="je-skel-title je-skeleton-shimmer"></div>'
+        + '<div class="je-skel-meta je-skeleton-shimmer"></div>'
+        + '<div class="je-skel-meta je-skeleton-shimmer" style="width: 40%"></div>'
+        + '</div></div>'
+        + '<div class="overview-section">'
+        + '<div class="je-skel-line je-skeleton-shimmer"></div>'
+        + '<div class="je-skel-line je-skeleton-shimmer" style="width: 90%"></div>'
+        + '<div class="je-skel-line je-skeleton-shimmer" style="width: 75%"></div>'
+        + '</div></div>'
+        + '<div class="modal-right"><div class="je-more-info-right-panel">'
+        + '<div class="je-more-info-ratings-skeleton">'
+        + '<span class="je-skel-badge je-skeleton-shimmer"></span>'
+        + '<span class="je-skel-badge je-skeleton-shimmer" style="width:72px"></span></div>'
+        + '<div class="je-skel-line je-skeleton-shimmer" style="margin-top: 1rem"></div>'
+        + '<div class="je-skel-line je-skeleton-shimmer" style="width: 60%"></div>'
+        + '</div></div></div></div></div></div>';
+}
+
+/**
+ * Close modal or skeleton immediately without animation (for fast replacement).
+ */
+function closeImmediate() {
+    if (currentModal) {
+        if (currentModal._cleanupTvListener) currentModal._cleanupTvListener();
+        if (currentModal._cleanupEscapeListener) currentModal._cleanupEscapeListener();
+        if (document.body.contains(currentModal)) document.body.removeChild(currentModal);
+        currentModal = null;
+    }
+}
+
+/**
+ * Close skeleton or modal (used on error paths).
+ */
+function closeSkeletonOrModal() {
+    closeImmediate();
+}
+
+/**
+ * Prefetch media details into the cache (called on hover).
+ * @param {number} tmdbId - The TMDB ID
+ * @param {string} mediaType - 'movie' or 'tv'
+ */
+moreInfoModal.prefetch = function(tmdbId, mediaType) {
+    // Don't prefetch if already cached
+    if (cacheGet(mediaType, tmdbId)) return;
+    // Fire and forget - just populate the cache
+    fetchMediaDetails(tmdbId, mediaType).catch(() => {});
 }
 
 /**
@@ -206,24 +387,44 @@ async function fetchRatings(tmdbId, mediaType) {
 /**
  * Fetch media details from Jellyseerr API via proxy
  */
-async function fetchMediaDetails(tmdbId, mediaType) {
-    try {
-        const endpoint = mediaType === 'movie'
-            ? `/movie/${tmdbId}`
-            : `/tv/${tmdbId}`;
-
-        const response = await ApiClient.ajax({
-            type: 'GET',
-            url: ApiClient.getUrl(`/JellyfinEnhanced/jellyseerr${endpoint}`),
-            headers: { 'X-Jellyfin-User-Id': ApiClient.getCurrentUserId() },
-            dataType: 'json'
-        });
-
-        return response;
-    } catch (error) {
-        console.error(`${logPrefix} Failed to fetch ${mediaType} details for TMDB ID ${tmdbId}:`, error);
-        throw error;
+async function fetchMediaDetails(tmdbId, mediaType, { skipCache = false } = {}) {
+    // Check frontend cache first
+    if (!skipCache) {
+        const cached = cacheGet(mediaType, tmdbId);
+        if (cached) return cached;
     }
+
+    // Deduplicate in-flight requests (e.g., hover prefetch + immediate click)
+    const flightKey = `${mediaType}:${tmdbId}`;
+    const inflight = _inflightRequests.get(flightKey);
+    if (inflight) return inflight;
+
+    const promise = (async () => {
+        try {
+            const endpoint = mediaType === 'movie'
+                ? `/movie/${tmdbId}`
+                : `/tv/${tmdbId}`;
+
+            const response = await ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl(`/JellyfinEnhanced/jellyseerr${endpoint}`),
+                headers: { 'X-Jellyfin-User-Id': ApiClient.getCurrentUserId() },
+                dataType: 'json'
+            });
+
+            // Store in cache
+            cacheSet(mediaType, tmdbId, response);
+            return response;
+        } catch (error) {
+            console.error(`${logPrefix} Failed to fetch ${mediaType} details for TMDB ID ${tmdbId}:`, error);
+            throw error;
+        } finally {
+            _inflightRequests.delete(flightKey);
+        }
+    })();
+
+    _inflightRequests.set(flightKey, promise);
+    return promise;
 }
 
 /**
@@ -235,8 +436,8 @@ async function refreshModalData(data, mediaType, modal, refreshBtn) {
         refreshBtn.classList.add('loading');
         refreshBtn.disabled = true;
 
-        // Fetch fresh data
-        const freshData = await fetchMediaDetails(data.id, mediaType);
+        // Fetch fresh data (skip frontend cache so refresh actually refreshes)
+        const freshData = await fetchMediaDetails(data.id, mediaType, { skipCache: true });
         if (!freshData) {
             showError('Failed to refresh media information');
             refreshBtn.classList.remove('loading');
@@ -412,15 +613,30 @@ function getContentRating(data, mediaType) {
 }
 
 /**
- * Show the modal with media information
+ * Show the modal with media information.
+ * If a skeleton modal is already open, updates its content in-place (no flash).
+ * Otherwise creates a new modal element.
  */
 function showModal(data, mediaType) {
-    // Close existing modal if any
-    moreInfoModal.close();
+    // Check if a skeleton modal is currently displayed for the same item
+    const existingSkeleton = currentModal?.dataset?.skeletonId;
+    let modal;
 
-    const modal = document.createElement('div');
-    modal.className = 'je-more-info-modal';
-    modal.innerHTML = buildModalContent(data, mediaType);
+    if (existingSkeleton && currentModal && document.body.contains(currentModal)) {
+        // Reuse the existing skeleton modal - swap content in-place for smooth transition
+        modal = currentModal;
+        // Content is built from API data with escapeHtml applied to all user-visible strings
+        modal.innerHTML = buildModalContent(data, mediaType);
+        delete modal.dataset.skeletonId;
+    } else {
+        // No skeleton - close anything existing and create fresh
+        closeImmediate();
+        modal = document.createElement('div');
+        modal.className = 'je-more-info-modal';
+        // Content is built from API data with escapeHtml applied to all user-visible strings
+        modal.innerHTML = buildModalContent(data, mediaType);
+    }
+
     // Tag modal so async updates only apply to the current item
     modal.dataset.tmdbId = String(data.id || '');
     modal.dataset.mediaType = mediaType;
@@ -466,8 +682,14 @@ function showModal(data, mediaType) {
         });
     }
 
-    document.body.appendChild(modal);
+    if (!document.body.contains(modal)) {
+        document.body.appendChild(modal);
+    }
     currentModal = modal;
+
+    // Clean up old listeners before adding new ones
+    if (modal._cleanupEscapeListener) modal._cleanupEscapeListener();
+    if (modal._cleanupTvListener) modal._cleanupTvListener();
 
     // Add Escape key handler
     const handleEscape = (e) => {
@@ -511,8 +733,10 @@ function showModal(data, mediaType) {
         modal._cleanupTvListener = () => document.removeEventListener('jellyseerr-tv-requested', handleTvRequest);
     }
 
-    // Trigger animation
-    setTimeout(() => modal.classList.add('active'), 10);
+    // Trigger animation (only needed for fresh modals; skeleton is already active)
+    if (!modal.classList.contains('active')) {
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
 }
 
 /**
@@ -563,7 +787,7 @@ function buildModalContent(data, mediaType) {
                         <div class="modal-left">
                             <div class="header-section">
                                 <div class="header-poster">
-                                    ${posterUrl ? `<img src="${posterUrl}" alt="${title}" />` : ''}
+                                    ${posterUrl ? `<img src="${posterUrl}" alt="${escapeHtml(title)}" />` : ''}
                                 </div>
                                 <div class="header-info">
                                     <div class="title-row">
@@ -571,7 +795,7 @@ function buildModalContent(data, mediaType) {
                                     <div class="title-chip" data-mount="je-status-chip"></div>
                                     </div>
                                     <div class="meta-info">
-                                        <span class="rating-badge">${getContentRating(data, mediaType)}</span>
+                                        <span class="rating-badge">${escapeHtml(getContentRating(data, mediaType))}</span>
                                         <span class="runtime">${runtime}</span>
                                         <span class="genres">${data.genres?.map(g => escapeHtml(g.name)).join(', ') || 'N/A'}</span>
                                     </div>
@@ -2714,6 +2938,39 @@ function injectStyles() {
             100% { background-position: 0 0; }
         }
 
+        .je-skeleton-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.14) 37%, rgba(255,255,255,0.06) 63%) !important;
+            background-size: 400% 100% !important;
+            animation: je-skel-shimmer 1.2s ease-in-out infinite !important;
+        }
+
+        .je-skel-poster {
+            width: 120px;
+            height: 180px;
+            border-radius: 8px;
+        }
+
+        .je-skel-title {
+            height: 2rem;
+            width: 60%;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+
+        .je-skel-meta {
+            height: 1rem;
+            width: 70%;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .je-skel-line {
+            height: 0.85rem;
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
         .je-more-info-ratings-cell {
             display: flex;
             justify-content: flex-end;
@@ -3076,6 +3333,28 @@ function injectStyles() {
             moreInfoModal.close();
         }
     });
+
+    // Hover prefetch: when hovering over any card with tmdb data attributes,
+    // start loading media details so the modal opens faster on click.
+    let _hoverPrefetchTimer = null;
+    document.addEventListener('mouseover', function(e) {
+        const card = e.target.closest('[data-tmdb-id][data-media-type]');
+        if (!card) return;
+
+        const tmdbId = parseInt(card.dataset.tmdbId, 10);
+        const mediaType = card.dataset.mediaType;
+        if (!tmdbId || !mediaType) return;
+
+        clearTimeout(_hoverPrefetchTimer);
+        _hoverPrefetchTimer = setTimeout(() => {
+            moreInfoModal.prefetch(tmdbId, mediaType);
+        }, 150);
+    }, true);
+    document.addEventListener('mouseout', function(e) {
+        if (e.target.closest('[data-tmdb-id]')) {
+            clearTimeout(_hoverPrefetchTimer);
+        }
+    }, true);
 
     // Expose the module on the global JE object
     JE.jellyseerrMoreInfo = moreInfoModal;
