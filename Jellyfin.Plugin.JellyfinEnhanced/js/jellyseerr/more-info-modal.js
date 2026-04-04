@@ -192,10 +192,12 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
         showSkeletonModal(mediaType, tmdbId);
         const skeletonOpenId = `${mediaType}:${tmdbId}`;
 
-        // Fire details + ratings in parallel
-        const [data, ratings] = await Promise.all([
+        // Fire details + ratings in parallel.
+        // Use a sentinel to distinguish "fetch error" from "API returned no ratings".
+        const RATINGS_FAILED = Symbol('ratings-failed');
+        const [data, ratingsResult] = await Promise.all([
             fetchMediaDetails(tmdbId, mediaType).catch(() => null),
-            fetchRatings(tmdbId, mediaType).catch(() => null)
+            fetchRatings(tmdbId, mediaType).catch(() => RATINGS_FAILED)
         ]);
 
         if (!data) {
@@ -207,8 +209,8 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
         // Bail if the modal was closed or a different item was opened while we were fetching
         if (!currentModal || currentModal.dataset?.skeletonId !== skeletonOpenId) return;
 
-        // Pre-attach ratings to data so buildModalContent can render them inline
-        if (ratings) data.ratings = ratings;
+        // Pre-attach ratings (even null means "no ratings available" -- clears skeleton)
+        if (ratingsResult !== RATINGS_FAILED) data.ratings = ratingsResult;
 
         // Replace skeleton with full content
         showModal(data, mediaType);
@@ -218,11 +220,11 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
             backfillSeasonMetadata(tmdbId, data);
         }
 
-        // If ratings weren't ready yet (unlikely since parallel), handle late arrival
-        if (!ratings) {
+        // Only retry ratings if the fetch actually failed (not if API returned null/empty)
+        if (ratingsResult === RATINGS_FAILED) {
             fetchRatings(tmdbId, mediaType)
                 .then((r) => applyRatings(r, data, mediaType, tmdbId))
-                .catch(() => {});
+                .catch(() => clearRatingsMount());
         }
     } catch (error) {
         console.error('Error opening more info modal:', error);
@@ -233,10 +235,11 @@ moreInfoModal.open = async function(tmdbId, mediaType) {
 
 /**
  * Apply ratings to the current modal (used for late-arriving or background-fetched ratings).
+ * If ratings is null/empty, clears the skeleton badges from the mount.
  * Rating logos are built from validated API data (not user input), safe for innerHTML.
  */
 function applyRatings(ratings, data, mediaType, tmdbId) {
-    if (!ratings || !currentModal) return;
+    if (!currentModal) return;
     const modalTmdbId = currentModal?.dataset?.tmdbId;
     const modalMediaType = currentModal?.dataset?.mediaType;
     if (String(modalTmdbId) !== String(data.id) || modalMediaType !== mediaType) return;
@@ -244,10 +247,19 @@ function applyRatings(ratings, data, mediaType, tmdbId) {
     data.ratings = ratings;
     const mount = currentModal.querySelector('[data-mount="ratings"]');
     if (mount) {
-        const logos = buildRatingLogos(ratings, data, mediaType, tmdbId);
         // Rating logos HTML is built from hardcoded SVGs and validated numeric scores - safe
+        const logos = ratings ? buildRatingLogos(ratings, data, mediaType, tmdbId) : '';
         mount.innerHTML = logos || '';
     }
+}
+
+/**
+ * Clear the ratings mount point (removes skeleton badges when ratings fetch fails).
+ */
+function clearRatingsMount() {
+    if (!currentModal) return;
+    const mount = currentModal.querySelector('[data-mount="ratings"]');
+    if (mount) mount.innerHTML = '';
 }
 
 /**
@@ -849,12 +861,12 @@ function buildRightPanel(data, mediaType, { budget, revenue, releaseDate, tmdbId
     return `
         <div class="je-more-info-right-panel">
             <div class="je-more-info-media-ratings" data-mount="ratings">
-                ${data.ratings ? buildRatingLogos(data.ratings, data, mediaType, tmdbId) : `
-                    <div class="je-more-info-ratings-skeleton">
+                ${data.ratings ? buildRatingLogos(data.ratings, data, mediaType, tmdbId)
+                    : ('ratings' in data ? ''
+                    : `<div class="je-more-info-ratings-skeleton">
                         <span class="je-skel-badge"></span>
                         <span class="je-skel-badge" style="width:72px"></span>
-                    </div>
-                `}
+                    </div>`)}
             </div>
             ${mediaType === 'movie' && data.collection ? buildCollectionCard(data.collection) : ''}
             <div class="je-more-info-stats-panel">
