@@ -410,7 +410,7 @@ async function fetchRatings(tmdbId, mediaType) {
         }
         return response;
     } catch (error) {
-        console.warn(`${logPrefix} Failed to fetch ratings for ${mediaType} ${tmdbId}:`, error);
+        console.debug(`${logPrefix} Failed to fetch ratings for ${mediaType} ${tmdbId}:`, error);
         return null;
     }
 }
