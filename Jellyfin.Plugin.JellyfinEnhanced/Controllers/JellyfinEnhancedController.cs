@@ -1885,6 +1885,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.JellyseerrShowGenreDiscovery,
                 config.JellyseerrShowTagDiscovery,
                 config.JellyseerrShowPersonDiscovery,
+                config.JellyseerrShowCollectionDiscovery,
                 config.JellyseerrExcludeLibraryItems,
                 config.JellyseerrExcludeBlocklistedItems,
                 config.JellyseerrDisableCache,
