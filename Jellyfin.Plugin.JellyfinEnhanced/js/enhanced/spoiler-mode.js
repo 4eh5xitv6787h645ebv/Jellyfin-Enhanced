@@ -1162,8 +1162,10 @@
     function onSpoilerModeChanged() {
         if (getSettings().enabled === false) {
             document.body.classList.remove('je-spoiler-active');
+            try { localStorage.removeItem('JE_spoiler_active'); } catch (e) { /* ignore */ }
         } else if (protectedIdSet.size > 0) {
             document.body.classList.add('je-spoiler-active');
+            try { localStorage.setItem('JE_spoiler_active', '1'); } catch (e) { /* ignore */ }
         }
         if (core.processCurrentPage) core.processCurrentPage();
     }
@@ -1178,9 +1180,13 @@
 
         if (protectedIdSet.size > 0 && getSettings().enabled !== false) {
             document.body.classList.add('je-spoiler-active');
+            try { localStorage.setItem('JE_spoiler_active', '1'); } catch (e) { /* ignore */ }
         } else {
             document.body.classList.remove('je-spoiler-active');
+            try { localStorage.removeItem('JE_spoiler_active'); } catch (e) { /* ignore */ }
         }
+        // Remove primed class (set by inline anti-flash script) — JS-injected CSS takes over
+        document.body.classList.remove('je-spoiler-primed');
 
         // Initialize sub-modules
         if (core.injectCSS) core.injectCSS();
@@ -1259,8 +1265,10 @@
             JE.helpers.removeCSS('je-spoiler-mode');
         }
 
-        // Remove body class
+        // Remove body classes and localStorage flag
         document.body.classList.remove('je-spoiler-active');
+        document.body.classList.remove('je-spoiler-primed');
+        try { localStorage.removeItem('JE_spoiler_active'); } catch (e) { /* ignore */ }
         document.body.classList.remove(DETAIL_OVERVIEW_PENDING_CLASS);
 
         // Remove spoiler-injected DOM elements
