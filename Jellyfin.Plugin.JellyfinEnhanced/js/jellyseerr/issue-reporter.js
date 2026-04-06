@@ -1113,7 +1113,7 @@
             return;
         }
 
-        const handleViewShow = async () => {
+        issueReporter._handleViewShow = async () => {
             try {
                 // Small delay to ensure DOM is ready
                 setTimeout(async () => {
@@ -1125,15 +1125,43 @@
         };
 
         // Listen for Jellyfin's page navigation events
-        document.addEventListener('viewshow', handleViewShow);
+        document.addEventListener('viewshow', issueReporter._handleViewShow);
 
         // Also try on initial load
-        setTimeout(handleViewShow, 500);
+        setTimeout(issueReporter._handleViewShow, 500);
 
         console.log(`${logPrefix} ✓ Initialized issue reporter with viewshow listener`);
     };
 
+    /**
+     * Tears down issue reporter: removes viewshow listener and injected buttons.
+     */
+    issueReporter.teardown = function () {
+        if (issueReporter._handleViewShow) {
+            document.removeEventListener('viewshow', issueReporter._handleViewShow);
+            issueReporter._handleViewShow = null;
+        }
+
+        // Remove any injected report buttons from detail pages
+        document.querySelectorAll('.jellyseerr-report-issue-icon, .jellyseerr-report-unavailable-icon').forEach(function (btn) {
+            btn.remove();
+        });
+
+        cachedUserCanReport = null;
+        console.log(`${logPrefix} Torn down`);
+    };
+
     // Expose the module on the global JE object
     JE.jellyseerrIssueReporter = issueReporter;
+
+    // Register with module registry for reactive config lifecycle
+    if (JE.moduleRegistry) {
+        JE.moduleRegistry.register('jellyseerr-issue-reporter', {
+            configKeys: ['JellyseerrEnabled', 'JellyseerrShowReportButton'],
+            enableKey: 'JellyseerrShowReportButton',
+            init: issueReporter.initialize,
+            teardown: issueReporter.teardown
+        });
+    }
 
 })(window.JellyfinEnhanced);

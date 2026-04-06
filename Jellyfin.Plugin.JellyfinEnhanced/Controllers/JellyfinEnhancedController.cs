@@ -1785,7 +1785,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.ClearLocalStorageTimestamp, config.ClearTranslationCacheTimestamp,
                 config.AutoPauseEnabled, config.AutoResumeEnabled, config.ShowWatchProgress,
                 config.ShowFileSizes, config.ShowAudioLanguages, config.DisableAllShortcuts,
-                config.MetadataIconsEnabled, config.EnableLoginImage
+                config.MetadataIconsEnabled, config.EnableLoginImage,
+                config.SpoilerModeEnabled
             };
             var json = System.Text.Json.JsonSerializer.Serialize(hashSource);
             using var sha = System.Security.Cryptography.SHA256.Create();
@@ -2735,6 +2736,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.HiddenContentEnabled,
                 config.HiddenContentUsePluginPages,
                 config.HiddenContentUseCustomTabs,
+
+                // Spoiler Mode Settings
+                config.SpoilerModeEnabled,
 
             });
         }

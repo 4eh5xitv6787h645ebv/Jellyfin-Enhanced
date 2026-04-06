@@ -666,25 +666,34 @@
     }
 
     /**
-     * Creates and connects the unified MutationObserver on document.body.
-     * Stores the observer reference in core.unifiedObserver.
+     * Connects to the shared body MutationObserver via helpers.onBodyMutation.
+     * Uses the multiplexer instead of creating a standalone observer.
      */
     function connectObserver() {
-        if (core.unifiedObserver) return;
+        if (core._bodyMutationHandle) return;
 
-        var observer = new MutationObserver(handleMutations);
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
-        core.unifiedObserver = observer;
+        if (JE.helpers && JE.helpers.onBodyMutation) {
+            core._bodyMutationHandle = JE.helpers.onBodyMutation(
+                'spoiler-mode',
+                handleMutations
+            );
+        } else {
+            // Fallback: create standalone observer if helpers not available
+            if (core.unifiedObserver) return;
+            var observer = new MutationObserver(handleMutations);
+            observer.observe(document.body, { childList: true, subtree: true });
+            core.unifiedObserver = observer;
+        }
     }
 
     /**
-     * Disconnects and nulls the unified MutationObserver.
+     * Disconnects from the shared body observer (or standalone fallback).
      */
     function disconnectObserver() {
+        if (core._bodyMutationHandle) {
+            core._bodyMutationHandle.disconnect();
+            core._bodyMutationHandle = null;
+        }
         if (core.unifiedObserver) {
             core.unifiedObserver.disconnect();
             core.unifiedObserver = null;
@@ -709,7 +718,7 @@
             return;
         }
 
-        JE.helpers.onViewPage(function (view, element, hash) {
+        core._viewPageUnsub = JE.helpers.onViewPage(function (view, element, hash) {
             // Reset detail page state
             core.lastDetailPageItemId = null;
             core.detailPageProcessing = false;

@@ -1159,6 +1159,16 @@
     // Public API & Initialization
     // ============================================================
 
+    // Named handler for je-spoiler-mode-changed (removable in teardown)
+    function onSpoilerModeChanged() {
+        if (getSettings().enabled === false) {
+            document.body.classList.remove('je-spoiler-active');
+        } else if (protectedIdSet.size > 0) {
+            document.body.classList.add('je-spoiler-active');
+        }
+        if (core.processCurrentPage) core.processCurrentPage();
+    }
+
     JE.initializeSpoilerMode = function () {
         spoilerDataOwnerId = typeof ApiClient !== 'undefined' && ApiClient.getCurrentUserId
             ? ApiClient.getCurrentUserId()
@@ -1178,14 +1188,7 @@
         if (core.setupObservers) core.setupObservers();
 
         // Re-process page when settings change
-        window.addEventListener('je-spoiler-mode-changed', function () {
-            if (getSettings().enabled === false) {
-                document.body.classList.remove('je-spoiler-active');
-            } else if (protectedIdSet.size > 0) {
-                document.body.classList.add('je-spoiler-active');
-            }
-            if (core.processCurrentPage) core.processCurrentPage();
-        });
+        window.addEventListener('je-spoiler-mode-changed', onSpoilerModeChanged);
 
         // Initial filter after a short delay
         if (protectedIdSet.size > 0 && core.filterAllCards) {
@@ -1223,5 +1226,66 @@
             rebuildSets: rebuildSets
         };
     };
+
+    /**
+     * Tears down spoiler mode: disconnects observer, clears redactions,
+     * removes CSS, event listeners, and body class.
+     */
+    JE.teardownSpoilerMode = function () {
+        // Disconnect observer
+        if (core.disconnectObserver) core.disconnectObserver();
+
+        // Clear all redactions from the DOM
+        if (core.clearAllRedactions) core.clearAllRedactions();
+
+        // Clear pending navigation timers
+        if (core.navigationTimers) {
+            for (var i = 0; i < core.navigationTimers.length; i++) {
+                clearTimeout(core.navigationTimers[i]);
+            }
+            core.navigationTimers = [];
+        }
+
+        // Unregister onViewPage handler
+        if (core._viewPageUnsub) {
+            core._viewPageUnsub();
+            core._viewPageUnsub = null;
+        }
+
+        // Remove event listener
+        window.removeEventListener('je-spoiler-mode-changed', onSpoilerModeChanged);
+
+        // Remove CSS
+        if (JE.helpers && JE.helpers.removeCSS) {
+            JE.helpers.removeCSS('je-spoiler-mode');
+        }
+
+        // Remove body class
+        document.body.classList.remove('je-spoiler-active');
+        document.body.classList.remove(DETAIL_OVERVIEW_PENDING_CLASS);
+
+        // Remove spoiler-injected DOM elements
+        document.querySelectorAll('.je-spoiler-toggle-btn, .je-spoiler-reveal-overlay, .je-spoiler-episode-protected').forEach(function (el) {
+            if (el.classList.contains('je-spoiler-episode-protected')) {
+                el.classList.remove('je-spoiler-episode-protected');
+            } else {
+                el.remove();
+            }
+        });
+
+        // Null out public API
+        JE.spoilerMode = undefined;
+
+        console.log('🪼 Jellyfin Enhanced: Spoiler mode torn down');
+    };
+
+    // Register with module registry for reactive config lifecycle
+    if (JE.moduleRegistry) {
+        JE.moduleRegistry.register('spoiler-mode', {
+            configKeys: ['SpoilerModeEnabled'],
+            init: JE.initializeSpoilerMode,
+            teardown: JE.teardownSpoilerMode
+        });
+    }
 
 })(window.JellyfinEnhanced);
