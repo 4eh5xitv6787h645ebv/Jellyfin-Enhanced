@@ -1687,13 +1687,28 @@
                             </div>
                         </div>
                     </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Config Page Preferences</h3></legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer" style="margin-bottom: 0.5em;">
+                                <label>
+                                    <input id="autoReloadOnSave" is="emby-checkbox" type="checkbox"/>
+                                    <span>Auto-reload page after saving</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription" style="margin-bottom: 1em;">
+                                Automatically reloads the page after saving to ensure all changes take effect.
+                                Disable if you prefer to reload manually.
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
                 <div
                     style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
                     <div>
-                        All changes require a page refresh to take effect. <br/>
-                        If old settings persist, please force clear browser cache.
+                        The page reloads after saving to apply all changes.
+                        You can disable this in Other Settings > Config Page Preferences.
                     </div>
                 </div>
                 <div>
@@ -2695,6 +2710,9 @@
                 document.querySelector('#loginImageEnabled').checked = config.EnableLoginImage || false;
                 document.querySelector('#customPluginLinks').value = config.CustomPluginLinks || '';
 
+                // Config page preference (localStorage, not server config)
+                document.querySelector('#autoReloadOnSave').checked = localStorage.getItem('JE_autoReloadOnSave') !== 'false';
+
                 // Set up event handler for watchlist prevention checkbox
                 function toggleWatchlistRetentionVisibility() {
                     const preventionEnabled = document.querySelector('#preventWatchlistReAddition').checked;
@@ -2918,6 +2936,21 @@
                 const config = await buildConfigFromForm();
                 const result = await ApiClient.updatePluginConfiguration(pluginId, config);
                 Dashboard.processPluginConfigurationUpdateResult(result);
+
+                // Notify other tabs/windows that config changed so they
+                // pick up new settings without a hard refresh
+                if (window.JellyfinEnhanced?.configStore?.broadcastChange) {
+                    window.JellyfinEnhanced.configStore.broadcastChange();
+                } else {
+                    try { var ch = new BroadcastChannel('jellyfin-enhanced-config'); ch.postMessage({type:'config-updated',ts:Date.now()}); ch.close(); } catch(_){}
+                    try { localStorage.setItem('JE_config_updated', String(Date.now())); } catch(_){}
+                }
+
+                var autoReload = document.querySelector('#autoReloadOnSave').checked;
+                localStorage.setItem('JE_autoReloadOnSave', String(autoReload));
+                if (autoReload) {
+                    setTimeout(function() { window.location.reload(); }, 500);
+                }
             } catch {
                 Dashboard.hideLoadingMsg();
             }

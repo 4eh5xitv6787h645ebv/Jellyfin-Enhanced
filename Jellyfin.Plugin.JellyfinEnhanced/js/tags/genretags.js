@@ -281,6 +281,9 @@
             .${tagClass} .material-symbols-outlined {
                 font-size: clamp(1em, 2.8vw, 1.4em);
                 line-height: 1;
+                overflow: hidden;
+                max-width: 100%;
+                max-height: 100%;
             }
             .${tagClass} .genre-text {
                 /* Absolutely positioned label = no layout reflow when shown/hidden.

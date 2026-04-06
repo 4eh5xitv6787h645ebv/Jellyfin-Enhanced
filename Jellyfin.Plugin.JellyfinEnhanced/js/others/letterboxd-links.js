@@ -182,4 +182,25 @@
             console.error(`${logPrefix} Failed to initialize`, err);
         }
     };
+
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('letterboxd-links') : null;
+    if (ctx) {
+        ctx.dom('.letterboxd-link');
+        ctx.dom('#letterboxd-links-styles');
+        ctx.onTeardown(function() {
+            JE.helpers.disconnectObserver('letterboxd-links');
+            isAddingLinks = false;
+            processedItemIds.clear();
+            lastVisibleItemId = null;
+            processingLetterboxd = false;
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('letterboxd-links', {
+            configKeys: ['LetterboxdEnabled'],
+            init: JE.initializeLetterboxdLinksScript,
+            teardown: ctx.teardown
+        });
+    }
 })(window.JellyfinEnhanced);

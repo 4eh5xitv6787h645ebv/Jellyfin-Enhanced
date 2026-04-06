@@ -41,6 +41,8 @@
     _customTabContainer: null,
   };
 
+  // Event listeners tracked via _ctx.listen() for automatic teardown.
+
   // Status color mapping
   const STATUS_COLORS = {
     CinemaRelease: "#2196f3",
@@ -1191,16 +1193,16 @@
     injectNavigation();
     setupNavigationWatcher();
 
-    // Setup event listeners
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
-    document.addEventListener("viewshow", handleViewShow);
-    document.addEventListener("click", handleNavClick);
-    document.addEventListener("click", handleEventClick);
+    if (_ctx) {
+      _ctx.listen(window, "hashchange", interceptNavigation, true);
+      _ctx.listen(window, "popstate", interceptNavigation, true);
+      _ctx.listen(document, "viewshow", handleViewShow);
+      _ctx.listen(document, "click", handleNavClick);
+      _ctx.listen(document, "click", handleEventClick);
+    }
 
     startLocationWatcher();
 
-    // Check location on init
     handleNavigation();
 
     console.log(`${logPrefix} Calendar page module initialized`);
@@ -2701,28 +2703,22 @@
     const config = JE.pluginConfig || {};
     if (!config.CalendarPageEnabled) return;
     if (pluginPagesExists && config.CalendarUsePluginPages) return;
-    if (config.CalendarUseCustomTabs) return; // Don't watch if using custom tabs
+    if (config.CalendarUseCustomTabs) return;
 
-    // Use MutationObserver to watch for sidebar changes, but disconnect after re-injection
-    const observer = new MutationObserver(() => {
-      // Re-check config each time to avoid injecting when settings change
-      const currentConfig = JE.pluginConfig || {};
-      if (currentConfig.CalendarUseCustomTabs) return;
-      if (pluginPagesExists && currentConfig.CalendarUsePluginPages) return;
+    if (JE.helpers?.onBodyMutation) {
+      JE.helpers.onBodyMutation('calendar-page-nav', () => {
+        const currentConfig = JE.pluginConfig || {};
+        if (currentConfig.CalendarUseCustomTabs) return;
+        if (pluginPagesExists && currentConfig.CalendarUsePluginPages) return;
 
-      if (!document.querySelector('.je-nav-calendar-item')) {
-        const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-        if (jellyfinEnhancedSection) {
-          console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
-          injectNavigation();
+        if (!document.querySelector('.je-nav-calendar-item')) {
+          const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
+          if (jellyfinEnhancedSection) {
+            console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
+            injectNavigation();
+          }
         }
-      }
-    });
-
-    // Observe the main drawer
-    const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
-    if (navDrawer) {
-      observer.observe(navDrawer, { childList: true, subtree: true });
+      });
     }
   }
 
@@ -2930,5 +2926,33 @@
     setDisplayMode
   };
 
+  var _ctx = JE.helpers ? JE.helpers.createModuleContext('calendar-page') : null;
+  if (_ctx) {
+    _ctx.dom('.je-nav-calendar-item');
+    _ctx.dom('#je-calendar-page');
+    _ctx.dom('#je-calendar-page-styles');
+    _ctx.onTeardown(function() {
+      if (state.pageVisible) hidePage();
+      stopLocationWatcher();
+      state.events = [];
+      state.isLoading = false;
+      state.previousPage = null;
+      state._customTabContainer = null;
+      if (state.pollTimer) { clearTimeout(state.pollTimer); state.pollTimer = null; }
+      if (state._pollIntervalId) { clearInterval(state._pollIntervalId); state._pollIntervalId = null; }
+      JE.helpers.disconnectObserver('calendar-page-nav');
+      console.log(`${logPrefix} Torn down`);
+    });
+  }
+
+  JE.calendarPage.teardown = _ctx ? _ctx.teardown : function() {};
   JE.initializeCalendarPage = initialize;
+
+  if (JE.moduleRegistry) {
+    JE.moduleRegistry.register('calendar-page', {
+      configKeys: ['CalendarPageEnabled'],
+      init: initialize,
+      teardown: _ctx.teardown
+    });
+  }
 })();

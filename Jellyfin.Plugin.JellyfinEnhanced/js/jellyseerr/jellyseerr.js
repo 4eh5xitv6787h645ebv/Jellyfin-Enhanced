@@ -597,4 +597,32 @@
         console.log(`${logPrefix} Initialization complete.`);
     };
 
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('jellyseerr-search') : null;
+    if (ctx) {
+        ctx.dom('.jellyseerr-section');
+        ctx.dom('#jellyseerr-search-icon');
+        ctx.onTeardown(function() {
+            JE.helpers.disconnectObserver('jellyseerr-search-listener');
+            isJellyseerrActive = false;
+            jellyseerrUserFound = false;
+            isJellyseerrOnlyMode = false;
+            if (debounceTimeout) { clearTimeout(debounceTimeout); debounceTimeout = null; }
+            lastProcessedQuery = null;
+            var searchInput = document.querySelector('#searchPage #searchTextInput');
+            if (searchInput) delete searchInput.dataset.jellyseerrListener;
+            try {
+                if (JE.seamlessScroll?.cleanupInfiniteScroll) JE.seamlessScroll.cleanupInfiniteScroll();
+            } catch (e) { /* ignore */ }
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('jellyseerr-search', {
+            configKeys: ['JellyseerrEnabled', 'JellyseerrShowSearchResults'],
+            enableKey: 'JellyseerrEnabled',
+            init: JE.initializeJellyseerrScript,
+            teardown: ctx.teardown
+        });
+    }
+
 })(window.JellyfinEnhanced);

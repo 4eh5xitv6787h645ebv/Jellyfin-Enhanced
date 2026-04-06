@@ -420,25 +420,52 @@
         }
     }
 
+    function onActivityHashChange() {
+        var hash = window.location.hash;
+        if (hash.includes('#/dashboard/activity') || hash.includes('#/configurationpage')) {
+            setTimeout(updateActivityIcons, 300);
+        }
+    }
+
     function initialize() {
-        // Inject CSS for Material Icons
         injectCSS();
         updateActivityIcons();
         startMonitoring();
 
-        // Re-process icons when navigating to activity page or configuration page
-        window.addEventListener('hashchange', (event) => {
-            const hash = window.location.hash;
-            if (hash.includes('#/dashboard/activity') || hash.includes('#/configurationpage')) {
-                // Use a longer timeout to ensure page is rendered
-                setTimeout(updateActivityIcons, 300);
-            }
+        if (_ctx) {
+            _ctx.listen(window, 'hashchange', onActivityHashChange);
+        } else {
+            window.addEventListener('hashchange', onActivityHashChange);
+        }
+    }
+
+    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('colored-activity-icons');
+    if (_ctx) {
+        _ctx.dom('#activity-icons-hide-svg');
+        _ctx.onTeardown(function() {
+            stopMonitoring();
+            isProcessing = false;
+            // Restore original icons
+            document.querySelectorAll('[data-jellyfin-enhanced-activity-icon]').forEach(function(el) {
+                el.removeAttribute('data-jellyfin-enhanced-activity-icon');
+                var icon = el.querySelector('.material-icons');
+                if (icon) icon.remove();
+                var svg = el.querySelector('svg');
+                if (svg) svg.style.display = '';
+            });
         });
     }
 
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeActivityIcons = initialize;
-        window.JellyfinEnhanced.stopActivityIconsMonitoring = stopMonitoring;
+    }
+
+    if (window.JellyfinEnhanced?.moduleRegistry && _ctx) {
+        window.JellyfinEnhanced.moduleRegistry.register('colored-activity-icons', {
+            configKeys: ['ColoredActivityIconsEnabled'],
+            init: initialize,
+            teardown: _ctx.teardown
+        });
     }
 
 })();

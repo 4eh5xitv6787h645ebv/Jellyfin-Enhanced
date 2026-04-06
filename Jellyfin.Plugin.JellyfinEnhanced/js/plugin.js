@@ -500,6 +500,9 @@
             // Stage 3: Load ALL component scripts
             const basePath = '/JellyfinEnhanced/js';
             const allComponentScripts = [
+                // reactive config infrastructure (must load before all modules)
+                'enhanced/config-store.js',
+                'enhanced/module-registry.js',
                 // enhanced
                 'enhanced/config.js',
                 'enhanced/helpers.js',
@@ -653,6 +656,57 @@
             }
 
             console.log('🪼 Jellyfin Enhanced: All components initialized successfully.');
+
+            // Stage 7: Start reactive config system
+            if (JE.configStore && JE.moduleRegistry) {
+                // Mark all registered modules as initialized so the registry knows
+                // their current state for future enable/disable/teardown transitions.
+                // Uses markAllInitialized() instead of per-module calls to stay resilient
+                // to module additions/removals.
+                JE.moduleRegistry.markAllInitialized();
+
+                // Snapshot the initial config hash so we can detect future changes
+                JE.configStore.fetchHash().then(function(hash) {
+                    if (hash) JE.configStore.snapshotHash(hash);
+                });
+                // Wire ConfigStore changes to ModuleRegistry lifecycle
+                JE.configStore.subscribe(function(event) {
+                    // Ensure sidebar section exists before modules try to inject nav items
+                    if (typeof JE.addPluginMenuButton === 'function') {
+                        JE.addPluginMenuButton();
+                    }
+                    var needsRefresh = JE.moduleRegistry.handleConfigChange(event.changedKeys, event.oldConfig, event.newConfig, event.oldSettings);
+                    // Re-run tag pipeline if any tag-related settings changed
+                    if (typeof JE.tagPipeline !== 'undefined' && typeof JE.tagPipeline.reset === 'function') {
+                        var tagKeys = ['QualityTagsEnabled', 'GenreTagsEnabled', 'LanguageTagsEnabled',
+                            'RatingTagsEnabled', 'PeopleTagsEnabled', 'qualityTagsEnabled', 'genreTagsEnabled',
+                            'languageTagsEnabled', 'ratingTagsEnabled', 'peopleTagsEnabled',
+                            'TagsHideOnHover', 'DisableTagsOnSearchPage'];
+                        if (event.changedKeys.some(function(k) { return tagKeys.indexOf(k) !== -1; })) {
+                            JE.tagPipeline.reset();
+                        }
+                    }
+                    // Show a refresh toast if some settings couldn't be applied live
+                    if (needsRefresh && needsRefresh.length > 0 && typeof JE.toast === 'function') {
+                        // Escape module names to prevent innerHTML injection
+                        var escaped = needsRefresh.map(function(n) {
+                            var d = document.createElement('span');
+                            d.textContent = n;
+                            return d.innerHTML;
+                        }).join(', ');
+                        JE.toast(
+                            '<div style="margin-bottom:6px">Some settings need a refresh to apply:</div>' +
+                            '<div style="font-size:0.85em;opacity:0.8;margin-bottom:8px">' + escaped + '</div>' +
+                            '<a href="#" onclick="window.location.reload();return false;" ' +
+                            'style="color:#00a4dc;text-decoration:underline;font-weight:600">Refresh now</a>',
+                            10000
+                        );
+                    }
+                });
+                // Start listening for tab focus changes
+                JE.configStore.startPolling();
+                console.log('🪼 Jellyfin Enhanced: Reactive config system started.');
+            }
 
             // Final Stage: Hide splash screen
             if (typeof JE.hideSplashScreen === 'function') {

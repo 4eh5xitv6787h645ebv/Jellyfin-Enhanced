@@ -9,39 +9,65 @@
 
     const logPrefix = '🪼 Jellyfin Enhanced: HSS Discovery Handler:';
 
-    function initDiscoveryHandler() {
+    function clickHandler(e) {
+        // Don't intercept if clicking the request button
+        if (e.target.closest('.discover-requestbutton')) {
+            return;
+        }
 
-        document.addEventListener('click', function(e) {
-            // Don't intercept if clicking the request button
-            if (e.target.closest('.discover-requestbutton')) {
-                return;
-            }
+        // Target any click on the discover card (except the request button)
+        const discoverCard = e.target.closest('.discover-card');
 
-            // Target any click on the discover card (except the request button)
-            const discoverCard = e.target.closest('.discover-card');
+        if (!discoverCard) {
+            return;
+        }
 
-            if (!discoverCard) {
-                return;
-            }
+        const tmdbId = discoverCard.dataset.tmdbId;
+        const mediaType = discoverCard.dataset.mediaType;
 
-            const tmdbId = discoverCard.dataset.tmdbId;
-            const mediaType = discoverCard.dataset.mediaType;
+        // Check if JE.jellyseerrMoreInfo is available
+        if (!tmdbId || !mediaType || !JE?.jellyseerrMoreInfo?.open) {
+            return;
+        }
 
-            // Check if JE.jellyseerrMoreInfo is available
-            if (!tmdbId || !mediaType || !JE?.jellyseerrMoreInfo?.open) {
-                return;
-            }
+        console.log(`${logPrefix} Opening more-info modal for TMDB ID: ${tmdbId}, Type: ${mediaType}`);
 
-            console.log(`${logPrefix} Opening more-info modal for TMDB ID: ${tmdbId}, Type: ${mediaType}`);
+        e.preventDefault();
+        e.stopPropagation();
 
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Open the more-info modal
-            JE.jellyseerrMoreInfo.open(tmdbId, mediaType);
-        }, true);
+        // Open the more-info modal
+        JE.jellyseerrMoreInfo.open(tmdbId, mediaType);
     }
 
-    initDiscoveryHandler();
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('hss-discovery-handler') : null;
+    let initialized = false;
+
+    function initDiscoveryHandler() {
+        if (initialized) return;
+        if (ctx) {
+            ctx.listen(document, 'click', clickHandler, true);
+        } else {
+            document.addEventListener('click', clickHandler, true);
+        }
+        initialized = true;
+    }
+
+    function teardown() {
+        if (ctx) ctx.teardown();
+        else document.removeEventListener('click', clickHandler, true);
+        initialized = false;
+    }
+
+    if (JE.pluginConfig?.JellyseerrEnabled) {
+        initDiscoveryHandler();
+    }
+
+    if (JE.moduleRegistry) {
+        JE.moduleRegistry.register('hss-discovery-handler', {
+            configKeys: ['JellyseerrEnabled'],
+            init: initDiscoveryHandler,
+            teardown: teardown
+        });
+    }
 
 })(window.JellyfinEnhanced || {});

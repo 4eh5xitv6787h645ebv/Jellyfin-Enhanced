@@ -2,6 +2,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Plugins;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using MediaBrowser.Controller;
 
@@ -11,6 +12,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
     {
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
+            // Fix browser caching: adds no-cache headers to plugin config endpoints via MVC action filter.
+            // Uses IActionFilter (post-routing) instead of IStartupFilter to avoid BaseUrl path-matching issues.
+            serviceCollection.AddSingleton<NoCacheConfigFilter>();
+            serviceCollection.Configure<MvcOptions>(opts => opts.Filters.Add<NoCacheConfigFilter>());
+
             serviceCollection.AddSingleton<StartupService>();
             serviceCollection.AddHttpClient();
             serviceCollection.AddSingleton<Logger>();

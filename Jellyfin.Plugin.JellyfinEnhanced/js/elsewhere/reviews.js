@@ -372,5 +372,21 @@
             immediate: true // Process current page immediately on load
         });
     };
+
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('reviews') : null;
+    if (ctx) {
+        ctx.dom('.tmdb-reviews-section');
+        ctx.onTeardown(function() {
+            JE.helpers.disconnectObserver('reviews');
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('reviews', {
+            configKeys: ['ShowReviews'],
+            init: JE.initializeReviewsScript,
+            teardown: ctx.teardown
+        });
+    }
 })(window.JellyfinEnhanced);
 

@@ -1745,6 +1745,49 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
+        /// <summary>
+        /// Returns a lightweight hash of the public config for change detection.
+        /// Cached and only recomputed when config changes (via ConfigurationChanged event
+        /// on the plugin base class). Avoids per-request serialization + SHA256 overhead.
+        /// </summary>
+        private static string? _cachedConfigHash;
+
+        internal static void InvalidateConfigHash() => _cachedConfigHash = null;
+
+        [HttpGet("config-hash")]
+        public ActionResult GetConfigHash()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null) return StatusCode(503);
+
+            if (_cachedConfigHash != null) return Content(_cachedConfigHash);
+
+            var hashSource = new
+            {
+                config.ElsewhereEnabled, config.JellyseerrEnabled, config.ArrLinksEnabled,
+                config.ArrTagsShowAsLinks, config.LetterboxdEnabled, config.ShowReviews,
+                config.HiddenContentEnabled, config.ColoredRatingsEnabled, config.ThemeSelectorEnabled,
+                config.ColoredActivityIconsEnabled, config.PluginIconsEnabled,
+                config.DownloadsPageEnabled, config.CalendarPageEnabled, config.BookmarksEnabled,
+                config.QualityTagsEnabled, config.GenreTagsEnabled, config.LanguageTagsEnabled,
+                config.RatingTagsEnabled, config.PeopleTagsEnabled, config.PauseScreenEnabled,
+                config.JellyseerrShowSearchResults, config.JellyseerrShowReportButton,
+                config.JellyseerrShowSimilar, config.JellyseerrShowRecommended,
+                config.JellyseerrShowGenreDiscovery, config.JellyseerrShowNetworkDiscovery,
+                config.ToastDuration, config.HelpPanelAutocloseDelay,
+                config.TagsHideOnHover, config.DisableTagsOnSearchPage,
+                config.ClearLocalStorageTimestamp, config.ClearTranslationCacheTimestamp,
+                config.AutoPauseEnabled, config.AutoResumeEnabled, config.ShowWatchProgress,
+                config.ShowFileSizes, config.ShowAudioLanguages, config.DisableAllShortcuts,
+                config.MetadataIconsEnabled, config.EnableLoginImage
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(hashSource);
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            var hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json));
+            _cachedConfigHash = Convert.ToHexString(hashBytes);
+            return Content(_cachedConfigHash);
+        }
+
         [HttpGet("private-config")]
         [Authorize]
         public ActionResult GetPrivateConfig()

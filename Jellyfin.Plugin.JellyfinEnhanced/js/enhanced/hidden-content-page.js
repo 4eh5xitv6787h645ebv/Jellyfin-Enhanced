@@ -25,6 +25,8 @@
     _customTabContainer: null,
   };
 
+  // Event listeners tracked via _ctx.listen() for automatic teardown.
+
   const logPrefix = '🪼 Jellyfin Enhanced: Hidden Content Page:';
 
   /** Polling interval for detecting pushState navigations. */
@@ -440,18 +442,19 @@
     injectNavigation();
     setupNavigationWatcher();
 
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
-    document.addEventListener("viewshow", handleViewShow);
-    document.addEventListener("click", handleNavClick);
-    window.addEventListener("hashchange", handleNavigation);
-    window.addEventListener("popstate", handleNavigation);
+    if (_ctx) {
+      _ctx.listen(window, "hashchange", interceptNavigation, true);
+      _ctx.listen(window, "popstate", interceptNavigation, true);
+      _ctx.listen(document, "viewshow", handleViewShow);
+      _ctx.listen(document, "click", handleNavClick);
+      _ctx.listen(window, "hashchange", handleNavigation);
+      _ctx.listen(window, "popstate", handleNavigation);
+    }
 
-    window.addEventListener('je-hidden-content-changed', () => {
-      if (state.pageVisible) {
-        renderPage();
-      }
-    });
+    var hiddenContentChanged = function() {
+      if (state.pageVisible) renderPage();
+    };
+    if (_ctx) _ctx.listen(window, 'je-hidden-content-changed', hiddenContentChanged);
 
     handleNavigation();
 
@@ -1551,29 +1554,44 @@
     if (pluginPagesExists && config.HiddenContentUsePluginPages) return;
     if (config.HiddenContentUseCustomTabs) return;
 
-    const observer = new MutationObserver(() => {
-      const currentConfig = JE.pluginConfig || {};
-      if (currentConfig.HiddenContentUseCustomTabs) return;
-      if (pluginPagesExists && currentConfig.HiddenContentUsePluginPages) return;
+    if (JE.helpers?.onBodyMutation) {
+      JE.helpers.onBodyMutation('hidden-content-page-nav', () => {
+        const currentConfig = JE.pluginConfig || {};
+        if (currentConfig.HiddenContentUseCustomTabs) return;
+        if (pluginPagesExists && currentConfig.HiddenContentUsePluginPages) return;
 
-      if (!document.querySelector('.je-nav-hidden-content-item')) {
-        const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-        if (jellyfinEnhancedSection) {
-          console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
-          injectNavigation();
+        if (!document.querySelector('.je-nav-hidden-content-item')) {
+          const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
+          if (jellyfinEnhancedSection) {
+            console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
+            injectNavigation();
+          }
         }
-      }
-    });
-
-    const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
-    if (navDrawer) {
-      observer.observe(navDrawer, { childList: true, subtree: true });
+      });
     }
   }
 
   // ============================================================
   // Public API
   // ============================================================
+
+  var _ctx = JE.helpers ? JE.helpers.createModuleContext('hidden-content-page') : null;
+  if (_ctx) {
+    _ctx.dom('.je-nav-hidden-content-item');
+    _ctx.dom('#je-hidden-content-page');
+    _ctx.dom('#je-hidden-content-page-styles');
+    _ctx.onTeardown(function() {
+      if (state.pageVisible) hidePage();
+      JE.helpers.disconnectObserver('hidden-content-page-nav');
+      if (state.locationTimer) { clearInterval(state.locationTimer); state.locationTimer = null; }
+      state.previousPage = null;
+      state.searchQuery = '';
+      state.scopedOnly = false;
+      state.locationSignature = null;
+      state._customTabContainer = null;
+      console.log(`${logPrefix} Torn down`);
+    });
+  }
 
   JE.hiddenContentPage = {
     initialize,
@@ -1582,7 +1600,16 @@
     renderPage,
     renderForCustomTab,
     injectStyles,
+    teardown: _ctx ? _ctx.teardown : function() {},
   };
 
   JE.initializeHiddenContentPage = initialize;
+
+  if (JE.moduleRegistry) {
+    JE.moduleRegistry.register('hidden-content-page', {
+      configKeys: ['HiddenContentEnabled'],
+      init: initialize,
+      teardown: _ctx.teardown
+    });
+  }
 })();

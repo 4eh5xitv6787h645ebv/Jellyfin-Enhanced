@@ -338,25 +338,28 @@
                 attributeFilter: ['class']
             });
 
-            // Store observer reference for potential cleanup
-            JE._arrLinksObserver = observer;
-
-            // Listen for configuration changes
-            window.addEventListener('JE:configUpdated', () => {
-                const isEnabled = JE?.pluginConfig?.ArrLinksEnabled;
-
-                if (!isEnabled) {
-                    // Disable: disconnect observer
-                    if (observer) {
-                        observer.disconnect();
-                        console.log(`${logPrefix} Observer disconnected - feature disabled via config update`);
-                    }
-                }
-            });
-
             console.log(`${logPrefix} Initialized successfully`);
         } catch (err) {
             console.error(`${logPrefix} Failed to initialize`, err);
         }
     };
+
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('arr-links') : null;
+    if (ctx) {
+        ctx.dom('.arr-link');
+        ctx.dom('#arr-links-styles');
+        ctx.onTeardown(function() {
+            if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+            isAddingLinks = false;
+            slugCache.clear();
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('arr-links', {
+            configKeys: ['ArrLinksEnabled'],
+            init: JE.initializeArrLinksScript,
+            teardown: ctx.teardown
+        });
+    }
 })(window.JellyfinEnhanced);
