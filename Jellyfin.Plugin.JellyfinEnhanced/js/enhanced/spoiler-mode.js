@@ -1181,6 +1181,14 @@
         if (protectedIdSet.size > 0 && getSettings().enabled !== false) {
             document.body.classList.add('je-spoiler-active');
             try { localStorage.setItem('JE_spoiler_active', '1'); } catch (e) { /* ignore */ }
+
+            // If we're on a detail page, bridge the gap between primed (inline CSS)
+            // and the async detail page handler by setting pending immediately.
+            // This prevents a flash when primed is removed below.
+            var hash = window.location.hash || '';
+            if (hash.indexOf('details') !== -1 || hash.indexOf('item') !== -1) {
+                setDetailOverviewPending(true);
+            }
         } else {
             document.body.classList.remove('je-spoiler-active');
             try { localStorage.removeItem('JE_spoiler_active'); } catch (e) { /* ignore */ }
