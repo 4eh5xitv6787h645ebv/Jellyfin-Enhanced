@@ -671,6 +671,10 @@
                 });
                 // Wire ConfigStore changes to ModuleRegistry lifecycle
                 JE.configStore.subscribe(function(event) {
+                    // Ensure sidebar section exists before modules try to inject nav items
+                    if (typeof JE.addPluginMenuButton === 'function') {
+                        JE.addPluginMenuButton();
+                    }
                     var needsRefresh = JE.moduleRegistry.handleConfigChange(event.changedKeys, event.oldConfig, event.newConfig, event.oldSettings);
                     // Re-run tag pipeline if any tag-related settings changed
                     if (typeof JE.tagPipeline !== 'undefined' && typeof JE.tagPipeline.reset === 'function') {
