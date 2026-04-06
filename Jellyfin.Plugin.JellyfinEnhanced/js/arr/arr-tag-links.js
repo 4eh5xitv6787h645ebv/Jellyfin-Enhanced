@@ -212,10 +212,11 @@
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(checkAndAddLinks, 200);
         };
-        window.addEventListener('hashchange', hashHandler);
-
-        // Store for teardown
-        JE._arrTagLinksHashHandler = hashHandler;
+        if (ctx) {
+            ctx.listen(window, 'hashchange', hashHandler);
+        } else {
+            window.addEventListener('hashchange', hashHandler);
+        }
 
         // Run once immediately in case were already on an item detail page
         setTimeout(checkAndAddLinks, 500);
@@ -230,10 +231,6 @@
             if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
             isAddingLinks = false;
             processedItems.clear();
-            if (JE._arrTagLinksHashHandler) {
-                window.removeEventListener('hashchange', JE._arrTagLinksHashHandler);
-                JE._arrTagLinksHashHandler = null;
-            }
         });
     }
 

@@ -61,7 +61,9 @@
         for (k in oldObj) { if (oldObj.hasOwnProperty(k)) allKeys[k] = true; }
         for (k in newObj) { if (newObj.hasOwnProperty(k)) allKeys[k] = true; }
         for (k in allKeys) {
-            if (JSON.stringify(oldObj[k]) !== JSON.stringify(newObj[k])) {
+            var a = oldObj[k], b = newObj[k];
+            if (a !== b && (typeof a !== 'object' || typeof b !== 'object'
+                || JSON.stringify(a) !== JSON.stringify(b))) {
                 changed.push(k);
             }
         }
@@ -290,6 +292,8 @@
      *
      * [H13] Guarded against double invocation.
      */
+    var navigateUnsub = null;
+
     function startPolling() {
         if (pollingStarted) return;
         pollingStarted = true;
@@ -299,9 +303,8 @@
         window.addEventListener('hashchange', onHashChange);
         window.addEventListener('popstate', onPopState);
 
-        // Also hook into JE's navigation helper if available
         if (JE.helpers && typeof JE.helpers.onNavigate === 'function') {
-            JE.helpers.onNavigate(function() {
+            navigateUnsub = JE.helpers.onNavigate(function() {
                 reloadConfig();
             });
         }
@@ -314,21 +317,16 @@
      * [H14] Provides full cleanup to prevent memory leaks and zombie behavior.
      */
     function destroy() {
-        // Polling listeners
         document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('pageshow', onPageShow);
         window.removeEventListener('hashchange', onHashChange);
         window.removeEventListener('popstate', onPopState);
+        if (navigateUnsub) { navigateUnsub(); navigateUnsub = null; }
         pollingStarted = false;
 
-        // Cross-tab listeners
         window.removeEventListener('storage', onStorageEvent);
-        if (channel) {
-            channel.close();
-            channel = null;
-        }
+        if (channel) { channel.close(); channel = null; }
 
-        // Clear state
         subscribers = [];
         lastHash = null;
         reloadInProgress = false;

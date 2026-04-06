@@ -34,8 +34,7 @@
     _customTabContainer: null,
   };
 
-  /** Tracked event listeners for teardown. */
-  const trackedListeners = [];
+  // Event listeners tracked via _ctx.listen() for automatic teardown.
 
   // Status color mapping - using theme-aware colors
   const getStatusColors = () => {
@@ -2302,16 +2301,12 @@
     injectNavigation();
     setupNavigationWatcher();
 
-    // Track all global listeners so teardown() can remove them
-    function addTracked(target, event, handler, options) {
-      target.addEventListener(event, handler, options);
-      trackedListeners.push({ target, event, handler, options });
+    if (_ctx) {
+      _ctx.listen(window, "hashchange", interceptNavigation, true);
+      _ctx.listen(window, "popstate", interceptNavigation, true);
+      _ctx.listen(window, "hashchange", handleNavigation);
+      _ctx.listen(window, "popstate", handleNavigation);
     }
-
-    addTracked(window, "hashchange", interceptNavigation, true);
-    addTracked(window, "popstate", interceptNavigation, true);
-    addTracked(window, "hashchange", handleNavigation);
-    addTracked(window, "popstate", handleNavigation);
 
     startLocationWatcher();
 
@@ -2321,7 +2316,7 @@
         hidePage();
       }
     };
-    addTracked(document, "viewshow", viewshowHandler);
+    if (_ctx) _ctx.listen(document, "viewshow", viewshowHandler);
 
     var clickHandler = function(e) {
       if (!state.pageVisible) return;
@@ -2341,7 +2336,7 @@
         hidePage();
       }
     };
-    addTracked(document, "click", clickHandler, true);
+    if (_ctx) _ctx.listen(document, "click", clickHandler, true);
 
     handleNavigation();
 
@@ -2433,10 +2428,6 @@
     _ctx.dom('#je-downloads-page');
     _ctx.dom('#je-downloads-page-styles');
     _ctx.onTeardown(function() {
-      trackedListeners.forEach(function(entry) {
-        entry.target.removeEventListener(entry.event, entry.handler, entry.options);
-      });
-      trackedListeners.length = 0;
       if (state.pageVisible) hidePage();
       stopPolling();
       stopLocationWatcher();

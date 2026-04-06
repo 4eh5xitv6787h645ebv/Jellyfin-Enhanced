@@ -25,8 +25,7 @@
     _customTabContainer: null,
   };
 
-  /** Tracked event listeners for teardown. */
-  const trackedListeners = [];
+  // Event listeners tracked via _ctx.listen() for automatic teardown.
 
   const logPrefix = '🪼 Jellyfin Enhanced: Hidden Content Page:';
 
@@ -443,23 +442,19 @@
     injectNavigation();
     setupNavigationWatcher();
 
-    // Track all global listeners so teardown() can remove them
-    function addTracked(target, event, handler, options) {
-      target.addEventListener(event, handler, options);
-      trackedListeners.push({ target, event, handler, options });
+    if (_ctx) {
+      _ctx.listen(window, "hashchange", interceptNavigation, true);
+      _ctx.listen(window, "popstate", interceptNavigation, true);
+      _ctx.listen(document, "viewshow", handleViewShow);
+      _ctx.listen(document, "click", handleNavClick);
+      _ctx.listen(window, "hashchange", handleNavigation);
+      _ctx.listen(window, "popstate", handleNavigation);
     }
-
-    addTracked(window, "hashchange", interceptNavigation, true);
-    addTracked(window, "popstate", interceptNavigation, true);
-    addTracked(document, "viewshow", handleViewShow);
-    addTracked(document, "click", handleNavClick);
-    addTracked(window, "hashchange", handleNavigation);
-    addTracked(window, "popstate", handleNavigation);
 
     var hiddenContentChanged = function() {
       if (state.pageVisible) renderPage();
     };
-    addTracked(window, 'je-hidden-content-changed', hiddenContentChanged);
+    if (_ctx) _ctx.listen(window, 'je-hidden-content-changed', hiddenContentChanged);
 
     handleNavigation();
 
@@ -1586,11 +1581,6 @@
     _ctx.dom('#je-hidden-content-page');
     _ctx.dom('#je-hidden-content-page-styles');
     _ctx.onTeardown(function() {
-      // Remove tracked listeners
-      trackedListeners.forEach(function(entry) {
-        entry.target.removeEventListener(entry.event, entry.handler, entry.options);
-      });
-      trackedListeners.length = 0;
       if (state.pageVisible) hidePage();
       JE.helpers.disconnectObserver('hidden-content-page-nav');
       if (state.locationTimer) { clearInterval(state.locationTimer); state.locationTimer = null; }

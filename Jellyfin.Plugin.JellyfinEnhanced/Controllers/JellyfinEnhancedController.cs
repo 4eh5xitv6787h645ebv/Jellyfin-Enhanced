@@ -1747,18 +1747,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         /// <summary>
         /// Returns a lightweight hash of the public config for change detection.
-        /// Clients poll this cheaply, then fetch the full config only when the hash changes.
-        /// Only hashes public (non-sensitive) config fields to avoid creating an oracle
-        /// that leaks when private values like API keys change.
+        /// Cached and only recomputed when config changes (via ConfigurationChanged event
+        /// on the plugin base class). Avoids per-request serialization + SHA256 overhead.
         /// </summary>
+        private static string? _cachedConfigHash;
+
+        internal static void InvalidateConfigHash() => _cachedConfigHash = null;
+
         [HttpGet("config-hash")]
         public ActionResult GetConfigHash()
         {
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null) return StatusCode(503);
 
-            // Hash only non-sensitive boolean/string config fields that the frontend reads.
-            // Deliberately excludes API keys, URLs, and other private fields.
+            if (_cachedConfigHash != null) return Content(_cachedConfigHash);
+
             var hashSource = new
             {
                 config.ElsewhereEnabled, config.JellyseerrEnabled, config.ArrLinksEnabled,
@@ -1781,7 +1784,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var json = System.Text.Json.JsonSerializer.Serialize(hashSource);
             using var sha = System.Security.Cryptography.SHA256.Create();
             var hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json));
-            return Content(Convert.ToHexString(hashBytes));
+            _cachedConfigHash = Convert.ToHexString(hashBytes);
+            return Content(_cachedConfigHash);
         }
 
         [HttpGet("private-config")]

@@ -34,6 +34,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             _applicationPaths = applicationPaths;
             _logger = logger;
             _logger.Info($"{PluginName} v{Version} initialized. Plugin logs will be written to: {_logger.CurrentLogFilePath}");
+            ConfigurationChanged += (_, _) => Controllers.JellyfinEnhancedController.InvalidateConfigHash();
             CleanupOldScript();
             CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
         }

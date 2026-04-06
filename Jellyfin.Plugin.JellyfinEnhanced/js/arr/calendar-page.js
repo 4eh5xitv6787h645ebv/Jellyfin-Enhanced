@@ -41,8 +41,7 @@
     _customTabContainer: null,
   };
 
-  /** Tracked event listeners for teardown. */
-  const trackedListeners = [];
+  // Event listeners tracked via _ctx.listen() for automatic teardown.
 
   // Status color mapping
   const STATUS_COLORS = {
@@ -1194,17 +1193,13 @@
     injectNavigation();
     setupNavigationWatcher();
 
-    // Track all global listeners so teardown() can remove them
-    function addTracked(target, event, handler, options) {
-      target.addEventListener(event, handler, options);
-      trackedListeners.push({ target, event, handler, options });
+    if (_ctx) {
+      _ctx.listen(window, "hashchange", interceptNavigation, true);
+      _ctx.listen(window, "popstate", interceptNavigation, true);
+      _ctx.listen(document, "viewshow", handleViewShow);
+      _ctx.listen(document, "click", handleNavClick);
+      _ctx.listen(document, "click", handleEventClick);
     }
-
-    addTracked(window, "hashchange", interceptNavigation, true);
-    addTracked(window, "popstate", interceptNavigation, true);
-    addTracked(document, "viewshow", handleViewShow);
-    addTracked(document, "click", handleNavClick);
-    addTracked(document, "click", handleEventClick);
 
     startLocationWatcher();
 
@@ -2937,10 +2932,6 @@
     _ctx.dom('#je-calendar-page');
     _ctx.dom('#je-calendar-page-styles');
     _ctx.onTeardown(function() {
-      trackedListeners.forEach(function(entry) {
-        entry.target.removeEventListener(entry.event, entry.handler, entry.options);
-      });
-      trackedListeners.length = 0;
       if (state.pageVisible) hidePage();
       stopLocationWatcher();
       state.events = [];
