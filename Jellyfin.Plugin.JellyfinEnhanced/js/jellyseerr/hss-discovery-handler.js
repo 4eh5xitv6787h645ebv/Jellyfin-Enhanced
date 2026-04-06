@@ -66,8 +66,7 @@
         JE.moduleRegistry.register('hss-discovery-handler', {
             configKeys: ['JellyseerrEnabled'],
             init: initDiscoveryHandler,
-            teardown: teardown,
-            liveToggle: false
+            teardown: teardown
         });
     }
 
