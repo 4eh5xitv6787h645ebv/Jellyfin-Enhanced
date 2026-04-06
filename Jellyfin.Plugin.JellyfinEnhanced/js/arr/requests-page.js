@@ -34,6 +34,9 @@
     _customTabContainer: null,
   };
 
+  /** Tracked event listeners for teardown. */
+  const trackedListeners = [];
+
   // Status color mapping - using theme-aware colors
   const getStatusColors = () => {
     const themeVars = JE.themer?.getThemeVariables() || {};
@@ -2237,28 +2240,22 @@
     const config = JE.pluginConfig || {};
     if (!config.DownloadsPageEnabled) return;
     if (pluginPagesExists && config.DownloadsUsePluginPages) return;
-    if (config.DownloadsUseCustomTabs) return; // Don't watch if using custom tabs
+    if (config.DownloadsUseCustomTabs) return;
 
-    // Use MutationObserver to watch for sidebar changes, but disconnect after re-injection
-    const observer = new MutationObserver(() => {
-      // Re-check config each time to avoid injecting when settings change
-      const currentConfig = JE.pluginConfig || {};
-      if (currentConfig.DownloadsUseCustomTabs) return;
-      if (pluginPagesExists && currentConfig.DownloadsUsePluginPages) return;
+    if (JE.helpers?.onBodyMutation) {
+      JE.helpers.onBodyMutation('downloads-page-nav', () => {
+        const currentConfig = JE.pluginConfig || {};
+        if (currentConfig.DownloadsUseCustomTabs) return;
+        if (pluginPagesExists && currentConfig.DownloadsUsePluginPages) return;
 
-      if (!document.querySelector('.je-nav-downloads-item')) {
-        const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-        if (jellyfinEnhancedSection) {
-          console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
-          injectNavigation();
+        if (!document.querySelector('.je-nav-downloads-item')) {
+          const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
+          if (jellyfinEnhancedSection) {
+            console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
+            injectNavigation();
+          }
         }
-      }
-    });
-
-    // Observe the main drawer
-    const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
-    if (navDrawer) {
-      observer.observe(navDrawer, { childList: true, subtree: true });
+      });
     }
   }
 
@@ -2305,61 +2302,47 @@
     injectNavigation();
     setupNavigationWatcher();
 
-    // Intercept router changes before Jellyfin handles them
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
+    // Track all global listeners so teardown() can remove them
+    function addTracked(target, event, handler, options) {
+      target.addEventListener(event, handler, options);
+      trackedListeners.push({ target, event, handler, options });
+    }
 
-    // Listen for hash changes - handles browser back/forward and direct URL changes
-    window.addEventListener("hashchange", handleNavigation);
-    window.addEventListener("popstate", handleNavigation);
+    addTracked(window, "hashchange", interceptNavigation, true);
+    addTracked(window, "popstate", interceptNavigation, true);
+    addTracked(window, "hashchange", handleNavigation);
+    addTracked(window, "popstate", handleNavigation);
 
     startLocationWatcher();
 
-    // Listen for Jellyfin's viewshow events - hide our page when other pages show
-    document.addEventListener("viewshow", (e) => {
-      const targetPage = e.target;
-      if (
-        state.pageVisible &&
-        targetPage &&
-        targetPage.id !== "je-downloads-page"
-      ) {
+    var viewshowHandler = function(e) {
+      var targetPage = e.target;
+      if (state.pageVisible && targetPage && targetPage.id !== "je-downloads-page") {
         hidePage();
       }
-    });
+    };
+    addTracked(document, "viewshow", viewshowHandler);
 
-    // Listen for clicks on header navigation buttons (Home, Favorites, etc.)
-    // These buttons use Jellyfin's internal router and may not change the hash immediately
-    document.addEventListener(
-      "click",
-      (e) => {
-        if (!state.pageVisible) return;
-
-        // Handle play button clicks
-        const playBtn = e.target.closest(".je-request-watch-btn");
-        if (playBtn) {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          const mediaId = playBtn.getAttribute("data-media-id");
-          if (mediaId && window.Emby?.Page?.showItem) {
-            window.Emby.Page.showItem(mediaId);
-          }
-          return;
+    var clickHandler = function(e) {
+      if (!state.pageVisible) return;
+      var playBtn = e.target.closest(".je-request-watch-btn");
+      if (playBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        var mediaId = playBtn.getAttribute("data-media-id");
+        if (mediaId && window.Emby?.Page?.showItem) {
+          window.Emby.Page.showItem(mediaId);
         }
+        return;
+      }
+      var btn = e.target.closest(".headerTabs button, .navMenuOption, .headerButton");
+      if (btn && !btn.classList.contains("je-nav-downloads-item")) {
+        hidePage();
+      }
+    };
+    addTracked(document, "click", clickHandler, true);
 
-        const btn = e.target.closest(
-          ".headerTabs button, .navMenuOption, .headerButton",
-        );
-        if (btn && !btn.classList.contains("je-nav-downloads-item")) {
-          // Hide our page immediately - don't try to manage other pages
-          // Jellyfin's router will handle showing the correct page
-          hidePage();
-        }
-      },
-      true,
-    );
-
-    // Check current URL on init
     handleNavigation();
 
     console.log(`${logPrefix} Downloads page module initialized`);
@@ -2444,5 +2427,48 @@
     injectStyles
   };
 
+  var _ctx = JE.helpers ? JE.helpers.createModuleContext('downloads-page') : null;
+  if (_ctx) {
+    _ctx.dom('.je-nav-downloads-item');
+    _ctx.dom('#je-downloads-page');
+    _ctx.dom('#je-downloads-page-styles');
+    _ctx.onTeardown(function() {
+      trackedListeners.forEach(function(entry) {
+        entry.target.removeEventListener(entry.event, entry.handler, entry.options);
+      });
+      trackedListeners.length = 0;
+      if (state.pageVisible) hidePage();
+      stopPolling();
+      stopLocationWatcher();
+      state.previousPage = null;
+      state._customTabContainer = null;
+      state.downloads = [];
+      state.requests = [];
+      state.issues = [];
+      issueMediaCache.clear();
+      avatarObjectUrlCache.forEach(function(url) { URL.revokeObjectURL(url); });
+      avatarObjectUrlCache.clear();
+      avatarFetchPromises.clear();
+      JE.helpers.disconnectObserver('downloads-page-nav');
+      console.log(`${logPrefix} Torn down`);
+    });
+  }
+
+  function teardown() {
+    if (_ctx) { _ctx.teardown(); return; }
+    if (state.pageVisible) hidePage();
+    stopPolling();
+    stopLocationWatcher();
+  }
+
+  JE.downloadsPage.teardown = teardown;
   JE.initializeDownloadsPage = initialize;
+
+  if (JE.moduleRegistry) {
+    JE.moduleRegistry.register('downloads-page', {
+      configKeys: ['DownloadsPageEnabled'],
+      init: initialize,
+      teardown: _ctx ? _ctx.teardown : teardown
+    });
+  }
 })();

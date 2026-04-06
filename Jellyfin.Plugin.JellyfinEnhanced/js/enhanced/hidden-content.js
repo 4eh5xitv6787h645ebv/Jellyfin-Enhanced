@@ -2107,4 +2107,34 @@
         console.log(`🪼 Jellyfin Enhanced: Hidden Content initialized (${getHiddenCount()} items hidden)`);
     };
 
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('hidden-content') : null;
+    if (ctx) {
+        ctx.dom('#je-hidden-content');
+        ctx.dom('.je-hide-btn');
+        ctx.onTeardown(function() {
+            JE.helpers.disconnectObserver('hidden-content');
+            JE.helpers.disconnectObserver('hidden-content-filter');
+            hiddenIdSet.clear();
+            hiddenTmdbIdSet.clear();
+            parentSeriesCache.clear();
+            parentSeriesRequestMap.clear();
+            hiddenData = null;
+            if (saveTimeout) { clearTimeout(saveTimeout); saveTimeout = null; }
+            // Show any hidden cards again
+            document.querySelectorAll('[data-je-hidden]').forEach(function(el) {
+                el.style.display = '';
+                el.removeAttribute('data-je-hidden');
+            });
+            JE.hiddenContent = undefined;
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('hidden-content', {
+            configKeys: ['HiddenContentEnabled'],
+            init: JE.initializeHiddenContent,
+            teardown: ctx.teardown
+        });
+    }
+
 })(window.JellyfinEnhanced);

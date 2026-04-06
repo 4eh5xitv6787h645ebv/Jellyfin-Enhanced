@@ -346,6 +346,23 @@
         tryInitialize();
     }
 
+    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('plugin-icons');
+    if (_ctx) {
+        _ctx.dom('#plugin-icons-material');
+        _ctx.dom('[data-jellyfin-enhanced-plugin-id]');
+        _ctx.onTeardown(function() {
+            stopMonitoring();
+            isProcessing = false;
+            customPluginsCache = null;
+            lastProcessedPluginsCount = 0;
+        });
+    }
+
+    function teardown() {
+        if (_ctx) { _ctx.teardown(); return; }
+        stopMonitoring();
+    }
+
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializePluginIcons = initialize;
         window.JellyfinEnhanced.stopPluginIconsMonitoring = stopMonitoring;
@@ -358,6 +375,14 @@
                 processPluginIcons();
             }
         };
+    }
+
+    if (window.JellyfinEnhanced?.moduleRegistry) {
+        window.JellyfinEnhanced.moduleRegistry.register('plugin-icons', {
+            configKeys: ['PluginIconsEnabled'],
+            init: initialize,
+            teardown: teardown
+        });
     }
 
 })();

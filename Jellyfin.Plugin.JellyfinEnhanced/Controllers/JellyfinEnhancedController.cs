@@ -1745,6 +1745,45 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
+        /// <summary>
+        /// Returns a lightweight hash of the public config for change detection.
+        /// Clients poll this cheaply, then fetch the full config only when the hash changes.
+        /// Only hashes public (non-sensitive) config fields to avoid creating an oracle
+        /// that leaks when private values like API keys change.
+        /// </summary>
+        [HttpGet("config-hash")]
+        public ActionResult GetConfigHash()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null) return StatusCode(503);
+
+            // Hash only non-sensitive boolean/string config fields that the frontend reads.
+            // Deliberately excludes API keys, URLs, and other private fields.
+            var hashSource = new
+            {
+                config.ElsewhereEnabled, config.JellyseerrEnabled, config.ArrLinksEnabled,
+                config.ArrTagsShowAsLinks, config.LetterboxdEnabled, config.ShowReviews,
+                config.HiddenContentEnabled, config.ColoredRatingsEnabled, config.ThemeSelectorEnabled,
+                config.ColoredActivityIconsEnabled, config.PluginIconsEnabled,
+                config.DownloadsPageEnabled, config.CalendarPageEnabled, config.BookmarksEnabled,
+                config.QualityTagsEnabled, config.GenreTagsEnabled, config.LanguageTagsEnabled,
+                config.RatingTagsEnabled, config.PeopleTagsEnabled, config.PauseScreenEnabled,
+                config.JellyseerrShowSearchResults, config.JellyseerrShowReportButton,
+                config.JellyseerrShowSimilar, config.JellyseerrShowRecommended,
+                config.JellyseerrShowGenreDiscovery, config.JellyseerrShowNetworkDiscovery,
+                config.ToastDuration, config.HelpPanelAutocloseDelay,
+                config.TagsHideOnHover, config.DisableTagsOnSearchPage,
+                config.ClearLocalStorageTimestamp, config.ClearTranslationCacheTimestamp,
+                config.AutoPauseEnabled, config.AutoResumeEnabled, config.ShowWatchProgress,
+                config.ShowFileSizes, config.ShowAudioLanguages, config.DisableAllShortcuts,
+                config.MetadataIconsEnabled, config.EnableLoginImage
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(hashSource);
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            var hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json));
+            return Content(Convert.ToHexString(hashBytes));
+        }
+
         [HttpGet("private-config")]
         [Authorize]
         public ActionResult GetPrivateConfig()

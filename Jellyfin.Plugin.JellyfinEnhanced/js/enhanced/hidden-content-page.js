@@ -25,6 +25,9 @@
     _customTabContainer: null,
   };
 
+  /** Tracked event listeners for teardown. */
+  const trackedListeners = [];
+
   const logPrefix = '🪼 Jellyfin Enhanced: Hidden Content Page:';
 
   /** Polling interval for detecting pushState navigations. */
@@ -440,18 +443,23 @@
     injectNavigation();
     setupNavigationWatcher();
 
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
-    document.addEventListener("viewshow", handleViewShow);
-    document.addEventListener("click", handleNavClick);
-    window.addEventListener("hashchange", handleNavigation);
-    window.addEventListener("popstate", handleNavigation);
+    // Track all global listeners so teardown() can remove them
+    function addTracked(target, event, handler, options) {
+      target.addEventListener(event, handler, options);
+      trackedListeners.push({ target, event, handler, options });
+    }
 
-    window.addEventListener('je-hidden-content-changed', () => {
-      if (state.pageVisible) {
-        renderPage();
-      }
-    });
+    addTracked(window, "hashchange", interceptNavigation, true);
+    addTracked(window, "popstate", interceptNavigation, true);
+    addTracked(document, "viewshow", handleViewShow);
+    addTracked(document, "click", handleNavClick);
+    addTracked(window, "hashchange", handleNavigation);
+    addTracked(window, "popstate", handleNavigation);
+
+    var hiddenContentChanged = function() {
+      if (state.pageVisible) renderPage();
+    };
+    addTracked(window, 'je-hidden-content-changed', hiddenContentChanged);
 
     handleNavigation();
 
@@ -1551,29 +1559,54 @@
     if (pluginPagesExists && config.HiddenContentUsePluginPages) return;
     if (config.HiddenContentUseCustomTabs) return;
 
-    const observer = new MutationObserver(() => {
-      const currentConfig = JE.pluginConfig || {};
-      if (currentConfig.HiddenContentUseCustomTabs) return;
-      if (pluginPagesExists && currentConfig.HiddenContentUsePluginPages) return;
+    if (JE.helpers?.onBodyMutation) {
+      JE.helpers.onBodyMutation('hidden-content-page-nav', () => {
+        const currentConfig = JE.pluginConfig || {};
+        if (currentConfig.HiddenContentUseCustomTabs) return;
+        if (pluginPagesExists && currentConfig.HiddenContentUsePluginPages) return;
 
-      if (!document.querySelector('.je-nav-hidden-content-item')) {
-        const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-        if (jellyfinEnhancedSection) {
-          console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
-          injectNavigation();
+        if (!document.querySelector('.je-nav-hidden-content-item')) {
+          const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
+          if (jellyfinEnhancedSection) {
+            console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
+            injectNavigation();
+          }
         }
-      }
-    });
-
-    const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
-    if (navDrawer) {
-      observer.observe(navDrawer, { childList: true, subtree: true });
+      });
     }
   }
 
   // ============================================================
   // Public API
   // ============================================================
+
+  var _ctx = JE.helpers ? JE.helpers.createModuleContext('hidden-content-page') : null;
+  if (_ctx) {
+    _ctx.dom('.je-nav-hidden-content-item');
+    _ctx.dom('#je-hidden-content-page');
+    _ctx.dom('#je-hidden-content-page-styles');
+    _ctx.onTeardown(function() {
+      // Remove tracked listeners
+      trackedListeners.forEach(function(entry) {
+        entry.target.removeEventListener(entry.event, entry.handler, entry.options);
+      });
+      trackedListeners.length = 0;
+      if (state.pageVisible) hidePage();
+      JE.helpers.disconnectObserver('hidden-content-page-nav');
+      if (state.locationTimer) { clearInterval(state.locationTimer); state.locationTimer = null; }
+      state.previousPage = null;
+      state.searchQuery = '';
+      state.scopedOnly = false;
+      state.locationSignature = null;
+      state._customTabContainer = null;
+      console.log(`${logPrefix} Torn down`);
+    });
+  }
+
+  function teardown() {
+    if (_ctx) { _ctx.teardown(); return; }
+    if (state.pageVisible) hidePage();
+  }
 
   JE.hiddenContentPage = {
     initialize,
@@ -1582,7 +1615,16 @@
     renderPage,
     renderForCustomTab,
     injectStyles,
+    teardown,
   };
 
   JE.initializeHiddenContentPage = initialize;
+
+  if (JE.moduleRegistry) {
+    JE.moduleRegistry.register('hidden-content-page', {
+      configKeys: ['HiddenContentEnabled'],
+      init: initialize,
+      teardown: _ctx ? _ctx.teardown : teardown
+    });
+  }
 })();

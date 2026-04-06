@@ -208,14 +208,40 @@
         });
 
         // Also check immediately on hash change (navigation)
-        window.addEventListener('hashchange', () => {
+        var hashHandler = function() {
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(checkAndAddLinks, 200);
-        });
+        };
+        window.addEventListener('hashchange', hashHandler);
+
+        // Store for teardown
+        JE._arrTagLinksHashHandler = hashHandler;
 
         // Run once immediately in case were already on an item detail page
         setTimeout(checkAndAddLinks, 500);
 
         console.log(`${logPrefix} Initialized successfully`);
     };
+
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('arr-tag-links') : null;
+    if (ctx) {
+        ctx.dom('.arr-tag-link');
+        ctx.onTeardown(function() {
+            if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+            isAddingLinks = false;
+            processedItems.clear();
+            if (JE._arrTagLinksHashHandler) {
+                window.removeEventListener('hashchange', JE._arrTagLinksHashHandler);
+                JE._arrTagLinksHashHandler = null;
+            }
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('arr-tag-links', {
+            configKeys: ['ArrTagsShowAsLinks'],
+            init: JE.initializeArrTagLinksScript,
+            teardown: ctx.teardown
+        });
+    }
 })(window.JellyfinEnhanced);

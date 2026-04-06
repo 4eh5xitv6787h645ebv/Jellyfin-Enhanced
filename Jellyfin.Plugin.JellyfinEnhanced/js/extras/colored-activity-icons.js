@@ -436,9 +436,40 @@
         });
     }
 
+    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('colored-activity-icons');
+    if (_ctx) {
+        _ctx.dom('#activity-icons-hide-svg');
+        _ctx.onTeardown(function() {
+            stopMonitoring();
+            isProcessing = false;
+            // Restore original icons
+            document.querySelectorAll('[data-jellyfin-enhanced-activity-icon]').forEach(function(el) {
+                el.removeAttribute('data-jellyfin-enhanced-activity-icon');
+                var icon = el.querySelector('.material-icons');
+                if (icon) icon.remove();
+                var svg = el.querySelector('svg');
+                if (svg) svg.style.display = '';
+            });
+        });
+    }
+
+    function teardown() {
+        if (_ctx) { _ctx.teardown(); return; }
+        stopMonitoring();
+    }
+
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeActivityIcons = initialize;
         window.JellyfinEnhanced.stopActivityIconsMonitoring = stopMonitoring;
+    }
+
+    // Register with module lifecycle system
+    if (window.JellyfinEnhanced?.moduleRegistry) {
+        window.JellyfinEnhanced.moduleRegistry.register('colored-activity-icons', {
+            configKeys: ['ColoredActivityIconsEnabled'],
+            init: initialize,
+            teardown: teardown
+        });
     }
 
 })();

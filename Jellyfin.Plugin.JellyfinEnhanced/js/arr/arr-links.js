@@ -359,4 +359,23 @@
             console.error(`${logPrefix} Failed to initialize`, err);
         }
     };
+
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('arr-links') : null;
+    if (ctx) {
+        ctx.dom('.arr-link');
+        ctx.dom('#arr-links-styles');
+        ctx.onTeardown(function() {
+            if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+            isAddingLinks = false;
+            slugCache.clear();
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('arr-links', {
+            configKeys: ['ArrLinksEnabled'],
+            init: JE.initializeArrLinksScript,
+            teardown: ctx.teardown
+        });
+    }
 })(window.JellyfinEnhanced);

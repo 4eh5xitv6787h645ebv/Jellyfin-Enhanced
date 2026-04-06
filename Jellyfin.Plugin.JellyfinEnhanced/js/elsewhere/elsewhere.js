@@ -1151,4 +1151,26 @@
         console.log('🪼 Jellyfin Enhanced: 🎬 Jellyfin Elsewhere loaded!');
     };
 
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('elsewhere') : null;
+    if (ctx) {
+        ctx.dom('.streaming-lookup-container');
+        ctx.onTeardown(function() {
+            JE.helpers.disconnectObserver('elsewhere-details');
+            userRegion = DEFAULT_REGION;
+            userRegions = [];
+            userServices = [];
+            availableRegions = {};
+            availableProviders = [];
+            processingElsewhere = false;
+        });
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('elsewhere', {
+            configKeys: ['ElsewhereEnabled'],
+            init: JE.initializeElsewhereScript,
+            teardown: ctx.teardown
+        });
+    }
+
 })(window.JellyfinEnhanced);

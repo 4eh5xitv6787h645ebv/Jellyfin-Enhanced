@@ -458,11 +458,32 @@
         });
     }
 
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('jellyseerr-item-details') : null;
+    if (ctx) {
+        ctx.dom('.jellyseerr-details-section');
+        ctx.onTeardown(function() {
+            JE.helpers.disconnectObserver('jellyseerr-item-details');
+            if (currentAbortController) { currentAbortController.abort(); currentAbortController = null; }
+            processedItems.clear();
+        });
+    }
+
     // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initialize);
-    } else {
-        initialize();
+    if (JE.pluginConfig?.JellyseerrEnabled) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+    }
+
+    if (JE.moduleRegistry && ctx) {
+        JE.moduleRegistry.register('jellyseerr-item-details', {
+            configKeys: ['JellyseerrEnabled', 'JellyseerrShowSimilar', 'JellyseerrShowRecommended'],
+            enableKey: 'JellyseerrEnabled',
+            init: initialize,
+            teardown: ctx.teardown
+        });
     }
 
 })(window.JellyfinEnhanced);

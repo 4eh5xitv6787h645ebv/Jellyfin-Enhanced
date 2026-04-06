@@ -440,8 +440,32 @@
         }
     };
 
+    var _ctx = JE?.helpers?.createModuleContext('theme-selector');
+    if (_ctx) {
+        _ctx.dom('#jellyfin-theme-selector-css');
+        _ctx.dom('#' + SELECTOR_ID);
+        _ctx.onTeardown(function() {
+            if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+            if (observerInstance) { if (observerInstance.disconnect) observerInstance.disconnect(); observerInstance = null; }
+            if (JE.helpers) JE.helpers.disconnectObserver('theme-selector');
+        });
+    }
+
+    function teardown() {
+        if (_ctx) { _ctx.teardown(); return; }
+        if (JE.helpers) JE.helpers.disconnectObserver('theme-selector');
+    }
+
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeThemeSelector = initialize;
+    }
+
+    if (window.JellyfinEnhanced?.moduleRegistry) {
+        window.JellyfinEnhanced.moduleRegistry.register('theme-selector', {
+            configKeys: ['ThemeSelectorEnabled'],
+            init: initialize,
+            teardown: teardown
+        });
     }
 
 })();

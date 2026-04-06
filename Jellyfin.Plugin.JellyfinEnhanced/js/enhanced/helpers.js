@@ -631,6 +631,200 @@
         disconnectAllObservers();
     });
 
+    // ============================================================
+    // Module Builder — reduces teardown boilerplate
+    // ============================================================
+
+    /**
+     * Create a self-cleaning module context that tracks all resources
+     * (observers, event listeners, timers, CSS, DOM) and tears them down
+     * automatically. Modules call ctx methods during init instead of raw
+     * DOM APIs, and the generated teardown handles everything.
+     *
+     * @param {string} name - Unique module name (used for observer IDs and logging)
+     * @returns {object} Module context with resource-tracking methods
+     *
+     * @example
+     * // In a module's IIFE:
+     * var ctx = JE.helpers.createModuleContext('arr-links');
+     *
+     * JE.initializeMyModule = function() {
+     *     ctx.observe('arr-links', callback);          // body mutation observer
+     *     ctx.listen(window, 'hashchange', handler);    // tracked event listener
+     *     ctx.css('my-styles', cssText);                // tracked <style> element
+     *     ctx.dom('.my-injected-class');                 // selector for DOM cleanup
+     *     ctx.timer(setTimeout(fn, 100));               // tracked timer
+     *     ctx.interval(setInterval(fn, 5000));           // tracked interval
+     *     ctx.state({ isProcessing: false, cache: null }); // state to reset on teardown
+     * };
+     *
+     * // Register with module registry — teardown is generated automatically:
+     * if (JE.moduleRegistry) {
+     *     JE.moduleRegistry.register('arr-links', {
+     *         configKeys: ['ArrLinksEnabled'],
+     *         init: JE.initializeMyModule,
+     *         teardown: ctx.teardown       // auto-generated!
+     *     });
+     * }
+     */
+    function createModuleContext(name) {
+        var listeners = [];
+        var observerIds = [];
+        var cssIds = [];
+        var domSelectors = [];
+        var timers = [];
+        var intervals = [];
+        var stateDefaults = null;
+        var stateRef = null;
+        var customCleanups = [];
+
+        var ctx = {
+            /**
+             * Register a body mutation observer (auto-disconnected on teardown).
+             * @param {string} id - Observer ID
+             * @param {Function} callback - Mutation callback
+             * @param {object} [options] - Options passed to onBodyMutation
+             */
+            observe: function(id, callback, options) {
+                observerIds.push(id);
+                return onBodyMutation(id, callback, options);
+            },
+
+            /**
+             * Add an event listener (auto-removed on teardown).
+             * @param {EventTarget} target - DOM element or window/document
+             * @param {string} event - Event name
+             * @param {Function} handler - Event handler
+             * @param {boolean|object} [options] - addEventListener options
+             */
+            listen: function(target, event, handler, options) {
+                target.addEventListener(event, handler, options);
+                listeners.push({ target: target, event: event, handler: handler, options: options });
+            },
+
+            /**
+             * Inject a <style> element (auto-removed on teardown).
+             * @param {string} id - Style element ID
+             * @param {string} cssText - CSS content
+             */
+            css: function(id, cssText) {
+                cssIds.push(id);
+                addCSS(id, cssText);
+            },
+
+            /**
+             * Register a CSS selector whose matching elements should be removed on teardown.
+             * @param {string} selector - CSS selector
+             */
+            dom: function(selector) {
+                domSelectors.push(selector);
+            },
+
+            /**
+             * Track a setTimeout (auto-cleared on teardown). Returns the timer ID.
+             * @param {Function} fn - Callback
+             * @param {number} delay - Delay in ms
+             * @returns {number} Timer ID
+             */
+            timer: function(fn, delay) {
+                var id = setTimeout(fn, delay);
+                timers.push(id);
+                return id;
+            },
+
+            /**
+             * Track a setInterval (auto-cleared on teardown). Returns the interval ID.
+             * @param {Function} fn - Callback
+             * @param {number} delay - Interval in ms
+             * @returns {number} Interval ID
+             */
+            interval: function(fn, delay) {
+                var id = setInterval(fn, delay);
+                intervals.push(id);
+                return id;
+            },
+
+            /**
+             * Register state variables with their default (reset) values.
+             * Pass an object whose keys are the variable names on the target,
+             * and whose values are what they should be reset to on teardown.
+             * @param {object} defaults - { key: resetValue, ... }
+             * @param {object} [target] - Object holding the state (defaults to the defaults object's scope — use for IIFE vars by passing a container)
+             */
+            state: function(defaults, target) {
+                stateDefaults = defaults;
+                stateRef = target || null;
+            },
+
+            /**
+             * Register a custom cleanup function (called during teardown).
+             * Use for cleanup that doesn't fit the other helpers.
+             * @param {Function} fn - Cleanup function
+             */
+            onTeardown: function(fn) {
+                customCleanups.push(fn);
+            },
+
+            /**
+             * Auto-generated teardown function. Cleans up everything registered
+             * via this context in reverse order.
+             */
+            teardown: function() {
+                // 1. Remove event listeners
+                for (var i = listeners.length - 1; i >= 0; i--) {
+                    var l = listeners[i];
+                    l.target.removeEventListener(l.event, l.handler, l.options);
+                }
+                listeners = [];
+
+                // 2. Disconnect observers
+                for (var j = 0; j < observerIds.length; j++) {
+                    disconnectObserver(observerIds[j]);
+                }
+                observerIds = [];
+
+                // 3. Clear timers and intervals
+                for (var t = 0; t < timers.length; t++) clearTimeout(timers[t]);
+                timers = [];
+                for (var v = 0; v < intervals.length; v++) clearInterval(intervals[v]);
+                intervals = [];
+
+                // 4. Remove CSS
+                for (var c = 0; c < cssIds.length; c++) removeCSS(cssIds[c]);
+                cssIds = [];
+
+                // 5. Remove injected DOM elements
+                for (var d = 0; d < domSelectors.length; d++) {
+                    document.querySelectorAll(domSelectors[d]).forEach(function(el) { el.remove(); });
+                }
+
+                // 6. Reset state variables
+                if (stateDefaults && stateRef) {
+                    for (var key in stateDefaults) {
+                        if (stateDefaults.hasOwnProperty(key)) {
+                            var val = stateDefaults[key];
+                            if (stateRef[key] && typeof stateRef[key].clear === 'function' && val === null) {
+                                stateRef[key].clear();
+                            } else {
+                                stateRef[key] = val;
+                            }
+                        }
+                    }
+                }
+
+                // 7. Custom cleanups (not cleared -- registered once at IIFE scope,
+                //    must persist across teardown+re-init cycles like domSelectors)
+                for (var f = 0; f < customCleanups.length; f++) {
+                    try { customCleanups[f](); } catch (e) {
+                        console.error('🪼 Jellyfin Enhanced: ' + name + ' teardown cleanup error:', e);
+                    }
+                }
+            }
+        };
+
+        return ctx;
+    }
+
     // Expose helpers
     JE.helpers = {
         onViewPage,
@@ -650,6 +844,7 @@
         isElementVisible,
         addCSS,
         removeCSS,
+        createModuleContext,
         getHandlerCount: () => handlers.length,
         getObserverCount: () => activeObservers.size,
         getBodySubscriberCount: () => bodySubscribers.size

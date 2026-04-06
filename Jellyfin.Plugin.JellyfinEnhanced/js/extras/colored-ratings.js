@@ -280,12 +280,38 @@
         }).observe(document, { subtree: true, childList: true });
     }
 
+    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('colored-ratings');
+    if (_ctx) {
+        _ctx.dom('#' + CONFIG.cssId);
+        _ctx.onTeardown(function() {
+            cleanup();
+            document.querySelectorAll('[' + CONFIG.attributeName + ']').forEach(function(el) {
+                el.removeAttribute(CONFIG.attributeName);
+                el.removeAttribute('aria-label');
+            });
+        });
+    }
+
+    function teardown() {
+        if (_ctx) { _ctx.teardown(); return; }
+        cleanup();
+    }
+
     window.addEventListener('beforeunload', cleanup);
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeColoredRatings = initialize;
         // Expose pause/resume functions for pausescreen.js to control
         window.JellyfinEnhanced.pauseRatingsPolling = pausePolling;
         window.JellyfinEnhanced.resumeRatingsPolling = resumePolling;
+    }
+
+    // Register with module lifecycle system
+    if (window.JellyfinEnhanced?.moduleRegistry) {
+        window.JellyfinEnhanced.moduleRegistry.register('colored-ratings', {
+            configKeys: ['ColoredRatingsEnabled'],
+            init: initialize,
+            teardown: teardown
+        });
     }
 
 })();
