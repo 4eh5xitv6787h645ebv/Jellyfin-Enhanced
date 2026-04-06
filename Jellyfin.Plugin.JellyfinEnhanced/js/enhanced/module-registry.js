@@ -23,6 +23,9 @@
      * @param {Function} [descriptor.onConfigChange] - Called when a non-enable config key
      *   changes. Receives { changedKeys, oldConfig, newConfig }. If absent, a full
      *   teardown+init cycle is used for non-boolean config changes.
+     * @param {boolean} [descriptor.liveToggle=true] - Whether this module supports
+     *   mid-session enable/disable. When false, config changes add this module to
+     *   needsRefresh instead of calling init/teardown. Teardown still runs as best-effort.
      */
     function register(name, descriptor) {
         // [H8] Teardown old module before replacing to prevent resource leaks
@@ -43,6 +46,7 @@
             init: descriptor.init,
             teardown: descriptor.teardown || null,
             onConfigChange: descriptor.onConfigChange || null,
+            liveToggle: descriptor.liveToggle !== false,
             initialized: false
         });
     }
@@ -111,8 +115,16 @@
                 var wasEnabled = enableKey ? !!resolveOldValue(enableKey, oldConfig, oldSettings) : true;
                 var nowEnabled = enableKey ? !!resolveNewValue(enableKey, newConfig) : true;
 
+                // Modules that don't support live toggle get best-effort teardown + refresh prompt
+                if (!mod.liveToggle) {
+                    if (wasEnabled && !nowEnabled && mod.teardown) {
+                        try { mod.teardown(); mod.initialized = false; } catch (e) { mod.initialized = false; }
+                    }
+                    needsRefresh.push(name);
+                    return;
+                }
+
                 if (!wasEnabled && nowEnabled) {
-                    // Module just became enabled — initialize it
                     if (mod.init) {
                         try {
                             mod.init();
@@ -123,7 +135,6 @@
                         }
                     }
                 } else if (wasEnabled && !nowEnabled) {
-                    // Module just became disabled — tear it down
                     if (mod.teardown) {
                         try {
                             mod.teardown();
@@ -134,11 +145,9 @@
                             mod.initialized = false;
                         }
                     } else {
-                        console.log('🪼 Jellyfin Enhanced: ModuleRegistry: ' + name + ' disabled but has no teardown (needs page reload)');
                         needsRefresh.push(name);
                     }
                 } else if (wasEnabled && nowEnabled) {
-                    // Module stayed enabled but a config value changed
                     if (mod.onConfigChange) {
                         try {
                             mod.onConfigChange({ changedKeys: changedKeys, oldConfig: oldConfig, newConfig: newConfig });
@@ -146,7 +155,6 @@
                             console.error('🪼 Jellyfin Enhanced: ModuleRegistry: onConfigChange error for ' + name, e);
                         }
                     } else if (mod.teardown && mod.init) {
-                        // [H7] Split into two try/catch blocks so init runs even if teardown throws
                         try {
                             mod.teardown();
                             mod.initialized = false;

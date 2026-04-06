@@ -482,7 +482,8 @@
             configKeys: ['JellyseerrEnabled', 'JellyseerrShowSimilar', 'JellyseerrShowRecommended'],
             enableKey: 'JellyseerrEnabled',
             init: initialize,
-            teardown: ctx.teardown
+            teardown: ctx.teardown,
+            liveToggle: false
         });
     }
 

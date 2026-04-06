@@ -2459,7 +2459,8 @@
     JE.moduleRegistry.register('downloads-page', {
       configKeys: ['DownloadsPageEnabled'],
       init: initialize,
-      teardown: _ctx ? _ctx.teardown : teardown
+      teardown: _ctx ? _ctx.teardown : teardown,
+      liveToggle: false
     });
   }
 })();

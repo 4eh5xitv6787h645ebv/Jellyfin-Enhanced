@@ -621,7 +621,8 @@
             configKeys: ['JellyseerrEnabled', 'JellyseerrShowSearchResults'],
             enableKey: 'JellyseerrEnabled',
             init: JE.initializeJellyseerrScript,
-            teardown: ctx.teardown
+            teardown: ctx.teardown,
+            liveToggle: false
         });
     }
 

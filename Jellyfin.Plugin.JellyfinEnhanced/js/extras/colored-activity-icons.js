@@ -467,7 +467,8 @@
         window.JellyfinEnhanced.moduleRegistry.register('colored-activity-icons', {
             configKeys: ['ColoredActivityIconsEnabled'],
             init: initialize,
-            teardown: teardown
+            teardown: teardown,
+            liveToggle: false
         });
     }
 

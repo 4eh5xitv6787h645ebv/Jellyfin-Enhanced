@@ -2958,7 +2958,8 @@
     JE.moduleRegistry.register('calendar-page', {
       configKeys: ['CalendarPageEnabled'],
       init: initialize,
-      teardown: _ctx ? _ctx.teardown : teardown
+      teardown: _ctx ? _ctx.teardown : teardown,
+      liveToggle: false
     });
   }
 })();
