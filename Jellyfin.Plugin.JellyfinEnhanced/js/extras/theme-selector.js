@@ -451,11 +451,6 @@
         });
     }
 
-    function teardown() {
-        if (_ctx) { _ctx.teardown(); return; }
-        if (JE.helpers) JE.helpers.disconnectObserver('theme-selector');
-    }
-
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeThemeSelector = initialize;
     }
@@ -464,7 +459,7 @@
         window.JellyfinEnhanced.moduleRegistry.register('theme-selector', {
             configKeys: ['ThemeSelectorEnabled'],
             init: initialize,
-            teardown: teardown
+            teardown: _ctx ? _ctx.teardown : function() { if (JE.helpers) JE.helpers.disconnectObserver('theme-selector'); }
         });
     }
 

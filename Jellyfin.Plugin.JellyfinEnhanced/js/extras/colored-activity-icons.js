@@ -456,21 +456,15 @@
         });
     }
 
-    function teardown() {
-        if (_ctx) { _ctx.teardown(); return; }
-        stopMonitoring();
-    }
-
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeActivityIcons = initialize;
     }
 
-    // Register with module lifecycle system
-    if (window.JellyfinEnhanced?.moduleRegistry) {
+    if (window.JellyfinEnhanced?.moduleRegistry && _ctx) {
         window.JellyfinEnhanced.moduleRegistry.register('colored-activity-icons', {
             configKeys: ['ColoredActivityIconsEnabled'],
             init: initialize,
-            teardown: teardown
+            teardown: _ctx.teardown
         });
     }
 

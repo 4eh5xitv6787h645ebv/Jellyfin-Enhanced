@@ -358,11 +358,6 @@
         });
     }
 
-    function teardown() {
-        if (_ctx) { _ctx.teardown(); return; }
-        stopMonitoring();
-    }
-
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializePluginIcons = initialize;
 
@@ -380,7 +375,7 @@
         window.JellyfinEnhanced.moduleRegistry.register('plugin-icons', {
             configKeys: ['PluginIconsEnabled'],
             init: initialize,
-            teardown: teardown
+            teardown: _ctx ? _ctx.teardown : function() { stopMonitoring(); }
         });
     }
 

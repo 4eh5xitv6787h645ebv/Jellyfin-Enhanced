@@ -1593,11 +1593,6 @@
     });
   }
 
-  function teardown() {
-    if (_ctx) { _ctx.teardown(); return; }
-    if (state.pageVisible) hidePage();
-  }
-
   JE.hiddenContentPage = {
     initialize,
     showPage,
@@ -1605,7 +1600,7 @@
     renderPage,
     renderForCustomTab,
     injectStyles,
-    teardown,
+    teardown: _ctx ? _ctx.teardown : function() {},
   };
 
   JE.initializeHiddenContentPage = initialize;
@@ -1614,7 +1609,7 @@
     JE.moduleRegistry.register('hidden-content-page', {
       configKeys: ['HiddenContentEnabled'],
       init: initialize,
-      teardown: _ctx ? _ctx.teardown : teardown
+      teardown: _ctx.teardown
     });
   }
 })();

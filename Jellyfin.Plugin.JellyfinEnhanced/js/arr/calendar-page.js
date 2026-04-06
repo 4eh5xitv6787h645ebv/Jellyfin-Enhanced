@@ -2945,20 +2945,14 @@
     });
   }
 
-  function teardown() {
-    if (_ctx) { _ctx.teardown(); return; }
-    if (state.pageVisible) hidePage();
-    stopLocationWatcher();
-  }
-
-  JE.calendarPage.teardown = teardown;
+  JE.calendarPage.teardown = _ctx ? _ctx.teardown : function() {};
   JE.initializeCalendarPage = initialize;
 
   if (JE.moduleRegistry) {
     JE.moduleRegistry.register('calendar-page', {
       configKeys: ['CalendarPageEnabled'],
       init: initialize,
-      teardown: _ctx ? _ctx.teardown : teardown
+      teardown: _ctx.teardown
     });
   }
 })();

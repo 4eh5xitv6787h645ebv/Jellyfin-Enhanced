@@ -2445,21 +2445,14 @@
     });
   }
 
-  function teardown() {
-    if (_ctx) { _ctx.teardown(); return; }
-    if (state.pageVisible) hidePage();
-    stopPolling();
-    stopLocationWatcher();
-  }
-
-  JE.downloadsPage.teardown = teardown;
+  JE.downloadsPage.teardown = _ctx ? _ctx.teardown : function() {};
   JE.initializeDownloadsPage = initialize;
 
   if (JE.moduleRegistry) {
     JE.moduleRegistry.register('downloads-page', {
       configKeys: ['DownloadsPageEnabled'],
       init: initialize,
-      teardown: _ctx ? _ctx.teardown : teardown
+      teardown: _ctx.teardown
     });
   }
 })();

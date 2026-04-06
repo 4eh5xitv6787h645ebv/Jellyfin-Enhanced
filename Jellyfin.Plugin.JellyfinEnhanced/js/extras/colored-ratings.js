@@ -292,11 +292,6 @@
         });
     }
 
-    function teardown() {
-        if (_ctx) { _ctx.teardown(); return; }
-        cleanup();
-    }
-
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeColoredRatings = initialize;
         // Expose pause/resume functions for pausescreen.js to control
@@ -309,7 +304,7 @@
         window.JellyfinEnhanced.moduleRegistry.register('colored-ratings', {
             configKeys: ['ColoredRatingsEnabled'],
             init: initialize,
-            teardown: teardown
+            teardown: _ctx ? _ctx.teardown : function() { cleanup(); }
         });
     }
 
