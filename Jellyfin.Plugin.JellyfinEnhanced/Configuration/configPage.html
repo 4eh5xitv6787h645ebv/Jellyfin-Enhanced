@@ -1693,12 +1693,12 @@
                             <div class="checkboxContainer" style="margin-bottom: 0.5em;">
                                 <label>
                                     <input id="autoReloadOnSave" is="emby-checkbox" type="checkbox"/>
-                                    <span>Auto-reload page after saving</span>
+                                    <span>Auto-reload when leaving config page</span>
                                 </label>
                             </div>
                             <div class="fieldDescription" style="margin-bottom: 1em;">
-                                Automatically reloads the page after saving to ensure all changes take effect cleanly.
-                                Disable this if you prefer to reload manually.
+                                Automatically reloads the page when you navigate away from the config page after saving.
+                                You can save multiple tabs without repeated reloads. Disable if you prefer to reload manually.
                             </div>
                         </div>
                     </fieldset>
@@ -1707,7 +1707,7 @@
                     style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
                     <div>
-                        The page auto-reloads after saving to ensure all changes take effect.
+                        The page reloads when you navigate away after saving to apply all changes.
                         You can disable this in Other Settings > Config Page Preferences.
                     </div>
                 </div>
@@ -2946,16 +2946,13 @@
                     try { localStorage.setItem('JE_config_updated', String(Date.now())); } catch(_){}
                 }
 
-                // Persist the auto-reload preference and reload the page.
-                // Many settings (feature toggles, custom tabs, plugin pages) need a
-                // full page reload to take effect cleanly. The reactive config system
-                // handles cross-tab sync and non-admin users picking up changes, but
-                // the config page itself benefits from a clean reload after save.
+                // Mark that config was saved. The page reloads when the user
+                // navigates away from the config page (not on every save),
+                // so multiple tabs can be saved without repeated reloads.
                 var autoReload = document.querySelector('#autoReloadOnSave').checked;
                 localStorage.setItem('JE_autoReloadOnSave', String(autoReload));
-
                 if (autoReload) {
-                    setTimeout(function() { window.location.reload(); }, 500);
+                    window._jeConfigDirty = true;
                 }
             } catch {
                 Dashboard.hideLoadingMsg();
@@ -3286,6 +3283,15 @@
 
         page.addEventListener('pageshow', loadConfig);
         form.addEventListener('submit', saveConfig);
+
+        // Reload when navigating away from the config page (not on every save).
+        // This lets the admin save multiple tabs without repeated reloads.
+        window.addEventListener('hashchange', function() {
+            if (window._jeConfigDirty && !window.location.hash.includes('configurationpage')) {
+                window._jeConfigDirty = false;
+                window.location.reload();
+            }
+        });
         resetAllUserSettingsBtn.addEventListener('click', resetAllUserSettings);
         initAutoMovieQualityMode();
 
