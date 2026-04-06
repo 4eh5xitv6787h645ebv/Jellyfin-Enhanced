@@ -718,6 +718,51 @@
                 episodeItem.IndexNumberEnd,
                 episodeItem.ParentIndexNumber === 0
             );
+            var hiddenText = core.tFallback('spoiler_mode_hidden_label', 'Hidden');
+
+            /**
+             * Reveals all redacted elements on the episode detail page.
+             * Called when the user clicks the poster image.
+             */
+            function revealEpisode() {
+                // Reveal title
+                var nameEl = visiblePage.querySelector('.itemName, h3.itemName');
+                if (nameEl && nameEl.dataset.jeSpoilerOriginal) {
+                    nameEl.textContent = nameEl.dataset.jeSpoilerOriginal;
+                    nameEl.classList.remove('je-spoiler-text-redacted');
+                }
+
+                // Reveal overview
+                var overviewEl = visiblePage.querySelector('.overview, .itemOverview');
+                if (overviewEl && overviewEl.dataset.jeSpoilerOriginal) {
+                    overviewEl.textContent = overviewEl.dataset.jeSpoilerOriginal;
+                    overviewEl.classList.remove('je-spoiler-overview-hidden');
+                    overviewEl.classList.add(core.OVERVIEW_REVEALED_CLASS);
+                }
+
+                // Reveal poster
+                var epPosterEl = visiblePage.querySelector('.detailImageContainer .cardImageContainer');
+                if (epPosterEl) epPosterEl.classList.add('je-spoiler-poster-revealed');
+
+                // Reveal metadata
+                visiblePage.classList.remove('je-spoiler-episode-protected');
+
+                // Hide the overlay text
+                var overlay = visiblePage.querySelector('.je-spoiler-poster-overlay');
+                if (overlay) overlay.style.display = 'none';
+
+                // Auto-hide after reveal duration
+                var revealDuration = core.getSettings().revealDuration || core.DEFAULT_REVEAL_DURATION;
+                setTimeout(function () {
+                    if (core.revealAllActive) return;
+                    applyEpisodeRedaction();
+                    if (!visiblePage.classList.contains('je-spoiler-episode-protected')) {
+                        visiblePage.classList.add('je-spoiler-episode-protected');
+                    }
+                    var overlayAfter = visiblePage.querySelector('.je-spoiler-poster-overlay');
+                    if (overlayAfter) overlayAfter.style.display = '';
+                }, revealDuration);
+            }
 
             /**
              * Applies title, overview, and backdrop redaction for the episode.
@@ -726,38 +771,46 @@
             function applyEpisodeRedaction() {
                 if (core.revealAllActive) return;
 
-                // Redact episode title with click-to-reveal
+                // Redact episode title (not clickable — poster is the single reveal point)
                 var nameEl = visiblePage.querySelector('.itemName, h3.itemName');
                 if (nameEl && !nameEl.classList.contains('je-spoiler-text-redacted')) {
                     nameEl.dataset.jeSpoilerOriginal = nameEl.textContent;
                     nameEl.textContent = redactedTitle;
                     nameEl.classList.add('je-spoiler-text-redacted');
-                    nameEl.style.cursor = 'pointer';
-
-                    if (!nameEl.dataset.jeSpoilerTitleBound) {
-                        nameEl.dataset.jeSpoilerTitleBound = '1';
-                        nameEl.addEventListener('click', function () {
-                            if (!nameEl.classList.contains('je-spoiler-text-redacted')) return;
-                            if (!nameEl.dataset.jeSpoilerOriginal) return;
-
-                            nameEl.textContent = nameEl.dataset.jeSpoilerOriginal;
-                            nameEl.classList.remove('je-spoiler-text-redacted');
-
-                            var revealDuration = core.getSettings().revealDuration || core.DEFAULT_REVEAL_DURATION;
-                            setTimeout(function () {
-                                if (core.revealAllActive) return;
-                                nameEl.textContent = redactedTitle;
-                                nameEl.classList.add('je-spoiler-text-redacted');
-                            }, revealDuration);
-                        });
-                    }
                 }
 
-                hideOverviewWithReveal(visiblePage);
+                // Redact overview (not clickable)
+                var overviewEl = visiblePage.querySelector('.overview, .itemOverview');
+                if (overviewEl && !overviewEl.classList.contains('je-spoiler-overview-hidden')) {
+                    if (!overviewEl.dataset.jeSpoilerOriginal) {
+                        overviewEl.dataset.jeSpoilerOriginal = overviewEl.textContent;
+                    }
+                    overviewEl.textContent = hiddenText;
+                    overviewEl.classList.remove(core.OVERVIEW_REVEALED_CLASS);
+                    overviewEl.classList.add('je-spoiler-overview-hidden');
+                }
 
-                // Bind click-to-reveal on episode poster (blurred via CSS class)
+                // Bind single click-to-reveal on poster (reveals everything)
                 var epPosterEl = visiblePage.querySelector('.detailImageContainer .cardImageContainer');
-                if (epPosterEl) bindPosterReveal(epPosterEl, true);
+                if (epPosterEl && !epPosterEl.dataset.jeSpoilerPosterBound) {
+                    epPosterEl.dataset.jeSpoilerPosterBound = '1';
+                    epPosterEl.style.cursor = 'pointer';
+
+                    // Add "Click to reveal" overlay
+                    var cardBox = epPosterEl.closest('.cardBox');
+                    if (cardBox && !cardBox.querySelector('.je-spoiler-poster-overlay')) {
+                        var overlay = document.createElement('div');
+                        overlay.className = 'je-spoiler-poster-overlay';
+                        overlay.textContent = core.tFallback('spoiler_mode_click_reveal', 'Click to reveal');
+                        cardBox.appendChild(overlay);
+                    }
+
+                    epPosterEl.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        revealEpisode();
+                    });
+                }
 
                 // Blur backdrop image (lives outside #itemDetailPage in .backdropContainer)
                 core.blurElement(document.querySelector('.backdropImage'));

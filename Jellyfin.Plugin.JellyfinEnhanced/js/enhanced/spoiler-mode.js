@@ -958,17 +958,16 @@
     function formatRedactedTitle(seasonNumber, episodeNumber, endEpisodeNumber, isSpecial) {
         if (isSpecial || seasonNumber === 0) {
             var num = episodeNumber != null ? String(episodeNumber).padStart(2, '0') : '01';
-            return 'Special ' + num + ' \u2014 Click to reveal';
+            return 'Special ' + num;
         }
         var s = seasonNumber != null ? String(seasonNumber).padStart(2, '0') : '00';
         var e = episodeNumber != null ? String(episodeNumber).padStart(2, '0') : '00';
 
-        var hint = ' \u2014 Click to reveal';
         if (endEpisodeNumber != null && endEpisodeNumber !== episodeNumber) {
             var eEnd = String(endEpisodeNumber).padStart(2, '0');
-            return 'S' + s + 'E' + e + '\u2013E' + eEnd + hint;
+            return 'S' + s + 'E' + e + '\u2013E' + eEnd;
         }
-        return 'S' + s + 'E' + e + hint;
+        return 'S' + s + 'E' + e;
     }
 
     function formatShortRedactedTitle(seasonNumber, episodeNumber) {

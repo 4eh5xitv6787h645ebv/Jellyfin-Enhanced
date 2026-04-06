@@ -119,7 +119,6 @@ body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not
 .je-spoiler-blur .je-spoiler-text-redacted,\n\
 .je-spoiler-generic .je-spoiler-text-redacted {\n\
   visibility: visible !important;\n\
-  cursor: pointer;\n\
 }\n\
 \n\
 .je-spoiler-overview-hidden {\n\
@@ -303,7 +302,7 @@ body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not
                 }
                 titleEl.dataset.jeSpoilerRedacted = redactedTitle;
                 titleEl.textContent = redactedTitle;
-                titleEl.classList.add('je-spoiler-text-redacted', 'je-spoiler-revealable');
+                titleEl.classList.add('je-spoiler-text-redacted');
                 isFirstRedactable = false;
             } else {
                 titleEl.classList.add('je-spoiler-metadata-hidden');
@@ -530,7 +529,8 @@ body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not
 
     /**
      * Binds click/touch reveal handlers to a redacted card.
-     * Click on redacted text reveals the original; mouseleave or touchend re-hides.
+     * Click on the blurred image or SPOILER badge reveals the full card
+     * (artwork, title, metadata). Mouseleave or touchend re-hides.
      * @param {HTMLElement} card The card element to bind.
      */
     function bindCardReveal(card) {
@@ -538,6 +538,7 @@ body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not
         card.dataset.jeSpoilerRevealBound = '1';
 
         var cardBox = card.querySelector('.cardBox') || card;
+        var imageArea = card.querySelector('.cardImageContainer') || card.querySelector('.cardImage') || card.querySelector('.listItemImage');
         var revealed = false;
         var longPressTimer = null;
 
@@ -553,14 +554,17 @@ body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not
             hideCard(card);
         }
 
-        card.addEventListener('click', function (e) {
-            var target = e.target;
-            if (target.closest('.je-spoiler-revealable') || target.closest('.je-spoiler-text-redacted')) {
-                e.preventDefault();
-                e.stopPropagation();
-                doReveal();
-            }
-        });
+        // Click on image area or badge reveals the card
+        if (imageArea) {
+            imageArea.style.cursor = 'pointer';
+            imageArea.addEventListener('click', function (e) {
+                if (cardBox.classList.contains('je-spoiler-blur') || cardBox.classList.contains('je-spoiler-generic')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    doReveal();
+                }
+            });
+        }
 
         cardBox.addEventListener('mouseleave', function () {
             if (revealed) doHide();
