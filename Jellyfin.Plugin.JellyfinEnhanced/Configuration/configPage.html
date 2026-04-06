@@ -2946,13 +2946,14 @@
                     try { localStorage.setItem('JE_config_updated', String(Date.now())); } catch(_){}
                 }
 
-                // Mark that config was saved. The page reloads when the user
+                // Mark that config was saved. A reload happens when the user
                 // navigates away from the config page (not on every save),
                 // so multiple tabs can be saved without repeated reloads.
+                // Uses localStorage so the flag survives page context teardown.
                 var autoReload = document.querySelector('#autoReloadOnSave').checked;
                 localStorage.setItem('JE_autoReloadOnSave', String(autoReload));
                 if (autoReload) {
-                    window._jeConfigDirty = true;
+                    localStorage.setItem('JE_configDirty', 'true');
                 }
             } catch {
                 Dashboard.hideLoadingMsg();
@@ -3283,15 +3284,6 @@
 
         page.addEventListener('pageshow', loadConfig);
         form.addEventListener('submit', saveConfig);
-
-        // Reload when navigating away from the config page (not on every save).
-        // This lets the admin save multiple tabs without repeated reloads.
-        window.addEventListener('hashchange', function() {
-            if (window._jeConfigDirty && !window.location.hash.includes('configurationpage')) {
-                window._jeConfigDirty = false;
-                window.location.reload();
-            }
-        });
         resetAllUserSettingsBtn.addEventListener('click', resetAllUserSettings);
         initAutoMovieQualityMode();
 

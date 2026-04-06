@@ -277,6 +277,17 @@
     }
 
     function onHashChange() {
+        // Deferred reload: config page sets a localStorage flag on save.
+        // When the user navigates away from the config page, reload once
+        // so all changes take effect. This avoids reloading on every save.
+        try {
+            if (localStorage.getItem('JE_configDirty') === 'true'
+                && !window.location.hash.includes('configurationpage')) {
+                localStorage.removeItem('JE_configDirty');
+                window.location.reload();
+                return;
+            }
+        } catch (e) { /* ignore */ }
         reloadConfig();
     }
 
