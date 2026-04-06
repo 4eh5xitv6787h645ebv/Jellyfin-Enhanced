@@ -14,6 +14,9 @@
                             <i class="md-icon button-icon button-icon-left secondaryText"></i>
                             <span>Help</span>
                         </a>
+                        <button id="jeReportIssueBtn" type="button" class="raised raised-mini emby-button" style="margin-left: 0.5em; background: rgba(200,120,50,0.2); border: 1px solid rgba(200,120,50,0.4); color: #ffcc88; cursor: pointer;">
+                            <span>Report Issue</span>
+                        </button>
                         <div id="settingsSearchContainer" style="margin-left: auto; min-width: 200px; max-width: 320px; flex: 1;">
                             <div style="position: relative;">
                                 <i class="material-icons" style="position: absolute; left: 0.6em; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.4); pointer-events: none; font-size: 1.1em;">search</i>
@@ -1715,6 +1718,7 @@
                         </div>
                     </fieldset>
                 </div>
+
                 <div
                     style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
@@ -1730,6 +1734,165 @@
                 </div>
 
             </form>
+
+            <!-- GitHub Issue Reporter Modal -->
+            <style>
+                .je-report-columns { display:flex; gap:1.5em; }
+                .je-report-form { flex:1; min-width:0; }
+                .je-report-live-preview { flex:0 0 380px; position:sticky; top:1em; align-self:flex-start; max-height:calc(100vh - 8em); overflow-y:auto; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:1em; }
+                .je-report-live-preview pre { margin:0; white-space:pre-wrap; word-wrap:break-word; font-size:0.8em; color:#ccc; line-height:1.4; }
+                .je-report-live-preview .je-preview-label { font-size:0.85em; font-weight:bold; color:#ffcc88; margin-bottom:0.5em; }
+                @media (max-width: 900px) {
+                    .je-report-columns { flex-direction:column; }
+                    .je-report-live-preview { position:static; max-height:300px; flex:none; }
+                }
+                .je-diag-row { display:flex; align-items:center; gap:0.3em; }
+                .je-diag-row label { flex:1; }
+                .je-diag-peek { background:none; border:none; color:#666; font-size:0.8em; cursor:pointer; padding:0.1em 0.3em; }
+                .je-diag-peek:hover { color:#ffcc88; }
+                .je-diag-inline { display:none; margin:0.2em 0 0.4em 1.6em; padding:0.5em; background:rgba(0,0,0,0.3); border-radius:4px; font-size:0.8em; color:#aaa; max-height:120px; overflow-y:auto; white-space:pre-wrap; word-wrap:break-word; }
+            </style>
+            <div id="jeReportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; overflow-y:auto; padding:2em;">
+                <div style="max-width:1100px; margin:2em auto; background:#1a1a2e; border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:2em; color:#eee; font-family:inherit;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5em;">
+                        <h2 style="margin:0; font-size:1.4em;">Report Issue / Request Feature</h2>
+                        <button id="jeReportCloseBtn" type="button" style="background:none; border:none; color:#aaa; font-size:1.5em; cursor:pointer; padding:0.2em;">&times;</button>
+                    </div>
+                    <div class="je-report-columns">
+
+                    <div class="je-report-form">
+                    <fieldset id="jeReportFieldset" style="border:none;padding:0;margin:0;">
+                    <div style="margin-bottom:1.2em;">
+                        <label style="font-weight:bold; display:block; margin-bottom:0.4em;">Report Type</label>
+                        <div style="display:flex; gap:1em;">
+                            <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="bug" checked style="margin-right:0.3em;"> Bug Report</label>
+                            <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="feature" style="margin-right:0.3em;"> Feature Request</label>
+                            <label style="cursor:pointer;"><input type="radio" name="jeReportType" value="performance" style="margin-right:0.3em;"> Performance Issue</label>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1.2em;">
+                        <label for="jeReportTitle" style="font-weight:bold; display:block; margin-bottom:0.4em;">Title</label>
+                        <input id="jeReportTitle" type="text" maxlength="200" placeholder="Brief summary of the issue or request" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
+                    </div>
+
+                    <div style="margin-bottom:1.2em;">
+                        <label for="jeReportComponent" style="font-weight:bold; display:block; margin-bottom:0.4em;">Related Component</label>
+                        <select id="jeReportComponent" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
+                            <option value="">-- Select Component (optional) --</option>
+                            <option value="General">General</option>
+                            <option value="Jellyseerr">Jellyseerr Integration</option>
+                            <option value="Calendar">Calendar</option>
+                            <option value="Arr Links">*arr Links / Tags</option>
+                            <option value="Tags">Tags (Quality/Genre/Language/Rating/People)</option>
+                            <option value="Bookmarks">Bookmarks</option>
+                            <option value="Elsewhere">Elsewhere</option>
+                            <option value="Playback">Playback (Pause Screen, Auto-Skip, PiP)</option>
+                            <option value="Subtitles">Subtitles</option>
+                            <option value="Hidden Content">Hidden Content</option>
+                            <option value="UI/Theme">UI / Theme</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:1.2em;">
+                        <label for="jeReportDescription" style="font-weight:bold; display:block; margin-bottom:0.4em;">Description</label>
+                        <textarea id="jeReportDescription" rows="5" placeholder="Describe the issue in detail." style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; resize:vertical; box-sizing:border-box; font-family:inherit;"></textarea>
+                    </div>
+
+                    <div id="jeBugDetailFields" style="margin-bottom:1.2em;">
+                        <div style="margin-bottom:0.8em;">
+                            <label for="jeReportSteps" style="font-weight:bold; display:block; margin-bottom:0.4em;">Steps to Reproduce <span style="color:#666; font-weight:normal;">(optional)</span></label>
+                            <textarea id="jeReportSteps" rows="3" placeholder="1. Go to...&#10;2. Click on...&#10;3. Observe..." style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; resize:vertical; box-sizing:border-box; font-family:inherit;"></textarea>
+                        </div>
+                        <div style="margin-bottom:0.8em;">
+                            <label for="jeReportExpected" style="font-weight:bold; display:block; margin-bottom:0.4em;">Expected Behavior <span style="color:#666; font-weight:normal;">(optional)</span></label>
+                            <input id="jeReportExpected" type="text" placeholder="What should happen?" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:0.8em;">
+                            <label for="jeReportActual" style="font-weight:bold; display:block; margin-bottom:0.4em;">Actual Behavior <span style="color:#666; font-weight:normal;">(optional)</span></label>
+                            <input id="jeReportActual" type="text" placeholder="What actually happens?" style="width:100%; padding:0.6em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:#eee; font-size:0.95em; box-sizing:border-box;">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1.2em; background:rgba(255,255,255,0.04); padding:1em; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                        <label style="font-weight:bold; display:block; margin-bottom:0.6em;">Include Diagnostic Data (opt-in)</label>
+                        <p style="font-size:0.85em; color:#999; margin:0 0 0.8em 0;">All diagnostic data is optional. Check the boxes below to include information that helps debug the issue. All data is sanitized to remove personal info (IPs, API keys, domains, tokens).</p>
+                        <div style="display:flex; flex-direction:column; gap:0.3em;">
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeVersions" style="margin-right:0.4em;"> JE version &amp; Jellyfin server version</label><button type="button" class="je-diag-peek" data-section="versions">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-versions"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeDevice" style="margin-right:0.4em;"> Device &amp; browser information</label><button type="button" class="je-diag-peek" data-section="device">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-device"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConfig" style="margin-right:0.4em;"> JE plugin configuration (sanitized)</label><button type="button" class="je-diag-peek" data-section="config">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-config"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeFeatures" style="margin-right:0.4em;"> Enabled features list</label><button type="button" class="je-diag-peek" data-section="features">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-features"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJeLogs" style="margin-right:0.4em;"> JE plugin logs (sanitized)</label><button type="button" class="je-diag-peek" data-section="jeLogs">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-jeLogs"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeJfLogs" style="margin-right:0.4em;"> Jellyfin server logs (sanitized)</label><button type="button" class="je-diag-peek" data-section="jfLogs">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-jfLogs"></div>
+                            <div class="je-diag-row"><label style="cursor:pointer; font-size:0.95em;"><input type="checkbox" id="jeIncludeConsoleErrors" style="margin-right:0.4em;"> Browser console errors &amp; warnings</label><button type="button" class="je-diag-peek" data-section="console">(peek)</button></div>
+                            <div class="je-diag-inline" id="jePeek-console"></div>
+                            <div id="jeLogTimeRangeContainer" style="display:none; margin-top:0.4em; margin-left:1.6em;">
+                                <label for="jeLogTimeRange" style="font-size:0.9em; color:#aaa;">Log time range:</label>
+                                <select id="jeLogTimeRange" style="margin-left:0.4em; padding:0.3em 0.5em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:#eee; font-size:0.9em;">
+                                    <option value="5">Last 5 minutes</option>
+                                    <option value="30">Last 30 minutes</option>
+                                    <option value="60" selected>Last 1 hour</option>
+                                    <option value="1440">Last 24 hours</option>
+                                    <option value="10080">Last 7 days</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1.2em; background:rgba(255,255,255,0.04); padding:1em; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                        <label style="font-weight:bold; display:block; margin-bottom:0.6em;">Screenshots (optional)</label>
+                        <p style="font-size:0.85em; color:#999; margin:0 0 0.8em 0;">Add screenshots to help illustrate the issue. Each screenshot can have a title.</p>
+                        <div id="jeScreenshotList" style="display:flex; flex-direction:column; gap:0.8em;"></div>
+                        <button type="button" id="jeAddScreenshotBtn" style="margin-top:0.5em; padding:0.4em 1em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:#ccc; cursor:pointer; font-size:0.9em;">+ Add Screenshot</button>
+                        <input type="file" id="jeScreenshotFileInput" accept="image/*" multiple style="display:none;">
+                    </div>
+
+                    <div style="padding:0.8em; background:rgba(100,150,255,0.1); border:1px solid rgba(100,150,255,0.3); border-radius:6px; margin-bottom:1.5em; font-size:0.85em; color:#aaccff;">
+                        <strong>Privacy:</strong> Public IPs, external hostnames, API keys, and tokens are stripped. Local/private IPs and internal URLs are preserved for debugging.
+                    </div>
+
+                    <div id="jeDeviceFlowStatus" style="display:none; margin-bottom:1em; padding:1em; background:rgba(80,180,80,0.1); border:1px solid rgba(80,180,80,0.3); border-radius:8px; text-align:center;">
+                        <p style="margin:0 0 0.5em; font-size:0.95em; color:#ccc;">Go to <a id="jeDeviceFlowLink" href="https://github.com/login/device" target="_blank" style="color:#aaccff; font-weight:bold;">github.com/login/device</a> and enter this code:</p>
+                        <div id="jeDeviceFlowCode" style="font-size:2em; font-weight:bold; letter-spacing:0.15em; color:#88ff88; margin:0.3em 0; font-family:monospace;"></div>
+                        <p id="jeDeviceFlowMsg" style="margin:0.5em 0 0; font-size:0.85em; color:#999;">Waiting for authorization...</p>
+                    </div>
+
+                    <div id="jeDuplicateResults" style="display:none; margin-bottom:1em; padding:0.8em; background:rgba(255,200,50,0.1); border:1px solid rgba(255,200,50,0.3); border-radius:6px; font-size:0.9em;">
+                        <strong style="color:#ffcc88;">Similar open issues found:</strong>
+                        <ul id="jeDuplicateList" style="margin:0.5em 0 0 1.2em; padding:0; list-style:disc;"></ul>
+                        <p style="margin:0.5em 0 0; color:#999; font-size:0.85em;">You can still submit if none of these match.</p>
+                    </div>
+
+                    <div style="display:flex; gap:0.8em; flex-wrap:wrap;">
+                        <button id="jeReportSubmitBtn" type="button" style="flex:1; min-width:150px; padding:0.7em 1.2em; background:rgba(80,180,80,0.25); border:1px solid rgba(80,180,80,0.5); color:#88ff88; border-radius:6px; cursor:pointer; font-size:0.95em; font-weight:bold;">Open on GitHub</button>
+                        <button id="jeReportCopyBtn" type="button" style="flex:1; min-width:150px; padding:0.7em 1.2em; background:rgba(100,150,255,0.15); border:1px solid rgba(100,150,255,0.4); color:#aaccff; border-radius:6px; cursor:pointer; font-size:0.95em;">Copy to Clipboard</button>
+                        <button id="jeReportCancelBtn" type="button" style="padding:0.7em 1.2em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#ccc; border-radius:6px; cursor:pointer; font-size:0.95em;">Cancel</button>
+                    </div>
+                    </fieldset>
+
+                    <div id="jeReportSuccess" style="display:none; text-align:center; padding:2em;">
+                        <div style="font-size:3em; margin-bottom:0.5em; color:#88ff88;">&#10003;</div>
+                        <h3 style="color:#88ff88; margin:0 0 0.5em;">Issue Created Successfully</h3>
+                        <p id="jeReportSuccessLink" style="margin:0 0 1em;"></p>
+                        <p id="jeReportSuccessCountdown" style="color:#999; font-size:0.9em; margin:0;"></p>
+                        <button id="jeReportSuccessClose" type="button" style="margin-top:1em; padding:0.6em 2em; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:#ccc; border-radius:6px; cursor:pointer; font-size:0.95em;">Close</button>
+                    </div>
+                    </div><!-- /je-report-form -->
+
+                    <div class="je-report-live-preview" id="jeReportLivePreview">
+                        <div class="je-preview-label">Live Preview</div>
+                        <pre id="jeReportPreview">Fill in the form to see a live preview of your report.</pre>
+                    </div>
+                    </div><!-- /je-report-columns -->
+                </div>
+            </div>
         </div>
     </div>
 <script type="text/javascript">
@@ -4303,6 +4466,937 @@
             }
             document.body.removeChild(textarea);
         }
+    })();
+</script>
+<script type="text/javascript">
+    /**
+     * GitHub Issue Reporter for Jellyfin Enhanced.
+     * Collects opt-in diagnostic data, sanitizes it, and opens a pre-filled GitHub issue.
+     * NOTE: Avoids template literals (backtick strings with ${}) because the Jellyfin
+     * plugin HTML serving pipeline processes ${} patterns before the browser receives them.
+     */
+    (function() {
+        'use strict';
+
+        // Console error/warn ring buffer — captures errors from page load
+        var JE_CONSOLE_BUFFER_MAX = 50;
+        var jeConsoleBuffer = [];
+        var _origConsoleError = console.error;
+        var _origConsoleWarn = console.warn;
+        function captureConsole(level, origFn, args) {
+            var parts = [];
+            for (var i = 0; i < args.length; i++) {
+                try { parts.push(typeof args[i] === 'object' ? JSON.stringify(args[i]) : String(args[i])); }
+                catch(e) { parts.push('[unserializable]'); }
+            }
+            jeConsoleBuffer.push({ level: level, time: new Date().toISOString(), message: parts.join(' ') });
+            if (jeConsoleBuffer.length > JE_CONSOLE_BUFFER_MAX) jeConsoleBuffer.shift();
+            origFn.apply(console, args);
+        }
+        console.error = function() { captureConsole('error', _origConsoleError, arguments); };
+        console.warn = function() { captureConsole('warn', _origConsoleWarn, arguments); };
+
+        var modal = document.getElementById('jeReportModal');
+        var openBtn = document.getElementById('jeReportIssueBtn');
+        var closeBtn = document.getElementById('jeReportCloseBtn');
+        var cancelBtn = document.getElementById('jeReportCancelBtn');
+        var submitBtn = document.getElementById('jeReportSubmitBtn');
+        var copyBtn = document.getElementById('jeReportCopyBtn');
+        var previewEl = document.getElementById('jeReportPreview');
+        var titleInput = document.getElementById('jeReportTitle');
+        var descInput = document.getElementById('jeReportDescription');
+
+        if (!modal || !openBtn) return;
+
+        /**
+         * Sanitizes text by removing sensitive information.
+         * @param {string} text - The text to sanitize.
+         * @returns {string} Sanitized text with sensitive data redacted.
+         */
+        /**
+         * Checks if an IPv4 address is private/local (RFC 1918 + loopback + link-local).
+         * @param {string} ip - IPv4 address string.
+         * @returns {boolean}
+         */
+        function isPrivateIP(ip) {
+            var parts = ip.split('.');
+            if (parts.length !== 4) return false;
+            var a = parseInt(parts[0], 10);
+            var b = parseInt(parts[1], 10);
+            if (a === 10) return true;                          // 10.0.0.0/8
+            if (a === 172 && b >= 16 && b <= 31) return true;  // 172.16.0.0/12
+            if (a === 192 && b === 168) return true;            // 192.168.0.0/16
+            if (a === 127) return true;                         // 127.0.0.0/8 (loopback)
+            if (a === 169 && b === 254) return true;            // 169.254.0.0/16 (link-local)
+            return false;
+        }
+
+        /**
+         * Checks if a hostname is local/internal (not a public domain).
+         * @param {string} host - Hostname string.
+         * @returns {boolean}
+         */
+        function isLocalHost(host) {
+            if (!host) return false;
+            var h = host.toLowerCase().split(':')[0]; // strip port
+            if (h === 'localhost') return true;
+            // Private IPs used as hostnames
+            if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h) && isPrivateIP(h)) return true;
+            // Common local TLDs / suffixes
+            if (/\.(local|lan|home|internal|intranet|localdomain|test)$/.test(h)) return true;
+            // Single-word hostnames (no dots = not a public domain)
+            if (h.indexOf('.') < 0) return true;
+            return false;
+        }
+
+        function sanitizeText(text) {
+            if (!text || typeof text !== 'string') return text || '';
+            var s = text;
+            // URLs: redact public hostnames, keep local/private ones
+            s = s.replace(/((?:https?|wss?|ftp):\/\/)([^\s\/"']+)(:\d+)?/gi, function(match, scheme, host, port) {
+                if (isLocalHost(host)) return match; // keep local URLs
+                return scheme + '[HOST_REDACTED]' + (port || '');
+            });
+            // API key/token query params
+            s = s.replace(/([?&](?:api_?key|apikey|key|token|access_token|auth|password|secret|pwd)=)[^&\s"']+/gi, '$1[REDACTED]');
+            // Auth headers
+            s = s.replace(/((?:Bearer|Basic|Token)\s+)[^\s"']+/gi, '$1[REDACTED]');
+            // IPv4: redact public IPs, keep private/local
+            s = s.replace(/\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?\b/g, function(match, ip, port) {
+                if (isPrivateIP(ip)) return match; // keep private IPs
+                return '[IP_REDACTED]' + (port || '');
+            });
+            // IPv6: keep loopback (::1), redact others
+            s = s.replace(/\b([0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}\b/g, function(match) {
+                if (match === '::1' || match === '0:0:0:0:0:0:0:1') return match;
+                return '[IP_REDACTED]';
+            });
+            // Email addresses
+            s = s.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL_REDACTED]');
+            return s;
+        }
+
+        /**
+         * Deep-sanitizes a JSON object, redacting sensitive keys entirely.
+         * @param {*} obj - The object to sanitize.
+         * @returns {*} A new sanitized copy of the object.
+         */
+        function sanitizeObject(obj) {
+            if (obj === null || obj === undefined) return obj;
+            if (typeof obj === 'string') return sanitizeText(obj);
+            if (typeof obj !== 'object') return obj;
+            if (Array.isArray(obj)) return obj.map(sanitizeObject);
+
+            var alwaysRedactKeys = /^(.*api.?key.*|.*apikey.*|.*token.*|.*secret.*|.*password.*|.*credential.*)$/i;
+            var urlKeys = /^(.*url.*|.*hostname.*)$/i;
+            var result = {};
+            for (var k in obj) {
+                if (!obj.hasOwnProperty(k)) continue;
+                var value = obj[k];
+                if (alwaysRedactKeys.test(k) && typeof value === 'string' && value.length > 0) {
+                    // API keys, tokens, passwords — always redact (partial for long strings)
+                    result[k] = value.length >= 8 ? value.substring(0, 3) + '***' + value.substring(value.length - 3) : '[REDACTED]';
+                } else if (urlKeys.test(k) && typeof value === 'string' && value.length > 0) {
+                    // URLs — keep if local/private, redact if public
+                    var urlMatch = value.match(/^(?:https?|wss?|ftp):\/\/([^\s\/:]+)/i);
+                    if (urlMatch && isLocalHost(urlMatch[1])) {
+                        result[k] = value; // keep local URLs (e.g., http://192.168.1.5:8989)
+                    } else if (!urlMatch && (value.startsWith('/') || value === '')) {
+                        result[k] = value; // keep relative paths and empty strings
+                    } else {
+                        result[k] = value.length >= 8 ? value.substring(0, 3) + '***' + value.substring(value.length - 3) : '[REDACTED]';
+                    }
+                } else if (typeof value === 'object') {
+                    result[k] = sanitizeObject(value);
+                } else {
+                    result[k] = value;
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Detects OS from user agent string.
+         * @returns {string} The detected operating system name.
+         */
+        function detectOS() {
+            var ua = navigator.userAgent;
+            if (/Windows/i.test(ua)) return 'Windows';
+            if (/Android/i.test(ua)) return 'Android';
+            if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
+            if (/Mac/i.test(ua)) return 'macOS';
+            if (/Linux/i.test(ua)) return 'Linux';
+            if (/CrOS/i.test(ua)) return 'ChromeOS';
+            if (/webOS|Tizen|SMART-TV|SmartTV/i.test(ua)) return 'Smart TV';
+            return 'Unknown';
+        }
+
+        /**
+         * Detects browser name and version.
+         * @returns {string} Browser name and version.
+         */
+        function detectBrowser() {
+            var ua = navigator.userAgent;
+            if (/Edg\//i.test(ua)) return 'Edge ' + ((ua.match(/Edg\/([\d.]+)/) || [])[1] || '');
+            if (/OPR\//i.test(ua)) return 'Opera ' + ((ua.match(/OPR\/([\d.]+)/) || [])[1] || '');
+            if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) return 'Chrome ' + ((ua.match(/Chrome\/([\d.]+)/) || [])[1] || '');
+            if (/Firefox\//i.test(ua)) return 'Firefox ' + ((ua.match(/Firefox\/([\d.]+)/) || [])[1] || '');
+            if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) return 'Safari ' + ((ua.match(/Version\/([\d.]+)/) || [])[1] || '');
+            return 'Unknown';
+        }
+
+        /**
+         * Collects all selected diagnostic data.
+         * @returns {Promise<object>} An object with each diagnostic section.
+         */
+        function collectDiagnostics() {
+            return new Promise(function(resolve) {
+                var data = {};
+                var pending = [];
+
+                if (document.getElementById('jeIncludeVersions').checked) {
+                    data.versions = {};
+                    pending.push(
+                        ApiClient.getPublicSystemInfo().then(function(info) {
+                            data.versions.jellyfinVersion = (info && info.Version) || 'Unknown';
+                            data.versions.os = (info && info.OperatingSystem) || 'Unknown';
+                        }).catch(function() {
+                            data.versions.jellyfinVersion = 'Could not retrieve';
+                        })
+                    );
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/version'), dataType: 'text' }).then(function(ver) {
+                            data.versions.jeVersion = ver || 'Unknown';
+                        }).catch(function() {
+                            data.versions.jeVersion = 'Could not retrieve';
+                        })
+                    );
+                }
+
+                if (document.getElementById('jeIncludeDevice').checked) {
+                    data.device = {
+                        os: detectOS(),
+                        browser: detectBrowser(),
+                        screenResolution: screen.width + 'x' + screen.height,
+                        viewportSize: window.innerWidth + 'x' + window.innerHeight,
+                        devicePixelRatio: window.devicePixelRatio || 1,
+                        touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+                        language: navigator.language || 'Unknown'
+                    };
+                }
+
+                var needsConfig = document.getElementById('jeIncludeConfig').checked;
+                var needsFeatures = document.getElementById('jeIncludeFeatures').checked;
+                if (needsConfig || needsFeatures) {
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(config) {
+                            if (needsConfig) {
+                                data.pluginConfig = sanitizeObject(config || {});
+                            }
+                            if (needsFeatures) {
+                                data.enabledFeatures = [];
+                                var featureMap = {
+                                    ElsewhereEnabled: 'Elsewhere',
+                                    JellyseerrEnabled: 'Jellyseerr Integration',
+                                    JellyseerrShowSearchResults: 'Jellyseerr Search Results',
+                                    JellyseerrShowReportButton: 'Jellyseerr Issue Reporter',
+                                    ArrLinksEnabled: '*arr Links',
+                                    ArrTagsShowAsLinks: '*arr Tag Links',
+                                    LetterboxdEnabled: 'Letterboxd Links',
+                                    QualityTagsEnabled: 'Quality Tags',
+                                    GenreTagsEnabled: 'Genre Tags',
+                                    LanguageTagsEnabled: 'Language Tags',
+                                    RatingTagsEnabled: 'Rating Tags',
+                                    PeopleTagsEnabled: 'People Tags',
+                                    ShowWatchProgress: 'Watch Progress',
+                                    ShowFileSizes: 'File Sizes',
+                                    ShowAudioLanguages: 'Audio Languages',
+                                    RemoveContinueWatchingEnabled: 'Remove Continue Watching',
+                                    RandomButtonEnabled: 'Random Button',
+                                    PauseScreenEnabled: 'Custom Pause Screen',
+                                    ShowReviews: 'TMDB Reviews',
+                                    EnableCustomSplashScreen: 'Custom Splash Screen',
+                                    MetadataIconsEnabled: 'Metadata Icons',
+                                    EnableLoginImage: 'Custom Login Image'
+                                };
+                                var keys = Object.keys(featureMap);
+                                for (var i = 0; i < keys.length; i++) {
+                                    if (config && config[keys[i]]) data.enabledFeatures.push(featureMap[keys[i]]);
+                                }
+                            }
+                        }).catch(function() {
+                            if (needsConfig) data.pluginConfig = 'Could not retrieve';
+                            if (needsFeatures) data.enabledFeatures = ['Could not retrieve'];
+                        })
+                    );
+                }
+
+                var needsJeLogs = document.getElementById('jeIncludeJeLogs').checked;
+                var needsJfLogs = document.getElementById('jeIncludeJfLogs').checked;
+                if (needsJeLogs || needsJfLogs) {
+                    var logMinutes = parseInt(document.getElementById('jeLogTimeRange').value, 10) || 60;
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { minutes: logMinutes }), dataType: 'json' }).then(function(logs) {
+                            if (needsJeLogs && logs && logs.jeLogs) data.jeLogs = logs.jeLogs;
+                            if (needsJfLogs && logs && logs.jellyfinLogs) data.jellyfinLogs = logs.jellyfinLogs;
+                        }).catch(function() {
+                            if (needsJeLogs) data.jeLogs = 'Could not retrieve JE logs';
+                            if (needsJfLogs) data.jellyfinLogs = 'Could not retrieve Jellyfin logs';
+                        })
+                    );
+                }
+
+                // Console errors (client-side only, no API call)
+                if (document.getElementById('jeIncludeConsoleErrors').checked) {
+                    if (jeConsoleBuffer.length > 0) {
+                        data.consoleErrors = jeConsoleBuffer.map(function(e) {
+                            return '[' + e.time + '] [' + e.level.toUpperCase() + '] ' + sanitizeText(e.message);
+                        }).join('\n');
+                    } else {
+                        data.consoleErrors = '(no console errors or warnings captured during this session)';
+                    }
+                }
+
+                // Extensible diagnostic sections (from registered server-side modules)
+                if (needsConfig || needsFeatures) {
+                    pending.push(
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-sections'), dataType: 'json' }).then(function(result) {
+                            if (result && result.sections) data.diagnosticSections = sanitizeObject(result.sections);
+                        }).catch(function() { /* silent fail */ })
+                    );
+                }
+
+                Promise.all(pending).then(function() { resolve(data); });
+            });
+        }
+
+        /**
+         * Builds a markdown-formatted report body.
+         * @param {object} diagnostics - Collected diagnostic data.
+         * @returns {string} Markdown formatted report.
+         */
+        function buildReportBody(diagnostics) {
+            var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
+            var desc = sanitizeText(descInput.value.trim());
+            var parts = [];
+
+            var component = (document.getElementById('jeReportComponent') || {}).value || '';
+
+            if (type === 'bug') {
+                parts.push('## Bug Report\n');
+                if (component) parts.push('**Component:** ' + component + '\n');
+                parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
+                var steps = (document.getElementById('jeReportSteps') || {}).value || '';
+                var expected = (document.getElementById('jeReportExpected') || {}).value || '';
+                var actual = (document.getElementById('jeReportActual') || {}).value || '';
+                steps = sanitizeText(steps.trim());
+                expected = sanitizeText(expected.trim());
+                actual = sanitizeText(actual.trim());
+                parts.push('### Steps to Reproduce\n' + (steps || '1. \n2. \n3. ') + '\n');
+                parts.push('### Expected Behavior\n' + (expected || '_Not specified_') + '\n');
+                parts.push('### Actual Behavior\n' + (actual || '_Not specified_') + '\n');
+            } else if (type === 'performance') {
+                parts.push('## Performance Issue\n');
+                if (component) parts.push('**Component:** ' + component + '\n');
+                parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
+                parts.push('### When does it happen?\n_Describe the scenario (e.g., browsing library, playing media, opening a specific page)_\n');
+                parts.push('### How often?\n_Always / Sometimes / Rarely_\n');
+                parts.push('### Performance Impact\n_Describe the impact (e.g., page load takes 10s, UI freezes, high CPU usage)_\n');
+            } else {
+                parts.push('## Feature Request\n');
+                if (component) parts.push('**Component:** ' + component + '\n');
+                parts.push('### Description\n' + (desc || '_No description provided_') + '\n');
+                parts.push('### Use Case\n_Why would this be useful?_\n');
+            }
+
+            if (diagnostics.versions) {
+                parts.push('### Version Information');
+                parts.push('- **JE Version:** ' + (diagnostics.versions.jeVersion || 'Unknown'));
+                parts.push('- **Jellyfin Version:** ' + (diagnostics.versions.jellyfinVersion || 'Unknown'));
+                if (diagnostics.versions.os) parts.push('- **Server OS:** ' + diagnostics.versions.os);
+                parts.push('');
+            }
+
+            if (diagnostics.device) {
+                var d = diagnostics.device;
+                parts.push('### Device Information');
+                parts.push('- **OS:** ' + d.os);
+                parts.push('- **Browser:** ' + d.browser);
+                parts.push('- **Screen:** ' + d.screenResolution + ' (viewport: ' + d.viewportSize + ', DPR: ' + d.devicePixelRatio + ')');
+                parts.push('- **Touch:** ' + (d.touchSupport ? 'Yes' : 'No'));
+                parts.push('- **Language:** ' + d.language);
+                parts.push('');
+            }
+
+            if (diagnostics.enabledFeatures) {
+                parts.push('### Enabled Features');
+                if (diagnostics.enabledFeatures.length > 0) {
+                    parts.push(diagnostics.enabledFeatures.map(function(f) { return '- ' + f; }).join('\n'));
+                } else {
+                    parts.push('_No features enabled_');
+                }
+                parts.push('');
+            }
+
+            if (diagnostics.pluginConfig && typeof diagnostics.pluginConfig === 'object') {
+                parts.push('<details><summary>Plugin Configuration (sanitized)</summary>\n');
+                parts.push('```json\n' + JSON.stringify(diagnostics.pluginConfig, null, 2) + '\n```\n');
+                parts.push('</details>\n');
+            }
+
+            if (diagnostics.consoleErrors) {
+                parts.push('<details><summary>Browser Console Errors/Warnings (' + jeConsoleBuffer.length + ' entries)</summary>\n');
+                parts.push('```\n' + diagnostics.consoleErrors + '\n```\n');
+                parts.push('</details>\n');
+            }
+
+            if (diagnostics.diagnosticSections && typeof diagnostics.diagnosticSections === 'object') {
+                parts.push('<details><summary>Feature Diagnostics</summary>\n');
+                parts.push('```json\n' + JSON.stringify(diagnostics.diagnosticSections, null, 2) + '\n```\n');
+                parts.push('</details>\n');
+            }
+
+            // Screenshot references (actual images embedded by server in issue body)
+            if (jeScreenshots.length > 0) {
+                parts.push('### Screenshots');
+                for (var si = 0; si < jeScreenshots.length; si++) {
+                    var ssTitle = jeScreenshots[si].title || ('Screenshot ' + (si + 1));
+                    parts.push('**' + ssTitle + '**');
+                }
+                parts.push('');
+            }
+
+            parts.push('\n<!-- generated by JE issue reporter -->');
+
+            return parts.join('\n');
+        }
+
+        /**
+         * Formats the issue title with a prefix.
+         * @returns {string} Formatted issue title.
+         */
+        function getIssueTitle() {
+            var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
+            var title = titleInput.value.trim();
+            if (!title) return '';
+            if (type === 'performance') return '[Performance] ' + title;
+            return type === 'bug' ? '[BUG] ' + title : '[Feature] ' + title;
+        }
+
+        /** Updates the preview pane with the current report content. */
+        function updatePreview() {
+            previewEl.textContent = 'Collecting data...';
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                previewEl.textContent = getIssueTitle() + '\n\n' + body;
+            }).catch(function(e) {
+                previewEl.textContent = 'Error generating preview: ' + e.message;
+            });
+        }
+
+        // Open modal
+        openBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.style.display = 'block';
+            titleInput.value = '';
+            descInput.value = '';
+            previewEl.textContent = 'Check the boxes above and click "Preview Report" to see what will be included.';
+            document.querySelectorAll('#jeReportModal input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+            document.querySelector('input[name="jeReportType"][value="bug"]').checked = true;
+            document.getElementById('jeReportComponent').value = '';
+            document.getElementById('jeReportSteps').value = '';
+            document.getElementById('jeReportExpected').value = '';
+            document.getElementById('jeReportActual').value = '';
+            document.getElementById('jeBugDetailFields').style.display = 'block';
+            jeScreenshots = [];
+            renderScreenshots();
+            // Hide all peek panels
+            document.querySelectorAll('.je-diag-inline').forEach(function(d) { d.style.display = 'none'; });
+            document.querySelectorAll('.je-diag-peek').forEach(function(b) { b.textContent = '(peek)'; });
+            // Trigger initial live preview
+            setTimeout(scheduleLivePreview, 300);
+        });
+
+        // Close modal
+        function closeModal() { modal.style.display = 'none'; }
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.style.display !== 'none') closeModal(); });
+
+        // Success state after API submission
+        var successCountdownId = null;
+        function showSuccessState(issueUrl, issueNumber) {
+            document.getElementById('jeReportFieldset').style.display = 'none';
+            document.getElementById('jeDeviceFlowStatus').style.display = 'none';
+            var successDiv = document.getElementById('jeReportSuccess');
+            successDiv.style.display = 'block';
+            var linkEl = document.getElementById('jeReportSuccessLink');
+            linkEl.textContent = '';
+            var a = document.createElement('a');
+            a.href = issueUrl;
+            a.target = '_blank';
+            a.style.color = '#aaccff';
+            a.textContent = '#' + issueNumber + ' - View on GitHub';
+            linkEl.appendChild(a);
+            document.getElementById('jeReportSuccessCountdown').textContent = '';
+            document.getElementById('jeReportSuccessClose').onclick = closeModal;
+        }
+
+        // Cleanup success state on modal close
+        var origCloseModal = closeModal;
+        closeModal = function() {
+            if (successCountdownId) { clearInterval(successCountdownId); successCountdownId = null; }
+            if (deviceFlowPollTimer) { clearTimeout(deviceFlowPollTimer); deviceFlowPollTimer = null; }
+            pendingReportData = null;
+            document.getElementById('jeReportSuccess').style.display = 'none';
+            document.getElementById('jeDeviceFlowStatus').style.display = 'none';
+            document.getElementById('jeReportFieldset').style.display = '';
+            document.getElementById('jeReportFieldset').disabled = false;
+            origCloseModal();
+        };
+
+        // Duplicate check — searches existing issues when title is entered
+        var dupCheckTimer = null;
+        function checkDuplicates() {
+            var title = titleInput.value.trim();
+            var resultsDiv = document.getElementById('jeDuplicateResults');
+            var listEl = document.getElementById('jeDuplicateList');
+            if (title.length < 5) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/search-issues', { query: title }), dataType: 'json' }).then(function(data) {
+                if (data && data.results && data.results.length > 0) {
+                    listEl.textContent = '';
+                    for (var i = 0; i < data.results.length; i++) {
+                        var r = data.results[i];
+                        var li = document.createElement('li');
+                        li.style.marginBottom = '0.3em';
+                        var link = document.createElement('a');
+                        link.href = r.url;
+                        link.target = '_blank';
+                        link.style.color = '#aaccff';
+                        link.textContent = '#' + r.number;
+                        li.appendChild(link);
+                        li.appendChild(document.createTextNode(' ' + (r.title || '')));
+                        listEl.appendChild(li);
+                    }
+                    resultsDiv.style.display = 'block';
+                } else {
+                    resultsDiv.style.display = 'none';
+                }
+            }).catch(function() { resultsDiv.style.display = 'none'; });
+        }
+        titleInput.addEventListener('input', function() {
+            if (dupCheckTimer) clearTimeout(dupCheckTimer);
+            dupCheckTimer = setTimeout(checkDuplicates, 1000);
+        });
+
+        // Live preview — debounced auto-update on any form change
+        var livePreviewTimer = null;
+        var livePreviewCache = null;
+        var livePreviewCacheTime = 0;
+        function scheduleLivePreview() {
+            if (livePreviewTimer) clearTimeout(livePreviewTimer);
+            livePreviewTimer = setTimeout(function() {
+                var now = Date.now();
+                // Use cache if less than 3s old to avoid hammering APIs
+                if (livePreviewCache && (now - livePreviewCacheTime) < 3000) {
+                    previewEl.textContent = livePreviewCache;
+                    return;
+                }
+                updatePreview();
+            }, 400);
+        }
+        // Store preview in cache when updatePreview runs
+        var origUpdatePreview = updatePreview;
+        updatePreview = function() {
+            previewEl.textContent = 'Updating preview...';
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                var text = getIssueTitle() + '\n\n' + body;
+                previewEl.textContent = text;
+                livePreviewCache = text;
+                livePreviewCacheTime = Date.now();
+            }).catch(function(e) {
+                previewEl.textContent = 'Error: ' + (e.message || e);
+            });
+        };
+
+        // Attach live preview to all form inputs
+        titleInput.addEventListener('input', scheduleLivePreview);
+        descInput.addEventListener('input', scheduleLivePreview);
+        document.getElementById('jeReportSteps').addEventListener('input', scheduleLivePreview);
+        document.getElementById('jeReportExpected').addEventListener('input', scheduleLivePreview);
+        document.getElementById('jeReportActual').addEventListener('input', scheduleLivePreview);
+        document.getElementById('jeReportComponent').addEventListener('change', scheduleLivePreview);
+        // Screenshot management
+        var jeScreenshots = []; // Array of { title: string, dataUrl: string, fileName: string }
+        var screenshotFileInput = document.getElementById('jeScreenshotFileInput');
+        var screenshotListEl = document.getElementById('jeScreenshotList');
+
+        document.getElementById('jeAddScreenshotBtn').addEventListener('click', function() {
+            screenshotFileInput.click();
+        });
+
+        // Compress image via canvas — max 1280px wide, JPEG quality 0.7
+        // Keeps total base64 under ~40KB per image for GitHub body limit
+        function compressImage(file, callback) {
+            var img = new Image();
+            img.onload = function() {
+                var maxWidth = 1280;
+                var maxHeight = 960;
+                var w = img.width;
+                var h = img.height;
+                if (w > maxWidth || h > maxHeight) {
+                    var ratio = Math.min(maxWidth / w, maxHeight / h);
+                    w = Math.round(w * ratio);
+                    h = Math.round(h * ratio);
+                }
+                var canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                callback(dataUrl);
+            };
+            img.onerror = function() {
+                // Fallback to raw file if canvas fails
+                var reader = new FileReader();
+                reader.onload = function(e) { callback(e.target.result); };
+                reader.readAsDataURL(file);
+            };
+            var reader = new FileReader();
+            reader.onload = function(e) { img.src = e.target.result; };
+            reader.readAsDataURL(file);
+        }
+
+        screenshotFileInput.addEventListener('change', function() {
+            var files = screenshotFileInput.files;
+            for (var i = 0; i < files.length; i++) {
+                (function(file) {
+                    compressImage(file, function(dataUrl) {
+                        jeScreenshots.push({
+                            title: file.name.replace(/\.[^.]+$/, ''),
+                            dataUrl: dataUrl,
+                            fileName: file.name
+                        });
+                        renderScreenshots();
+                        scheduleLivePreview();
+                    });
+                })(files[i]);
+            }
+            screenshotFileInput.value = '';
+        });
+
+        function renderScreenshots() {
+            screenshotListEl.textContent = '';
+            for (var i = 0; i < jeScreenshots.length; i++) {
+                (function(idx) {
+                    var ss = jeScreenshots[idx];
+                    var row = document.createElement('div');
+                    row.style.cssText = 'display:flex; gap:0.5em; align-items:center; padding:0.5em; background:rgba(255,255,255,0.05); border-radius:4px;';
+
+                    var thumb = document.createElement('img');
+                    thumb.src = ss.dataUrl;
+                    thumb.style.cssText = 'width:60px; height:40px; object-fit:cover; border-radius:3px; border:1px solid rgba(255,255,255,0.15);';
+                    row.appendChild(thumb);
+
+                    var titleInput = document.createElement('input');
+                    titleInput.type = 'text';
+                    titleInput.value = ss.title;
+                    titleInput.placeholder = 'Screenshot title';
+                    titleInput.style.cssText = 'flex:1; padding:0.3em 0.5em; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:#eee; font-size:0.9em;';
+                    titleInput.addEventListener('input', function() {
+                        jeScreenshots[idx].title = this.value;
+                        scheduleLivePreview();
+                    });
+                    row.appendChild(titleInput);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.textContent = '\u00D7';
+                    removeBtn.style.cssText = 'background:none; border:none; color:#ff8888; font-size:1.3em; cursor:pointer; padding:0 0.3em;';
+                    removeBtn.addEventListener('click', function() {
+                        jeScreenshots.splice(idx, 1);
+                        renderScreenshots();
+                        scheduleLivePreview();
+                    });
+                    row.appendChild(removeBtn);
+
+                    screenshotListEl.appendChild(row);
+                })(i);
+            }
+        }
+
+        // Show/hide bug-specific fields based on report type
+        var bugDetailFields = document.getElementById('jeBugDetailFields');
+        function updateBugFieldsVisibility() {
+            var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
+            bugDetailFields.style.display = (type === 'bug') ? 'block' : 'none';
+            scheduleLivePreview();
+        }
+        document.querySelectorAll('input[name="jeReportType"]').forEach(function(r) { r.addEventListener('change', updateBugFieldsVisibility); });
+        document.querySelectorAll('#jeReportModal input[type="checkbox"]').forEach(function(cb) { cb.addEventListener('change', scheduleLivePreview); });
+        document.getElementById('jeLogTimeRange').addEventListener('change', scheduleLivePreview);
+
+        // Per-section peek buttons
+        document.querySelectorAll('.je-diag-peek').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var section = btn.getAttribute('data-section');
+                var peekDiv = document.getElementById('jePeek-' + section);
+                if (!peekDiv) return;
+                if (peekDiv.style.display === 'block') {
+                    peekDiv.style.display = 'none';
+                    btn.textContent = '(peek)';
+                    return;
+                }
+                peekDiv.textContent = 'Loading...';
+                peekDiv.style.display = 'block';
+                btn.textContent = '(hide)';
+
+                // Collect just this section's data
+                var sectionCollectors = {
+                    versions: function() {
+                        return Promise.all([
+                            ApiClient.getPublicSystemInfo().catch(function() { return {}; }),
+                            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/version'), dataType: 'text' }).catch(function() { return '?'; })
+                        ]).then(function(r) {
+                            return 'JE Version: ' + (r[1] || '?') + '\nJellyfin: ' + ((r[0] && r[0].Version) || '?') + '\nOS: ' + ((r[0] && r[0].OperatingSystem) || '?');
+                        });
+                    },
+                    device: function() {
+                        return Promise.resolve('OS: ' + detectOS() + '\nBrowser: ' + detectBrowser() + '\nScreen: ' + screen.width + 'x' + screen.height + '\nViewport: ' + window.innerWidth + 'x' + window.innerHeight + '\nTouch: ' + ('ontouchstart' in window) + '\nLanguage: ' + navigator.language);
+                    },
+                    config: function() {
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(c) {
+                            return JSON.stringify(sanitizeObject(c || {}), null, 2);
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    features: function() {
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }).then(function(c) {
+                            var feats = [];
+                            var fm = {ElsewhereEnabled:'Elsewhere',JellyseerrEnabled:'Jellyseerr',ArrLinksEnabled:'*arr Links',QualityTagsEnabled:'Quality Tags',GenreTagsEnabled:'Genre Tags',RatingTagsEnabled:'Rating Tags',PeopleTagsEnabled:'People Tags',ShowWatchProgress:'Watch Progress',RandomButtonEnabled:'Random Button',PauseScreenEnabled:'Pause Screen',ShowReviews:'Reviews'};
+                            for (var k in fm) { if (c && c[k]) feats.push(fm[k]); }
+                            return feats.length > 0 ? feats.join(', ') : '(none enabled)';
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    jeLogs: function() {
+                        var mins = parseInt(document.getElementById('jeLogTimeRange').value, 10) || 60;
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { minutes: mins }), dataType: 'json' }).then(function(d) {
+                            var log = (d && d.jeLogs) || '(empty)';
+                            return log.length > 500 ? log.substring(0, 500) + '\n... (' + log.split('\n').length + ' total lines)' : log;
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    jfLogs: function() {
+                        var mins = parseInt(document.getElementById('jeLogTimeRange').value, 10) || 60;
+                        return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/diagnostic-logs', { minutes: mins }), dataType: 'json' }).then(function(d) {
+                            var log = (d && d.jellyfinLogs) || '(empty)';
+                            return log.length > 500 ? log.substring(0, 500) + '\n... (' + log.split('\n').length + ' total lines)' : log;
+                        }).catch(function() { return '(could not load)'; });
+                    },
+                    console: function() {
+                        if (jeConsoleBuffer.length === 0) return Promise.resolve('(no console errors/warnings captured)');
+                        return Promise.resolve(jeConsoleBuffer.slice(-10).map(function(e) {
+                            return '[' + e.level.toUpperCase() + '] ' + e.message.substring(0, 120);
+                        }).join('\n') + (jeConsoleBuffer.length > 10 ? '\n... (' + jeConsoleBuffer.length + ' total)' : ''));
+                    }
+                };
+
+                var collector = sectionCollectors[section];
+                if (collector) {
+                    collector().then(function(text) { peekDiv.textContent = text; }).catch(function() { peekDiv.textContent = '(error)'; });
+                } else {
+                    peekDiv.textContent = '(unknown section)';
+                }
+            });
+        });
+
+        // Show/hide log time range dropdown when log checkboxes change
+        var logTimeContainer = document.getElementById('jeLogTimeRangeContainer');
+        var jeLogsCheck = document.getElementById('jeIncludeJeLogs');
+        var jfLogsCheck = document.getElementById('jeIncludeJfLogs');
+        function updateLogTimeVisibility() {
+            logTimeContainer.style.display = (jeLogsCheck.checked || jfLogsCheck.checked) ? 'block' : 'none';
+        }
+        jeLogsCheck.addEventListener('change', updateLogTimeVisibility);
+        jfLogsCheck.addEventListener('change', updateLogTimeVisibility);
+
+        submitBtn.textContent = 'Login & Submit to GitHub';
+
+        // Device Flow state
+        var deviceFlowPollTimer = null;
+        var pendingReportData = null; // { title, body, labels }
+
+        // Helper: POST to JE endpoint using fetch (ApiClient.ajax returns undefined for POST)
+        function jePost(path, data) {
+            return fetch(ApiClient.getUrl(path), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Emby-Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
+                },
+                body: JSON.stringify(data || {})
+            }).then(function(r) {
+                return r.json();
+            }).catch(function(e) {
+                throw e;
+            });
+        }
+
+        function startDeviceFlow(reportData) {
+            pendingReportData = reportData;
+            var statusDiv = document.getElementById('jeDeviceFlowStatus');
+            var codeDiv = document.getElementById('jeDeviceFlowCode');
+            var msgDiv = document.getElementById('jeDeviceFlowMsg');
+
+            submitBtn.textContent = 'Authenticating...';
+            statusDiv.style.display = 'block';
+            codeDiv.textContent = '...';
+            msgDiv.textContent = 'Starting GitHub login...';
+            msgDiv.style.color = '#999';
+
+            jePost('/JellyfinEnhanced/github-device/start').then(function(data) {
+                codeDiv.textContent = data.user_code;
+                msgDiv.textContent = 'Waiting for you to authorize...';
+                document.getElementById('jeDeviceFlowLink').href = data.verification_uri;
+                window.open(data.verification_uri, '_blank');
+
+                var pollInterval = (data.interval || 5) * 1000;
+                var deviceCode = data.device_code;
+
+                function schedulePoll() {
+                    deviceFlowPollTimer = setTimeout(function() {
+                        jePost('/JellyfinEnhanced/github-device/poll', { device_code: deviceCode }).then(function(poll) {
+                            if (poll.status === 'success' && poll.access_token) {
+                                deviceFlowPollTimer = null;
+                                msgDiv.textContent = 'Authorized! Creating issue...';
+                                submitIssueWithToken(poll.access_token);
+                            } else if (poll.status === 'expired_token') {
+                                deviceFlowPollTimer = null;
+                                msgDiv.textContent = 'Code expired. Please try again.';
+                                msgDiv.style.color = '#ff8888';
+                                resetSubmitButton();
+                            } else if (poll.status === 'slow_down') {
+                                pollInterval += 5000; // GitHub requires +5s on slow_down
+                                schedulePoll();
+                            } else {
+                                // authorization_pending — keep polling
+                                schedulePoll();
+                            }
+                        }).catch(function() { schedulePoll(); });
+                    }, pollInterval);
+                }
+                // Delay first poll 15s to give user time to authorize
+                deviceFlowPollTimer = setTimeout(schedulePoll, 15000);
+            }).catch(function() {
+                msgDiv.textContent = 'Failed to start GitHub login.';
+                msgDiv.style.color = '#ff8888';
+                resetSubmitButton();
+            });
+        }
+
+        function submitIssueWithToken(accessToken) {
+            var rd = pendingReportData;
+            if (!rd) return;
+            jePost('/JellyfinEnhanced/github-device/submit', {
+                access_token: accessToken, title: rd.title, body: rd.body, labels: rd.labels, jeLogs: rd.jeLogs || '', jfLogs: rd.jfLogs || '', screenshots: rd.screenshots || []
+            }).then(function(result) {
+                if (result && result.url) {
+                    document.getElementById('jeDeviceFlowStatus').style.display = 'none';
+                    showSuccessState(result.url, result.number);
+                }
+            }).catch(function(err) {
+                var msg = 'Failed to create issue.';
+                try { msg = JSON.parse(err.responseText || '{}').error || msg; } catch(e) {}
+                Dashboard.alert({ title: 'Submission Failed', message: msg });
+                document.getElementById('jeDeviceFlowStatus').style.display = 'none';
+                resetSubmitButton();
+            });
+            pendingReportData = null;
+        }
+
+        function resetSubmitButton() {
+            document.getElementById('jeReportFieldset').disabled = false;
+            submitBtn.textContent = 'Login & Submit to GitHub';
+            submitBtn.disabled = false;
+        }
+
+        // Submit to GitHub
+        submitBtn.addEventListener('click', function() {
+            var title = getIssueTitle();
+            if (!title) {
+                Dashboard.alert({ title: 'Missing Title', message: 'Please enter a title for the report.' });
+                return;
+            }
+
+            document.getElementById('jeReportFieldset').disabled = true;
+            submitBtn.textContent = 'Preparing...';
+            submitBtn.disabled = true;
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                var type = (document.querySelector('input[name="jeReportType"]:checked') || {}).value || 'bug';
+                var labels = type === 'performance' ? 'bug,performance' : (type === 'bug' ? 'bug' : 'enhancement');
+                var component = (document.getElementById('jeReportComponent') || {}).value;
+                if (component) labels = labels + ',' + component;
+
+                startDeviceFlow({ title: title, body: body, labels: labels, jeLogs: diagnostics.jeLogs || '', jfLogs: diagnostics.jellyfinLogs || '', screenshots: jeScreenshots });
+            }).catch(function(e) {
+                Dashboard.alert({ title: 'Error', message: 'Failed to prepare report: ' + (e.message || e) });
+                resetSubmitButton();
+            });
+        });
+
+
+        // Copy to clipboard
+        copyBtn.addEventListener('click', function() {
+            var title = getIssueTitle();
+            if (!title) {
+                Dashboard.alert({ title: 'Missing Title', message: 'Please enter a title for the report.' });
+                return;
+            }
+
+            document.getElementById('jeReportFieldset').disabled = true;
+            copyBtn.textContent = 'Copying...';
+            copyBtn.disabled = true;
+            collectDiagnostics().then(function(diagnostics) {
+                var body = buildReportBody(diagnostics);
+                var fullReport = '# ' + title + '\n\n' + body;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(fullReport);
+                } else {
+                    var textarea = document.createElement('textarea');
+                    textarea.value = fullReport;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    return Promise.resolve();
+                }
+            }).then(function() {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.style.color = '#4CAF50';
+                copyBtn.style.borderColor = '#4CAF50';
+                setTimeout(function() {
+                    copyBtn.textContent = 'Copy to Clipboard';
+                    copyBtn.style.color = '';
+                    copyBtn.style.borderColor = '';
+                    copyBtn.disabled = false;
+                }, 2000);
+            }).catch(function(e) {
+                Dashboard.alert({ title: 'Error', message: 'Failed to copy: ' + (e.message || e) });
+                copyBtn.textContent = 'Copy to Clipboard';
+                copyBtn.disabled = false;
+            }).finally(function() {
+                document.getElementById('jeReportFieldset').disabled = false;
+            });
+        });
     })();
 </script>
 </div>

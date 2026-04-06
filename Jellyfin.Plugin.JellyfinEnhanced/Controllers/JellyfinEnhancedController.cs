@@ -18,6 +18,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Querying;
+using MediaBrowser.Common.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
@@ -31,6 +32,7 @@ using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
+using Jellyfin.Plugin.JellyfinEnhanced.Diagnostics;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Database.Implementations;
 using Microsoft.EntityFrameworkCore;
@@ -116,6 +118,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             "apple-touch-icon.png"
         }, StringComparer.OrdinalIgnoreCase);
 
+        private readonly IApplicationPaths _appPaths;
+
         public JellyfinEnhancedController(
             IHttpClientFactory httpClientFactory,
             Logger logger,
@@ -126,7 +130,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             UserConfigurationManager userConfigurationManager,
             IItemRepository itemRepository,
             IDbContextFactory<JellyfinDbContext> dbContextFactory,
-            Services.TagCacheService tagCacheService)
+            Services.TagCacheService tagCacheService,
+            IApplicationPaths appPaths)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -138,6 +143,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _itemRepository = itemRepository;
             _dbContextFactory = dbContextFactory;
             _tagCacheService = tagCacheService;
+            _appPaths = appPaths;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId)
@@ -1786,6 +1792,742 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json));
             _cachedConfigHash = Convert.ToHexString(hashBytes);
             return Content(_cachedConfigHash);
+        }
+
+        /// <summary>
+        /// Uploads screenshots to a 'screenshots' branch in the repo via the Contents API.
+        /// Returns a list of (title, raw URL) pairs for embedding in the issue body.
+        /// </summary>
+        private async Task<List<(string title, string url)>> UploadScreenshots(
+            System.Net.Http.HttpClient client, string repo,
+            List<(string title, string dataUrl)> screenshots)
+        {
+            var results = new List<(string title, string url)>();
+            var branch = "screenshots";
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+
+            // Ensure the screenshots branch exists
+            await EnsureBranchExists(client, repo, branch);
+
+            for (int i = 0; i < screenshots.Count; i++)
+            {
+                try
+                {
+                    var ss = screenshots[i];
+                    // Extract base64 content from data URL (strip "data:image/png;base64," prefix)
+                    var base64Data = ss.dataUrl;
+                    var commaIdx = base64Data.IndexOf(',');
+                    if (commaIdx >= 0) base64Data = base64Data.Substring(commaIdx + 1);
+
+                    // Determine file extension from data URL
+                    var ext = "jpg";
+                    if (ss.dataUrl.Contains("image/png")) ext = "png";
+                    else if (ss.dataUrl.Contains("image/gif")) ext = "gif";
+                    else if (ss.dataUrl.Contains("image/webp")) ext = "webp";
+
+                    var safeName = System.Text.RegularExpressions.Regex.Replace(
+                        ss.title ?? "screenshot", @"[^a-zA-Z0-9_-]", "_");
+                    var path = timestamp + "/" + safeName + "-" + (i + 1) + "." + ext;
+
+                    var uploadPayload = new Dictionary<string, object>
+                    {
+                        { "message", "Screenshot: " + (ss.title ?? "screenshot") },
+                        { "content", base64Data },
+                        { "branch", branch }
+                    };
+
+                    var json = JsonSerializer.Serialize(uploadPayload);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = await client.PutAsync(
+                        "https://api.github.com/repos/" + repo + "/contents/" + path, content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var rawUrl = "https://raw.githubusercontent.com/" + repo + "/" + branch + "/" + path;
+                        results.Add((ss.title ?? "Screenshot " + (i + 1), rawUrl));
+                        _logger.Info("Uploaded screenshot: " + rawUrl);
+                    }
+                    else
+                    {
+                        var err = await response.Content.ReadAsStringAsync();
+                        _logger.Warning("Screenshot upload failed: " + response.StatusCode + " " + err);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning("Screenshot upload error: " + ex.Message);
+                }
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// Ensures the 'screenshots' orphan branch exists in the repo.
+        /// Creates it with an empty README if it doesn't exist.
+        /// </summary>
+        private async Task EnsureBranchExists(System.Net.Http.HttpClient client, string repo, string branch)
+        {
+            try
+            {
+                // Check if branch exists
+                var checkResponse = await client.GetAsync(
+                    "https://api.github.com/repos/" + repo + "/branches/" + branch);
+                if (checkResponse.IsSuccessStatusCode) return; // branch exists
+
+                // Get the default branch's latest commit SHA to use as base
+                var repoResponse = await client.GetAsync("https://api.github.com/repos/" + repo);
+                if (!repoResponse.IsSuccessStatusCode) return;
+                var repoBody = await repoResponse.Content.ReadAsStringAsync();
+                using var repoDoc = JsonDocument.Parse(repoBody);
+                var defaultBranch = repoDoc.RootElement.GetProperty("default_branch").GetString() ?? "main";
+
+                var refResponse = await client.GetAsync(
+                    "https://api.github.com/repos/" + repo + "/git/ref/heads/" + defaultBranch);
+                if (!refResponse.IsSuccessStatusCode) return;
+                var refBody = await refResponse.Content.ReadAsStringAsync();
+                using var refDoc = JsonDocument.Parse(refBody);
+                var sha = refDoc.RootElement.GetProperty("object").GetProperty("sha").GetString();
+
+                // Create the branch
+                var createPayload = JsonSerializer.Serialize(new
+                {
+                    @ref = "refs/heads/" + branch,
+                    sha
+                });
+                var createContent = new StringContent(createPayload, Encoding.UTF8, "application/json");
+                await client.PostAsync("https://api.github.com/repos/" + repo + "/git/refs", createContent);
+                _logger.Info("Created screenshots branch in " + repo);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Failed to ensure screenshots branch: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Uploads logs as a GitHub Gist and returns the URL.
+        /// </summary>
+        private async Task<string?> CreateLogsGist(System.Net.Http.HttpClient client, string title,
+            string? jeLogs, string? jfLogs)
+        {
+            if (string.IsNullOrWhiteSpace(jeLogs) && string.IsNullOrWhiteSpace(jfLogs)) return null;
+
+            try
+            {
+                var files = new Dictionary<string, object>();
+                if (!string.IsNullOrWhiteSpace(jeLogs))
+                    files["je-plugin-logs.txt"] = new { content = jeLogs };
+                if (!string.IsNullOrWhiteSpace(jfLogs))
+                    files["jellyfin-server-logs.txt"] = new { content = jfLogs };
+
+                var description = "JE Issue Reporter Logs: " + title;
+                var gistPayload = new Dictionary<string, object>
+                {
+                    { "description", description },
+                    { "public", false },
+                    { "files", files }
+                };
+
+                var json = JsonSerializer.Serialize(gistPayload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("https://api.github.com/gists", content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    using var doc = JsonDocument.Parse(responseBody);
+                    var gistUrl = doc.RootElement.TryGetProperty("html_url", out var u) ? u.GetString() : null;
+                    _logger.Info("Created logs Gist: " + gistUrl);
+                    return gistUrl;
+                }
+                _logger.Warning("Failed to create Gist: " + response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning("Gist creation error: " + ex.Message);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Creates a GitHub issue + optional logs Gist using the provided auth token.
+        /// </summary>
+        private async Task<(string? url, int number, string? error)> CreateGitHubIssue(
+            string token, string repo, string title, string? issueBody,
+            string? labels, string? jeLogs, string? jfLogs,
+            List<(string title, string dataUrl)>? screenshots = null)
+        {
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
+            client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
+            client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+            // Upload logs as Gist (screenshots go inline in issue body instead)
+            var gistUrl = await CreateLogsGist(client, title, jeLogs, jfLogs);
+            if (gistUrl != null && !string.IsNullOrEmpty(issueBody))
+            {
+                issueBody += "\n\n### Logs\n[View full logs on GitHub Gist](" + gistUrl + ")";
+            }
+
+            // Upload screenshots to repo's 'screenshots' branch via Contents API
+            if (screenshots != null && screenshots.Count > 0 && !string.IsNullOrEmpty(issueBody))
+            {
+                var imageUrls = await UploadScreenshots(client, repo, screenshots);
+                if (imageUrls.Count > 0)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("\n\n### Screenshots");
+                    for (int i = 0; i < imageUrls.Count; i++)
+                    {
+                        sb.AppendLine("**" + imageUrls[i].title + "**");
+                        sb.AppendLine("![" + imageUrls[i].title + "](" + imageUrls[i].url + ")");
+                        sb.AppendLine();
+                    }
+                    issueBody += sb.ToString();
+                }
+            }
+
+            // Truncate body if still too long (shouldn't happen without inline logs)
+            if (!string.IsNullOrEmpty(issueBody) && issueBody.Length > 64000)
+            {
+                issueBody = issueBody.Substring(0, 64000) + "\n\n---\n_Report truncated_";
+            }
+
+            var payload = new Dictionary<string, object> { { "title", title } };
+            if (!string.IsNullOrWhiteSpace(issueBody)) payload["body"] = issueBody;
+            if (!string.IsNullOrWhiteSpace(labels))
+                payload["labels"] = labels.Split(',').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("https://api.github.com/repos/" + repo.Trim() + "/issues", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.Error("GitHub issue creation failed: " + response.StatusCode + " " + responseBody);
+                return (null, 0, "GitHub API error: " + response.StatusCode);
+            }
+
+            using var doc = JsonDocument.Parse(responseBody);
+            var issueUrl = doc.RootElement.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;
+            var issueNumber = doc.RootElement.TryGetProperty("number", out var numProp) ? numProp.GetInt32() : 0;
+            _logger.Info("GitHub issue created: #" + issueNumber + " " + issueUrl);
+            return (issueUrl, issueNumber, null);
+        }
+
+        // GitHub Device Flow OAuth
+        private const string GitHubDeviceFlowClientId = "Ov23likf6n8R5TydNYei";
+
+        /// <summary>
+        /// Starts the GitHub Device Flow. Returns a user_code and verification_uri for the user.
+        /// </summary>
+        [HttpPost("github-device/start")]
+        [Authorize]
+        public async Task<ActionResult> StartGitHubDeviceFlow()
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("client_id", GitHubDeviceFlowClientId),
+                    new KeyValuePair<string, string>("scope", "public_repo gist")
+                });
+
+                var response = await client.PostAsync("https://github.com/login/device/code", content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Error("GitHub device flow start failed: " + responseBody);
+                    return StatusCode((int)response.StatusCode, new { error = "Failed to start device flow" });
+                }
+
+                using var doc = JsonDocument.Parse(responseBody);
+                return new JsonResult(new
+                {
+                    device_code = doc.RootElement.GetProperty("device_code").GetString(),
+                    user_code = doc.RootElement.GetProperty("user_code").GetString(),
+                    verification_uri = doc.RootElement.GetProperty("verification_uri").GetString(),
+                    expires_in = doc.RootElement.GetProperty("expires_in").GetInt32(),
+                    interval = doc.RootElement.GetProperty("interval").GetInt32()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("GitHub device flow start error: " + ex.Message);
+                return StatusCode(500, new { error = "Device flow error: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Polls GitHub to check if the user has completed the Device Flow authorization.
+        /// Returns the access_token on success, or a status indicating to keep polling.
+        /// </summary>
+        [HttpPost("github-device/poll")]
+        [Authorize]
+        public async Task<ActionResult> PollGitHubDeviceFlow([FromBody] JsonElement body)
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            var deviceCode = body.TryGetProperty("device_code", out var dc) ? dc.GetString() : null;
+            if (string.IsNullOrWhiteSpace(deviceCode))
+                return BadRequest(new { error = "device_code required" });
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("client_id", GitHubDeviceFlowClientId),
+                    new KeyValuePair<string, string>("device_code", deviceCode),
+                    new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
+                });
+
+                var response = await client.PostAsync("https://github.com/login/oauth/access_token", content);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                using var doc = JsonDocument.Parse(responseBody);
+
+                // Check for error (authorization_pending, slow_down, expired_token, etc.)
+                if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                {
+                    var error = errorProp.GetString();
+                    return new JsonResult(new { status = error }); // "authorization_pending", "slow_down", etc.
+                }
+
+                // Success — got access token
+                if (doc.RootElement.TryGetProperty("access_token", out var tokenProp))
+                {
+                    return new JsonResult(new { status = "success", access_token = tokenProp.GetString() });
+                }
+
+                return new JsonResult(new { status = "unknown" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Poll error: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Creates a GitHub issue using a Device Flow access token (ephemeral, not stored).
+        /// </summary>
+        [HttpPost("github-device/submit")]
+        [Authorize]
+        public async Task<ActionResult> SubmitWithDeviceToken([FromBody] JsonElement body)
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            var accessToken = body.TryGetProperty("access_token", out var at) ? at.GetString() : null;
+            var title = body.TryGetProperty("title", out var t) ? t.GetString() : null;
+            var issueBody = body.TryGetProperty("body", out var b) ? b.GetString() : null;
+            var labels = body.TryGetProperty("labels", out var l) ? l.GetString() : null;
+            var repo = body.TryGetProperty("repo", out var r) ? r.GetString() : null;
+            var jeLogs = body.TryGetProperty("jeLogs", out var jl) ? jl.GetString() : null;
+            var jfLogs = body.TryGetProperty("jfLogs", out var jfl) ? jfl.GetString() : null;
+
+            // Parse screenshots array
+            List<(string title, string dataUrl)>? screenshots = null;
+            if (body.TryGetProperty("screenshots", out var ssArr) && ssArr.ValueKind == JsonValueKind.Array)
+            {
+                screenshots = new List<(string, string)>();
+                foreach (var ss in ssArr.EnumerateArray())
+                {
+                    var ssTitle = ss.TryGetProperty("title", out var st) ? st.GetString() ?? "" : "";
+                    var ssData = ss.TryGetProperty("dataUrl", out var sd) ? sd.GetString() ?? "" : "";
+                    if (!string.IsNullOrEmpty(ssData))
+                        screenshots.Add((ssTitle, ssData));
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+                return BadRequest(new { error = "access_token required" });
+            if (string.IsNullOrWhiteSpace(title))
+                return BadRequest(new { error = "title required" });
+
+            if (string.IsNullOrWhiteSpace(repo))
+                repo = JellyfinEnhanced.Instance?.Configuration?.GitHubIssueRepo ?? "4eh5xitv6787h645ebv/Jellyfin-Enhanced";
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(repo.Trim(), @"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$"))
+                return BadRequest(new { error = "Invalid repository format" });
+
+            try
+            {
+                var (url, number, error) = await CreateGitHubIssue(
+                    accessToken.Trim(), repo.Trim(), title, issueBody, labels, jeLogs, jfLogs, screenshots);
+                if (error != null)
+                    return StatusCode(422, new { error });
+                return new JsonResult(new { url, number });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("GitHub device flow submit error: " + ex.Message);
+                return StatusCode(500, new { error = "Failed to create issue: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Returns diagnostic data from all registered diagnostic sections.
+        /// Each section provides a lightweight, config-only snapshot. Admin-only.
+        /// </summary>
+        [HttpGet("diagnostic-sections")]
+        [Authorize]
+        public async Task<ActionResult> GetDiagnosticSections()
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            var sections = DiagnosticRegistry.Instance.GetSections();
+            var results = new Dictionary<string, object>();
+
+            foreach (var section in sections)
+            {
+                try
+                {
+                    results[section.SectionId] = await section.CollectAsync();
+                }
+                catch (Exception ex)
+                {
+                    results[section.SectionId] = new { error = ex.Message };
+                }
+            }
+
+            return new JsonResult(new { sections = results });
+        }
+
+        /// <summary>
+        /// Searches GitHub issues for duplicates. Admin-only.
+        /// </summary>
+        [HttpGet("search-issues")]
+        [Authorize]
+        public async Task<ActionResult> SearchGitHubIssues([FromQuery] string query)
+        {
+            if (!IsAdminUser()) return Forbid();
+
+            var repo = JellyfinEnhanced.Instance?.Configuration?.GitHubIssueRepo?.Trim();
+            if (string.IsNullOrWhiteSpace(repo))
+                return new JsonResult(new { results = Array.Empty<object>() });
+
+            query = (query ?? "").Trim();
+            if (query.Length < 3)
+                return new JsonResult(new { results = Array.Empty<object>() });
+            if (query.Length > 128)
+                query = query.Substring(0, 128);
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("User-Agent", "JellyfinEnhanced-IssueReporter");
+                client.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+                var searchQuery = Uri.EscapeDataString(query + " repo:" + repo + " is:issue is:open");
+                var response = await client.GetAsync("https://api.github.com/search/issues?q=" + searchQuery + "&per_page=5");
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return new JsonResult(new { results = Array.Empty<object>() });
+
+                using var doc = JsonDocument.Parse(responseBody);
+                var items = doc.RootElement.GetProperty("items");
+                var results = new List<object>();
+                foreach (var item in items.EnumerateArray())
+                {
+                    results.Add(new
+                    {
+                        number = item.GetProperty("number").GetInt32(),
+                        title = item.GetProperty("title").GetString(),
+                        url = item.GetProperty("html_url").GetString()
+                    });
+                }
+                return new JsonResult(new { results });
+            }
+            catch
+            {
+                return new JsonResult(new { results = Array.Empty<object>() });
+            }
+        }
+
+        /// <summary>
+        /// Returns recent log entries for the issue reporter. Admin-only.
+        /// Sanitizes sensitive data (IPs, URLs, API keys, tokens) before returning.
+        /// </summary>
+        [HttpGet("diagnostic-logs")]
+        [Authorize]
+        public ActionResult GetDiagnosticLogs([FromQuery] int minutes = 5)
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            // Allowed values: 5, 30, 60, 1440 (1 day), 10080 (1 week)
+            minutes = Math.Clamp(minutes, 1, 10080);
+            var cutoff = DateTime.Now.AddMinutes(-minutes);
+            const int maxLines = int.MaxValue;
+
+            try
+            {
+                // Read JE plugin logs — may span multiple daily files
+                var logDir = _appPaths.LogDirectoryPath;
+                var jeLogs = ReadJeLogsSince(logDir, cutoff, maxLines);
+                var jellyfinLogs = "";
+
+                // Read Jellyfin main logs — check recent log_ files
+                if (Directory.Exists(logDir))
+                {
+                    var logFiles = Directory.GetFiles(logDir, "log_*.log")
+                        .Select(f => new FileInfo(f))
+                        .Where(f => f.LastWriteTime >= cutoff)
+                        .OrderBy(f => f.LastWriteTime)
+                        .ToList();
+                    if (logFiles.Count == 0)
+                    {
+                        // Fallback to most recent file
+                        var latest = Directory.GetFiles(logDir, "log_*.log")
+                            .Select(f => new FileInfo(f))
+                            .OrderByDescending(f => f.LastWriteTime)
+                            .FirstOrDefault();
+                        if (latest != null) logFiles.Add(latest);
+                    }
+
+                    var jfLines = new System.Collections.Generic.List<string>();
+                    foreach (var logFile in logFiles)
+                    {
+                        ReadLinesSince(logFile.FullName, cutoff, @"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", jfLines, maxLines);
+                        if (jfLines.Count >= maxLines) break;
+                    }
+                    jellyfinLogs = string.Join("\n", jfLines);
+                }
+
+                // Build GUID→username map for consistent anonymization
+                var guidMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                try
+                {
+                    var users = _userManager.Users;
+                    foreach (var u in users)
+                    {
+                        var id = u.Id.ToString();
+                        var name = u.Username;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            guidMap[id] = name;
+                            guidMap[id.Replace("-", "")] = name;
+                        }
+                    }
+                }
+                catch { /* non-critical */ }
+
+                return new JsonResult(new
+                {
+                    jeLogs = SanitizeLogOutput(jeLogs, guidMap),
+                    jellyfinLogs = SanitizeLogOutput(jellyfinLogs, guidMap)
+                });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new
+                {
+                    jeLogs = "Error reading JE logs: " + ex.Message,
+                    jellyfinLogs = "Error reading Jellyfin logs"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Reads JE plugin log files (daily rotation) since the cutoff time.
+        /// </summary>
+        private static string ReadJeLogsSince(string logDir, DateTime cutoff, int maxLines)
+        {
+            if (!Directory.Exists(logDir)) return "(log directory not found)";
+
+            // JE logs are named JellyfinEnhanced_YYYY-MM-DD.log
+            var jeFiles = Directory.GetFiles(logDir, "JellyfinEnhanced_*.log")
+                .Select(f => new FileInfo(f))
+                .Where(f => f.LastWriteTime >= cutoff)
+                .OrderBy(f => f.Name)
+                .ToList();
+
+            if (jeFiles.Count == 0)
+            {
+                // Fallback to today's file
+                var todayFile = Path.Combine(logDir, $"JellyfinEnhanced_{DateTime.Now:yyyy-MM-dd}.log");
+                if (System.IO.File.Exists(todayFile)) jeFiles.Add(new FileInfo(todayFile));
+                else return "(no JE log files found)";
+            }
+
+            var lines = new System.Collections.Generic.List<string>();
+            // JE log timestamp format: [YYYY-MM-DD HH:mm:ss]
+            foreach (var file in jeFiles)
+            {
+                ReadLinesSince(file.FullName, cutoff, @"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]", lines, maxLines);
+                if (lines.Count >= maxLines) break;
+            }
+
+            return lines.Count > 0 ? string.Join("\n", lines) : "(no log entries in selected time range)";
+        }
+
+        /// <summary>
+        /// Reads lines from a log file that have timestamps after the cutoff.
+        /// Lines without a parseable timestamp are included if the previous line was after cutoff.
+        /// </summary>
+        private static void ReadLinesSince(string filePath, DateTime cutoff, string timestampPattern, System.Collections.Generic.List<string> output, int maxLines)
+        {
+            if (!System.IO.File.Exists(filePath)) return;
+            try
+            {
+                var regex = new System.Text.RegularExpressions.Regex(timestampPattern);
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(fs);
+                bool lastLineMatched = false;
+                string? line;
+                while ((line = reader.ReadLine()) != null && output.Count < maxLines)
+                {
+                    var match = regex.Match(line);
+                    if (match.Success && DateTime.TryParse(match.Groups[1].Value, out var ts))
+                    {
+                        if (ts >= cutoff)
+                        {
+                            output.Add(line);
+                            lastLineMatched = true;
+                        }
+                        else
+                        {
+                            lastLineMatched = false;
+                        }
+                    }
+                    else if (lastLineMatched)
+                    {
+                        // Continuation line (stack trace, multi-line message)
+                        output.Add(line);
+                    }
+                }
+            }
+            catch { /* skip unreadable files */ }
+        }
+
+        private static bool IsPrivateIp(string ip)
+        {
+            var parts = ip.Split('.');
+            if (parts.Length != 4) return false;
+            if (!int.TryParse(parts[0], out var a) || !int.TryParse(parts[1], out var b)) return false;
+            return a == 10                              // 10.0.0.0/8
+                || (a == 172 && b >= 16 && b <= 31)     // 172.16.0.0/12
+                || (a == 192 && b == 168)                // 192.168.0.0/16
+                || a == 127                              // 127.0.0.0/8 loopback
+                || (a == 169 && b == 254);               // 169.254.0.0/16 link-local
+        }
+
+        private static bool IsLocalHost(string host)
+        {
+            if (string.IsNullOrEmpty(host)) return false;
+            var h = host.Split(':')[0].ToLowerInvariant();
+            if (h == "localhost") return true;
+            if (System.Text.RegularExpressions.Regex.IsMatch(h, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$") && IsPrivateIp(h)) return true;
+            if (h.EndsWith(".local") || h.EndsWith(".lan") || h.EndsWith(".home")
+                || h.EndsWith(".internal") || h.EndsWith(".intranet") || h.EndsWith(".localdomain")
+                || h.EndsWith(".test")) return true;
+            if (!h.Contains('.')) return true; // single-word hostname = local
+            return false;
+        }
+
+        /// <summary>
+        /// Sanitizes log output, anonymizing usernames/GUIDs and redacting sensitive data.
+        /// </summary>
+        /// <param name="text">Raw log text.</param>
+        /// <param name="guidToUsername">Optional GUID→username mapping for consistent anonymization.</param>
+        private static string SanitizeLogOutput(string text, Dictionary<string, string>? guidToUsername = null)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            // Build anonymous user mapping for consistent anonymization
+            var userMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            int userCounter = 0;
+
+            string AnonymizeUser(string realName)
+            {
+                var key = realName.Trim();
+                if (string.IsNullOrEmpty(key)) return key;
+                // If this is a GUID, resolve to username first for consistent mapping
+                if (guidToUsername != null)
+                {
+                    var normalized = key.Replace("-", "");
+                    foreach (var kvp in guidToUsername)
+                    {
+                        if (kvp.Key.Equals(key, StringComparison.OrdinalIgnoreCase)
+                            || kvp.Key.Replace("-", "").Equals(normalized, StringComparison.OrdinalIgnoreCase))
+                        {
+                            key = kvp.Value; // resolve GUID to username
+                            break;
+                        }
+                    }
+                }
+                if (!userMap.TryGetValue(key, out var anon))
+                {
+                    userCounter++;
+                    anon = "User-" + userCounter;
+                    userMap[key] = anon;
+                }
+                return anon;
+            }
+
+            // Anonymize Jellyfin usernames (preserves relationships: same name → same User-N)
+            // Matches: "user: Name", "for user: Name", "user Name", "by Name," (after started/requested)
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"((?:user|User)[: ]+)([A-Za-z][A-Za-z0-9 _.-]{1,}?)(?=[\r\n:,""'()\[\]]|$)",
+                m => m.Groups[1].Value + AnonymizeUser(m.Groups[2].Value));
+            // "started by X", "for X" at end of line, and similar patterns in JE logs
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"((?:started by|requested by|Requested .+ for|watchlist for|Added .+ for) )([A-Za-z][A-Za-z0-9 _.-]{1,}?)(?=[\r\n,""'()\[\]]|$)",
+                m => m.Groups[1].Value + AnonymizeUser(m.Groups[2].Value));
+
+            // Anonymize Jellyfin user GUIDs (8-4-4-4-12 format) — only in user-related contexts
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"((?:user|User|userId|user-settings/)[\s/:]+)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b",
+                m => m.Groups[1].Value + AnonymizeUser(m.Groups[2].Value));
+
+            // Anonymize 32-char hex GUIDs in user paths
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"(?<=/user-settings/|user[ /])([0-9a-f]{32})\b",
+                m => AnonymizeUser(m.Groups[1].Value));
+
+            // Redact URLs — keep local/private hostnames, redact public ones
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"(https?://|wss?://|ftp://)([^\s/""']+)(:\d+)?",
+                m => {
+                    var host = m.Groups[2].Value;
+                    if (IsLocalHost(host)) return m.Value;
+                    return m.Groups[1].Value + "[HOST_REDACTED]" + (m.Groups[3].Success ? m.Groups[3].Value : "");
+                });
+            // Redact API key/token query params
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"([?&](?:api_?key|apikey|key|token|access_token|auth|password|secret)=)[^&\s""']+",
+                "$1[REDACTED]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            // Redact Bearer/Basic tokens
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"((?:Bearer|Basic|Token)\s+)[^\s""']+", "$1[REDACTED]",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            // Redact public IPv4 addresses, keep private/local
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?\b",
+                m => {
+                    var ip = m.Groups[1].Value;
+                    if (IsPrivateIp(ip)) return m.Value;
+                    return "[IP_REDACTED]" + (m.Groups[2].Success ? m.Groups[2].Value : "");
+                });
+            // Redact email addresses
+            text = System.Text.RegularExpressions.Regex.Replace(text,
+                @"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", "[EMAIL_REDACTED]");
+            return text;
         }
 
         [HttpGet("private-config")]

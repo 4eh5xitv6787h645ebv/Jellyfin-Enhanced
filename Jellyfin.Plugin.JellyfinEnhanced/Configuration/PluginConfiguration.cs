@@ -213,6 +213,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
             // Spoiler Mode Settings
             SpoilerModeEnabled = true;
+
+            // GitHub Issue Reporter Settings
+            GitHubIssueRepo = "4eh5xitv6787h645ebv/Jellyfin-Enhanced";
         }
 
         // Jellyfin Enhanced Settings
@@ -403,5 +406,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
         // Spoiler Mode Settings
         public bool SpoilerModeEnabled { get; set; }
+
+        // GitHub Issue Reporter Settings
+        public string GitHubIssueRepo { get; set; }
     }
 }
