@@ -297,7 +297,6 @@
         cleanup();
     }
 
-    window.addEventListener('beforeunload', cleanup);
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeColoredRatings = initialize;
         // Expose pause/resume functions for pausescreen.js to control

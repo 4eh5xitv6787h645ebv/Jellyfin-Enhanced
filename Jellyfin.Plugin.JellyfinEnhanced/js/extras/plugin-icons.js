@@ -365,7 +365,6 @@
 
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializePluginIcons = initialize;
-        window.JellyfinEnhanced.stopPluginIconsMonitoring = stopMonitoring;
 
         // Expose API for refreshing custom plugins
         window.JellyfinEnhanced.customPlugins = {

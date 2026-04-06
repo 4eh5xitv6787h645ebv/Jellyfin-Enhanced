@@ -338,22 +338,6 @@
                 attributeFilter: ['class']
             });
 
-            // Store observer reference for potential cleanup
-            JE._arrLinksObserver = observer;
-
-            // Listen for configuration changes
-            window.addEventListener('JE:configUpdated', () => {
-                const isEnabled = JE?.pluginConfig?.ArrLinksEnabled;
-
-                if (!isEnabled) {
-                    // Disable: disconnect observer
-                    if (observer) {
-                        observer.disconnect();
-                        console.log(`${logPrefix} Observer disconnected - feature disabled via config update`);
-                    }
-                }
-            });
-
             console.log(`${logPrefix} Initialized successfully`);
         } catch (err) {
             console.error(`${logPrefix} Failed to initialize`, err);

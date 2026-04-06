@@ -460,7 +460,6 @@
 
     if (window.JellyfinEnhanced) {
         window.JellyfinEnhanced.initializeActivityIcons = initialize;
-        window.JellyfinEnhanced.stopActivityIconsMonitoring = stopMonitoring;
     }
 
     // Register with module lifecycle system
