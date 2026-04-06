@@ -2463,6 +2463,71 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
+        [HttpGet("user-settings/{userId}/spoiler-mode.json")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult GetUserSpoilerMode(string userId)
+        {
+            if (!IsCurrentUserRequest(userId))
+            {
+                return Forbid();
+            }
+
+            var userConfig = _userConfigurationManager.GetUserConfiguration<UserSpoilerMode>(userId, "spoiler-mode.json");
+            return Ok(userConfig);
+        }
+
+        [HttpPost("user-settings/{userId}/spoiler-mode.json")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult SaveUserSpoilerMode(string userId, [FromBody] JsonElement userConfiguration)
+        {
+            if (!IsCurrentUserRequest(userId))
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                _userConfigurationManager.SaveUserConfiguration(userId, "spoiler-mode.json", userConfiguration);
+                _logger.Info("Saved spoiler mode settings for user to spoiler-mode.json");
+                return Ok(new { success = true, file = "spoiler-mode.json" });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to save spoiler mode settings: " + ex.Message);
+                return StatusCode(500, new { success = false, message = "Failed to save spoiler mode settings." });
+            }
+        }
+
+        private bool IsCurrentUserRequest(string requestedUserId)
+        {
+            var currentUserId = UserHelper.GetCurrentUserId(User);
+            if (string.IsNullOrWhiteSpace(requestedUserId))
+            {
+                return false;
+            }
+
+            // Some API-key based contexts may not include user claims; keep compatibility.
+            if (currentUserId == null)
+            {
+                return true;
+            }
+
+            // Support both hyphenated and compact user-id formats.
+            var normalizedRequested = requestedUserId.Replace("-", string.Empty, StringComparison.Ordinal)
+                .Trim()
+                .ToLowerInvariant();
+            var normalizedCurrent = currentUserId.Value.ToString("N").ToLowerInvariant();
+            if (string.Equals(normalizedRequested, normalizedCurrent, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            // Allow administrators to access other users' hidden-content config when needed.
+            return User.IsInRole("Administrator");
+        }
+
         [HttpPost("reset-all-users-settings")]
         [Authorize]
         public IActionResult ResetAllUsersSettings()
