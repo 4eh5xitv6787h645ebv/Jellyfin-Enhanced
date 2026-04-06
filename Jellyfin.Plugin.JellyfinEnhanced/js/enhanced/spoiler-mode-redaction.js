@@ -46,7 +46,7 @@ body.je-spoiler-active .listItem[data-id]:not([' + SCANNED_ATTR + ']) .listItemB
   visibility: hidden;\n\
 }\n\
 \n\
-/* ===== Detail page pre-hide: avoid overview flash before async redaction ===== */\n\
+/* ===== Detail page pre-hide: avoid content flash before async redaction ===== */\n\
 body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .overview,\n\
 body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .itemOverview {\n\
   visibility: hidden;\n\
@@ -54,6 +54,20 @@ body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not
 body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .overview.' + OVERVIEW_REVEALED_CLASS + ',\n\
 body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .itemOverview.' + OVERVIEW_REVEALED_CLASS + ' {\n\
   visibility: visible;\n\
+}\n\
+body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .itemName {\n\
+  visibility: hidden;\n\
+}\n\
+body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .detailImageContainer .cardImageContainer {\n\
+  filter: blur(' + BLUR_RADIUS + ');\n\
+  transform: scale(1.05);\n\
+  overflow: hidden;\n\
+}\n\
+body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .mediaInfoContent,\n\
+body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .itemGenres,\n\
+body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .itemExternalLinks,\n\
+body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not(.hide) .itemMiscInfo {\n\
+  visibility: hidden;\n\
 }\n\
 \n\
 /* ===== Spoiler blur: applied to confirmed-spoiler cards ===== */\n\
@@ -554,11 +568,12 @@ body.je-spoiler-active.' + DETAIL_OVERVIEW_PENDING_CLASS + ' #itemDetailPage:not
             hideCard(card);
         }
 
-        // Click on image area or badge reveals the card
+        // Click on image area or badge reveals the card (only when actively blurred, not during reveal)
         if (imageArea) {
             imageArea.style.cursor = 'pointer';
             imageArea.addEventListener('click', function (e) {
-                if (cardBox.classList.contains('je-spoiler-blur') || cardBox.classList.contains('je-spoiler-generic')) {
+                if ((cardBox.classList.contains('je-spoiler-blur') || cardBox.classList.contains('je-spoiler-generic'))
+                    && !cardBox.classList.contains('je-spoiler-revealing')) {
                     e.preventDefault();
                     e.stopPropagation();
                     doReveal();

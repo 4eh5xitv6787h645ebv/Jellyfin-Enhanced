@@ -454,15 +454,15 @@
      */
     async function handleDetailPageMutation() {
         var settings = core.getSettings();
-        if (settings.enabled === false) return;
-        if (core.protectedIdSet.size === 0) return;
+        if (settings.enabled === false) { core.setDetailOverviewPending(false); return; }
+        if (core.protectedIdSet.size === 0) { core.setDetailOverviewPending(false); return; }
         if (core.detailPageProcessing) return;
 
         var hash = window.location.hash || '';
         var params = new URLSearchParams(hash.split('?')[1]);
         var detailItemId = params.get('id') || '';
 
-        if (!detailItemId || !core.isValidId(detailItemId)) return;
+        if (!detailItemId || !core.isValidId(detailItemId)) { core.setDetailOverviewPending(false); return; }
 
         // Avoid redundant processing for the same item
         if (core.lastDetailPageItemId === detailItemId) return;
@@ -473,6 +473,7 @@
             var visiblePage = document.querySelector('#itemDetailPage:not(.hide)');
             if (!visiblePage) {
                 core.detailPageProcessing = false;
+                core.setDetailOverviewPending(false);
                 return;
             }
 
@@ -481,13 +482,6 @@
             var allPageCards = visiblePage.querySelectorAll(core.CARD_SEL);
             for (var pc = 0; pc < allPageCards.length; pc++) {
                 allPageCards[pc].setAttribute(core.PROCESSED_ATTR, '1');
-            }
-
-            // Pre-hide overview if conditions are met
-            if (core.shouldPrehideDetailOverview()) {
-                if (!core.shouldSkipDetailOverviewPrehide(visiblePage)) {
-                    core.setDetailOverviewPending(true);
-                }
             }
 
             core.lastDetailPageItemId = detailItemId;
@@ -502,6 +496,7 @@
 
             if (!item) {
                 core.detailPageProcessing = false;
+                core.setDetailOverviewPending(false);
                 return;
             }
 
@@ -569,6 +564,7 @@
 
         } catch (err) {
             console.warn('🪼 Jellyfin Enhanced: Error in detail page mutation handler', err);
+            core.setDetailOverviewPending(false);
         } finally {
             core.detailPageProcessing = false;
         }
@@ -742,6 +738,12 @@
 
             // Schedule surface-appropriate handlers
             if (surface === 'detail') {
+                // Pre-hide detail page content immediately to prevent spoiler flash.
+                // The pending class triggers CSS rules that blur poster, hide title,
+                // overview, and metadata before the async handler determines what
+                // actually needs redaction. Cleared once redaction completes.
+                core.setDetailOverviewPending(true);
+
                 // Detail pages need multiple scans as content loads asynchronously
                 core.navigationTimers.push(
                     setTimeout(function () {
