@@ -420,20 +420,23 @@
         }
     }
 
+    function onActivityHashChange() {
+        var hash = window.location.hash;
+        if (hash.includes('#/dashboard/activity') || hash.includes('#/configurationpage')) {
+            setTimeout(updateActivityIcons, 300);
+        }
+    }
+
     function initialize() {
-        // Inject CSS for Material Icons
         injectCSS();
         updateActivityIcons();
         startMonitoring();
 
-        // Re-process icons when navigating to activity page or configuration page
-        window.addEventListener('hashchange', (event) => {
-            const hash = window.location.hash;
-            if (hash.includes('#/dashboard/activity') || hash.includes('#/configurationpage')) {
-                // Use a longer timeout to ensure page is rendered
-                setTimeout(updateActivityIcons, 300);
-            }
-        });
+        if (_ctx) {
+            _ctx.listen(window, 'hashchange', onActivityHashChange);
+        } else {
+            window.addEventListener('hashchange', onActivityHashChange);
+        }
     }
 
     var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('colored-activity-icons');
@@ -467,8 +470,7 @@
         window.JellyfinEnhanced.moduleRegistry.register('colored-activity-icons', {
             configKeys: ['ColoredActivityIconsEnabled'],
             init: initialize,
-            teardown: teardown,
-            liveToggle: false
+            teardown: teardown
         });
     }
 

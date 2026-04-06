@@ -23,9 +23,6 @@
      * @param {Function} [descriptor.onConfigChange] - Called when a non-enable config key
      *   changes. Receives { changedKeys, oldConfig, newConfig }. If absent, a full
      *   teardown+init cycle is used for non-boolean config changes.
-     * @param {boolean} [descriptor.liveToggle=true] - Whether this module supports
-     *   mid-session enable/disable. When false, config changes add this module to
-     *   needsRefresh instead of calling init/teardown. Teardown still runs as best-effort.
      */
     function register(name, descriptor) {
         // [H8] Teardown old module before replacing to prevent resource leaks
@@ -46,7 +43,6 @@
             init: descriptor.init,
             teardown: descriptor.teardown || null,
             onConfigChange: descriptor.onConfigChange || null,
-            liveToggle: descriptor.liveToggle !== false,
             initialized: false
         });
     }
@@ -114,15 +110,6 @@
                 var enableKey = mod.enableKey;
                 var wasEnabled = enableKey ? !!resolveOldValue(enableKey, oldConfig, oldSettings) : true;
                 var nowEnabled = enableKey ? !!resolveNewValue(enableKey, newConfig) : true;
-
-                // Modules that don't support live toggle get best-effort teardown + refresh prompt
-                if (!mod.liveToggle) {
-                    if (wasEnabled && !nowEnabled && mod.teardown) {
-                        try { mod.teardown(); mod.initialized = false; } catch (e) { mod.initialized = false; }
-                    }
-                    needsRefresh.push(name);
-                    return;
-                }
 
                 if (!wasEnabled && nowEnabled) {
                     if (mod.init) {
