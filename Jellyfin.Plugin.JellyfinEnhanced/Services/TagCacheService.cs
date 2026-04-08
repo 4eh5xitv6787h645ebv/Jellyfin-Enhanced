@@ -24,6 +24,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly ILibraryManager _libraryManager;
         private readonly IApplicationPaths _applicationPaths;
         private readonly Logger _logger;
+        private readonly LanguageEnrichmentService _languageEnrichment;
         private volatile ConcurrentDictionary<string, TagCacheEntry> _cache = new();
         private readonly object _saveLock = new();
         private long _version;
@@ -44,11 +45,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             BaseItemKind.BoxSet,
         };
 
-        public TagCacheService(ILibraryManager libraryManager, IApplicationPaths applicationPaths, Logger logger)
+        public TagCacheService(
+            ILibraryManager libraryManager,
+            IApplicationPaths applicationPaths,
+            Logger logger,
+            LanguageEnrichmentService languageEnrichment)
         {
             _libraryManager = libraryManager;
             _applicationPaths = applicationPaths;
             _logger = logger;
+            _languageEnrichment = languageEnrichment;
         }
 
         public long Version => Interlocked.Read(ref _version);
@@ -66,6 +72,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             _logger.Info("[TagCache] Starting full cache build...");
             var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            // Refresh language enrichment cache from arrs BEFORE walking items, so each item
+            // can pick up regional variants synchronously. Force=true so a deliberate rebuild
+            // always re-pulls from the arrs (the 6-hour TTL only applies to background warm-ups).
+            // Connectivity/parse failures inside the service are already handled there; this
+            // outer catch only fires on unexpected bugs (e.g. disposed semaphore). We narrow
+            // the caught type so genuine bugs surface as Error instead of being masked as a
+            // routine "arr is down" Warning — if a NullReferenceException ever lands here,
+            // something is actually broken.
+            try
+            {
+                _languageEnrichment.EnsureFreshAsync(cancellationToken, force: true).GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (ObjectDisposedException ex)
+            {
+                _logger.Warning($"[TagCache] Language enrichment service was disposed mid-refresh: {ex.Message}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.Warning($"[TagCache] Language enrichment refresh failed: {ex.Message}");
+            }
+            catch (System.Net.Http.HttpRequestException ex)
+            {
+                _logger.Warning($"[TagCache] Language enrichment connectivity failure: {ex.Message}");
+            }
 
             var allItems = _libraryManager.GetItemList(new InternalItemsQuery
             {
@@ -320,6 +352,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                             ItemPath = string.IsNullOrEmpty(firstEp.Path) ? null : Path.GetFileName(firstEp.Path)
                         };
                         entry.AudioLanguages = languages;
+                        // Resolve regional variants from the SERIES (Sonarr is keyed by series TVDB id),
+                        // not the first episode whose ProviderIds usually lack TVDB.
+                        var regional = _languageEnrichment.GetForItem(item);
+                        if (regional != null && regional.Count > 0) entry.RegionalAudioLanguages = regional;
                     }
 
                     if (kind == BaseItemKind.Season && entry.CommunityRating == null)
@@ -347,6 +383,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                         ItemPath = string.IsNullOrEmpty(item.Path) ? null : Path.GetFileName(item.Path)
                     };
                     entry.AudioLanguages = languages;
+                    var regional = _languageEnrichment.GetForItem(item);
+                    if (regional != null && regional.Count > 0) entry.RegionalAudioLanguages = regional;
 
                     if (kind == BaseItemKind.Episode && entry.CommunityRating == null)
                     {

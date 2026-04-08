@@ -51,6 +51,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly IItemRepository _itemRepository;
         private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
         private readonly Services.TagCacheService _tagCacheService;
+        private readonly Services.LanguageEnrichmentService _languageEnrichment;
 
         // Server-side cache for proxied avatar images to avoid re-fetching from
         // upstream Seerr on every request. Entries expire after 1 hour.
@@ -126,7 +127,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             UserConfigurationManager userConfigurationManager,
             IItemRepository itemRepository,
             IDbContextFactory<JellyfinDbContext> dbContextFactory,
-            Services.TagCacheService tagCacheService)
+            Services.TagCacheService tagCacheService,
+            Services.LanguageEnrichmentService languageEnrichment)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -138,6 +140,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _itemRepository = itemRepository;
             _dbContextFactory = dbContextFactory;
             _tagCacheService = tagCacheService;
+            _languageEnrichment = languageEnrichment;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId)
@@ -1845,6 +1848,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.QualityTagsEnabled,
                 config.GenreTagsEnabled,
                 config.LanguageTagsEnabled,
+                config.EnableArrLanguageEnrichment,
+                config.LanguageRegionOverrides,
                 config.RatingTagsEnabled,
                 config.PeopleTagsEnabled,
                 config.DisableAllShortcuts,
@@ -2733,6 +2738,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return BadRequest(new { error = "Maximum 200 items per request" });
             }
 
+            // Issue #544: warm the language enrichment cache lazily on first request when
+            // server-mode tag cache is disabled (BuildFullCache won't have run). No-op when fresh.
+            _languageEnrichment.TryRefreshInBackground();
+
             var itemIds = ids;
             var results = new List<object>(itemIds.Length);
 
@@ -2819,6 +2828,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                              : (item is MediaBrowser.Controller.Entities.TV.Season sItem) ? sItem.SeriesId
                              : (Guid?)null;
 
+                // Issue #544: regional language enrichment from arrs (no-op when arr is not
+                // configured, item lacks provider IDs, or arr enrichment is disabled).
+                // GetForItem has an internal try/catch but we belt-and-braces here too so a
+                // single bad item can never 500 the whole 200-item batch.
+                List<Model.TagRegionalLanguage>? regionalLangs = null;
+                try { regionalLangs = _languageEnrichment.GetForItem(item); }
+                catch (Exception ex) { _logger.Debug($"[LangEnrichment] Skipping regional lookup for {item.Id}: {ex.Message}"); }
+
                 results.Add(new
                 {
                     Id = item.Id,
@@ -2832,7 +2849,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     Path = string.IsNullOrEmpty(item.Path) ? null : System.IO.Path.GetFileName(item.Path),
                     MediaStreams = trimmedStreams,
                     MediaSources = trimmedSources,
-                    FirstEpisode = firstEpisodeData
+                    FirstEpisode = firstEpisodeData,
+                    RegionalAudioLanguages = regionalLangs
                 });
             }
 

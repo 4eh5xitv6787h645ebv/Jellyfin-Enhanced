@@ -13,8 +13,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Model
         public float? CommunityRating { get; set; }
         public float? CriticRating { get; set; }
         public string[]? AudioLanguages { get; set; }
+        /// <summary>
+        /// Regional language variants (e.g. Brazilian Portuguese, Latino Spanish) sourced
+        /// from Sonarr/Radarr's enriched languages list. Null when arr enrichment is disabled
+        /// or the item isn't tracked in either arr.
+        /// </summary>
+        public List<TagRegionalLanguage>? RegionalAudioLanguages { get; set; }
         public TagStreamData? StreamData { get; set; }
         public long LastUpdated { get; set; }
+    }
+
+    /// <summary>
+    /// A single regional language variant sourced from arr metadata.
+    /// Code is BCP-47 (pt-BR, es-419), Name is the human label from the arr.
+    /// </summary>
+    public class TagRegionalLanguage
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 
     /// <summary>

@@ -466,6 +466,8 @@
 
     /**
      * A map of language names/codes to country codes for flag display.
+     * Includes BCP-47 regional variants (pt-BR, en-US, es-419, etc.) — issue #544.
+     * Kept in sync with the version in js/tags/languagetags.js.
      */
     const languageToCountryMap={English:"gb",eng:"gb",Japanese:"jp",jpn:"jp",Spanish:"es",spa:"es",French:"fr",fre:"fr",fra:"fr",German:"de",ger:"de",deu:"de",Italian:"it",ita:"it",Korean:"kr",kor:"kr",
                                 Chinese:"cn",chi:"cn",zho:"cn",Russian:"ru",rus:"ru",Portuguese:"pt",por:"pt",Hindi:"in",hin:"in",Dutch:"nl",dut:"nl",nld:"nl",Arabic:"sa",ara:"sa",Bengali:"in",ben:"in",
@@ -476,7 +478,12 @@
                                 Kurdish:"iq",kur:"iq",Slovak:"sk",slk:"sk",Slovenian:"si",slv:"si",Serbian:"rs",srp:"rs",Croatian:"hr",hrv:"hr",Bulgarian:"bg",bul:"bg",Macedonian:"mk",mkd:"mk",Albanian:"al",
                                 sqi:"al",Estonian:"ee",est:"ee",Latvian:"lv",lav:"lv",Lithuanian:"lt",lit:"lt",Icelandic:"is",isl:"is",Georgian:"ge",kat:"ge",Armenian:"am",hye:"am",Mongolian:"mn",mon:"mn",
                                 Kazakh:"kz",kaz:"kz",Uzbek:"uz",uzb:"uz",Azerbaijani:"az",aze:"az",Belarusian:"by",bel:"by",Amharic:"et",amh:"et",Zulu:"za",zul:"za",Afrikaans:"za",afr:"za",Hausa:"ng",hau:"ng",
-                                Yoruba:"ng",yor:"ng",Igbo:"ng",ibo:"ng",Brazilian:"br",bra:"br",Catalan:"es-ct",cat:"es-ct",ca:"es-ct",Galician:"es-ga",glg:"es-ga",gl:"es-ga",Basque:"es-pv",eus:"es-pv",baq:"es-pv",eu:"es-pv"};
+                                Yoruba:"ng",yor:"ng",Igbo:"ng",ibo:"ng",Brazilian:"br",bra:"br",Catalan:"es-ct",cat:"es-ct",ca:"es-ct",Galician:"es-ga",glg:"es-ga",gl:"es-ga",Basque:"es-pv",eus:"es-pv",baq:"es-pv",eu:"es-pv",
+                                "pt-br":"br","pt-pt":"pt","en-us":"us","en-gb":"gb","en-au":"au","en-ca":"ca","en-nz":"nz","en-ie":"ie",
+                                "es-es":"es","es-mx":"mx","es-419":"mx","es-ar":"ar","es-co":"co","es-cl":"cl",
+                                "fr-fr":"fr","fr-ca":"ca","fr-be":"be","fr-ch":"ch","de-de":"de","de-at":"at","de-ch":"ch",
+                                "zh-cn":"cn","zh-tw":"tw","zh-hk":"hk","zh-sg":"sg","it-it":"it","it-ch":"ch","nl-nl":"nl","nl-be":"be",
+                                "ar-sa":"sa","ar-eg":"eg","ar-ae":"ae","ar-ma":"ma"};
 
     /**
      * Fetches the first episode of a series or season for language detection.
@@ -621,10 +628,21 @@
                 langSpan.dataset.langName = lang.name;
                 langSpan.style.whiteSpace = 'nowrap';
 
-                const countryCode = languageToCountryMap[lang.name] || languageToCountryMap[lang.code];
+                // Issue #544: prefer the full BCP-47 code (e.g. "pt-BR") so regional flags
+                // surface on detail pages, falling back to base code (e.g. "por") and finally
+                // the language NAME. Case-insensitive on the regional lookup so ffprobe's
+                // lowercase "pt-br" matches Sonarr's mixed-case "pt-BR". Fixes a regression
+                // from PR #535 where the flag image referenced an undefined variable.
+                const rawCode = (lang.code || '').toString();
+                const normalizedCode = rawCode.replace('_', '-').toLowerCase();
+                const baseCode = rawCode.split('-')[0];
+                const countryCode =
+                    languageToCountryMap[normalizedCode]
+                    || languageToCountryMap[baseCode]
+                    || languageToCountryMap[lang.name];
                 if (countryCode) {
                     const flag = document.createElement('img');
-                    flag.src = `https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.2.1/flags/4x3/${flagInfo.countryCode.toLowerCase()}.svg`;
+                    flag.src = `https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.2.1/flags/4x3/${countryCode.toLowerCase()}.svg`;
                     flag.alt = `${lang.name} flag`;
                     flag.style.width = '18px';
                     flag.style.marginRight = '0.3em';

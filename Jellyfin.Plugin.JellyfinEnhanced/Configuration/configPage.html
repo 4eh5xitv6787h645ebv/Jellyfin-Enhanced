@@ -170,6 +170,17 @@
                                             <option value="bottom-right">Bottom Right</option>
                                         </select>
                                     </div>
+                                    <div class="checkboxContainer" id="enableArrLanguageEnrichmentContainer" style="margin-top: 1em;">
+                                        <label style="line-height: 1.2em; align-self: flex-start;"><input id="enableArrLanguageEnrichment" is="emby-checkbox" type="checkbox"/>
+                                            <span>Enrich language flags with regional variants from Sonarr/Radarr
+                                            <div style="font-size: 0.8em;">When Sonarr or Radarr is configured, surfaces Brazilian Portuguese and Latino Spanish as distinct flags by reading the arr's enriched languages list (which parses release names like <i>DUBLADO</i> / <i>LATINO</i> that ffprobe doesn't see). Refreshes every 6 hours.</div></span>
+                                        </label>
+                                    </div>
+                                    <div class="inputContainer" id="languageRegionOverridesContainer" style="margin-top: 1em;">
+                                        <label class="inputLabel inputLabelUnfocused" for="languageRegionOverrides">Language Flag Region Overrides</label>
+                                        <input id="languageRegionOverrides" is="emby-input" type="text" placeholder="por:br,spa:mx,eng:us"/>
+                                        <div class="fieldDescription">Force a specific country flag for languages that have no regional metadata. Format: <code>iso639:country</code> pairs separated by commas (e.g. <code>por:br,spa:mx,eng:us</code>). Only applied when no BCP-47 region tag or arr enrichment is available, so confidently regional content is never overridden.</div>
+                                    </div>
                                     <div class="inputContainer">
                                         <label class="inputLabel inputLabelUnfocused" for="ratingTagsPosition">Rating Tags Position</label>
                                         <select is="emby-select" id="ratingTagsPosition" name="ratingTagsPosition" class="emby-select">
@@ -2573,6 +2584,10 @@
                 document.querySelector('#tagCacheServerMode').checked = config.TagCacheServerMode !== false;
                 document.querySelector('#enableTagsLocalStorageFallback').checked = config.EnableTagsLocalStorageFallback === true;
                 document.querySelector('#tagsCacheTtlDays').value = config.TagsCacheTtlDays || 30;
+                const arrEnrichmentChk = document.querySelector('#enableArrLanguageEnrichment');
+                if (arrEnrichmentChk) arrEnrichmentChk.checked = config.EnableArrLanguageEnrichment !== false;
+                const regionOverridesInput = document.querySelector('#languageRegionOverrides');
+                if (regionOverridesInput) regionOverridesInput.value = config.LanguageRegionOverrides || '';
                 document.querySelector('#pauseScreenEnabled').checked = config.PauseScreenEnabled;
                 document.querySelector('#showReviews').checked = config.ShowReviews;
                 document.querySelector('#showUserReviews').checked = !!config.ShowUserReviews;
@@ -2776,6 +2791,10 @@
             config.RatingTagsPosition = document.querySelector('#ratingTagsPosition').value;
             config.ShowRatingInPlayer = document.querySelector('#showRatingInPlayer').checked;
             config.TagsCacheTtlDays = parseInt(document.querySelector('#tagsCacheTtlDays').value, 10) || 30;
+            const arrEnrichmentSave = document.querySelector('#enableArrLanguageEnrichment');
+            if (arrEnrichmentSave) config.EnableArrLanguageEnrichment = arrEnrichmentSave.checked;
+            const regionOverridesSave = document.querySelector('#languageRegionOverrides');
+            if (regionOverridesSave) config.LanguageRegionOverrides = regionOverridesSave.value || '';
             config.PauseScreenEnabled = document.querySelector('#pauseScreenEnabled').checked;
             config.ShowReviews = document.querySelector('#showReviews').checked;
             config.ShowUserReviews = document.querySelector('#showUserReviews').checked;
@@ -3504,7 +3523,7 @@
             { parent: 'showWatchProgress', label: 'Show watch progress', children: ['watchProgressDefaultMode', 'watchProgressTimeFormat'] },
             { parent: 'qualityTagsEnabled', label: 'Enable Quality Tags', children: ['qualityTagsPosition'] },
             { parent: 'genreTagsEnabled', label: 'Enable Genre Tags', children: ['genreTagsPosition'] },
-            { parent: 'languageTagsEnabled', label: 'Enable Language Tags', children: ['languageTagsPosition'] },
+            { parent: 'languageTagsEnabled', label: 'Enable Language Tags', children: ['languageTagsPosition', 'enableArrLanguageEnrichment', 'languageRegionOverrides'] },
             { parent: 'ratingTagsEnabled', label: 'Enable Rating Tags', children: ['ratingTagsPosition'] },
             { parent: 'useIcons', label: 'Use Icons', children: ['iconStyle'] },
             { parent: 'letterboxdEnabled', label: 'Enable Letterboxd', children: ['showLetterboxdLinkAsText'] },

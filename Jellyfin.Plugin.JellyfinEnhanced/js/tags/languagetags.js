@@ -71,7 +71,10 @@
             }
         }
 
-        // Language to country code mapping (shared with features.js)
+        // Language to country code mapping (shared with features.js).
+        // Regional BCP-47 keys below are stored lowercase so a case-insensitive lookup
+        // can match ffprobe's lowercase `pt-br` as well as Sonarr's mixed-case `pt-BR`
+        // — see lookupRegionalCode() below.
         const languageToCountryMap = {
             English: 'gb', eng: 'gb', Japanese: 'jp', jpn: 'jp', Spanish: 'es', spa: 'es', French: 'fr', fre: 'fr', fra: 'fr',
             German: 'de', ger: 'de', deu: 'de', Italian: 'it', ita: 'it', Korean: 'kr', kor: 'kr', Chinese: 'cn', chi: 'cn',
@@ -92,8 +95,160 @@
             aze: 'az', Belarusian: 'by', bel: 'by', Amharic: 'et', amh: 'et', Zulu: 'za', zul: 'za', Afrikaans: 'za',
             afr: 'za', Hausa: 'ng', hau: 'ng', Yoruba: 'ng', yor: 'ng', Igbo: 'ng', ibo: 'ng', Brazilian: 'br', bra: 'br',
             Catalan: 'es-ct', cat: 'es-ct', ca: 'es-ct', Galician: 'es-ga', glg: 'es-ga', gl: 'es-ga', Basque: 'es-pv',
-            baq: 'es-pv', eus: 'es-pv'
+            baq: 'es-pv', eus: 'es-pv',
+            // Regional BCP-47 variants — surface a region-specific flag when the file or arr
+            // metadata is regionally tagged. Sonarr/Radarr explicitly track Brazilian Portuguese
+            // and Latino Spanish; the rest light up only when the file's container language tag
+            // is BCP-47 (rare but spec-allowed for MKVs and the issue reporter's use case).
+            // Keys are lowercase — lookupRegionalCode() normalizes incoming codes before lookup.
+            'pt-br': 'br', 'pt-pt': 'pt',
+            'en-us': 'us', 'en-gb': 'gb', 'en-au': 'au', 'en-ca': 'ca', 'en-nz': 'nz', 'en-ie': 'ie',
+            'es-es': 'es', 'es-mx': 'mx', 'es-419': 'mx', 'es-ar': 'ar', 'es-co': 'co', 'es-cl': 'cl',
+            'fr-fr': 'fr', 'fr-ca': 'ca', 'fr-be': 'be', 'fr-ch': 'ch',
+            'de-de': 'de', 'de-at': 'at', 'de-ch': 'ch',
+            'zh-cn': 'cn', 'zh-tw': 'tw', 'zh-hk': 'hk', 'zh-sg': 'sg',
+            'it-it': 'it', 'it-ch': 'ch',
+            'nl-nl': 'nl', 'nl-be': 'be',
+            'ar-sa': 'sa', 'ar-eg': 'eg', 'ar-ae': 'ae', 'ar-ma': 'ma'
         };
+
+        /**
+         * Look up a BCP-47 code (like "pt-BR", "pt-br", or "en_US") in the country map.
+         * Normalizes case and separator so ffprobe's lowercase and Sonarr's mixed-case both
+         * match the same entry. Returns null when no regional mapping is registered.
+         */
+        function lookupRegionalCode(code) {
+            if (!code) return null;
+            const normalized = code.toString().replace('_', '-').toLowerCase();
+            return languageToCountryMap[normalized] || null;
+        }
+
+        // Names emitted by Sonarr/Radarr's language enum that don't match the base name.
+        // Keyed by lowercased name → BCP-47 code so the resolver doesn't need a separate path.
+        const arrRegionalNameToCode = {
+            'portuguese (brazil)': 'pt-BR',
+            'spanish (latino)': 'es-419',
+            'spanish (latin america)': 'es-419',
+            'chinese (mandarin)': 'zh-CN',
+            'chinese (cantonese)': 'zh-HK'
+        };
+
+        // ffprobe/Jellyfin typically returns ISO 639-2/B (3-letter, e.g. "por", "spa", "eng")
+        // while arr enrichment uses ISO 639-1 (2-letter, e.g. "pt", "es", "en"). To correctly
+        // collapse "por" with "pt-BR" into a single regional entry, both sides need to be
+        // normalized to the same canonical family key.
+        const iso6392ToFamily = {
+            por: 'pt', spa: 'es', eng: 'en',
+            fre: 'fr', fra: 'fr',
+            ger: 'de', deu: 'de',
+            ita: 'it', jpn: 'ja', kor: 'ko',
+            chi: 'zh', zho: 'zh',
+            rus: 'ru', ara: 'ar', hin: 'hi',
+            dut: 'nl', nld: 'nl', hol: 'nl',
+            pol: 'pl', tur: 'tr', ukr: 'uk',
+            swe: 'sv', nor: 'no', dan: 'da',
+            fin: 'fi', ces: 'cs', slk: 'sk',
+            ell: 'el', heb: 'he', hun: 'hu',
+            ron: 'ro', rum: 'ro',
+            bul: 'bg', srp: 'sr', hrv: 'hr',
+            tha: 'th', vie: 'vi', ind: 'id',
+            msa: 'ms', may: 'ms',
+            fas: 'fa', per: 'fa',
+            ben: 'bn', tam: 'ta', tel: 'te',
+            mar: 'mr', guj: 'gu', pan: 'pa',
+            kan: 'kn', mal: 'ml', urd: 'ur'
+        };
+
+        /**
+         * Map a language code (ISO 639-1, 639-2, or BCP-47) to its canonical family key.
+         * Used for collapsing "por" with "pt-BR" during regional merge.
+         */
+        function canonicalFamilyKey(code) {
+            const base = (code || '').toString().split('-')[0].toLowerCase();
+            if (!base) return '';
+            return iso6392ToFamily[base] || base;
+        }
+
+        // Remember which malformed override tokens we've already warned about — fires once
+        // per session per bad token so the console isn't spammed on every pipeline scan.
+        const _warnedOverrideTokens = new Set();
+
+        /**
+         * Parse the admin's "Default flag overrides" config (e.g. "por:br,spa:mx,eng:us")
+         * into a {baseCode → countryCode} map. Applied only when an audio entry has NO
+         * regional info — never overrides a confidently-tagged regional variant.
+         * Malformed tokens trigger a once-per-token console.warn so admin typos surface.
+         */
+        function parseRegionOverrides() {
+            const raw = JE.pluginConfig?.LanguageRegionOverrides;
+            if (!raw || typeof raw !== 'string') return {};
+            const out = {};
+            raw.split(/[,\n]/).forEach(function(pair) {
+                const trimmed = pair.trim();
+                if (!trimmed) return;
+                const idx = trimmed.indexOf(':');
+                if (idx <= 0) {
+                    if (!_warnedOverrideTokens.has(trimmed)) {
+                        _warnedOverrideTokens.add(trimmed);
+                        console.warn('🪼 Jellyfin Enhanced: Language Tags: Malformed LanguageRegionOverrides token (expected "iso639:country"):', trimmed);
+                    }
+                    return;
+                }
+                const k = trimmed.slice(0, idx).trim().toLowerCase();
+                const v = trimmed.slice(idx + 1).trim().toLowerCase();
+                if (k && v) {
+                    out[k] = v;
+                } else if (!_warnedOverrideTokens.has(trimmed)) {
+                    _warnedOverrideTokens.add(trimmed);
+                    console.warn('🪼 Jellyfin Enhanced: Language Tags: Empty key or value in LanguageRegionOverrides token:', trimmed);
+                }
+            });
+            return out;
+        }
+        // Note: regionOverrides are re-parsed on every resolveCountryCode() call so admin
+        // saves take effect on the next pipeline scan without needing a page reload.
+
+        /**
+         * Resolve a {name, code} language object to a country code for the flag CDN.
+         * Priority: regional BCP-47 code → arr-style regional name → override → base code → name.
+         * The override applies ONLY when the entry has no regional hint (no `-` in code,
+         * no `(...)` in name, no arr regional name match) — confidently regional content
+         * is never overridden.
+         * Returns null when no flag is appropriate.
+         */
+        function resolveCountryCode(lang) {
+            if (!lang) return null;
+            const code = (lang.code || '').toString().trim();
+            const name = (lang.name || '').toString().trim();
+            const lowerName = name.toLowerCase();
+            const baseCode = code.split('-')[0].toLowerCase();
+            const hasExplicitRegion = code.includes('-')
+                || /\(/.test(name)
+                || !!arrRegionalNameToCode[lowerName];
+
+            // Re-parse overrides on every call so admin config changes propagate without
+            // requiring a page reload (cheap — the source string is short and split-once).
+            const overrides = parseRegionOverrides();
+
+            // 1. Full BCP-47 code with region (e.g. "pt-BR" → "br"). Case-insensitive
+            // via lookupRegionalCode so ffprobe's lowercase "pt-br" matches Sonarr's "pt-BR".
+            if (hasExplicitRegion && code.includes('-')) {
+                const regionalCountry = lookupRegionalCode(code);
+                if (regionalCountry) return regionalCountry;
+            }
+            // 2. Arr-style regional name (e.g. "Portuguese (Brazil)" → "br")
+            if (arrRegionalNameToCode[lowerName]) {
+                const bcp = arrRegionalNameToCode[lowerName];
+                const mapped = lookupRegionalCode(bcp);
+                if (mapped) return mapped;
+            }
+            // 3. Manual override applies ONLY when there is no regional hint at all.
+            if (!hasExplicitRegion && baseCode && overrides[baseCode]) {
+                return overrides[baseCode];
+            }
+            // 4. Fall back to base code or name lookup.
+            return languageToCountryMap[name] || languageToCountryMap[baseCode] || null;
+        }
 
         /**
          * Extracts audio languages from a Jellyfin item's media sources.
@@ -142,7 +297,8 @@
             return styles;
         }
 
-        // Normalize different shapes of language arrays into [{ name, code }] and de-duplicate
+        // Normalize different shapes of language arrays into [{ name, code }] and de-duplicate.
+        // Region suffixes (pt-BR, en-US) are PRESERVED so resolveCountryCode can pick a regional flag.
         function normalizeLanguages(languages) {
             if (!Array.isArray(languages)) return [];
             const norm = [];
@@ -152,19 +308,21 @@
                 if (!entry) continue;
                 if (typeof entry === 'string') {
                     // Handle legacy cache that stored ["en", "fr", ...]
-                    const code = entry.split('-')[0].toLowerCase();
+                    const fullCode = entry.trim();
+                    const baseCode = fullCode.split('-')[0].toLowerCase();
                     let name = null;
-                    try { name = new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code.toUpperCase(); }
-                    catch { name = code.toUpperCase(); }
-                    obj = { name, code };
+                    try { name = langDisplayNames.of(fullCode) || langDisplayNames.of(baseCode) || fullCode.toUpperCase(); }
+                    catch { name = fullCode.toUpperCase(); }
+                    obj = { name, code: fullCode };
                 } else if (typeof entry === 'object') {
-                    const code = (entry.code || entry.Code || '').toString().split('-')[0];
+                    const fullCode = (entry.code || entry.Code || '').toString().trim();
+                    const baseCode = fullCode.split('-')[0].toLowerCase();
                     const name = entry.name || entry.Name || null;
-                    if (code) {
+                    if (fullCode) {
                         let resolvedName = name;
-                        try { if (!resolvedName) resolvedName = new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code.toUpperCase(); }
-                        catch { resolvedName = (name || code.toUpperCase()); }
-                        obj = { name: resolvedName, code };
+                        try { if (!resolvedName) resolvedName = langDisplayNames.of(fullCode) || langDisplayNames.of(baseCode) || fullCode.toUpperCase(); }
+                        catch { resolvedName = (name || fullCode.toUpperCase()); }
+                        obj = { name: resolvedName, code: fullCode };
                     }
                 }
                 if (!obj) continue;
@@ -172,6 +330,53 @@
                 if (!seen.has(key)) { seen.add(key); norm.push(obj); }
             }
             return norm;
+        }
+
+        /**
+         * Merge a base language list with arr-sourced regional variants. When the arr knows
+         * a more specific code for a language already present in the base list, the regional
+         * entry replaces the base one. Other base entries pass through unchanged.
+         * Matching uses canonicalFamilyKey() so "por" correctly collapses with "pt-BR".
+         */
+        function mergeRegionalLanguages(base, regional) {
+            if (!Array.isArray(regional) || regional.length === 0) return base || [];
+            const baseList = Array.isArray(base) ? base.slice() : [];
+            const regionalByFamily = {};
+            for (const entry of regional) {
+                if (!entry) continue;
+                const code = (entry.code || entry.Code || '').toString().trim();
+                if (!code) continue;
+                const family = canonicalFamilyKey(code);
+                // If the arr returns multiple regionals for the same family (hypothetical
+                // pt-BR + pt-PT), keep the first — current arr enums only have one per family.
+                if (!regionalByFamily[family]) {
+                    regionalByFamily[family] = {
+                        name: entry.name || entry.Name || code,
+                        code: code
+                    };
+                }
+            }
+            const seenFamilies = new Set();
+            const merged = [];
+            for (const entry of baseList) {
+                const family = canonicalFamilyKey(entry.code);
+                if (regionalByFamily[family]) {
+                    if (!seenFamilies.has(family)) {
+                        merged.push(regionalByFamily[family]);
+                        seenFamilies.add(family);
+                    }
+                } else {
+                    merged.push(entry);
+                    seenFamilies.add(family);
+                }
+            }
+            // Append any regional entries that didn't match a base entry
+            for (const family of Object.keys(regionalByFamily)) {
+                if (!seenFamilies.has(family)) {
+                    merged.push(regionalByFamily[family]);
+                }
+            }
+            return merged;
         }
 
         function insertLanguageTags(container, languages) {
@@ -203,7 +408,7 @@
             normalized.forEach(lang => {
                 const codeKey = (lang.code || '').toString().split('-')[0];
                 const nameKey = (lang.name || '').toString();
-                const countryCode = languageToCountryMap[nameKey] || languageToCountryMap[codeKey];
+                const countryCode = resolveCountryCode(lang);
                 if (countryCode && !seenCountries.has(countryCode)) {
                     seenCountries.add(countryCode);
                     uniqueFlags.push({ countryCode, name: nameKey || codeKey.toUpperCase(), allLanguages: [nameKey || codeKey.toUpperCase()] });
@@ -340,6 +545,11 @@
                     }
 
                     var languages = extractLanguagesFromItem(sourceItem);
+                    // Tier 1.5: merge arr-sourced regional variants when the controller
+                    // included them on this item (only present if arr enrichment is enabled).
+                    if (item.RegionalAudioLanguages && item.RegionalAudioLanguages.length > 0) {
+                        languages = mergeRegionalLanguages(languages, item.RegionalAudioLanguages);
+                    }
 
                     if (languages.length > 0) {
                         langCache[itemId] = languages;
@@ -375,6 +585,11 @@
                             return { name: code.toUpperCase(), code: code };
                         }
                     });
+                    // Tier 1.5: arr-sourced regional variants override the base ISO code when
+                    // present (e.g. "por" → "pt-BR" when Sonarr tagged the file as Brazilian).
+                    if (entry.RegionalAudioLanguages && entry.RegionalAudioLanguages.length > 0) {
+                        languages = mergeRegionalLanguages(languages, entry.RegionalAudioLanguages);
+                    }
                     insertLanguageTags(el, languages);
                 },
                 isEnabled: function() { return !!JE.currentSettings?.languageTagsEnabled; },
@@ -399,6 +614,10 @@
         // Always remove existing tags and clear tagged state
         document.querySelectorAll('.language-overlay-container').forEach(el => el.remove());
         document.querySelectorAll('[data-je-language-tagged]').forEach(el => { delete el.dataset.jeLanguageTagged; });
+
+        // Drop the in-memory language cache so newly-fetched arr enrichment / region overrides
+        // take effect on the next pipeline scan instead of being masked by stale cache hits.
+        if (JE._hotCache?.language) JE._hotCache.language.clear();
 
         // Re-inject CSS in case position settings changed
         // Use the renderer's injectCss reference (captures the initialize closure)
