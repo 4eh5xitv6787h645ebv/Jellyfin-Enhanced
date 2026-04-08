@@ -4,6 +4,13 @@
 (function() {
     'use strict';
 
+    // Capture the JE namespace at IIFE load. window.JellyfinEnhanced is the
+    // authoritative handle; plugin.js bootstraps it before any feature module
+    // runs. Referencing `JE` at IIFE top-scope caused a ReferenceError in
+    // strict mode because some modules had lifted this into a local inside
+    // initialize() only.
+    const JE = window.JellyfinEnhanced;
+
     const THEMES = Object.freeze({
         'Default': '',
         'Aurora': 'aurora.css',
@@ -430,7 +437,6 @@
             }, DEBOUNCE_DELAY);
         };
 
-        const JE = window.JellyfinEnhanced;
         if (JE?.helpers?.onBodyMutation) {
             observerInstance = JE.helpers.onBodyMutation('theme-selector', callback);
         } else {

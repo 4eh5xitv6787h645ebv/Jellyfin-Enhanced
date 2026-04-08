@@ -798,7 +798,10 @@
                     document.querySelectorAll(domSelectors[d]).forEach(function(el) { el.remove(); });
                 }
 
-                // 6. Reset state variables
+                // 6. Reset state variables. Do NOT clear stateDefaults/stateRef
+                // references themselves — modules register state once at IIFE
+                // time, and re-init should re-use the same defaults. Clearing
+                // the refs here would break teardown on a subsequent cycle.
                 if (stateDefaults && stateRef) {
                     for (var key in stateDefaults) {
                         if (stateDefaults.hasOwnProperty(key)) {

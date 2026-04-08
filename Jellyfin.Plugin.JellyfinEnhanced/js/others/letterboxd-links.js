@@ -2,6 +2,12 @@
 (function (JE) {
     'use strict';
 
+    // State lifted to IIFE scope so the teardown closure can reach it.
+    let isAddingLinks = false;
+    let processedItemIds = new Set();
+    let lastVisibleItemId = null;
+    let processingLetterboxd = false;
+
     JE.initializeLetterboxdLinksScript = async function () {
         const logPrefix = '🪼 Jellyfin Enhanced: Letterboxd Links:';
 
@@ -12,9 +18,11 @@
 
         console.log(`${logPrefix} Initializing...`);
 
-        let isAddingLinks = false; // Lock to prevent concurrent runs
-        let processedItemIds = new Set(); // Cache of items we've already processed
-        let lastVisibleItemId = null; // Track the currently visible item
+        // Re-init path: reset state from any previous run.
+        isAddingLinks = false;
+        processedItemIds.clear();
+        lastVisibleItemId = null;
+        processingLetterboxd = false;
 
         const LETTERBOXD_ICON_URL = 'https://cdn.jsdelivr.net/gh/selfhst/icons/svg/letterboxd.svg';
 
@@ -141,7 +149,6 @@
         }
 
         // Replace polling with MutationObserver for better performance
-        let processingLetterboxd = false;
         const letterboxdObserver = JE.helpers.createObserver('letterboxd-links', () => {
             if (!JE?.pluginConfig?.LetterboxdEnabled) {
                 letterboxdObserver.disconnect();

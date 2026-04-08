@@ -6,14 +6,15 @@
 (function (JE) {
   'use strict';
 
-  if (!JE?.pluginConfig?.BookmarksEnabled) {
-    console.log('🪼 Jellyfin Enhanced: Bookmarks library feature is disabled');
-    return;
-  }
+  // NOTE: The early-return "if (!BookmarksEnabled) return;" was removed so
+  // the module can register with moduleRegistry and support live toggles.
+  // init() gates on BookmarksEnabled so nothing runs when disabled.
 
-  // Inject custom styles
-  const style = document.createElement('style');
-  style.textContent = `
+  // [R2] Style CSS kept as a module-scope string + injected inside init() so
+  // teardown + re-init re-adds it. Previously injected once at IIFE load and
+  // removed by _ctx.dom('#je-bookmarks-library-styles') on first teardown,
+  // never re-added.
+  const STYLE_CSS = `
     .je-bookmarks-wrapper {
       display: flex;
       flex-direction: column;
@@ -881,13 +882,62 @@
       font-size: 18px;
     }
   `;
-  document.head.appendChild(style);
+
+  // Helper to (re-)inject the bookmarks styles. Idempotent by id.
+  function injectBookmarksStyles() {
+    if (document.getElementById('je-bookmarks-library-styles')) return;
+    const el = document.createElement('style');
+    el.id = 'je-bookmarks-library-styles';
+    el.textContent = STYLE_CSS;
+    document.head.appendChild(el);
+  }
 
   const logPrefix = '🪼 Jellyfin Enhanced: Bookmarks Library:';
   let sectionObserver = null;
+  // Sidebar nav watcher observer — tracked at module scope so teardown can
+  // disconnect it. Previously this was a local const inside
+  // setupNavigationWatcher which meant the watcher survived teardown and
+  // re-injected the nav item.
+  let navWatcherObserver = null;
+  // [R3] The init-time ready-poll interval. Tracked at module scope so
+  // (a) teardown can clear it, (b) init() can dedup against an in-flight
+  // poll to prevent concurrent polls stacking on rapid re-toggle.
+  let checkReadyTimer = null;
   let isRendering = false;
   let lastRenderTs = 0;
   let lastMountedContainer = null;
+
+  // Module context used by init() to track event listeners, and by teardown
+  // to clean them up. Created here so init() can reach it; reset on each
+  // init() via init-time clearing below.
+  var _ctx = JE.helpers ? JE.helpers.createModuleContext('bookmarks-library') : null;
+  if (_ctx) {
+    _ctx.dom('.je-nav-bookmarks-item');
+    _ctx.dom('#je-bookmarks-library-styles');
+    _ctx.onTeardown(function() {
+      console.log(`${logPrefix} Tearing down`);
+      // [R3] Stop any in-flight ready-poll so rapid toggle doesn't stack.
+      if (checkReadyTimer) { clearInterval(checkReadyTimer); checkReadyTimer = null; }
+      // Hide the bookmarks page if currently visible.
+      try { if (typeof hidePage === 'function') hidePage(); } catch (e) { /* ignore */ }
+      // Remove the full bookmarks page DOM (it lives outside the
+      // .je-nav-bookmarks-item selector tracked via ctx.dom).
+      document.querySelectorAll('.je-bookmarks-page').forEach(function(el) { el.remove(); });
+      // Disconnect the nav watcher MutationObserver.
+      if (navWatcherObserver) {
+        try { navWatcherObserver.disconnect(); } catch (e) { /* ignore */ }
+        navWatcherObserver = null;
+      }
+      // Disconnect the shared body subscriber for custom-tab mounting.
+      if (JE.helpers) {
+        JE.helpers.disconnectObserver('bookmarks-library-custom-tab');
+      }
+      sectionObserver = null;
+      lastMountedContainer = null;
+      isRendering = false;
+      lastRenderTs = 0;
+    });
+  }
 
   // Sidebar navigation state
   /** Polling interval for detecting pushState navigations. */
@@ -1172,14 +1222,23 @@
 
   /**
    * Re-injects the sidebar nav item when Jellyfin rebuilds the drawer.
+   * The observer is stored at module scope (navWatcherObserver) so teardown
+   * can disconnect it — previously a local const that survived teardown.
    */
   function setupNavigationWatcher() {
     if (!JE?.pluginConfig?.BookmarksEnabled) return;
     if (isPluginPagesActive()) return;
     if (JE?.pluginConfig?.BookmarksUseCustomTabs) return;
 
-    const observer = new MutationObserver(() => {
+    // Safety: disconnect any prior watcher before creating a new one.
+    if (navWatcherObserver) {
+      try { navWatcherObserver.disconnect(); } catch (e) { /* ignore */ }
+      navWatcherObserver = null;
+    }
+
+    navWatcherObserver = new MutationObserver(() => {
       if (isPluginPagesActive()) return;
+      if (!JE?.pluginConfig?.BookmarksEnabled) return;
       if (!document.querySelector('.je-nav-bookmarks-item') && document.querySelector('.jellyfinEnhancedSection')) {
         injectNavigation();
       }
@@ -1187,7 +1246,7 @@
 
     const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
     if (navDrawer) {
-      observer.observe(navDrawer, { childList: true, subtree: true });
+      navWatcherObserver.observe(navDrawer, { childList: true, subtree: true });
     }
   }
 
@@ -1206,13 +1265,29 @@
   }
 
   /**
-   * Initialize
+   * Initialize. Called on initial page load AND by moduleRegistry when the
+   * user toggles BookmarksEnabled back on. Gated on the enable flag so it's
+   * safe to call even when disabled (becomes a no-op).
    */
   function init() {
+    if (!JE?.pluginConfig?.BookmarksEnabled) {
+      console.log(`${logPrefix} Bookmarks disabled, skipping init`);
+      return;
+    }
+    // [R3] Dedup concurrent init() calls (rapid toggle, or URL-triggered
+    // reinit on top of an in-flight poll). If a previous poll is still
+    // running, kill it first so we don't stack.
+    if (checkReadyTimer) {
+      clearInterval(checkReadyTimer);
+      checkReadyTimer = null;
+    }
+    // [R2] (Re-)inject the shared CSS — idempotent by id. After teardown
+    // the style element is gone; re-init must put it back.
+    injectBookmarksStyles();
     console.log(`${logPrefix} Initializing (build id: ${Date.now()})...`);
 
     let attempts = 0;
-    const checkReady = setInterval(() => {
+    checkReadyTimer = setInterval(() => {
       attempts += 1;
       const je = getJE();
       const ready = !!(je && je.userConfig && je.bookmarks);
@@ -1221,32 +1296,62 @@
         console.log(`${logPrefix} ready check #${attempts} (JE=${!!je}, userConfig=${!!(je && je.userConfig)}, bookmarks=${!!(je && je.bookmarks)})`);
       }
 
+      // [R3] Max attempts bound so a permanently-absent dependency doesn't
+      // leak an interval forever.
+      if (attempts > 200) { // 200 * 100ms = 20s
+        clearInterval(checkReadyTimer);
+        checkReadyTimer = null;
+        console.warn(`${logPrefix} ready check timed out after ${attempts} attempts`);
+        return;
+      }
+
       if (ready) {
-        clearInterval(checkReady);
+        clearInterval(checkReadyTimer);
+        checkReadyTimer = null;
+        // Bail if user disabled the feature while we were waiting.
+        if (!JE?.pluginConfig?.BookmarksEnabled) return;
         // If JE is available only on parent/top, make it accessible locally for this script
         if (!window.JE && je) {
           window.JE = je;
         }
         hookViewEvents();
-        document.addEventListener('je-bookmarks-updated', renderIfSectionExists);
+        // Use ctx.listen so teardown removes this listener automatically.
+        if (_ctx) {
+          _ctx.listen(document, 'je-bookmarks-updated', renderIfSectionExists);
+        } else {
+          document.addEventListener('je-bookmarks-updated', renderIfSectionExists);
+        }
 
         // Sidebar navigation (when neither Plugin Pages nor Custom Tabs is handling it)
         if (!isPluginPagesActive() && !JE.pluginConfig?.BookmarksUseCustomTabs) {
           injectNavigation();
           setupNavigationWatcher();
-          window.addEventListener('hashchange', interceptNavigation, true);
-          window.addEventListener('popstate', interceptNavigation, true);
-          document.addEventListener('viewshow', handleViewShow);
-          document.addEventListener('click', handleNavClick);
-          window.addEventListener('hashchange', handleNavigation);
-          window.addEventListener('popstate', handleNavigation);
+          if (_ctx) {
+            _ctx.listen(window, 'hashchange', interceptNavigation, true);
+            _ctx.listen(window, 'popstate', interceptNavigation, true);
+            _ctx.listen(document, 'viewshow', handleViewShow);
+            _ctx.listen(document, 'click', handleNavClick);
+            _ctx.listen(window, 'hashchange', handleNavigation);
+            _ctx.listen(window, 'popstate', handleNavigation);
+          } else {
+            window.addEventListener('hashchange', interceptNavigation, true);
+            window.addEventListener('popstate', interceptNavigation, true);
+            document.addEventListener('viewshow', handleViewShow);
+            document.addEventListener('click', handleNavClick);
+            window.addEventListener('hashchange', handleNavigation);
+            window.addEventListener('popstate', handleNavigation);
+          }
           handleNavigation();
         }
 
-        // Watch for section being injected by CustomTabs (persistent -- do not disconnect)
-        const observeTarget = document.querySelector('.mainAnimatedPages') || document.body;
+        // Watch for section being injected by CustomTabs.
+        // Observe document.body (not .mainAnimatedPages) because Jellyfin
+        // replaces .mainAnimatedPages when navigating to the admin dashboard
+        // — an observer bound to the old element would become orphaned after
+        // returning to home (issue 536). Routes to the shared multiplexed
+        // body observer.
         let mountPending = false;
-        sectionObserver = new MutationObserver(() => {
+        sectionObserver = JE.helpers.createObserver('bookmarks-library-custom-tab', () => {
           if (!mountPending) {
             mountPending = true;
             requestAnimationFrame(() => {
@@ -1254,8 +1359,7 @@
               renderIfSectionExists();
             });
           }
-        });
-        sectionObserver.observe(observeTarget, { childList: true, subtree: true });
+        }, document.body, { childList: true, subtree: true });
 
         // Try immediate render in case tab is already visible
         renderIfSectionExists();
@@ -1311,10 +1415,13 @@
   }
 
   /**
-   * Bind to viewshow so CustomTabs triggers render
+   * Bind to viewshow so CustomTabs triggers render. Uses _ctx.listen when
+   * available so teardown removes the listener on disable; without tracking
+   * each re-init (from rapid toggle or cross-module reinit) would stack
+   * duplicate viewshow listeners that each trigger redundant renders.
    */
   function hookViewEvents() {
-    document.addEventListener('viewshow', (e) => {
+    const handler = (e) => {
       if (isRendering) return;
       // CustomTabs provides a view element on e.detail.view
       const view = e.detail?.view || document;
@@ -1328,7 +1435,12 @@
         });
         lastMountedContainer = container;
       }
-    });
+    };
+    if (_ctx) {
+      _ctx.listen(document, 'viewshow', handler);
+    } else {
+      document.addEventListener('viewshow', handler);
+    }
   }
 
   /**
@@ -2630,11 +2742,30 @@
     setTimeout(() => modal.style.opacity = '1', 10);
   }
 
-  // Initialize
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  // Expose init for module-registry + plugin.js bootstrap.
+  JE.initializeBookmarksLibrary = init;
+
+  // Register with the reactive lifecycle system so toggling BookmarksEnabled
+  // / BookmarksUseCustomTabs / BookmarksUsePluginPages at runtime tears down
+  // and re-initializes cleanly — no refresh needed.
+  if (JE.moduleRegistry && _ctx) {
+    JE.moduleRegistry.register('bookmarks-library', {
+      configKeys: ['BookmarksEnabled', 'BookmarksUseCustomTabs', 'BookmarksUsePluginPages'],
+      enableKey: 'BookmarksEnabled',
+      init: init,
+      teardown: _ctx.teardown
+    });
+  }
+
+  // Initial load: run init() directly if enabled. Module-registry's
+  // markAllInitialized() will mark us initialized so future toggles get
+  // a proper teardown → init cycle.
+  if (JE?.pluginConfig?.BookmarksEnabled) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   }
 
 })(window.JellyfinEnhanced);

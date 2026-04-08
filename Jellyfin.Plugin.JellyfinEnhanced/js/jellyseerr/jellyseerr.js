@@ -2,6 +2,15 @@
 (function(JE) {
     'use strict';
 
+    // State lifted to IIFE scope so the teardown closure below can reach it
+    // during live toggles. Previously these lived inside
+    // initializeJellyseerrScript and the teardown threw a ReferenceError.
+    let lastProcessedQuery = null;
+    let debounceTimeout = null;
+    let isJellyseerrActive = false;
+    let jellyseerrUserFound = false;
+    let isJellyseerrOnlyMode = false;
+
     /**
      * Main initialization function for Seerr search integration.
      * This function sets up the state, observers, and event listeners.
@@ -24,11 +33,13 @@
         // ================================
         // STATE MANAGEMENT VARIABLES
         // ================================
-        let lastProcessedQuery = null;
-        let debounceTimeout = null;
-        let isJellyseerrActive = false;
-        let jellyseerrUserFound = false;
-        let isJellyseerrOnlyMode = false;
+        // Reactive-lifecycle state lives at IIFE scope so teardown can reach
+        // it; reset here on every init() in case the module was torn down.
+        lastProcessedQuery = null;
+        if (debounceTimeout) { clearTimeout(debounceTimeout); debounceTimeout = null; }
+        isJellyseerrActive = false;
+        jellyseerrUserFound = false;
+        isJellyseerrOnlyMode = false;
         let hiddenSections = [];
         let jellyseerrOriginalPosition = null;
 

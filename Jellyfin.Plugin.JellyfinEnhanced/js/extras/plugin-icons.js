@@ -4,6 +4,11 @@
 (function () {
     'use strict';
 
+    // Hoisted so setupHashChangeListener can register its listener via
+    // ctx.listen() (auto-removed on teardown). Without this, each live-toggle
+    // cycle would leak one hashchange listener.
+    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('plugin-icons');
+
     function injectCSS() {
         const styleId = 'plugin-icons-material';
         if (document.getElementById(styleId)) return;
@@ -309,14 +314,19 @@
 
     // Handle page navigation
     function setupHashChangeListener() {
-        window.addEventListener('hashchange', () => {
+        var handler = function() {
             const hash = window.location.hash;
             // Process plugin icons when navigating to dashboard, settings, or configuration pages
             if (hash.includes('#/dashboard') || hash.includes('#/settings') || hash.includes('#/configurationpage')) {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(processPluginIcons, 300);
             }
-        });
+        };
+        if (_ctx) {
+            _ctx.listen(window, 'hashchange', handler);
+        } else {
+            window.addEventListener('hashchange', handler);
+        }
     }
 
     async function initialize() {
@@ -346,7 +356,6 @@
         tryInitialize();
     }
 
-    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('plugin-icons');
     if (_ctx) {
         _ctx.dom('#plugin-icons-material');
         _ctx.dom('[data-jellyfin-enhanced-plugin-id]');

@@ -2,6 +2,11 @@
 (function (JE) {
     'use strict';
 
+    // State lifted to IIFE scope so the teardown closure can reach it.
+    let isAddingLinks = false;
+    let processedItems = new Set();
+    let debounceTimer = null;
+
     JE.initializeArrTagLinksScript = async function () {
         const logPrefix = '🪼 Jellyfin Enhanced: Arr Tag Links:';
 
@@ -12,9 +17,10 @@
 
         console.log(`${logPrefix} Initializing...`);
 
-        let isAddingLinks = false;
-        let processedItems = new Set(); // Track items that have been processed
-        let debounceTimer = null;
+        // Re-init path: reset state from a previous run.
+        isAddingLinks = false;
+        processedItems.clear();
+        if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
 
         function slugifyTagName(name) {
             try {

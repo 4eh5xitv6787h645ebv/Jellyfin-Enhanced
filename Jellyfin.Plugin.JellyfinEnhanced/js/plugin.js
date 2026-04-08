@@ -250,6 +250,17 @@
         const promises = scripts.map(scriptName => {
             return new Promise((resolve) => { // Always resolve so one failure doesn't stop others
                 const script = document.createElement('script');
+                // [R6] Force in-order execution. Dynamically-inserted <script>
+                // tags default to async=true, which means they execute in
+                // network-completion order rather than insertion order. That
+                // load-order race was the root cause of C1 (theme-selector
+                // ReferenceError when it loaded before bookmarks-library set
+                // window.JE) and a latent cause of 8 other modules having
+                // _ctx = undefined when helpers.js lost the race. Setting
+                // async=false restores deterministic insertion order so
+                // modules that depend on helpers.js / config-store.js /
+                // module-registry.js see them initialized before running.
+                script.async = false;
                 script.src = ApiClient.getUrl(`${basePath}/${scriptName}?v=${Date.now()}`); // Cache-busting
                 script.onload = () => {
                     resolve({ status: 'fulfilled', script: scriptName });

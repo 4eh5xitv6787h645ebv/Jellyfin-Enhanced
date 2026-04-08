@@ -2950,7 +2950,11 @@
 
   if (JE.moduleRegistry) {
     JE.moduleRegistry.register('calendar-page', {
-      configKeys: ['CalendarPageEnabled'],
+      // Include the delivery-mode keys so toggling CalendarUseCustomTabs /
+      // CalendarUsePluginPages at runtime re-runs initialize() and picks up
+      // the new path (standalone page vs custom tab vs Plugin Pages).
+      configKeys: ['CalendarPageEnabled', 'CalendarUseCustomTabs', 'CalendarUsePluginPages'],
+      enableKey: 'CalendarPageEnabled',
       init: initialize,
       teardown: _ctx.teardown
     });

@@ -5,6 +5,16 @@
 (function(JE) {
     'use strict';
 
+    // State lifted to IIFE scope so the teardown closure below can reach it.
+    // Declared here (shared across init/teardown cycles) rather than inside
+    // initializeElsewhereScript.
+    let userRegion = '';
+    let userRegions = [];
+    let userServices = [];
+    let availableRegions = {};
+    let availableProviders = [];
+    let processingElsewhere = false;
+
     /**
      * Initializes the Jellyfin Elsewhere script.
      * It will only run if the server reports TMDB is configured.
@@ -27,11 +37,14 @@
             return;
         }
 
-        let userRegion = DEFAULT_REGION;
-        let userRegions = []; // Multiple regions for search
-        let userServices = []; // Empty by default - will show all services from settings region
-        let availableRegions = {};
-        let availableProviders = [];
+        // Reset state on (re-)init. Declarations live at IIFE scope so
+        // the teardown closure can reach them.
+        userRegion = DEFAULT_REGION;
+        userRegions = [];
+        userServices = [];
+        availableRegions = {};
+        availableProviders = [];
+        processingElsewhere = false;
 
         console.log('🪼 Jellyfin Enhanced: 🎬 Jellyfin Elsewhere starting...');
 
@@ -1119,7 +1132,7 @@
         }
 
         // Replace polling with MutationObserver for better performance
-        let processingElsewhere = false;
+        // processingElsewhere is declared at IIFE scope (see top of file).
         JE.helpers.createObserver('elsewhere', () => {
             if (!processingElsewhere) {
                 processingElsewhere = true;
@@ -1155,8 +1168,13 @@
     if (ctx) {
         ctx.dom('.streaming-lookup-container');
         ctx.onTeardown(function() {
-            JE.helpers.disconnectObserver('elsewhere-details');
-            userRegion = DEFAULT_REGION;
+            // [CF3] Observer is registered as 'elsewhere' (line 1136), not
+            // 'elsewhere-details' — the old id was stale from a pre-refactor
+            // version and left the observer attached across teardowns.
+            JE.helpers.disconnectObserver('elsewhere');
+            // Reset IIFE-scope state. The next init() re-seeds userRegion
+            // from JE.pluginConfig.DEFAULT_REGION, so blanking here is fine.
+            userRegion = '';
             userRegions = [];
             userServices = [];
             availableRegions = {};

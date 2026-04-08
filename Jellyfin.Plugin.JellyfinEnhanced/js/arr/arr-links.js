@@ -2,6 +2,13 @@
 (function (JE) {
     'use strict';
 
+    // State lifted to IIFE scope so the teardown closure (registered below
+    // via createModuleContext) can access it. Declaring these inside
+    // initializeArrLinksScript would make them unreachable from teardown.
+    let isAddingLinks = false; // Lock to prevent concurrent runs
+    let debounceTimer = null;
+    const slugCache = new Map(); // Cache Sonarr titleSlugs by TVDB ID
+
     JE.initializeArrLinksScript = async function () {
         const logPrefix = '🪼 Jellyfin Enhanced: Arr Links:';
 
@@ -57,10 +64,12 @@
 
         console.log(`${logPrefix} Initializing...`);
 
-        let isAddingLinks = false; // Lock to prevent concurrent runs
-        let debounceTimer = null;
+        // Re-init path: reset state from a previous run in case the module
+        // was torn down and re-initialized (e.g. user toggled the setting).
+        isAddingLinks = false;
+        if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+        slugCache.clear();
         let observer = null;
-        const slugCache = new Map(); // Cache Sonarr titleSlugs by TVDB ID
 
         // Parse URL mappings from config
         function parseUrlMappings(mappingsString) {

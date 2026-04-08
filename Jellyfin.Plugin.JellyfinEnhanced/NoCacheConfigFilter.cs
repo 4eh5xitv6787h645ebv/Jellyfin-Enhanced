@@ -47,20 +47,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            var routeValues = context.ActionDescriptor.RouteValues;
-
-            if (routeValues.TryGetValue("controller", out var controller)
-                && routeValues.TryGetValue("action", out var action)
-                && controller is not null
-                && action is not null
-                && NoCacheEndpoints.Contains((controller, action)))
+            try
             {
-                context.HttpContext.Response.Headers[HeaderNames.CacheControl]
-                    = "no-store, no-cache, max-age=0, must-revalidate";
-                context.HttpContext.Response.Headers[HeaderNames.Pragma]
-                    = "no-cache";
-                context.HttpContext.Response.Headers[HeaderNames.Expires]
-                    = "0";
+                var routeValues = context.ActionDescriptor.RouteValues;
+                if (routeValues is null) return;
+
+                if (routeValues.TryGetValue("controller", out var controller)
+                    && routeValues.TryGetValue("action", out var action)
+                    && controller is not null
+                    && action is not null
+                    && NoCacheEndpoints.Contains((controller, action)))
+                {
+                    var headers = context.HttpContext.Response.Headers;
+                    headers[HeaderNames.CacheControl] = "no-store, no-cache, max-age=0, must-revalidate";
+                    headers[HeaderNames.Pragma] = "no-cache";
+                    headers[HeaderNames.Expires] = "0";
+                }
+            }
+            catch (Exception ex)
+            {
+                // Never let a cache-header filter crash the request pipeline.
+                // Log once and proceed — the underlying action can still run.
+                // [R7] Guard the logger call itself: if the logger is disposed
+                // (DI container tearing down during shutdown) or the provider
+                // throws, swallow it so the request still completes.
+                try { _logger.LogWarning(ex, "NoCacheConfigFilter failed to apply headers"); }
+                catch { /* shutdown race — nothing we can do safely */ }
             }
         }
 

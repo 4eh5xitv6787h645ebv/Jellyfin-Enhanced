@@ -4,6 +4,13 @@
 (function() {
     'use strict';
 
+    // Hoisted so initialize() can register listeners via ctx.listen() and
+    // the URL observer can re-subscribe on re-init. Previously the URL
+    // observer was set up once at IIFE load and never re-subscribed after
+    // teardown, so after one off/on cycle SPA navigations stopped triggering
+    // rating refresh.
+    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('colored-ratings');
+
     const CONFIG = {
         targetSelector: '.mediaInfoOfficialRating',
         attributeName: 'rating',
@@ -235,6 +242,9 @@
         processedElements = new WeakSet();
     }
 
+    let lastUrl = location.href;
+    const JE = window.JellyfinEnhanced;
+
     function initialize() {
         if (!isFeatureEnabled()) {
             cleanup();
@@ -245,42 +255,42 @@
         processRatingElements();
         setupMutationObserver();
         setupFallbackPolling();
+
+        // Register the SPA URL-change watcher INSIDE initialize() so re-init
+        // after a teardown re-subscribes it. Re-calling onBodyMutation with
+        // the same id is a safe replace (helpers.js dedups by id), so this
+        // doesn't accumulate observers on re-init.
+        if (JE?.helpers?.onBodyMutation) {
+            urlObserverHandle = JE.helpers.onBodyMutation('colored-ratings-url-watcher', () => {
+                const url = location.href;
+                if (url !== lastUrl) {
+                    lastUrl = url;
+                    if (isFeatureEnabled()) {
+                        setTimeout(initialize, 500);
+                    }
+                }
+            });
+        }
     }
 
+    // [R1] visibilitychange listener is registered ONCE at module load via
+    // raw addEventListener — NOT via _ctx.listen(). Reasoning:
+    //   - Registering inside initialize() would stack listeners on every
+    //     SPA re-init (URL watcher calls initialize() on every navigation).
+    //   - Using _ctx.listen() at IIFE scope (what CF4 tried) breaks on
+    //     teardown: ctx.teardown() clears listeners and re-init doesn't
+    //     re-add them because the IIFE runs once.
+    //   - Raw addEventListener at IIFE scope is always-on, but the handler
+    //     gates on isFeatureEnabled() so it's inert when the feature is
+    //     disabled. Cost is ~1 no-op function call per tab refocus — fine.
     if (typeof document.visibilityState !== 'undefined') {
-        document.addEventListener('visibilitychange', () => {
+        document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'visible' && isFeatureEnabled()) {
                 setTimeout(processRatingElements, 100);
             }
         });
     }
 
-    let lastUrl = location.href;
-
-    const JE = window.JellyfinEnhanced;
-    if (JE?.helpers?.onBodyMutation) {
-        urlObserverHandle = JE.helpers.onBodyMutation('colored-ratings-url-watcher', () => {
-            const url = location.href;
-            if (url !== lastUrl) {
-                lastUrl = url;
-                if (isFeatureEnabled()) {
-                    setTimeout(initialize, 500);
-                }
-            }
-        });
-    } else {
-        new MutationObserver(() => {
-            const url = location.href;
-            if (url !== lastUrl) {
-                lastUrl = url;
-                if (isFeatureEnabled()) {
-                    setTimeout(initialize, 500);
-                }
-            }
-        }).observe(document, { subtree: true, childList: true });
-    }
-
-    var _ctx = window.JellyfinEnhanced?.helpers?.createModuleContext('colored-ratings');
     if (_ctx) {
         _ctx.dom('#' + CONFIG.cssId);
         _ctx.onTeardown(function() {

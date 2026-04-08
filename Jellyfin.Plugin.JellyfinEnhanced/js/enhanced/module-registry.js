@@ -6,7 +6,12 @@
     'use strict';
 
     var modules = new Map();
-    var handlingChange = false; // [M5] reentrancy guard
+    var handlingChange = false; // reentrancy guard
+    // [H6] Reentrant config-change events are queued instead of dropped.
+    // If handleConfigChange is called while another call is in flight, the
+    // new event is appended here and processed immediately after the current
+    // one finishes — so no change is ever silently lost.
+    var pendingEvents = [];
 
     /**
      * Register a module with the lifecycle system.
@@ -85,8 +90,17 @@
      * @param {object} [oldSettings] - Previous JE.currentSettings snapshot
      */
     function handleConfigChange(changedKeys, oldConfig, newConfig, oldSettings) {
+        // [H6] Queue reentrant events instead of dropping them. A module's
+        // init/teardown/onConfigChange callback that triggers another reactive
+        // reload (directly or via broadcastChange bouncing back) used to lose
+        // the second update permanently; now it gets drained below.
         if (handlingChange) {
-            console.warn('🪼 Jellyfin Enhanced: ModuleRegistry: Ignoring re-entrant config change');
+            pendingEvents.push({
+                changedKeys: changedKeys.slice(),
+                oldConfig: oldConfig,
+                newConfig: newConfig,
+                oldSettings: oldSettings
+            });
             return [];
         }
         handlingChange = true;
@@ -162,6 +176,23 @@
         } finally {
             handlingChange = false;
         }
+
+        // [H6] Drain any events that arrived while we were processing.
+        // Defer via microtask so stack depth stays bounded and the caller's
+        // `needsRefresh` return value is observed before recursion.
+        if (pendingEvents.length > 0) {
+            Promise.resolve().then(function() {
+                while (pendingEvents.length > 0) {
+                    var next = pendingEvents.shift();
+                    try {
+                        handleConfigChange(next.changedKeys, next.oldConfig, next.newConfig, next.oldSettings);
+                    } catch (e) {
+                        console.error('🪼 Jellyfin Enhanced: ModuleRegistry: queued change failed', e);
+                    }
+                }
+            });
+        }
+
         return needsRefresh;
     }
 

@@ -2450,7 +2450,18 @@
 
   if (JE.moduleRegistry) {
     JE.moduleRegistry.register('downloads-page', {
-      configKeys: ['DownloadsPageEnabled'],
+      // Include delivery-mode keys so toggling DownloadsUseCustomTabs /
+      // DownloadsUsePluginPages at runtime re-runs initialize() and picks up
+      // the new path. Also include polling keys so changing the poll interval
+      // or toggling polling mode live takes effect without a refresh.
+      configKeys: [
+        'DownloadsPageEnabled',
+        'DownloadsUseCustomTabs',
+        'DownloadsUsePluginPages',
+        'DownloadsPagePollingEnabled',
+        'DownloadsPollIntervalSeconds'
+      ],
+      enableKey: 'DownloadsPageEnabled',
       init: initialize,
       teardown: _ctx.teardown
     });

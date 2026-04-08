@@ -1749,8 +1749,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// Returns a lightweight hash of the public config for change detection.
         /// Cached and only recomputed when config changes (via ConfigurationChanged event
         /// on the plugin base class). Avoids per-request serialization + SHA256 overhead.
+        ///
+        /// Hashes the EXACT same payload that GetPublicConfig() returns — done via a
+        /// shared BuildPublicConfigPayload() helper — so the two can never drift. Any
+        /// field added to GetPublicConfig is automatically covered by the hash.
         /// </summary>
-        private static string? _cachedConfigHash;
+        private static volatile string? _cachedConfigHash;
 
         internal static void InvalidateConfigHash() => _cachedConfigHash = null;
 
@@ -1760,71 +1764,37 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null) return StatusCode(503);
 
-            if (_cachedConfigHash != null) return Content(_cachedConfigHash);
+            var cached = _cachedConfigHash;
+            if (cached != null) return Content(cached);
 
-            var hashSource = new
+            try
             {
-                config.ElsewhereEnabled, config.JellyseerrEnabled, config.ArrLinksEnabled,
-                config.ArrTagsShowAsLinks, config.LetterboxdEnabled, config.ShowReviews,
-                config.HiddenContentEnabled, config.ColoredRatingsEnabled, config.ThemeSelectorEnabled,
-                config.ColoredActivityIconsEnabled, config.PluginIconsEnabled,
-                config.DownloadsPageEnabled, config.CalendarPageEnabled, config.BookmarksEnabled,
-                config.QualityTagsEnabled, config.GenreTagsEnabled, config.LanguageTagsEnabled,
-                config.RatingTagsEnabled, config.PeopleTagsEnabled, config.PauseScreenEnabled,
-                config.JellyseerrShowSearchResults, config.JellyseerrShowReportButton,
-                config.JellyseerrShowSimilar, config.JellyseerrShowRecommended,
-                config.JellyseerrShowGenreDiscovery, config.JellyseerrShowNetworkDiscovery,
-                config.ToastDuration, config.HelpPanelAutocloseDelay,
-                config.TagsHideOnHover, config.DisableTagsOnSearchPage,
-                config.ClearLocalStorageTimestamp, config.ClearTranslationCacheTimestamp,
-                config.AutoPauseEnabled, config.AutoResumeEnabled, config.ShowWatchProgress,
-                config.ShowFileSizes, config.ShowAudioLanguages, config.DisableAllShortcuts,
-                config.MetadataIconsEnabled, config.EnableLoginImage
-            };
-            var json = System.Text.Json.JsonSerializer.Serialize(hashSource);
-            using var sha = System.Security.Cryptography.SHA256.Create();
-            var hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json));
-            _cachedConfigHash = Convert.ToHexString(hashBytes);
-            return Content(_cachedConfigHash);
+                var payload = BuildPublicConfigPayload(config);
+                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                using var sha = System.Security.Cryptography.SHA256.Create();
+                var hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json));
+                var hex = Convert.ToHexString(hashBytes);
+                _cachedConfigHash = hex;
+                return Content(hex);
+            }
+            catch (Exception ex)
+            {
+                // Don't cache on failure — the next request will retry. Log so we can
+                // diagnose why hashing failed instead of leaving clients silently stuck
+                // thinking the config never changes.
+                _logger.Error($"Failed to compute config hash: {ex.Message}");
+                return StatusCode(500);
+            }
         }
 
-        [HttpGet("private-config")]
-        [Authorize]
-        public ActionResult GetPrivateConfig()
+        /// <summary>
+        /// Shared builder for the public config payload. Both GetPublicConfig
+        /// (full JSON response) and GetConfigHash (SHA256 change detector) call
+        /// this so they can never drift — adding a field here automatically
+        /// covers both endpoints.
+        /// </summary>
+        private static object BuildPublicConfigPayload(PluginConfiguration config)
         {
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            if (config == null)
-            {
-                return StatusCode(503);
-            }
-
-            // Non-admin users receive an empty config object rather than a 403 so that the
-            // client-side plugin initialises without error but never sees sensitive fields.
-            if (!IsAdminUser())
-            {
-                return new JsonResult(new { });
-            }
-
-            return new JsonResult(new
-            {
-                // For Arr Links (admin-only feature)
-                config.SonarrUrl,
-                config.RadarrUrl,
-                config.BazarrUrl,
-                config.SonarrUrlMappings,
-                config.RadarrUrlMappings,
-                config.BazarrUrlMappings,
-            });
-        }
-        [HttpGet("public-config")]
-        public ActionResult GetPublicConfig()
-        {
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            if (config == null)
-            {
-                return StatusCode(503);
-            }
-
             // Expose whether TMDB is configured as a boolean so all users
             // (including non-admin) can use TMDB-dependent features like
             // Reviews and Elsewhere without leaking the actual API key.
@@ -1834,19 +1804,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // Only the base URL is exposed (not the API key), so non-admin users
             // can generate "Open in Seerr" links from search results.
             string jellyseerrBaseUrl = string.Empty;
-            try
+            if (!string.IsNullOrWhiteSpace(config.JellyseerrUrls))
             {
-                if (!string.IsNullOrWhiteSpace(config.JellyseerrUrls))
-                {
-                    jellyseerrBaseUrl = config.JellyseerrUrls
-                        .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(u => u.Trim())
-                        .FirstOrDefault() ?? string.Empty;
-                }
+                jellyseerrBaseUrl = config.JellyseerrUrls
+                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(u => u.Trim())
+                    .FirstOrDefault() ?? string.Empty;
             }
-            catch { /* ignore */ }
 
-            return new JsonResult(new
+            return new
             {
                 // Jellyfin Enhanced Settings
                 TmdbEnabled = tmdbEnabled,
@@ -1882,6 +1848,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.ShowAudioLanguages,
                 config.Shortcuts,
                 config.ShowReviews,
+                config.ShowUserReviews,
                 config.ReviewsExpandedByDefault,
                 config.PauseScreenEnabled,
                 config.QualityTagsEnabled,
@@ -1993,8 +1960,47 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.HiddenContentEnabled,
                 config.HiddenContentUsePluginPages,
                 config.HiddenContentUseCustomTabs,
+            };
+        }
 
+        [HttpGet("private-config")]
+        [Authorize]
+        public ActionResult GetPrivateConfig()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+            {
+                return StatusCode(503);
+            }
+
+            // Non-admin users receive an empty config object rather than a 403 so that the
+            // client-side plugin initialises without error but never sees sensitive fields.
+            if (!IsAdminUser())
+            {
+                return new JsonResult(new { });
+            }
+
+            return new JsonResult(new
+            {
+                // For Arr Links (admin-only feature)
+                config.SonarrUrl,
+                config.RadarrUrl,
+                config.BazarrUrl,
+                config.SonarrUrlMappings,
+                config.RadarrUrlMappings,
+                config.BazarrUrlMappings,
             });
+        }
+        [HttpGet("public-config")]
+        public ActionResult GetPublicConfig()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+            {
+                return StatusCode(503);
+            }
+
+            return new JsonResult(BuildPublicConfigPayload(config));
         }
 
         [HttpGet("tmdb/{**apiPath}")]
@@ -2457,6 +2463,170 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 _logger.Error($"Failed to save hidden content for user {authorizedUserId}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save hidden content." });
+            }
+        }
+
+        // ─── User Reviews (shared reviews.json at plugin config root) ────────────
+
+        public sealed class ReviewPayload
+        {
+            public string Content { get; set; } = string.Empty;
+            public int? Rating { get; set; }
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex _tmdbIdRegex =
+            new System.Text.RegularExpressions.Regex(@"^\d+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>
+        /// Returns all user-written reviews for a specific TMDB item,
+        /// enriched with each reviewer's display name.
+        /// </summary>
+        [HttpGet("reviews/{mediaType}/{tmdbId}")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult GetItemReviews(string mediaType, string tmdbId)
+        {
+            if (mediaType != "movie" && mediaType != "tv")
+                return BadRequest(new { message = "MediaType must be 'movie' or 'tv'." });
+
+            if (string.IsNullOrWhiteSpace(tmdbId) || !_tmdbIdRegex.IsMatch(tmdbId))
+                return BadRequest(new { message = "Invalid TmdbId." });
+
+            var suffix = $":{mediaType}:{tmdbId}";
+            var store = _userConfigurationManager.GetAllReviews();
+            var results = new List<object>();
+
+            foreach (var kvp in store.Reviews)
+            {
+                if (!kvp.Key.EndsWith(suffix, StringComparison.Ordinal)) continue;
+                var review = kvp.Value;
+
+                string displayName = review.UserId;
+                if (Guid.TryParseExact(review.UserId, "N", out var userGuid))
+                {
+                    var jellyfinUser = _userManager.GetUserById(userGuid);
+                    if (jellyfinUser != null) displayName = jellyfinUser.Username;
+                }
+
+                results.Add(new
+                {
+                    userId = review.UserId,
+                    userName = displayName,
+                    tmdbId = review.TmdbId,
+                    mediaType = review.MediaType,
+                    content = review.Content,
+                    rating = review.Rating,
+                    createdAt = review.CreatedAt,
+                    updatedAt = review.UpdatedAt
+                });
+            }
+
+            return Ok(new { reviews = results });
+        }
+
+        /// <summary>
+        /// Creates or updates the current user's review for a TMDB item.
+        /// User identity is resolved from the auth token — no userId in the path.
+        /// </summary>
+        [HttpPost("reviews/{mediaType}/{tmdbId}")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult UpsertReview(string mediaType, string tmdbId, [FromBody] ReviewPayload payload)
+        {
+            if (mediaType != "movie" && mediaType != "tv")
+                return BadRequest(new { success = false, message = "MediaType must be 'movie' or 'tv'." });
+
+            if (string.IsNullOrWhiteSpace(tmdbId) || !_tmdbIdRegex.IsMatch(tmdbId))
+                return BadRequest(new { success = false, message = "Invalid TmdbId." });
+
+            if (payload == null)
+                return BadRequest(new { success = false, message = "Invalid review payload." });
+
+            var normalizedContent = payload.Content?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(normalizedContent) && !payload.Rating.HasValue)
+                return BadRequest(new { success = false, message = "A rating or review text is required." });
+
+            if (normalizedContent.Length > 2000)
+                return BadRequest(new { success = false, message = "Review content must not exceed 2000 characters." });
+
+            if (payload.Rating.HasValue && (payload.Rating.Value < 1 || payload.Rating.Value > 5))
+                return BadRequest(new { success = false, message = "Rating must be between 1 and 5." });
+
+            var currentUserId = UserHelper.GetCurrentUserId(User);
+            if (!currentUserId.HasValue) return Forbid();
+            var userIdN = currentUserId.Value.ToString("N");
+
+            try
+            {
+                var store = _userConfigurationManager.GetAllReviews();
+                var key = $"{userIdN}:{mediaType}:{tmdbId}";
+                var now = DateTime.UtcNow.ToString("o");
+
+                if (store.Reviews.TryGetValue(key, out var existing))
+                {
+                    existing.Content = normalizedContent;
+                    existing.Rating = payload.Rating;
+                    existing.UpdatedAt = now;
+                }
+                else
+                {
+                    store.Reviews[key] = new UserReview
+                    {
+                        UserId = userIdN,
+                        TmdbId = tmdbId,
+                        MediaType = mediaType,
+                        Content = normalizedContent,
+                        Rating = payload.Rating,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    };
+                }
+
+                _userConfigurationManager.SaveAllReviews(store);
+                _logger.Info($"Saved review for {mediaType}:{tmdbId} by user {userIdN}.");
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to save review for user {userIdN}: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to save review." });
+            }
+        }
+
+        /// <summary>
+        /// Deletes the current user's review for a TMDB item.
+        /// </summary>
+        [HttpDelete("reviews/{mediaType}/{tmdbId}")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult DeleteReview(string mediaType, string tmdbId)
+        {
+            if (mediaType != "movie" && mediaType != "tv")
+                return BadRequest(new { success = false, message = "MediaType must be 'movie' or 'tv'." });
+
+            if (string.IsNullOrWhiteSpace(tmdbId) || !_tmdbIdRegex.IsMatch(tmdbId))
+                return BadRequest(new { success = false, message = "Invalid TmdbId." });
+
+            var currentUserId = UserHelper.GetCurrentUserId(User);
+            if (!currentUserId.HasValue) return Forbid();
+            var userIdN = currentUserId.Value.ToString("N");
+
+            try
+            {
+                var store = _userConfigurationManager.GetAllReviews();
+                var key = $"{userIdN}:{mediaType}:{tmdbId}";
+                if (store.Reviews.Remove(key))
+                {
+                    _userConfigurationManager.SaveAllReviews(store);
+                    _logger.Info($"Deleted review for {mediaType}:{tmdbId} by user {userIdN}.");
+                }
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to delete review for user {userIdN}: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to delete review." });
             }
         }
 

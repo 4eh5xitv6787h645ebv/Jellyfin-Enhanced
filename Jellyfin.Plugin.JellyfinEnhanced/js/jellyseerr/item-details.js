@@ -437,28 +437,38 @@
         processedItems.clear();
     }
 
+    // ctx is declared at IIFE scope so initialize() can register tracked
+    // listeners via ctx.listen() — otherwise each live-toggle cycle would
+    // leak a hashchange + viewshow listener pair.
+    var ctx = JE.helpers ? JE.helpers.createModuleContext('jellyseerr-item-details') : null;
+
     /**
      * Initializes the item details handler
      */
     function initialize() {
         console.debug(`${logPrefix} Initializing Recommendations and Similar sections`);
 
-        // Listen for hash changes (navigation)
-        window.addEventListener('hashchange', () => {
+        // Tracked listeners are auto-removed in ctx.teardown(). Without this,
+        // toggling JellyseerrEnabled off+on would leak one pair per cycle.
+        var onHashChange = function() {
             cleanup();
             handleItemDetailsPage();
-        });
+        };
+        var onViewShow = function() {
+            handleItemDetailsPage();
+        };
+        if (ctx) {
+            ctx.listen(window, 'hashchange', onHashChange);
+            ctx.listen(document, 'viewshow', onViewShow);
+        } else {
+            window.addEventListener('hashchange', onHashChange);
+            document.addEventListener('viewshow', onViewShow);
+        }
 
         // Check current page on load
         handleItemDetailsPage();
-
-        // Also listen for viewshow events (Jellyfin's custom event)
-        document.addEventListener('viewshow', () => {
-            handleItemDetailsPage();
-        });
     }
 
-    var ctx = JE.helpers ? JE.helpers.createModuleContext('jellyseerr-item-details') : null;
     if (ctx) {
         ctx.dom('.jellyseerr-details-section');
         ctx.onTeardown(function() {
@@ -468,10 +478,22 @@
         });
     }
 
-    // Initialize when DOM is ready
+    // Initialize when DOM is ready.
+    // [R8] By the time plugin.js Stage 6 fires this module, DOMContentLoaded
+    // has almost always already fired (plugin.js waits for ApiClient + the
+    // whole stages 1-5 pipeline first). Guard on readyState and fall through
+    // to a direct initialize() call rather than leaving a dangling
+    // DOMContentLoaded listener that's never cleaned up.
     if (JE.pluginConfig?.JellyseerrEnabled) {
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initialize);
+            // Fallback path: register a one-shot listener using ctx tracking
+            // if available so teardown removes it on live disable.
+            const onReady = function() { initialize(); };
+            if (ctx) {
+                ctx.listen(document, 'DOMContentLoaded', onReady);
+            } else {
+                document.addEventListener('DOMContentLoaded', onReady, { once: true });
+            }
         } else {
             initialize();
         }

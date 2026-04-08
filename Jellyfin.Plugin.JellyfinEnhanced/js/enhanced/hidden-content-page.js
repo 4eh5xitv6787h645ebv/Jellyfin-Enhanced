@@ -27,6 +27,12 @@
 
   // Event listeners tracked via _ctx.listen() for automatic teardown.
 
+  // [R5] Module-scope handle for the retry-wait interval in initialize().
+  // Tracked here (not via _ctx.interval — _ctx is declared later in the
+  // file and not available at init-time) so teardown can clear it and
+  // re-init can detect an in-flight poll to prevent duplicates.
+  let hiddenContentWaitTimer = null;
+
   const logPrefix = '🪼 Jellyfin Enhanced: Hidden Content Page:';
 
   /** Polling interval for detecting pushState navigations. */
@@ -426,8 +432,45 @@
       return;
     }
 
+    // JE.hiddenContent is created by the sibling hidden-content module and
+    // may not be ready yet on re-init (module-registry snapshots modules and
+    // iterates them in insertion order, which doesn't guarantee hidden-content
+    // runs before hidden-content-page). Poll briefly instead of bailing.
+    // See "Cross-module load order" gotcha in CLAUDE docs.
+    //
+    // [R5] hiddenContentWaitTimer is module-scope so (a) teardown can clear
+    // it to prevent post-disable interval leaks, (b) a concurrent init()
+    // call (rapid toggle) cancels the in-flight poll before starting a new
+    // one — previously each init() created its own local var waitTimer and
+    // multiple stacked polls all called initialize() when JE.hiddenContent
+    // eventually appeared, duplicating nav items and listeners.
     if (!JE.hiddenContent) {
-      console.log(`${logPrefix} Hidden content not initialized, skipping page module`);
+      if (hiddenContentWaitTimer) {
+        clearInterval(hiddenContentWaitTimer);
+        hiddenContentWaitTimer = null;
+      }
+      console.log(`${logPrefix} Waiting for JE.hiddenContent to become available...`);
+      var attempts = 0;
+      hiddenContentWaitTimer = setInterval(function() {
+        attempts++;
+        // Abort if feature was disabled mid-poll.
+        if (!JE.pluginConfig?.HiddenContentEnabled) {
+          clearInterval(hiddenContentWaitTimer);
+          hiddenContentWaitTimer = null;
+          return;
+        }
+        if (JE.hiddenContent) {
+          clearInterval(hiddenContentWaitTimer);
+          hiddenContentWaitTimer = null;
+          console.log(`${logPrefix} JE.hiddenContent ready after ${attempts * 50}ms, resuming init`);
+          initialize();
+        } else if (attempts > 60) {
+          // 3 seconds — give up so we don't leak an interval forever
+          clearInterval(hiddenContentWaitTimer);
+          hiddenContentWaitTimer = null;
+          console.warn(`${logPrefix} JE.hiddenContent never appeared, skipping page module`);
+        }
+      }, 50);
       return;
     }
 
@@ -1584,6 +1627,9 @@
       if (state.pageVisible) hidePage();
       JE.helpers.disconnectObserver('hidden-content-page-nav');
       if (state.locationTimer) { clearInterval(state.locationTimer); state.locationTimer = null; }
+      // [R5] Clear any in-flight ready-poll so it can't fire initialize()
+      // after the module has been torn down.
+      if (hiddenContentWaitTimer) { clearInterval(hiddenContentWaitTimer); hiddenContentWaitTimer = null; }
       state.previousPage = null;
       state.searchQuery = '';
       state.scopedOnly = false;
@@ -1607,7 +1653,14 @@
 
   if (JE.moduleRegistry) {
     JE.moduleRegistry.register('hidden-content-page', {
-      configKeys: ['HiddenContentEnabled'],
+      // Include delivery-mode keys so toggling HiddenContentUseCustomTabs /
+      // HiddenContentUsePluginPages at runtime re-runs initialize().
+      configKeys: [
+        'HiddenContentEnabled',
+        'HiddenContentUseCustomTabs',
+        'HiddenContentUsePluginPages'
+      ],
+      enableKey: 'HiddenContentEnabled',
       init: initialize,
       teardown: _ctx.teardown
     });
