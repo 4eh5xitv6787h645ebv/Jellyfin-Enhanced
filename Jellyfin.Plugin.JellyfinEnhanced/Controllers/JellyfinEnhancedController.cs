@@ -2835,6 +2835,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 try { regionalLangs = _languageEnrichment.GetForItem(item); }
                 catch (Exception ex) { _logger.Debug($"[LangEnrichment] Skipping regional lookup for {item.Id}: {ex.Message}"); }
 
+                // Issue #544: also read per-item ManualRegionOverrides from the tag cache.
+                // These are admin-set via the flag-click popover and take highest priority.
+                Dictionary<string, string>? manualOverrides = null;
+                var itemCacheKey = item.Id.ToString("N").ToLowerInvariant();
+                manualOverrides = _tagCacheService.GetManualRegionOverrides(itemCacheKey);
+                // If this item doesn't have its own override, inherit from series
+                if (manualOverrides == null && seriesId.HasValue && seriesId.Value != Guid.Empty)
+                {
+                    var seriesCacheKey = seriesId.Value.ToString("N").ToLowerInvariant();
+                    manualOverrides = _tagCacheService.GetManualRegionOverrides(seriesCacheKey);
+                }
+
                 results.Add(new
                 {
                     Id = item.Id,
@@ -2849,7 +2861,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     MediaStreams = trimmedStreams,
                     MediaSources = trimmedSources,
                     FirstEpisode = firstEpisodeData,
-                    RegionalAudioLanguages = regionalLangs
+                    RegionalAudioLanguages = regionalLangs,
+                    ManualRegionOverrides = manualOverrides
                 });
             }
 

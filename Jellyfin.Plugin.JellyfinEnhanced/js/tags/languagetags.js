@@ -738,9 +738,15 @@
                     }
 
                     var languages = extractLanguagesFromItem(sourceItem);
-                    // Tier 1.5: merge arr-sourced regional variants when the controller
-                    // included them on this item (only present if arr enrichment is enabled).
-                    if (item.RegionalAudioLanguages && item.RegionalAudioLanguages.length > 0) {
+                    // Priority chain: manual per-item override > arr enrichment > file metadata.
+                    if (item.ManualRegionOverrides && Object.keys(item.ManualRegionOverrides).length > 0) {
+                        var manualRegional = [];
+                        for (var family in item.ManualRegionOverrides) {
+                            var bcp = item.ManualRegionOverrides[family];
+                            manualRegional.push({ code: bcp, name: bcp });
+                        }
+                        languages = mergeRegionalLanguages(languages, manualRegional);
+                    } else if (item.RegionalAudioLanguages && item.RegionalAudioLanguages.length > 0) {
                         languages = mergeRegionalLanguages(languages, item.RegionalAudioLanguages);
                     }
 

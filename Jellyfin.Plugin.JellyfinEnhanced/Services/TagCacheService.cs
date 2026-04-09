@@ -185,6 +185,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         }
 
         /// <summary>
+        /// Get ManualRegionOverrides for a cache entry, or null if none set.
+        /// Used by the tag-data endpoint (live mode) to include per-item overrides.
+        /// </summary>
+        public Dictionary<string, string>? GetManualRegionOverrides(string cacheKey)
+        {
+            if (_cache.TryGetValue(cacheKey, out var entry)
+                && entry.ManualRegionOverrides != null
+                && entry.ManualRegionOverrides.Count > 0)
+            {
+                return entry.ManualRegionOverrides;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Set or clear ManualRegionOverrides on a specific cache entry.
         /// Called from the language-region controller endpoint. Triggers a debounced save.
         /// </summary>
