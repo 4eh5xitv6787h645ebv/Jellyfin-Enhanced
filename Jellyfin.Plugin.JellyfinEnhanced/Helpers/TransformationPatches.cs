@@ -30,9 +30,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             var regex = new Regex($"<script[^>]*plugin=[\"']{pluginName}[\"'][^>]*>\\s*</script>\\n?");
             var updatedContent = regex.Replace(content.Contents, string.Empty);
 
-            // 3. Inject the new script tag.
+            // Phase 4: preconnect hints for external origins the plugin
+            // will fetch from early in the page lifecycle. These establish
+            // the TCP+TLS connection in the background while the browser
+            // parses the main document, shaving ~100-300ms off the first
+            // request to each origin.
+            var preconnectHints = string.Join("\n", new[]
+            {
+                "<link rel=\"preconnect\" href=\"https://api.themoviedb.org\" crossorigin>",
+                "<link rel=\"preconnect\" href=\"https://image.tmdb.org\" crossorigin>",
+                "<link rel=\"preconnect\" href=\"https://cdn.jsdelivr.net\" crossorigin>",
+            });
+
+            // 3. Inject the script tag + preconnect hints.
             if (updatedContent.Contains("</body>"))
             {
+                // Preconnect hints go in <head>; script tag goes before </body>
+                if (updatedContent.Contains("</head>"))
+                {
+                    updatedContent = updatedContent.Replace("</head>", $"{preconnectHints}\n</head>");
+                }
                 return updatedContent.Replace("</body>", $"{scriptTag}\n</body>");
             }
 

@@ -1021,10 +1021,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     return null;
                 }
 
-                var httpClient = _httpClientFactory.CreateClient();
-                var tmdbUrl = $"https://api.themoviedb.org/3/person/{tmdbPersonId}?api_key={config.TMDB_API_KEY}";
-
-                // _logger.Debug($"Fetching TMDB person data from: https://api.themoviedb.org/3/person/{tmdbPersonId}");
+                var httpClient = _httpClientFactory.CreateClient("TMDB");
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.TMDB_API_KEY);
+                var tmdbUrl = $"https://api.themoviedb.org/3/person/{tmdbPersonId}";
                 var response = await httpClient.GetAsync(tmdbUrl);
 
                 if (!response.IsSuccessStatusCode)
@@ -1720,10 +1720,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return BadRequest(new { ok = false, message = "API key is missing" });
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient("TMDB");
             try
             {
-                var requestUri = $"https://api.themoviedb.org/3/configuration?api_key={apiKey}";
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+                var requestUri = "https://api.themoviedb.org/3/configuration";
                 var response = await httpClient.GetAsync(requestUri);
 
                 if (response.IsSuccessStatusCode)
@@ -2057,10 +2059,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(503, "TMDB API key is not configured.");
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient("TMDB");
             var queryString = HttpContext.Request.QueryString;
-            var separator = queryString.HasValue ? "&" : "?";
-            var requestUri = $"https://api.themoviedb.org/3/{apiPath}{queryString}{separator}api_key={config.TMDB_API_KEY}";
+
+            // Phase 4: use Bearer token auth instead of query-string api_key.
+            // TMDB deprecated query-string auth; query strings land in
+            // upstream proxy logs, HTTP referrer headers, and any MITM.
+            // Bearer token goes in the Authorization header only.
+            // The admin's key may be a v3 key (32-char hex) or a v4 read
+            // access token (longer JWT-like). Both work as Bearer tokens
+            // on TMDB's v3 endpoints since TMDB auto-detects the format.
+            var requestUri = $"https://api.themoviedb.org/3/{apiPath}{queryString}";
+            httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.TMDB_API_KEY);
 
             try
             {
@@ -2600,7 +2611,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         public sealed class ReviewPayload
         {
+            // Phase 4: input validation attributes for defense-in-depth.
+            // The controller action also validates, but attributes catch
+            // malformed input before the action body runs.
+            [System.ComponentModel.DataAnnotations.MaxLength(2000)]
             public string Content { get; set; } = string.Empty;
+            [System.ComponentModel.DataAnnotations.Range(1, 5)]
             public int? Rating { get; set; }
         }
 
