@@ -16,6 +16,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Uses IActionFilter (post-routing) instead of IStartupFilter to avoid BaseUrl path-matching issues.
             serviceCollection.AddSingleton<NoCacheConfigFilter>();
             serviceCollection.Configure<MvcOptions>(opts => opts.Filters.Add<NoCacheConfigFilter>());
+            // Phase 2: enable RFC 7807 ProblemDetails for consistent error
+            // responses across all plugin endpoints. Endpoints opt-in by
+            // returning Problem(...) instead of StatusCode(...) or
+            // BadRequest(new { ... }). The middleware also auto-shapes
+            // unhandled exceptions as ProblemDetails.
+            serviceCollection.AddProblemDetails();
 
             serviceCollection.AddSingleton<StartupService>();
             serviceCollection.AddHttpClient();

@@ -591,6 +591,7 @@
                 // reactive config infrastructure (must load before all modules)
                 'enhanced/config-store.js',
                 'enhanced/user-store.js',    // Phase 1: per-user settings reactive store
+                'enhanced/notify.js',        // Phase 2: unified notification API
                 'enhanced/module-registry.js',
                 // enhanced
                 'enhanced/config.js',

@@ -1710,7 +1710,18 @@
                 } else {
                     JE.toast(JE.t('toast_language_changed'));
                 }
-                setTimeout(() => window.location.reload(), 1500);
+                // Phase 2: re-fetch translations live instead of reloading.
+                // JE.loadTranslations() is idempotent — it reads the new
+                // language from localStorage and re-fetches the translation
+                // file. Modules that render persistent translated strings
+                // will pick up the new values on next render; the help panel
+                // and settings panel are rebuilt from scratch on every open.
+                if (typeof JE.loadTranslations === 'function') {
+                    JE.loadTranslations().then(function(translations) {
+                        if (translations) JE.translations = translations;
+                        window.dispatchEvent(new CustomEvent('je:language-changed'));
+                    });
+                }
             });
         }
 
@@ -1732,7 +1743,15 @@
                 cacheKeys.forEach(key => localStorage.removeItem(key));
 
                 JE.toast(JE.t('toast_translation_cache_cleared', { count: cacheKeys.length }));
-                setTimeout(() => window.location.reload(), 2000);
+                // Phase 2: re-fetch translations live instead of reloading.
+                // The cache was just cleared, so loadTranslations will
+                // pull a fresh copy from the server/GitHub.
+                if (typeof JE.loadTranslations === 'function') {
+                    JE.loadTranslations().then(function(translations) {
+                        if (translations) JE.translations = translations;
+                        window.dispatchEvent(new CustomEvent('je:language-changed'));
+                    });
+                }
                 resetAutoCloseTimer();
             });
         }

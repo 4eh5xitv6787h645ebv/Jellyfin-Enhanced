@@ -165,6 +165,75 @@
     // --- Theme Management ---
     const getCurrentTheme = (userId) => getLocalStorageValue(userId, 'customCss', '');
 
+    /**
+     * Phase 2: Apply a theme change live without a page reload.
+     *
+     * Jellyfin's web client creates a `<style>` element on page load with
+     * the `@import url(...)` content from `{userId}-customCss` in
+     * localStorage. To switch themes without a reload:
+     *   1. Update localStorage (so the next page load picks it up too)
+     *   2. Find the existing <style> element that contains the current
+     *      @import (or create one if there isn't one — e.g., switching
+     *      from Default which has no @import)
+     *   3. Replace its textContent with the new @import
+     *   4. Wait for the CSS to load over the network
+     *   5. Re-detect the active theme so JE.themer.getThemeVariables()
+     *      returns the correct values
+     *   6. Emit je:theme-changed so modules that cached theme vars
+     *      (toast, panel, hidden-content overlay) can re-derive
+     */
+    function applyThemeLive(newThemeValue) {
+        // Find the <style> element Jellyfin (or a previous applyThemeLive
+        // call) created for the customCss @import. It's the one whose
+        // textContent starts with `@import url` pointing at the theme CDN.
+        var themeStyle = null;
+        var allStyles = document.querySelectorAll('style');
+        for (var i = 0; i < allStyles.length; i++) {
+            var txt = allStyles[i].textContent || '';
+            if (txt.indexOf('@import url') !== -1 && txt.indexOf('Jellyfish') !== -1) {
+                themeStyle = allStyles[i];
+                break;
+            }
+            // Also match the generic CDN path for non-Jellyfish themes
+            if (txt.indexOf('@import url') !== -1 && txt.indexOf('cdn.jsdelivr.net') !== -1) {
+                themeStyle = allStyles[i];
+                break;
+            }
+        }
+
+        if (newThemeValue) {
+            // Switching TO a theme (non-default)
+            if (themeStyle) {
+                themeStyle.textContent = newThemeValue;
+            } else {
+                // No existing theme <style> — create one (switching from Default)
+                var newStyle = document.createElement('style');
+                newStyle.textContent = newThemeValue;
+                document.head.appendChild(newStyle);
+            }
+        } else {
+            // Switching to Default — remove the theme <style>
+            if (themeStyle) {
+                themeStyle.textContent = '';
+            }
+        }
+
+        // Wait for the @import to load, then re-detect + notify
+        setTimeout(function() {
+            // Re-detect theme so JE.themer.getThemeVariables() returns fresh values
+            if (typeof JE !== 'undefined' && JE.themer) {
+                JE.themer.activeTheme = null; // force re-detection
+                JE.themer.detectActiveTheme();
+            }
+            // Notify all listeners
+            window.dispatchEvent(new CustomEvent('je:theme-changed'));
+            // Remove the transition class
+            document.body.classList.remove('theme-applying');
+            document.body.classList.add('theme-applied');
+            setTimeout(function() { document.body.classList.remove('theme-applied'); }, TRANSITION_DURATION);
+        }, 500); // 500ms for the CDN CSS to load
+    }
+
     const setTheme = (userId, themeFilename, themeName = 'Default') => {
         const themeValue = getThemeImport(themeFilename);
         if (themeValue) {
@@ -225,7 +294,8 @@
             } catch (e) {
                 console.error('🪼🎨Jellyfish Theme Selector :  Could not set session storage:', e);
             }
-            window.location.reload();
+            // Phase 2: live-apply instead of reload
+            applyThemeLive(getThemeImport(randomThemeFilename));
         } else {
             console.log('🪼🎨Jellyfish Theme Selector :  Random theme already applied for today.');
         }
@@ -290,10 +360,16 @@
                 console.error('🪼🎨Jellyfish Theme Selector :  Session storage error:', e);
             }
 
-            // Wait for fade-out transition, then reload
+            // Phase 2: live-apply with transition instead of reload
             setTimeout(() => {
-                console.log(`🪼🎨Jellyfish Theme Selector :  Reloading to apply theme: ${newThemeName}`);
-                window.location.reload();
+                console.log(`🪼🎨Jellyfish Theme Selector :  Applying theme live: ${newThemeName}`);
+                applyThemeLive(getThemeImport(newThemeFilename));
+                // Re-enable controls after theme applies
+                setTimeout(() => {
+                    select.disabled = false;
+                    const rb = document.getElementById('random-theme-button');
+                    if (rb) rb.disabled = false;
+                }, 600);
             }, TRANSITION_DURATION);
         });
 
