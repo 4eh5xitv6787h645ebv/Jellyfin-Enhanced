@@ -183,21 +183,21 @@
      *      (toast, panel, hidden-content overlay) can re-derive
      */
     function applyThemeLive(newThemeValue) {
-        // Find the <style> element Jellyfin (or a previous applyThemeLive
-        // call) created for the customCss @import. It's the one whose
-        // textContent starts with `@import url` pointing at the theme CDN.
-        var themeStyle = null;
-        var allStyles = document.querySelectorAll('style');
-        for (var i = 0; i < allStyles.length; i++) {
-            var txt = allStyles[i].textContent || '';
-            if (txt.indexOf('@import url') !== -1 && txt.indexOf('Jellyfish') !== -1) {
-                themeStyle = allStyles[i];
-                break;
-            }
-            // Also match the generic CDN path for non-Jellyfish themes
-            if (txt.indexOf('@import url') !== -1 && txt.indexOf('cdn.jsdelivr.net') !== -1) {
-                themeStyle = allStyles[i];
-                break;
+        // Find the <style> element containing the active theme's @import.
+        // Priority: (1) our own tagged element from a previous live swap,
+        // (2) any <style> whose textContent starts with @import url.
+        // We tag it with data-je-theme on first match so subsequent swaps
+        // find it reliably regardless of CDN origin.
+        var themeStyle = document.querySelector('style[data-je-theme]');
+        if (!themeStyle) {
+            var allStyles = document.querySelectorAll('style');
+            for (var i = 0; i < allStyles.length; i++) {
+                var txt = allStyles[i].textContent || '';
+                if (txt.indexOf('@import url') !== -1) {
+                    themeStyle = allStyles[i];
+                    themeStyle.setAttribute('data-je-theme', 'true');
+                    break;
+                }
             }
         }
 
@@ -208,6 +208,7 @@
             } else {
                 // No existing theme <style> — create one (switching from Default)
                 var newStyle = document.createElement('style');
+                newStyle.setAttribute('data-je-theme', 'true');
                 newStyle.textContent = newThemeValue;
                 document.head.appendChild(newStyle);
             }
@@ -218,20 +219,44 @@
             }
         }
 
-        // Wait for the @import to load, then re-detect + notify
-        setTimeout(function() {
-            // Re-detect theme so JE.themer.getThemeVariables() returns fresh values
+        // Wait for the new CSS to actually load and parse. We poll
+        // getComputedStyle for the theme's unique CSS variable to
+        // change (or appear/disappear) rather than relying on a blind
+        // setTimeout. Falls back to 3s timeout if the poll never fires
+        // (e.g., Default theme has no unique var).
+        var pollAttempts = 0;
+        var maxPollAttempts = 60; // 60 * 50ms = 3s
+        var oldThemeKey = (typeof JE !== 'undefined' && JE.themer && JE.themer.activeTheme)
+            ? JE.themer.activeTheme.key : null;
+
+        function finishThemeApply() {
             if (typeof JE !== 'undefined' && JE.themer) {
-                JE.themer.activeTheme = null; // force re-detection
+                JE.themer.activeTheme = null;
                 JE.themer.detectActiveTheme();
             }
-            // Notify all listeners
             window.dispatchEvent(new CustomEvent('je:theme-changed'));
-            // Remove the transition class
             document.body.classList.remove('theme-applying');
             document.body.classList.add('theme-applied');
             setTimeout(function() { document.body.classList.remove('theme-applied'); }, TRANSITION_DURATION);
-        }, 500); // 500ms for the CDN CSS to load
+        }
+
+        var pollTimer = setInterval(function() {
+            pollAttempts++;
+            // Re-detect to see if the CSS vars have changed
+            if (typeof JE !== 'undefined' && JE.themer) {
+                JE.themer.activeTheme = null;
+                var detected = JE.themer.detectActiveTheme();
+                if (detected && detected.key !== oldThemeKey) {
+                    clearInterval(pollTimer);
+                    finishThemeApply();
+                    return;
+                }
+            }
+            if (pollAttempts >= maxPollAttempts) {
+                clearInterval(pollTimer);
+                finishThemeApply(); // fallback — apply anyway after 3s
+            }
+        }, 50);
     }
 
     const setTheme = (userId, themeFilename, themeName = 'Default') => {

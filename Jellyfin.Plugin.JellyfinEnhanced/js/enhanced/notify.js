@@ -99,11 +99,16 @@
 
         el.appendChild(body);
 
-        // Close button
+        // Close button — accepts an optional onClose callback so callers
+        // (like persistent()) can hook cleanup without stacking a second
+        // listener on the same button.
         var closeBtn = document.createElement('span');
         closeBtn.className = 'je-notify-close material-icons';
         closeBtn.textContent = 'close';
-        closeBtn.addEventListener('click', function() { el.remove(); });
+        closeBtn.addEventListener('click', function() {
+            el.remove();
+            if (typeof options.onClose === 'function') options.onClose();
+        });
         el.appendChild(closeBtn);
 
         return el;
@@ -141,18 +146,14 @@
             if (old.parentNode) old.remove();
         }
 
+        // Use onClose callback to remove from map when user dismisses —
+        // no second listener needed (the createNotificationElement close
+        // handler calls onClose after el.remove()).
+        options.onClose = function() { persistentNotifications.delete(id); };
         var el = createNotificationElement(options.level || 'error', message, options);
         el.dataset.notifyId = id;
         container.appendChild(el);
         persistentNotifications.set(id, el);
-
-        // Override close to also remove from map
-        var closeBtn = el.querySelector('.je-notify-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                persistentNotifications.delete(id);
-            });
-        }
     }
 
     /**
