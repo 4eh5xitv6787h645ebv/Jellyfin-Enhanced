@@ -619,21 +619,15 @@
             var isAdmin = JE.currentSettings?.isAdmin === true
                 || JE.currentUser?.Policy?.IsAdministrator === true;
             if (!isAdmin) return;
-            // Enable pointer events on the overlay so admin can interact with it
+            // Enable pointer events on the overlay so admin can click the flags.
+            // Non-admin users keep pointer-events:none so the flags are non-interactive
+            // and clicks pass through to the card beneath.
             wrap.style.pointerEvents = 'auto';
-            wrap.style.cursor = 'context-menu';
-            wrap.addEventListener('contextmenu', function(e) {
+            wrap.style.cursor = 'pointer';
+            wrap.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 showRegionPopover(wrap, itemId);
-            });
-            // Alt+click as alternative (some trackpad users can't right-click easily)
-            wrap.addEventListener('click', function(e) {
-                if (e.altKey) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    showRegionPopover(wrap, itemId);
-                }
             });
         }
 
