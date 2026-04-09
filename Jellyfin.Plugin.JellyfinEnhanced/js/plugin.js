@@ -592,6 +592,8 @@
                 'enhanced/config-store.js',
                 'enhanced/user-store.js',    // Phase 1: per-user settings reactive store
                 'enhanced/notify.js',        // Phase 2: unified notification API
+                'enhanced/dedupe.js',        // Phase 3: request deduplication
+                'enhanced/debug-panel.js',   // Phase 3: Ctrl+Shift+E diagnostics
                 'enhanced/module-registry.js',
                 // enhanced
                 'enhanced/config.js',

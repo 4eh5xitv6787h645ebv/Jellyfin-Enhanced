@@ -24,7 +24,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddProblemDetails();
 
             serviceCollection.AddSingleton<StartupService>();
+            // Phase 3: Named HttpClients with per-service timeouts.
+            // The default unnamed client is kept for backward compat;
+            // services should migrate to named clients incrementally.
             serviceCollection.AddHttpClient();
+            serviceCollection.AddHttpClient("Sonarr", c => { c.Timeout = TimeSpan.FromSeconds(15); });
+            serviceCollection.AddHttpClient("Radarr", c => { c.Timeout = TimeSpan.FromSeconds(15); });
+            serviceCollection.AddHttpClient("Jellyseerr", c => { c.Timeout = TimeSpan.FromSeconds(15); });
+            serviceCollection.AddHttpClient("TMDB", c =>
+            {
+                c.BaseAddress = new Uri("https://api.themoviedb.org/3/");
+                c.Timeout = TimeSpan.FromSeconds(10);
+            });
             serviceCollection.AddSingleton<Logger>();
             // Phase 0: content-hash fingerprint for script / locale URLs.
             // Singleton so the hash is computed at most once and every caller

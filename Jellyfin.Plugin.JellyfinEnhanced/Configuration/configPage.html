@@ -1687,22 +1687,11 @@
                             </div>
                         </div>
                     </fieldset>
-                    <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Config Page Preferences</h3></legend>
-                        <div class="configSection">
-                            <div class="checkboxContainer" style="margin-bottom: 0.5em;">
-                                <label>
-                                    <input id="autoReloadOnSave" is="emby-checkbox" type="checkbox"/>
-                                    <span>Force reload on save (legacy fallback)</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription" style="margin-bottom: 1em;">
-                                Forces a full page reload after saving. The reactive config system now applies
-                                most changes live, so this is only needed as a fallback for settings that
-                                haven't been migrated yet. Off by default.
-                            </div>
-                        </div>
-                    </fieldset>
+                    <!-- Phase 3: autoReloadOnSave removed. The reactive config
+                         system (Phases 1-2) handles all setting changes live.
+                         The needsRefresh toast in plugin.js is the only reload
+                         suggestion path that remains (for modules without
+                         teardown or on plugin version upgrade). -->
                 </div>
                 <div
                     style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
@@ -2711,11 +2700,9 @@
                 document.querySelector('#loginImageEnabled').checked = config.EnableLoginImage || false;
                 document.querySelector('#customPluginLinks').value = config.CustomPluginLinks || '';
 
-                // Config page preference (localStorage, not server config)
-                // Phase 1: default OFF — the reactive config system handles
-                // most changes live now. Only users who explicitly checked
-                // the box in a previous session keep it on.
-                document.querySelector('#autoReloadOnSave').checked = localStorage.getItem('JE_autoReloadOnSave') === 'true';
+                // Phase 3: autoReloadOnSave checkbox removed — reactive config
+                // handles everything. Clean up stale localStorage key.
+                try { localStorage.removeItem('JE_autoReloadOnSave'); } catch(e) {}
 
                 // Set up event handler for watchlist prevention checkbox
                 function toggleWatchlistRetentionVisibility() {
@@ -2950,11 +2937,9 @@
                     try { localStorage.setItem('JE_config_updated', String(Date.now())); } catch(_){}
                 }
 
-                var autoReload = document.querySelector('#autoReloadOnSave').checked;
-                localStorage.setItem('JE_autoReloadOnSave', String(autoReload));
-                if (autoReload) {
-                    setTimeout(function() { window.location.reload(); }, 500);
-                }
+                // Phase 3: auto-reload removed. The reactive config system
+                // (configStore.broadcastChange above) handles propagation.
+                // No reload is ever needed from the save handler.
             } catch {
                 Dashboard.hideLoadingMsg();
             }
