@@ -1,0 +1,92 @@
+name: CI
+
+# Phase 0 test foundation — runs on every PR and every push to a branch.
+#
+# Jobs:
+#   dotnet-test  — builds + runs the xUnit unit test project
+#   js-test      — runs the Vitest suite for config-store / module-registry
+#   e2e          — manual-trigger only (requires a jellyfin-dev instance
+#                  that CI does not provide by default)
+
+on:
+  push:
+    branches:
+      - main
+      - 'features/**'
+      - 'issues/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet-test:
+    name: .NET unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj
+
+      - name: Build plugin
+        run: dotnet build Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test tests/Jellyfin.Plugin.JellyfinEnhanced.Tests/Jellyfin.Plugin.JellyfinEnhanced.Tests.csproj --configuration Release --logger "console;verbosity=normal"
+
+  js-test:
+    name: JS unit tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tests/js/package-lock.json
+
+      - name: Install
+        run: npm ci
+        working-directory: tests/js
+
+      - name: Run Vitest
+        run: npm test
+        working-directory: tests/js
+
+  e2e:
+    name: E2E (Playwright) — manual only
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    env:
+      # Set TEST_JELLYFIN_URL as a repo variable (Settings > Variables) to
+      # point at a reachable jellyfin-dev instance before running this job.
+      TEST_JELLYFIN_URL: ${{ vars.TEST_JELLYFIN_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm install
+          npx playwright install chromium --with-deps
+        working-directory: tests/e2e
+
+      - name: Run full sweep
+        run: npm test
+        working-directory: tests/e2e

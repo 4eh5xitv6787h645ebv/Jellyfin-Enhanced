@@ -116,6 +116,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             "apple-touch-icon.png"
         }, StringComparer.OrdinalIgnoreCase);
 
+        private readonly Services.AssetHashProvider _assetHashProvider;
+
         public JellyfinEnhancedController(
             IHttpClientFactory httpClientFactory,
             Logger logger,
@@ -126,7 +128,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             UserConfigurationManager userConfigurationManager,
             IItemRepository itemRepository,
             IDbContextFactory<JellyfinDbContext> dbContextFactory,
-            Services.TagCacheService tagCacheService)
+            Services.TagCacheService tagCacheService,
+            Services.AssetHashProvider assetHashProvider)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -138,6 +141,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _itemRepository = itemRepository;
             _dbContextFactory = dbContextFactory;
             _tagCacheService = tagCacheService;
+            _assetHashProvider = assetHashProvider;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId)
@@ -1746,6 +1750,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
         /// <summary>
+        /// Returns the fingerprint used as the cache-busting query string on
+        /// script and locale URLs. Fetched once by plugin.js at bootstrap and
+        /// reused for every asset load in that session. Changing the plugin
+        /// DLL changes the hash, so the browser re-downloads assets on upgrade
+        /// without cache-busting every normal page load.
+        ///
+        /// This endpoint is in the NoCacheConfigFilter allowlist so the hash
+        /// itself is never stale — if the plugin was just upgraded, the next
+        /// fetch returns the new hash and the client's asset cache pivots
+        /// cleanly to the new fingerprint.
+        /// </summary>
+        [HttpGet("asset-hash")]
+        public ActionResult GetAssetHash() => Content(_assetHashProvider.Hash);
+
+        /// <summary>
         /// Returns a lightweight hash of the public config for change detection.
         /// Cached and only recomputed when config changes (via ConfigurationChanged event
         /// on the plugin base class). Avoids per-request serialization + SHA256 overhead.
@@ -1770,7 +1789,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             try
             {
                 var payload = BuildPublicConfigPayload(config);
-                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                // Phase 0: fold the asset hash into the config-hash source so
+                // a plugin upgrade (which changes the asset hash but may leave
+                // the PluginConfiguration untouched) still bumps config-hash
+                // and wakes the client's reactive path. Without this, a
+                // running tab would not notice a plugin upgrade until the
+                // next save.
+                var composite = new { config = payload, assetHash = _assetHashProvider.Hash };
+                var json = System.Text.Json.JsonSerializer.Serialize(composite);
                 using var sha = System.Security.Cryptography.SHA256.Create();
                 var hashBytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json));
                 var hex = Convert.ToHexString(hashBytes);
@@ -1792,8 +1818,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// (full JSON response) and GetConfigHash (SHA256 change detector) call
         /// this so they can never drift — adding a field here automatically
         /// covers both endpoints.
+        ///
+        /// The optional assetHash argument is included in the returned
+        /// anonymous object as AssetHash so the frontend can detect plugin
+        /// upgrades via the same reactive-config subscribe path (no extra
+        /// poll needed). GetConfigHash() passes null because the hash source
+        /// already folds assetHash into a composite — this keeps both call
+        /// sites from double-counting.
         /// </summary>
-        private static object BuildPublicConfigPayload(PluginConfiguration config)
+        private static object BuildPublicConfigPayload(PluginConfiguration config, string? assetHash = null)
         {
             // Expose whether TMDB is configured as a boolean so all users
             // (including non-admin) can use TMDB-dependent features like
@@ -1960,6 +1993,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.HiddenContentEnabled,
                 config.HiddenContentUsePluginPages,
                 config.HiddenContentUseCustomTabs,
+
+                // Phase 0: fingerprint of the current plugin build.
+                // Populated by GetPublicConfig so the frontend can see
+                // upgrades via the standard reactive-config subscribe path;
+                // GetConfigHash folds this in independently via a composite
+                // so it does NOT pass a value here (the payload is used for
+                // hashing and the composite includes assetHash separately).
+                AssetHash = assetHash,
             };
         }
 
@@ -2000,7 +2041,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(503);
             }
 
-            return new JsonResult(BuildPublicConfigPayload(config));
+            return new JsonResult(BuildPublicConfigPayload(config, _assetHashProvider.Hash));
         }
 
         [HttpGet("tmdb/{**apiPath}")]
@@ -2060,21 +2101,66 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         {
             var sanitizedLang = Path.GetFileName(lang); // Basic sanitization
             var resourcePath = $"Jellyfin.Plugin.JellyfinEnhanced.js.locales.{sanitizedLang}.json";
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourcePath);
-
-            if (stream == null)
-            {
-                _logger.Warning($"Locale file not found for language: {sanitizedLang}");
-                return NotFound();
-            }
-
-            return new FileStreamResult(stream, "application/json");
+            return ServeCacheableResource(resourcePath, "application/json", $"locale:{sanitizedLang}");
         }
 
         private ActionResult GetScriptResource(string resourcePath)
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Jellyfin.Plugin.JellyfinEnhanced.{resourcePath.Replace('/', '.')}");
-            return stream == null ? NotFound() : new FileStreamResult(stream, "application/javascript");
+            var fullPath = $"Jellyfin.Plugin.JellyfinEnhanced.{resourcePath.Replace('/', '.')}";
+            return ServeCacheableResource(fullPath, "application/javascript", $"js:{resourcePath}");
+        }
+
+        /// <summary>
+        /// Serves an embedded resource with strong caching headers and ETag
+        /// revalidation. Used for JS + locale assets.
+        ///
+        /// Behavior:
+        ///   • ETag is "{pluginAssetHash}:{resourceKey}" — two files in the
+        ///     same plugin build get distinct ETags, and every build gets a
+        ///     fresh set of ETags. That means `If-None-Match` 304s are
+        ///     efficient within a single plugin version AND correctly
+        ///     invalidate on upgrade.
+        ///   • `Cache-Control: public, max-age=31536000, immutable` — safe
+        ///     because the client hits these URLs with `?v={asset-hash}`, so
+        ///     the URL itself is versioned and cached copies can never go
+        ///     stale for the wrong version.
+        ///   • If a client sends a matching `If-None-Match`, return 304 with
+        ///     no body — avoids re-reading the embedded resource stream.
+        /// </summary>
+        private ActionResult ServeCacheableResource(string fullResourcePath, string contentType, string resourceKey)
+        {
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fullResourcePath);
+            if (stream == null) return NotFound();
+
+            var etag = $"\"{_assetHashProvider.Hash}:{resourceKey}\"";
+            var response = Response;
+            response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ETag] = etag;
+            response.Headers[Microsoft.Net.Http.Headers.HeaderNames.CacheControl] = "public, max-age=31536000, immutable";
+
+            // Honor If-None-Match for 304 revalidation (RFC 7232 §3.2).
+            // The header may carry a comma-separated list of ETags, a
+            // wildcard `*`, or a single value. We only emit strong ETags
+            // so strong-match semantics apply (exact string equality).
+            if (Request.Headers.TryGetValue(Microsoft.Net.Http.Headers.HeaderNames.IfNoneMatch, out var inm))
+            {
+                foreach (var raw in inm)
+                {
+                    if (string.IsNullOrEmpty(raw)) continue;
+                    // Split on comma to handle multi-ETag headers from
+                    // CDNs, proxies, or spec-compliant browsers.
+                    foreach (var part in raw.Split(','))
+                    {
+                        var trimmed = part.Trim();
+                        if (trimmed == "*" || trimmed == etag)
+                        {
+                            stream.Dispose();
+                            return StatusCode(StatusCodes.Status304NotModified);
+                        }
+                    }
+                }
+            }
+
+            return new FileStreamResult(stream, contentType);
         }
 
         /// <summary>

@@ -19,7 +19,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             var pluginName = "Jellyfin Enhanced";
             var pluginVersion = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown";
 
-            var scriptUrl = "../JellyfinEnhanced/script";
+            // Phase 0: include the content hash as a cache-busting query so
+            // the browser re-downloads plugin.js on plugin upgrades even
+            // though /JellyfinEnhanced/script now ships with Cache-Control:
+            // immutable. This is the same hash the asset-hash endpoint
+            // returns — see JellyfinEnhanced.cs ComputedAssetHash.
+            var scriptUrl = $"../JellyfinEnhanced/script?v={JellyfinEnhanced.ComputedAssetHash}";
             var scriptTag = $"<script plugin=\"{pluginName}\" version=\"{pluginVersion}\" src=\"{scriptUrl}\" defer></script>";
 
             var regex = new Regex($"<script[^>]*plugin=[\"']{pluginName}[\"'][^>]*>\\s*</script>\\n?");

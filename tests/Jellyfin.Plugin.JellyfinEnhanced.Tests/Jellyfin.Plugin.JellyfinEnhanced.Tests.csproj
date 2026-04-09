@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      Targets net9.0 because the main plugin project does (Jellyfin 10.11.x
+      runs on .NET 9). CI installs the .NET 9 + ASP.NET Core 9 runtimes
+      before running `dotnet test`. Local dev machines may only have .NET 10;
+      see README.md for setup. RollForward lets the test host pick up a
+      newer runtime if 9.0 is unavailable — when combined with the matching
+      ASP.NET Core shared framework, this makes the tests runnable on dev
+      machines with only .NET 10 installed.
+    -->
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Jellyfin.Plugin.JellyfinEnhanced.Tests</RootNamespace>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Jellyfin.Plugin.JellyfinEnhanced\JellyfinEnhanced.csproj" />
+  </ItemGroup>
+
+</Project>

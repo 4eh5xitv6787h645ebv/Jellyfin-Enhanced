@@ -1,0 +1,17 @@
+{
+  "name": "jellyfin-enhanced-e2e",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test-cache-fix-v2.js && sleep 4 && node test-theme-selector-referror.js && sleep 4 && node test-teardown-scope.js && sleep 4 && node test-elsewhere-toggle.js && sleep 6 && node test-sidebar-teardown.js && sleep 4 && node test-asset-cache.js",
+    "test:asset-cache": "node test-asset-cache.js",
+    "test:cache-fix-v2": "node test-cache-fix-v2.js",
+    "test:theme-selector": "node test-theme-selector-referror.js",
+    "test:teardown-scope": "node test-teardown-scope.js",
+    "test:elsewhere": "node test-elsewhere-toggle.js",
+    "test:sidebar": "node test-sidebar-teardown.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

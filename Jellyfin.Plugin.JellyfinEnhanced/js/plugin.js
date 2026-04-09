@@ -2,6 +2,50 @@
 (function() {
     'use strict';
 
+    // Phase 0: content-hash asset fingerprint.
+    // Fetched once from /JellyfinEnhanced/asset-hash at bootstrap and reused
+    // as the ?v= query on every script and locale URL. Contrast with the
+    // previous Date.now() approach which defeated the browser cache on every
+    // page load (forcing a refetch of ~60 scripts on every navigation).
+    //
+    // With a stable per-build fingerprint plus the Cache-Control: immutable
+    // headers the server now sends, the browser caches each asset for a
+    // year and only re-downloads it when the plugin upgrades (which changes
+    // the fingerprint, which changes the query string, which is a new URL).
+    //
+    // Fallback chain:
+    //   1. Fetch from /JellyfinEnhanced/asset-hash (authoritative)
+    //   2. Fall back to JellyfinEnhanced.pluginVersion if the fetch fails
+    //   3. Fall back to "dev" as a final guard so URLs are never broken
+    // The first path should be the only one that ever runs in practice;
+    // the fallbacks exist so a transient fetch error cannot brick the
+    // plugin bootstrap.
+    let _assetFingerprint = null;
+    let _assetFingerprintPromise = null;
+    function getAssetFingerprint() {
+        if (_assetFingerprint) return Promise.resolve(_assetFingerprint);
+        if (_assetFingerprintPromise) return _assetFingerprintPromise;
+        if (typeof ApiClient === 'undefined' || typeof ApiClient.ajax !== 'function') {
+            // ApiClient not ready yet — use a stable placeholder so early
+            // scripts still load. The real fingerprint is fetched later.
+            return Promise.resolve('bootstrap');
+        }
+        _assetFingerprintPromise = ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('/JellyfinEnhanced/asset-hash'),
+            dataType: 'text'
+        }).then((hash) => {
+            const trimmed = typeof hash === 'string' ? hash.trim() : '';
+            _assetFingerprint = trimmed || (window.JellyfinEnhanced?.pluginVersion ?? 'dev');
+            return _assetFingerprint;
+        }).catch((err) => {
+            console.warn('🪼 Jellyfin Enhanced: asset-hash fetch failed, falling back to pluginVersion', err);
+            _assetFingerprint = window.JellyfinEnhanced?.pluginVersion || 'dev';
+            return _assetFingerprint;
+        });
+        return _assetFingerprintPromise;
+    }
+
     // Create the global namespace immediately with placeholders
     window.JellyfinEnhanced = {
         pluginConfig: {},
@@ -169,9 +213,10 @@
      */
     async function loadTranslationsModule() {
         if (typeof JE.loadTranslations === 'function') return;
+        const fp = await getAssetFingerprint();
         await new Promise((resolve) => {
             const script = document.createElement('script');
-            script.src = ApiClient.getUrl(`/JellyfinEnhanced/js/enhanced/translations.js?v=${Date.now()}`);
+            script.src = ApiClient.getUrl(`/JellyfinEnhanced/js/enhanced/translations.js?v=${fp}`);
             script.onload = () => resolve();
             script.onerror = (e) => {
                 console.error('🪼 Jellyfin Enhanced: Failed to load translations module', e);
@@ -246,7 +291,12 @@
      * @param {string} basePath - The base URL path for the scripts.
      * @returns {Promise<void>} - A promise that resolves when all scripts attempt to load.
      */
-    function loadScripts(scripts, basePath) {
+    async function loadScripts(scripts, basePath) {
+        // Resolve the asset fingerprint ONCE before kicking off the fleet so
+        // all 60 scripts share the same ?v= query string. That gives the
+        // browser a stable cache key: one network fetch per script per
+        // plugin build, rather than a fresh fetch on every page load.
+        const fp = await getAssetFingerprint();
         const promises = scripts.map(scriptName => {
             return new Promise((resolve) => { // Always resolve so one failure doesn't stop others
                 const script = document.createElement('script');
@@ -261,7 +311,7 @@
                 // modules that depend on helpers.js / config-store.js /
                 // module-registry.js see them initialized before running.
                 script.async = false;
-                script.src = ApiClient.getUrl(`${basePath}/${scriptName}?v=${Date.now()}`); // Cache-busting
+                script.src = ApiClient.getUrl(`${basePath}/${scriptName}?v=${fp}`);
                 script.onload = () => {
                     resolve({ status: 'fulfilled', script: scriptName });
                 };
@@ -284,15 +334,21 @@
             setTimeout(loadSplashScreenEarly, 50);
             return;
         }
-        const splashScript = document.createElement('script');
-        splashScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/others/splashscreen.js?v=' + Date.now());
-        splashScript.onload = () => {
-            if (typeof JE.initializeSplashScreen === 'function') {
-                JE.initializeSplashScreen(); // Initialize if available
-            }
-        };
-         splashScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load splash screen script.');
-        document.head.appendChild(splashScript);
+        // Fetch the asset fingerprint before loading the splash so the
+        // splash script URL is stable across page loads. The fingerprint
+        // is also cached for every subsequent script loaded via
+        // loadScripts / loadTranslationsModule / loadLoginImageEarly.
+        getAssetFingerprint().then((fp) => {
+            const splashScript = document.createElement('script');
+            splashScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/others/splashscreen.js?v=' + fp);
+            splashScript.onload = () => {
+                if (typeof JE.initializeSplashScreen === 'function') {
+                    JE.initializeSplashScreen(); // Initialize if available
+                }
+            };
+            splashScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load splash screen script.');
+            document.head.appendChild(splashScript);
+        });
     }
 
     /**
@@ -304,18 +360,26 @@
             return;
         }
 
-        // Fetch the public config to check if login image is enabled
+        // Fetch the public config to check if login image is enabled.
+        // The response now includes AssetHash — seed the fingerprint cache
+        // from that field so the login-image script URL stays stable and
+        // we don't need a separate /asset-hash round-trip on this path.
         ApiClient.ajax({
             type: 'GET',
             url: ApiClient.getUrl('/JellyfinEnhanced/public-config'),
             dataType: 'json'
         }).then((config) => {
+            if (config && typeof config.AssetHash === 'string' && config.AssetHash.length > 0) {
+                _assetFingerprint = config.AssetHash; // seed cache so getAssetFingerprint() is instant
+            }
             // Only load if enabled (default to false)
             if (config?.EnableLoginImage === true) {
-                const loginImageScript = document.createElement('script');
-                loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + Date.now());
-                loginImageScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load login image script.');
-                document.head.appendChild(loginImageScript);
+                getAssetFingerprint().then((fp) => {
+                    const loginImageScript = document.createElement('script');
+                    loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + fp);
+                    loginImageScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load login image script.');
+                    document.head.appendChild(loginImageScript);
+                });
             }
         }).catch(() => {
             console.warn('🪼 Jellyfin Enhanced: Could not fetch config for login image, skipping.');

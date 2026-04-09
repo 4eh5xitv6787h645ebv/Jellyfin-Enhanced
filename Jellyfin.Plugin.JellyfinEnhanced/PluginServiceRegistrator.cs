@@ -20,6 +20,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<StartupService>();
             serviceCollection.AddHttpClient();
             serviceCollection.AddSingleton<Logger>();
+            // Phase 0: content-hash fingerprint for script / locale URLs.
+            // Singleton so the hash is computed at most once and every caller
+            // (asset-hash endpoint + ETag headers) shares the same value.
+            serviceCollection.AddSingleton<AssetHashProvider>();
             serviceCollection.AddSingleton<UserConfigurationManager>();
             serviceCollection.AddSingleton<AutoSeasonRequestService>();
             serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();

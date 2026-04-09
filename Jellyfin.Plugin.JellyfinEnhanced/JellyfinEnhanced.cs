@@ -28,15 +28,61 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         private readonly Logger _logger;
         private const string PluginName = "Jellyfin Enhanced";
 
+        // Phase 0: cached content hash of the current plugin assembly.
+        // Computed once at plugin construction via the same logic
+        // AssetHashProvider uses, but inlined here because the plugin
+        // class itself doesn't get DI-injected services. Used as the ?v=
+        // query on the injected <script> URL so that when the plugin is
+        // upgraded (new DLL bytes), the browser sees a new URL and drops
+        // its cached copy — which is essential because the script endpoint
+        // now ships Cache-Control: immutable for one year.
+        //
+        // Visible as an internal property so AssetHashProvider and any
+        // test code can verify the two code paths agree on the hash.
+        internal static string ComputedAssetHash { get; private set; } = "bootstrap";
+
         public JellyfinEnhanced(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, IXmlSerializer xmlSerializer, Logger logger) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
             _applicationPaths = applicationPaths;
             _logger = logger;
-            _logger.Info($"{PluginName} v{Version} initialized. Plugin logs will be written to: {_logger.CurrentLogFilePath}");
+            // Phase 0: compute the asset content hash before anything else so
+            // InjectScript below has a stable, content-addressed URL to write
+            // into index.html. The same hash is returned by
+            // AssetHashProvider.Hash — both derive from the assembly file.
+            ComputedAssetHash = ComputeAssetHash();
+            _logger.Info($"{PluginName} v{Version} initialized. Asset hash: {ComputedAssetHash}. Plugin logs: {_logger.CurrentLogFilePath}");
             ConfigurationChanged += (_, _) => Controllers.JellyfinEnhancedController.InvalidateConfigHash();
             CleanupOldScript();
             CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
+        }
+
+        /// <summary>
+        /// Computes the content hash of the current plugin assembly using the
+        /// same strategy as <see cref="Services.AssetHashProvider"/>. Inlined
+        /// here because the plugin class (this) is constructed by Jellyfin
+        /// outside the DI container, so it cannot receive services via
+        /// constructor injection.
+        /// </summary>
+        private static string ComputeAssetHash()
+        {
+            try
+            {
+                var assemblyPath = typeof(JellyfinEnhanced).Assembly.Location;
+                if (!string.IsNullOrWhiteSpace(assemblyPath) && File.Exists(assemblyPath))
+                {
+                    using var stream = File.OpenRead(assemblyPath);
+                    using var sha = System.Security.Cryptography.SHA256.Create();
+                    var bytes = sha.ComputeHash(stream);
+                    return Convert.ToHexString(bytes).ToLowerInvariant().Substring(0, 16);
+                }
+            }
+            catch
+            {
+                // fall through to version-based fingerprint
+            }
+            var version = typeof(JellyfinEnhanced).Assembly.GetName().Version?.ToString() ?? "unknown";
+            return version.Replace('.', '-');
         }
 
         public override string Name => PluginName;
@@ -273,7 +319,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 }
 
                 var content = File.ReadAllText(indexPath);
-                var scriptUrl = "../JellyfinEnhanced/script";
+                // Phase 0: include the content hash as a cache-busting query.
+                // Required because /JellyfinEnhanced/script now responds with
+                // Cache-Control: public, max-age=31536000, immutable — so
+                // the URL itself must change when the plugin upgrades, or
+                // the browser will keep serving the old bytes for a year.
+                var scriptUrl = $"../JellyfinEnhanced/script?v={ComputedAssetHash}";
                 var scriptTag = $"<script plugin=\"{Name}\" version=\"{Version}\" src=\"{scriptUrl}\" defer></script>";
                 var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
 

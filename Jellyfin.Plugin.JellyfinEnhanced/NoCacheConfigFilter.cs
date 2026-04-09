@@ -38,6 +38,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             ("JellyfinEnhanced", "GetPublicConfig"),
             ("JellyfinEnhanced", "GetPrivateConfig"),
             ("JellyfinEnhanced", "GetConfigHash"),
+            // The asset-hash endpoint is what clients poll to discover that
+            // a plugin upgrade has happened. It must NEVER be served from a
+            // cached response — that would defeat the upgrade-detection path.
+            // Contrast with the asset endpoints themselves (GetScript,
+            // GetLocale), which ARE cacheable because their URLs carry the
+            // hash as a cache-busting query string.
+            ("JellyfinEnhanced", "GetAssetHash"),
         };
 
         public NoCacheConfigFilter(ILogger<NoCacheConfigFilter> logger)
