@@ -40,8 +40,21 @@
             return _assetFingerprint;
         }).catch((err) => {
             console.warn('🪼 Jellyfin Enhanced: asset-hash fetch failed, falling back to pluginVersion', err);
-            _assetFingerprint = window.JellyfinEnhanced?.pluginVersion || 'dev';
-            return _assetFingerprint;
+            // [Codex P2] Do NOT cache the fallback value. pluginVersion
+            // starts as 'unknown' and may not be populated yet. If we
+            // cached it, the whole session would be locked to ?v=unknown
+            // under Cache-Control: immutable, which means a future plugin
+            // upgrade wouldn't invalidate the cached scripts for up to a
+            // year. By leaving _assetFingerprint null and clearing the
+            // in-flight promise, the NEXT call to getAssetFingerprint()
+            // will retry the fetch — which will succeed once the transient
+            // error clears. Scripts loaded during this session still get
+            // the fallback string (safe: the server serves the correct
+            // bytes regardless of the ?v= value), but they are NOT
+            // cached under immutable because the browser sees a different
+            // URL on every subsequent page load until the fetch succeeds.
+            _assetFingerprintPromise = null;
+            return window.JellyfinEnhanced?.pluginVersion || 'dev';
         });
         return _assetFingerprintPromise;
     }
