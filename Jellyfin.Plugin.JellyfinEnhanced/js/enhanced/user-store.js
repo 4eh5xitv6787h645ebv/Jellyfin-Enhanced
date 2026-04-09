@@ -213,6 +213,8 @@
     function onHashChange() { reloadUserConfig(); }
     function onPopState() { reloadUserConfig(); }
 
+    var navigateUnsub = null;
+
     function startPolling() {
         if (pollingStarted) return;
         pollingStarted = true;
@@ -221,7 +223,7 @@
         window.addEventListener('hashchange', onHashChange);
         window.addEventListener('popstate', onPopState);
         if (JE.helpers && typeof JE.helpers.onNavigate === 'function') {
-            JE.helpers.onNavigate(function() { reloadUserConfig(); });
+            navigateUnsub = JE.helpers.onNavigate(function() { reloadUserConfig(); });
         }
     }
 
@@ -232,6 +234,7 @@
         window.removeEventListener('pageshow', onPageShow);
         window.removeEventListener('hashchange', onHashChange);
         window.removeEventListener('popstate', onPopState);
+        if (navigateUnsub) { navigateUnsub(); navigateUnsub = null; }
         window.removeEventListener('storage', onStorageEvent);
         if (channel) { channel.close(); channel = null; }
         pollingStarted = false;

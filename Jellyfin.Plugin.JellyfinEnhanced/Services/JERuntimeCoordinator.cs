@@ -30,7 +30,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly Logger _logger;
         private readonly object _lock = new();
         private readonly List<MonitorRegistration> _registrations = new();
-        private PluginConfiguration? _lastConfig;
 
         /// <summary>
         /// Describes a registered monitor's lifecycle contract.
@@ -138,7 +137,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return;
             }
 
-            _lastConfig = config;
 
             lock (_lock)
             {
@@ -251,7 +249,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
             }
 
-            _lastConfig = config;
         }
 
         /// <summary>
