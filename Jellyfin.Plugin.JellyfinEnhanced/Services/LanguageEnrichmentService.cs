@@ -54,6 +54,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             ["Portuguese (Brazil)"] = ("pt-BR", "Portuguese (Brazil)"),
             ["Spanish (Latino)"] = ("es-419", "Spanish (Latino)"),
             ["Spanish (Latin America)"] = ("es-419", "Spanish (Latino)"),
+            ["Flemish"] = ("nl-BE", "Flemish"),
             ["Chinese (Mandarin)"] = ("zh-CN", "Chinese (Mandarin)"),
             ["Chinese (Cantonese)"] = ("zh-HK", "Chinese (Cantonese)")
         };

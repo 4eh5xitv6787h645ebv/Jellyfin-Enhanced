@@ -94,6 +94,7 @@
             hye: 'am', Mongolian: 'mn', mon: 'mn', Kazakh: 'kz', kaz: 'kz', Uzbek: 'uz', uzb: 'uz', Azerbaijani: 'az',
             aze: 'az', Belarusian: 'by', bel: 'by', Amharic: 'et', amh: 'et', Zulu: 'za', zul: 'za', Afrikaans: 'za',
             afr: 'za', Hausa: 'ng', hau: 'ng', Yoruba: 'ng', yor: 'ng', Igbo: 'ng', ibo: 'ng', Brazilian: 'br', bra: 'br',
+            Bosnian: 'ba', bos: 'ba', Flemish: 'be', Romansh: 'ch', roh: 'ch',
             Catalan: 'es-ct', cat: 'es-ct', ca: 'es-ct', Galician: 'es-ga', glg: 'es-ga', gl: 'es-ga', Basque: 'es-pv',
             baq: 'es-pv', eus: 'es-pv',
             // Regional BCP-47 variants — surface a region-specific flag when the file or arr
@@ -108,7 +109,7 @@
             'de-de': 'de', 'de-at': 'at', 'de-ch': 'ch',
             'zh-cn': 'cn', 'zh-tw': 'tw', 'zh-hk': 'hk', 'zh-sg': 'sg',
             'it-it': 'it', 'it-ch': 'ch',
-            'nl-nl': 'nl', 'nl-be': 'be',
+            'nl-nl': 'nl', 'nl-be': 'be', 'nl-sr': 'sr',
             'ar-sa': 'sa', 'ar-eg': 'eg', 'ar-ae': 'ae', 'ar-ma': 'ma'
         };
 
@@ -129,6 +130,7 @@
             'portuguese (brazil)': 'pt-BR',
             'spanish (latino)': 'es-419',
             'spanish (latin america)': 'es-419',
+            'flemish': 'nl-BE',
             'chinese (mandarin)': 'zh-CN',
             'chinese (cantonese)': 'zh-HK'
         };
@@ -156,7 +158,8 @@
             fas: 'fa', per: 'fa',
             ben: 'bn', tam: 'ta', tel: 'te',
             mar: 'mr', guj: 'gu', pan: 'pa',
-            kan: 'kn', mal: 'ml', urd: 'ur'
+            kan: 'kn', mal: 'ml', urd: 'ur',
+            bos: 'bs', roh: 'rm'
         };
 
         /**
