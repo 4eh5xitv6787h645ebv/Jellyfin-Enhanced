@@ -31,11 +31,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddHttpClient("Sonarr", c => { c.Timeout = TimeSpan.FromSeconds(15); });
             serviceCollection.AddHttpClient("Radarr", c => { c.Timeout = TimeSpan.FromSeconds(15); });
             serviceCollection.AddHttpClient("Jellyseerr", c => { c.Timeout = TimeSpan.FromSeconds(15); });
-            serviceCollection.AddHttpClient("TMDB", c =>
-            {
-                c.BaseAddress = new Uri("https://api.themoviedb.org/3/");
-                c.Timeout = TimeSpan.FromSeconds(10);
-            });
+            // TMDB: timeout-only, no BaseAddress. The controller's proxy
+            // builds absolute URLs with the API key appended, so setting
+            // BaseAddress would create a latent double-path trap.
+            serviceCollection.AddHttpClient("TMDB", c => { c.Timeout = TimeSpan.FromSeconds(10); });
             serviceCollection.AddSingleton<Logger>();
             // Phase 0: content-hash fingerprint for script / locale URLs.
             // Singleton so the hash is computed at most once and every caller

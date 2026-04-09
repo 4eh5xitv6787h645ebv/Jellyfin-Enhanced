@@ -179,9 +179,10 @@
         }
     }
 
-    // Register keyboard shortcut: Ctrl+Shift+E
+    // Register keyboard shortcut: Ctrl+Alt+D
+    // (Ctrl+Shift+E conflicts with Chrome/Edge "Search in Sidebar")
     document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+        if (e.ctrlKey && e.altKey && (e.key === 'd' || e.key === 'D')) {
             e.preventDefault();
             togglePanel();
         }

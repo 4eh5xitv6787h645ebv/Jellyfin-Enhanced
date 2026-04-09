@@ -15,6 +15,17 @@
     var inFlight = new Map(); // key → Promise
     var cache = new Map();    // key → { value, ts }
     var DEFAULT_TTL_MS = 30000; // 30s default cache TTL
+    var MAX_CACHE_SIZE = 500;  // cap to prevent unbounded growth in long sessions
+
+    // Periodic sweep: every 60s, evict entries older than DEFAULT_TTL_MS.
+    // Prevents unbounded memory growth in long-running SPA sessions with
+    // diverse keys (e.g. tmdb-movie-{id} per item browsed).
+    setInterval(function() {
+        var now = Date.now();
+        cache.forEach(function(entry, key) {
+            if (now - entry.ts >= DEFAULT_TTL_MS) cache.delete(key);
+        });
+    }, 60000);
 
     /**
      * Deduplicate an async operation by key.
@@ -52,6 +63,11 @@
         var promise = fn().then(function(value) {
             inFlight.delete(key);
             if (ttlMs > 0) {
+                // Enforce size cap: evict oldest entry if at limit
+                if (cache.size >= MAX_CACHE_SIZE) {
+                    var oldestKey = cache.keys().next().value;
+                    cache.delete(oldestKey);
+                }
                 cache.set(key, { value: value, ts: Date.now() });
             }
             return value;
