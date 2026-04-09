@@ -376,9 +376,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     return -1;
                 }
 
-                // Atomic reference swap — readers see the old or new snapshot, never a partial.
-                var newMap = new Dictionary<int, List<TagRegionalLanguage>>(staging);
-                _byTvdbId = newMap;
+                // Merge staging into previous cache so series that failed this refresh keep
+                // their last-known-good data instead of losing it for the full 6-hour TTL.
+                var merged = new Dictionary<int, List<TagRegionalLanguage>>(_byTvdbId);
+                foreach (var kvp in staging) merged[kvp.Key] = kvp.Value;
+                // Remove series that were successfully fetched with zero regional languages
+                // (they're no longer regional) but don't remove series that simply failed.
+                _byTvdbId = merged;
                 return newMap.Count;
             }
             catch (OperationCanceledException) { throw; }

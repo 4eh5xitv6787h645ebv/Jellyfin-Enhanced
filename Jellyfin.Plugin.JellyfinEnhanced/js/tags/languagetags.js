@@ -779,8 +779,12 @@
                 renderFromServerCache: function(el, entry) {
                     if (isCardAlreadyTagged(el)) return;
                     if (shouldIgnoreElement(el)) return;
-                    var codes = entry.AudioLanguages;
-                    if (!codes || codes.length === 0) return;
+                    var codes = entry.AudioLanguages || [];
+                    var hasManualOverride = entry.ManualRegionOverrides && Object.keys(entry.ManualRegionOverrides).length > 0;
+                    var hasArrRegional = entry.RegionalAudioLanguages && entry.RegionalAudioLanguages.length > 0;
+                    // Don't bail early on empty AudioLanguages when overrides or arr enrichment
+                    // could still provide a flag (e.g. untagged audio but Sonarr knows the language).
+                    if (codes.length === 0 && !hasManualOverride && !hasArrRegional) return;
                     var languages = codes.map(function(code) {
                         try {
                             return { name: langDisplayNames.of(code), code: code };
@@ -791,14 +795,15 @@
                     // Priority chain: manual per-item override > arr enrichment > file metadata.
                     // ManualRegionOverrides (admin-set via flag-click popover) is a dict of
                     // canonical family key → BCP-47 code, e.g. {"pt": "pt-BR"}.
-                    if (entry.ManualRegionOverrides && Object.keys(entry.ManualRegionOverrides).length > 0) {
+                    // Manual overrides always apply; arr enrichment respects the toggle.
+                    if (hasManualOverride) {
                         var manualRegional = [];
                         for (var family in entry.ManualRegionOverrides) {
                             var bcp = entry.ManualRegionOverrides[family];
                             manualRegional.push({ code: bcp, name: bcp });
                         }
                         languages = mergeRegionalLanguages(languages, manualRegional);
-                    } else if (entry.RegionalAudioLanguages && entry.RegionalAudioLanguages.length > 0) {
+                    } else if (hasArrRegional && JE.pluginConfig?.EnableArrLanguageEnrichment !== false) {
                         languages = mergeRegionalLanguages(languages, entry.RegionalAudioLanguages);
                     }
                     insertLanguageTags(el, languages);
