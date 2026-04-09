@@ -383,7 +383,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 // Remove series that were successfully fetched with zero regional languages
                 // (they're no longer regional) but don't remove series that simply failed.
                 _byTvdbId = merged;
-                return newMap.Count;
+                return staging.Count;
             }
             catch (OperationCanceledException) { throw; }
             catch (HttpRequestException ex)
