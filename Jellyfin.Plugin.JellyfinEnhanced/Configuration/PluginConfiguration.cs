@@ -143,7 +143,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             // Issue #544: enrich language flags with regional variants by querying Sonarr/Radarr,
             // which parse release names for tokens like DUBLADO/LATINO that ffprobe never sees.
             EnableArrLanguageEnrichment = true;
-            LanguageRegionOverrides = "";
 
             // Letterboxd Settings
             LetterboxdEnabled = false;
@@ -266,13 +265,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         /// variants (Brazilian Portuguese, Latino Spanish) sourced from arr release-name parsing.
         /// </summary>
         public bool EnableArrLanguageEnrichment { get; set; } = true;
-        /// <summary>
-        /// Manual region overrides applied to base languages with no regional metadata.
-        /// Format: "iso639:country,iso639:country" (e.g. "por:br,spa:mx,eng:us").
-        /// Each entry forces the flag for that language code unless an arr or BCP-47 tag
-        /// already provided a more specific region.
-        /// </summary>
-        public string LanguageRegionOverrides { get; set; } = string.Empty;
         public bool RatingTagsEnabled { get; set; }
         public bool PeopleTagsEnabled { get; set; }
         public int TagsCacheTtlDays { get; set; }

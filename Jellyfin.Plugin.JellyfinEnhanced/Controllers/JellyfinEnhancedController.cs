@@ -1849,7 +1849,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.GenreTagsEnabled,
                 config.LanguageTagsEnabled,
                 config.EnableArrLanguageEnrichment,
-                config.LanguageRegionOverrides,
                 config.RatingTagsEnabled,
                 config.PeopleTagsEnabled,
                 config.DisableAllShortcuts,
@@ -2857,6 +2856,101 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return Ok(new { Items = results });
         }
 
+
+        /// <summary>
+        /// Set or clear a per-item language region override. Admin-only.
+        /// For Series/Season/Episode items, automatically resolves to the Series level
+        /// and propagates the override to all child Season/Episode cache entries.
+        /// For Movies, sets on the specific item.
+        /// </summary>
+        [HttpPost("language-region/{itemId}")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult SetLanguageRegion(Guid itemId, [FromBody] LanguageRegionRequest request)
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            var item = _libraryManager.GetItemById<BaseItem>(itemId);
+            if (item == null)
+            {
+                return NotFound(new { error = "Item not found" });
+            }
+
+            // Resolve to series level for TV content so the override applies show-wide.
+            BaseItem target = item;
+            if (item is MediaBrowser.Controller.Entities.TV.Episode ep && ep.SeriesId != Guid.Empty)
+            {
+                var series = _libraryManager.GetItemById<BaseItem>(ep.SeriesId);
+                if (series != null) target = series;
+            }
+            else if (item is MediaBrowser.Controller.Entities.TV.Season season && season.SeriesId != Guid.Empty)
+            {
+                var series = _libraryManager.GetItemById<BaseItem>(season.SeriesId);
+                if (series != null) target = series;
+            }
+
+            var targetKey = target.Id.ToString("N").ToLowerInvariant();
+
+            // Build the override dict from the request, keyed by canonical family (ISO 639-1).
+            Dictionary<string, string>? overrides = null;
+            if (request.Overrides != null && request.Overrides.Count > 0)
+            {
+                overrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var kvp in request.Overrides)
+                {
+                    if (!string.IsNullOrWhiteSpace(kvp.Key) && !string.IsNullOrWhiteSpace(kvp.Value))
+                    {
+                        overrides[kvp.Key.Trim().ToLowerInvariant()] = kvp.Value.Trim();
+                    }
+                }
+                if (overrides.Count == 0) overrides = null;
+            }
+
+            // Apply to the target cache entry
+            _tagCacheService.SetManualRegionOverride(targetKey, overrides);
+
+            // Propagate to child Season/Episode entries if the target is a Series
+            if (target.GetBaseItemKind() == Jellyfin.Data.Enums.BaseItemKind.Series)
+            {
+                var children = _libraryManager.GetItemList(new MediaBrowser.Controller.Entities.InternalItemsQuery
+                {
+                    ParentId = target.Id,
+                    IncludeItemTypes = new[] { Jellyfin.Data.Enums.BaseItemKind.Season, Jellyfin.Data.Enums.BaseItemKind.Episode },
+                    Recursive = true
+                });
+                foreach (var child in children)
+                {
+                    var childKey = child.Id.ToString("N").ToLowerInvariant();
+                    _tagCacheService.SetManualRegionOverride(childKey, overrides);
+                }
+                _logger.Info($"[LangRegion] Set override on {target.Name} ({targetKey}) + {children.Count} children");
+            }
+            else
+            {
+                _logger.Info($"[LangRegion] Set override on {target.Name} ({targetKey})");
+            }
+
+            return Ok(new
+            {
+                success = true,
+                targetId = target.Id,
+                targetName = target.Name,
+                targetType = target.GetBaseItemKind().ToString(),
+                overrides = overrides
+            });
+        }
+
+        public class LanguageRegionRequest
+        {
+            /// <summary>
+            /// Map of canonical language family (ISO 639-1, e.g. "pt") to BCP-47 regional code
+            /// (e.g. "pt-BR"). Pass null or empty to clear overrides.
+            /// </summary>
+            public Dictionary<string, string>? Overrides { get; set; }
+        }
 
         [HttpGet("file-size/{userId}/{itemId}")]
         [Authorize]

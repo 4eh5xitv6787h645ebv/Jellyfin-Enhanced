@@ -129,6 +129,47 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
             }
 
+            // Preserve admin-set ManualRegionOverrides from the old cache. These are set
+            // via the per-item flag-click popover and must survive full rebuilds.
+            var oldCache = _cache;
+            foreach (var kvp in oldCache)
+            {
+                if (kvp.Value.ManualRegionOverrides != null
+                    && kvp.Value.ManualRegionOverrides.Count > 0
+                    && newCache.TryGetValue(kvp.Key, out var newEntry))
+                {
+                    newEntry.ManualRegionOverrides = kvp.Value.ManualRegionOverrides;
+                }
+            }
+
+            // Inherit series-level overrides to Season/Episode entries that don't have
+            // their own override. We use the allItems list (still in memory) to resolve
+            // each child's SeriesId cheaply.
+            foreach (var item in allItems)
+            {
+                var kind = item.GetBaseItemKind();
+                if (kind != BaseItemKind.Season && kind != BaseItemKind.Episode) continue;
+
+                var key = item.Id.ToString("N").ToLowerInvariant();
+                if (!newCache.TryGetValue(key, out var childEntry)) continue;
+                if (childEntry.ManualRegionOverrides != null) continue; // has own override
+
+                Guid? seriesId = null;
+                if (item is MediaBrowser.Controller.Entities.TV.Season s) seriesId = s.SeriesId;
+                else if (item is MediaBrowser.Controller.Entities.TV.Episode e) seriesId = e.SeriesId;
+
+                if (seriesId.HasValue && seriesId.Value != Guid.Empty)
+                {
+                    var seriesKey = seriesId.Value.ToString("N").ToLowerInvariant();
+                    if (newCache.TryGetValue(seriesKey, out var seriesEntry)
+                        && seriesEntry.ManualRegionOverrides != null
+                        && seriesEntry.ManualRegionOverrides.Count > 0)
+                    {
+                        childEntry.ManualRegionOverrides = seriesEntry.ManualRegionOverrides;
+                    }
+                }
+            }
+
             // Atomic reference swap — readers see old or new cache, never partial
             _cache = newCache;
             Interlocked.Increment(ref _version);
@@ -144,6 +185,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         }
 
         /// <summary>
+        /// Set or clear ManualRegionOverrides on a specific cache entry.
+        /// Called from the language-region controller endpoint. Triggers a debounced save.
+        /// </summary>
+        public void SetManualRegionOverride(string cacheKey, Dictionary<string, string>? overrides)
+        {
+            if (_cache.TryGetValue(cacheKey, out var entry))
+            {
+                entry.ManualRegionOverrides = overrides;
+                Interlocked.Increment(ref _version);
+                Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                ScheduleDebouncedSave();
+            }
+        }
+
+        /// <summary>
         /// Update (or insert) a single item in the cache.
         /// Called by TagCacheMonitor on ItemAdded/ItemUpdated events.
         /// </summary>
@@ -156,6 +212,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             if (entry != null)
             {
                 var key = item.Id.ToString("N").ToLowerInvariant();
+                // Preserve admin-set ManualRegionOverrides across metadata refreshes.
+                if (_cache.TryGetValue(key, out var oldEntry)
+                    && oldEntry.ManualRegionOverrides != null
+                    && oldEntry.ManualRegionOverrides.Count > 0)
+                {
+                    entry.ManualRegionOverrides = oldEntry.ManualRegionOverrides;
+                }
                 _cache[key] = entry;
                 Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                 ScheduleDebouncedSave();

@@ -19,6 +19,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Model
         /// or the item isn't tracked in either arr.
         /// </summary>
         public List<TagRegionalLanguage>? RegionalAudioLanguages { get; set; }
+        /// <summary>
+        /// Admin-set per-item language region overrides. Maps canonical language family key
+        /// (ISO 639-1, e.g. "pt", "es", "en") to BCP-47 regional code (e.g. "pt-BR", "es-419").
+        /// Highest priority — beats arr enrichment and file metadata. Set via the flag-click
+        /// popover on cards (admin-only). Inherited from Series to Season/Episode entries
+        /// during cache build. Preserved across full cache rebuilds.
+        /// </summary>
+        public Dictionary<string, string>? ManualRegionOverrides { get; set; }
         public TagStreamData? StreamData { get; set; }
         public long LastUpdated { get; set; }
     }

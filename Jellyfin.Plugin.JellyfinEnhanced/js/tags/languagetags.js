@@ -172,84 +172,35 @@
             return iso6392ToFamily[base] || base;
         }
 
-        // Remember which malformed override tokens we've already warned about — fires once
-        // per session per bad token so the console isn't spammed on every pipeline scan.
-        const _warnedOverrideTokens = new Set();
-
-        /**
-         * Parse the admin's "Default flag overrides" config (e.g. "por:br,spa:mx,eng:us")
-         * into a {baseCode → countryCode} map. Applied only when an audio entry has NO
-         * regional info — never overrides a confidently-tagged regional variant.
-         * Malformed tokens trigger a once-per-token console.warn so admin typos surface.
-         */
-        function parseRegionOverrides() {
-            const raw = JE.pluginConfig?.LanguageRegionOverrides;
-            if (!raw || typeof raw !== 'string') return {};
-            const out = {};
-            raw.split(/[,\n]/).forEach(function(pair) {
-                const trimmed = pair.trim();
-                if (!trimmed) return;
-                const idx = trimmed.indexOf(':');
-                if (idx <= 0) {
-                    if (!_warnedOverrideTokens.has(trimmed)) {
-                        _warnedOverrideTokens.add(trimmed);
-                        console.warn('🪼 Jellyfin Enhanced: Language Tags: Malformed LanguageRegionOverrides token (expected "iso639:country"):', trimmed);
-                    }
-                    return;
-                }
-                const k = trimmed.slice(0, idx).trim().toLowerCase();
-                const v = trimmed.slice(idx + 1).trim().toLowerCase();
-                if (k && v) {
-                    out[k] = v;
-                } else if (!_warnedOverrideTokens.has(trimmed)) {
-                    _warnedOverrideTokens.add(trimmed);
-                    console.warn('🪼 Jellyfin Enhanced: Language Tags: Empty key or value in LanguageRegionOverrides token:', trimmed);
-                }
-            });
-            return out;
-        }
-        // Note: regionOverrides are re-parsed on every resolveCountryCode() call so admin
-        // saves take effect on the next pipeline scan without needing a page reload.
 
         /**
          * Resolve a {name, code} language object to a country code for the flag CDN.
-         * Priority: regional BCP-47 code → arr-style regional name → override → base code → name.
-         * The override applies ONLY when the entry has no regional hint (no `-` in code,
-         * no `(...)` in name, no arr regional name match) — confidently regional content
-         * is never overridden.
+         * Priority: regional BCP-47 code → arr-style regional name → base code → name.
+         * Per-item manual overrides are applied upstream in mergeRegionalLanguages
+         * (from ManualRegionOverrides on the TagCacheEntry), so by the time a language
+         * reaches this function, its code is already the correct regional variant.
          * Returns null when no flag is appropriate.
          */
         function resolveCountryCode(lang) {
             if (!lang) return null;
-            const code = (lang.code || '').toString().trim();
-            const name = (lang.name || '').toString().trim();
-            const lowerName = name.toLowerCase();
-            const baseCode = code.split('-')[0].toLowerCase();
-            const hasExplicitRegion = code.includes('-')
-                || /\(/.test(name)
-                || !!arrRegionalNameToCode[lowerName];
-
-            // Re-parse overrides on every call so admin config changes propagate without
-            // requiring a page reload (cheap — the source string is short and split-once).
-            const overrides = parseRegionOverrides();
+            var code = (lang.code || '').toString().trim();
+            var name = (lang.name || '').toString().trim();
+            var lowerName = name.toLowerCase();
 
             // 1. Full BCP-47 code with region (e.g. "pt-BR" → "br"). Case-insensitive
             // via lookupRegionalCode so ffprobe's lowercase "pt-br" matches Sonarr's "pt-BR".
-            if (hasExplicitRegion && code.includes('-')) {
-                const regionalCountry = lookupRegionalCode(code);
+            if (code.includes('-')) {
+                var regionalCountry = lookupRegionalCode(code);
                 if (regionalCountry) return regionalCountry;
             }
             // 2. Arr-style regional name (e.g. "Portuguese (Brazil)" → "br")
             if (arrRegionalNameToCode[lowerName]) {
-                const bcp = arrRegionalNameToCode[lowerName];
-                const mapped = lookupRegionalCode(bcp);
+                var bcp = arrRegionalNameToCode[lowerName];
+                var mapped = lookupRegionalCode(bcp);
                 if (mapped) return mapped;
             }
-            // 3. Manual override applies ONLY when there is no regional hint at all.
-            if (!hasExplicitRegion && baseCode && overrides[baseCode]) {
-                return overrides[baseCode];
-            }
-            // 4. Fall back to base code or name lookup.
+            // 3. Fall back to base code or name lookup.
+            var baseCode = code.split('-')[0].toLowerCase();
             return languageToCountryMap[name] || languageToCountryMap[baseCode] || null;
         }
 
@@ -438,7 +389,252 @@
             if (wrap.children.length > 0) {
                 container.appendChild(wrap);
                 markCardTagged(container);
+                // Admin-only: attach right-click handler for per-item region override
+                var popoverItemId = getItemIdFromCard(container);
+                if (popoverItemId) attachRegionPopoverHandler(wrap, popoverItemId);
             }
+        }
+
+        // ---- Per-item region override popover (admin-only, issue #544) ----
+
+        // Build a lookup of language family → available regional options from the country map.
+        // e.g. "pt" → [{code:"pt-br", label:"Brazil", country:"br"}, {code:"pt-pt", label:"Portugal", country:"pt"}]
+        var _regionOptions = null;
+        function getRegionOptions() {
+            if (_regionOptions) return _regionOptions;
+            _regionOptions = {};
+            var regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+            for (var key in languageToCountryMap) {
+                if (!key.includes('-')) continue; // only regional keys like "pt-br"
+                var parts = key.split('-');
+                var family = parts[0];
+                var regionPart = parts.slice(1).join('-');
+                var country = languageToCountryMap[key];
+                var label = country.toUpperCase();
+                try { label = regionNames.of(country.toUpperCase()) || label; } catch(e) {}
+                if (!_regionOptions[family]) _regionOptions[family] = [];
+                _regionOptions[family].push({ code: key, country: country, label: label });
+            }
+            return _regionOptions;
+        }
+
+        function getItemIdFromCard(el) {
+            // Try data-itemid on ancestors
+            var card = el.closest('.card') || el.closest('[data-itemid]');
+            if (card && card.dataset.itemid) return card.dataset.itemid;
+            // Try an <a> ancestor with id= in href
+            var link = el.closest('a[href*="id="]');
+            if (link) {
+                var m = link.href.match(/[?&]id=([^&#]+)/);
+                if (m) return m[1];
+            }
+            // The tag pipeline renders overlays into .je-tag-host which is a SIBLING of the
+            // <a class="cardImageContainer"> link. Look for the link WITHIN the same card.
+            if (card) {
+                var cardLink = card.querySelector('a.cardImageContainer[href*="id="]');
+                if (cardLink) {
+                    var cm = cardLink.href.match(/[?&]id=([^&#]+)/);
+                    if (cm) return cm[1];
+                }
+            }
+            // Background image fallback
+            if (el.style && el.style.backgroundImage) {
+                var bgMatch = el.style.backgroundImage.match(/Items\/(.*?)\//);
+                if (bgMatch) return bgMatch[1];
+            }
+            return null;
+        }
+
+        /**
+         * Show the region-override popover anchored to a flag overlay container.
+         * Admin right-clicks a flag → popover with per-language region dropdowns.
+         */
+        function showRegionPopover(overlayEl, itemId) {
+            // Close any existing popover
+            var existing = document.getElementById('je-region-popover');
+            if (existing) existing.remove();
+
+            // Detect which audio languages this item has from the rendered flags
+            var flags = Array.from(overlayEl.querySelectorAll('.' + flagClass));
+            if (flags.length === 0) return;
+
+            var regionOpts = getRegionOptions();
+            var languageFamilies = [];
+            flags.forEach(function(img) {
+                var langName = img.dataset.langName || '';
+                var langCountry = img.dataset.lang || '';
+                // Resolve the language family from the country code via reverse-lookup.
+                // The map has both NAME keys ("English") and CODE keys ("eng"). We want the
+                // CODE key so canonicalFamilyKey maps it correctly (eng → en, por → pt).
+                var bestFamily = null;
+                for (var key in languageToCountryMap) {
+                    if (key.includes('-')) continue; // skip regional entries
+                    if (languageToCountryMap[key] !== langCountry) continue;
+                    var family = canonicalFamilyKey(key);
+                    // Prefer the mapping that actually has regional options
+                    if (family && regionOpts[family] && regionOpts[family].length > 1) {
+                        bestFamily = family;
+                        break;
+                    }
+                    // Also try: if the key is short (3 chars = ISO 639-2), it's more likely
+                    // to map correctly than a long NAME key
+                    if (!bestFamily && family && key.length <= 3) {
+                        bestFamily = family;
+                    }
+                }
+                if (bestFamily && regionOpts[bestFamily] && regionOpts[bestFamily].length > 1) {
+                    if (!languageFamilies.find(function(f) { return f.family === bestFamily; })) {
+                        languageFamilies.push({
+                            family: bestFamily,
+                            name: langName.split(',')[0].trim(),
+                            currentCountry: langCountry
+                        });
+                    }
+                }
+            });
+
+            if (languageFamilies.length === 0) {
+                JE.toast?.('No regional variants available for this language');
+                return;
+            }
+
+            // Build popover DOM
+            var popover = document.createElement('div');
+            popover.id = 'je-region-popover';
+            popover.style.cssText = 'position:fixed;z-index:10000;background:var(--theme-card-background,#1c1c1e);' +
+                'border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:12px 16px;min-width:220px;' +
+                'box-shadow:0 8px 24px rgba(0,0,0,0.5);font-size:0.9em;color:var(--theme-text-color,#fff);';
+
+            var title = document.createElement('div');
+            title.textContent = 'Set Language Region';
+            title.style.cssText = 'font-weight:600;margin-bottom:10px;font-size:1em;';
+            popover.appendChild(title);
+
+            languageFamilies.forEach(function(lf) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+
+                var label = document.createElement('span');
+                label.textContent = lf.name + ':';
+                label.style.cssText = 'min-width:80px;';
+                row.appendChild(label);
+
+                var select = document.createElement('select');
+                select.dataset.family = lf.family;
+                select.style.cssText = 'flex:1;background:rgba(255,255,255,0.1);color:inherit;border:1px solid rgba(255,255,255,0.2);' +
+                    'border-radius:4px;padding:4px 8px;font-size:0.95em;';
+
+                var autoOpt = document.createElement('option');
+                autoOpt.value = '';
+                autoOpt.textContent = 'Auto (detected)';
+                select.appendChild(autoOpt);
+
+                regionOpts[lf.family].forEach(function(opt) {
+                    var o = document.createElement('option');
+                    o.value = opt.code;
+                    o.textContent = opt.label + ' (' + opt.country.toUpperCase() + ')';
+                    if (opt.country === lf.currentCountry) o.selected = true;
+                    select.appendChild(o);
+                });
+
+                row.appendChild(select);
+                popover.appendChild(row);
+            });
+
+            // Buttons
+            var btnRow = document.createElement('div');
+            btnRow.style.cssText = 'display:flex;gap:8px;margin-top:10px;justify-content:flex-end;';
+
+            var cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.cssText = 'padding:4px 12px;border-radius:4px;border:1px solid rgba(255,255,255,0.2);' +
+                'background:transparent;color:inherit;cursor:pointer;';
+            cancelBtn.onclick = function() { popover.remove(); backdrop.remove(); };
+            btnRow.appendChild(cancelBtn);
+
+            var saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Save';
+            saveBtn.style.cssText = 'padding:4px 12px;border-radius:4px;border:none;' +
+                'background:var(--theme-primary-color,#00a4dc);color:#fff;cursor:pointer;font-weight:600;';
+            saveBtn.onclick = function() {
+                var overrides = {};
+                var hasOverride = false;
+                popover.querySelectorAll('select').forEach(function(sel) {
+                    if (sel.value) {
+                        overrides[sel.dataset.family] = sel.value;
+                        hasOverride = true;
+                    }
+                });
+
+                var body = JSON.stringify({ overrides: hasOverride ? overrides : null });
+                ApiClient.ajax({
+                    type: 'POST',
+                    url: ApiClient.getUrl('/JellyfinEnhanced/language-region/' + itemId),
+                    data: body,
+                    contentType: 'application/json',
+                    dataType: 'json'
+                }).then(function(resp) {
+                    JE.toast?.('Language region updated' + (resp.targetName ? ' for ' + resp.targetName : '') + '. Refreshing...');
+                    // The server-side tag cache is updated but the client's local copy is
+                    // stale. For a rarely-used admin action, a page reload is the cleanest
+                    // way to pick up the change without complex cache invalidation.
+                    setTimeout(function() { window.location.reload(); }, 1200);
+                }).catch(function(err) {
+                    console.error(logPrefix, 'Failed to save region override:', err);
+                    JE.toast?.('Failed to save region override');
+                });
+
+                popover.remove();
+                backdrop.remove();
+            };
+            btnRow.appendChild(saveBtn);
+            popover.appendChild(btnRow);
+
+            // Backdrop to close on outside click
+            var backdrop = document.createElement('div');
+            backdrop.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;';
+            backdrop.onclick = function() { popover.remove(); backdrop.remove(); };
+
+            document.body.appendChild(backdrop);
+            document.body.appendChild(popover);
+
+            // Position near the flag overlay
+            var rect = overlayEl.getBoundingClientRect();
+            var popW = 260;
+            var left = Math.min(rect.left, window.innerWidth - popW - 16);
+            var top = rect.bottom + 8;
+            if (top + 200 > window.innerHeight) top = rect.top - 200;
+            popover.style.left = Math.max(8, left) + 'px';
+            popover.style.top = Math.max(8, top) + 'px';
+        }
+
+        /**
+         * Attach the admin-only right-click handler to a language overlay container.
+         * Called from insertLanguageTags after flags are rendered.
+         */
+        function attachRegionPopoverHandler(wrap, itemId) {
+            // Use currentSettings.isAdmin (cached from prior session) OR currentUser.Policy
+            // (resolved during this session). currentUser may not be populated yet on first
+            // render since plugin.js fetches it asynchronously.
+            var isAdmin = JE.currentSettings?.isAdmin === true
+                || JE.currentUser?.Policy?.IsAdministrator === true;
+            if (!isAdmin) return;
+            // Enable pointer events on the overlay so admin can interact with it
+            wrap.style.pointerEvents = 'auto';
+            wrap.style.cursor = 'context-menu';
+            wrap.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showRegionPopover(wrap, itemId);
+            });
+            // Alt+click as alternative (some trackpad users can't right-click easily)
+            wrap.addEventListener('click', function(e) {
+                if (e.altKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showRegionPopover(wrap, itemId);
+                }
+            });
         }
 
         function shouldIgnoreElement(el) {
@@ -588,9 +784,17 @@
                             return { name: code.toUpperCase(), code: code };
                         }
                     });
-                    // Tier 1.5: arr-sourced regional variants override the base ISO code when
-                    // present (e.g. "por" → "pt-BR" when Sonarr tagged the file as Brazilian).
-                    if (entry.RegionalAudioLanguages && entry.RegionalAudioLanguages.length > 0) {
+                    // Priority chain: manual per-item override > arr enrichment > file metadata.
+                    // ManualRegionOverrides (admin-set via flag-click popover) is a dict of
+                    // canonical family key → BCP-47 code, e.g. {"pt": "pt-BR"}.
+                    if (entry.ManualRegionOverrides && Object.keys(entry.ManualRegionOverrides).length > 0) {
+                        var manualRegional = [];
+                        for (var family in entry.ManualRegionOverrides) {
+                            var bcp = entry.ManualRegionOverrides[family];
+                            manualRegional.push({ code: bcp, name: bcp });
+                        }
+                        languages = mergeRegionalLanguages(languages, manualRegional);
+                    } else if (entry.RegionalAudioLanguages && entry.RegionalAudioLanguages.length > 0) {
                         languages = mergeRegionalLanguages(languages, entry.RegionalAudioLanguages);
                     }
                     insertLanguageTags(el, languages);
