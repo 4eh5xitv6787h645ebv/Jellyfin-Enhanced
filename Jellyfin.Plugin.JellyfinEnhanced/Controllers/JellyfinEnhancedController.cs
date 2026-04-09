@@ -2049,10 +2049,28 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return new JsonResult(BuildPublicConfigPayload(config, _assetHashProvider.Hash));
         }
 
+        // Phase 4: regex for TMDB apiPath validation. Only alphanumerics,
+        // slashes, underscores, hyphens, and dots are allowed. Blocks
+        // path traversal (../) and non-ASCII characters.
+        private static readonly System.Text.RegularExpressions.Regex _tmdbApiPathRegex =
+            new System.Text.RegularExpressions.Regex(
+                @"^[a-zA-Z0-9/_\-\.]+$",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
+
         [HttpGet("tmdb/{**apiPath}")]
         [Authorize]
         public async Task<IActionResult> ProxyTmdbRequest(string apiPath)
         {
+            // Validate apiPath before using it in a URL. The catch-all
+            // route segment accepts any string including "../" which could
+            // reach unintended TMDB API versions or leak the Bearer token
+            // to unexpected endpoints.
+            if (string.IsNullOrWhiteSpace(apiPath) || apiPath.Contains("..")
+                || !_tmdbApiPathRegex.IsMatch(apiPath))
+            {
+                return BadRequest(new { message = "Invalid TMDB API path." });
+            }
+
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrEmpty(config.TMDB_API_KEY))
             {
