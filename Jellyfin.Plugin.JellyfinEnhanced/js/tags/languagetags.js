@@ -567,6 +567,9 @@
                 });
 
                 var body = JSON.stringify({ overrides: hasOverride ? overrides : null });
+                // Disable the save button and show saving state while the POST is in-flight.
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
                 ApiClient.ajax({
                     type: 'POST',
                     url: ApiClient.getUrl('/JellyfinEnhanced/language-region/' + itemId),
@@ -574,18 +577,19 @@
                     contentType: 'application/json',
                     dataType: 'json'
                 }).then(function(resp) {
-                    JE.toast?.('Language region updated' + (resp.targetName ? ' for ' + resp.targetName : '') + '. Refreshing...');
-                    // The server-side tag cache is updated but the client's local copy is
-                    // stale. For a rarely-used admin action, a page reload is the cleanest
-                    // way to pick up the change without complex cache invalidation.
+                    popover.remove();
+                    backdrop.remove();
+                    var msg = 'Language region updated' + (resp.targetName ? ' for ' + resp.targetName : '') + '. Refreshing...';
+                    if (typeof JE.toast === 'function') { JE.toast(msg); }
                     setTimeout(function() { window.location.reload(); }, 1200);
                 }).catch(function(err) {
                     console.error(logPrefix, 'Failed to save region override:', err);
-                    JE.toast?.('Failed to save region override');
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save';
+                    var errMsg = 'Failed to save region override. Check the Jellyfin log for details.';
+                    if (typeof JE.toast === 'function') { JE.toast(errMsg); }
+                    else { window.alert(errMsg); }
                 });
-
-                popover.remove();
-                backdrop.remove();
             };
             btnRow.appendChild(saveBtn);
             popover.appendChild(btnRow);

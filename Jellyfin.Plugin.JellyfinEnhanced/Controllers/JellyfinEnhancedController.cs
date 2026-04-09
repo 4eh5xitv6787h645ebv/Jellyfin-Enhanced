@@ -2833,7 +2833,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // single bad item can never 500 the whole 200-item batch.
                 List<Model.TagRegionalLanguage>? regionalLangs = null;
                 try { regionalLangs = _languageEnrichment.GetForItem(item); }
-                catch (Exception ex) { _logger.Debug($"[LangEnrichment] Skipping regional lookup for {item.Id}: {ex.Message}"); }
+                catch (Exception ex) { _logger.Warning($"[LangEnrichment] Skipping regional lookup for {item.Id} ({ex.GetType().Name}): {ex.Message}"); }
 
                 // Issue #544: also read per-item ManualRegionOverrides from the tag cache.
                 // These are admin-set via the flag-click popover and take highest priority.
@@ -2922,8 +2922,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 if (overrides.Count == 0) overrides = null;
             }
 
-            // Apply to the target cache entry
-            _tagCacheService.SetManualRegionOverride(targetKey, overrides);
+            // Apply to the target cache entry. If the tag cache hasn't been built yet
+            // (first run, server just restarted), the key won't exist and the override
+            // is silently dropped — warn so the admin knows to rebuild.
+            int updated = 0;
+            if (_tagCacheService.SetManualRegionOverride(targetKey, overrides)) updated++;
 
             // Propagate to child Season/Episode entries if the target is a Series
             if (target.GetBaseItemKind() == Jellyfin.Data.Enums.BaseItemKind.Series)
@@ -2937,13 +2940,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 foreach (var child in children)
                 {
                     var childKey = child.Id.ToString("N").ToLowerInvariant();
-                    _tagCacheService.SetManualRegionOverride(childKey, overrides);
+                    if (_tagCacheService.SetManualRegionOverride(childKey, overrides)) updated++;
                 }
-                _logger.Info($"[LangRegion] Set override on {target.Name} ({targetKey}) + {children.Count} children");
+                _logger.Info($"[LangRegion] Set override on {target.Name} ({targetKey}) — {updated}/{children.Count + 1} cache entries updated");
             }
             else
             {
-                _logger.Info($"[LangRegion] Set override on {target.Name} ({targetKey})");
+                _logger.Info($"[LangRegion] Set override on {target.Name} ({targetKey}) — {updated} cache entry updated");
+            }
+
+            if (updated == 0)
+            {
+                _logger.Warning($"[LangRegion] Override for {target.Name} ({targetKey}) was NOT persisted — tag cache may not be built yet. Run 'Build Tag Cache' scheduled task.");
             }
 
             return Ok(new
@@ -2952,7 +2960,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 targetId = target.Id,
                 targetName = target.Name,
                 targetType = target.GetBaseItemKind().ToString(),
-                overrides = overrides
+                overrides = overrides,
+                updatedEntries = updated
             });
         }
 

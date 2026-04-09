@@ -105,11 +105,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
                 else if (item is MediaBrowser.Controller.Entities.TV.Season seasonItem)
                 {
-                    try { seriesItem = seasonItem.Series; } catch { seriesItem = null; }
+                    try { seriesItem = seasonItem.Series; }
+                    catch (Exception ex) { _logger.Debug($"[LangEnrichment] Could not resolve series for season {seasonItem.Id}: {ex.Message}"); seriesItem = null; }
                 }
                 else if (item is MediaBrowser.Controller.Entities.TV.Episode epItem)
                 {
-                    try { seriesItem = epItem.Series; } catch { seriesItem = null; }
+                    try { seriesItem = epItem.Series; }
+                    catch (Exception ex) { _logger.Debug($"[LangEnrichment] Could not resolve series for episode {epItem.Id}: {ex.Message}"); seriesItem = null; }
                 }
 
                 if (seriesItem != null
@@ -122,7 +124,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.Debug($"[LangEnrichment] GetForItem failed for {item?.Id}: {ex.Message}");
+                _logger.Warning($"[LangEnrichment] Unexpected error in GetForItem for {item?.Id} ({ex.GetType().Name}): {ex.Message}");
                 return null;
             }
         }

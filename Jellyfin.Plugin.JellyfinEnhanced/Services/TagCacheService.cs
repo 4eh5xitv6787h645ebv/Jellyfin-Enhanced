@@ -203,7 +203,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         /// Set or clear ManualRegionOverrides on a specific cache entry.
         /// Called from the language-region controller endpoint. Triggers a debounced save.
         /// </summary>
-        public void SetManualRegionOverride(string cacheKey, Dictionary<string, string>? overrides)
+        /// <returns>True if the cache entry was found and updated; false if the key wasn't in cache.</returns>
+        public bool SetManualRegionOverride(string cacheKey, Dictionary<string, string>? overrides)
         {
             if (_cache.TryGetValue(cacheKey, out var entry))
             {
@@ -211,7 +212,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 Interlocked.Increment(ref _version);
                 Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                 ScheduleDebouncedSave();
+                return true;
             }
+            return false;
         }
 
         /// <summary>
