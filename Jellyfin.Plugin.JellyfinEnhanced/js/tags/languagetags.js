@@ -120,7 +120,7 @@
          */
         function lookupRegionalCode(code) {
             if (!code) return null;
-            const normalized = code.toString().replace('_', '-').toLowerCase();
+            const normalized = code.toString().replace(/_/g, '-').toLowerCase();
             return languageToCountryMap[normalized] || null;
         }
 

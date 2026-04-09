@@ -165,7 +165,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                         && seriesEntry.ManualRegionOverrides != null
                         && seriesEntry.ManualRegionOverrides.Count > 0)
                     {
-                        childEntry.ManualRegionOverrides = seriesEntry.ManualRegionOverrides;
+                        childEntry.ManualRegionOverrides = new Dictionary<string, string>(seriesEntry.ManualRegionOverrides);
                     }
                 }
             }

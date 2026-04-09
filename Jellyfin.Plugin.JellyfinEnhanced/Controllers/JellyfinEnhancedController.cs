@@ -2908,16 +2908,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var targetKey = target.Id.ToString("N").ToLowerInvariant();
 
             // Build the override dict from the request, keyed by canonical family (ISO 639-1).
+            // Validate format: keys are 2-3 letter ISO codes, values are BCP-47 regional codes.
             Dictionary<string, string>? overrides = null;
             if (request.Overrides != null && request.Overrides.Count > 0)
             {
+                if (request.Overrides.Count > 10)
+                    return BadRequest(new { error = "Maximum 10 language overrides per item" });
+
+                var keyPattern = new System.Text.RegularExpressions.Regex(@"^[a-z]{2,3}$");
+                var valPattern = new System.Text.RegularExpressions.Regex(@"^[a-z]{2,3}(-[a-zA-Z0-9]{1,8}){0,2}$");
+
                 overrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var kvp in request.Overrides)
                 {
-                    if (!string.IsNullOrWhiteSpace(kvp.Key) && !string.IsNullOrWhiteSpace(kvp.Value))
-                    {
-                        overrides[kvp.Key.Trim().ToLowerInvariant()] = kvp.Value.Trim();
-                    }
+                    var k = kvp.Key?.Trim().ToLowerInvariant() ?? "";
+                    var v = kvp.Value?.Trim() ?? "";
+                    if (!keyPattern.IsMatch(k))
+                        return BadRequest(new { error = $"Invalid language family key: '{kvp.Key}'. Expected 2-3 letter ISO 639-1 code." });
+                    if (!valPattern.IsMatch(v.ToLowerInvariant()))
+                        return BadRequest(new { error = $"Invalid regional code: '{kvp.Value}'. Expected BCP-47 format like 'pt-BR'." });
+                    overrides[k] = v;
                 }
                 if (overrides.Count == 0) overrides = null;
             }

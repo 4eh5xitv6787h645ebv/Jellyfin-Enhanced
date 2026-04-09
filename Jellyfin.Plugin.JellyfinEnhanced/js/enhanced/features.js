@@ -635,7 +635,7 @@
                 // lowercase "pt-br" matches Sonarr's mixed-case "pt-BR". Fixes a regression
                 // from PR #535 where the flag image referenced an undefined variable.
                 const rawCode = (lang.code || '').toString();
-                const normalizedCode = rawCode.replace('_', '-').toLowerCase();
+                const normalizedCode = rawCode.replace(/_/g, '-').toLowerCase();
                 const baseCode = rawCode.split('-')[0];
                 const countryCode =
                     languageToCountryMap[normalizedCode]
