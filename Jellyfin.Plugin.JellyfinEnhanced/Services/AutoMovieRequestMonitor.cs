@@ -39,27 +39,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         }
 
         // Initialize and start monitoring playback events.
+        // Phase 1: enable check now owned by JERuntimeCoordinator.
         public void Initialize()
         {
-            // Check if auto-movie-request is enabled
-            var config = JellyfinEnhanced.Instance?.Configuration as Configuration.PluginConfiguration;
-            if (config == null)
-            {
-                _logger.Warning("[Auto-Movie-Request] Configuration is null - skipping auto-movie-request monitoring initialization");
-                return;
-            }
-
-            if (!config.AutoMovieRequestEnabled || !config.JellyseerrEnabled)
-            {
-                _logger.Info("[Auto-Movie-Request] Auto-Movie-Request monitoring is disabled in configuration - not subscribing to playback events");
-                return;
-            }
-
-            // _logger.Info("[Auto-Movie-Request] Initializing playback event monitoring");
-
-            // Subscribe to playback progress events (to detect when user starts watching)
             _sessionManager.PlaybackProgress += OnPlaybackProgress;
-
             _logger.Info("[Auto-Movie-Request] Successfully subscribed to playback events");
         }
 

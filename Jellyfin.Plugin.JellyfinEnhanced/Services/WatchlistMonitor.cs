@@ -56,23 +56,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         }
 
         // Initialize and start monitoring library events.
+        // Phase 1: enable check now owned by JERuntimeCoordinator.
         public void Initialize()
         {
-            // Only initialize if the watchlist feature is enabled in plugin configuration.
-            var config = JellyfinEnhanced.Instance?.Configuration as Configuration.PluginConfiguration;
-            if (config == null)
-            {
-                _logger.Warning("[Watchlist] Configuration is null - skipping watchlist monitoring initialization");
-                return;
-            }
-
-            if (!config.AddRequestedMediaToWatchlist || !config.JellyseerrEnabled)
-            {
-                _logger.Info("[Watchlist] Watchlist monitoring is disabled in configuration - not subscribing to library events");
-                return;
-            }
-
-            // _logger.Info("[Watchlist] Initializing library event monitoring");
             _libraryManager.ItemAdded += OnItemAdded;
             _libraryManager.ItemUpdated += OnItemUpdated;
             _logger.Info("[Watchlist] Successfully subscribed to library ItemAdded and ItemUpdated events");

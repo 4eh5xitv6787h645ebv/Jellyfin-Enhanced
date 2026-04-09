@@ -39,24 +39,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         }
 
         // Initialize and start monitoring playback events.
+        // Phase 1: the enable check is now owned by JERuntimeCoordinator —
+        // when this method is called, the coordinator has already verified
+        // that AutoSeasonRequestEnabled && JellyseerrEnabled are true.
+        // Removing the redundant internal guard prevents a TOCTOU race
+        // where the coordinator's predicate and this method's re-read of
+        // Configuration could disagree (leaving the monitor in a
+        // "marked active but never subscribed" state).
         public void Initialize()
         {
-            // Only initialize if the auto-season-request feature is enabled in plugin configuration.
-            var config = JellyfinEnhanced.Instance?.Configuration as Configuration.PluginConfiguration;
-            if (config == null)
-            {
-                _logger.Warning("[Auto-Season-Request] Configuration is null - skipping auto-season-request monitoring initialization");
-                return;
-            }
-
-            if (!config.AutoSeasonRequestEnabled || !config.JellyseerrEnabled)
-            {
-                _logger.Info("[Auto-Season-Request] Auto-request monitoring is disabled in configuration - not subscribing to playback events");
-                return;
-            }
-
-            // _logger.Info("[Auto-Season-Request] Initializing playback event monitoring");
-
             // Subscribe to playback events
             _sessionManager.PlaybackStopped += OnPlaybackStopped;
             _sessionManager.PlaybackProgress += OnPlaybackProgress;

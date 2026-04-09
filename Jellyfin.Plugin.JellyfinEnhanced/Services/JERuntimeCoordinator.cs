@@ -162,10 +162,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null) return;
 
-            // Invalidate the config hash (this also happens in the existing
-            // ConfigurationChanged handler in JellyfinEnhanced.cs — belt and
-            // braces so the coordinator is self-contained).
-            Controllers.JellyfinEnhancedController.InvalidateConfigHash();
+            // NOTE: InvalidateConfigHash is called by JellyfinEnhanced.cs's
+            // ConfigurationChanged handler BEFORE this method runs — do NOT
+            // duplicate it here. The coordinator does NOT own hash invalidation;
+            // it owns monitor lifecycle + cache clearing only.
 
             // Clear the controller's static caches. These are keyed by
             // Jellyseerr URLs, TMDB keys, etc. — if any of those changed,

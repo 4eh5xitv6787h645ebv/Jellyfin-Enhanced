@@ -93,7 +93,16 @@
                 });
                 newConfig[key] = data || {};
             } catch (e) {
-                newConfig[key] = oldConfig[key] || {};
+                // [CF2 pattern] Preserve old value on transient failure
+                // (5xx, network error) rather than overwriting with {}.
+                // Same distinction as config-store's fetchPrivateConfig:
+                // a 404 is "file doesn't exist yet" = genuine empty;
+                // a 5xx is "server hiccup" = keep what we had.
+                if (e && (e.status === 404 || e.status === 403)) {
+                    newConfig[key] = {};
+                } else {
+                    newConfig[key] = oldConfig[key] || {};
+                }
             }
             // Simple object comparison via JSON
             if (JSON.stringify(newConfig[key]) !== JSON.stringify(oldConfig[key] || {})) {
@@ -182,6 +191,9 @@
     function onVisibilityChange() {
         if (document.visibilityState === 'visible') reloadUserConfig();
     }
+    function onPageShow(event) {
+        if (event.persisted) reloadUserConfig();
+    }
     function onHashChange() { reloadUserConfig(); }
     function onPopState() { reloadUserConfig(); }
 
@@ -189,6 +201,7 @@
         if (pollingStarted) return;
         pollingStarted = true;
         document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('pageshow', onPageShow);
         window.addEventListener('hashchange', onHashChange);
         window.addEventListener('popstate', onPopState);
         if (JE.helpers && typeof JE.helpers.onNavigate === 'function') {
@@ -200,6 +213,7 @@
 
     function destroy() {
         document.removeEventListener('visibilitychange', onVisibilityChange);
+        window.removeEventListener('pageshow', onPageShow);
         window.removeEventListener('hashchange', onHashChange);
         window.removeEventListener('popstate', onPopState);
         window.removeEventListener('storage', onStorageEvent);
