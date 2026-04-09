@@ -84,15 +84,42 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             lock (_lock)
             {
-                _registrations.Add(new MonitorRegistration
+                // [Codex P2] Guard against duplicate registration. If
+                // StartupService.ExecuteAsync runs more than once (Jellyfin
+                // re-runs startup tasks in some scenarios), blindly
+                // appending would create duplicate subscriptions that each
+                // process events independently. Replace instead of append.
+                var existing = _registrations.FindIndex(r => r.Name == name);
+                if (existing >= 0)
                 {
-                    Name = name,
-                    IsEnabled = isEnabled,
-                    Initialize = initialize,
-                    Teardown = teardown,
-                    WasActive = false
-                });
-                _logger.Info($"[RuntimeCoordinator] Registered monitor: {name}");
+                    // Tear down the old registration if active, then replace
+                    var old = _registrations[existing];
+                    if (old.WasActive)
+                    {
+                        try { old.Teardown(); } catch { /* best-effort */ }
+                    }
+                    _registrations[existing] = new MonitorRegistration
+                    {
+                        Name = name,
+                        IsEnabled = isEnabled,
+                        Initialize = initialize,
+                        Teardown = teardown,
+                        WasActive = false
+                    };
+                    _logger.Info($"[RuntimeCoordinator] Replaced monitor: {name}");
+                }
+                else
+                {
+                    _registrations.Add(new MonitorRegistration
+                    {
+                        Name = name,
+                        IsEnabled = isEnabled,
+                        Initialize = initialize,
+                        Teardown = teardown,
+                        WasActive = false
+                    });
+                    _logger.Info($"[RuntimeCoordinator] Registered monitor: {name}");
+                }
             }
         }
 

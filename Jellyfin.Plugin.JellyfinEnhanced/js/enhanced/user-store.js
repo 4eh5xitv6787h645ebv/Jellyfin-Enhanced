@@ -74,13 +74,21 @@
         if (!userId) return;
 
         var oldConfig = JE.userConfig || {};
+        // [Codex P1] Key names MUST match what plugin.js bootstrap uses
+        // for JE.userConfig: .settings, .shortcuts, .bookmark (singular),
+        // .elsewhere, .hiddenContent. The previous version used "bookmarks"
+        // which broke all bookmark consumers after the first reactive
+        // reload.
         var files = {
             settings: '/JellyfinEnhanced/user-settings/' + userId + '/settings.json',
             shortcuts: '/JellyfinEnhanced/user-settings/' + userId + '/shortcuts.json',
-            bookmarks: '/JellyfinEnhanced/user-settings/' + userId + '/bookmark.json',
+            bookmark: '/JellyfinEnhanced/user-settings/' + userId + '/bookmark.json',
             elsewhere: '/JellyfinEnhanced/user-settings/' + userId + '/elsewhere.json',
             hiddenContent: '/JellyfinEnhanced/user-settings/' + userId + '/hidden-content.json'
         };
+        // Keys whose server-side JSON uses PascalCase but the frontend
+        // expects camelCase (same conversion plugin.js:554 does).
+        var camelCaseKeys = { settings: true, bookmark: true, hiddenContent: true };
 
         var newConfig = {};
         var changedKeys = [];
@@ -91,7 +99,15 @@
                     url: ApiClient.getUrl(files[key] + '?_=' + Date.now()),
                     dataType: 'json'
                 });
-                newConfig[key] = data || {};
+                // [Codex P1] Apply the same PascalCase→camelCase conversion
+                // that plugin.js bootstrap does on initial load. Without
+                // this, JE.loadSettings() can't find camelCase keys and
+                // falls back to plugin defaults.
+                if (camelCaseKeys[key] && data && typeof JE.toCamelCase === 'function') {
+                    newConfig[key] = JE.toCamelCase(data);
+                } else {
+                    newConfig[key] = data || {};
+                }
             } catch (e) {
                 // [CF2 pattern] Preserve old value on transient failure
                 // (5xx, network error) rather than overwriting with {}.

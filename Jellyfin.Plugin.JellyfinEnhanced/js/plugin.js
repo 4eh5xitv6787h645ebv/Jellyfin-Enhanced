@@ -804,6 +804,27 @@
                 JE.userStore.fetchUserHash().then(function(hash) {
                     if (hash) JE.userStore.snapshotHash(hash);
                 });
+
+                // [Codex P1] Wire a subscriber so user-settings changes
+                // actually propagate to modules. When userStore detects a
+                // cross-tab change and updates JE.userConfig, recompute
+                // JE.currentSettings (which is a merged view of user +
+                // plugin + hardcoded) and reset the tag pipeline so tags
+                // pick up any changed per-user preferences (e.g. tag
+                // visibility toggles). Full userConfigKeys on
+                // moduleRegistry is deferred to Phase 2.
+                JE.userStore.subscribe(function(event) {
+                    console.log('🪼 Jellyfin Enhanced: User settings changed: ' + event.changedKeys.join(', '));
+                    // Recompute merged settings
+                    if (typeof JE.loadSettings === 'function') {
+                        JE.currentSettings = JE.loadSettings();
+                    }
+                    // Reset tag pipeline if any tag-related user settings changed
+                    if (typeof JE.tagPipeline !== 'undefined' && typeof JE.tagPipeline.reset === 'function') {
+                        JE.tagPipeline.reset();
+                    }
+                });
+
                 JE.userStore.startPolling();
                 console.log('🪼 Jellyfin Enhanced: Reactive user-settings store started.');
             }
