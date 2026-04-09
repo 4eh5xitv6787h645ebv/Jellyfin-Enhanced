@@ -54,6 +54,13 @@
                 data: JSON.stringify(dataToSave),
                 contentType: 'application/json'
             });
+            // Phase 1: broadcast the save so other tabs for the same user
+            // pick up the change via the reactive userStore. Without this,
+            // tab B stays on stale per-user settings until the user navigates
+            // or reloads.
+            if (typeof JE.userStore !== 'undefined' && typeof JE.userStore.broadcastChange === 'function') {
+                JE.userStore.broadcastChange();
+            }
         } catch (e) {
             console.error(`🪼 Jellyfin Enhanced: Failed to save ${fileName}:`, e);
         }

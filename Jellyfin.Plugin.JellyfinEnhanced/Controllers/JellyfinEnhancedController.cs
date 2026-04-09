@@ -381,6 +381,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
+        /// <summary>
+        /// Clears ALL static response caches. Called by the runtime
+        /// coordinator on every config change so stale data from the old
+        /// config (e.g. old Jellyseerr URL, old TMDB key) doesn't persist.
+        /// The caches are self-warming: the next request populates them.
+        /// </summary>
+        internal static void ClearResponseCaches()
+        {
+            ClearUserCaches();
+            _avatarCache.Clear();
+            lock (_responseCacheLock) { _responseCache.Clear(); }
+            lock (_tmdbEnrichmentCacheLock) { _tmdbEnrichmentCache.Clear(); }
+            _tmdbEnrichmentInFlight.Clear();
+        }
+
         private async Task<string?> GetJellyseerrUserId(string jellyfinUserId)
         {
             var config = JellyfinEnhanced.Instance?.Configuration;
@@ -607,13 +622,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         [HttpGet("jellyseerr/validate")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> ValidateJellyseerr([FromQuery] string url, [FromHeader(Name = "X-Arr-ApiKey")] string apiKey)
         {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
 
             if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(apiKey))
                 return BadRequest(new { ok = false, message = "Missing url or apiKey" });
@@ -1238,13 +1249,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         [HttpPost("jellyseerr/sync-watchlist")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> SyncJellyseerrWatchlist()
         {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
 
             try
             {
@@ -1353,13 +1360,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         [HttpPost("jellyseerr/import-users")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> ImportJellyseerrUsers()
         {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
 
             try
             {
@@ -2304,6 +2307,47 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return true;
         }
 
+        /// <summary>
+        /// Phase 1: returns a lightweight hash of all per-user config files
+        /// for the given user. The frontend's userStore polls this on
+        /// navigation / tab-refocus to detect cross-tab or cross-device
+        /// changes to user settings. Only the hash travels the wire — the
+        /// actual config files are fetched separately only when the hash
+        /// differs from the last known value.
+        ///
+        /// The hash is computed from the concatenation of all per-user JSON
+        /// file contents (settings, shortcuts, bookmarks, elsewhere, hidden-
+        /// content). If a file doesn't exist, an empty string is used for
+        /// that slot — so creating a new file also changes the hash.
+        /// </summary>
+        [HttpGet("user-settings/{userId}/hash")]
+        [Authorize]
+        public IActionResult GetUserSettingsHash(string userId)
+        {
+            var authorizationResult = AuthorizeUserConfigAccess(userId, out var authorizedUserId);
+            if (authorizationResult != null) return authorizationResult;
+
+            try
+            {
+                var files = new[] { "settings.json", "shortcuts.json", "bookmark.json", "elsewhere.json", "hidden-content.json" };
+                var sb = new System.Text.StringBuilder();
+                foreach (var file in files)
+                {
+                    var content = _userConfigurationManager.GetRawUserConfiguration(authorizedUserId, file);
+                    sb.Append(content ?? string.Empty);
+                    sb.Append('|'); // separator so empty files don't collide
+                }
+                using var sha = System.Security.Cryptography.SHA256.Create();
+                var bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(sb.ToString()));
+                return Content(Convert.ToHexString(bytes).ToLowerInvariant().Substring(0, 16));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to compute user settings hash: {ex.Message}");
+                return StatusCode(500);
+            }
+        }
+
         [HttpGet("user-settings/{userId}/settings.json")]
         [Authorize]
         public IActionResult GetUserSettingsSettings(string userId)
@@ -2717,13 +2761,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         [HttpPost("reset-all-users-settings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult ResetAllUsersSettings()
         {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
 
             var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
 
@@ -3111,13 +3151,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         [HttpPost("UploadBrandingImage")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> UploadBrandingImage()
         {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
 
             try
             {
@@ -3201,13 +3237,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         [HttpPost("DeleteBrandingImage")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult DeleteBrandingImage()
         {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
 
             try
             {
@@ -3251,7 +3283,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// Validates connectivity to a Sonarr instance using the system status endpoint.
         /// </summary>
         [HttpGet("arr/validate/sonarr")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> ValidateSonarr([FromQuery] string url, [FromHeader(Name = "X-Arr-ApiKey")] string apiKey)
         {
             return await ValidateArrService("Sonarr", url, apiKey);
@@ -3261,7 +3293,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// Validates connectivity to a Radarr instance using the system status endpoint.
         /// </summary>
         [HttpGet("arr/validate/radarr")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> ValidateRadarr([FromQuery] string url, [FromHeader(Name = "X-Arr-ApiKey")] string apiKey)
         {
             return await ValidateArrService("Radarr", url, apiKey);
@@ -3276,8 +3308,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// <param name="apiKey">The API key to authenticate with.</param>
         private async Task<IActionResult> ValidateArrService(string serviceName, string url, string apiKey)
         {
-            if (!IsAdminUser())
-                return Forbid();
 
             if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(apiKey))
                 return BadRequest(new { ok = false, message = $"Missing {serviceName} URL or API key" });
@@ -3318,11 +3348,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// Returns reachability status and service name (Sonarr, Radarr, Jellyfin, Bazarr, or unknown).
         /// </summary>
         [HttpGet("arr/identify-url")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> IdentifyUrl([FromQuery] string url)
         {
-            if (!IsAdminUser())
-                return Forbid();
 
             if (string.IsNullOrWhiteSpace(url))
                 return BadRequest(new { reachable = false, service = "unknown" });
@@ -3445,11 +3473,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// </summary>
         /// <param name="tvdbId">The TVDB ID of the series to look up.</param>
         [HttpGet("arr/series-slug")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> GetSeriesSlug([FromQuery] int tvdbId)
         {
-            if (!IsAdminUser())
-                return Forbid();
 
             if (tvdbId <= 0)
                 return BadRequest(new { error = "tvdbId must be a positive integer" });

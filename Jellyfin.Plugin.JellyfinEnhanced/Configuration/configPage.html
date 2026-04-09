@@ -1693,12 +1693,13 @@
                             <div class="checkboxContainer" style="margin-bottom: 0.5em;">
                                 <label>
                                     <input id="autoReloadOnSave" is="emby-checkbox" type="checkbox"/>
-                                    <span>Auto-reload page after saving</span>
+                                    <span>Force reload on save (legacy fallback)</span>
                                 </label>
                             </div>
                             <div class="fieldDescription" style="margin-bottom: 1em;">
-                                Automatically reloads the page after saving to ensure all changes take effect.
-                                Disable if you prefer to reload manually.
+                                Forces a full page reload after saving. The reactive config system now applies
+                                most changes live, so this is only needed as a fallback for settings that
+                                haven't been migrated yet. Off by default.
                             </div>
                         </div>
                     </fieldset>
@@ -2711,7 +2712,10 @@
                 document.querySelector('#customPluginLinks').value = config.CustomPluginLinks || '';
 
                 // Config page preference (localStorage, not server config)
-                document.querySelector('#autoReloadOnSave').checked = localStorage.getItem('JE_autoReloadOnSave') !== 'false';
+                // Phase 1: default OFF — the reactive config system handles
+                // most changes live now. Only users who explicitly checked
+                // the box in a previous session keep it on.
+                document.querySelector('#autoReloadOnSave').checked = localStorage.getItem('JE_autoReloadOnSave') === 'true';
 
                 // Set up event handler for watchlist prevention checkbox
                 function toggleWatchlistRetentionVisibility() {

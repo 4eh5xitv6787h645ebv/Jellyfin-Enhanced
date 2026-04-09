@@ -205,7 +205,8 @@
 
     if (JE.moduleRegistry && ctx) {
         JE.moduleRegistry.register('letterboxd-links', {
-            configKeys: ['LetterboxdEnabled'],
+            configKeys: ['LetterboxdEnabled', 'ShowLetterboxdLinkAsText'],
+            enableKey: 'LetterboxdEnabled',
             init: JE.initializeLetterboxdLinksScript,
             teardown: ctx.teardown
         });

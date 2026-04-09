@@ -590,6 +590,7 @@
             const allComponentScripts = [
                 // reactive config infrastructure (must load before all modules)
                 'enhanced/config-store.js',
+                'enhanced/user-store.js',    // Phase 1: per-user settings reactive store
                 'enhanced/module-registry.js',
                 // enhanced
                 'enhanced/config.js',
@@ -794,6 +795,17 @@
                 // Start listening for tab focus changes
                 JE.configStore.startPolling();
                 console.log('🪼 Jellyfin Enhanced: Reactive config system started.');
+            }
+
+            // Phase 1: Start reactive per-user settings polling
+            if (JE.userStore) {
+                // Snapshot the initial user settings hash so the poller
+                // can detect future changes.
+                JE.userStore.fetchUserHash().then(function(hash) {
+                    if (hash) JE.userStore.snapshotHash(hash);
+                });
+                JE.userStore.startPolling();
+                console.log('🪼 Jellyfin Enhanced: Reactive user-settings store started.');
             }
 
             // Final Stage: Hide splash screen

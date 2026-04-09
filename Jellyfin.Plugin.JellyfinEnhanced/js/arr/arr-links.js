@@ -366,7 +366,21 @@
 
     if (JE.moduleRegistry && ctx) {
         JE.moduleRegistry.register('arr-links', {
-            configKeys: ['ArrLinksEnabled'],
+            // Phase 1: expanded configKeys so URL/mapping changes trigger a
+            // teardown+init cycle that clears the slug cache and reloads with
+            // the new Sonarr/Radarr/Bazarr targets. Previously the module
+            // only watched ArrLinksEnabled and URL changes needed a refresh.
+            configKeys: [
+                'ArrLinksEnabled',
+                'ShowArrLinksAsText',
+                'SonarrUrl',
+                'RadarrUrl',
+                'BazarrUrl',
+                'SonarrUrlMappings',
+                'RadarrUrlMappings',
+                'BazarrUrlMappings'
+            ],
+            enableKey: 'ArrLinksEnabled',
             init: JE.initializeArrLinksScript,
             teardown: ctx.teardown
         });

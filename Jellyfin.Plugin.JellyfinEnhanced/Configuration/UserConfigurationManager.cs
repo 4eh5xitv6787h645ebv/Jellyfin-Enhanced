@@ -41,6 +41,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             }
         }
 
+        /// Phase 1: returns the raw JSON content of a per-user config file,
+        /// or null if the file doesn't exist. Used by the user-settings hash
+        /// endpoint to compute a change-detection fingerprint without
+        /// deserializing. Callers must handle null (= file not yet created).
+        public string? GetRawUserConfiguration(string userId, string fileName)
+        {
+            var configPath = Path.Combine(GetUserConfigDir(userId), fileName);
+            return File.Exists(configPath) ? File.ReadAllText(configPath) : null;
+        }
+
         /// Loads user configuration from a JSON file.
         public T GetUserConfiguration<T>(string userId, string fileName) where T : new()
         {

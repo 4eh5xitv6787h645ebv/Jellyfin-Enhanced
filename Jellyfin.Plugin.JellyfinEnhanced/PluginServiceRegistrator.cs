@@ -24,6 +24,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Singleton so the hash is computed at most once and every caller
             // (asset-hash endpoint + ETag headers) shares the same value.
             serviceCollection.AddSingleton<AssetHashProvider>();
+            // Phase 1: central lifecycle coordinator for server-side monitors.
+            // Symmetric with the frontend moduleRegistry. Wired to
+            // ConfigurationChanged in JellyfinEnhanced.cs ctor.
+            serviceCollection.AddSingleton<JERuntimeCoordinator>();
             serviceCollection.AddSingleton<UserConfigurationManager>();
             serviceCollection.AddSingleton<AutoSeasonRequestService>();
             serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();

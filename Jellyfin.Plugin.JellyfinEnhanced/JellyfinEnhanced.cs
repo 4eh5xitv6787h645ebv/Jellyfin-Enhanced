@@ -52,7 +52,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // AssetHashProvider.Hash — both derive from the assembly file.
             ComputedAssetHash = ComputeAssetHash();
             _logger.Info($"{PluginName} v{Version} initialized. Asset hash: {ComputedAssetHash}. Plugin logs: {_logger.CurrentLogFilePath}");
-            ConfigurationChanged += (_, _) => Controllers.JellyfinEnhancedController.InvalidateConfigHash();
+            // Phase 1: ConfigurationChanged now fans out to both the
+            // config-hash invalidation AND the runtime coordinator's
+            // monitor lifecycle diff. The coordinator is a DI singleton
+            // that may not exist yet when the plugin constructor runs (DI
+            // services are registered AFTER the plugin class is constructed),
+            // so we use a deferred lookup via RuntimeCoordinator property.
+            ConfigurationChanged += (_, _) =>
+            {
+                Controllers.JellyfinEnhancedController.InvalidateConfigHash();
+                RuntimeCoordinator?.OnConfigurationChanged();
+            };
             CleanupOldScript();
             CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
         }
@@ -88,6 +98,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         public override string Name => PluginName;
         public override Guid Id => Guid.Parse("f69e946a-4b3c-4e9a-8f0a-8d7c1b2c4d9b");
         public static JellyfinEnhanced? Instance { get; private set; }
+
+        /// <summary>
+        /// Phase 1: reference to the DI-managed runtime coordinator.
+        /// Set by <see cref="Services.StartupService"/> after DI resolution
+        /// so the <see cref="ConfigurationChanged"/> handler can fan out
+        /// lifecycle calls without holding a constructor dependency.
+        /// </summary>
+        internal static Services.JERuntimeCoordinator? RuntimeCoordinator { get; set; }
 
         private string IndexHtmlPath => Path.Combine(_applicationPaths.WebPath, "index.html");
 

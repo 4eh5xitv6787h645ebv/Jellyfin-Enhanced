@@ -242,7 +242,13 @@
 
     if (JE.moduleRegistry && ctx) {
         JE.moduleRegistry.register('arr-tag-links', {
-            configKeys: ['ArrTagsShowAsLinks'],
+            configKeys: [
+                'ArrTagsShowAsLinks',
+                'ArrTagsPrefix',
+                'ArrTagsLinksFilter',
+                'ArrTagsLinksHideFilter'
+            ],
+            enableKey: 'ArrTagsShowAsLinks',
             init: JE.initializeArrTagLinksScript,
             teardown: ctx.teardown
         });

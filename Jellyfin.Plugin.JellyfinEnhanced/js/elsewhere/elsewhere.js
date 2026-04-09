@@ -1185,7 +1185,15 @@
 
     if (JE.moduleRegistry && ctx) {
         JE.moduleRegistry.register('elsewhere', {
-            configKeys: ['ElsewhereEnabled'],
+            configKeys: [
+                'ElsewhereEnabled',
+                'DEFAULT_REGION',
+                'DEFAULT_PROVIDERS',
+                'IGNORE_PROVIDERS',
+                'ElsewhereCustomBrandingText',
+                'ElsewhereCustomBrandingImageUrl'
+            ],
+            enableKey: 'ElsewhereEnabled',
             init: JE.initializeElsewhereScript,
             teardown: ctx.teardown
         });

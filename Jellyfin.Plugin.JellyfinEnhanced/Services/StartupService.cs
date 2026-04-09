@@ -24,13 +24,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly WatchlistMonitor _watchlistMonitor;
         private readonly TagCacheService _tagCacheService;
         private readonly TagCacheMonitor _tagCacheMonitor;
+        private readonly JERuntimeCoordinator _coordinator;
 
         public string Name => "Jellyfin Enhanced Startup";
         public string Key => "JellyfinEnhancedStartup";
         public string Description => "Injects the Jellyfin Enhanced script using the File Transformation plugin and performs necessary cleanups.";
         public string Category => "Jellyfin Enhanced";
 
-        public StartupService(Logger logger, IApplicationPaths applicationPaths, AutoSeasonRequestMonitor autoSeasonRequestMonitor, AutoMovieRequestMonitor autoMovieRequestMonitor, WatchlistMonitor watchlistMonitor, TagCacheService tagCacheService, TagCacheMonitor tagCacheMonitor)
+        public StartupService(
+            Logger logger,
+            IApplicationPaths applicationPaths,
+            AutoSeasonRequestMonitor autoSeasonRequestMonitor,
+            AutoMovieRequestMonitor autoMovieRequestMonitor,
+            WatchlistMonitor watchlistMonitor,
+            TagCacheService tagCacheService,
+            TagCacheMonitor tagCacheMonitor,
+            JERuntimeCoordinator coordinator)
         {
             _logger = logger;
             _applicationPaths = applicationPaths;
@@ -39,6 +48,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             _watchlistMonitor = watchlistMonitor;
             _tagCacheService = tagCacheService;
             _tagCacheMonitor = tagCacheMonitor;
+            _coordinator = coordinator;
         }
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
@@ -48,36 +58,71 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 _logger.Info("Jellyfin Enhanced Startup Task run successfully.");
                 RegisterFileTransformation();
 
-                // Initialize auto season request monitoring
-                _autoSeasonRequestMonitor.Initialize();
+                // Phase 1: register monitors with the runtime coordinator so
+                // they become hot-toggleable via ConfigurationChanged without
+                // restarting Jellyfin. Each monitor provides:
+                //   - IsEnabled: predicate reading the current config
+                //   - Initialize: subscribes events, starts work
+                //   - Teardown: unsubscribes events, clears caches (= Dispose)
+                //
+                // The coordinator calls Initialize on monitors whose gate
+                // passes, and Teardown on those that don't. On a config
+                // change, it diffs old vs new and calls the appropriate side.
 
-                // Initialize auto movie request monitoring
-                _autoMovieRequestMonitor.Initialize();
+                _coordinator.Register(
+                    name: "AutoSeasonRequest",
+                    isEnabled: c => c.AutoSeasonRequestEnabled && c.JellyseerrEnabled,
+                    initialize: () => _autoSeasonRequestMonitor.Initialize(),
+                    teardown: () => _autoSeasonRequestMonitor.Dispose()
+                );
 
-                // Initialize watchlist monitoring
-                _watchlistMonitor.Initialize();
+                _coordinator.Register(
+                    name: "AutoMovieRequest",
+                    isEnabled: c => c.AutoMovieRequestEnabled && c.JellyseerrEnabled,
+                    initialize: () => _autoMovieRequestMonitor.Initialize(),
+                    teardown: () => _autoMovieRequestMonitor.Dispose()
+                );
 
-                // Load tag cache from disk. New/changed items are picked up by the
-                // monitor via Jellyfin's library scan events (ItemAdded/ItemUpdated).
-                // A full rebuild runs daily at 3 AM or can be triggered manually.
-                // Wrapped in try/catch so a cache failure never prevents the rest of
-                // the plugin from working (tags just fall back to batch mode).
-                try
-                {
-                    _tagCacheService.LoadFromDisk();
-                    _tagCacheMonitor.Initialize();
+                _coordinator.Register(
+                    name: "WatchlistSync",
+                    isEnabled: c => c.AddRequestedMediaToWatchlist && c.JellyseerrEnabled,
+                    initialize: () => _watchlistMonitor.Initialize(),
+                    teardown: () => _watchlistMonitor.Dispose()
+                );
 
-                    // First install: if no cache exists, build it now so tags work immediately
-                    if (_tagCacheService.Count == 0)
+                // Tag cache monitor always subscribes (no config gate) but
+                // we still register it so the coordinator tracks it and can
+                // tear it down cleanly on plugin uninstall.
+                _coordinator.Register(
+                    name: "TagCacheMonitor",
+                    isEnabled: _ => true, // always active
+                    initialize: () =>
                     {
-                        _logger.Info("[TagCache] No cache on disk, building initial cache...");
-                        _tagCacheService.BuildFullCache(null, CancellationToken.None);
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    _logger.Error($"[TagCache] Failed to initialize tag cache (tags will use batch fallback): {ex.Message}");
-                }
+                        try
+                        {
+                            _tagCacheService.LoadFromDisk();
+                            _tagCacheMonitor.Initialize();
+                            if (_tagCacheService.Count == 0)
+                            {
+                                _logger.Info("[TagCache] No cache on disk, building initial cache...");
+                                _tagCacheService.BuildFullCache(null, CancellationToken.None);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.Error($"[TagCache] Failed to initialize (tags will use batch fallback): {ex.Message}");
+                        }
+                    },
+                    teardown: () => _tagCacheMonitor.Dispose()
+                );
+
+                // Wire the static reference so ConfigurationChanged can
+                // reach the coordinator without DI injection into the
+                // plugin class.
+                JellyfinEnhanced.RuntimeCoordinator = _coordinator;
+
+                // Run the initial enable/disable check for all monitors.
+                _coordinator.InitializeAll();
 
                 _logger.Info("Jellyfin Enhanced Startup Task completed successfully.");
             }, cancellationToken);
