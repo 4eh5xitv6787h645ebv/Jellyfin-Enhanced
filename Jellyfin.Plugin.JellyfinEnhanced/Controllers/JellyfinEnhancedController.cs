@@ -1022,9 +1022,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
 
                 var httpClient = _httpClientFactory.CreateClient("TMDB");
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.TMDB_API_KEY);
-                var tmdbUrl = $"https://api.themoviedb.org/3/person/{tmdbPersonId}";
+                var tmdbKey = config.TMDB_API_KEY;
+                string tmdbUrl;
+                if (tmdbKey.Length > 40)
+                {
+                    httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tmdbKey);
+                    tmdbUrl = $"https://api.themoviedb.org/3/person/{tmdbPersonId}";
+                }
+                else
+                {
+                    tmdbUrl = $"https://api.themoviedb.org/3/person/{tmdbPersonId}?api_key={tmdbKey}";
+                }
                 var response = await httpClient.GetAsync(tmdbUrl);
 
                 if (!response.IsSuccessStatusCode)
@@ -1723,9 +1732,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var httpClient = _httpClientFactory.CreateClient("TMDB");
             try
             {
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-                var requestUri = "https://api.themoviedb.org/3/configuration";
+                // Validate endpoint: apiKey comes from the admin's input,
+                // could be v3 (32-char) or v4 (200+ char). Use matching auth.
+                string requestUri;
+                if (apiKey.Length > 40)
+                {
+                    httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+                    requestUri = "https://api.themoviedb.org/3/configuration";
+                }
+                else
+                {
+                    requestUri = $"https://api.themoviedb.org/3/configuration?api_key={apiKey}";
+                }
                 var response = await httpClient.GetAsync(requestUri);
 
                 if (response.IsSuccessStatusCode)
@@ -2080,16 +2099,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var httpClient = _httpClientFactory.CreateClient("TMDB");
             var queryString = HttpContext.Request.QueryString;
 
-            // Phase 4: use Bearer token auth instead of query-string api_key.
-            // TMDB deprecated query-string auth; query strings land in
-            // upstream proxy logs, HTTP referrer headers, and any MITM.
-            // Bearer token goes in the Authorization header only.
-            // The admin's key may be a v3 key (32-char hex) or a v4 read
-            // access token (longer JWT-like). Both work as Bearer tokens
-            // on TMDB's v3 endpoints since TMDB auto-detects the format.
-            var requestUri = $"https://api.themoviedb.org/3/{apiPath}{queryString}";
-            httpClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.TMDB_API_KEY);
+            // TMDB auth: v3 API keys (32-char hex) ONLY work as a query
+            // parameter (?api_key=). v4 read-access tokens (200+ chars)
+            // work as Bearer tokens. Auto-detect based on key length.
+            var apiKey = config.TMDB_API_KEY;
+            string requestUri;
+            if (apiKey.Length > 40)
+            {
+                // v4 token — use Bearer header (keeps key out of URLs/logs)
+                requestUri = $"https://api.themoviedb.org/3/{apiPath}{queryString}";
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+            }
+            else
+            {
+                // v3 key — must use query-string (Bearer not supported)
+                var separator = queryString.HasValue ? "&" : "?";
+                requestUri = $"https://api.themoviedb.org/3/{apiPath}{queryString}{separator}api_key={apiKey}";
+            }
 
             try
             {
