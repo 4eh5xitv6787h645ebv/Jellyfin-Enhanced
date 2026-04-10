@@ -264,6 +264,9 @@
         }
         .je-request-actions {
             margin-top: 1em;
+            display: flex;
+            gap: 0.5em;
+            align-items: center;
         }
         .je-request-watch-btn {
           color: inherit;
@@ -280,6 +283,23 @@
         }
         .je-request-watch-btn:hover { opacity: 0.9; }
         .je-request-watch-btn .material-icons { font-size: 20px; }
+        .je-request-cancel-btn {
+          color: #ff6b6b;
+          background: rgba(255,107,107,0.1);
+          border: 1px solid rgba(255,107,107,0.3);
+          padding: 0.45em;
+          border-radius: 50%;
+          cursor: pointer;
+          width: 36px;
+          height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s;
+        }
+        .je-request-cancel-btn:hover { background: rgba(255,107,107,0.2); }
+        .je-request-cancel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .je-request-cancel-btn .material-icons { font-size: 20px; }
         .je-issues-section h2 {
           font-size: 1.5em;
           margin-bottom: 1em;
@@ -753,6 +773,35 @@
       state.downloads = [];
       return null;
     }
+  }
+
+  /**
+   * Cancel/delete a Seerr request and refresh the list.
+   * @param {string|number} requestId - Seerr request ID
+   * @param {HTMLElement} [btn] - Button element to disable during request
+   */
+  async function cancelRequest(requestId, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      const url = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/request/' + requestId);
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (response.ok) {
+        JE.toast?.('Request cancelled', 3000);
+        // Refresh the requests list
+        await renderRequestsSection();
+      } else {
+        var errMsg = 'Failed to cancel request';
+        try { var err = await response.json(); errMsg = err.message || errMsg; } catch (_) {}
+        JE.toast?.(errMsg, 5000);
+      }
+    } catch (error) {
+      console.error(logPrefix + ' Cancel request failed:', error);
+      JE.toast?.('Failed to cancel request', 5000);
+    }
+    if (btn) btn.disabled = false;
   }
 
   /**
@@ -1331,7 +1380,10 @@
                         ${item.createdAt ? `<span>&#8226;</span><span>${escapeHtml(formatRelativeDate(item.createdAt))}</span>` : ""}
                       </div>
                     </div>
-                    ${watchButton ? `<div class="je-request-actions">${watchButton}</div>` : ""}
+                    <div class="je-request-actions">
+                      ${watchButton}
+                      ${(item.mediaStatus === "Pending" || item.mediaStatus === "Approved" || item.mediaStatus === "Processing") && item.id ? `<button class="je-request-cancel-btn" title="Cancel Request" aria-label="Cancel Request" data-request-id="${item.id}"><span class="material-icons">close</span></button>` : ""}
+                    </div>
                 </div>
             </div>
         `;
@@ -1908,6 +1960,26 @@
         const title = viewIssueBtn.getAttribute('data-issue-title') || '';
         if (tmdbId && mediaType && JE.jellyseerrIssueReporter?.showReportModal) {
           JE.jellyseerrIssueReporter.showReportModal(tmdbId, title, mediaType, null, null);
+        }
+        return;
+      }
+
+      // Handle cancel request button clicks
+      const cancelBtn = e.target.closest('.je-request-cancel-btn');
+      if (cancelBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const requestId = cancelBtn.getAttribute('data-request-id');
+        if (requestId) {
+          var confirmText = 'Cancel this request?';
+          var confirmTitle = 'Cancel Request';
+          if (window.Dashboard && typeof window.Dashboard.confirm === 'function') {
+            window.Dashboard.confirm(confirmText, confirmTitle, function(confirmed) {
+              if (confirmed) cancelRequest(requestId, cancelBtn);
+            });
+          } else if (window.confirm(confirmTitle + '\n\n' + confirmText)) {
+            cancelRequest(requestId, cancelBtn);
+          }
         }
         return;
       }

@@ -728,6 +728,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/request?take={take}&skip={skip}&filter={filter}", HttpMethod.Get);
         }
 
+        [HttpDelete("jellyseerr/request/{requestId}")]
+        [Authorize]
+        public Task<IActionResult> DeleteJellyseerrRequest(int requestId)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/request/{requestId}", HttpMethod.Delete);
+        }
+
         [HttpGet("jellyseerr/tv/{tmdbId}")]
         [Authorize]
         public Task<IActionResult> GetTvShow(int tmdbId)
