@@ -477,9 +477,13 @@
      */
     function waitForSeasonsHeading(signal) {
         return pollUntil(() => {
-            const activePage = document.querySelector('.libraryPage:not(.hide)');
+            // Try multiple page selectors -- Jellyfin uses different classes depending on navigation path
+            const activePage = document.querySelector('.itemDetailPage:not(.hide)') ||
+                               document.querySelector('.libraryPage:not(.hide)') ||
+                               document.querySelector('.page:not(.hide) .detailPageContent')?.closest('.page');
             if (!activePage) return null;
-            const collapsible = activePage.querySelector('#listChildrenCollapsible');
+            const collapsible = activePage.querySelector('#listChildrenCollapsible') ||
+                                document.querySelector('#listChildrenCollapsible');
             if (!collapsible || collapsible.classList.contains('hide')) return null;
             const heading = collapsible.querySelector('h2.sectionTitle.sectionTitle-cards');
             if (!heading || heading.classList.contains('hide')) return null;
