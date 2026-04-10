@@ -1093,16 +1093,16 @@
 
         card.appendChild(cardBox);
 
-        // Click handler: look up person in Jellyfin by name via /Persons/{name} API
+        // Click handler: look up person in Jellyfin, fall back to Seerr more-info modal
         card.style.cursor = 'pointer';
         card.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             var personName = item.name;
+            var tmdbId = item.id;
             if (!personName) return;
 
-            // Jellyfin's /Persons/{name} endpoint returns the person item if they
-            // exist in any library metadata. Persons are keyed by name in Jellyfin.
+            // Try Jellyfin's native /Persons/{name} first
             fetch(ApiClient.getUrl('/Persons/' + encodeURIComponent(personName)), {
                 headers: { 'X-Emby-Token': ApiClient.accessToken() }
             }).then(function(resp) {
@@ -1110,12 +1110,23 @@
                 return null;
             }).then(function(person) {
                 if (person && person.Id) {
+                    // Person exists in Jellyfin -- navigate to their page
                     window.location.hash = '#!/details?id=' + person.Id;
+                } else if (tmdbId && item.knownFor && item.knownFor.length > 0) {
+                    // Not in library -- show their first known-for title in more-info modal
+                    var firstWork = item.knownFor[0];
+                    var workType = firstWork.mediaType || (firstWork.title ? 'movie' : 'tv');
+                    if (firstWork.id && JE.jellyseerrMoreInfo?.open) {
+                        JE.toast('Opening ' + personName + "'s filmography", 2000);
+                        JE.jellyseerrMoreInfo.open(firstWork.id, workType);
+                    } else {
+                        JE.toast(personName + ' is not in your library', 3000);
+                    }
                 } else {
-                    JE.toast(personName + ' not found in your library', 3000);
+                    JE.toast(personName + ' is not in your library', 3000);
                 }
             }).catch(function() {
-                JE.toast(personName + ' not found in your library', 3000);
+                JE.toast(personName + ' is not in your library', 3000);
             });
         });
 
