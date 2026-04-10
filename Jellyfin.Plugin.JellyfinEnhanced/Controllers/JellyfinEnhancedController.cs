@@ -1207,6 +1207,41 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/search/keyword?query={Uri.EscapeDataString(query)}", HttpMethod.Get);
         }
 
+        [HttpGet("jellyseerr/discover/trending")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTrending([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/discover/trending?page={page}", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/movies/upcoming")]
+        [Authorize]
+        public Task<IActionResult> DiscoverMoviesUpcoming([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies/upcoming?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/tv/upcoming")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTvUpcoming([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/tv/upcoming?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/movies")]
+        [Authorize]
+        public Task<IActionResult> DiscoverMovies([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/tv")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTv([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/tv?page={page}"), HttpMethod.Get);
+        }
+
         [HttpGet("tmdb/genres/movie")]
         [Authorize]
         public Task<IActionResult> GetTmdbMovieGenres()
@@ -1945,6 +1980,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.JellyseerrShowGenreDiscovery,
                 config.JellyseerrShowTagDiscovery,
                 config.JellyseerrShowPersonDiscovery,
+                config.JellyseerrShowTrending,
+                config.JellyseerrShowPopularMovies,
+                config.JellyseerrShowPopularTv,
+                config.JellyseerrShowUpcoming,
                 config.JellyseerrExcludeLibraryItems,
                 config.JellyseerrExcludeBlocklistedItems,
                 config.JellyseerrDisableCache,

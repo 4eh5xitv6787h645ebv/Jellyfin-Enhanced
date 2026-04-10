@@ -540,6 +540,7 @@
                 'jellyseerr/genre-discovery.js',
                 'jellyseerr/tag-discovery.js',
                 'jellyseerr/collection-discovery.js',
+                'jellyseerr/discover-home.js',
 
                 // tags
                 'tags/genretags.js',
