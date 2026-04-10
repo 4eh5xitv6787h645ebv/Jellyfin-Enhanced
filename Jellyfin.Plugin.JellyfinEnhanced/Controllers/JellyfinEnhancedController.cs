@@ -415,8 +415,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             "sortBy", "primaryReleaseDateGte", "primaryReleaseDateLte",
             "firstAirDateGte", "firstAirDateLte",
             "voteAverageGte", "voteAverageLte",
+            "voteCountGte", "voteCountLte",
             "withRuntimeGte", "withRuntimeLte",
-            "certification", "watchRegion", "language"
+            "originalLanguage",
+            "watchProviders", "watchRegion",
+            "certification", "certificationCountry",
+            "withStatus",
+            "language"
         };
 
         /// <summary>
@@ -1198,6 +1203,25 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public Task<IActionResult> GetTvGenreSlider()
         {
             return ProxyJellyseerrRequest("/api/v1/discover/genreslider/tv", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/languages")]
+        [Authorize]
+        public Task<IActionResult> GetLanguages()
+        {
+            return ProxyJellyseerrRequest("/api/v1/languages", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/watchproviders/{type}")]
+        [Authorize]
+        public Task<IActionResult> GetWatchProviders(string type, [FromQuery] string watchRegion = "US")
+        {
+            var validTypes = new[] { "movies", "tv" };
+            if (!validTypes.Contains(type.ToLowerInvariant()))
+            {
+                return Task.FromResult<IActionResult>(BadRequest(new { message = "Type must be 'movies' or 'tv'" }));
+            }
+            return ProxyJellyseerrRequest($"/api/v1/watchproviders/{Uri.EscapeDataString(type)}?watchRegion={Uri.EscapeDataString(watchRegion)}", HttpMethod.Get);
         }
 
         [HttpGet("jellyseerr/overrideRule")]

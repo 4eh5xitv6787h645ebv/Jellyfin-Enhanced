@@ -181,6 +181,8 @@
             const sortBy = JE.discoveryFilter?.getTvSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/tv/genre/${genreId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            const advancedParams = JE.discoveryFilter?.buildFilterQueryString(MODULE_NAME, 'tv') || '';
+            if (advancedParams) path += advancedParams;
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -206,6 +208,8 @@
             const sortBy = JE.discoveryFilter?.getSortMode(MODULE_NAME) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/movies/genre/${genreId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            const advancedParams = JE.discoveryFilter?.buildFilterQueryString(MODULE_NAME, 'movie') || '';
+            if (advancedParams) path += advancedParams;
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -256,7 +260,7 @@
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onAdvancedFilterChange) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-genre-discovery-section padded-left padded-right';
         section.setAttribute('data-jellyseerr-genre-discovery', 'true');
@@ -264,7 +268,7 @@
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange, onAdvancedFilterChange);
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -280,6 +284,15 @@
         section.appendChild(itemsContainer);
 
         return section;
+    }
+
+    /**
+     * Handles advanced filter change: delegates to handleSortChange which
+     * resets pagination and re-fetches from page 1 (the fetch functions
+     * already read the current advanced filter state via buildFilterQueryString).
+     */
+    function handleAdvancedFilterChange() {
+        handleSortChange();
     }
 
     /**
@@ -641,6 +654,7 @@
             // Always start each section on defaults instead of persisting previous choice.
             JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
             JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+            JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
             // Get current filter mode
             const filterMode = JE.discoveryFilter?.getFilterMode(MODULE_NAME) || 'mixed';
 
@@ -663,7 +677,7 @@
             if (existing) existing.remove();
 
             const sectionTitle = JE.t('discovery_more_with_genre', { genre: genreInfo.name });
-            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
+            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange, handleAdvancedFilterChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 
             const fragment = createCardsFragment(displayResults);
@@ -739,6 +753,7 @@
         itemDeduplicator = null;
         JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
         JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+        JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
     }
 
     /**
