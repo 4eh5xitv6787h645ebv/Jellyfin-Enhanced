@@ -1093,38 +1093,59 @@
 
         card.appendChild(cardBox);
 
-        // Click handler: search for person in Jellyfin, navigate to their page
+        // Click handler: find this exact person in Jellyfin by matching TMDB ID
         card.style.cursor = 'pointer';
         card.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            // Try to find this person in Jellyfin and navigate to their page
             var personName = item.name;
-            if (personName) {
-                ApiClient.getSearchHints({
-                    searchTerm: personName,
-                    IncludeItemTypes: 'Person',
-                    Limit: 5
-                }).then(function(result) {
-                    var hints = result.SearchHints || result.TotalRecordCount ? result.SearchHints : [];
-                    var match = hints.find(function(h) {
+            var tmdbId = String(item.id || '');
+            if (!personName) return;
+
+            ApiClient.getSearchHints({
+                searchTerm: personName,
+                IncludeItemTypes: 'Person',
+                Limit: 10
+            }).then(function(result) {
+                var hints = result.SearchHints || [];
+                if (hints.length === 0) {
+                    JE.toast('Person not found in library', 3000);
+                    return;
+                }
+                // If only one result, go directly
+                if (hints.length === 1) {
+                    window.location.hash = '#!/details?id=' + hints[0].ItemId;
+                    return;
+                }
+                // Multiple results: fetch each to match by TMDB provider ID
+                if (!tmdbId) {
+                    // No TMDB ID to disambiguate, take exact name match
+                    var nameMatch = hints.find(function(h) {
                         return h.Name && h.Name.toLowerCase() === personName.toLowerCase();
-                    }) || hints[0];
-                    if (match && match.ItemId) {
-                        window.location.hash = '#!/details?id=' + match.ItemId;
+                    });
+                    window.location.hash = '#!/details?id=' + (nameMatch || hints[0]).ItemId;
+                    return;
+                }
+                // Fetch provider IDs for each hint to find the TMDB match
+                Promise.all(hints.map(function(h) {
+                    return ApiClient.getItem(ApiClient.getCurrentUserId(), h.ItemId)
+                        .then(function(detail) { return { id: h.ItemId, tmdb: detail.ProviderIds?.Tmdb || '' }; })
+                        .catch(function() { return { id: h.ItemId, tmdb: '' }; });
+                })).then(function(details) {
+                    var tmdbMatch = details.find(function(d) { return d.tmdb === tmdbId; });
+                    if (tmdbMatch) {
+                        window.location.hash = '#!/details?id=' + tmdbMatch.id;
                     } else {
-                        // Fallback: open Seerr person page or show toast
-                        var base = JE.jellyseerrAPI?.resolveJellyseerrBaseUrl() || '';
-                        if (base && item.id && Number.isInteger(item.id) && item.id > 0) {
-                            window.open(base + '/person/' + item.id, '_blank');
-                        } else {
-                            JE.toast('Person not found in library', 3000);
-                        }
+                        // No TMDB match -- go to exact name match or first result
+                        var nameMatch = hints.find(function(h) {
+                            return h.Name && h.Name.toLowerCase() === personName.toLowerCase();
+                        });
+                        window.location.hash = '#!/details?id=' + (nameMatch || hints[0]).ItemId;
                     }
-                }).catch(function() {
-                    JE.toast('Could not search for person', 3000);
                 });
-            }
+            }).catch(function() {
+                JE.toast('Could not search for person', 3000);
+            });
         });
 
         return card;
