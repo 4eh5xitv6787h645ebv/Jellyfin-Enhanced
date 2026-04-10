@@ -2453,7 +2453,7 @@
                 </div>
                 <div class="jellyseerr-season-episodes">${escapeHtml(season.episodeCount || 0)} ep</div>
                 <div class="jellyseerr-season-status jellyseerr-season-status-${escapeHtml(statusClass)}">${escapeHtml(statusText)}</div>
-                <button type="button" class="jellyseerr-season-expand-btn" data-season-number="${escapeHtml(seasonNumber)}" data-tmdb-id="${escapeHtml(tmdbId)}" title="Show episodes" style="background:none;border:none;color:inherit;cursor:pointer;padding:2px 4px;font-size:1.2em;opacity:0.5;">
+                <button type="button" class="jellyseerr-season-expand-btn" data-season-number="${escapeHtml(seasonNumber)}" data-tmdb-id="${escapeHtml(tvDetails.id)}" title="Show episodes" style="background:none;border:none;color:inherit;cursor:pointer;padding:2px 4px;font-size:1.2em;opacity:0.5;">
                     <span class="material-icons" style="font-size:18px;">expand_more</span>
                 </button>
             `;
