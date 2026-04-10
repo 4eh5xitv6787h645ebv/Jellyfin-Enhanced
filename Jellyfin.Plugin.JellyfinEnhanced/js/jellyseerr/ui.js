@@ -1023,6 +1023,114 @@
     }
 
     /**
+     * Creates a person card for search results.
+     * Shows profile photo, name, and known-for titles.
+     * Clicking navigates to the Jellyfin person page or opens filmography.
+     * @param {Object} item - Person search result from Seerr API.
+     * @returns {HTMLElement} - Card element.
+     */
+    function createPersonCard(item) {
+        var profileUrl = item.profilePath
+            ? 'https://image.tmdb.org/t/p/w400' + item.profilePath
+            : 'https://i.ibb.co/fdbkXQdP/jellyseerr-poster-not-found.png';
+        var nameText = escapeHtml(item.name || 'Unknown');
+        var knownFor = '';
+        if (item.knownFor && item.knownFor.length > 0) {
+            knownFor = item.knownFor
+                .slice(0, 3)
+                .map(function(k) { return escapeHtml(k.title || k.name || ''); })
+                .filter(Boolean)
+                .join(', ');
+        }
+
+        var card = document.createElement('div');
+        card.className = 'card overflowPortraitCard card-hoverable jellyseerr-card jellyseerr-person-card';
+        card.setAttribute('data-tmdb-id', item.id);
+        card.setAttribute('data-media-type', 'person');
+
+        var cardBox = document.createElement('div');
+        cardBox.className = 'cardBox cardBox-bottompadded';
+
+        var cardScalable = document.createElement('div');
+        cardScalable.className = 'cardScalable';
+
+        var cardPadder = document.createElement('div');
+        cardPadder.className = 'cardPadder cardPadder-overflowPortrait';
+        cardScalable.appendChild(cardPadder);
+
+        var imageContainer = document.createElement('div');
+        imageContainer.className = 'cardImageContainer coveredImage cardContent jellyseerr-poster-image';
+        imageContainer.style.backgroundImage = "url('" + profileUrl + "')";
+
+        var personBadge = document.createElement('div');
+        personBadge.className = 'jellyseerr-status-badge';
+        personBadge.style.cssText = 'position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.7);' +
+            'color:#fff;padding:2px 6px;border-radius:3px;font-size:0.7em;';
+        personBadge.textContent = 'Person';
+        imageContainer.appendChild(personBadge);
+
+        cardScalable.appendChild(imageContainer);
+        cardBox.appendChild(cardScalable);
+
+        var nameDiv = document.createElement('div');
+        nameDiv.className = 'cardText cardTextCentered cardText-first';
+        var nameLink = document.createElement('a');
+        nameLink.href = '#';
+        nameLink.className = 'jellyseerr-more-info-link';
+        nameLink.title = item.name || '';
+        var nameBdi = document.createElement('bdi');
+        nameBdi.textContent = item.name || 'Unknown';
+        nameLink.appendChild(nameBdi);
+        nameDiv.appendChild(nameLink);
+        cardBox.appendChild(nameDiv);
+
+        var metaDiv = document.createElement('div');
+        metaDiv.className = 'cardText cardTextCentered cardText-secondary jellyseerr-meta';
+        metaDiv.style.cssText = 'font-size:0.75em;opacity:0.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        metaDiv.textContent = knownFor || 'Actor';
+        metaDiv.title = knownFor || '';
+        cardBox.appendChild(metaDiv);
+
+        card.appendChild(cardBox);
+
+        // Click handler: search for person in Jellyfin, navigate to their page
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Try to find this person in Jellyfin and navigate to their page
+            var personName = item.name;
+            if (personName) {
+                ApiClient.getSearchHints({
+                    searchTerm: personName,
+                    IncludeItemTypes: 'Person',
+                    Limit: 5
+                }).then(function(result) {
+                    var hints = result.SearchHints || result.TotalRecordCount ? result.SearchHints : [];
+                    var match = hints.find(function(h) {
+                        return h.Name && h.Name.toLowerCase() === personName.toLowerCase();
+                    }) || hints[0];
+                    if (match && match.ItemId) {
+                        window.location.hash = '#!/details?id=' + match.ItemId;
+                    } else {
+                        // Fallback: open Seerr person page or show toast
+                        var base = JE.jellyseerrAPI?.resolveJellyseerrBaseUrl() || '';
+                        if (base) {
+                            window.open(base + '/person/' + item.id, '_blank');
+                        } else {
+                            JE.toast('Person not found in library', 3000);
+                        }
+                    }
+                }).catch(function() {
+                    JE.toast('Could not search for person', 3000);
+                });
+            }
+        });
+
+        return card;
+    }
+
+    /**
      * Creates an individual Seerr result card.
      * @param {Object} item - Search result item from Seerr API.
      * @param {boolean} isJellyseerrActive - If the server is reachable.
@@ -1030,6 +1138,11 @@
      * @returns {HTMLElement} - Card element.
      */
     function createJellyseerrCard(item, isJellyseerrActive, jellyseerrUserFound) {
+        // Person card variant
+        if (item.mediaType === 'person') {
+            return createPersonCard(item);
+        }
+
         const year = item.releaseDate?.substring(0, 4) || item.firstAirDate?.substring(0, 4) || 'N/A';
         const posterUrl = item.posterPath ? `https://image.tmdb.org/t/p/w400${item.posterPath}` : 'https://i.ibb.co/fdbkXQdP/jellyseerr-poster-not-found.png';
         const rating = item.voteAverage ? item.voteAverage.toFixed(1) : 'N/A';

@@ -230,10 +230,8 @@
             const { skipCache = false } = options;
             const data = await get(`/search?query=${encodeURIComponent(query)}&page=${page}&language=${lang}`, { skipCache });
 
-            // Filter out people results before returning (immutable — don't mutate cached response)
             if (data.results) {
-                const filteredResults = data.results.filter(result => result.mediaType !== 'person');
-                return { ...data, results: filteredResults, totalResults: filteredResults.length };
+                return { ...data, totalResults: data.results.length };
             }
 
             return data;
