@@ -112,12 +112,17 @@
                 lastStatus = response.status;
 
                 // Read error body to surface server error messages (e.g., quota exceeded)
+                // The proxy may double-encode JSON (string-wrapped), so parse twice if needed
                 var serverMessage = null;
                 try {
                     var errText = await response.text();
                     if (errText) {
                         var errJson = JSON.parse(errText);
-                        serverMessage = errJson.message || null;
+                        // If first parse yields a string, it's double-encoded -- parse again
+                        if (typeof errJson === 'string') {
+                            try { errJson = JSON.parse(errJson); } catch (_) {}
+                        }
+                        serverMessage = (typeof errJson === 'object' && errJson !== null) ? errJson.message || null : null;
                     }
                 } catch (_) {}
 

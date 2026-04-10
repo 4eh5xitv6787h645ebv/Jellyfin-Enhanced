@@ -123,10 +123,14 @@
                 const text = await response.text();
                 if (!response.ok) {
                     var parsed = null;
-                    try { parsed = text ? JSON.parse(text) : null; } catch (_) {}
-                    var err = new Error(parsed?.message || 'Request failed (' + response.status + ')');
+                    try {
+                        parsed = text ? JSON.parse(text) : null;
+                        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                    } catch (_) {}
+                    var srvMsg = (parsed && typeof parsed === 'object') ? parsed.message || null : null;
+                    var err = new Error(srvMsg || 'Request failed (' + response.status + ')');
                     err.status = response.status;
-                    err.serverMessage = parsed?.message || null;
+                    err.serverMessage = srvMsg;
                     throw err;
                 }
                 return text ? JSON.parse(text) : {};
@@ -148,10 +152,14 @@
         var text = await response.text();
         if (!response.ok) {
             var parsed = null;
-            try { parsed = text ? JSON.parse(text) : null; } catch (_) {}
-            var err = new Error(parsed?.message || 'Request failed (' + response.status + ')');
+            try {
+                parsed = text ? JSON.parse(text) : null;
+                if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+            } catch (_) {}
+            var srvMsg = (parsed && typeof parsed === 'object') ? parsed.message || null : null;
+            var err = new Error(srvMsg || 'Request failed (' + response.status + ')');
             err.status = response.status;
-            err.serverMessage = parsed?.message || null;
+            err.serverMessage = srvMsg;
             throw err;
         }
         return text ? JSON.parse(text) : {};
