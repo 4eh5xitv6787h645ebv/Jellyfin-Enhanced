@@ -541,6 +541,7 @@
                 'jellyseerr/tag-discovery.js',
                 'jellyseerr/collection-discovery.js',
                 'jellyseerr/discover-home.js',
+                'jellyseerr/discover-page.js',
 
                 // tags
                 'tags/genretags.js',

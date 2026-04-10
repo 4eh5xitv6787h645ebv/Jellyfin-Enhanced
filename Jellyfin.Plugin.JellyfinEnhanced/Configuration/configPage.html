@@ -803,6 +803,30 @@
                                         </label>
                                     </div>
                                     <div class="fieldDescription" style="margin-bottom: 2em;">Displays upcoming movies and TV shows from Seerr on the Jellyfin home page.</div>
+
+                                    <div class="checkboxContainer" style="margin-bottom: 0.5em !important; margin-top: 1em; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1em;">
+                                        <label>
+                                            <input id="jellyseerrDiscoverPageEnabled" is="emby-checkbox" type="checkbox"/>
+                                            <span>Enable standalone Discover page</span>
+                                        </label>
+                                    </div>
+                                    <div class="fieldDescription" style="margin-bottom: 1em;">Adds a dedicated "Discover" page accessible from the sidebar that combines Trending, Popular, and Upcoming content from Seerr into one browsable page.</div>
+
+                                    <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                        <label>
+                                            <input id="jellyseerrDiscoverUsePluginPages" is="emby-checkbox" type="checkbox"/>
+                                            <span>Use Plugin Pages for Discover page</span>
+                                        </label>
+                                    </div>
+                                    <div class="fieldDescription" style="margin-bottom: 1em;">If the Plugin Pages plugin is installed, use it to add the Discover page to the sidebar instead of injecting navigation directly.</div>
+
+                                    <div class="checkboxContainer" style="margin-bottom: 0.5em !important;">
+                                        <label>
+                                            <input id="jellyseerrDiscoverUseCustomTabs" is="emby-checkbox" type="checkbox"/>
+                                            <span>Use Custom Tabs for Discover page</span>
+                                        </label>
+                                    </div>
+                                    <div class="fieldDescription" style="margin-bottom: 2em;">If the Custom Tabs plugin is installed, add a Discover tab to the home page.</div>
                                 </div>
                             </details>
                         </div>
@@ -2653,6 +2677,9 @@
                 document.querySelector('#jellyseerrShowPopularMovies').checked = config.JellyseerrShowPopularMovies !== false;
                 document.querySelector('#jellyseerrShowPopularTv').checked = config.JellyseerrShowPopularTv !== false;
                 document.querySelector('#jellyseerrShowUpcoming').checked = config.JellyseerrShowUpcoming !== false;
+                document.querySelector('#jellyseerrDiscoverPageEnabled').checked = !!config.JellyseerrDiscoverPageEnabled;
+                document.querySelector('#jellyseerrDiscoverUsePluginPages').checked = !!config.JellyseerrDiscoverUsePluginPages;
+                document.querySelector('#jellyseerrDiscoverUseCustomTabs').checked = !!config.JellyseerrDiscoverUseCustomTabs;
                 document.querySelector('#jellyseerrShowReportButton').checked = !!config.JellyseerrShowReportButton;
                 document.querySelector('#jellyseerrShowIssueIndicator').checked = !!config.JellyseerrShowIssueIndicator;
                 document.querySelector('#jellyseerrExcludeBlocklistedItems').checked = !!config.JellyseerrExcludeBlocklistedItems;
@@ -2867,6 +2894,9 @@
             config.JellyseerrShowPopularMovies = document.querySelector('#jellyseerrShowPopularMovies').checked;
             config.JellyseerrShowPopularTv = document.querySelector('#jellyseerrShowPopularTv').checked;
             config.JellyseerrShowUpcoming = document.querySelector('#jellyseerrShowUpcoming').checked;
+            config.JellyseerrDiscoverPageEnabled = document.querySelector('#jellyseerrDiscoverPageEnabled').checked;
+            config.JellyseerrDiscoverUsePluginPages = document.querySelector('#jellyseerrDiscoverUsePluginPages').checked;
+            config.JellyseerrDiscoverUseCustomTabs = document.querySelector('#jellyseerrDiscoverUseCustomTabs').checked;
             config.JellyseerrShowReportButton = document.querySelector('#jellyseerrShowReportButton').checked;
             config.JellyseerrShowIssueIndicator = document.querySelector('#jellyseerrShowIssueIndicator').checked;
             config.ShowElsewhereOnJellyseerr = document.querySelector('#showElsewhereOnJellyseerr').checked;

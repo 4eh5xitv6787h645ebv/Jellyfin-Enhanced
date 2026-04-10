@@ -115,6 +115,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             JellyseerrShowPopularMovies = true;
             JellyseerrShowPopularTv = true;
             JellyseerrShowUpcoming = true;
+            JellyseerrDiscoverPageEnabled = false;
+            JellyseerrDiscoverUsePluginPages = false;
+            JellyseerrDiscoverUseCustomTabs = false;
             ShowElsewhereOnJellyseerr = false;
             JellyseerrUseMoreInfoModal = false;
             JellyseerrUrls = "";
@@ -304,6 +307,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool JellyseerrShowPopularMovies { get; set; }
         public bool JellyseerrShowPopularTv { get; set; }
         public bool JellyseerrShowUpcoming { get; set; }
+        public bool JellyseerrDiscoverPageEnabled { get; set; }
+        public bool JellyseerrDiscoverUsePluginPages { get; set; }
+        public bool JellyseerrDiscoverUseCustomTabs { get; set; }
         public bool JellyseerrExcludeLibraryItems { get; set; } = true;
         public bool JellyseerrExcludeBlocklistedItems { get; set; } = false;
         public bool ShowElsewhereOnJellyseerr { get; set; }
