@@ -110,7 +110,20 @@
                 }
 
                 lastStatus = response.status;
-                lastError = new Error(`HTTP ${response.status}`);
+
+                // Read error body to surface server error messages (e.g., quota exceeded)
+                var serverMessage = null;
+                try {
+                    var errText = await response.text();
+                    if (errText) {
+                        var errJson = JSON.parse(errText);
+                        serverMessage = errJson.message || null;
+                    }
+                } catch (_) {}
+
+                lastError = new Error(serverMessage || `HTTP ${response.status}`);
+                lastError.status = response.status;
+                lastError.serverMessage = serverMessage;
 
                 if (!isRetryable(null, response.status)) {
                     throw lastError;
