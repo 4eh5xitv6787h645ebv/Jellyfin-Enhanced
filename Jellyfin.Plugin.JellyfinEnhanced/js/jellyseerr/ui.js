@@ -1093,58 +1093,29 @@
 
         card.appendChild(cardBox);
 
-        // Click handler: find this exact person in Jellyfin by matching TMDB ID
+        // Click handler: look up person in Jellyfin by name via /Persons/{name} API
         card.style.cursor = 'pointer';
         card.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             var personName = item.name;
-            var tmdbId = String(item.id || '');
             if (!personName) return;
 
-            ApiClient.getSearchHints({
-                searchTerm: personName,
-                IncludeItemTypes: 'Person',
-                Limit: 10
-            }).then(function(result) {
-                var hints = result.SearchHints || [];
-                if (hints.length === 0) {
-                    JE.toast('Person not found in library', 3000);
-                    return;
+            // Jellyfin's /Persons/{name} endpoint returns the person item if they
+            // exist in any library metadata. Persons are keyed by name in Jellyfin.
+            fetch(ApiClient.getUrl('/Persons/' + encodeURIComponent(personName)), {
+                headers: { 'X-Emby-Token': ApiClient.accessToken() }
+            }).then(function(resp) {
+                if (resp.ok) return resp.json();
+                return null;
+            }).then(function(person) {
+                if (person && person.Id) {
+                    window.location.hash = '#!/details?id=' + person.Id;
+                } else {
+                    JE.toast(personName + ' not found in your library', 3000);
                 }
-                // If only one result, go directly
-                if (hints.length === 1) {
-                    window.location.hash = '#!/details?id=' + hints[0].ItemId;
-                    return;
-                }
-                // Multiple results: fetch each to match by TMDB provider ID
-                if (!tmdbId) {
-                    // No TMDB ID to disambiguate, take exact name match
-                    var nameMatch = hints.find(function(h) {
-                        return h.Name && h.Name.toLowerCase() === personName.toLowerCase();
-                    });
-                    window.location.hash = '#!/details?id=' + (nameMatch || hints[0]).ItemId;
-                    return;
-                }
-                // Fetch provider IDs for each hint to find the TMDB match
-                Promise.all(hints.map(function(h) {
-                    return ApiClient.getItem(ApiClient.getCurrentUserId(), h.ItemId)
-                        .then(function(detail) { return { id: h.ItemId, tmdb: detail.ProviderIds?.Tmdb || '' }; })
-                        .catch(function() { return { id: h.ItemId, tmdb: '' }; });
-                })).then(function(details) {
-                    var tmdbMatch = details.find(function(d) { return d.tmdb === tmdbId; });
-                    if (tmdbMatch) {
-                        window.location.hash = '#!/details?id=' + tmdbMatch.id;
-                    } else {
-                        // No TMDB match -- go to exact name match or first result
-                        var nameMatch = hints.find(function(h) {
-                            return h.Name && h.Name.toLowerCase() === personName.toLowerCase();
-                        });
-                        window.location.hash = '#!/details?id=' + (nameMatch || hints[0]).ItemId;
-                    }
-                });
             }).catch(function() {
-                JE.toast('Could not search for person', 3000);
+                JE.toast(personName + ' not found in your library', 3000);
             });
         });
 
