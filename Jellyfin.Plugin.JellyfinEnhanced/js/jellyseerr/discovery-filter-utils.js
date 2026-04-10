@@ -501,17 +501,13 @@
             e.preventDefault();
             e.stopPropagation();
             resetAdvancedFilters(moduleName);
-            // Re-create panel contents by finding and replacing
-            var parent = panel.parentElement;
-            if (parent) {
-                var newPanel = createAdvancedFilterPanel(moduleName, onFilterApply);
-                // Preserve visibility
-                if (panel.style.display !== 'none') {
-                    newPanel.style.display = 'flex';
-                    newPanel.style.flexDirection = 'column';
-                }
-                parent.replaceChild(newPanel, panel);
-            }
+            // Reset all controls in-place (don't replace panel to preserve closure references)
+            panel.querySelectorAll('select').forEach(function(sel) {
+                sel.selectedIndex = 0;
+            });
+            panel.querySelectorAll('input[type="number"]').forEach(function(inp) {
+                inp.value = '';
+            });
             onFilterApply();
         });
         row2.appendChild(resetBtn);
@@ -858,7 +854,14 @@
                     var certSelect = certGroup.querySelector('select');
                     if (certSelect) {
                         var certOptions = (newMode === FILTER_MODES.TV) ? TV_CERTIFICATIONS : MOVIE_CERTIFICATIONS;
-                        replaceSelectOptions(certSelect, certOptions, certSelect.value);
+                        var oldVal = certSelect.value;
+                        replaceSelectOptions(certSelect, certOptions, oldVal);
+                        // Clear stale certification if value doesn't exist in new options
+                        var validValues = certOptions.map(function(o) { return o.value; });
+                        if (validValues.indexOf(oldVal) === -1) {
+                            setAdvancedFilter(moduleName, 'certification', '');
+                            setAdvancedFilter(moduleName, 'certificationCountry', '');
+                        }
                     }
                 }
                 if (onFilterChange) onFilterChange(newMode);
