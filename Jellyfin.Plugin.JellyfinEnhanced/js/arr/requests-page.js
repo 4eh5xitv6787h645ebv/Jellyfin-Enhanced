@@ -320,6 +320,22 @@
         .je-request-decline-btn:hover { background: rgba(239,83,80,0.2); }
         .je-request-approve-btn:disabled, .je-request-decline-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .je-request-approve-btn .material-icons, .je-request-decline-btn .material-icons { font-size: 20px; }
+        .je-issue-resolve-btn, .je-issue-delete-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 2px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          transition: background 0.15s;
+        }
+        .je-issue-resolve-btn { color: #66bb6a; }
+        .je-issue-resolve-btn:hover { background: rgba(102,187,106,0.15); }
+        .je-issue-delete-btn { color: #ef5350; }
+        .je-issue-delete-btn:hover { background: rgba(239,83,80,0.15); }
+        .je-issue-resolve-btn:disabled, .je-issue-delete-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .je-issue-resolve-btn .material-icons, .je-issue-delete-btn .material-icons { font-size: 18px; }
         .je-issues-section h2 {
           font-size: 1.5em;
           margin-bottom: 1em;
@@ -793,6 +809,42 @@
       state.downloads = [];
       return null;
     }
+  }
+
+  /**
+   * Resolve, reopen, or delete a Seerr issue (admin only).
+   * @param {string|number} issueId
+   * @param {'open'|'resolved'|'delete'} action
+   * @param {HTMLElement} [btn]
+   */
+  async function issueAction(issueId, action, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      var method = action === 'delete' ? 'DELETE' : 'POST';
+      var path = action === 'delete'
+        ? '/JellyfinEnhanced/jellyseerr/issue/' + issueId
+        : '/JellyfinEnhanced/jellyseerr/issue/' + issueId + '/' + action;
+      var url = ApiClient.getUrl(path);
+      var response = await fetch(url, { method: method, headers: getAuthHeaders() });
+      if (response.ok) {
+        var label = action === 'delete' ? 'deleted' : (action === 'resolved' ? 'resolved' : 'reopened');
+        JE.toast?.('Issue ' + label, 3000);
+        await renderIssuesSection();
+      } else {
+        var errMsg = 'Failed to update issue';
+        try {
+          var text = await response.text();
+          var parsed = JSON.parse(text);
+          if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (_) {}
+        JE.toast?.(errMsg, 5000);
+      }
+    } catch (error) {
+      console.error(logPrefix + ' Issue action failed:', error);
+      JE.toast?.('Failed to update issue', 5000);
+    }
+    if (btn) btn.disabled = false;
   }
 
   /**
@@ -1554,6 +1606,8 @@
             <button class="je-issue-view-btn ${canView ? "" : "is-disabled"}" type="button" aria-label="View issue" ${canView ? `data-issue-tmdb-id="${escapeHtml(tmdbId)}" data-issue-media-type="${escapeHtml(mediaType)}" data-issue-title="${escapeHtml(title)}"` : "disabled"}>
               <span class="material-icons">visibility</span>
             </button>
+            ${state._isAdmin && issue?.id ? `<button class="je-issue-resolve-btn" type="button" title="${status.label === 'Resolved' ? 'Reopen' : 'Resolve'}" data-issue-id="${issue.id}" data-issue-action="${status.label === 'Resolved' ? 'open' : 'resolved'}"><span class="material-icons">${status.label === 'Resolved' ? 'replay' : 'check_circle'}</span></button>` : ""}
+            ${state._isAdmin && issue?.id ? `<button class="je-issue-delete-btn" type="button" title="Delete Issue" data-issue-id="${issue.id}"><span class="material-icons">delete</span></button>` : ""}
           </div>
         </div>
       </div>
@@ -2016,6 +2070,35 @@
         const title = viewIssueBtn.getAttribute('data-issue-title') || '';
         if (tmdbId && mediaType && JE.jellyseerrIssueReporter?.showReportModal) {
           JE.jellyseerrIssueReporter.showReportModal(tmdbId, title, mediaType, null, null);
+        }
+        return;
+      }
+
+      // Handle issue resolve/reopen button clicks (admin only)
+      const resolveBtn = e.target.closest('.je-issue-resolve-btn');
+      if (resolveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const issueId = resolveBtn.getAttribute('data-issue-id');
+        const action = resolveBtn.getAttribute('data-issue-action');
+        if (issueId && action) issueAction(issueId, action, resolveBtn);
+        return;
+      }
+
+      // Handle issue delete button clicks (admin only)
+      const deleteIssueBtn = e.target.closest('.je-issue-delete-btn');
+      if (deleteIssueBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const issueId = deleteIssueBtn.getAttribute('data-issue-id');
+        if (issueId) {
+          if (window.Dashboard && typeof window.Dashboard.confirm === 'function') {
+            window.Dashboard.confirm('Delete this issue?', 'Delete Issue', function(confirmed) {
+              if (confirmed) issueAction(issueId, 'delete', deleteIssueBtn);
+            });
+          } else if (window.confirm('Delete this issue?')) {
+            issueAction(issueId, 'delete', deleteIssueBtn);
+          }
         }
         return;
       }

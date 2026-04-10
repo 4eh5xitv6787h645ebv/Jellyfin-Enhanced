@@ -3169,6 +3169,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return await ProxyJellyseerrRequest("/api/v1/issue", HttpMethod.Post, issueBody.ToString());
         }
 
+        [HttpPost("jellyseerr/issue/{id}/comment")]
+        [Authorize]
+        public async Task<IActionResult> AddIssueComment(int id, [FromBody] JsonElement body)
+        {
+            return await ProxyJellyseerrRequest($"/api/v1/issue/{id}/comment", HttpMethod.Post, body.ToString());
+        }
+
+        [HttpPost("jellyseerr/issue/{id}/{status}")]
+        [Authorize]
+        public Task<IActionResult> UpdateIssueStatus(int id, string status)
+        {
+            var validStatuses = new[] { "open", "resolved" };
+            if (!validStatuses.Contains(status.ToLowerInvariant()))
+            {
+                return Task.FromResult<IActionResult>(BadRequest(new { message = "Status must be 'open' or 'resolved'" }));
+            }
+            return ProxyJellyseerrRequest($"/api/v1/issue/{id}/{Uri.EscapeDataString(status)}", HttpMethod.Post);
+        }
+
+        [HttpDelete("jellyseerr/issue/{id}")]
+        [Authorize]
+        public Task<IActionResult> DeleteIssue(int id)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/issue/{id}", HttpMethod.Delete);
+        }
+
         [HttpPost("UploadBrandingImage")]
         [Authorize]
         public async Task<IActionResult> UploadBrandingImage()
