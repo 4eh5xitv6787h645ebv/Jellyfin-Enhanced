@@ -1253,10 +1253,13 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                 mountRequestedChip(data, 'movie', false, response);
             } catch (error) {
                 mainButton.disabled = false;
-                // Escape API error before innerHTML to prevent reflected XSS
-                const errorMessage = error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
-                mainButton.innerHTML = `<span>${escapeHtml(errorMessage)}</span>${JE.jellyseerrUIIcons?.error || ''}`;
+                const errorMessage = error?.serverMessage || error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                while (mainButton.firstChild) mainButton.removeChild(mainButton.firstChild);
+                var errSpan = document.createElement('span');
+                errSpan.textContent = errorMessage;
+                mainButton.appendChild(errSpan);
                 mainButton.classList.add('jellyseerr-button-error');
+                JE.toast?.(errorMessage, 5000);
             }
         });
 
@@ -1323,7 +1326,9 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                     close4k();
                 } catch (error) {
                     option.disabled = false;
-                    option.textContent = error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                    var errMsg = error?.serverMessage || error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                    option.textContent = errMsg;
+                    JE.toast?.(errMsg, 5000);
                 }
             });
         }
@@ -1360,10 +1365,13 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                 mountRequestedChip(data, 'movie', false);
             } catch (error) {
                 requestButton.disabled = false;
-                // Escape API error before innerHTML to prevent reflected XSS
-                const errorMessage = error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
-                requestButton.innerHTML = `<span>${escapeHtml(errorMessage)}</span>${JE.jellyseerrUIIcons?.error || ''}`;
+                const errorMessage = error?.serverMessage || error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                while (requestButton.firstChild) requestButton.removeChild(requestButton.firstChild);
+                var errSpan = document.createElement('span');
+                errSpan.textContent = errorMessage;
+                requestButton.appendChild(errSpan);
                 requestButton.classList.add('jellyseerr-button-error');
+                JE.toast?.(errorMessage, 5000);
             }
         });
         container.appendChild(requestButton);

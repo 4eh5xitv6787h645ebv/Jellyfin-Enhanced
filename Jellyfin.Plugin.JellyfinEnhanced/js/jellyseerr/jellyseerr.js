@@ -527,14 +527,11 @@
                             }
                         }
                     } catch (error) {
-                        let errorMessage = 'Failed to request 4K version';
-                        if (error.status === 404) {
+                        let errorMessage = error?.serverMessage || error?.responseJSON?.message || 'Failed to request 4K version';
+                        if (error.status === 404 && !error.serverMessage) {
                             errorMessage = 'User not found';
-                        } else if (error.responseJSON?.message) {
-                            errorMessage = error.responseJSON.message;
                         }
-                        // Escape API error before display to prevent reflected XSS
-                        JE.toast(escapeHtml(errorMessage), 4000);
+                        JE.toast(escapeHtml(errorMessage), 5000);
                         item.disabled = false;
                         item.innerHTML = `<span>Request in 4K</span>`;
                     }

@@ -2034,7 +2034,8 @@
                     }
                     closeFn();
                 } catch (error) {
-                    JE.toast(JE.t('jellyseerr_modal_toast_request_fail'), 4000);
+                    var msg = error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed';
+                    JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = JE.t('jellyseerr_modal_request');
                 }
@@ -2180,7 +2181,8 @@
                         }
                     }, 1000);
                 } catch (error) {
-                    JE.toast(JE.t('jellyseerr_modal_toast_request_fail'), 4000);
+                    var msg = error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed';
+                    JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = is4k ? (JE.t('jellyseerr_btn_request_4k') || 'Request in 4K') : (partialRequestsEnabled ? JE.t('jellyseerr_modal_request_selected') : JE.t('jellyseerr_modal_request'));
                 }
@@ -2565,7 +2567,8 @@
                         }
                     }, 1000);
                 } catch (error) {
-                    JE.toast(JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed', 4000);
+                    var msg = error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed';
+                    JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = JE.t('jellyseerr_modal_request_selected_movies') || 'Request Selected Movies';
                 }

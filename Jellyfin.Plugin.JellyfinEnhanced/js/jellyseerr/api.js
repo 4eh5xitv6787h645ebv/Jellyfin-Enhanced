@@ -121,18 +121,40 @@
                     { ...JE.requestManager.CONFIG.retry, maxAttempts: 1 }
                 );
                 const text = await response.text();
+                if (!response.ok) {
+                    var parsed = null;
+                    try { parsed = text ? JSON.parse(text) : null; } catch (_) {}
+                    var err = new Error(parsed?.message || 'Request failed (' + response.status + ')');
+                    err.status = response.status;
+                    err.serverMessage = parsed?.message || null;
+                    throw err;
+                }
                 return text ? JSON.parse(text) : {};
             };
             return JE.requestManager.withConcurrencyLimit(fetchFn);
         }
 
-        return ApiClient.ajax({
-            type: 'POST',
-            url: url,
-            data: JSON.stringify(body),
-            contentType: 'application/json',
-            headers: { 'X-Jellyfin-User-Id': ApiClient.getCurrentUserId() }
+        // Fallback path without request manager
+        var response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Jellyfin-User-Id': ApiClient.getCurrentUserId(),
+                'X-Emby-Token': ApiClient.accessToken(),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(body)
         });
+        var text = await response.text();
+        if (!response.ok) {
+            var parsed = null;
+            try { parsed = text ? JSON.parse(text) : null; } catch (_) {}
+            var err = new Error(parsed?.message || 'Request failed (' + response.status + ')');
+            err.status = response.status;
+            err.serverMessage = parsed?.message || null;
+            throw err;
+        }
+        return text ? JSON.parse(text) : {};
     }
 
     /**
