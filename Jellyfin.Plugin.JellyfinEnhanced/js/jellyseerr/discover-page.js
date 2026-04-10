@@ -224,7 +224,6 @@
         var config = JE.pluginConfig || {};
         if (!config.JellyseerrDiscoverPageEnabled) return;
         if (pluginPagesExists && config.JellyseerrDiscoverUsePluginPages) return;
-        // Custom Tabs bootstrapper not yet implemented -- don't suppress sidebar nav
 
         if (document.querySelector('.je-nav-discover-item')) return;
 
@@ -346,6 +345,16 @@
 
         createPageContainer();
         injectNavigation();
+
+        // Retry nav injection -- the JE sidebar section may not exist yet at load time
+        var navRetries = 0;
+        var navTimer = setInterval(function() {
+            if (document.querySelector('.je-nav-discover-item') || ++navRetries > 50) {
+                clearInterval(navTimer);
+                return;
+            }
+            injectNavigation();
+        }, 200);
 
         window.addEventListener('hashchange', interceptNavigation, true);
         window.addEventListener('popstate', interceptNavigation, true);
