@@ -869,7 +869,12 @@
             header.appendChild(filterControl);
         }
 
-        // Advanced filter toggle button and panel
+        if (onSortChange) {
+            var sortControl = createSortControl(moduleName, onSortChange);
+            header.appendChild(sortControl);
+        }
+
+        // Advanced filter toggle button and panel (after sort, so they sit side by side)
         if (onAdvancedFilterChange) {
             var filterPanel = createAdvancedFilterPanel(moduleName, function() {
                 if (filterPanel._updateIndicator) filterPanel._updateIndicator();
@@ -894,11 +899,6 @@
             wrapper.appendChild(filterPanel);
         } else {
             wrapper.appendChild(header);
-        }
-
-        if (onSortChange) {
-            var sortControl = createSortControl(moduleName, onSortChange);
-            header.appendChild(sortControl);
         }
 
         return wrapper;
