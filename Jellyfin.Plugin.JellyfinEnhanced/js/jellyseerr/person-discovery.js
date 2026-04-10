@@ -192,6 +192,30 @@
     }
 
     /**
+     * Applies advanced filters client-side to a results array.
+     * Filters available in credits data: year, rating, language, vote count.
+     * @param {Array} results
+     * @returns {Array} filtered array
+     */
+    function applyAdvancedFilters(results) {
+        const filters = JE.discoveryFilter?.getAdvancedFilters(MODULE_NAME) || {};
+        if (Object.keys(filters).length === 0) return results;
+
+        return results.filter(function(item) {
+            var date = item.releaseDate || item.firstAirDate || '';
+            var year = date ? parseInt(date.substring(0, 4), 10) : 0;
+
+            if (filters.yearFrom && year && year < parseInt(filters.yearFrom, 10)) return false;
+            if (filters.yearTo && year && year > parseInt(filters.yearTo, 10)) return false;
+            if (filters.ratingMin && (item.voteAverage || 0) < parseFloat(filters.ratingMin)) return false;
+            if (filters.ratingMax && filters.ratingMax !== '10' && (item.voteAverage || 0) > parseFloat(filters.ratingMax)) return false;
+            if (filters.language && item.originalLanguage && item.originalLanguage !== filters.language) return false;
+            if (filters.voteCountMin && (item.voteCount || 0) < parseInt(filters.voteCountMin, 10)) return false;
+            return true;
+        });
+    }
+
+    /**
      * Sorts results client-side based on current sort mode
      * @param {Array} results
      * @returns {Array} new sorted array
@@ -201,20 +225,25 @@
         if (!sortBy) return results; // default order from API (popularity)
 
         const sorted = [...results];
+        var getDate = function(item) { return item.releaseDate || item.firstAirDate || ''; };
+        var getTitle = function(item) { return item.title || item.name || ''; };
+
         if (sortBy === 'vote_average.desc') {
             sorted.sort((a, b) => (b.voteAverage || 0) - (a.voteAverage || 0));
+        } else if (sortBy === 'vote_average.asc') {
+            sorted.sort((a, b) => (a.voteAverage || 0) - (b.voteAverage || 0));
         } else if (sortBy === 'release_date.desc') {
-            sorted.sort((a, b) => {
-                const dateA = a.releaseDate || a.firstAirDate || '';
-                const dateB = b.releaseDate || b.firstAirDate || '';
-                return dateB.localeCompare(dateA);
-            });
+            sorted.sort((a, b) => getDate(b).localeCompare(getDate(a)));
         } else if (sortBy === 'release_date.asc') {
-            sorted.sort((a, b) => {
-                const dateA = a.releaseDate || a.firstAirDate || '';
-                const dateB = b.releaseDate || b.firstAirDate || '';
-                return dateA.localeCompare(dateB);
-            });
+            sorted.sort((a, b) => getDate(a).localeCompare(getDate(b)));
+        } else if (sortBy === 'vote_count.desc') {
+            sorted.sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0));
+        } else if (sortBy === 'popularity.asc') {
+            sorted.sort((a, b) => (a.popularity || 0) - (b.popularity || 0));
+        } else if (sortBy === 'original_title.asc') {
+            sorted.sort((a, b) => getTitle(a).localeCompare(getTitle(b)));
+        } else if (sortBy === 'original_title.desc') {
+            sorted.sort((a, b) => getTitle(b).localeCompare(getTitle(a)));
         }
         return sorted;
     }
@@ -225,7 +254,8 @@
      * @returns {Array}
      */
     function getFilteredResults(mode) {
-        const sorted = applySortOrder(cachedAllResults);
+        const filtered = applyAdvancedFilters(cachedAllResults);
+        const sorted = applySortOrder(filtered);
         const filter = JE.discoveryFilter;
         if (!filter) {
             return sorted;
@@ -269,7 +299,7 @@
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onAdvancedFilterChange) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-person-discovery-section';
         section.setAttribute('data-jellyseerr-person-discovery', 'true');
@@ -277,7 +307,7 @@
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange, onAdvancedFilterChange);
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -294,6 +324,13 @@
         section.appendChild(itemsContainer);
 
         return section;
+    }
+
+    /**
+     * Handles advanced filter change: re-filters and re-renders client-side.
+     */
+    function handleAdvancedFilterChange() {
+        handleSortChange();
     }
 
     /**
@@ -506,6 +543,7 @@
             // Always start each section on defaults instead of persisting previous choice.
             JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
             JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+            JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
             // Get current filter mode
             const filterMode = JE.discoveryFilter?.getFilterMode(MODULE_NAME) || 'mixed';
 
@@ -532,7 +570,7 @@
 
             // Create and insert section
             const sectionTitle = JE.t('discovery_more_from_person', { person: personInfo.name });
-            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
+            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange, handleAdvancedFilterChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 
             // Seed first page and let seamless scroll load the rest.
@@ -600,6 +638,7 @@
         cachedAllResults = [];
         JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
         JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+        JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
     }
 
     /**
