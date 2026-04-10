@@ -739,6 +739,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> ApproveJellyseerrRequest(int requestId)
         {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
             return ProxyJellyseerrRequest($"/api/v1/request/{requestId}/approve", HttpMethod.Post);
         }
 
@@ -746,6 +748,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> DeclineJellyseerrRequest(int requestId)
         {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
             return ProxyJellyseerrRequest($"/api/v1/request/{requestId}/decline", HttpMethod.Post);
         }
 
@@ -3180,6 +3184,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> UpdateIssueStatus(int id, string status)
         {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
             var validStatuses = new[] { "open", "resolved" };
             if (!validStatuses.Contains(status.ToLowerInvariant()))
             {
@@ -3192,6 +3198,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [Authorize]
         public Task<IActionResult> DeleteIssue(int id)
         {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
             return ProxyJellyseerrRequest($"/api/v1/issue/{id}", HttpMethod.Delete);
         }
 

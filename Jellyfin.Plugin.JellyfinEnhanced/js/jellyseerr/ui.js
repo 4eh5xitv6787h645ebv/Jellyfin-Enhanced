@@ -1030,9 +1030,10 @@
      * @returns {HTMLElement} - Card element.
      */
     function createPersonCard(item) {
-        var profileUrl = item.profilePath
-            ? 'https://image.tmdb.org/t/p/w400' + item.profilePath
-            : 'https://i.ibb.co/fdbkXQdP/jellyseerr-poster-not-found.png';
+        var profileUrl = 'https://i.ibb.co/fdbkXQdP/jellyseerr-poster-not-found.png';
+        if (item.profilePath && /^\/[a-zA-Z0-9._\-\/]+$/.test(item.profilePath)) {
+            profileUrl = 'https://image.tmdb.org/t/p/w400' + item.profilePath;
+        }
         var nameText = escapeHtml(item.name || 'Unknown');
         var knownFor = '';
         if (item.knownFor && item.knownFor.length > 0) {
@@ -1115,7 +1116,7 @@
                     } else {
                         // Fallback: open Seerr person page or show toast
                         var base = JE.jellyseerrAPI?.resolveJellyseerrBaseUrl() || '';
-                        if (base) {
+                        if (base && item.id && Number.isInteger(item.id) && item.id > 0) {
                             window.open(base + '/person/' + item.id, '_blank');
                         } else {
                             JE.toast('Person not found in library', 3000);
@@ -2034,7 +2035,7 @@
                     }
                     closeFn();
                 } catch (error) {
-                    var msg = error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed';
+                    var msg = escapeHtml(error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed');
                     JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = JE.t('jellyseerr_modal_request');
@@ -2181,7 +2182,7 @@
                         }
                     }, 1000);
                 } catch (error) {
-                    var msg = error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed';
+                    var msg = escapeHtml(error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed');
                     JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = is4k ? (JE.t('jellyseerr_btn_request_4k') || 'Request in 4K') : (partialRequestsEnabled ? JE.t('jellyseerr_modal_request_selected') : JE.t('jellyseerr_modal_request'));
@@ -2645,7 +2646,7 @@
                         }
                     }, 1000);
                 } catch (error) {
-                    var msg = error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed';
+                    var msg = escapeHtml(error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed');
                     JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = JE.t('jellyseerr_modal_request_selected_movies') || 'Request Selected Movies';

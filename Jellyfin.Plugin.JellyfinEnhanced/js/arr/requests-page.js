@@ -838,7 +838,7 @@
           if (typeof parsed === 'string') parsed = JSON.parse(parsed);
           if (parsed?.message) errMsg = parsed.message;
         } catch (_) {}
-        JE.toast?.(errMsg, 5000);
+        JE.toast?.(escapeHtml(errMsg), 5000);
       }
     } catch (error) {
       console.error(logPrefix + ' Issue action failed:', error);
@@ -872,7 +872,7 @@
           if (typeof parsed === 'string') parsed = JSON.parse(parsed);
           if (parsed?.message) errMsg = parsed.message;
         } catch (_) {}
-        JE.toast?.(errMsg, 5000);
+        JE.toast?.(escapeHtml(errMsg), 5000);
       }
     } catch (error) {
       console.error(logPrefix + ' ' + action + ' request failed:', error);
@@ -901,7 +901,7 @@
       } else {
         var errMsg = 'Failed to cancel request';
         try { var err = await response.json(); errMsg = err.message || errMsg; } catch (_) {}
-        JE.toast?.(errMsg, 5000);
+        JE.toast?.(escapeHtml(errMsg), 5000);
       }
     } catch (error) {
       console.error(logPrefix + ' Cancel request failed:', error);
@@ -1488,9 +1488,9 @@
                     </div>
                     <div class="je-request-actions">
                       ${watchButton}
-                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-approve-btn" title="Approve" aria-label="Approve" data-request-id="${item.id}"><span class="material-icons">check_circle</span></button>` : ""}
-                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-decline-btn" title="Decline" aria-label="Decline" data-request-id="${item.id}"><span class="material-icons">cancel</span></button>` : ""}
-                      ${(item.mediaStatus === "Pending" || item.mediaStatus === "Approved" || item.mediaStatus === "Processing") && item.id ? `<button class="je-request-cancel-btn" title="Cancel Request" aria-label="Cancel Request" data-request-id="${item.id}"><span class="material-icons">close</span></button>` : ""}
+                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-approve-btn" title="Approve" aria-label="Approve" data-request-id="${escapeHtml(String(item.id))}"><span class="material-icons">check_circle</span></button>` : ""}
+                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-decline-btn" title="Decline" aria-label="Decline" data-request-id="${escapeHtml(String(item.id))}"><span class="material-icons">cancel</span></button>` : ""}
+                      ${(item.mediaStatus === "Pending" || item.mediaStatus === "Approved" || item.mediaStatus === "Processing") && item.id ? `<button class="je-request-cancel-btn" title="Cancel Request" aria-label="Cancel Request" data-request-id="${escapeHtml(String(item.id))}"><span class="material-icons">close</span></button>` : ""}
                     </div>
                 </div>
             </div>
@@ -1606,8 +1606,8 @@
             <button class="je-issue-view-btn ${canView ? "" : "is-disabled"}" type="button" aria-label="View issue" ${canView ? `data-issue-tmdb-id="${escapeHtml(tmdbId)}" data-issue-media-type="${escapeHtml(mediaType)}" data-issue-title="${escapeHtml(title)}"` : "disabled"}>
               <span class="material-icons">visibility</span>
             </button>
-            ${state._isAdmin && issue?.id ? `<button class="je-issue-resolve-btn" type="button" title="${status.label === 'Resolved' ? 'Reopen' : 'Resolve'}" data-issue-id="${issue.id}" data-issue-action="${status.label === 'Resolved' ? 'open' : 'resolved'}"><span class="material-icons">${status.label === 'Resolved' ? 'replay' : 'check_circle'}</span></button>` : ""}
-            ${state._isAdmin && issue?.id ? `<button class="je-issue-delete-btn" type="button" title="Delete Issue" data-issue-id="${issue.id}"><span class="material-icons">delete</span></button>` : ""}
+            ${state._isAdmin && issue?.id ? `<button class="je-issue-resolve-btn" type="button" title="${status.label === 'Resolved' ? 'Reopen' : 'Resolve'}" data-issue-id="${escapeHtml(String(issue.id))}" data-issue-action="${status.label === 'Resolved' ? 'open' : 'resolved'}"><span class="material-icons">${status.label === 'Resolved' ? 'replay' : 'check_circle'}</span></button>` : ""}
+            ${state._isAdmin && issue?.id ? `<button class="je-issue-delete-btn" type="button" title="Delete Issue" data-issue-id="${escapeHtml(String(issue.id))}"><span class="material-icons">delete</span></button>` : ""}
           </div>
         </div>
       </div>

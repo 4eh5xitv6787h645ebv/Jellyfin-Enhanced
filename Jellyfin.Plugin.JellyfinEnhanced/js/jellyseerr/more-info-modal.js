@@ -1259,7 +1259,7 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                 errSpan.textContent = errorMessage;
                 mainButton.appendChild(errSpan);
                 mainButton.classList.add('jellyseerr-button-error');
-                JE.toast?.(errorMessage, 5000);
+                JE.toast?.(escapeHtml(errorMessage), 5000);
             }
         });
 
@@ -1328,7 +1328,7 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                     option.disabled = false;
                     var errMsg = error?.serverMessage || error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
                     option.textContent = errMsg;
-                    JE.toast?.(errMsg, 5000);
+                    JE.toast?.(escapeHtml(errMsg), 5000);
                 }
             });
         }
@@ -1371,7 +1371,7 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                 errSpan.textContent = errorMessage;
                 requestButton.appendChild(errSpan);
                 requestButton.classList.add('jellyseerr-button-error');
-                JE.toast?.(errorMessage, 5000);
+                JE.toast?.(escapeHtml(errorMessage), 5000);
             }
         });
         container.appendChild(requestButton);

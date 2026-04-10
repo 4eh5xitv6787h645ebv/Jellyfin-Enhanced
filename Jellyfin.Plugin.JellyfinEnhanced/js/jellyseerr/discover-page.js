@@ -190,6 +190,10 @@
         page.dispatchEvent(new CustomEvent('viewshow', { bubbles: true, detail: { type: 'custom', isRestored: false, options: {} } }));
 
         var container = document.getElementById('je-discover-container');
+        // Reset loaded state if container was recreated (Plugin Pages) or is empty
+        if (container && state.loaded && !container.hasChildNodes()) {
+            state.loaded = false;
+        }
         if (container && !state.loaded) {
             loadContent(container);
         }
@@ -217,7 +221,7 @@
         var config = JE.pluginConfig || {};
         if (!config.JellyseerrDiscoverPageEnabled) return;
         if (pluginPagesExists && config.JellyseerrDiscoverUsePluginPages) return;
-        if (config.JellyseerrDiscoverUseCustomTabs) return;
+        // Custom Tabs bootstrapper not yet implemented -- don't suppress sidebar nav
 
         if (document.querySelector('.je-nav-discover-item')) return;
 
@@ -292,6 +296,10 @@
             container = document.getElementById('je-discover-container');
         }
 
+        // Reset if container was recreated or is empty
+        if (container && state.loaded && !container.hasChildNodes()) {
+            state.loaded = false;
+        }
         if (container && !state.loaded) {
             loadContent(container);
         }
