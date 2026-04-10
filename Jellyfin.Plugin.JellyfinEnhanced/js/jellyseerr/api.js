@@ -846,6 +846,27 @@
     };
 
     /**
+     * Fetches the current user's request quota from Seerr.
+     * @returns {Promise<{movie:{limit:number,remaining:number,days:number},tv:{limit:number,remaining:number,days:number}}|null>}
+     */
+    api.fetchUserQuota = async function() {
+        try {
+            var url = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/user/quota');
+            var response = await fetch(url, {
+                headers: {
+                    'X-Emby-Token': ApiClient.accessToken(),
+                    'X-Jellyfin-User-Id': ApiClient.getCurrentUserId()
+                }
+            });
+            if (!response.ok) return null;
+            return await response.json();
+        } catch (error) {
+            console.debug(logPrefix + ' Failed to fetch user quota:', error);
+            return null;
+        }
+    };
+
+    /**
      * Resolves the Seerr base URL based on URL mappings or falls back to the default base URL.
      * This function checks if there are URL mappings configured and matches the current Jellyfin server URL
      * against the mappings to determine the appropriate Seerr URL.

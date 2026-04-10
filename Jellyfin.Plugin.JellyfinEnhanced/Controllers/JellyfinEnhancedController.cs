@@ -735,6 +735,29 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/request/{requestId}", HttpMethod.Delete);
         }
 
+        [HttpGet("jellyseerr/user/quota")]
+        [Authorize]
+        public async Task<IActionResult> GetUserQuota()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null || !config.JellyseerrEnabled ||
+                string.IsNullOrEmpty(config.JellyseerrApiKey) ||
+                string.IsNullOrEmpty(config.JellyseerrUrls))
+            {
+                return Ok(new { quotaEnabled = false });
+            }
+
+            var jellyfinUserId = UserHelper.GetCurrentUserId(User)?.ToString();
+            if (string.IsNullOrEmpty(jellyfinUserId))
+                return BadRequest(new { message = "Could not resolve user" });
+
+            var jellyseerrUserId = await GetJellyseerrUserId(jellyfinUserId);
+            if (string.IsNullOrEmpty(jellyseerrUserId))
+                return NotFound(new { message = "User not linked to Seerr" });
+
+            return await ProxyJellyseerrRequest($"/api/v1/user/{jellyseerrUserId}/quota", HttpMethod.Get);
+        }
+
         [HttpGet("jellyseerr/tv/{tmdbId}")]
         [Authorize]
         public Task<IActionResult> GetTvShow(int tmdbId)

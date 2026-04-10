@@ -1371,6 +1371,36 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
     return container;
 }
 
+/**
+ * Builds a quota info line showing remaining requests.
+ * @param {object} quota - Quota data from Seerr ({movie:{limit,remaining,days},tv:{...}})
+ * @param {string} mediaType - 'movie' or 'tv'
+ * @returns {HTMLElement|null}
+ */
+function buildQuotaLine(quota, mediaType) {
+    var q = mediaType === 'tv' ? quota.tv : quota.movie;
+    if (!q || !q.limit || q.limit <= 0) return null;
+
+    var line = document.createElement('div');
+    line.className = 'je-more-info-quota';
+    line.style.cssText = 'font-size:0.8em;opacity:0.7;margin-bottom:0.5em;';
+
+    var remaining = typeof q.remaining === 'number' ? q.remaining : q.limit;
+    var text = remaining + ' of ' + q.limit + ' requests remaining';
+    if (q.days) text += ' (resets in ' + q.days + 'd)';
+
+    line.textContent = text;
+
+    if (remaining <= 0) {
+        line.style.color = '#ff6b6b';
+        line.style.opacity = '1';
+    } else if (remaining <= Math.ceil(q.limit * 0.25)) {
+        line.style.color = '#ffa726';
+    }
+
+    return line;
+}
+
 function buildStatusChip(status, status4k, isMovie, downloads = [], downloads4k = [], jellyfinMediaId = null, jellyfinMediaId4k = null, is4kChip = false) {
     const chip = document.createElement('div');
     chip.className = 'je-status-chip';
@@ -1663,9 +1693,26 @@ function renderActions(data, mediaType) {
     const actionMount = currentModal.querySelector('[data-mount="je-actions"]');
     const chipMount = currentModal.querySelector('[data-mount="je-status-chip"]');
     const downloadsMount = currentModal.querySelector('[data-mount="je-downloads"]');
-    if (actionMount) actionMount.innerHTML = '';
-    if (chipMount) chipMount.innerHTML = '';
-    if (downloadsMount) downloadsMount.innerHTML = '';
+    if (actionMount) {
+        while (actionMount.firstChild) actionMount.removeChild(actionMount.firstChild);
+    }
+    if (chipMount) {
+        while (chipMount.firstChild) chipMount.removeChild(chipMount.firstChild);
+    }
+    if (downloadsMount) {
+        while (downloadsMount.firstChild) downloadsMount.removeChild(downloadsMount.firstChild);
+    }
+
+    // Fetch and display quota info (non-blocking)
+    if (actionMount && JE.jellyseerrAPI?.fetchUserQuota) {
+        JE.jellyseerrAPI.fetchUserQuota().then(function(quota) {
+            if (!quota || !currentModal) return;
+            var quotaLine = buildQuotaLine(quota, mediaType);
+            if (quotaLine && actionMount.parentElement) {
+                actionMount.parentElement.insertBefore(quotaLine, actionMount);
+            }
+        });
+    }
 
     if (mediaType === 'movie') {
         const mediaInfo = data.mediaInfo || {};
