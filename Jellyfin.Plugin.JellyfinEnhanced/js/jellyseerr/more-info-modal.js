@@ -1713,13 +1713,14 @@ function renderActions(data, mediaType) {
 
     // Fetch and display quota info (non-blocking)
     if (actionMount && JE.jellyseerrAPI?.fetchUserQuota) {
+        var modalRef = currentModal;
         JE.jellyseerrAPI.fetchUserQuota().then(function(quota) {
-            if (!quota || !currentModal) return;
+            if (!quota || currentModal !== modalRef || !document.contains(actionMount)) return;
             var quotaLine = buildQuotaLine(quota, mediaType);
             if (quotaLine && actionMount.parentElement) {
                 actionMount.parentElement.insertBefore(quotaLine, actionMount);
             }
-        });
+        }).catch(function() {});
     }
 
     if (mediaType === 'movie') {

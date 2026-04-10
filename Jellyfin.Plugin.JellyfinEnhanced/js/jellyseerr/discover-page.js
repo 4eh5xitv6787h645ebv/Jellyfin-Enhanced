@@ -41,7 +41,10 @@
         try {
             var url = ApiClient.getUrl(path + '?page=1');
             var response = await fetch(url, { headers: getAuthHeaders(), signal: signal });
-            if (!response.ok) return [];
+            if (!response.ok) {
+                console.debug(logPrefix, 'HTTP', response.status, 'for', path);
+                return [];
+            }
             var data = await response.json();
             return data.results || [];
         } catch (e) {
@@ -208,7 +211,7 @@
             page.dispatchEvent(new CustomEvent('viewhide', { bubbles: true, detail: { type: 'custom' } }));
         }
 
-        if (state.previousPage && !document.querySelector('.mainAnimatedPage:not(.hide):not(#je-discover-page)')) {
+        if (state.previousPage && document.contains(state.previousPage) && !document.querySelector('.mainAnimatedPage:not(.hide):not(#je-discover-page)')) {
             state.previousPage.classList.remove('hide');
             state.previousPage.dispatchEvent(new CustomEvent('viewshow', { bubbles: true, detail: { type: 'interior', isRestored: true } }));
         }

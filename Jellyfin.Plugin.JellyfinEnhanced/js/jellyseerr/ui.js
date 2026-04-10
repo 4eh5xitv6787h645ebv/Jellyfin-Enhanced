@@ -1034,12 +1034,11 @@
         if (item.profilePath && /^\/[a-zA-Z0-9._\-\/]+$/.test(item.profilePath)) {
             profileUrl = 'https://image.tmdb.org/t/p/w400' + item.profilePath;
         }
-        var nameText = escapeHtml(item.name || 'Unknown');
         var knownFor = '';
         if (item.knownFor && item.knownFor.length > 0) {
             knownFor = item.knownFor
                 .slice(0, 3)
-                .map(function(k) { return escapeHtml(k.title || k.name || ''); })
+                .map(function(k) { return k.title || k.name || ''; })
                 .filter(Boolean)
                 .join(', ');
         }
@@ -2337,6 +2336,8 @@
         expandBtn.querySelector('.material-icons').textContent = 'hourglass_empty';
         try {
             var seasonData = await JE.jellyseerrAPI.fetchTvSeasonDetails(tmdbId, seasonNumber);
+            // Guard: modal may have been closed during fetch
+            if (!document.contains(seasonItem)) return;
             var episodes = seasonData?.episodes || [];
 
             var listEl = document.createElement('div');
@@ -2374,7 +2375,9 @@
             seasonItem.appendChild(listEl);
             expandBtn.querySelector('.material-icons').textContent = 'expand_less';
         } catch (e) {
-            expandBtn.querySelector('.material-icons').textContent = 'expand_more';
+            if (document.contains(expandBtn)) {
+                expandBtn.querySelector('.material-icons').textContent = 'expand_more';
+            }
             console.error('Failed to load episode data:', e);
         }
     }

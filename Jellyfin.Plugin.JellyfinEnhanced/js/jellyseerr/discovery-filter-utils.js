@@ -135,8 +135,7 @@
         { value: 'ta', label: 'Tamil' },
         { value: 'te', label: 'Telugu' },
         { value: 'bn', label: 'Bengali' },
-        { value: 'ml', label: 'Malayalam' },
-        { value: 'cn', label: 'Cantonese' }
+        { value: 'ml', label: 'Malayalam' }
     ];
 
     /** Movie certifications (US) */
@@ -254,7 +253,7 @@
             params.push('certification=' + encodeURIComponent(filters.certification));
             params.push('certificationCountry=' + encodeURIComponent(filters.certificationCountry || 'US'));
         }
-        if (filters.tvStatus && isTv) {
+        if (filters.tvStatus !== undefined && filters.tvStatus !== '' && isTv) {
             params.push('withStatus=' + encodeURIComponent(filters.tvStatus));
         }
         if (filters.voteCountMin) {

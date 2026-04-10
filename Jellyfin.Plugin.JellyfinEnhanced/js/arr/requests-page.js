@@ -829,7 +829,7 @@
       if (response.ok) {
         var label = action === 'delete' ? 'deleted' : (action === 'resolved' ? 'resolved' : 'reopened');
         JE.toast?.('Issue ' + label, 3000);
-        await renderIssuesSection();
+        await loadAllData();
       } else {
         var errMsg = 'Failed to update issue';
         try {
@@ -863,7 +863,7 @@
       });
       if (response.ok) {
         JE.toast?.('Request ' + action + 'd', 3000);
-        await renderRequestsSection();
+        await loadAllData();
       } else {
         var errMsg = 'Failed to ' + action + ' request';
         try {
@@ -897,10 +897,15 @@
       if (response.ok) {
         JE.toast?.('Request cancelled', 3000);
         // Refresh the requests list
-        await renderRequestsSection();
+        await loadAllData();
       } else {
         var errMsg = 'Failed to cancel request';
-        try { var err = await response.json(); errMsg = err.message || errMsg; } catch (_) {}
+        try {
+          var text = await response.text();
+          var parsed = JSON.parse(text);
+          if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (_) {}
         JE.toast?.(escapeHtml(errMsg), 5000);
       }
     } catch (error) {
@@ -2529,8 +2534,12 @@
     try {
       ApiClient.getCurrentUser().then(function(user) {
         state._isAdmin = user?.Policy?.IsAdministrator === true;
-      }).catch(function() {});
-    } catch (_) {}
+      }).catch(function(err) {
+        console.warn(`${logPrefix} Failed to detect admin status:`, err);
+      });
+    } catch (err) {
+      console.warn(`${logPrefix} Admin detection error:`, err);
+    }
 
     const config = JE.pluginConfig || {};
     if (!config.DownloadsPageEnabled) {

@@ -40,7 +40,10 @@
         try {
             var url = ApiClient.getUrl(path + '?page=1');
             var response = await fetch(url, { headers: getAuthHeaders(), signal: signal });
-            if (!response.ok) return [];
+            if (!response.ok) {
+                console.debug(logPrefix, 'HTTP', response.status, 'for', path);
+                return [];
+            }
             var data = await response.json();
             return data.results || [];
         } catch (e) {
