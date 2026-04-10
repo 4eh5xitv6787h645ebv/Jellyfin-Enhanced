@@ -735,6 +735,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/request/{requestId}", HttpMethod.Delete);
         }
 
+        [HttpPost("jellyseerr/request/{requestId}/approve")]
+        [Authorize]
+        public Task<IActionResult> ApproveJellyseerrRequest(int requestId)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/request/{requestId}/approve", HttpMethod.Post);
+        }
+
+        [HttpPost("jellyseerr/request/{requestId}/decline")]
+        [Authorize]
+        public Task<IActionResult> DeclineJellyseerrRequest(int requestId)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/request/{requestId}/decline", HttpMethod.Post);
+        }
+
         [HttpGet("jellyseerr/user/quota")]
         [Authorize]
         public async Task<IActionResult> GetUserQuota()

@@ -25,6 +25,7 @@
     pollTimer: null,
     pageVisible: false,
     previousPage: null,
+    _isAdmin: false,
     locationSignature: null,
     locationUnsubscribe: null,
     downloadsActiveTab: "all",
@@ -300,6 +301,25 @@
         .je-request-cancel-btn:hover { background: rgba(255,107,107,0.2); }
         .je-request-cancel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .je-request-cancel-btn .material-icons { font-size: 20px; }
+        .je-request-approve-btn, .je-request-decline-btn {
+          color: inherit;
+          border: 1px solid rgba(255,255,255,0.2);
+          padding: 0.45em;
+          border-radius: 50%;
+          cursor: pointer;
+          width: 36px;
+          height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s;
+        }
+        .je-request-approve-btn { color: #66bb6a; background: rgba(102,187,106,0.1); border-color: rgba(102,187,106,0.3); }
+        .je-request-approve-btn:hover { background: rgba(102,187,106,0.2); }
+        .je-request-decline-btn { color: #ef5350; background: rgba(239,83,80,0.1); border-color: rgba(239,83,80,0.3); }
+        .je-request-decline-btn:hover { background: rgba(239,83,80,0.2); }
+        .je-request-approve-btn:disabled, .je-request-decline-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .je-request-approve-btn .material-icons, .je-request-decline-btn .material-icons { font-size: 20px; }
         .je-issues-section h2 {
           font-size: 1.5em;
           margin-bottom: 1em;
@@ -773,6 +793,40 @@
       state.downloads = [];
       return null;
     }
+  }
+
+  /**
+   * Approve or decline a Seerr request (admin only).
+   * @param {string|number} requestId
+   * @param {'approve'|'decline'} action
+   * @param {HTMLElement} [btn]
+   */
+  async function adminAction(requestId, action, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      var url = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/request/' + requestId + '/' + action);
+      var response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      if (response.ok) {
+        JE.toast?.('Request ' + action + 'd', 3000);
+        await renderRequestsSection();
+      } else {
+        var errMsg = 'Failed to ' + action + ' request';
+        try {
+          var text = await response.text();
+          var parsed = JSON.parse(text);
+          if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (_) {}
+        JE.toast?.(errMsg, 5000);
+      }
+    } catch (error) {
+      console.error(logPrefix + ' ' + action + ' request failed:', error);
+      JE.toast?.('Failed to ' + action + ' request', 5000);
+    }
+    if (btn) btn.disabled = false;
   }
 
   /**
@@ -1382,6 +1436,8 @@
                     </div>
                     <div class="je-request-actions">
                       ${watchButton}
+                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-approve-btn" title="Approve" aria-label="Approve" data-request-id="${item.id}"><span class="material-icons">check_circle</span></button>` : ""}
+                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-decline-btn" title="Decline" aria-label="Decline" data-request-id="${item.id}"><span class="material-icons">cancel</span></button>` : ""}
                       ${(item.mediaStatus === "Pending" || item.mediaStatus === "Approved" || item.mediaStatus === "Processing") && item.id ? `<button class="je-request-cancel-btn" title="Cancel Request" aria-label="Cancel Request" data-request-id="${item.id}"><span class="material-icons">close</span></button>` : ""}
                     </div>
                 </div>
@@ -1964,6 +2020,36 @@
         return;
       }
 
+      // Handle approve request button clicks (admin only)
+      const approveBtn = e.target.closest('.je-request-approve-btn');
+      if (approveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const requestId = approveBtn.getAttribute('data-request-id');
+        if (requestId) adminAction(requestId, 'approve', approveBtn);
+        return;
+      }
+
+      // Handle decline request button clicks (admin only)
+      const declineBtn = e.target.closest('.je-request-decline-btn');
+      if (declineBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const requestId = declineBtn.getAttribute('data-request-id');
+        if (requestId) {
+          var confirmText = 'Decline this request?';
+          var confirmTitle = 'Decline Request';
+          if (window.Dashboard && typeof window.Dashboard.confirm === 'function') {
+            window.Dashboard.confirm(confirmText, confirmTitle, function(confirmed) {
+              if (confirmed) adminAction(requestId, 'decline', declineBtn);
+            });
+          } else if (window.confirm(confirmTitle + '\n\n' + confirmText)) {
+            adminAction(requestId, 'decline', declineBtn);
+          }
+        }
+        return;
+      }
+
       // Handle cancel request button clicks
       const cancelBtn = e.target.closest('.je-request-cancel-btn');
       if (cancelBtn) {
@@ -2355,6 +2441,13 @@
    */
   function initialize() {
     console.log(`${logPrefix} Initializing downloads page module`);
+
+    // Detect admin status for approve/decline buttons
+    try {
+      ApiClient.getCurrentUser().then(function(user) {
+        state._isAdmin = user?.Policy?.IsAdministrator === true;
+      }).catch(function() {});
+    } catch (_) {}
 
     const config = JE.pluginConfig || {};
     if (!config.DownloadsPageEnabled) {
