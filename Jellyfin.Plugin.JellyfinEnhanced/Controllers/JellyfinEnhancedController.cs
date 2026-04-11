@@ -80,22 +80,38 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private static readonly object _tmdbEnrichmentCacheLock = new();
         private static readonly ConcurrentDictionary<string, Task<TmdbEnrichmentResult>> _tmdbEnrichmentInFlight = new();
 
+        // Cache TTL clamp bounds — must match the client-side clamps in configPage.html
+        // (CACHE_TTL_MIN_MINUTES / CACHE_TTL_MAX_MINUTES). The HTML min/max attributes
+        // are advisory only, so the upper bound is enforced both on save and on read so
+        // that hand-edited XML or older saves cannot poison the cache with absurd TTLs
+        // (which would otherwise cause unbounded memory growth in `_responseCache` and
+        // `_userCache` since neither dictionary evicts on cap, only on TTL expiry).
+        private const int CacheTtlMinMinutes = 1;
+        private const int CacheTtlMaxMinutes = 1440;
+
+        private static int ClampCacheTtlMinutes(int value)
+        {
+            if (value < CacheTtlMinMinutes) return CacheTtlMinMinutes;
+            if (value > CacheTtlMaxMinutes) return CacheTtlMaxMinutes;
+            return value;
+        }
+
         private static TimeSpan GetResponseCacheTtl()
         {
             var minutes = JellyfinEnhanced.Instance?.Configuration?.JellyseerrResponseCacheTtlMinutes ?? 10;
-            return TimeSpan.FromMinutes(Math.Max(1, minutes));
+            return TimeSpan.FromMinutes(ClampCacheTtlMinutes(minutes));
         }
 
         private static TimeSpan GetUserIdCacheTtl()
         {
             var minutes = JellyfinEnhanced.Instance?.Configuration?.JellyseerrUserIdCacheTtlMinutes ?? 30;
-            return TimeSpan.FromMinutes(Math.Max(1, minutes));
+            return TimeSpan.FromMinutes(ClampCacheTtlMinutes(minutes));
         }
 
         private static TimeSpan GetTmdbEnrichmentCacheTtl()
         {
             var minutes = JellyfinEnhanced.Instance?.Configuration?.JellyseerrResponseCacheTtlMinutes ?? 10;
-            return TimeSpan.FromMinutes(Math.Max(1, minutes));
+            return TimeSpan.FromMinutes(ClampCacheTtlMinutes(minutes));
         }
 
         private sealed class TmdbEnrichmentResult

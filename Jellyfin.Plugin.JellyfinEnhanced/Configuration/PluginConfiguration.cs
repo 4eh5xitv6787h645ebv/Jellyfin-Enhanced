@@ -120,6 +120,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             JellyseerrDisableCache = false;
             JellyseerrResponseCacheTtlMinutes = 10;
             JellyseerrUserIdCacheTtlMinutes = 30;
+            JellyseerrExcludeLibraryItems = true;
+            JellyseerrExcludeBlocklistedItems = false;
+
+            // Seerr User Import Settings
+            JellyseerrAutoImportUsers = false;
+            JellyseerrImportBlockedUsers = string.Empty;
 
             // Arr Links Settings
             ArrLinksEnabled = false;
@@ -281,32 +287,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string DefaultLanguage { get; set; }
 
         // Seerr Search Settings
-        public bool JellyseerrEnabled { get; set; }
-        public bool JellyseerrShowSearchResults { get; set; }
-        public bool JellyseerrShowReportButton { get; set; }
-        public bool JellyseerrShowIssueIndicator { get; set; }
-        public bool JellyseerrEnable4KRequests { get; set; }
-        public bool JellyseerrEnable4KTvRequests { get; set; }
-        public bool JellyseerrShowAdvanced { get; set; }
-        public bool JellyseerrShowSimilar { get; set; }
-        public bool JellyseerrShowRecommended { get; set; }
-        public bool JellyseerrShowRequestMoreOnSeries { get; set; }
-        public bool JellyseerrShowNetworkDiscovery { get; set; }
-        public bool JellyseerrShowGenreDiscovery { get; set; }
-        public bool JellyseerrShowTagDiscovery { get; set; }
-        public bool JellyseerrShowPersonDiscovery { get; set; }
-        public bool JellyseerrShowCollectionDiscovery { get; set; }
+        // Note: every property below has BOTH a property initializer AND a matching constructor
+        // assignment. This is required per project convention so that upgrade installs whose XML
+        // does not yet contain a new key still get the intended safe default rather than the CLR
+        // default. Do not split the pair without also updating PluginConfiguration().
+        public bool JellyseerrEnabled { get; set; } = false;
+        public bool JellyseerrShowSearchResults { get; set; } = true;
+        public bool JellyseerrShowReportButton { get; set; } = false;
+        public bool JellyseerrShowIssueIndicator { get; set; } = false;
+        public bool JellyseerrEnable4KRequests { get; set; } = false;
+        public bool JellyseerrEnable4KTvRequests { get; set; } = false;
+        public bool JellyseerrShowAdvanced { get; set; } = false;
+        public bool JellyseerrShowSimilar { get; set; } = true;
+        public bool JellyseerrShowRecommended { get; set; } = true;
+        public bool JellyseerrShowRequestMoreOnSeries { get; set; } = true;
+        public bool JellyseerrShowNetworkDiscovery { get; set; } = true;
+        public bool JellyseerrShowGenreDiscovery { get; set; } = true;
+        public bool JellyseerrShowTagDiscovery { get; set; } = true;
+        public bool JellyseerrShowPersonDiscovery { get; set; } = true;
+        public bool JellyseerrShowCollectionDiscovery { get; set; } = true;
         public bool JellyseerrExcludeLibraryItems { get; set; } = true;
         public bool JellyseerrExcludeBlocklistedItems { get; set; } = false;
-        public bool ShowElsewhereOnJellyseerr { get; set; }
+        public bool ShowElsewhereOnJellyseerr { get; set; } = false;
         public bool JellyseerrUseMoreInfoModal { get; set; } = false;
-        public string JellyseerrUrls { get; set; }
-        public string JellyseerrApiKey { get; set; }
-        public string JellyseerrUrlMappings { get; set; }
-        public bool ShowCollectionsInSearch { get; set; }
-        public bool JellyseerrDisableCache { get; set; }
-        public int JellyseerrResponseCacheTtlMinutes { get; set; }
-        public int JellyseerrUserIdCacheTtlMinutes { get; set; }
+        public string JellyseerrUrls { get; set; } = string.Empty;
+        public string JellyseerrApiKey { get; set; } = string.Empty;
+        public string JellyseerrUrlMappings { get; set; } = string.Empty;
+        public bool ShowCollectionsInSearch { get; set; } = true;
+        public bool JellyseerrDisableCache { get; set; } = false;
+        public int JellyseerrResponseCacheTtlMinutes { get; set; } = 10;
+        public int JellyseerrUserIdCacheTtlMinutes { get; set; } = 30;
 
         // Arr Links Settings
         public bool ArrLinksEnabled { get; set; }
@@ -347,7 +357,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public int AutoMovieRequestMinutesWatched { get; set; } // Minutes to watch before triggering request
         public bool AutoMovieRequestCheckReleaseDate { get; set; } // Only request if movie is already released
         public string AutoMovieRequestQualityMode { get; set; } // "default", "original", or "custom"
-        public int AutoMovieRequestCustomServerId { get; set; } // Radarr server ID for "custom" mode
+        // Radarr server ID for "custom" mode. Initializer must be -1 because Seerr server IDs
+        // are 0-indexed, so 0 is a valid server. Defaulting to 0 would silently route "unset"
+        // upgrade installs to whichever server happens to have id 0.
+        public int AutoMovieRequestCustomServerId { get; set; } = -1;
         public int AutoMovieRequestCustomProfileId { get; set; } // Quality profile ID for "custom" mode
         public string AutoMovieRequestCustomRootFolder { get; set; } // Root folder path for "custom" mode
         public bool AutoMovieRequestFallbackOn4k { get; set; } // When original mode finds a 4K profile, fall back to default
@@ -359,7 +372,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public int WatchlistMemoryRetentionDays { get; set; }
 
         // User Import Settings
-        public bool JellyseerrAutoImportUsers { get; set; }
+        public bool JellyseerrAutoImportUsers { get; set; } = false;
         public string JellyseerrImportBlockedUsers { get; set; } = string.Empty;
 
         // Bookmarks Settings

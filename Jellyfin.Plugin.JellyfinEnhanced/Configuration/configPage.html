@@ -439,7 +439,10 @@
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="TMDB_API_KEY">TMDB API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" style="flex-grow: 1;"/>
+                                    <input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="password" autocomplete="off" style="flex-grow: 1;"/>
+                                    <button is="emby-button" type="button" class="je-api-key-toggle paper-icon-button-light" data-target="TMDB_API_KEY" title="Show / hide key" aria-label="Show or hide API key">
+                                        <span class="material-icons">visibility_off</span>
+                                    </button>
                                     <span id="tmdbStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
                                         <span>Test</span>
@@ -522,7 +525,10 @@
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="JellyseerrApiKey">Seerr API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="JellyseerrApiKey" is="emby-input" name="JellyseerrApiKey" type="text" style="flex-grow: 1;"/>
+                                    <input id="JellyseerrApiKey" is="emby-input" name="JellyseerrApiKey" type="password" autocomplete="off" style="flex-grow: 1;"/>
+                                    <button is="emby-button" type="button" class="je-api-key-toggle paper-icon-button-light" data-target="JellyseerrApiKey" title="Show / hide key" aria-label="Show or hide API key">
+                                        <span class="material-icons">visibility_off</span>
+                                    </button>
                                     <span id="jellyseerrStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" id="testJellyseerrBtn" class="raised button-submit">
                                         <span>Test</span>
@@ -533,7 +539,10 @@
                             <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="jellyseerr_TMDB_API_KEY">TMDB API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="jellyseerr_TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" style="flex-grow: 1;"/>
+                                    <input id="jellyseerr_TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="password" autocomplete="off" style="flex-grow: 1;"/>
+                                    <button is="emby-button" type="button" class="je-api-key-toggle paper-icon-button-light" data-target="jellyseerr_TMDB_API_KEY" title="Show / hide key" aria-label="Show or hide API key">
+                                        <span class="material-icons">visibility_off</span>
+                                    </button>
                                     <span id="jellyseerrTmdbStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
                                         <span>Test</span>
@@ -1143,7 +1152,10 @@
                             <div class="inputContainer" style="margin-top: 1em;">
                                 <label class="inputLabel inputLabelUnfocused" for="sonarrApiKey">Sonarr API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="sonarrApiKey" is="emby-input" name="sonarrApiKey" placeholder="Your Sonarr API key" style="flex-grow: 1;"/>
+                                    <input id="sonarrApiKey" is="emby-input" name="sonarrApiKey" type="password" autocomplete="off" placeholder="Your Sonarr API key" style="flex-grow: 1;"/>
+                                    <button is="emby-button" type="button" class="je-api-key-toggle paper-icon-button-light" data-target="sonarrApiKey" title="Show / hide key" aria-label="Show or hide API key">
+                                        <span class="material-icons">visibility_off</span>
+                                    </button>
                                     <span id="sonarrStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" id="testSonarrBtn" class="raised button-submit">
                                         <span>Test</span>
@@ -1159,7 +1171,10 @@
                             <div class="inputContainer" style="margin-top: 1em;">
                                 <label class="inputLabel inputLabelUnfocused" for="radarrApiKey">Radarr API Key</label>
                                 <div style="display: flex; align-items: center; gap: 1em; margin-left: -1em;">
-                                    <input id="radarrApiKey" is="emby-input" name="radarrApiKey" placeholder="Your Radarr API key" style="flex-grow: 1;"/>
+                                    <input id="radarrApiKey" is="emby-input" name="radarrApiKey" type="password" autocomplete="off" placeholder="Your Radarr API key" style="flex-grow: 1;"/>
+                                    <button is="emby-button" type="button" class="je-api-key-toggle paper-icon-button-light" data-target="radarrApiKey" title="Show / hide key" aria-label="Show or hide API key">
+                                        <span class="material-icons">visibility_off</span>
+                                    </button>
                                     <span id="radarrStatusIndicator" class="material-icons" style="transition: color 0.3s ease;"></span>
                                     <button is="emby-button" type="button" id="testRadarrBtn" class="raised button-submit">
                                         <span>Test</span>
@@ -2531,16 +2546,27 @@
                 document.querySelector('#ElsewhereCustomBrandingImageUrl').value = config.ElsewhereCustomBrandingImageUrl || '';
                 document.querySelector('#jellyseerr_TMDB_API_KEY').value = config.TMDB_API_KEY;
 
-                // Set up bidirectional sync between TMDB API key fields
+                // Set up bidirectional sync between TMDB API key fields.
+                // Programmatic `.value = ...` does NOT fire an `input` event, so without
+                // dispatching one explicitly, the dependency-tracker registered on the OTHER
+                // field at the bottom of this script (around line 3651) won't see the change
+                // and `updateAllDependencies` won't run for the propagated value. Dispatch a
+                // synthetic input event after each programmatic copy to fix this.
                 const tmdbKeyField = document.querySelector('#TMDB_API_KEY');
                 const jellyseerrTmdbKeyField = document.querySelector('#jellyseerr_TMDB_API_KEY');
 
                 tmdbKeyField.addEventListener('input', function() {
-                    jellyseerrTmdbKeyField.value = this.value;
+                    if (jellyseerrTmdbKeyField.value !== this.value) {
+                        jellyseerrTmdbKeyField.value = this.value;
+                        jellyseerrTmdbKeyField.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                 });
 
                 jellyseerrTmdbKeyField.addEventListener('input', function() {
-                    tmdbKeyField.value = this.value;
+                    if (tmdbKeyField.value !== this.value) {
+                        tmdbKeyField.value = this.value;
+                        tmdbKeyField.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                 });
                 document.querySelector('#autoPauseEnabled').checked = config.AutoPauseEnabled;
                 document.querySelector('#autoResumeEnabled').checked = config.AutoResumeEnabled;
@@ -2743,6 +2769,63 @@
             });
         }
 
+        // Cache TTL clamp bounds — must match the server-side clamps in
+        // JellyfinEnhancedController.GetResponseCacheTtl / GetUserIdCacheTtl. The HTML
+        // min/max attributes are advisory only, so we re-clamp on save to keep the
+        // stored value in [1, 1440] minutes regardless of how the user got the value
+        // into the input (paste, devtools, etc.).
+        var CACHE_TTL_MIN_MINUTES = 1;
+        var CACHE_TTL_MAX_MINUTES = 1440;
+
+        /**
+         * Clamps a cache TTL minutes value to [CACHE_TTL_MIN_MINUTES, CACHE_TTL_MAX_MINUTES]
+         * with a fallback default for non-numeric input.
+         */
+        function clampCacheTtlMinutes(rawValue, defaultMinutes) {
+            var n = parseInt(rawValue, 10);
+            if (isNaN(n)) return defaultMinutes;
+            if (n < CACHE_TTL_MIN_MINUTES) return CACHE_TTL_MIN_MINUTES;
+            if (n > CACHE_TTL_MAX_MINUTES) return CACHE_TTL_MAX_MINUTES;
+            return n;
+        }
+
+        /**
+         * Validates that every non-empty line in the Seerr URLs textarea is an absolute
+         * http(s) URL. Returns an object with `normalized` (a `\n`-joined cleaned string
+         * suitable for storage) and `errors` (an array of human-readable validation
+         * messages, empty when valid).
+         *
+         * Validation rules:
+         *   - Empty textarea is OK (admin may not have configured Seerr yet)
+         *   - Each non-empty line must parse via `new URL(...)` AND have protocol
+         *     `http:` or `https:`
+         *   - Trailing slashes are stripped to match server-side normalization
+         */
+        function validateJellyseerrUrls(rawValue) {
+            var errors = [];
+            var lines = (rawValue || '').split('\n').map(function(u) { return u.trim(); }).filter(Boolean);
+            var normalized = [];
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                var parsed;
+                try {
+                    parsed = new URL(line);
+                } catch (e) {
+                    errors.push('Line ' + (i + 1) + ': "' + line + '" is not a valid URL.');
+                    continue;
+                }
+                if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                    errors.push('Line ' + (i + 1) + ': "' + line + '" must use http:// or https://.');
+                    continue;
+                }
+                // Strip a single trailing slash on the path so the server-side
+                // `url.TrimEnd('/')` doesn't accidentally double-process the path.
+                var cleaned = line.replace(/\/+$/, '');
+                normalized.push(cleaned);
+            }
+            return { errors: errors, normalized: normalized.join('\n') };
+        }
+
         async function buildConfigFromForm() {
             const config = await ApiClient.getPluginConfiguration(pluginId);
             const finalShortcuts = [...defaultShortcuts];
@@ -2815,8 +2898,11 @@
             config.JellyseerrExcludeLibraryItems = document.querySelector('#jellyseerrExcludeLibraryItems').checked;
             config.JellyseerrExcludeBlocklistedItems = document.querySelector('#jellyseerrExcludeBlocklistedItems').checked;
             config.JellyseerrDisableCache = document.querySelector('#jellyseerrDisableCache').checked;
-            config.JellyseerrResponseCacheTtlMinutes = parseInt(document.querySelector('#jellyseerrResponseCacheTtlMinutes').value, 10) || 10;
-            config.JellyseerrUserIdCacheTtlMinutes = parseInt(document.querySelector('#jellyseerrUserIdCacheTtlMinutes').value, 10) || 30;
+            // Clamp to [1, 1440] — see clampCacheTtlMinutes / GetResponseCacheTtl on the server.
+            config.JellyseerrResponseCacheTtlMinutes = clampCacheTtlMinutes(
+                document.querySelector('#jellyseerrResponseCacheTtlMinutes').value, 10);
+            config.JellyseerrUserIdCacheTtlMinutes = clampCacheTtlMinutes(
+                document.querySelector('#jellyseerrUserIdCacheTtlMinutes').value, 30);
             config.JellyseerrShowNetworkDiscovery = document.querySelector('#jellyseerrShowNetworkDiscovery').checked;
             config.JellyseerrShowGenreDiscovery = document.querySelector('#jellyseerrShowGenreDiscovery').checked;
             config.JellyseerrShowTagDiscovery = document.querySelector('#jellyseerrShowTagDiscovery').checked;
@@ -2825,7 +2911,39 @@
             config.JellyseerrShowReportButton = document.querySelector('#jellyseerrShowReportButton').checked;
             config.JellyseerrShowIssueIndicator = document.querySelector('#jellyseerrShowIssueIndicator').checked;
             config.ShowElsewhereOnJellyseerr = document.querySelector('#showElsewhereOnJellyseerr').checked;
-            config.JellyseerrUrls = (document.querySelector('#jellyseerrUrls').value || '').split('\n').map(u => u.trim()).filter(Boolean).join('\n');
+            // Validate Seerr URLs and short-circuit save with a clear error if any line is malformed.
+            // The server-side proxy code falls back to logging warnings on bad URLs, so without this
+            // check the admin would save a broken config and then see "nothing works" with no hint.
+            //
+            // Only ENFORCED when Seerr is actually enabled — otherwise an admin with Seerr off but a
+            // stale/broken URL line in the textarea would be unable to save ANY other setting until
+            // they cleaned up the URL field.
+            //
+            // When Seerr is disabled and the value contains errors, we preserve the raw input
+            // (whitespace-trimmed) so we don't silently drop the admin's broken lines — they may
+            // want to fix them later, and silently dropping them on save would be data loss.
+            var jellyseerrUrlsRaw = document.querySelector('#jellyseerrUrls').value || '';
+            var jellyseerrUrlsResult = validateJellyseerrUrls(jellyseerrUrlsRaw);
+            var jellyseerrEnabled = document.querySelector('#jellyseerrEnabled').checked;
+            if (jellyseerrEnabled && jellyseerrUrlsResult.errors.length > 0) {
+                Dashboard.alert({
+                    title: 'Invalid Seerr URL',
+                    message: 'Cannot save: each Seerr URL must be a complete http:// or https:// address.\n\n' +
+                        jellyseerrUrlsResult.errors.join('\n')
+                });
+                throw new Error('Invalid JellyseerrUrls');
+            }
+            if (jellyseerrUrlsResult.errors.length === 0) {
+                // Clean save path: store the normalized form (trailing slashes stripped, whitespace trimmed).
+                config.JellyseerrUrls = jellyseerrUrlsResult.normalized;
+            } else {
+                // Disabled-Seerr-with-broken-URL path: preserve raw input minus pure-whitespace lines.
+                config.JellyseerrUrls = jellyseerrUrlsRaw
+                    .split('\n')
+                    .map(function(u) { return u.trim(); })
+                    .filter(Boolean)
+                    .join('\n');
+            }
             config.JellyseerrApiKey = (document.querySelector('#JellyseerrApiKey').value || '').trim();
             config.JellyseerrUrlMappings = (document.querySelector('#jellyseerrUrlMappings').value || '').split('\n').map(u => u.trim()).filter(Boolean).join('\n');
             config.TMDB_API_KEY = document.querySelector('#jellyseerr_TMDB_API_KEY').value;
@@ -3337,9 +3455,19 @@
             }
         ];
 
+        // Returns true when at least one of the two review features is enabled. Used so the
+        // "Expand reviews by default" checkbox is configurable when EITHER TMDB reviews OR
+        // user reviews are on — they're independent features that share the rendering toggle.
+        function hasAnyReviewSourceEnabled() {
+            var tmdb = document.getElementById('showReviews');
+            var user = document.getElementById('showUserReviews');
+            return (tmdb && tmdb.checked) || (user && user.checked);
+        }
+
         var INDIVIDUAL_DEPS = [
             { id: 'elsewhereEnabled',         checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
             { id: 'showReviews',              checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
+            { id: 'reviewsExpandedByDefault', checkFn: hasAnyReviewSourceEnabled, hint: 'Enable TMDB Reviews or User Reviews to configure', icon: 'rate_review' },
             { id: 'showCollectionsInSearch',   checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
             { id: 'showElsewhereOnJellyseerr', checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
             { id: 'autoMovieRequestEnabled',   checkFn: hasTmdbKey, hint: 'Add a TMDB API Key to enable', icon: 'key' },
@@ -3521,9 +3649,15 @@
         }
 
         var PARENT_DEPS = [
-            { parent: 'elsewhereEnabled', label: 'Enable Elsewhere', children: ['DEFAULT_REGION', 'DEFAULT_PROVIDERS', 'IGNORE_PROVIDERS', 'ElsewhereCustomBrandingText', 'ElsewhereCustomBrandingImageUrl', 'showReviews', 'reviewsExpandedByDefault'] },
-            { parent: 'showReviews', label: 'Show Reviews', children: ['reviewsExpandedByDefault'] },
+            { parent: 'elsewhereEnabled', label: 'Enable Elsewhere', children: ['DEFAULT_REGION', 'DEFAULT_PROVIDERS', 'IGNORE_PROVIDERS', 'ElsewhereCustomBrandingText', 'ElsewhereCustomBrandingImageUrl', 'showReviews'] },
+            // Note: `reviewsExpandedByDefault` used to be a child of showReviews and elsewhereEnabled,
+            // but it now has an INDIVIDUAL_DEP below that enables it whenever EITHER showReviews OR
+            // showUserReviews is on (user reviews are independent of TMDB reviews / Elsewhere).
             { parent: 'showUserReviews', label: 'Enable User Reviews', children: ['hideReviewsFromHiddenUsers', 'hideReviewsFromDisabledUsers'] },
+            // Inverted dep: TTL fields are meaningless when the cache is OFF, so they grey out
+            // when `jellyseerrDisableCache` is checked. The `invert: true` flag flips the parent
+            // predicate in updateParentDep below.
+            { parent: 'jellyseerrDisableCache', label: 'Disable Server-Side Cache', children: ['jellyseerrResponseCacheTtlMinutes', 'jellyseerrUserIdCacheTtlMinutes'], invert: true, hint: 'Re-enable the server-side cache to configure' },
             { parent: 'randomButtonEnabled', label: 'Enable Random Button', children: ['randomUnwatchedOnly', 'randomIncludeMovies', 'randomIncludeShows'] },
             { parent: 'showWatchProgress', label: 'Show watch progress', children: ['watchProgressDefaultMode', 'watchProgressTimeFormat'] },
             { parent: 'qualityTagsEnabled', label: 'Enable Quality Tags', children: ['qualityTagsPosition'] },
@@ -3556,9 +3690,14 @@
         function updateParentDep(dep) {
             var parent = document.getElementById(dep.parent);
             if (!parent) return;
-            var isEnabled = parent.checked;
+            // For normal deps, child is enabled when parent is checked. For inverted deps
+            // (`invert: true`), child is enabled when parent is UNCHECKED — this is used for
+            // settings like `jellyseerrDisableCache` whose child fields (cache TTLs) only make
+            // sense when the parent toggle is OFF.
+            var isEnabled = dep.invert ? !parent.checked : parent.checked;
             var tag = 'parent-' + dep.parent;
             var hintClass = 'parent-hint-' + dep.parent;
+            var hintText = dep.hint || ('Enable "' + dep.label + '" to configure');
 
             dep.children.forEach(function(childId) {
                 var child = document.getElementById(childId);
@@ -3577,7 +3716,7 @@
                         if (!container.querySelector('.' + hintClass)) {
                             var hint = document.createElement('div');
                             hint.className = 'dep-hint-text ' + hintClass;
-                            hint.textContent = 'Enable "' + dep.label + '" to configure';
+                            hint.textContent = hintText;
                             container.appendChild(hint);
                         }
                     }
@@ -3648,6 +3787,27 @@
         Object.keys(parentIds).forEach(function(id) {
             var el = document.getElementById(id);
             if (el) el.addEventListener('change', updateAllDependencies);
+        });
+
+        // === API Key Show/Hide Toggle ===
+        // Wires every .je-api-key-toggle button to flip its target input between
+        // type="password" and type="text", swapping the visibility icon. The buttons
+        // are declared in the HTML with data-target="<inputId>".
+        Array.prototype.forEach.call(document.querySelectorAll('.je-api-key-toggle'), function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var targetId = btn.getAttribute('data-target');
+                var input = targetId && document.getElementById(targetId);
+                if (!input) return;
+                var icon = btn.querySelector('.material-icons');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    if (icon) icon.textContent = 'visibility';
+                } else {
+                    input.type = 'password';
+                    if (icon) icon.textContent = 'visibility_off';
+                }
+            });
         });
 
         var originalTestTmdb = testTmdbConnection;
