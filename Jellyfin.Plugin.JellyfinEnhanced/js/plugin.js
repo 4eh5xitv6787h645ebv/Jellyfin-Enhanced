@@ -609,6 +609,9 @@
             });
 
             // Stage 6: Initialize feature modules
+            // features.js owns the item-details observer; initialize it BEFORE events.js so
+            // its observer is registered while JE.helpers is guaranteed available.
+            if (typeof JE.initializeFeatures === 'function') JE.initializeFeatures();
             if (typeof JE.initializeEnhancedScript === 'function') JE.initializeEnhancedScript();
             if (typeof JE.initializeElsewhereScript === 'function' && JE.pluginConfig?.ElsewhereEnabled) JE.initializeElsewhereScript();
             if (typeof JE.initializeJellyseerrScript === 'function' && JE.pluginConfig?.JellyseerrEnabled && JE.pluginConfig?.JellyseerrShowSearchResults !== false) JE.initializeJellyseerrScript();

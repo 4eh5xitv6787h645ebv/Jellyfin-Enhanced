@@ -197,20 +197,49 @@
 
     /**
      * Sets up listeners for the action sheet to add the "Remove" button.
+     *
+     * Only reacts to mutations that actually add an action sheet element to the DOM.
+     * The previous implementation fired on every body mutation and spammed
+     * "addRemoveButton not available" if features.js hit a cold-load race and never
+     * finished assigning JE.addRemoveButton.
      */
     function observeActionSheets() {
-        // Create managed observer for action sheets
-        JE.helpers.createObserver(
-            'action-sheets',
-            JE.helpers.debounce(() => {
-                if (JE.currentSettings.removeContinueWatchingEnabled) {
-                    if (typeof JE.addRemoveButton === 'function') {
-                        JE.addRemoveButton();
-                    } else {
-                        console.warn('🪼 Jellyfin Enhanced: addRemoveButton not available');
+        let addRemoveButtonMissingWarned = false;
+
+        const mutationHasActionSheet = (mutations) => {
+            for (let i = 0; i < mutations.length; i++) {
+                const added = mutations[i].addedNodes;
+                for (let j = 0; j < added.length; j++) {
+                    const node = added[j];
+                    if (node.nodeType !== 1) continue;
+                    if (node.classList && (node.classList.contains('actionSheet') || node.classList.contains('actionSheetContent'))) {
+                        return true;
+                    }
+                    // Jellyfin inserts a `<div class="dialogContainer">` under body with an
+                    // inner `<dialog class="actionSheet">` — check for either class.
+                    if (typeof node.querySelector === 'function' && node.querySelector('.actionSheet, .actionSheetContent')) {
+                        return true;
                     }
                 }
-            }, 150),
+            }
+            return false;
+        };
+
+        JE.helpers.createObserver(
+            'action-sheets',
+            (mutations) => {
+                if (!JE.currentSettings.removeContinueWatchingEnabled) return;
+                if (!mutationHasActionSheet(mutations)) return;
+
+                if (typeof JE.addRemoveButton === 'function') {
+                    JE.addRemoveButton();
+                } else if (!addRemoveButtonMissingWarned) {
+                    // Rate-limit to once per session -- a broken features.js IIFE would
+                    // otherwise log this warning on every action sheet open forever.
+                    addRemoveButtonMissingWarned = true;
+                    console.warn('🪼 Jellyfin Enhanced: JE.addRemoveButton not available when action sheet opened -- features.js may have failed to load.');
+                }
+            },
             document.body,
             { childList: true, subtree: true }
         );

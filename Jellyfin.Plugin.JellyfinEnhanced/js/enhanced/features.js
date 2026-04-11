@@ -937,7 +937,14 @@
         }
     }
 
-    const handleItemDetails = JE.helpers.debounce(() => {
+    // handleItemDetails is assigned inside JE.initializeFeatures() (called from plugin.js
+    // Stage 6) so we don't touch JE.helpers at IIFE parse time. Doing so used to crash the
+    // whole features.js IIFE on cold-load when helpers.js hadn't finished parsing yet,
+    // which left JE.addRemoveButton undefined and caused events.js's action-sheets observer
+    // to spam "addRemoveButton not available" on every body mutation.
+    let handleItemDetails = null;
+
+    function itemDetailsHandlerImpl() {
         const visiblePage = document.querySelector('#itemDetailPage:not(.hide)');
         if (!visiblePage) return;
 
@@ -965,7 +972,7 @@
                             lastDetailsItemType = item?.Type || null;
                             itemTypeFetchInProgress = null;
                             // Re-run once type is known to render features
-                            handleItemDetails();
+                            if (handleItemDetails) handleItemDetails();
                         })
                         .catch(() => { itemTypeFetchInProgress = null; });
                 }
@@ -992,28 +999,42 @@
                 displayAudioLanguages(itemId, container);
             }
         } catch (e) {
-        console.warn('🪼 Jellyfin Enhanced: Error in item details handler', e);
-    }
-    }, 100);
-
-    // Create managed observer for item details
-    JE.helpers.createObserver(
-        'item-details-info',
-        (mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'childList' || mutation.type === 'attributes') {
-                    handleItemDetails();
-                }
-            }
-        },
-        document.body,
-        {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['class', 'style']
+            console.warn('🪼 Jellyfin Enhanced: Error in item details handler', e);
         }
-    );
+    }
+
+    /**
+     * Initializes the item-details observer. Called from plugin.js Stage 6 after all
+     * scripts (including helpers.js) have finished parsing, so JE.helpers is guaranteed
+     * available. Safe to call more than once -- createObserver dedupes by id.
+     */
+    JE.initializeFeatures = function() {
+        if (!JE.helpers || typeof JE.helpers.debounce !== 'function' || typeof JE.helpers.createObserver !== 'function') {
+            console.warn('🪼 Jellyfin Enhanced: JE.helpers not ready when initializeFeatures() ran; item-details observer not registered.');
+            return;
+        }
+
+        handleItemDetails = JE.helpers.debounce(itemDetailsHandlerImpl, 100);
+
+        // Create managed observer for item details
+        JE.helpers.createObserver(
+            'item-details-info',
+            (mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.type === 'childList' || mutation.type === 'attributes') {
+                        handleItemDetails();
+                    }
+                }
+            },
+            document.body,
+            {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['class', 'style']
+            }
+        );
+    };
 
     /**
      * Resets the playback position of an item to 0, effectively removing it from "Continue Watching".
