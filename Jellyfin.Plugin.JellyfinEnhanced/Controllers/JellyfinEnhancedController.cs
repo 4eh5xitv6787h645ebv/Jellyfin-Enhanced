@@ -2053,7 +2053,33 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Jellyfin.Plugin.JellyfinEnhanced.{resourcePath.Replace('/', '.')}");
             if (stream == null) return NotFound();
 
-            Response.Headers["Cache-Control"] = "no-cache";
+            // When the client pins a ?v= cache key (plugin version or per-day fallback),
+            // the URL is effectively content-addressed — let the browser cache it for a long
+            // time so reloads don't re-download ~2 MB of JS on every page view. Without ?v=
+            // keep the conservative no-cache behavior for old clients / direct requests.
+            //
+            // A plugin-version key that parses as a System.Version (e.g. "11.6.0.0") is
+            // fully content-addressed — mark it immutable so browsers never revalidate.
+            // Any other non-empty value (e.g. the day-based "20260417" fallback used by
+            // the few scripts that load before the version is known, or anything unusual)
+            // gets a 24h cache with no `immutable` so the browser will revalidate on the
+            // next day rollover and pick up a mid-day upgrade.
+            var cacheKey = Request.Query
+                .FirstOrDefault(kv => string.Equals(kv.Key, "v", StringComparison.OrdinalIgnoreCase))
+                .Value.ToString();
+
+            if (string.IsNullOrWhiteSpace(cacheKey))
+            {
+                Response.Headers["Cache-Control"] = "no-cache";
+            }
+            else if (Version.TryParse(cacheKey, out _))
+            {
+                Response.Headers["Cache-Control"] = "public, max-age=2592000, immutable";
+            }
+            else
+            {
+                Response.Headers["Cache-Control"] = "public, max-age=86400";
+            }
             return new FileStreamResult(stream, "application/javascript");
         }
 
@@ -2198,6 +2224,69 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return true;
         }
 
+        /// <summary>
+        /// If the user has no settings.json yet, seed it from the admin's plugin
+        /// configuration defaults so first-time users inherit the configured values.
+        /// </summary>
+        private void EnsureDefaultUserSettings(string authorizedUserId)
+        {
+            if (_userConfigurationManager.UserConfigurationExists(authorizedUserId, "settings.json"))
+            {
+                return;
+            }
+
+            var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
+            if (defaultConfig == null)
+            {
+                _logger.Warning($"EnsureDefaultUserSettings: plugin Instance or Configuration is null for user {authorizedUserId}; admin defaults will not be seeded.");
+                return;
+            }
+
+            var defaultUserSettings = new UserSettings
+            {
+                AutoPauseEnabled = defaultConfig.AutoPauseEnabled,
+                AutoResumeEnabled = defaultConfig.AutoResumeEnabled,
+                AutoPipEnabled = defaultConfig.AutoPipEnabled,
+                LongPress2xEnabled = defaultConfig.LongPress2xEnabled,
+                PauseScreenEnabled = defaultConfig.PauseScreenEnabled,
+                PauseScreenDelaySeconds = defaultConfig.PauseScreenDelaySeconds,
+                AutoSkipIntro = defaultConfig.AutoSkipIntro,
+                AutoSkipOutro = defaultConfig.AutoSkipOutro,
+                DisableCustomSubtitleStyles = defaultConfig.DisableCustomSubtitleStyles,
+                SelectedStylePresetIndex = defaultConfig.DefaultSubtitleStyle,
+                SelectedFontSizePresetIndex = defaultConfig.DefaultSubtitleSize,
+                SelectedFontFamilyPresetIndex = defaultConfig.DefaultSubtitleFont,
+                RandomButtonEnabled = defaultConfig.RandomButtonEnabled,
+                RandomUnwatchedOnly = defaultConfig.RandomUnwatchedOnly,
+                RandomIncludeMovies = defaultConfig.RandomIncludeMovies,
+                RandomIncludeShows = defaultConfig.RandomIncludeShows,
+                ShowWatchProgress = defaultConfig.ShowWatchProgress,
+                WatchProgressMode = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressDefaultMode) ? "percentage" : defaultConfig.WatchProgressDefaultMode,
+                WatchProgressTimeFormat = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressTimeFormat) ? "hours" : defaultConfig.WatchProgressTimeFormat,
+                ShowFileSizes = defaultConfig.ShowFileSizes,
+                ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
+                QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
+                GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
+                LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
+                RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
+                PeopleTagsEnabled = defaultConfig.PeopleTagsEnabled,
+                QualityTagsPosition = defaultConfig.QualityTagsPosition,
+                GenreTagsPosition = defaultConfig.GenreTagsPosition,
+                LanguageTagsPosition = defaultConfig.LanguageTagsPosition,
+                RatingTagsPosition = defaultConfig.RatingTagsPosition,
+                ShowRatingInPlayer = defaultConfig.ShowRatingInPlayer,
+                RemoveContinueWatchingEnabled = defaultConfig.RemoveContinueWatchingEnabled,
+                ReviewsExpandedByDefault = defaultConfig.ReviewsExpandedByDefault,
+                DisplayLanguage = defaultConfig.DefaultLanguage,
+                CalendarDisplayMode = "list",
+                CalendarDefaultViewMode = "agenda",
+                LastOpenedTab = "shortcuts"
+            };
+
+            _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "settings.json", defaultUserSettings);
+            _logger.Info($"Saved default settings.json for new user {authorizedUserId} from plugin configuration.");
+        }
+
         [HttpGet("user-settings/{userId}/settings.json")]
         [Authorize]
         public IActionResult GetUserSettingsSettings(string userId)
@@ -2208,60 +2297,65 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return authorizationResult;
             }
 
-            // Populate defaults from plugin configuration if missing
-            if (!_userConfigurationManager.UserConfigurationExists(authorizedUserId, "settings.json"))
-            {
-                var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
-                if (defaultConfig != null)
-                {
-                    var defaultUserSettings = new UserSettings
-                    {
-                        AutoPauseEnabled = defaultConfig.AutoPauseEnabled,
-                        AutoResumeEnabled = defaultConfig.AutoResumeEnabled,
-                        AutoPipEnabled = defaultConfig.AutoPipEnabled,
-                        LongPress2xEnabled = defaultConfig.LongPress2xEnabled,
-                        PauseScreenEnabled = defaultConfig.PauseScreenEnabled,
-                        PauseScreenDelaySeconds = defaultConfig.PauseScreenDelaySeconds,
-                        AutoSkipIntro = defaultConfig.AutoSkipIntro,
-                        AutoSkipOutro = defaultConfig.AutoSkipOutro,
-                        DisableCustomSubtitleStyles = defaultConfig.DisableCustomSubtitleStyles,
-                        SelectedStylePresetIndex = defaultConfig.DefaultSubtitleStyle,
-                        SelectedFontSizePresetIndex = defaultConfig.DefaultSubtitleSize,
-                        SelectedFontFamilyPresetIndex = defaultConfig.DefaultSubtitleFont,
-                        RandomButtonEnabled = defaultConfig.RandomButtonEnabled,
-                        RandomUnwatchedOnly = defaultConfig.RandomUnwatchedOnly,
-                        RandomIncludeMovies = defaultConfig.RandomIncludeMovies,
-                        RandomIncludeShows = defaultConfig.RandomIncludeShows,
-                        ShowWatchProgress = defaultConfig.ShowWatchProgress,
-                        WatchProgressMode = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressDefaultMode) ? "percentage" : defaultConfig.WatchProgressDefaultMode,
-                        WatchProgressTimeFormat = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressTimeFormat) ? "hours" : defaultConfig.WatchProgressTimeFormat,
-                        ShowFileSizes = defaultConfig.ShowFileSizes,
-                        ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
-                        QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
-                        GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
-                        LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
-                        RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
-                        PeopleTagsEnabled = defaultConfig.PeopleTagsEnabled,
-                        QualityTagsPosition = defaultConfig.QualityTagsPosition,
-                        GenreTagsPosition = defaultConfig.GenreTagsPosition,
-                        LanguageTagsPosition = defaultConfig.LanguageTagsPosition,
-                        RatingTagsPosition = defaultConfig.RatingTagsPosition,
-                        ShowRatingInPlayer = defaultConfig.ShowRatingInPlayer,
-                        RemoveContinueWatchingEnabled = defaultConfig.RemoveContinueWatchingEnabled,
-                        ReviewsExpandedByDefault = defaultConfig.ReviewsExpandedByDefault,
-                        DisplayLanguage = defaultConfig.DefaultLanguage,
-                        CalendarDisplayMode = "list",
-                        CalendarDefaultViewMode = "agenda",
-                        LastOpenedTab = "shortcuts"
-                    };
-
-                    _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "settings.json", defaultUserSettings);
-                    _logger.Info($"Saved default settings.json for new user {authorizedUserId} from plugin configuration.");
-                }
-            }
+            EnsureDefaultUserSettings(authorizedUserId);
 
             var userConfig = _userConfigurationManager.GetUserConfiguration<UserSettings>(authorizedUserId, "settings.json");
             return Ok(userConfig);
+        }
+
+        /// <summary>
+        /// Returns all five user-scoped configuration files in one response so the
+        /// frontend can skip 5 sequential round-trips during bootstrap. Each file is
+        /// loaded independently and failures are isolated: if one throws (disk,
+        /// permissions, deserialization), its slot falls back to an empty default and
+        /// the response includes a `partial: true` flag so the client knows the state
+        /// is degraded. This preserves the per-file resilience of the old endpoints
+        /// while still coalescing the happy-path round-trips.
+        /// </summary>
+        [HttpGet("user-settings/{userId}/bundle.json")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult GetUserSettingsBundle(string userId)
+        {
+            var authorizationResult = AuthorizeUserConfigAccess(userId, out var authorizedUserId);
+            if (authorizationResult != null)
+            {
+                return authorizationResult;
+            }
+
+            try
+            {
+                EnsureDefaultUserSettings(authorizedUserId);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to seed default user settings for user {authorizedUserId}: {ex.Message}");
+            }
+
+            var partial = false;
+            T LoadOrDefault<T>(string filename) where T : class, new()
+            {
+                try
+                {
+                    return _userConfigurationManager.GetUserConfiguration<T>(authorizedUserId, filename) ?? new T();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Failed to read {filename} for user {authorizedUserId}: {ex.Message}");
+                    partial = true;
+                    return new T();
+                }
+            }
+
+            return Ok(new
+            {
+                settings = LoadOrDefault<UserSettings>("settings.json"),
+                shortcuts = LoadOrDefault<UserShortcuts>("shortcuts.json"),
+                bookmark = LoadOrDefault<UserBookmark>("bookmark.json"),
+                elsewhere = LoadOrDefault<ElsewhereSettings>("elsewhere.json"),
+                hiddenContent = LoadOrDefault<UserHiddenContent>("hidden-content.json"),
+                partial
+            });
         }
 
         [HttpGet("user-settings/{userId}/shortcuts.json")]
