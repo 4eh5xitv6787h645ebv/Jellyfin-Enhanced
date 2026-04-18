@@ -39,9 +39,25 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             Log(msg, "ERROR");
         }
 
+        /// <summary>
+        /// Log an error with full exception context (type + message + stack trace).
+        /// Use this instead of <c>Error($"...{ex.Message}")</c> whenever a stack trace
+        /// is useful for diagnosing unexpected exceptions — single-line message loses
+        /// the trace that tells you where the exception originated.
+        /// </summary>
+        public void Error(Exception ex, string msg)
+        {
+            Log($"{msg} | {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", "ERROR");
+        }
+
         public void Warning(string msg)
         {
             Log(msg, "WARN");
+        }
+
+        public void Warning(Exception ex, string msg)
+        {
+            Log($"{msg} | {ex.GetType().Name}: {ex.Message}", "WARN");
         }
 
         private void Log(string msg, string level)

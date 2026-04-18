@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -47,32 +48,35 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Fetches Sonarr tag mappings keyed by IMDb ID. Throws <see cref="ArrFetchFailedException"/>
+        /// on any upstream failure (SSRF reject, non-2xx, parse error, network error) so callers
+        /// can distinguish a genuine empty library from a fetch failure — critical before any
+        /// destructive post-processing (e.g. clearing "Requested by:" tags).
+        /// </summary>
         public async Task<Dictionary<string, List<string>>> GetSeriesTagsByTvdbId(string sonarrUrl, string apiKey, CancellationToken ct = default)
         {
             var result = new Dictionary<string, List<string>>();
 
-            // SSRF guard: reject before any outbound request so scheduled-task callers
-            // cannot be pointed at metadata/loopback targets via instance URL.
-            if (!Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrl(sonarrUrl))
+            if (!ArrUrlGuard.IsAllowedUrl(sonarrUrl))
             {
                 _logger.Error($"Refusing to fetch Sonarr tags — URL rejected by SSRF guard: {sonarrUrl}");
-                return result;
+                throw new ArrFetchFailedException($"URL rejected by SSRF guard: {sonarrUrl}");
             }
 
             try
             {
-                var httpClient = _httpClientFactory.CreateClient();
+                var httpClient = _httpClientFactory.CreateClient(PluginServiceRegistrator.ArrSafeHttpClientName);
                 httpClient.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
 
-                // Get all tags first
                 _logger.Info($"Fetching Sonarr tags from {sonarrUrl}");
                 var tagsUrl = $"{sonarrUrl.TrimEnd('/')}/api/v3/tag";
                 var tagsResponse = await httpClient.GetAsync(tagsUrl, ct);
 
                 if (!tagsResponse.IsSuccessStatusCode)
                 {
-                    _logger.Error($"Failed to fetch Sonarr tags. Status: {tagsResponse.StatusCode}");
-                    return result;
+                    _logger.Error($"Failed to fetch Sonarr tags from {sonarrUrl}. Status: {tagsResponse.StatusCode}");
+                    throw new ArrFetchFailedException($"Sonarr tags endpoint returned {(int)tagsResponse.StatusCode}");
                 }
 
                 var tagsContent = await tagsResponse.Content.ReadAsStringAsync(ct);
@@ -81,15 +85,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 _logger.Info($"Found {tags.Count} tags in Sonarr");
 
-                // Get all series
                 _logger.Info($"Fetching Sonarr series from {sonarrUrl}");
                 var seriesUrl = $"{sonarrUrl.TrimEnd('/')}/api/v3/series";
                 var seriesResponse = await httpClient.GetAsync(seriesUrl, ct);
 
                 if (!seriesResponse.IsSuccessStatusCode)
                 {
-                    _logger.Error($"Failed to fetch Sonarr series. Status: {seriesResponse.StatusCode}");
-                    return result;
+                    _logger.Error($"Failed to fetch Sonarr series from {sonarrUrl}. Status: {seriesResponse.StatusCode}");
+                    throw new ArrFetchFailedException($"Sonarr series endpoint returned {(int)seriesResponse.StatusCode}");
                 }
 
                 var seriesContent = await seriesResponse.Content.ReadAsStringAsync(ct);
@@ -97,7 +100,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 _logger.Info($"Found {allSeries.Count} series in Sonarr");
 
-                // Map tags to series - use ImdbId as key since Jellyfin uses it
                 foreach (var series in allSeries)
                 {
                     if (!string.IsNullOrEmpty(series.ImdbId) && series.Tags.Count > 0)
@@ -119,29 +121,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
 
                 _logger.Info($"Mapped tags for {result.Count} series");
+                return result;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                throw;  // propagate cancel up to the scheduled task
+                throw;
+            }
+            catch (ArrFetchFailedException)
+            {
+                throw;
             }
             catch (HttpRequestException ex)
             {
-                _logger.Error($"Network error fetching Sonarr tags: {ex.Message}");
+                _logger.Error($"Network error fetching Sonarr tags from {sonarrUrl}: {ex.GetType().Name}: {ex.Message}");
+                throw new ArrFetchFailedException($"Network error: {ex.Message}", ex);
             }
             catch (TaskCanceledException ex)
             {
-                _logger.Error($"Timeout fetching Sonarr tags: {ex.Message}");
+                _logger.Error($"Timeout fetching Sonarr tags from {sonarrUrl}: {ex.Message}");
+                throw new ArrFetchFailedException("Request timed out", ex);
             }
             catch (JsonException ex)
             {
-                _logger.Error($"Invalid JSON from Sonarr tags endpoint: {ex.Message}");
+                _logger.Error($"Invalid JSON from Sonarr tags endpoint {sonarrUrl}: {ex.Message}");
+                throw new ArrFetchFailedException("Invalid JSON response", ex);
             }
             catch (Exception ex)
             {
-                _logger.Error($"Unexpected error fetching Sonarr tags: {ex.Message}");
+                _logger.Error(ex, $"Unexpected error fetching Sonarr tags from {sonarrUrl}");
+                throw new ArrFetchFailedException($"Unexpected error: {ex.Message}", ex);
             }
-
-            return result;
         }
     }
 }

@@ -98,7 +98,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             async Task<string?> FetchAsync()
             {
                 var urls = GetConfiguredUrls(config.JellyseerrUrls);
-                var httpClient = _httpClientFactory.CreateClient();
+                var httpClient = _httpClientFactory.CreateClient(PluginServiceRegistrator.ArrSafeHttpClientName);
                 httpClient.DefaultRequestHeaders.Clear();
                 httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
 
@@ -425,7 +425,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             try
             {
                 var urls = GetConfiguredUrls(config.JellyseerrUrls);
-                var httpClient = _httpClientFactory.CreateClient();
+                var httpClient = _httpClientFactory.CreateClient(PluginServiceRegistrator.ArrSafeHttpClientName);
                 httpClient.DefaultRequestHeaders.Clear();
                 httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
 
@@ -584,7 +584,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
 
             var urls = GetConfiguredUrls(config.JellyseerrUrls);
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient(PluginServiceRegistrator.ArrSafeHttpClientName);
             httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
             httpClient.DefaultRequestHeaders.Add("X-Api-User", jellyseerrUserId);
 
@@ -646,7 +646,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
 
             var urls = GetConfiguredUrls(config.JellyseerrUrls);
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient(PluginServiceRegistrator.ArrSafeHttpClientName);
             httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
 
             foreach (var url in urls)

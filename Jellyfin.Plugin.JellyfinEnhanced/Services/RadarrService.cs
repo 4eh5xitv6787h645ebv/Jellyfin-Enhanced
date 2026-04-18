@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -47,32 +48,35 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Fetches Radarr tag mappings keyed by TMDB ID. Throws <see cref="ArrFetchFailedException"/>
+        /// on any upstream failure (SSRF reject, non-2xx, parse error, network error) so callers
+        /// can distinguish a genuine empty library from a fetch failure — critical before any
+        /// destructive post-processing (e.g. clearing "Requested by:" tags).
+        /// </summary>
         public async Task<Dictionary<int, List<string>>> GetMovieTagsByTmdbId(string radarrUrl, string apiKey, CancellationToken ct = default)
         {
             var result = new Dictionary<int, List<string>>();
 
-            // SSRF guard: reject before any outbound request so scheduled-task callers
-            // cannot be pointed at metadata/loopback targets via instance URL.
-            if (!Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrl(radarrUrl))
+            if (!ArrUrlGuard.IsAllowedUrl(radarrUrl))
             {
                 _logger.Error($"Refusing to fetch Radarr tags — URL rejected by SSRF guard: {radarrUrl}");
-                return result;
+                throw new ArrFetchFailedException($"URL rejected by SSRF guard: {radarrUrl}");
             }
 
             try
             {
-                var httpClient = _httpClientFactory.CreateClient();
+                var httpClient = _httpClientFactory.CreateClient(PluginServiceRegistrator.ArrSafeHttpClientName);
                 httpClient.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
 
-                // Get all tags first
                 _logger.Info($"Fetching Radarr tags from {radarrUrl}");
                 var tagsUrl = $"{radarrUrl.TrimEnd('/')}/api/v3/tag";
                 var tagsResponse = await httpClient.GetAsync(tagsUrl, ct);
 
                 if (!tagsResponse.IsSuccessStatusCode)
                 {
-                    _logger.Error($"Failed to fetch Radarr tags. Status: {tagsResponse.StatusCode}");
-                    return result;
+                    _logger.Error($"Failed to fetch Radarr tags from {radarrUrl}. Status: {tagsResponse.StatusCode}");
+                    throw new ArrFetchFailedException($"Radarr tags endpoint returned {(int)tagsResponse.StatusCode}");
                 }
 
                 var tagsContent = await tagsResponse.Content.ReadAsStringAsync(ct);
@@ -81,15 +85,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 _logger.Info($"Found {tags.Count} tags in Radarr");
 
-                // Get all movies
                 _logger.Info($"Fetching Radarr movies from {radarrUrl}");
                 var moviesUrl = $"{radarrUrl.TrimEnd('/')}/api/v3/movie";
                 var moviesResponse = await httpClient.GetAsync(moviesUrl, ct);
 
                 if (!moviesResponse.IsSuccessStatusCode)
                 {
-                    _logger.Error($"Failed to fetch Radarr movies. Status: {moviesResponse.StatusCode}");
-                    return result;
+                    _logger.Error($"Failed to fetch Radarr movies from {radarrUrl}. Status: {moviesResponse.StatusCode}");
+                    throw new ArrFetchFailedException($"Radarr movies endpoint returned {(int)moviesResponse.StatusCode}");
                 }
 
                 var moviesContent = await moviesResponse.Content.ReadAsStringAsync(ct);
@@ -97,7 +100,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 _logger.Info($"Found {movies.Count} movies in Radarr");
 
-                // Map tags to movies
                 foreach (var movie in movies)
                 {
                     if (movie.TmdbId > 0 && movie.Tags.Count > 0)
@@ -119,31 +121,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
 
                 _logger.Info($"Mapped tags for {result.Count} movies");
+                return result;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                // Let the scheduled task's cancellation path observe the cancel instead of
-                // flattening it into an empty "success" result.
+                throw;
+            }
+            catch (ArrFetchFailedException)
+            {
                 throw;
             }
             catch (HttpRequestException ex)
             {
-                _logger.Error($"Network error fetching Radarr tags: {ex.Message}");
+                _logger.Error($"Network error fetching Radarr tags from {radarrUrl}: {ex.GetType().Name}: {ex.Message}");
+                throw new ArrFetchFailedException($"Network error: {ex.Message}", ex);
             }
             catch (TaskCanceledException ex)
             {
-                _logger.Error($"Timeout fetching Radarr tags: {ex.Message}");
+                _logger.Error($"Timeout fetching Radarr tags from {radarrUrl}: {ex.Message}");
+                throw new ArrFetchFailedException("Request timed out", ex);
             }
             catch (JsonException ex)
             {
-                _logger.Error($"Invalid JSON from Radarr tags endpoint: {ex.Message}");
+                _logger.Error($"Invalid JSON from Radarr tags endpoint {radarrUrl}: {ex.Message}");
+                throw new ArrFetchFailedException("Invalid JSON response", ex);
             }
             catch (Exception ex)
             {
-                _logger.Error($"Unexpected error fetching Radarr tags: {ex.Message}");
+                _logger.Error(ex, $"Unexpected error fetching Radarr tags from {radarrUrl}");
+                throw new ArrFetchFailedException($"Unexpected error: {ex.Message}", ex);
             }
-
-            return result;
         }
     }
 }

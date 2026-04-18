@@ -93,7 +93,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 return;
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient(PluginServiceRegistrator.ArrSafeHttpClientName);
             httpClient.DefaultRequestHeaders.Add("X-Api-Key", config.JellyseerrApiKey);
 
             var jellyseerrUserMap = await GetJellyseerrUserMap(httpClient, jellyseerrUrl);
