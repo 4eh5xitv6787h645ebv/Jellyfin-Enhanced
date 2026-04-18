@@ -19,11 +19,14 @@
             let user = JE.currentUser || null;
             if (!user) {
                 for (let i = 0; i < 5; i++) {  // shortened retry window (~2.5s)
+                    const attempt = i + 1;
                     try {
                         user = await ApiClient.getCurrentUser();
                         if (user) break;
                     } catch (e) {
-                        // swallow error, retry
+                        // Surface auth/network failures so admins can trace why the user
+                        // lookup didn't succeed — empty catch hides intermittent auth issues.
+                        console.debug(`getCurrentUser attempt ${attempt} failed:`, e);
                     }
                     await new Promise(r => setTimeout(r, 500));
                 }
@@ -76,6 +79,19 @@
         // admin must hard-reload the web client after changing instance config for
         // this cache to drop (same constraint every other JE module has today).
         const slugCache = new Map();
+        // Track the server we cached against so that switching Jellyfin servers
+        // (e.g., a user with multiple servers in the same browser session) can't
+        // serve stale slugs cached from another server's *arr config.
+        let _cachedServerAddress = null;
+        function invalidateCacheOnServerChange() {
+            const current = (typeof ApiClient !== 'undefined' && ApiClient.serverAddress)
+                ? ApiClient.serverAddress()
+                : null;
+            if (_cachedServerAddress !== null && current !== _cachedServerAddress) {
+                slugCache.clear();
+            }
+            _cachedServerAddress = current;
+        }
 
         // Parse URL mappings from config
         function parseUrlMappings(mappingsString) {
@@ -354,12 +370,14 @@
             }
 
             function surfaceGlobalFailure(kind, detail) {
+                // Always log so admins can trace failures across requests; only the toast
+                // is deduped to avoid spamming the user once they've been notified.
+                console.warn(`${logPrefix} ${kind} lookup backend failed:`, detail);
                 if (_toastedGlobalFailure[kind.toLowerCase()]) return;
                 _toastedGlobalFailure[kind.toLowerCase()] = true;
                 if (typeof JE.toast === 'function') {
                     JE.toast('⚠ ' + esc(kind) + ' lookup failed; links unavailable. See console for details.');
                 }
-                console.warn(`${logPrefix} ${kind} lookup backend failed:`, detail);
             }
 
             /**
@@ -371,6 +389,7 @@
              * @returns {Promise<Array>} Array of { instanceName, instanceUrl, titleSlug, ... } matches
              */
             async function getSonarrSlugs(item) {
+                invalidateCacheOnServerChange();
                 const tvdbId = String(item.ProviderIds?.Tvdb || '');
                 const cacheKey = `slugs-${tvdbId}`;
 
@@ -425,6 +444,7 @@
              * @returns {Promise<Array>} Array of matching instances
              */
             async function getRadarrInstances(tmdbId) {
+                invalidateCacheOnServerChange();
                 if (!tmdbId) return [];
 
                 const cacheKey = `radarr-${tmdbId}`;

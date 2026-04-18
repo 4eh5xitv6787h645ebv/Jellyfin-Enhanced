@@ -1,3 +1,7 @@
+using System;
+using System.Security.Cryptography;
+using System.Text;
+
 namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr
 {
     /// <summary>
@@ -34,5 +38,23 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr
         /// field and <see cref="System.Text.Json"/> leaves the default value in place.
         /// </summary>
         public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Stable per-instance identifier derived from <see cref="Url"/>.
+        /// Used as a join key across backend/frontend (event IDs, queue filters, grouping).
+        /// Name is intentionally NOT part of the hash so renaming an instance doesn't break
+        /// cached client state; if the URL changes, it's effectively a different instance.
+        /// Empty URL → empty ID; caller should skip.
+        /// </summary>
+        public string GetStableId()
+        {
+            if (string.IsNullOrWhiteSpace(Url)) return string.Empty;
+            var normalized = Url.Trim().TrimEnd('/').ToLowerInvariant();
+            var bytes = Encoding.UTF8.GetBytes(normalized);
+            var hash = SHA256.HashData(bytes);
+            // 12 hex chars = 48 bits — ample for collision avoidance across <1000 instances
+            // and short enough to keep event-id strings readable in logs/devtools.
+            return Convert.ToHexString(hash, 0, 6).ToLowerInvariant();
+        }
     }
 }

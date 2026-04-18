@@ -2758,13 +2758,18 @@
         function saveArrInstances(config) {
             // Only overwrite stored state when the load parse succeeded. Otherwise leave the stored
             // JSON AND legacy fields untouched so the admin can recover the original value.
+            // Legacy single-instance fields (SonarrUrl/ApiKey/UrlMappings) mirror the FIRST ENABLED
+            // instance — never a disabled one. Third-party code or migration tools that still read
+            // legacy fields would otherwise hit a deliberately-off endpoint.
             if (_arrParseOK.sonarr) {
                 var sonarrInstances = collectInstancesFromDom('#sonarrInstancesList .arr-instance-card', 'Sonarr');
                 config.SonarrInstances = JSON.stringify(sonarrInstances);
-                if (sonarrInstances.length > 0) {
-                    config.SonarrUrl = sonarrInstances[0].Url;
-                    config.SonarrApiKey = sonarrInstances[0].ApiKey;
-                    config.SonarrUrlMappings = sonarrInstances[0].UrlMappings;
+                var primarySonarr = sonarrInstances.find(function(i) { return i && i.Enabled !== false; })
+                                 || sonarrInstances[0];
+                if (primarySonarr) {
+                    config.SonarrUrl = primarySonarr.Url;
+                    config.SonarrApiKey = primarySonarr.ApiKey;
+                    config.SonarrUrlMappings = primarySonarr.UrlMappings;
                 } else {
                     config.SonarrUrl = '';
                     config.SonarrApiKey = '';
@@ -2775,10 +2780,12 @@
             if (_arrParseOK.radarr) {
                 var radarrInstances = collectInstancesFromDom('#radarrInstancesList .arr-instance-card', 'Radarr');
                 config.RadarrInstances = JSON.stringify(radarrInstances);
-                if (radarrInstances.length > 0) {
-                    config.RadarrUrl = radarrInstances[0].Url;
-                    config.RadarrApiKey = radarrInstances[0].ApiKey;
-                    config.RadarrUrlMappings = radarrInstances[0].UrlMappings;
+                var primaryRadarr = radarrInstances.find(function(i) { return i && i.Enabled !== false; })
+                                 || radarrInstances[0];
+                if (primaryRadarr) {
+                    config.RadarrUrl = primaryRadarr.Url;
+                    config.RadarrApiKey = primaryRadarr.ApiKey;
+                    config.RadarrUrlMappings = primaryRadarr.UrlMappings;
                 } else {
                     config.RadarrUrl = '';
                     config.RadarrApiKey = '';
@@ -4087,10 +4094,14 @@
             mappingDefs.forEach(function(m) {
                 var textarea = document.getElementById(m.id);
                 if (!textarea) return;
+                // m.service is the canonical kind (sonarr/radarr/bazarr/seerr) used
+                // for service-type comparisons; m.label is the friendly display name
+                // (instance name, or service kind for non-multi-instance mappings).
+                var displayLabel = m.label || m.service;
                 textarea.value.split('\n').forEach(function(line, idx) {
                     var trimmed = line.trim();
                     if (!trimmed) return;
-                    var lineLabel = m.service + ' line ' + (idx + 1);
+                    var lineLabel = displayLabel + ' line ' + (idx + 1);
                     var parts = trimmed.split('|');
                     if (parts.length !== 2) {
                         formatIssues.push(lineLabel + ': Invalid format. Use jellyfin_url|' + m.service.toLowerCase() + '_url separated by a pipe (|).');
@@ -4110,7 +4121,7 @@
                         formatIssues.push(lineLabel + ': Right side (' + right + ') should start with http:// or https://.');
                         return;
                     }
-                    pairs.push({ left: left, right: right, service: m.service, label: lineLabel });
+                    pairs.push({ left: left, right: right, service: m.service, label: displayLabel });
                 });
             });
 
@@ -4138,8 +4149,10 @@
                 uniqueUrls[p.right.replace(/\/+$/, '')] = null;
             });
 
-            // Also probe configured service URLs so we can cross-reference client-only mappings
-            var serviceUrlIds = { 'Bazarr': 'bazarrUrl', 'Seerr': 'jellyseerrUrls' };
+            // Also probe configured service URLs so we can cross-reference client-only mappings.
+            // Keyed by the canonical service kind (lowercase) so the lookup is independent of
+            // user-editable instance display names.
+            var serviceUrlIds = { 'bazarr': 'bazarrUrl', 'seerr': 'jellyseerrUrls' };
             pairs.forEach(function(p) {
                 var urlId = serviceUrlIds[p.service];
                 if (!urlId) return;
@@ -4176,6 +4189,12 @@
             pairs.forEach(function(p) {
                 var leftInfo = uniqueUrls[p.left.replace(/\/+$/, '')] || { reachable: false, service: 'unknown' };
                 var rightInfo = uniqueUrls[p.right.replace(/\/+$/, '')] || { reachable: false, service: 'unknown' };
+                // p.service is the canonical kind ('sonarr'/'radarr'/'bazarr'/'seerr');
+                // p.label is the user-facing display name (instance name) we use in errors.
+                // identifyUrl returns capitalised service names ('Sonarr','Radarr',...) so
+                // compare via lowercase to keep both sides consistent.
+                var serviceKind = (p.service || '').toLowerCase();
+                var rightServiceLower = (rightInfo.service || '').toLowerCase();
 
                 // Both sides must be reachable from server or browser
                 if (!leftInfo.reachable) {
@@ -4183,14 +4202,14 @@
                     return;
                 }
                 if (!rightInfo.reachable) {
-                    issues.push(p.label + ': Right URL (' + p.right + ') is unreachable. Check for typos or that ' + p.service + ' is running.');
+                    issues.push(p.label + ': Right URL (' + p.right + ') is unreachable. Check for typos or that ' + p.label + ' is running.');
                     return;
                 }
 
                 var leftLower = p.left.toLowerCase().replace(/\/+$/, '');
                 var rightLower = p.right.toLowerCase().replace(/\/+$/, '');
                 if (leftLower === rightLower) {
-                    issues.push(p.label + ': Both sides are the same URL. Left should be Jellyfin, right should be ' + p.service + '.');
+                    issues.push(p.label + ': Both sides are the same URL. Left should be Jellyfin, right should be ' + p.label + '.');
                     return;
                 }
 
@@ -4201,7 +4220,7 @@
                 if (leftIsArr) {
                     var detected = leftInfo.service === 'arr' ? 'an *arr service' : leftInfo.service;
                     if (rightIsJellyfin) {
-                        issues.push(p.label + ': URLs are reversed. Left side is ' + detected + ' and right side is Jellyfin. Swap them: Jellyfin URL goes on the left, ' + p.service + ' URL on the right.');
+                        issues.push(p.label + ': URLs are reversed. Left side is ' + detected + ' and right side is Jellyfin. Swap them: Jellyfin URL goes on the left, ' + p.label + ' URL on the right.');
                     } else {
                         issues.push(p.label + ': Left side (' + p.left + ') is running ' + detected + ', not Jellyfin. Left should be your Jellyfin URL.');
                     }
@@ -4209,18 +4228,20 @@
                 }
 
                 if (rightIsJellyfin) {
-                    issues.push(p.label + ': Right side (' + p.right + ') is running Jellyfin, not ' + p.service + '. Right should be the ' + p.service + ' URL.');
+                    issues.push(p.label + ': Right side (' + p.right + ') is running Jellyfin, not ' + p.label + '. Right should be the ' + p.label + ' URL.');
                     return;
                 }
 
-                // Check service mismatch (e.g., Sonarr mapping pointing to Radarr)
-                // p.service may be an instance name like "Sonarr Main" or "Radarr 4K",
-                // so check if the detected service is contained in the instance name
-                var serviceMatchesInstance = rightInfo.service === p.service
-                    || p.service.toLowerCase().indexOf(rightInfo.service.toLowerCase()) !== -1
-                    || rightInfo.service === 'arr';
+                // Check service mismatch (e.g., Sonarr mapping pointing to Radarr).
+                // serviceKind is the canonical 'sonarr'/'radarr'/'bazarr'/'seerr' so this
+                // comparison is no longer fooled by descriptive instance names like
+                // "TV Shows" or "Anime" that don't contain the literal service name.
+                // 'arr' from identifyUrl is treated as compatible with sonarr/radarr since
+                // the probe couldn't disambiguate the two but confirmed it's an *arr.
+                var serviceMatchesInstance = rightServiceLower === serviceKind
+                    || rightServiceLower === 'arr' && (serviceKind === 'sonarr' || serviceKind === 'radarr');
                 if (rightInfo.service !== 'unknown' && !serviceMatchesInstance) {
-                    issues.push(p.label + ': Right side (' + p.right + ') is running ' + rightInfo.service + ', but this is the ' + p.service + ' mapping section.');
+                    issues.push(p.label + ': Right side (' + p.right + ') is running ' + rightInfo.service + ', but this is the ' + p.label + ' mapping section.');
                     return;
                 }
 
@@ -4230,7 +4251,7 @@
                 // If right side is only browser-reachable (server can't reach localhost etc.),
                 // check if the configured service URL confirms the service identity
                 if (!rightConfirmed && rightInfo.clientOnly) {
-                    var configUrlId = serviceUrlIds[p.service];
+                    var configUrlId = serviceUrlIds[serviceKind];
                     if (configUrlId) {
                         var configLines = (document.getElementById(configUrlId)?.value || '').split('\n');
                         var mappingPort = (p.right.match(/:(\d+)/) || [])[1] || '';
@@ -4238,7 +4259,8 @@
                             var configUrl = configLines[ci].trim().replace(/\/+$/, '');
                             if (!configUrl) continue;
                             var configInfo = uniqueUrls[configUrl];
-                            if (configInfo && (configInfo.service === p.service || (configInfo.service === 'arr' && p.service !== 'Bazarr'))) {
+                            var configServiceLower = (configInfo && configInfo.service || '').toLowerCase();
+                            if (configInfo && (configServiceLower === serviceKind || (configServiceLower === 'arr' && serviceKind !== 'bazarr' && serviceKind !== 'seerr'))) {
                                 var configPort = (configUrl.match(/:(\d+)/) || [])[1] || '';
                                 if (mappingPort && configPort && mappingPort === configPort) {
                                     rightConfirmed = true;
@@ -4252,7 +4274,7 @@
                     good++;
                 } else {
                     // Reachable but unknown service — could be anything (SABnzbd, nginx, etc.)
-                    warnings.push(p.label + ': Right side (' + p.right + ') is reachable but JE could not verify it is ' + p.service + '. This may still work correctly — JE just cannot confirm the service automatically.');
+                    warnings.push(p.label + ': Right side (' + p.right + ') is reachable but JE could not verify it is ' + p.label + '. This may still work correctly — JE just cannot confirm the service automatically.');
                 }
             });
 
@@ -4295,7 +4317,10 @@
             // accumulate orphans when a card that previously had mappings now has none.
             document.querySelectorAll('textarea[data-arr-validate-temp="true"]').forEach(function(el) { el.remove(); });
 
-            function addTempTextarea(value, prefix, idx, serviceName) {
+            // service is the canonical kind ('sonarr'/'radarr'/'bazarr'/'seerr') used
+            // by validateMappingSet for type-comparison; label is the user-facing display
+            // name shown in error messages (e.g., "TV Shows" for a Sonarr instance card).
+            function addTempTextarea(value, prefix, idx, serviceKind, displayLabel) {
                 var tempId = prefix + '-' + idx;
                 var temp = document.createElement('textarea');
                 temp.id = tempId;
@@ -4304,7 +4329,7 @@
                 temp.setAttribute('data-arr-validate-temp', 'true');
                 document.body.appendChild(temp);
                 createdTempIds.push(tempId);
-                mappingDefs.push({ id: tempId, service: serviceName });
+                mappingDefs.push({ id: tempId, service: serviceKind, label: displayLabel });
             }
 
             // Per-instance URL mappings from cards
@@ -4312,7 +4337,7 @@
                 var name = card.querySelector('.arr-instance-name').value.trim() || ('Sonarr ' + (idx + 1));
                 var textarea = card.querySelector('.arr-instance-urlmappings');
                 if (textarea && textarea.value.trim()) {
-                    addTempTextarea(textarea.value, 'arr-validate-sonarr', idx, name);
+                    addTempTextarea(textarea.value, 'arr-validate-sonarr', idx, 'sonarr', name);
                 }
             });
 
@@ -4320,13 +4345,13 @@
                 var name = card.querySelector('.arr-instance-name').value.trim() || ('Radarr ' + (idx + 1));
                 var textarea = card.querySelector('.arr-instance-urlmappings');
                 if (textarea && textarea.value.trim()) {
-                    addTempTextarea(textarea.value, 'arr-validate-radarr', idx, name);
+                    addTempTextarea(textarea.value, 'arr-validate-radarr', idx, 'radarr', name);
                 }
             });
 
             // Bazarr mappings
             if (document.getElementById('bazarrUrlMappings').value.trim()) {
-                mappingDefs.push({ id: 'bazarrUrlMappings', service: 'Bazarr' });
+                mappingDefs.push({ id: 'bazarrUrlMappings', service: 'bazarr', label: 'Bazarr' });
             }
 
             if (mappingDefs.length === 0) {
@@ -4354,7 +4379,7 @@
 
         document.getElementById('validateSeerrMappingsBtn').addEventListener('click', function() {
             validateMappingSet(
-                [{ id: 'jellyseerrUrlMappings', service: 'Seerr' }],
+                [{ id: 'jellyseerrUrlMappings', service: 'seerr', label: 'Seerr' }],
                 'validateSeerrMappingsBtn', 'seerrMappingsValidationResult'
             );
         });

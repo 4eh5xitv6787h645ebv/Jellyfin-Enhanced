@@ -518,11 +518,31 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
         private enum InstanceParseResult { ExplicitlyEmpty, Parsed, Corrupt }
 
+        /// <summary>
+        /// Upper bound on the serialized instance-list JSON. Prevents a corrupted or malicious
+        /// config.xml (local attacker with file access) from loading a multi-megabyte string
+        /// into memory on every /private-config request. 64 KB comfortably fits ~400 instances
+        /// even with long names and URL mappings; anything bigger is almost certainly corrupt.
+        /// </summary>
+        private const int MaxInstanceJsonBytes = 64 * 1024;
+
+        /// <summary>Maximum number of instances per side after deserialize — defense in depth.</summary>
+        private const int MaxInstanceCount = 100;
+
         private static List<ArrInstance> TryDeserializeInstances(string? json, out InstanceParseResult result)
         {
             if (string.IsNullOrWhiteSpace(json))
             {
                 result = InstanceParseResult.ExplicitlyEmpty;
+                return new List<ArrInstance>();
+            }
+
+            // Reject obviously oversized payloads before parsing. A 100MB string of junk would
+            // otherwise parse (System.Text.Json streams), then allocate a huge list, then be
+            // re-serialized on every /private-config read.
+            if (json.Length > MaxInstanceJsonBytes)
+            {
+                result = InstanceParseResult.Corrupt;
                 return new List<ArrInstance>();
             }
 
@@ -534,6 +554,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             try
             {
                 var instances = JsonSerializer.Deserialize<List<ArrInstance>>(json) ?? new List<ArrInstance>();
+                if (instances.Count > MaxInstanceCount)
+                {
+                    // Treat as corrupt rather than silently truncating — admin should notice
+                    // and fix the config. Filed as an instance-list-too-large warning in logs
+                    // via the callers' corruption check.
+                    result = InstanceParseResult.Corrupt;
+                    return new List<ArrInstance>();
+                }
                 // Drop null entries AND entries with empty URL or API key. System.Text.Json happily
                 // accepts `[null]` as a one-element list containing null (verified empirically);
                 // without this guard the predicate below dereferences the null and throws NRE,

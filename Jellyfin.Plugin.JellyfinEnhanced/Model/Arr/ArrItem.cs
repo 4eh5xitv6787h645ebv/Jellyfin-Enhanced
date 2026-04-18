@@ -146,9 +146,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr {
         /// <summary>
         /// User-assigned instance name (e.g., "Anime", "4K Movies").
         /// Used to differentiate items from multiple Sonarr/Radarr instances.
+        /// Admin-only: may be stripped from non-admin responses to avoid leaking
+        /// internal infrastructure names.
         /// </summary>
         [JsonPropertyName("instanceName")]
         public string? InstanceName { get; set; }
+
+        /// <summary>
+        /// Stable per-instance identifier (hash of instance URL). Safe to expose to
+        /// non-admins — doesn't reveal the URL or the admin's naming. Used as a
+        /// grouping/join key on the frontend so two instances with the same display
+        /// name don't collide.
+        /// </summary>
+        [JsonPropertyName("instanceId")]
+        public string? InstanceId { get; set; }
 
         /// <summary>
         /// Other instance names that also contain this item (populated during dedup).

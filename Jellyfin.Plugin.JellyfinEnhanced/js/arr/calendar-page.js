@@ -1134,12 +1134,24 @@
     showUnmonitored: "je.calendar.showUnmonitored",
   };
 
+  // Module-level dedup flags so non-critical failures (highlighting, preference
+  // persistence) toast/warn once per session instead of every render or click.
+  let _toastedCalendarUserDataFailure = false;
+  let _warnedLocalStorageUnavailable = false;
+
+  function warnLocalStorageOnce(error) {
+    if (_warnedLocalStorageUnavailable) return;
+    _warnedLocalStorageUnavailable = true;
+    console.warn("Preference not persisted — localStorage unavailable:", error);
+  }
+
   function getStoredShowUnmonitored() {
     try {
       const stored = window.localStorage?.getItem(STORAGE_KEYS.showUnmonitored);
       if (stored === null) return null;
       return stored === "true";
     } catch (error) {
+      warnLocalStorageOnce(error);
       return null;
     }
   }
@@ -1148,6 +1160,7 @@
     try {
       window.localStorage?.setItem(STORAGE_KEYS.showUnmonitored, String(!!value));
     } catch (error) {
+      warnLocalStorageOnce(error);
     }
   }
 
@@ -1479,7 +1492,14 @@
         });
       });
     } catch (error) {
-      // Silently handle error - highlighting is optional
+      // Highlighting is optional, but the failure is still worth surfacing —
+      // logging always happens so admins can diagnose; the toast is deduped to
+      // a single notification per session via the module-level flag.
+      console.error("Calendar user-data fetch failed:", error);
+      if (!_toastedCalendarUserDataFailure) {
+        _toastedCalendarUserDataFailure = true;
+        JE.toast?.({ message: 'Calendar highlighting unavailable', type: 'warning' });
+      }
       state.userDataMap = new Map();
     }
   }
@@ -1924,6 +1944,14 @@
     // Add episode info for series (e.g., "S01E05 - Episode Title")
     if (event.type === "Series" && event.subtitle) {
       tooltip += ` ${event.subtitle}`;
+    }
+
+    // Surface duplicate matches across instances. Backend emits `alsoInInstances`
+    // when the same media exists on multiple Sonarr/Radarr instances; chose the
+    // tooltip line (rather than a new card row) as the simplest place to expose
+    // it without restructuring three separate render paths.
+    if (Array.isArray(event.alsoInInstances) && event.alsoInInstances.length > 0) {
+      tooltip += `\nAlso in: ${event.alsoInInstances.join(", ")}`;
     }
 
     return tooltip;

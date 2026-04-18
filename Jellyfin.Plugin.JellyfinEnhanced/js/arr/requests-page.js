@@ -697,7 +697,10 @@
         const objectUrl = URL.createObjectURL(blob);
         avatarObjectUrlCache.set(avatarUrl, objectUrl);
         return objectUrl;
-      } catch {
+      } catch (e) {
+        // Surface the failure in the console for diagnosis; the empty string
+        // return path keeps the img display:none fallback in hydrateAvatarImages.
+        console.debug(`Avatar resolution failed for ${avatarUrl}:`, e);
         return "";
       } finally {
         avatarFetchPromises.delete(avatarUrl);
@@ -875,7 +878,9 @@
       issueMediaCache.set(cacheKey, data || null);
       return data || null;
     } catch (error) {
-      issueMediaCache.set(cacheKey, null);
+      // Don't poison the cache on transient failures — leave it untouched so
+      // the next call retries the real fetch instead of returning a memoised null.
+      console.warn(`Failed to fetch issue media for ${cacheKey}:`, error);
       return null;
     }
   }
@@ -1498,8 +1503,10 @@
     for (const item of downloads) {
       // Only group sonarr items with season numbers
       if (item.source === "Sonarr" && item.seasonNumber != null) {
-        // Group by show title + season + progress (same progress = likely season pack)
-        const key = `${item.title}|${item.seasonNumber}|${item.progress}|${item.instanceName || ''}`;
+        // Group by show title + season + progress (same progress = likely season pack).
+        // Prefer the stable backend-emitted instanceId (12-char hex) over the
+        // user-editable instanceName, which isn't guaranteed unique across instances.
+        const key = `${item.title}|${item.seasonNumber}|${item.progress}|${item.instanceId || item.instanceName || ''}`;
 
         if (!seasonPackMap.has(key)) {
           seasonPackMap.set(key, []);
