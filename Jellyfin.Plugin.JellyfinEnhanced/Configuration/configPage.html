@@ -37,86 +37,81 @@
                 </div>
             </div>
 
+
+            <div class="je-status-dashboard" id="je-status-dashboard">
+                <button type="button" class="je-status-card" data-target="extras" data-status-id="tmdb">
+                    <div class="je-status-card-header">
+                        <i class="material-icons je-status-card-icon">vpn_key</i>
+                        <span class="je-status-card-title">TMDB</span>
+                        <span class="je-status-indicator" data-status="unknown" aria-hidden="true"></span>
+                    </div>
+                    <div class="je-status-card-detail">Checking...</div>
+                </button>
+                <button type="button" class="je-status-card" data-target="seerr" data-status-id="seerr">
+                    <div class="je-status-card-header">
+                        <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/seerr.svg" alt="" class="je-status-card-img">
+                        <span class="je-status-card-title">Seerr</span>
+                        <span class="je-status-indicator" data-status="unknown" aria-hidden="true"></span>
+                    </div>
+                    <div class="je-status-card-detail">Checking...</div>
+                </button>
+                <button type="button" class="je-status-card" data-target="arr" data-status-id="sonarr">
+                    <div class="je-status-card-header">
+                        <i class="material-icons je-status-card-icon">tv</i>
+                        <span class="je-status-card-title">Sonarr</span>
+                        <span class="je-status-indicator" data-status="unknown" aria-hidden="true"></span>
+                    </div>
+                    <div class="je-status-card-detail">Checking...</div>
+                </button>
+                <button type="button" class="je-status-card" data-target="arr" data-status-id="radarr">
+                    <div class="je-status-card-header">
+                        <i class="material-icons je-status-card-icon">movie</i>
+                        <span class="je-status-card-title">Radarr</span>
+                        <span class="je-status-indicator" data-status="unknown" aria-hidden="true"></span>
+                    </div>
+                    <div class="je-status-card-detail">Checking...</div>
+                </button>
+                <button type="button" class="je-status-card" data-target="arr" data-status-id="bazarr">
+                    <div class="je-status-card-header">
+                        <i class="material-icons je-status-card-icon">subtitles</i>
+                        <span class="je-status-card-title">Bazarr</span>
+                        <span class="je-status-indicator" data-status="unknown" aria-hidden="true"></span>
+                    </div>
+                    <div class="je-status-card-detail">Checking...</div>
+                </button>
+                <button type="button" class="je-status-card" data-target="pages" data-status-id="pluginpages">
+                    <div class="je-status-card-header">
+                        <i class="material-icons je-status-card-icon">extension</i>
+                        <span class="je-status-card-title">Plugin Pages</span>
+                        <span class="je-status-indicator" data-status="unknown" aria-hidden="true"></span>
+                    </div>
+                    <div class="je-status-card-detail">Checking...</div>
+                </button>
+                <button type="button" class="je-status-card" data-target="playback" data-status-id="introskipper">
+                    <div class="je-status-card-header">
+                        <i class="material-icons je-status-card-icon">skip_next</i>
+                        <span class="je-status-card-title">Intro Skipper</span>
+                        <span class="je-status-indicator" data-status="unknown" aria-hidden="true"></span>
+                    </div>
+                    <div class="je-status-card-detail">Checking...</div>
+                </button>
+            </div>
+
             <div class="je-tab-bar">
-                <button class="jellyfin-tab-button active" data-tab="enhanced"><h3>Enhanced Settings</h3></button>
-                <button class="jellyfin-tab-button" data-tab="elsewhere"><h3>Elsewhere Settings</h3></button>
-                <button class="jellyfin-tab-button" data-tab="jellyseerr"><h3><img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/seerr.svg" alt="Seerr">Seerr Settings</h3></button>
-                <button class="jellyfin-tab-button" data-tab="arr-links"><h3>*arr Settings</h3></button>
-                <button class="jellyfin-tab-button" data-tab="extras"><h3>Other Settings</h3></button>
+                <button class="jellyfin-tab-button active" data-tab="display"><h3>Display</h3></button>
+                <button class="jellyfin-tab-button" data-tab="playback"><h3>Playback</h3></button>
+                <button class="jellyfin-tab-button" data-tab="pages"><h3>Pages</h3></button>
+                <button class="jellyfin-tab-button" data-tab="seerr"><h3><img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/seerr.svg" alt="Seerr">Seerr</h3></button>
+                <button class="jellyfin-tab-button" data-tab="arr"><h3>*arr</h3></button>
+                <button class="jellyfin-tab-button" data-tab="extras"><h3>Extras</h3></button>
+                <button class="jellyfin-tab-button" data-tab="keyboard"><h3>Keyboard</h3></button>
             </div>
             <form id="JellyfinEnhancedForm">
-                <div id="enhanced" class="jellyfin-tab-content active">
+                <div id="display" class="jellyfin-tab-content active">
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Default User Settings</h3></legend>
+                        <legend class="sectionTitle"><h3>UI</h3></legend>
                         <div class="configSection">
-                            <details class="je-details-section">
-                                <summary class="je-details-section-summary" data-icon="playback" data-text="Playback Settings">⏯️ Playback Settings</summary>
-                                <div class="je-details-body">
-                                    <div class="checkboxContainer"><label><input id="autoPauseEnabled" is="emby-checkbox" type="checkbox"/><span>Auto-pause on tab switch</span></label></div>
-                                    <div class="checkboxContainer"><label><input id="autoResumeEnabled" is="emby-checkbox" type="checkbox"/><span>Auto-resume on tab switch</span></label></div>
-                                    <div class="checkboxContainer"><label><input id="autoPipEnabled" is="emby-checkbox" type="checkbox"/><span>Auto Picture-in-Picture on tab switch</span></label></div>
-                                    <div class="checkboxContainer"><label><input id="longPress2xEnabled" is="emby-checkbox" type="checkbox"/><span>Long press/hold for 2x speed <sup> β</sup></span></label></div>
-                                    <div class="checkboxContainer"><label><input id="pauseScreenEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Custom Pause Screen</span></label></div>
-                                    <div class="fieldDescription je-field-desc-sm">This feature is a modified version of the original script by <a class="sectionTitle" target="_blank" href="https://github.com/BobHasNoSoul/Jellyfin-PauseScreen">BobHasNoSoul</a></div>
-                                </div>
-                            </details>
-                            <details class="je-details-section">
-                                <summary class="je-details-section-summary" data-icon="skip" data-text="Auto-Skip Settings">↪️ Auto-Skip Settings</summary>
-                                <div class="je-details-body">
-                                    <div class="checkboxContainer"><label><input id="autoSkipIntro" is="emby-checkbox" type="checkbox"/><span>Auto-skip Intro</span></label></div>
-                                    <div class="checkboxContainer"><label><input id="autoSkipOutro" is="emby-checkbox" type="checkbox"/><span>Auto-skip Outro</span></label></div>
-                                </div>
-                            </details>
-                            <details class="je-details-section">
-                                <summary class="je-details-section-summary" data-icon="subtitles" data-text="Subtitle Settings">📝 Subtitle Settings</summary>
-                                <div class="je-details-body">
-                                    <div class="checkboxContainer je-checkbox-mb-1"><label><input id="disableCustomSubtitleStyles" is="emby-checkbox" type="checkbox"/><span>Disable Custom Subtitle Styles by default</span></label></div>
-                                    <div class="inputContainer">
-                                        <label class="inputLabel inputLabelUnfocused" for="DefaultSubtitleStyle">Default Subtitle Style</label>
-                                        <select is="emby-select" id="DefaultSubtitleStyle" name="DefaultSubtitleStyle" class="emby-select">
-                                            <option value="0">Clean White</option>
-                                            <option value="1">Classic Black Box</option>
-                                            <option value="2">Netflix Style</option>
-                                            <option value="3">Cinema Yellow</option>
-                                            <option value="4">Soft Gray</option>
-                                            <option value="5">High Contrast</option>
-                                        </select>
-                                    </div>
-                                    <div class="inputContainer">
-                                        <label class="inputLabel inputLabelUnfocused" for="DefaultSubtitleSize">Default Subtitle Size</label>
-                                        <select is="emby-select" id="DefaultSubtitleSize" name="DefaultSubtitleSize" class="emby-select">
-                                            <option value="0">Tiny</option>
-                                            <option value="1">Small</option>
-                                            <option value="2">Normal</option>
-                                            <option value="3">Large</option>
-                                            <option value="4">Extra Large</option>
-                                            <option value="5">Gigantic</option>
-                                        </select>
-                                    </div>
-                                    <div class="inputContainer">
-                                        <label class="inputLabel inputLabelUnfocused" for="DefaultSubtitleFont">Default Subtitle Font</label>
-                                        <select is="emby-select" id="DefaultSubtitleFont" name="DefaultSubtitleFont" class="emby-select">
-                                            <option value="0">Default</option>
-                                            <option value="1">Noto Sans</option>
-                                            <option value="2">Sans Serif</option>
-                                            <option value="3">Typewriter</option>
-                                            <option value="4">Roboto</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </details>
-                            <details class="je-details-section">
-                                <summary class="je-details-section-summary" data-icon="random" data-text="Random Button Settings">🎲 Random Button Settings</summary>
-                                <div class="je-details-body">
-                                    <div class="checkboxContainer"><label><input id="randomButtonEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Random Button</span></label></div>
-                                    <div class="checkboxContainer"><label><input id="randomUnwatchedOnly" is="emby-checkbox" type="checkbox"/><span>Show unwatched only in random selection</span></label></div>
-                                    <div class="checkboxContainer"><label><input id="randomIncludeMovies" is="emby-checkbox" type="checkbox"/><span>Include movies in random selection</span></label></div>
-                                    <div class="checkboxContainer"><label><input id="randomIncludeShows" is="emby-checkbox" type="checkbox"/><span>Include shows in random selection</span></label></div>
-                                </div>
-                            </details>
-                            <details class="je-details-section">
-                                <summary class="je-details-section-summary" data-icon="ui" data-text="UI Settings">🖥️ UI Settings</summary>
-                                <div class="je-details-body">
+
                                     <div class="checkboxContainer"><label><input id="showWatchProgress" is="emby-checkbox" type="checkbox"/><span>Show watch progress</span></label></div>
                                     <div class="inputContainer">
                                         <label class="inputLabel inputLabelUnfocused" for="watchProgressDefaultMode">Watch Progress Default</label>
@@ -210,42 +205,7 @@
                                 <div class="fieldDescription je-field-desc-sm-font-lg">Pre-computes tag data on the server and serves it in a single request. Tags load instantly without per-page API calls. Disable to use the legacy per-page batch mode (not recommended).</div>
                                 <div id="tagsLocalStorageFallbackContainer" class="checkboxContainer"><label><input id="enableTagsLocalStorageFallback" is="emby-checkbox" type="checkbox"/><span>Persist Tag Fallback Cache in Browser Local Storage</span></label></div>
                                 <div class="fieldDescription je-field-desc-sm-font-xl">Available when Server-Side Tag Cache is disabled. Stores fallback tag cache entries in browser localStorage for faster repeat loads.</div>
-                            </div>
-                        </details>
-                            <details class="je-details-section">
-                                <summary class="je-details-section-summary" data-icon="language" data-text="Language Settings">🌐 Language Settings</summary>
-                                <div class="je-details-body">
-                                    <div class="inputContainer">
-                                        <label class="inputLabel inputLabelUnfocused" for="DefaultLanguage">Default UI Language</label>
-                                        <select is="emby-select" id="DefaultLanguage" name="DefaultLanguage" class="emby-select">
-                                            <option value="">System Default</option>
-                                        </select>
-                                        <div class="fieldDescription">Sets the default language for all users. Users can still override this in their own settings.</div>
-                                    </div>
-                                </div>
-                            </details>
-                            <div class="je-details-body">
-                                    <div class="checkboxContainer"><label><input id="disableAllShortcuts" is="emby-checkbox" type="checkbox"/><span data-icon="keyboard" data-text="Disable Keyboard Shortcuts">⌨️ Disable Keyboard Shortcuts</span></label></div>
-                                    <div class="fieldDescription">Disables all keyboard shortcuts, and hides the 'Shortcuts' tab in enhanced panel</div>
-                                </div>
-                        </div>
-                        <div class="verticalSection je-apply-section">
-                            <button id="resetAllUserSettingsBtn" class="raised button-submit block emby-button" is="emby-button" type="button">
-                                <span>Apply Above Settings to All Users</span>
-                            </button>
-                            <div class="je-info-banner">
-                                <div class="je-info-banner-row">
-                                    <i class="material-icons je-info-icon">info</i>
-                                    <div>
-                                        <strong>This will save the current configuration and apply all the above settings to every user on this server.</strong><br>
-                                        <strong>Note:</strong> Users can individually customize their own settings by opening the Enhanced Panel:<br>
-                                        • Press <code>?</code> key (default shortcut)<br>
-                                        • Long Press on user profile picture in the top-right corner<br>
-                                        • Through "Jellyfin Enhanced" link from the side bar<br>
-                                        • Access via playback controls menu during video playback (only on mobile devices)
-                                    </div>
-                                </div>
-                            </div>
+                            
                         </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
@@ -272,29 +232,112 @@
                                 </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Shortcut Overrides</h3></legend>
-                        <div class="je-icon-section">
-                            <h4 class="sectionTitle je-section-h4">Add Override</h4>
-                            <div class="je-shortcut-add-row">
-                                <div class="je-shortcut-flex">
-                                    <select is="emby-select" id="add-shortcut-select" label="Shortcut Action"></select>
-                                </div>
-                                <div class="je-shortcut-flex">
-                                    <input is="emby-input" id="add-shortcut-key" type="text" label="New Key"/>
-                                </div>
-                                <button is="emby-button" type="button" id="add-shortcut-btn" class="raised button-submit je-shortcut-add-btn">
-                                    <span>Add</span>
-                                </button>
-                            </div>
-                            <div id="shortcut-error-comment" style="display: none;"></div>
-                            <p class="fieldDescription je-field-desc-mt">
-                                <b>Modifier Keys:</b> Use `Shift+`, `Ctrl+`, or `Alt+`. Examples: `Shift+A`, `Ctrl+S`.
-                            </p>
+                        <legend class="sectionTitle"><h3>Random Button</h3></legend>
+                        <div class="configSection">
+
+                                    <div class="checkboxContainer"><label><input id="randomButtonEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Random Button</span></label></div>
+                                    <div class="checkboxContainer"><label><input id="randomUnwatchedOnly" is="emby-checkbox" type="checkbox"/><span>Show unwatched only in random selection</span></label></div>
+                                    <div class="checkboxContainer"><label><input id="randomIncludeMovies" is="emby-checkbox" type="checkbox"/><span>Include movies in random selection</span></label></div>
+                                    <div class="checkboxContainer"><label><input id="randomIncludeShows" is="emby-checkbox" type="checkbox"/><span>Include shows in random selection</span></label></div>
+                                
                         </div>
-                        <h4 class="sectionTitle je-section-h4">Configured Overrides</h4>
-                        <div id="shortcut-list-container" class="je-shortcut-list">
-                            </div>
                     </fieldset>
+                </div>
+                <div id="playback" class="jellyfin-tab-content">
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Playback &amp; Tab Switch</h3></legend>
+                        <div class="configSection">
+
+                                    <div class="checkboxContainer"><label><input id="autoPauseEnabled" is="emby-checkbox" type="checkbox"/><span>Auto-pause on tab switch</span></label></div>
+                                    <div class="checkboxContainer"><label><input id="autoResumeEnabled" is="emby-checkbox" type="checkbox"/><span>Auto-resume on tab switch</span></label></div>
+                                    <div class="checkboxContainer"><label><input id="autoPipEnabled" is="emby-checkbox" type="checkbox"/><span>Auto Picture-in-Picture on tab switch</span></label></div>
+                                    <div class="checkboxContainer"><label><input id="longPress2xEnabled" is="emby-checkbox" type="checkbox"/><span>Long press/hold for 2x speed <sup> β</sup></span></label></div>
+                                    <div class="checkboxContainer"><label><input id="pauseScreenEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Custom Pause Screen</span></label></div>
+                                    <div class="fieldDescription je-field-desc-sm">This feature is a modified version of the original script by <a class="sectionTitle" target="_blank" href="https://github.com/BobHasNoSoul/Jellyfin-PauseScreen">BobHasNoSoul</a></div>
+                                
+                        </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Auto-Skip</h3></legend>
+                        <div class="configSection">
+
+                                    <div class="checkboxContainer"><label><input id="autoSkipIntro" is="emby-checkbox" type="checkbox"/><span>Auto-skip Intro</span></label></div>
+                                    <div class="checkboxContainer"><label><input id="autoSkipOutro" is="emby-checkbox" type="checkbox"/><span>Auto-skip Outro</span></label></div>
+                                
+                        </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Subtitles</h3></legend>
+                        <div class="configSection">
+
+                                    <div class="checkboxContainer je-checkbox-mb-1"><label><input id="disableCustomSubtitleStyles" is="emby-checkbox" type="checkbox"/><span>Disable Custom Subtitle Styles by default</span></label></div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="DefaultSubtitleStyle">Default Subtitle Style</label>
+                                        <select is="emby-select" id="DefaultSubtitleStyle" name="DefaultSubtitleStyle" class="emby-select">
+                                            <option value="0">Clean White</option>
+                                            <option value="1">Classic Black Box</option>
+                                            <option value="2">Netflix Style</option>
+                                            <option value="3">Cinema Yellow</option>
+                                            <option value="4">Soft Gray</option>
+                                            <option value="5">High Contrast</option>
+                                        </select>
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="DefaultSubtitleSize">Default Subtitle Size</label>
+                                        <select is="emby-select" id="DefaultSubtitleSize" name="DefaultSubtitleSize" class="emby-select">
+                                            <option value="0">Tiny</option>
+                                            <option value="1">Small</option>
+                                            <option value="2">Normal</option>
+                                            <option value="3">Large</option>
+                                            <option value="4">Extra Large</option>
+                                            <option value="5">Gigantic</option>
+                                        </select>
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="DefaultSubtitleFont">Default Subtitle Font</label>
+                                        <select is="emby-select" id="DefaultSubtitleFont" name="DefaultSubtitleFont" class="emby-select">
+                                            <option value="0">Default</option>
+                                            <option value="1">Noto Sans</option>
+                                            <option value="2">Sans Serif</option>
+                                            <option value="3">Typewriter</option>
+                                            <option value="4">Roboto</option>
+                                        </select>
+                                    </div>
+                                
+                        </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Language</h3></legend>
+                        <div class="configSection">
+
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="DefaultLanguage">Default UI Language</label>
+                                        <select is="emby-select" id="DefaultLanguage" name="DefaultLanguage" class="emby-select">
+                                            <option value="">System Default</option>
+                                        </select>
+                                        <div class="fieldDescription">Sets the default language for all users. Users can still override this in their own settings.</div>
+                                    </div>
+                                
+                        </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Timeout Settings</h3></legend>
+                        <div class="configSection">
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="HelpPanelAutocloseDelay">Help Panel Autoclose Delay (in milliseconds)</label>
+                                <input id="HelpPanelAutocloseDelay" is="emby-input" name="HelpPanelAutocloseDelay" type="number"/>
+                                <div class="fieldDescription">How long the help panel stays open before auto-closing.</div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="ToastDuration">Toast Duration (in milliseconds)</label>
+                                <input id="ToastDuration" is="emby-input" name="ToastDuration" type="number"/>
+                                <div class="fieldDescription">How long toast notifications are displayed.</div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div id="pages" class="jellyfin-tab-content">
+                    <div class="je-tab-intro">Features that add or replace navigation pages in the Jellyfin web UI. Each supports integration with the <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> plugin (injects into the sidebar) or the <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> plugin (injects into the home page).</div>
                     <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Bookmarks</h3></legend>
                         <div class="configSection">
@@ -364,21 +407,6 @@
                         </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Timeout Settings</h3></legend>
-                        <div class="configSection">
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="HelpPanelAutocloseDelay">Help Panel Autoclose Delay (in milliseconds)</label>
-                                <input id="HelpPanelAutocloseDelay" is="emby-input" name="HelpPanelAutocloseDelay" type="number"/>
-                                <div class="fieldDescription">How long the help panel stays open before auto-closing.</div>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="ToastDuration">Toast Duration (in milliseconds)</label>
-                                <input id="ToastDuration" is="emby-input" name="ToastDuration" type="number"/>
-                                <div class="fieldDescription">How long toast notifications are displayed.</div>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Hidden Content</h3></legend>
                         <div class="configSection">
                             <div class="checkboxContainer">
@@ -431,93 +459,220 @@
                             </div>
                         </div>
                     </fieldset>
-                </div>
-
-                <div id="elsewhere" class="jellyfin-tab-content">
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Configuration</h3></legend>
-                        <div class="checkboxContainer je-checkbox-mb-2">
-                            <label>
-                                <input id="elsewhereEnabled" is="emby-checkbox" type="checkbox"/>
-                                <span>Enable Elsewhere<div class="je-elsewhere-subtitle">Show Streaming Provider Lookup on Item Details Page</div></span>
-                            </label>
-                        </div>
+                        <legend class="sectionTitle"><h3>Requests Page</h3></legend>
                         <div class="configSection">
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="TMDB_API_KEY">TMDB API Key</label>
-                                <div class="je-api-row">
-                                    <input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" class="je-api-input"/>
-                                    <span id="tmdbStatusIndicator" class="material-icons je-status-indicator"></span>
-                                    <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
-                                        <span>Test</span>
-                                    </button>
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="downloadsPageEnabled" is="emby-checkbox" type="checkbox"/>
+                                    <span>Enable Requests Page</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-xl">Adds a "Requests" link to the navigation showing active downloads and requests.</div>
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="showDownloadsInRequests" is="emby-checkbox" type="checkbox"/>
+                                    <span>Show Downloads in Requests Page</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-xl">Shows active downloads from Sonarr/Radarr on the Requests page. (Requires *arr links and API keys to be configured)</div>
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="downloadsFilterByUserRequests" is="emby-checkbox" type="checkbox"/>
+                                    <span>Filter Downloads by User Requests</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-xl">When enabled, non-admin users only see downloads for content they requested. When disabled, all authenticated users can see every item in the download queue, including content requested by other users.</div>
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="downloadsPageShowIssues" is="emby-checkbox" type="checkbox"/>
+                                    <span>Show Seerr Issues Section</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-xl">Shows open/resolved Seerr issues beneath Requests.</div>
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="downloadsUsePluginPages" is="emby-checkbox" type="checkbox"/>
+                                    <span>Use Plugin Pages for Requests Page</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-xl">Replaces the default Requests page with a <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> implementation.<br><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.</div>
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="downloadsUseCustomTabs" is="emby-checkbox" type="checkbox"/>
+                                    <span>Use Custom Tabs for Requests (instead of sidebar)</span>
+                                </label>
+                            </div>
+                            <div class="je-info-banner-inline">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">info</i>
+                                    <div>
+                                        <h4 class="je-custom-tabs-h4">Embed Requests in Custom Tabs:</h4>
+                                        <p class="fieldDescription je-custom-tabs-p">Display the Requests page in a Custom Tabs tab instead of the sidebar link.</p>
+                                        <p class="fieldDescription je-custom-tabs-p-mt">You need the <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> plugin.</p>
+                                        <ol class="fieldDescription je-custom-tabs-ol">
+                                            <li class="je-custom-tabs-li">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                            <li class="je-custom-tabs-li">Navigate to Dashboard > Plugins > Custom Tabs and add a new tab.</li>
+                                            <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Requests")</li>
+                                            <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                        </ol>
+                                        <div class="je-copy-code-wrapper">
+                                            <button type="button" class="je-copy-html-btn raised raised-mini emby-button" data-copy-text="&lt;div class=&quot;jellyfinenhanced requests&quot;&gt;&lt;/div&gt;">
+                                                <i class="material-icons je-copy-icon">content_copy</i>
+                                                <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                            </button>
+                                            <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced requests"&gt;&lt;/div&gt;
+</code></pre>
+                                        </div>
+                                        <div class="fieldDescription je-field-desc-mt">
+                                            Already have Custom Tabs installed?
+                                            <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" target="_blank" href="https://www.themoviedb.org/settings/api">How to?</a></div>
-                                <div class="fieldDescription"><br>Shared with Seerr Settings</div>
                             </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="DEFAULT_REGION">Default Region</label>
-                                <input id="DEFAULT_REGION" is="emby-input" name="DEFAULT_REGION" type="text" placeholder="e.g., US"/>
-                                <div class="fieldDescription">The default two-letter country code for streaming provider lookup. Empty defaults to US. <a class="sectionTitle" target="_blank" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/regions.txt">Full List</a></div>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="DEFAULT_PROVIDERS">Default Providers</label>
-                                <textarea class="emby-textarea emby-input je-textarea-tall" id="DEFAULT_PROVIDERS" name="DEFAULT_PROVIDERS" placeholder="e.g., Netflix,Hulu"></textarea>
-                                <div class="fieldDescription">A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" target="_blank" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt">Full List</a></div>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="IGNORE_PROVIDERS">Ignore Providers</label>
-                                <textarea class="emby-textarea emby-input je-textarea-tall" id="IGNORE_PROVIDERS" name="IGNORE_PROVIDERS" placeholder="e.g., .*with Ads, Hulu"></textarea>
-                                <div class="fieldDescription">A list of providers to ignore from the default region (supports regex).<a class="sectionTitle" target="_blank" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt">Full List</a></div>
-                            </div>
-                            <h3>Elsewhere Custom Branding</h3>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="ElsewhereCustomBrandingText">Custom Branding Message</label>
-                                <input id="ElsewhereCustomBrandingText" is="emby-input" name="ElsewhereCustomBrandingText" type="text" placeholder="e.g., Only available on My Server"/>
-                                <div class="fieldDescription">Custom message to display when content is not available on any streaming providers. Leave blank to disable custom branding.</div>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="ElsewhereCustomBrandingImageUrl">Custom Branding Icon URL</label>
-                                <input id="ElsewhereCustomBrandingImageUrl" is="emby-input" name="ElsewhereCustomBrandingImageUrl" type="text" placeholder="e.g., /web/assets/img/icon.png"/>
-                                <div class="fieldDescription">Optional URL for an icon to display next to the custom message. Leave blank for no icon.</div>
-                            </div>
-                            <h3 class="je-h3-mt">Extras</h3>
-                            <div class="checkboxContainer">
-                                <label class="je-elsewhere-label"><input id="showReviews" is="emby-checkbox" type="checkbox"/>
-                                    <span>Show Reviews from TMDB in Item Details Page</span>
+                            <div class="checkboxContainer je-checkbox-mb-1">
+                                <label>
+                                    <input id="downloadsPagePollingEnabled" is="emby-checkbox" type="checkbox"/>
+                                    <span>Enable Auto-Refresh for Downloads</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription je-field-desc-sm-font-lg">Requires TMDB API Key to be set</div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="downloadsPollIntervalSeconds">Poll Interval (seconds)</label>
+                                <input id="downloadsPollIntervalSeconds" is="emby-input" type="number" min="30" max="300"/>
+                            </div>
+                            <div class="fieldDescription je-field-desc-xl">How often to refresh download status automatically. Minimum is 30 seconds and applies only when auto-refresh is enabled.</div>
+                        </div>
+                        <div class="je-info-banner-inline-center">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">info</i>
+                                    <div>
+                                        <strong>Requests Page</strong> shows a Requests Button in sidebar with a dedicated view of active downloads from Sonarr/Radarr and requests from Seerr.
+                                        <br><br>
+                                        <strong>Requirements:</strong> Configure Sonarr/Radarr and Seerr URLs and API keys.
+                                    </div>
+                                </div>
+                            </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Calendar Page</h3></legend>
+                        <div class="configSection">
                             <div class="checkboxContainer">
-                                <label class="je-elsewhere-label"><input id="reviewsExpandedByDefault" is="emby-checkbox" type="checkbox"/>
-                                    <span>Expand reviews by default</span>
+                                <label>
+                                    <input id="calendarPageEnabled" is="emby-checkbox" type="checkbox"/>
+                                    <span>Enable Calendar Page</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, the reviews section opens expanded by default for all users (unless they override in their session).</div>
-                            <h3 class="je-h3-mt-lg">User Reviews</h3>
-                            <h5>These settings do not require TMDB API key to be populated</h5>
+                            <div class="fieldDescription je-field-desc-xl">Adds a "Calendar" link to the navigation showing upcoming releases from Sonarr/Radarr.</div>
                             <div class="checkboxContainer">
-                                <label class="je-elsewhere-label"><input id="showUserReviews" is="emby-checkbox" type="checkbox"/>
-                                    <span>Enable User Reviews in Item Details Page</span>
+                                <label>
+                                    <input id="calendarUsePluginPages" is="emby-checkbox" type="checkbox"/>
+                                    <span>Use Plugin Pages for Calendar Page</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription je-field-desc-sm-font-lg">Allows users to write reviews and rate items in the library.<br/><strong>Completely independent of Elsewhere being enabled and TMDB Reviews being enabled</strong></div>
+                            <div class="fieldDescription je-field-desc-xl">Replaces the default Calendar page with a <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> implementation.<br><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.</div>
                             <div class="checkboxContainer">
-                                <label class="je-elsewhere-label"><input id="hideReviewsFromHiddenUsers" is="emby-checkbox" type="checkbox"/>
-                                    <span>Hide reviews written by hidden users</span>
+                                <label>
+                                    <input id="calendarUseCustomTabs" is="emby-checkbox" type="checkbox"/>
+                                    <span>Use Custom Tabs for Calendar (instead of sidebar)</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, reviews written by Jellyfin users marked as "Hide this user from login screens" are hidden from non-admin viewers. Admins always see all reviews.</div>
-                            <div class="checkboxContainer">
-                                <label class="je-elsewhere-label"><input id="hideReviewsFromDisabledUsers" is="emby-checkbox" type="checkbox"/>
-                                    <span>Hide reviews written by disabled users</span>
+                            <div class="je-info-banner-inline">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">info</i>
+                                    <div>
+                                        <h4 class="je-custom-tabs-h4">Embed Calendar in Custom Tabs:</h4>
+                                        <p class="fieldDescription je-custom-tabs-p">Display the Calendar page in a Custom Tabs tab instead of the sidebar link.</p>
+                                        <p class="fieldDescription je-custom-tabs-p-mt">You need the <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> plugin.</p>
+                                        <ol class="fieldDescription je-custom-tabs-ol">
+                                            <li class="je-custom-tabs-li">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                            <li class="je-custom-tabs-li">Navigate to Dashboard > Plugins > Custom Tabs and add a new tab.</li>
+                                            <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Calendar").</li>
+                                            <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                        </ol>
+                                        <div class="je-copy-code-wrapper">
+                                            <button type="button" class="je-copy-html-btn raised raised-mini emby-button" data-copy-text="&lt;div class=&quot;jellyfinenhanced calendar&quot;&gt;&lt;/div&gt;">
+                                                <i class="material-icons je-copy-icon">content_copy</i>
+                                                <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                            </button>
+                                            <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced calendar"&gt;&lt;/div&gt;
+</code></pre>
+                                        </div>
+                                        <div class="fieldDescription je-field-desc-mt">
+                                            Already have Custom Tabs installed?
+                                            <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="calendarFirstDayOfWeek">First Day of Week</label>
+                                <select id="calendarFirstDayOfWeek" is="emby-select">
+                                    <option value="Sunday">Sunday</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="calendarTimeFormat">Time Format</label>
+                                <select id="calendarTimeFormat" is="emby-select">
+                                    <option value="5pm/5:30pm">5pm/5:30pm</option>
+                                    <option value="17:00/17:30">17:00/17:30</option>
+                                </select>
+                            </div>
+                            <div class="checkboxContainer je-calendar-checkbox-mt">
+                                <label>
+                                    <input id="calendarHighlightFavorites" is="emby-checkbox" type="checkbox"/>
+                                    <span>Highlight Favorites/Watchlist</span>
                                 </label>
                             </div>
-                            <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, reviews written by Jellyfin users marked as "Disable this user" are hidden from non-admin viewers. Admins always see all reviews.</div>
+                            <div class="fieldDescription je-field-desc-md">Show a golden border on calendar entries for items in your Jellyfin favorites.</div>
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="calendarHighlightWatchedSeries" is="emby-checkbox" type="checkbox"/>
+                                    <span>Highlight Watched Series</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription">Show a border on calendar entries for series you have watched episodes from.</div>
+                            <div class="checkboxContainer je-calendar-checkbox-mt">
+                                <label>
+                                    <input id="calendarFilterByLibraryAccess" is="emby-checkbox" type="checkbox"/>
+                                    <span>Filter by Library Access</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription">When enabled, the calendar only shows items from libraries the user has access to. Upcoming items not yet in Jellyfin are filtered based on their Sonarr/Radarr root folder.</div>
+                            <div class="checkboxContainer je-calendar-checkbox-mt">
+                                <label>
+                                    <input id="calendarShowOnlyRequested" is="emby-checkbox" type="checkbox"/>
+                                    <span>Show Requested Items Only by Default</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription">When enabled, the calendar will load showing only Requested items by default, but users can still change filters.</div>
+                            <div class="checkboxContainer je-calendar-checkbox-mt">
+                                <label>
+                                    <input id="calendarForceOnlyRequested" is="emby-checkbox" type="checkbox"/>
+                                    <span>Show Only Requested Items</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription">When enabled, the calendar always shows only your requested items and the Requests filter is hidden.</div>
+                        </div>
+                        <div class="je-info-banner-inline-center">
+                            <div class="je-info-banner-row">
+                                <i class="material-icons je-info-icon">calendar_today</i>
+                                <div>
+                                    <strong>Calendar Page</strong> adds a Calendar Button in sidebar with a dedicated view that displays upcoming releases from Sonarr and Radarr in a calendar view.
+                                    <br><br>
+                                    <strong>Requirements:</strong> Configure Sonarr and/or Radarr URLs and API keys.
+                                </div>
+                            </div>
                         </div>
                     </fieldset>
                 </div>
-                <div id="jellyseerr" class="jellyfin-tab-content">
+                <div id="seerr" class="jellyfin-tab-content">
                     <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Setup</h3></legend>
                         <div class="configSection">
@@ -785,123 +940,6 @@
                         </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Testing / Debug</h3></legend>
-                        <div class="configSection">
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="jellyseerrDisableCache" is="emby-checkbox" type="checkbox"/>
-                                    <span>Disable server-side response cache</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">When enabled, all Seerr proxy requests bypass the server-side cache and are fetched fresh from Seerr every time. This is useful for testing but will increase load on your Seerr instance. <b>Not recommended for normal use.</b></div>
-                            <div class="inputContainer je-input-mb">
-                                <label class="inputLabel inputLabelUnfocused" for="jellyseerrResponseCacheTtlMinutes">Response Cache TTL (minutes)</label>
-                                <input id="jellyseerrResponseCacheTtlMinutes" is="emby-input" type="number" min="1" max="1440" value="10"/>
-                                <div class="fieldDescription">How long Seerr API responses (search, discovery, recommendations) are cached. Default: 10 minutes.</div>
-                            </div>
-                            <div class="inputContainer je-input-mb">
-                                <label class="inputLabel inputLabelUnfocused" for="jellyseerrUserIdCacheTtlMinutes">User ID Cache TTL (minutes)</label>
-                                <input id="jellyseerrUserIdCacheTtlMinutes" is="emby-input" type="number" min="1" max="1440" value="30"/>
-                                <div class="fieldDescription">How long the Jellyfin → Seerr user ID mapping is cached. Default: 30 minutes.</div>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Requests Page</h3></legend>
-                        <div class="configSection">
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="downloadsPageEnabled" is="emby-checkbox" type="checkbox"/>
-                                    <span>Enable Requests Page</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">Adds a "Requests" link to the navigation showing active downloads and requests.</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="showDownloadsInRequests" is="emby-checkbox" type="checkbox"/>
-                                    <span>Show Downloads in Requests Page</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">Shows active downloads from Sonarr/Radarr on the Requests page. (Requires *arr links and API keys to be configured)</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="downloadsFilterByUserRequests" is="emby-checkbox" type="checkbox"/>
-                                    <span>Filter Downloads by User Requests</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">When enabled, non-admin users only see downloads for content they requested. When disabled, all authenticated users can see every item in the download queue, including content requested by other users.</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="downloadsPageShowIssues" is="emby-checkbox" type="checkbox"/>
-                                    <span>Show Seerr Issues Section</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">Shows open/resolved Seerr issues beneath Requests.</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="downloadsUsePluginPages" is="emby-checkbox" type="checkbox"/>
-                                    <span>Use Plugin Pages for Requests Page</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">Replaces the default Requests page with a <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> implementation.<br><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="downloadsUseCustomTabs" is="emby-checkbox" type="checkbox"/>
-                                    <span>Use Custom Tabs for Requests (instead of sidebar)</span>
-                                </label>
-                            </div>
-                            <div class="je-info-banner-inline">
-                                <div class="je-info-banner-row">
-                                    <i class="material-icons je-info-icon">info</i>
-                                    <div>
-                                        <h4 class="je-custom-tabs-h4">Embed Requests in Custom Tabs:</h4>
-                                        <p class="fieldDescription je-custom-tabs-p">Display the Requests page in a Custom Tabs tab instead of the sidebar link.</p>
-                                        <p class="fieldDescription je-custom-tabs-p-mt">You need the <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> plugin.</p>
-                                        <ol class="fieldDescription je-custom-tabs-ol">
-                                            <li class="je-custom-tabs-li">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
-                                            <li class="je-custom-tabs-li">Navigate to Dashboard > Plugins > Custom Tabs and add a new tab.</li>
-                                            <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Requests")</li>
-                                            <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
-                                        </ol>
-                                        <div class="je-copy-code-wrapper">
-                                            <button type="button" class="je-copy-html-btn raised raised-mini emby-button" data-copy-text="&lt;div class=&quot;jellyfinenhanced requests&quot;&gt;&lt;/div&gt;">
-                                                <i class="material-icons je-copy-icon">content_copy</i>
-                                                <span class="copy-btn-text je-copy-btn-text">Copy</span>
-                                            </button>
-                                            <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced requests"&gt;&lt;/div&gt;
-</code></pre>
-                                        </div>
-                                        <div class="fieldDescription je-field-desc-mt">
-                                            Already have Custom Tabs installed?
-                                            <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="checkboxContainer je-checkbox-mb-1">
-                                <label>
-                                    <input id="downloadsPagePollingEnabled" is="emby-checkbox" type="checkbox"/>
-                                    <span>Enable Auto-Refresh for Downloads</span>
-                                </label>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="downloadsPollIntervalSeconds">Poll Interval (seconds)</label>
-                                <input id="downloadsPollIntervalSeconds" is="emby-input" type="number" min="30" max="300"/>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">How often to refresh download status automatically. Minimum is 30 seconds and applies only when auto-refresh is enabled.</div>
-                        </div>
-                        <div class="je-info-banner-inline-center">
-                                <div class="je-info-banner-row">
-                                    <i class="material-icons je-info-icon">info</i>
-                                    <div>
-                                        <strong>Requests Page</strong> shows a Requests Button in sidebar with a dedicated view of active downloads from Sonarr/Radarr and requests from Seerr.
-                                        <br><br>
-                                        <strong>Requirements:</strong> Configure Sonarr/Radarr and Seerr URLs and API keys.
-                                    </div>
-                                </div>
-                            </div>
-                    </fieldset>
-                    <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Automatic Requests</h3></legend>
                         <div class="configSection">
                             <details class="je-details-section">
@@ -1145,9 +1183,30 @@
                             </div>
                         </div>
                     </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Testing / Debug</h3></legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer">
+                                <label>
+                                    <input id="jellyseerrDisableCache" is="emby-checkbox" type="checkbox"/>
+                                    <span>Disable server-side response cache</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-xl">When enabled, all Seerr proxy requests bypass the server-side cache and are fetched fresh from Seerr every time. This is useful for testing but will increase load on your Seerr instance. <b>Not recommended for normal use.</b></div>
+                            <div class="inputContainer je-input-mb">
+                                <label class="inputLabel inputLabelUnfocused" for="jellyseerrResponseCacheTtlMinutes">Response Cache TTL (minutes)</label>
+                                <input id="jellyseerrResponseCacheTtlMinutes" is="emby-input" type="number" min="1" max="1440" value="10"/>
+                                <div class="fieldDescription">How long Seerr API responses (search, discovery, recommendations) are cached. Default: 10 minutes.</div>
+                            </div>
+                            <div class="inputContainer je-input-mb">
+                                <label class="inputLabel inputLabelUnfocused" for="jellyseerrUserIdCacheTtlMinutes">User ID Cache TTL (minutes)</label>
+                                <input id="jellyseerrUserIdCacheTtlMinutes" is="emby-input" type="number" min="1" max="1440" value="30"/>
+                                <div class="fieldDescription">How long the Jellyfin → Seerr user ID mapping is cached. Default: 30 minutes.</div>
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
-                <div id="arr-links" class="jellyfin-tab-content">
-
+                <div id="arr" class="jellyfin-tab-content">
                     <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Configuration</h3></legend>
                         <div class="configSection">
@@ -1166,7 +1225,6 @@
                             </div>
                         </div>
                     </fieldset>
-
                     <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>*arr Links</h3></legend>
                         <div class="configSection">
@@ -1276,125 +1334,90 @@
                             </div>
                         </div>
                     </fieldset>
+                </div>
+                <div id="extras" class="jellyfin-tab-content">
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3>Calendar Page</h3></legend>
-                        <div class="configSection">
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="calendarPageEnabled" is="emby-checkbox" type="checkbox"/>
-                                    <span>Enable Calendar Page</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">Adds a "Calendar" link to the navigation showing upcoming releases from Sonarr/Radarr.</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="calendarUsePluginPages" is="emby-checkbox" type="checkbox"/>
-                                    <span>Use Plugin Pages for Calendar Page</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-xl">Replaces the default Calendar page with a <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> implementation.<br><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="calendarUseCustomTabs" is="emby-checkbox" type="checkbox"/>
-                                    <span>Use Custom Tabs for Calendar (instead of sidebar)</span>
-                                </label>
-                            </div>
-                            <div class="je-info-banner-inline">
-                                <div class="je-info-banner-row">
-                                    <i class="material-icons je-info-icon">info</i>
-                                    <div>
-                                        <h4 class="je-custom-tabs-h4">Embed Calendar in Custom Tabs:</h4>
-                                        <p class="fieldDescription je-custom-tabs-p">Display the Calendar page in a Custom Tabs tab instead of the sidebar link.</p>
-                                        <p class="fieldDescription je-custom-tabs-p-mt">You need the <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> plugin.</p>
-                                        <ol class="fieldDescription je-custom-tabs-ol">
-                                            <li class="je-custom-tabs-li">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
-                                            <li class="je-custom-tabs-li">Navigate to Dashboard > Plugins > Custom Tabs and add a new tab.</li>
-                                            <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Calendar").</li>
-                                            <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
-                                        </ol>
-                                        <div class="je-copy-code-wrapper">
-                                            <button type="button" class="je-copy-html-btn raised raised-mini emby-button" data-copy-text="&lt;div class=&quot;jellyfinenhanced calendar&quot;&gt;&lt;/div&gt;">
-                                                <i class="material-icons je-copy-icon">content_copy</i>
-                                                <span class="copy-btn-text je-copy-btn-text">Copy</span>
-                                            </button>
-                                            <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced calendar"&gt;&lt;/div&gt;
-</code></pre>
-                                        </div>
-                                        <div class="fieldDescription je-field-desc-mt">
-                                            Already have Custom Tabs installed?
-                                            <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="calendarFirstDayOfWeek">First Day of Week</label>
-                                <select id="calendarFirstDayOfWeek" is="emby-select">
-                                    <option value="Sunday">Sunday</option>
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
-                                </select>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="calendarTimeFormat">Time Format</label>
-                                <select id="calendarTimeFormat" is="emby-select">
-                                    <option value="5pm/5:30pm">5pm/5:30pm</option>
-                                    <option value="17:00/17:30">17:00/17:30</option>
-                                </select>
-                            </div>
-                            <div class="checkboxContainer je-calendar-checkbox-mt">
-                                <label>
-                                    <input id="calendarHighlightFavorites" is="emby-checkbox" type="checkbox"/>
-                                    <span>Highlight Favorites/Watchlist</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription je-field-desc-md">Show a golden border on calendar entries for items in your Jellyfin favorites.</div>
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="calendarHighlightWatchedSeries" is="emby-checkbox" type="checkbox"/>
-                                    <span>Highlight Watched Series</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription">Show a border on calendar entries for series you have watched episodes from.</div>
-                            <div class="checkboxContainer je-calendar-checkbox-mt">
-                                <label>
-                                    <input id="calendarFilterByLibraryAccess" is="emby-checkbox" type="checkbox"/>
-                                    <span>Filter by Library Access</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription">When enabled, the calendar only shows items from libraries the user has access to. Upcoming items not yet in Jellyfin are filtered based on their Sonarr/Radarr root folder.</div>
-                            <div class="checkboxContainer je-calendar-checkbox-mt">
-                                <label>
-                                    <input id="calendarShowOnlyRequested" is="emby-checkbox" type="checkbox"/>
-                                    <span>Show Requested Items Only by Default</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription">When enabled, the calendar will load showing only Requested items by default, but users can still change filters.</div>
-                            <div class="checkboxContainer je-calendar-checkbox-mt">
-                                <label>
-                                    <input id="calendarForceOnlyRequested" is="emby-checkbox" type="checkbox"/>
-                                    <span>Show Only Requested Items</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription">When enabled, the calendar always shows only your requested items and the Requests filter is hidden.</div>
+                        <legend class="sectionTitle"><h3>Elsewhere</h3></legend>
+                        <div class="checkboxContainer je-checkbox-mb-2">
+                            <label>
+                                <input id="elsewhereEnabled" is="emby-checkbox" type="checkbox"/>
+                                <span>Enable Elsewhere<div class="je-elsewhere-subtitle">Show Streaming Provider Lookup on Item Details Page</div></span>
+                            </label>
                         </div>
-                        <div class="je-info-banner-inline-center">
-                            <div class="je-info-banner-row">
-                                <i class="material-icons je-info-icon">calendar_today</i>
-                                <div>
-                                    <strong>Calendar Page</strong> adds a Calendar Button in sidebar with a dedicated view that displays upcoming releases from Sonarr and Radarr in a calendar view.
-                                    <br><br>
-                                    <strong>Requirements:</strong> Configure Sonarr and/or Radarr URLs and API keys.
+                        <div class="configSection">
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="TMDB_API_KEY">TMDB API Key</label>
+                                <div class="je-api-row">
+                                    <input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" class="je-api-input"/>
+                                    <span id="tmdbStatusIndicator" class="material-icons je-status-indicator"></span>
+                                    <button is="emby-button" type="button" class="testTmdbBtn raised button-submit">
+                                        <span>Test</span>
+                                    </button>
                                 </div>
+                                <div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" target="_blank" href="https://www.themoviedb.org/settings/api">How to?</a></div>
+                                <div class="fieldDescription"><br>Shared with Seerr Settings</div>
                             </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="DEFAULT_REGION">Default Region</label>
+                                <input id="DEFAULT_REGION" is="emby-input" name="DEFAULT_REGION" type="text" placeholder="e.g., US"/>
+                                <div class="fieldDescription">The default two-letter country code for streaming provider lookup. Empty defaults to US. <a class="sectionTitle" target="_blank" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/regions.txt">Full List</a></div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="DEFAULT_PROVIDERS">Default Providers</label>
+                                <textarea class="emby-textarea emby-input je-textarea-tall" id="DEFAULT_PROVIDERS" name="DEFAULT_PROVIDERS" placeholder="e.g., Netflix,Hulu"></textarea>
+                                <div class="fieldDescription">A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" target="_blank" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt">Full List</a></div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="IGNORE_PROVIDERS">Ignore Providers</label>
+                                <textarea class="emby-textarea emby-input je-textarea-tall" id="IGNORE_PROVIDERS" name="IGNORE_PROVIDERS" placeholder="e.g., .*with Ads, Hulu"></textarea>
+                                <div class="fieldDescription">A list of providers to ignore from the default region (supports regex).<a class="sectionTitle" target="_blank" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt">Full List</a></div>
+                            </div>
+                            <h3>Elsewhere Custom Branding</h3>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="ElsewhereCustomBrandingText">Custom Branding Message</label>
+                                <input id="ElsewhereCustomBrandingText" is="emby-input" name="ElsewhereCustomBrandingText" type="text" placeholder="e.g., Only available on My Server"/>
+                                <div class="fieldDescription">Custom message to display when content is not available on any streaming providers. Leave blank to disable custom branding.</div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="ElsewhereCustomBrandingImageUrl">Custom Branding Icon URL</label>
+                                <input id="ElsewhereCustomBrandingImageUrl" is="emby-input" name="ElsewhereCustomBrandingImageUrl" type="text" placeholder="e.g., /web/assets/img/icon.png"/>
+                                <div class="fieldDescription">Optional URL for an icon to display next to the custom message. Leave blank for no icon.</div>
+                            </div>
+                            <h3 class="je-h3-mt">Extras</h3>
+                            <div class="checkboxContainer">
+                                <label class="je-elsewhere-label"><input id="showReviews" is="emby-checkbox" type="checkbox"/>
+                                    <span>Show Reviews from TMDB in Item Details Page</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-sm-font-lg">Requires TMDB API Key to be set</div>
+                            <div class="checkboxContainer">
+                                <label class="je-elsewhere-label"><input id="reviewsExpandedByDefault" is="emby-checkbox" type="checkbox"/>
+                                    <span>Expand reviews by default</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, the reviews section opens expanded by default for all users (unless they override in their session).</div>
+                            <h3 class="je-h3-mt-lg">User Reviews</h3>
+                            <h5>These settings do not require TMDB API key to be populated</h5>
+                            <div class="checkboxContainer">
+                                <label class="je-elsewhere-label"><input id="showUserReviews" is="emby-checkbox" type="checkbox"/>
+                                    <span>Enable User Reviews in Item Details Page</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-sm-font-lg">Allows users to write reviews and rate items in the library.<br/><strong>Completely independent of Elsewhere being enabled and TMDB Reviews being enabled</strong></div>
+                            <div class="checkboxContainer">
+                                <label class="je-elsewhere-label"><input id="hideReviewsFromHiddenUsers" is="emby-checkbox" type="checkbox"/>
+                                    <span>Hide reviews written by hidden users</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, reviews written by Jellyfin users marked as "Hide this user from login screens" are hidden from non-admin viewers. Admins always see all reviews.</div>
+                            <div class="checkboxContainer">
+                                <label class="je-elsewhere-label"><input id="hideReviewsFromDisabledUsers" is="emby-checkbox" type="checkbox"/>
+                                    <span>Hide reviews written by disabled users</span>
+                                </label>
+                            </div>
+                            <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, reviews written by Jellyfin users marked as "Disable this user" are hidden from non-admin viewers. Admins always see all reviews.</div>
                         </div>
                     </fieldset>
-                </div>
-                 <div id="extras" class="jellyfin-tab-content">
                     <fieldset class="verticalSection-extrabottompadding">
                         <legend class="sectionTitle"><h3>Other Scripts</h3></legend>
                         <div class="configSection">
@@ -1698,7 +1721,7 @@
                         </div>
                     </fieldset>
                     <fieldset class="verticalSection-extrabottompadding">
-                        <legend class="sectionTitle"><h3></h3></legend>
+                        <legend class="sectionTitle"><h3>Splash Screen</h3></legend>
                         <div class="configSection">
                                 <div class="je-details-body">
                                     <div class="checkboxContainer"><label><input id="enableCustomSplashScreen" is="emby-checkbox" type="checkbox"/><span>Enable Custom Splash Screen</span></label></div>
@@ -1717,6 +1740,60 @@
                             </div>
                         </div>
                     </fieldset>
+                </div>
+                <div id="keyboard" class="jellyfin-tab-content">
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>General</h3></legend>
+                        <div class="configSection">
+                            <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="disableAllShortcuts" is="emby-checkbox" type="checkbox"/><span data-icon="keyboard" data-text="Disable Keyboard Shortcuts">⌨️ Disable Keyboard Shortcuts</span></label></div>
+                                    <div class="fieldDescription">Disables all keyboard shortcuts, and hides the 'Shortcuts' tab in enhanced panel</div>
+                                </div>
+
+                        </div>
+                    </fieldset>
+                    <fieldset class="verticalSection-extrabottompadding">
+                        <legend class="sectionTitle"><h3>Shortcut Overrides</h3></legend>
+                        <div class="je-icon-section">
+                            <h4 class="sectionTitle je-section-h4">Add Override</h4>
+                            <div class="je-shortcut-add-row">
+                                <div class="je-shortcut-flex">
+                                    <select is="emby-select" id="add-shortcut-select" label="Shortcut Action"></select>
+                                </div>
+                                <div class="je-shortcut-flex">
+                                    <input is="emby-input" id="add-shortcut-key" type="text" label="New Key"/>
+                                </div>
+                                <button is="emby-button" type="button" id="add-shortcut-btn" class="raised button-submit je-shortcut-add-btn">
+                                    <span>Add</span>
+                                </button>
+                            </div>
+                            <div id="shortcut-error-comment" style="display: none;"></div>
+                            <p class="fieldDescription je-field-desc-mt">
+                                <b>Modifier Keys:</b> Use `Shift+`, `Ctrl+`, or `Alt+`. Examples: `Shift+A`, `Ctrl+S`.
+                            </p>
+                        </div>
+                        <h4 class="sectionTitle je-section-h4">Configured Overrides</h4>
+                        <div id="shortcut-list-container" class="je-shortcut-list">
+                            </div>
+                    </fieldset>
+                </div>
+                <div class="je-apply-section verticalSection">
+                    <button id="resetAllUserSettingsBtn" class="raised button-submit block emby-button" is="emby-button" type="button">
+                        <span>Save and Apply to All Users</span>
+                    </button>
+                    <div class="je-info-banner">
+                        <div class="je-info-banner-row">
+                            <i class="material-icons je-info-icon">info</i>
+                            <div>
+                                <strong>Saves the configuration and applies every per-user default (Display / Playback / Keyboard) to all existing users on this server.</strong><br>
+                                <strong>Note:</strong> Users can still customize their own settings by opening the Enhanced Panel:<br>
+                                &bull; Press <code>?</code> key (default shortcut)<br>
+                                &bull; Long press on user profile picture in the top-right corner<br>
+                                &bull; Through "Jellyfin Enhanced" link from the side bar<br>
+                                &bull; Access via playback controls menu during video playback (only on mobile devices)
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div
                     class="je-info-banner-inline-center">
@@ -1793,14 +1870,33 @@
                 });
             });
 
+            // Map legacy tab IDs (pre-redesign) to the closest new tab, so users with
+            // a saved sessionStorage value from the old layout don't land on a missing tab.
+            const LEGACY_TAB_MAP = {
+                'enhanced': 'display',
+                'elsewhere': 'extras',
+                'jellyseerr': 'seerr',
+                'arr-links': 'arr'
+            };
+
             // Restore tab from sessionStorage on page load
             try {
-                const savedTab = sessionStorage.getItem('jellyfinEnhancedActiveTab');
+                let savedTab = sessionStorage.getItem('jellyfinEnhancedActiveTab');
+                if (savedTab && LEGACY_TAB_MAP[savedTab]) {
+                    savedTab = LEGACY_TAB_MAP[savedTab];
+                    sessionStorage.setItem('jellyfinEnhancedActiveTab', savedTab);
+                }
                 if (savedTab && document.getElementById(savedTab)) {
                     activateTab(savedTab);
+                } else if (savedTab) {
+                    // Saved tab doesn't match any current tab and isn't a legacy key —
+                    // probably a tab that was later renamed or a stray value. Clear it
+                    // so the user stops silently getting ignored on every page load.
+                    console.info('[JE] discarding unknown saved tab: ' + savedTab);
+                    sessionStorage.removeItem('jellyfinEnhancedActiveTab');
                 }
             } catch (e) {
-                // Ignore if sessionStorage is not available
+                // sessionStorage unavailable (private mode / quota / security) — skip restore.
             }
 
             // === Settings Search ===
@@ -1970,9 +2066,10 @@
                     if (savedDetailsStates.has(d)) d.open = savedDetailsStates.get(d);
                 });
                 savedDetailsStates.clear();
-                let savedTab = 'enhanced';
+                let savedTab = 'display';
                 try {
-                    savedTab = sessionStorage.getItem('jellyfinEnhancedActiveTab') || 'enhanced';
+                    savedTab = sessionStorage.getItem('jellyfinEnhancedActiveTab') || 'display';
+                    if (LEGACY_TAB_MAP[savedTab]) savedTab = LEGACY_TAB_MAP[savedTab];
                 } catch (e) {
                     // Ignore if sessionStorage is not available
                 }
@@ -2318,8 +2415,17 @@
 
                 // Re-run dependencies now that plugin info is available
                 updateAllDependencies();
-            }).catch(function() {
-                // If we can't check, don't show the warning
+            }).catch(function(err) {
+                // Plugin list request failed (network, auth expiry, server offline, ...).
+                // Leave hasPluginPages/hasIntroSkipper at null so individual deps show
+                // "unknown" rather than incorrectly disabling toggles. Still refresh
+                // the dashboard so cards don't sit stuck on "Checking..." forever.
+                console.warn('[JE] plugin detection failed; dashboard/deps may show "unknown":', err);
+                try {
+                    updateStatusDashboard();
+                } catch (e) {
+                    console.warn('[JE] updateStatusDashboard threw during plugin-detect fallback:', e);
+                }
             });
 
             // Set up dismiss button handlers
@@ -3583,7 +3689,7 @@
 
         var SECTION_DEPS = [
             {
-                tabSelector: '#jellyseerr',
+                tabSelector: '#seerr',
                 skipFirst: true,
                 checkFn: hasJellyseerrConfigured,
                 bannerIcon: 'link_off',
@@ -3592,7 +3698,7 @@
                 bannerId: 'dep-banner-jellyseerr'
             },
             {
-                tabSelector: '#arr-links',
+                tabSelector: '#arr',
                 skipFirst: true,
                 checkFn: hasAnyArrService,
                 bannerIcon: 'link_off',
@@ -3861,13 +3967,164 @@
 
         /**
          * Orchestrator: evaluates all section, individual, and parent dependency rules.
+         * Each step is isolated so a throw in the status dashboard (which reads a lot
+         * of field values) can't cascade and break dependency updates.
          */
         function updateAllDependencies() {
             SECTION_DEPS.forEach(updateSectionDep);
             INDIVIDUAL_DEPS.forEach(updateIndividualDep);
             PARENT_DEPS.forEach(updateParentDep);
             updateClientTagCacheControlsVisibility();
+            try {
+                updateStatusDashboard();
+            } catch (e) {
+                console.warn('[JE] updateStatusDashboard threw; dashboard may be stale:', e);
+            }
         }
+
+        /**
+         * Reads `.value` from a selector, returning '' if the element is missing.
+         * Logs once per missing selector so DOM/JS mismatches surface in devtools
+         * instead of throwing silently through a querySelector chain.
+         * @param {string} sel - CSS selector
+         * @returns {string} Trimmed value, or '' if element not found
+         */
+        var _jeMissingSelectorsWarned = Object.create(null);
+        function readFieldValue(sel) {
+            var el = document.querySelector(sel);
+            if (!el) {
+                if (!_jeMissingSelectorsWarned[sel]) {
+                    _jeMissingSelectorsWarned[sel] = true;
+                    console.warn('[JE] status dashboard: selector "' + sel + '" not found');
+                }
+                return '';
+            }
+            return (el.value || '').trim();
+        }
+
+        /**
+         * Counts configured arr instance cards for a given type (sonarr|radarr).
+         * An instance is "configured" when both URL and API key are non-empty.
+         * Returns -1 (not 0) if the instance list container is missing, so callers
+         * can distinguish "user configured zero" from "DOM not ready / mismatched."
+         * @param {string} type - 'sonarr' or 'radarr'
+         * @returns {number} Count of fully-configured instances, or -1 if list missing
+         */
+        var _jeMissingListWarned = Object.create(null);
+        function countArrInstances(type) {
+            var listId = type === 'sonarr' ? 'sonarrInstancesList' : 'radarrInstancesList';
+            var list = document.getElementById(listId);
+            if (!list) {
+                if (!_jeMissingListWarned[listId]) {
+                    _jeMissingListWarned[listId] = true;
+                    console.warn('[JE] status dashboard: #' + listId + ' not found');
+                }
+                return -1;
+            }
+            var cards = list.querySelectorAll('.arr-instance-card');
+            var count = 0;
+            for (var i = 0; i < cards.length; i++) {
+                var url = cards[i].querySelector('.arr-instance-url');
+                var key = cards[i].querySelector('.arr-instance-apikey');
+                if (url && url.value.trim() && key && key.value.trim()) count++;
+            }
+            return count;
+        }
+
+        /**
+         * Writes a status ('ok' | 'missing' | 'warn' | 'unknown') and a detail line
+         * to one status-dashboard card.
+         * @param {string} statusId - The data-status-id of the target card
+         * @param {string} status - State value for the indicator dot
+         * @param {string} detail - Short description shown below the title
+         */
+        var _jeMissingCardsWarned = Object.create(null);
+        function setStatusCard(statusId, status, detail) {
+            var card = document.querySelector('.je-status-card[data-status-id="' + statusId + '"]');
+            if (!card) {
+                if (!_jeMissingCardsWarned[statusId]) {
+                    _jeMissingCardsWarned[statusId] = true;
+                    console.warn('[JE] status card not found: ' + statusId);
+                }
+                return;
+            }
+            var indicator = card.querySelector('.je-status-indicator');
+            var detailEl = card.querySelector('.je-status-card-detail');
+            if (indicator) indicator.setAttribute('data-status', status);
+            if (detailEl) detailEl.textContent = detail;
+        }
+
+        /**
+         * Recomputes the status-dashboard cards. Safe to call multiple times — it's
+         * idempotent and cheap. Called after loadConfig, after plugin detection,
+         * and from updateAllDependencies (which fires on any config change).
+         */
+        function updateStatusDashboard() {
+            // TMDB
+            var tmdbOk = hasTmdbKey();
+            setStatusCard('tmdb', tmdbOk ? 'ok' : 'missing', tmdbOk ? 'API key set' : 'No API key');
+
+            // Seerr
+            var seerrEnabled = document.querySelector('#jellyseerrEnabled');
+            var seerrUrls = readFieldValue('#jellyseerrUrls');
+            var seerrKey = readFieldValue('#JellyseerrApiKey');
+            if (seerrEnabled && seerrEnabled.checked && seerrUrls && seerrKey) {
+                var urlCount = seerrUrls.split(/\r?\n/).filter(function(u) { return u.trim(); }).length;
+                setStatusCard('seerr', 'ok', urlCount === 1 ? 'Connected' : (urlCount + ' URLs'));
+            } else if (seerrUrls || seerrKey) {
+                setStatusCard('seerr', 'warn', 'Incomplete');
+            } else {
+                setStatusCard('seerr', 'missing', 'Not configured');
+            }
+
+            // Sonarr / Radarr — distinguish "no instances" from "list missing"
+            var sonarrCount = countArrInstances('sonarr');
+            if (sonarrCount < 0)       setStatusCard('sonarr', 'unknown', 'Checking...');
+            else if (sonarrCount === 0) setStatusCard('sonarr', 'missing', 'Not configured');
+            else                        setStatusCard('sonarr', 'ok', sonarrCount + ' instance' + (sonarrCount === 1 ? '' : 's'));
+            var radarrCount = countArrInstances('radarr');
+            if (radarrCount < 0)       setStatusCard('radarr', 'unknown', 'Checking...');
+            else if (radarrCount === 0) setStatusCard('radarr', 'missing', 'Not configured');
+            else                        setStatusCard('radarr', 'ok', radarrCount + ' instance' + (radarrCount === 1 ? '' : 's'));
+
+            // Bazarr — considered present when a URL OR mapping is set
+            var bazarrUrl = readFieldValue('#bazarrUrl');
+            var bazarrMappings = readFieldValue('#bazarrUrlMappings');
+            setStatusCard('bazarr', (bazarrUrl || bazarrMappings) ? 'ok' : 'missing',
+                (bazarrUrl || bazarrMappings) ? 'Configured' : 'Not configured');
+
+            // Plugin Pages (hasPluginPages is null until detection completes)
+            if (hasPluginPages === true) setStatusCard('pluginpages', 'ok', 'Installed');
+            else if (hasPluginPages === false) setStatusCard('pluginpages', 'missing', 'Not installed');
+            else setStatusCard('pluginpages', 'unknown', 'Checking...');
+
+            // Intro Skipper
+            if (hasIntroSkipper === true) setStatusCard('introskipper', 'ok', 'Installed');
+            else if (hasIntroSkipper === false) setStatusCard('introskipper', 'missing', 'Not installed');
+            else setStatusCard('introskipper', 'unknown', 'Checking...');
+        }
+
+        // Make status cards clickable — jump to the target tab. Log a warning if
+        // no cards are found so future markup mismatches (e.g., someone renames
+        // the class) surface in devtools instead of silently doing nothing.
+        var _statusCards = document.querySelectorAll('.je-status-card[data-target]');
+        if (_statusCards.length === 0) {
+            console.warn('[JE] status dashboard: no clickable cards found — markup mismatch?');
+        }
+        _statusCards.forEach(function(card) {
+            card.addEventListener('click', function() {
+                var tabId = card.getAttribute('data-target');
+                if (!tabId) return;
+                activateTab(tabId);
+                try {
+                    sessionStorage.setItem('jellyfinEnhancedActiveTab', tabId);
+                } catch (e) {
+                    console.warn('[JE] sessionStorage.setItem failed (likely private-mode or quota):', e);
+                }
+                var tabEl = document.getElementById(tabId);
+                if (tabEl) tabEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
 
         /**
          * Shows clear-client-cache controls only when server-side tag cache is disabled.

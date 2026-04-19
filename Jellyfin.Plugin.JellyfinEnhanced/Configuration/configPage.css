@@ -1050,3 +1050,160 @@
 /* Screenshot details/summary */
 .je-screenshot-details  { margin: 0.5em 0; }
 .je-screenshot-summary  { cursor: pointer; color: #00a4dc; }
+
+/* ---------------------------------------------------------------------------
+   Status dashboard — compact integration status cards above the tab bar.
+   Each card shows a service name, icon, and a coloured indicator dot.
+   Clicking a card jumps to the tab where that integration is configured.
+   --------------------------------------------------------------------------- */
+.je-status-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.6em;
+    margin: 0.5em 0 1em;
+}
+
+.je-status-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 0.6em 0.8em;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+}
+
+.je-status-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.je-status-card:focus-visible {
+    outline: 2px solid var(--primary-accent-color, #00a4dc);
+    outline-offset: 2px;
+}
+
+.je-status-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+}
+
+.je-status-card-icon {
+    font-size: 1.1em;
+    opacity: 0.75;
+}
+
+.je-status-card-img {
+    width: 18px;
+    height: 18px;
+    opacity: 0.85;
+    filter: brightness(0.9);
+}
+
+.je-status-card-title {
+    font-size: 0.88em;
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.je-status-indicator {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #666;
+    flex-shrink: 0;
+}
+.je-status-indicator[data-status="ok"]       { background: #52b54b; box-shadow: 0 0 0 1px rgba(82, 181, 75, 0.35); }
+.je-status-indicator[data-status="missing"]  { background: #777; }
+.je-status-indicator[data-status="warn"]     { background: #ff9800; }
+.je-status-indicator[data-status="error"]    { background: #dc3545; }
+.je-status-indicator[data-status="unknown"]  { background: #444; }
+
+.je-status-card-detail {
+    font-size: 0.72em;
+    opacity: 0.65;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   Pages tab intro paragraph — brief blurb before the four page-feature cards
+   --------------------------------------------------------------------------- */
+.je-tab-intro {
+    background: rgba(255, 255, 255, 0.04);
+    border-left: 3px solid var(--primary-accent-color, #00a4dc);
+    padding: 0.75em 1em;
+    margin-bottom: 1em;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+/* ---------------------------------------------------------------------------
+   Apply-to-all-users section — now at bottom of form above main Save button
+   --------------------------------------------------------------------------- */
+.je-apply-section {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ---------------------------------------------------------------------------
+   Widen the config form to use available screen space instead of Jellyfin's
+   default ~800px form column. Capped at 1600px so line lengths stay readable.
+   Also lay each tab's fieldsets out in an auto-fit grid so multi-fieldset
+   tabs fill horizontal space on wide displays instead of leaving a blank
+   column on the right.
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedForm {
+    max-width: min(100%, 1600px);
+    width: 100%;
+}
+
+.jellyfin-tab-content {
+    display: none;
+}
+.jellyfin-tab-content.active {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+    gap: 1em;
+    align-items: start;
+}
+
+/* Fieldsets fill their grid cell. Allow tall cells (Seerr Setup, Sonarr/Radarr
+   server lists, Custom Branding grid) to span the full row so they don't sit
+   cramped in a 440px column next to a shorter card. */
+.jellyfin-tab-content.active > fieldset {
+    margin: 0;
+}
+.jellyfin-tab-content.active > fieldset.je-fieldset-wide,
+.jellyfin-tab-content.active > fieldset:has(.je-branding-grid),
+.jellyfin-tab-content.active > fieldset:has(.arr-instances-list),
+.jellyfin-tab-content.active > fieldset:has(.je-textarea-large),
+.jellyfin-tab-content.active > fieldset:has(.je-seerr-label) {
+    grid-column: 1 / -1;
+}
+
+/* Elements that should always span the full tab width (intro banner, global
+   dep banners that get injected above fieldsets). */
+.jellyfin-tab-content.active > .je-tab-intro,
+.jellyfin-tab-content.active > .je-dep-banner {
+    grid-column: 1 / -1;
+}
+
+/* Status dashboard: a bit more breathing room on very wide screens. */
+@media (min-width: 1600px) {
+    .je-status-dashboard {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+}
