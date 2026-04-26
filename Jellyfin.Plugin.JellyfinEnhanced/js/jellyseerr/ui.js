@@ -1931,7 +1931,8 @@
                     }
                     closeFn();
                 } catch (error) {
-                    JE.toast(JE.t('jellyseerr_modal_toast_request_fail'), 4000);
+                    var msg = escapeHtml(error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed');
+                    JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = JE.t('jellyseerr_modal_request');
                 }
@@ -2077,7 +2078,8 @@
                         }
                     }, 1000);
                 } catch (error) {
-                    JE.toast(JE.t('jellyseerr_modal_toast_request_fail'), 4000);
+                    var msg = escapeHtml(error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed');
+                    JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = is4k ? (JE.t('jellyseerr_btn_request_4k') || 'Request in 4K') : (partialRequestsEnabled ? JE.t('jellyseerr_modal_request_selected') : JE.t('jellyseerr_modal_request'));
                 }
@@ -2209,6 +2211,74 @@
         }
     };
 
+    /**
+     * Toggles an expandable episode list under a season row.
+     * Fetches episode data from Seerr on first expand.
+     */
+    async function toggleEpisodeList(seasonItem, tmdbId, seasonNumber, expandBtn) {
+        var existing = seasonItem.querySelector('.jellyseerr-episode-list');
+        if (existing) {
+            // Toggle visibility
+            if (existing.style.display === 'none') {
+                existing.style.display = '';
+                expandBtn.querySelector('.material-icons').textContent = 'expand_less';
+            } else {
+                existing.style.display = 'none';
+                expandBtn.querySelector('.material-icons').textContent = 'expand_more';
+            }
+            return;
+        }
+
+        // Fetch episode data
+        expandBtn.querySelector('.material-icons').textContent = 'hourglass_empty';
+        try {
+            var seasonData = await JE.jellyseerrAPI.fetchTvSeasonDetails(tmdbId, seasonNumber);
+            // Guard: modal may have been closed during fetch
+            if (!document.contains(seasonItem)) return;
+            var episodes = seasonData?.episodes || [];
+
+            var listEl = document.createElement('div');
+            listEl.className = 'jellyseerr-episode-list';
+            listEl.style.cssText = 'padding:0.5em 0 0.5em 2em;font-size:0.85em;border-top:1px solid rgba(255,255,255,0.05);margin-top:0.3em;';
+
+            if (episodes.length === 0) {
+                var empty = document.createElement('div');
+                empty.textContent = 'No episode data available';
+                empty.style.opacity = '0.5';
+                listEl.appendChild(empty);
+            } else {
+                for (var i = 0; i < episodes.length; i++) {
+                    var ep = episodes[i];
+                    var epRow = document.createElement('div');
+                    epRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:3px 0;gap:0.5em;';
+
+                    var epInfo = document.createElement('span');
+                    epInfo.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+                    epInfo.textContent = 'E' + (ep.episodeNumber || (i + 1)) + ' ' + (ep.name || '');
+                    epInfo.title = ep.name || '';
+                    epRow.appendChild(epInfo);
+
+                    if (ep.airDate) {
+                        var dateSpan = document.createElement('span');
+                        dateSpan.style.cssText = 'opacity:0.5;font-size:0.9em;white-space:nowrap;';
+                        dateSpan.textContent = ep.airDate.substring(0, 10);
+                        epRow.appendChild(dateSpan);
+                    }
+
+                    listEl.appendChild(epRow);
+                }
+            }
+
+            seasonItem.appendChild(listEl);
+            expandBtn.querySelector('.material-icons').textContent = 'expand_less';
+        } catch (e) {
+            if (document.contains(expandBtn)) {
+                expandBtn.querySelector('.material-icons').textContent = 'expand_more';
+            }
+            console.error('Failed to load episode data:', e);
+        }
+    }
+
     function updateSeasonList(seasonListElement, tvDetails, partialRequestsEnabled = true, enableSpecialEpisodes = false, is4kMode = false) {
         if (!seasonListElement || !tvDetails) return;
 
@@ -2284,6 +2354,9 @@
                 </div>
                 <div class="jellyseerr-season-episodes">${escapeHtml(season.episodeCount || 0)} ep</div>
                 <div class="jellyseerr-season-status jellyseerr-season-status-${escapeHtml(statusClass)}">${escapeHtml(statusText)}</div>
+                <button type="button" class="jellyseerr-season-expand-btn" data-season-number="${escapeHtml(seasonNumber)}" data-tmdb-id="${escapeHtml(tvDetails.id)}" title="Show episodes" style="background:none;border:none;color:inherit;cursor:pointer;padding:2px 4px;font-size:1.2em;opacity:0.5;">
+                    <span class="material-icons" style="font-size:18px;">expand_more</span>
+                </button>
             `;
 
             if(existingCheckbox) {
@@ -2291,6 +2364,17 @@
             }
 
             seasonItem.classList.toggle('disabled', !canRequest);
+
+            // Wire up episode expand button
+            var expandBtn = seasonItem.querySelector('.jellyseerr-season-expand-btn');
+            if (expandBtn && !expandBtn._wired) {
+                expandBtn._wired = true;
+                expandBtn.addEventListener('click', function(evt) {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    toggleEpisodeList(seasonItem, parseInt(expandBtn.dataset.tmdbId), parseInt(expandBtn.dataset.seasonNumber), expandBtn);
+                });
+            }
 
             // Add/Update inline download progress
             const existingProgress = seasonItem.querySelector('.jellyseerr-inline-progress');
@@ -2462,7 +2546,8 @@
                         }
                     }, 1000);
                 } catch (error) {
-                    JE.toast(JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed', 4000);
+                    var msg = escapeHtml(error.serverMessage || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed');
+                    JE.toast(msg, 5000);
                     requestBtn.disabled = false;
                     requestBtn.textContent = JE.t('jellyseerr_modal_request_selected_movies') || 'Request Selected Movies';
                 }

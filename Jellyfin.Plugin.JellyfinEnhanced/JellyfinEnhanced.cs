@@ -253,6 +253,30 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 }
             }
 
+            // Discover Page
+            bool discoverExists = config.Value<JArray>("pages")!
+                .Any(x => x.Value<string>("Id") == $"{namespaceName}.DiscoverPage");
+            if (!discoverExists && pluginConfig.JellyseerrDiscoverPageEnabled && pluginConfig.JellyseerrDiscoverUsePluginPages)
+            {
+                config.Value<JArray>("pages")!.Add(new JObject
+                {
+                    { "Id", $"{namespaceName}.DiscoverPage" },
+                    { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/discoverPage" },
+                    { "DisplayText", "Discover" },
+                    { "Icon", "explore" },
+                    { "Version", pluginPageConfigVersion }
+                });
+            }
+            else if (discoverExists && (!pluginConfig.JellyseerrDiscoverPageEnabled || !pluginConfig.JellyseerrDiscoverUsePluginPages))
+            {
+                var discoverPage = config.Value<JArray>("pages")!
+                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.DiscoverPage");
+                if (discoverPage != null)
+                {
+                    config.Value<JArray>("pages")!.Remove(discoverPage);
+                }
+            }
+
             File.WriteAllText(pluginPagesConfig, config.ToString(Formatting.Indented));
             }
             catch (Exception ex)
@@ -340,6 +364,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 new PluginPageInfo {
                     Name = "hiddenContentPage",
                     EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.HiddenContentPage.html"
+                },
+                new PluginPageInfo {
+                    Name = "discoverPage",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.DiscoverPage.html"
                 }
             };
         }

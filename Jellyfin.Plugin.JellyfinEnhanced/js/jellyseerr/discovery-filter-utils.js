@@ -13,9 +13,15 @@
 
     const SORT_OPTIONS = [
         { value: '', label: 'Popular' },
+        { value: 'popularity.asc', label: 'Least Popular' },
         { value: 'vote_average.desc', label: 'Top Rated' },
+        { value: 'vote_average.asc', label: 'Lowest Rated' },
         { value: 'release_date.desc', label: 'Newest' },
-        { value: 'release_date.asc', label: 'Oldest' }
+        { value: 'release_date.asc', label: 'Oldest' },
+        { value: 'revenue.desc', label: 'Highest Revenue' },
+        { value: 'vote_count.desc', label: 'Most Voted' },
+        { value: 'original_title.asc', label: 'Title (A-Z)' },
+        { value: 'original_title.desc', label: 'Title (Z-A)' }
     ];
 
     /**
@@ -85,6 +91,495 @@
      */
     function resetSortMode(moduleName) {
         runtimeSortModes.delete(moduleName);
+    }
+
+    // ========================================
+    // ADVANCED FILTER STATE MANAGEMENT
+    // ========================================
+
+    const runtimeAdvancedFilters = new Map();
+
+    /** Common languages list (ISO 639-1 codes) */
+    const LANGUAGES = [
+        { value: '', label: 'Any Language' },
+        { value: 'en', label: 'English' },
+        { value: 'es', label: 'Spanish' },
+        { value: 'fr', label: 'French' },
+        { value: 'de', label: 'German' },
+        { value: 'it', label: 'Italian' },
+        { value: 'pt', label: 'Portuguese' },
+        { value: 'ja', label: 'Japanese' },
+        { value: 'ko', label: 'Korean' },
+        { value: 'zh', label: 'Chinese' },
+        { value: 'hi', label: 'Hindi' },
+        { value: 'ar', label: 'Arabic' },
+        { value: 'ru', label: 'Russian' },
+        { value: 'nl', label: 'Dutch' },
+        { value: 'sv', label: 'Swedish' },
+        { value: 'no', label: 'Norwegian' },
+        { value: 'da', label: 'Danish' },
+        { value: 'fi', label: 'Finnish' },
+        { value: 'pl', label: 'Polish' },
+        { value: 'tr', label: 'Turkish' },
+        { value: 'th', label: 'Thai' },
+        { value: 'vi', label: 'Vietnamese' },
+        { value: 'id', label: 'Indonesian' },
+        { value: 'ms', label: 'Malay' },
+        { value: 'tl', label: 'Tagalog' },
+        { value: 'uk', label: 'Ukrainian' },
+        { value: 'cs', label: 'Czech' },
+        { value: 'el', label: 'Greek' },
+        { value: 'he', label: 'Hebrew' },
+        { value: 'hu', label: 'Hungarian' },
+        { value: 'ro', label: 'Romanian' },
+        { value: 'ta', label: 'Tamil' },
+        { value: 'te', label: 'Telugu' },
+        { value: 'bn', label: 'Bengali' },
+        { value: 'ml', label: 'Malayalam' }
+    ];
+
+    /** Movie certifications (US) */
+    var MOVIE_CERTIFICATIONS = [
+        { value: '', label: 'Any Rating' },
+        { value: 'G', label: 'G' },
+        { value: 'PG', label: 'PG' },
+        { value: 'PG-13', label: 'PG-13' },
+        { value: 'R', label: 'R' },
+        { value: 'NC-17', label: 'NC-17' },
+        { value: 'NR', label: 'NR' }
+    ];
+
+    /** TV certifications (US) */
+    var TV_CERTIFICATIONS = [
+        { value: '', label: 'Any Rating' },
+        { value: 'TV-Y', label: 'TV-Y' },
+        { value: 'TV-Y7', label: 'TV-Y7' },
+        { value: 'TV-G', label: 'TV-G' },
+        { value: 'TV-PG', label: 'TV-PG' },
+        { value: 'TV-14', label: 'TV-14' },
+        { value: 'TV-MA', label: 'TV-MA' }
+    ];
+
+    /** TV show status options */
+    var TV_STATUS_OPTIONS = [
+        { value: '', label: 'Any Status' },
+        { value: '0', label: 'Returning Series' },
+        { value: '3', label: 'Ended' },
+        { value: '4', label: 'Cancelled' },
+        { value: '2', label: 'In Production' },
+        { value: '1', label: 'Planned' },
+        { value: '5', label: 'Pilot' }
+    ];
+
+    /**
+     * Gets the current advanced filters for a module.
+     * @param {string} moduleName
+     * @returns {object} Filter state object
+     */
+    function getAdvancedFilters(moduleName) {
+        return runtimeAdvancedFilters.get(moduleName) || {};
+    }
+
+    /**
+     * Sets a single advanced filter value for a module.
+     * @param {string} moduleName
+     * @param {string} key
+     * @param {string} value
+     */
+    function setAdvancedFilter(moduleName, key, value) {
+        var filters = runtimeAdvancedFilters.get(moduleName) || {};
+        if (value === '' || value === undefined || value === null) {
+            delete filters[key];
+        } else {
+            filters[key] = value;
+        }
+        runtimeAdvancedFilters.set(moduleName, filters);
+    }
+
+    /**
+     * Resets all advanced filters for a module.
+     * @param {string} moduleName
+     */
+    function resetAdvancedFilters(moduleName) {
+        runtimeAdvancedFilters.delete(moduleName);
+    }
+
+    /**
+     * Checks if any advanced filters are active for a module.
+     * @param {string} moduleName
+     * @returns {boolean}
+     */
+    function hasActiveAdvancedFilters(moduleName) {
+        var filters = runtimeAdvancedFilters.get(moduleName) || {};
+        return Object.keys(filters).length > 0;
+    }
+
+    /**
+     * Builds a URL query string from the current advanced filter state.
+     * Maps UI filter keys to the Seerr API parameter names.
+     * @param {string} moduleName
+     * @param {string} mediaType - 'tv' or 'movie'
+     * @returns {string} Query string fragment (e.g., "&voteAverageGte=7&primaryReleaseDateGte=2020-01-01")
+     */
+    function buildFilterQueryString(moduleName, mediaType) {
+        var filters = runtimeAdvancedFilters.get(moduleName) || {};
+        var params = [];
+        var isTv = mediaType === 'tv';
+
+        if (filters.yearFrom) {
+            var dateKey = isTv ? 'firstAirDateGte' : 'primaryReleaseDateGte';
+            params.push(dateKey + '=' + encodeURIComponent(filters.yearFrom + '-01-01'));
+        }
+        if (filters.yearTo) {
+            var dateKey = isTv ? 'firstAirDateLte' : 'primaryReleaseDateLte';
+            params.push(dateKey + '=' + encodeURIComponent(filters.yearTo + '-12-31'));
+        }
+        if (filters.ratingMin) {
+            params.push('voteAverageGte=' + encodeURIComponent(filters.ratingMin));
+        }
+        if (filters.ratingMax && filters.ratingMax !== '10') {
+            params.push('voteAverageLte=' + encodeURIComponent(filters.ratingMax));
+        }
+        if (filters.runtimeMin) {
+            params.push('withRuntimeGte=' + encodeURIComponent(filters.runtimeMin));
+        }
+        if (filters.runtimeMax) {
+            params.push('withRuntimeLte=' + encodeURIComponent(filters.runtimeMax));
+        }
+        if (filters.language) {
+            params.push('originalLanguage=' + encodeURIComponent(filters.language));
+        }
+        if (filters.certification) {
+            params.push('certification=' + encodeURIComponent(filters.certification));
+            params.push('certificationCountry=' + encodeURIComponent(filters.certificationCountry || 'US'));
+        }
+        if (filters.tvStatus !== undefined && filters.tvStatus !== '' && isTv) {
+            params.push('withStatus=' + encodeURIComponent(filters.tvStatus));
+        }
+        if (filters.voteCountMin) {
+            params.push('voteCountGte=' + encodeURIComponent(filters.voteCountMin));
+        }
+
+        return params.length > 0 ? '&' + params.join('&') : '';
+    }
+
+    // ========================================
+    // ADVANCED FILTER PANEL UI
+    // ========================================
+
+    /**
+     * Shared inline styles for filter panel controls
+     */
+    var FILTER_INPUT_STYLE = 'background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);' +
+        'border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:3px 6px;' +
+        'font-size:inherit;font-family:inherit;cursor:pointer;outline:none;';
+
+    var FILTER_LABEL_STYLE = 'color:rgba(255,255,255,0.5);font-size:0.8em;white-space:nowrap;';
+
+    /**
+     * Creates a select dropdown for the filter panel.
+     * @param {Array<{value:string, label:string}>} options
+     * @param {string} currentValue
+     * @param {Function} onChange - callback(newValue)
+     * @returns {HTMLSelectElement}
+     */
+    function createFilterSelect(options, currentValue, onChange) {
+        var select = document.createElement('select');
+        select.style.cssText = FILTER_INPUT_STYLE + 'max-width:140px;';
+        options.forEach(function(opt) {
+            var option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.label;
+            option.style.cssText = 'background:#1a1a2e;color:#fff;';
+            if (currentValue === opt.value) option.selected = true;
+            select.appendChild(option);
+        });
+        select.addEventListener('change', function() {
+            onChange(select.value);
+        });
+        return select;
+    }
+
+    /**
+     * Creates a number input for the filter panel.
+     * @param {string} placeholder
+     * @param {string} currentValue
+     * @param {Function} onChange - callback(newValue)
+     * @param {object} [opts]
+     * @returns {HTMLInputElement}
+     */
+    function createFilterNumberInput(placeholder, currentValue, onChange, opts) {
+        opts = opts || {};
+        var input = document.createElement('input');
+        input.type = 'number';
+        input.placeholder = placeholder;
+        input.style.cssText = FILTER_INPUT_STYLE + 'width:70px;';
+        if (currentValue) input.value = currentValue;
+        if (opts.min !== undefined) input.min = opts.min;
+        if (opts.max !== undefined) input.max = opts.max;
+        var debounce = null;
+        input.addEventListener('input', function() {
+            clearTimeout(debounce);
+            debounce = setTimeout(function() {
+                onChange(input.value);
+            }, 500);
+        });
+        return input;
+    }
+
+    /**
+     * Creates a filter group (label + control(s)).
+     * @param {string} labelText
+     * @param {...HTMLElement} controls
+     * @returns {HTMLElement}
+     */
+    function createFilterGroup(labelText, controls) {
+        var group = document.createElement('div');
+        group.className = 'jellyseerr-filter-group';
+        group.style.cssText = 'display:inline-flex;align-items:center;gap:0.3em;';
+        var label = document.createElement('span');
+        label.textContent = labelText;
+        label.style.cssText = FILTER_LABEL_STYLE;
+        group.appendChild(label);
+        for (var i = 1; i < arguments.length; i++) {
+            group.appendChild(arguments[i]);
+        }
+        return group;
+    }
+
+    /**
+     * Generates year options from 1900 to current year + 1.
+     * @returns {Array<{value:string, label:string}>}
+     */
+    function getYearOptions() {
+        var currentYear = new Date().getFullYear();
+        var options = [{ value: '', label: 'Any' }];
+        for (var y = currentYear + 1; y >= 1900; y--) {
+            options.push({ value: String(y), label: String(y) });
+        }
+        return options;
+    }
+
+    /**
+     * Generates rating options from 0 to 10 in whole numbers.
+     * @param {boolean} isMax - If true, default selected is 10
+     * @returns {Array<{value:string, label:string}>}
+     */
+    function getRatingOptions(isMax) {
+        var options = [{ value: '', label: isMax ? '10' : '0' }];
+        for (var r = isMax ? 10 : 1; isMax ? r >= 0 : r <= 10; isMax ? r-- : r++) {
+            options.push({ value: String(r), label: String(r) });
+        }
+        return options;
+    }
+
+    /**
+     * Creates the advanced filter panel.
+     * @param {string} moduleName
+     * @param {Function} onFilterApply - Called when any filter changes: () => void
+     * @returns {HTMLElement} The filter panel container
+     */
+    function createAdvancedFilterPanel(moduleName, onFilterApply) {
+        var filters = getAdvancedFilters(moduleName);
+        var filterMode = getFilterMode(moduleName);
+
+        var panel = document.createElement('div');
+        panel.className = 'jellyseerr-advanced-filters';
+        panel.style.cssText = 'display:none;width:100%;background:rgba(255,255,255,0.03);' +
+            'border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:0.8em 1em;' +
+            'margin-top:0.5em;font-size:0.85em;';
+
+        // Row 1: Year, Rating, Runtime
+        var row1 = document.createElement('div');
+        row1.style.cssText = 'display:flex;flex-wrap:wrap;gap:1em 1.5em;align-items:center;margin-bottom:0.6em;';
+
+        var yearFromSelect = createFilterSelect(getYearOptions(), filters.yearFrom || '', function(v) {
+            setAdvancedFilter(moduleName, 'yearFrom', v);
+            onFilterApply();
+        });
+        var yearDash = document.createElement('span');
+        yearDash.textContent = '-';
+        yearDash.style.cssText = 'color:rgba(255,255,255,0.4);';
+        var yearToSelect = createFilterSelect(getYearOptions(), filters.yearTo || '', function(v) {
+            setAdvancedFilter(moduleName, 'yearTo', v);
+            onFilterApply();
+        });
+        row1.appendChild(createFilterGroup('Year:', yearFromSelect, yearDash, yearToSelect));
+
+        var ratingMinSelect = createFilterSelect(getRatingOptions(false), filters.ratingMin || '', function(v) {
+            setAdvancedFilter(moduleName, 'ratingMin', v);
+            onFilterApply();
+        });
+        var ratingDash = document.createElement('span');
+        ratingDash.textContent = '-';
+        ratingDash.style.cssText = 'color:rgba(255,255,255,0.4);';
+        var ratingMaxSelect = createFilterSelect(getRatingOptions(true), filters.ratingMax || '', function(v) {
+            setAdvancedFilter(moduleName, 'ratingMax', v);
+            onFilterApply();
+        });
+        row1.appendChild(createFilterGroup('Rating:', ratingMinSelect, ratingDash, ratingMaxSelect));
+
+        var runtimeMinInput = createFilterNumberInput('Min', filters.runtimeMin || '', function(v) {
+            setAdvancedFilter(moduleName, 'runtimeMin', v);
+            onFilterApply();
+        }, { min: 0, max: 400 });
+        var runtimeDash = document.createElement('span');
+        runtimeDash.textContent = '-';
+        runtimeDash.style.cssText = 'color:rgba(255,255,255,0.4);';
+        var runtimeMaxInput = createFilterNumberInput('Max', filters.runtimeMax || '', function(v) {
+            setAdvancedFilter(moduleName, 'runtimeMax', v);
+            onFilterApply();
+        }, { min: 0, max: 400 });
+        var runtimeUnit = document.createElement('span');
+        runtimeUnit.textContent = 'min';
+        runtimeUnit.style.cssText = FILTER_LABEL_STYLE;
+        row1.appendChild(createFilterGroup('Runtime:', runtimeMinInput, runtimeDash, runtimeMaxInput, runtimeUnit));
+
+        panel.appendChild(row1);
+
+        // Row 2: Language, Certification, TV Status, Vote Count, Reset
+        var row2 = document.createElement('div');
+        row2.style.cssText = 'display:flex;flex-wrap:wrap;gap:1em 1.5em;align-items:center;';
+
+        var langSelect = createFilterSelect(LANGUAGES, filters.language || '', function(v) {
+            setAdvancedFilter(moduleName, 'language', v);
+            onFilterApply();
+        });
+        row2.appendChild(createFilterGroup('Language:', langSelect));
+
+        // Certification: show movie or TV certs depending on filter mode
+        var certOptions = (filterMode === FILTER_MODES.TV)
+            ? TV_CERTIFICATIONS
+            : MOVIE_CERTIFICATIONS;
+        var certSelect = createFilterSelect(certOptions, filters.certification || '', function(v) {
+            setAdvancedFilter(moduleName, 'certification', v);
+            if (v) {
+                setAdvancedFilter(moduleName, 'certificationCountry', 'US');
+            } else {
+                setAdvancedFilter(moduleName, 'certificationCountry', '');
+            }
+            onFilterApply();
+        });
+        row2.appendChild(createFilterGroup('Rating:', certSelect));
+
+        // TV Status (only visible when filtering TV or mixed)
+        var tvStatusGroup = createFilterGroup('Status:',
+            createFilterSelect(TV_STATUS_OPTIONS, filters.tvStatus || '', function(v) {
+                setAdvancedFilter(moduleName, 'tvStatus', v);
+                onFilterApply();
+            })
+        );
+        if (filterMode === FILTER_MODES.MOVIES) {
+            tvStatusGroup.style.display = 'none';
+        }
+        tvStatusGroup.setAttribute('data-filter-tvstatus', 'true');
+        row2.appendChild(tvStatusGroup);
+
+        // Vote count minimum
+        var voteCountInput = createFilterNumberInput('Min votes', filters.voteCountMin || '', function(v) {
+            setAdvancedFilter(moduleName, 'voteCountMin', v);
+            onFilterApply();
+        }, { min: 0 });
+        voteCountInput.style.cssText = FILTER_INPUT_STYLE + 'width:90px;';
+        row2.appendChild(createFilterGroup('Votes:', voteCountInput));
+
+        // Reset button
+        var resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.textContent = 'Reset Filters';
+        resetBtn.style.cssText = 'margin-left:auto;padding:4px 12px;border:1px solid rgba(255,255,255,0.2);' +
+            'border-radius:4px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);' +
+            'cursor:pointer;font-size:inherit;font-family:inherit;transition:background 0.15s;';
+        resetBtn.addEventListener('mouseenter', function() {
+            resetBtn.style.background = 'rgba(255,255,255,0.1)';
+        });
+        resetBtn.addEventListener('mouseleave', function() {
+            resetBtn.style.background = 'rgba(255,255,255,0.05)';
+        });
+        resetBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetAdvancedFilters(moduleName);
+            // Reset all controls in-place (don't replace panel to preserve closure references)
+            panel.querySelectorAll('select').forEach(function(sel) {
+                sel.selectedIndex = 0;
+            });
+            panel.querySelectorAll('input[type="number"]').forEach(function(inp) {
+                inp.value = '';
+            });
+            onFilterApply();
+        });
+        row2.appendChild(resetBtn);
+
+        panel.appendChild(row2);
+
+        return panel;
+    }
+
+    /**
+     * Creates the filter toggle button for the section header.
+     * @param {HTMLElement} filterPanel - The panel to toggle
+     * @param {string} moduleName
+     * @returns {HTMLElement}
+     */
+    function createFilterToggleButton(filterPanel, moduleName) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'jellyseerr-filter-toggle';
+        btn.style.cssText = 'display:inline-flex;align-items:center;gap:0.3em;' +
+            'padding:4px 10px;border:1px solid rgba(255,255,255,0.3);border-radius:4px;' +
+            'background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.8);cursor:pointer;' +
+            'font-size:0.85em;font-family:inherit;transition:background 0.15s;';
+
+        var icon = document.createElement('span');
+        icon.className = 'material-icons';
+        icon.textContent = 'tune';
+        icon.style.cssText = 'font-size:1.1em;';
+        btn.appendChild(icon);
+
+        var label = document.createElement('span');
+        label.textContent = 'Filters';
+        btn.appendChild(label);
+
+        // Active indicator
+        var indicator = document.createElement('span');
+        indicator.className = 'jellyseerr-filter-indicator';
+        indicator.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#4fc3f7;display:none;';
+        btn.appendChild(indicator);
+
+        function updateIndicator() {
+            indicator.style.display = hasActiveAdvancedFilters(moduleName) ? 'inline-block' : 'none';
+        }
+        updateIndicator();
+
+        // Store updater on panel for external access
+        filterPanel._updateIndicator = updateIndicator;
+
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var isVisible = filterPanel.style.display !== 'none';
+            if (isVisible) {
+                filterPanel.style.display = 'none';
+                btn.style.background = 'rgba(255,255,255,0.05)';
+            } else {
+                filterPanel.style.display = 'flex';
+                filterPanel.style.flexDirection = 'column';
+                btn.style.background = 'rgba(255,255,255,0.15)';
+            }
+        });
+        btn.addEventListener('mouseenter', function() {
+            if (filterPanel.style.display === 'none') {
+                btn.style.background = 'rgba(255,255,255,0.1)';
+            }
+        });
+        btn.addEventListener('mouseleave', function() {
+            if (filterPanel.style.display === 'none') {
+                btn.style.background = 'rgba(255,255,255,0.05)';
+            }
+        });
+
+        return btn;
     }
 
     /**
@@ -303,36 +798,109 @@
     }
 
     /**
-     * Creates a section header with title, optional filter control, and sort dropdown
+     * Replaces all options in a select element using DOM methods.
+     * @param {HTMLSelectElement} selectEl
+     * @param {Array<{value:string, label:string}>} options
+     * @param {string} [currentValue] - Value to preserve selection for
+     */
+    function replaceSelectOptions(selectEl, options, currentValue) {
+        while (selectEl.firstChild) selectEl.removeChild(selectEl.firstChild);
+        options.forEach(function(opt) {
+            var option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.label;
+            option.style.cssText = 'background:#1a1a2e;color:#fff;';
+            if (currentValue === opt.value) option.selected = true;
+            selectEl.appendChild(option);
+        });
+    }
+
+    /**
+     * Creates a section header with title, optional filter control, sort dropdown, and advanced filters.
      * @param {string} title - Section title text
      * @param {string} moduleName - Module name for filter persistence
-     * @param {boolean} showFilter - Whether to show the filter control
-     * @param {Function} onFilterChange - Callback when filter changes
+     * @param {boolean} showFilter - Whether to show the media type filter control
+     * @param {Function} onFilterChange - Callback when media type filter changes
      * @param {Function} [onSortChange] - Callback when sort changes
-     * @returns {HTMLElement} - The header element
+     * @param {Function} [onAdvancedFilterChange] - Callback when advanced filters change (enables filter panel)
+     * @returns {HTMLElement} - The header wrapper (contains header row + optional filter panel)
      */
-    function createSectionHeader(title, moduleName, showFilter, onFilterChange, onSortChange) {
-        const header = document.createElement('div');
-        header.className = 'jellyseerr-discovery-header';
-        header.style.cssText = 'display:flex;align-items:baseline;gap:1em;margin-bottom:1em;flex-wrap:wrap;width:100%;';
+    function createSectionHeader(title, moduleName, showFilter, onFilterChange, onSortChange, onAdvancedFilterChange) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'jellyseerr-discovery-header-wrapper';
+        wrapper.style.cssText = 'width:100%;margin-bottom:1em;';
 
-        const titleElement = document.createElement('h2');
+        var header = document.createElement('div');
+        header.className = 'jellyseerr-discovery-header';
+        header.style.cssText = 'display:flex;align-items:baseline;gap:1em;flex-wrap:wrap;width:100%;';
+
+        var titleElement = document.createElement('h2');
         titleElement.className = 'sectionTitle sectionTitle-cards';
         titleElement.textContent = title;
         titleElement.style.margin = '0';
         header.appendChild(titleElement);
 
         if (showFilter) {
-            const filterControl = createFilterControl(moduleName, onFilterChange);
+            var filterControl = createFilterControl(moduleName, function(newMode) {
+                // Update TV status visibility in the advanced filter panel
+                var tvStatusGroup = wrapper.querySelector('[data-filter-tvstatus]');
+                if (tvStatusGroup) {
+                    tvStatusGroup.style.display = (newMode === FILTER_MODES.MOVIES) ? 'none' : '';
+                }
+                // Update certification options based on media type
+                var certGroup = wrapper.querySelector('[data-filter-certification]');
+                if (certGroup) {
+                    var certSelect = certGroup.querySelector('select');
+                    if (certSelect) {
+                        var certOptions = (newMode === FILTER_MODES.TV) ? TV_CERTIFICATIONS : MOVIE_CERTIFICATIONS;
+                        var oldVal = certSelect.value;
+                        replaceSelectOptions(certSelect, certOptions, oldVal);
+                        // Clear stale certification if value doesn't exist in new options
+                        var validValues = certOptions.map(function(o) { return o.value; });
+                        if (validValues.indexOf(oldVal) === -1) {
+                            setAdvancedFilter(moduleName, 'certification', '');
+                            setAdvancedFilter(moduleName, 'certificationCountry', '');
+                        }
+                    }
+                }
+                if (onFilterChange) onFilterChange(newMode);
+            });
             header.appendChild(filterControl);
         }
 
         if (onSortChange) {
-            const sortControl = createSortControl(moduleName, onSortChange);
+            var sortControl = createSortControl(moduleName, onSortChange);
             header.appendChild(sortControl);
         }
 
-        return header;
+        // Advanced filter toggle button and panel (after sort, so they sit side by side)
+        if (onAdvancedFilterChange) {
+            var filterPanel = createAdvancedFilterPanel(moduleName, function() {
+                if (filterPanel._updateIndicator) filterPanel._updateIndicator();
+                onAdvancedFilterChange();
+            });
+            var toggleBtn = createFilterToggleButton(filterPanel, moduleName);
+            header.appendChild(toggleBtn);
+
+            // Tag the certification group for media type switching
+            var certGroups = filterPanel.querySelectorAll('.jellyseerr-filter-group');
+            certGroups.forEach(function(g) {
+                var lbl = g.querySelector('span');
+                if (lbl && lbl.textContent === 'Rating:' && g.querySelector('select')) {
+                    var selects = g.querySelectorAll('select');
+                    if (selects.length === 1 && selects[0].options.length < 12) {
+                        g.setAttribute('data-filter-certification', 'true');
+                    }
+                }
+            });
+
+            wrapper.appendChild(header);
+            wrapper.appendChild(filterPanel);
+        } else {
+            wrapper.appendChild(header);
+        }
+
+        return wrapper;
     }
 
     /**
@@ -591,6 +1159,12 @@
         getTvSortMode,
         setSortMode,
         resetSortMode,
+        // Advanced filters
+        getAdvancedFilters,
+        setAdvancedFilter,
+        resetAdvancedFilters,
+        hasActiveAdvancedFilters,
+        buildFilterQueryString,
         interleaveArrays,
         filterByMediaType,
         hasBothTypes,

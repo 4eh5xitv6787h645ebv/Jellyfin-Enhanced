@@ -120,19 +120,38 @@
                     },
                     { ...JE.requestManager.CONFIG.retry, maxAttempts: 1 }
                 );
+                // fetchWithRetry only returns on response.ok; errors throw with .serverMessage
                 const text = await response.text();
                 return text ? JSON.parse(text) : {};
             };
             return JE.requestManager.withConcurrencyLimit(fetchFn);
         }
 
-        return ApiClient.ajax({
-            type: 'POST',
-            url: url,
-            data: JSON.stringify(body),
-            contentType: 'application/json',
-            headers: { 'X-Jellyfin-User-Id': ApiClient.getCurrentUserId() }
+        // Fallback path without request manager
+        var response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Jellyfin-User-Id': ApiClient.getCurrentUserId(),
+                'X-Emby-Token': ApiClient.accessToken(),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(body)
         });
+        var text = await response.text();
+        if (!response.ok) {
+            var parsed = null;
+            try {
+                parsed = text ? JSON.parse(text) : null;
+                if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+            } catch (_) {}
+            var srvMsg = (parsed && typeof parsed === 'object') ? parsed.message || null : null;
+            var err = new Error(srvMsg || 'Request failed (' + response.status + ')');
+            err.status = response.status;
+            err.serverMessage = srvMsg;
+            throw err;
+        }
+        return text ? JSON.parse(text) : {};
     }
 
     /**
@@ -230,10 +249,8 @@
             const { skipCache = false } = options;
             const data = await get(`/search?query=${encodeURIComponent(query)}&page=${page}&language=${lang}`, { skipCache });
 
-            // Filter out people results before returning (immutable — don't mutate cached response)
             if (data.results) {
-                const filteredResults = data.results.filter(result => result.mediaType !== 'person');
-                return { ...data, results: filteredResults, totalResults: filteredResults.length };
+                return { ...data, totalResults: data.results.length };
             }
 
             return data;
@@ -844,6 +861,27 @@
         } catch (error) {
             console.error(`${logPrefix} Failed to fetch genre slider for ${type}:`, error);
             return [];
+        }
+    };
+
+    /**
+     * Fetches the current user's request quota from Seerr.
+     * @returns {Promise<{movie:{limit:number,remaining:number,days:number},tv:{limit:number,remaining:number,days:number}}|null>}
+     */
+    api.fetchUserQuota = async function() {
+        try {
+            var url = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/user/quota');
+            var response = await fetch(url, {
+                headers: {
+                    'X-Emby-Token': ApiClient.accessToken(),
+                    'X-Jellyfin-User-Id': ApiClient.getCurrentUserId()
+                }
+            });
+            if (!response.ok) return null;
+            return await response.json();
+        } catch (error) {
+            console.debug(logPrefix + ' Failed to fetch user quota:', error);
+            return null;
         }
     };
 

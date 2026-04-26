@@ -25,6 +25,7 @@
     pollTimer: null,
     pageVisible: false,
     previousPage: null,
+    _isAdmin: false,
     locationSignature: null,
     locationUnsubscribe: null,
     downloadsActiveTab: "all",
@@ -264,6 +265,9 @@
         }
         .je-request-actions {
             margin-top: 1em;
+            display: flex;
+            gap: 0.5em;
+            align-items: center;
         }
         .je-request-watch-btn {
           color: inherit;
@@ -280,6 +284,58 @@
         }
         .je-request-watch-btn:hover { opacity: 0.9; }
         .je-request-watch-btn .material-icons { font-size: 20px; }
+        .je-request-cancel-btn {
+          color: #ff6b6b;
+          background: rgba(255,107,107,0.1);
+          border: 1px solid rgba(255,107,107,0.3);
+          padding: 0.45em;
+          border-radius: 50%;
+          cursor: pointer;
+          width: 36px;
+          height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s;
+        }
+        .je-request-cancel-btn:hover { background: rgba(255,107,107,0.2); }
+        .je-request-cancel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .je-request-cancel-btn .material-icons { font-size: 20px; }
+        .je-request-approve-btn, .je-request-decline-btn {
+          color: inherit;
+          border: 1px solid rgba(255,255,255,0.2);
+          padding: 0.45em;
+          border-radius: 50%;
+          cursor: pointer;
+          width: 36px;
+          height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s;
+        }
+        .je-request-approve-btn { color: #66bb6a; background: rgba(102,187,106,0.1); border-color: rgba(102,187,106,0.3); }
+        .je-request-approve-btn:hover { background: rgba(102,187,106,0.2); }
+        .je-request-decline-btn { color: #ef5350; background: rgba(239,83,80,0.1); border-color: rgba(239,83,80,0.3); }
+        .je-request-decline-btn:hover { background: rgba(239,83,80,0.2); }
+        .je-request-approve-btn:disabled, .je-request-decline-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .je-request-approve-btn .material-icons, .je-request-decline-btn .material-icons { font-size: 20px; }
+        .je-issue-resolve-btn, .je-issue-delete-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 2px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          transition: background 0.15s;
+        }
+        .je-issue-resolve-btn { color: #66bb6a; }
+        .je-issue-resolve-btn:hover { background: rgba(102,187,106,0.15); }
+        .je-issue-delete-btn { color: #ef5350; }
+        .je-issue-delete-btn:hover { background: rgba(239,83,80,0.15); }
+        .je-issue-resolve-btn:disabled, .je-issue-delete-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .je-issue-resolve-btn .material-icons, .je-issue-delete-btn .material-icons { font-size: 18px; }
         .je-issues-section h2 {
           font-size: 1.5em;
           margin-bottom: 1em;
@@ -792,6 +848,110 @@
     Array.from(_toastedDownloadsErrors).forEach(function(k) {
       if (!seenThisTick.has(k)) _toastedDownloadsErrors.delete(k);
     });
+  }
+
+  /**
+   * Resolve, reopen, or delete a Seerr issue (admin only).
+   * @param {string|number} issueId
+   * @param {'open'|'resolved'|'delete'} action
+   * @param {HTMLElement} [btn]
+   */
+  async function issueAction(issueId, action, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      var method = action === 'delete' ? 'DELETE' : 'POST';
+      var path = action === 'delete'
+        ? '/JellyfinEnhanced/jellyseerr/issue/' + issueId
+        : '/JellyfinEnhanced/jellyseerr/issue/' + issueId + '/' + action;
+      var url = ApiClient.getUrl(path);
+      var response = await fetch(url, { method: method, headers: getAuthHeaders() });
+      if (response.ok) {
+        var label = action === 'delete' ? 'deleted' : (action === 'resolved' ? 'resolved' : 'reopened');
+        JE.toast?.('Issue ' + label, 3000);
+        await loadAllData();
+      } else {
+        var errMsg = 'Failed to update issue';
+        try {
+          var text = await response.text();
+          var parsed = JSON.parse(text);
+          if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (_) {}
+        JE.toast?.(escapeHtml(errMsg), 5000);
+      }
+    } catch (error) {
+      console.error(logPrefix + ' Issue action failed:', error);
+      JE.toast?.('Failed to update issue', 5000);
+    }
+    if (btn) btn.disabled = false;
+  }
+
+  /**
+   * Approve or decline a Seerr request (admin only).
+   * @param {string|number} requestId
+   * @param {'approve'|'decline'} action
+   * @param {HTMLElement} [btn]
+   */
+  async function adminAction(requestId, action, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      var url = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/request/' + requestId + '/' + action);
+      var response = await fetch(url, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      if (response.ok) {
+        JE.toast?.('Request ' + action + 'd', 3000);
+        await loadAllData();
+      } else {
+        var errMsg = 'Failed to ' + action + ' request';
+        try {
+          var text = await response.text();
+          var parsed = JSON.parse(text);
+          if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (_) {}
+        JE.toast?.(escapeHtml(errMsg), 5000);
+      }
+    } catch (error) {
+      console.error(logPrefix + ' ' + action + ' request failed:', error);
+      JE.toast?.('Failed to ' + action + ' request', 5000);
+    }
+    if (btn) btn.disabled = false;
+  }
+
+  /**
+   * Cancel/delete a Seerr request and refresh the list.
+   * @param {string|number} requestId - Seerr request ID
+   * @param {HTMLElement} [btn] - Button element to disable during request
+   */
+  async function cancelRequest(requestId, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      const url = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/request/' + requestId);
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (response.ok) {
+        JE.toast?.('Request cancelled', 3000);
+        // Refresh the requests list
+        await loadAllData();
+      } else {
+        var errMsg = 'Failed to cancel request';
+        try {
+          var text = await response.text();
+          var parsed = JSON.parse(text);
+          if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (_) {}
+        JE.toast?.(escapeHtml(errMsg), 5000);
+      }
+    } catch (error) {
+      console.error(logPrefix + ' Cancel request failed:', error);
+      JE.toast?.('Failed to cancel request', 5000);
+    }
+    if (btn) btn.disabled = false;
   }
 
   /**
@@ -1380,7 +1540,12 @@
                         ${item.createdAt ? `<span>&#8226;</span><span>${escapeHtml(formatRelativeDate(item.createdAt))}</span>` : ""}
                       </div>
                     </div>
-                    ${watchButton ? `<div class="je-request-actions">${watchButton}</div>` : ""}
+                    <div class="je-request-actions">
+                      ${watchButton}
+                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-approve-btn" title="Approve" aria-label="Approve" data-request-id="${escapeHtml(String(item.id))}"><span class="material-icons">check_circle</span></button>` : ""}
+                      ${item.mediaStatus === "Pending" && item.id && state._isAdmin ? `<button class="je-request-decline-btn" title="Decline" aria-label="Decline" data-request-id="${escapeHtml(String(item.id))}"><span class="material-icons">cancel</span></button>` : ""}
+                      ${(item.mediaStatus === "Pending" || item.mediaStatus === "Approved" || item.mediaStatus === "Processing") && item.id ? `<button class="je-request-cancel-btn" title="Cancel Request" aria-label="Cancel Request" data-request-id="${escapeHtml(String(item.id))}"><span class="material-icons">close</span></button>` : ""}
+                    </div>
                 </div>
             </div>
         `;
@@ -1495,6 +1660,8 @@
             <button class="je-issue-view-btn ${canView ? "" : "is-disabled"}" type="button" aria-label="View issue" ${canView ? `data-issue-tmdb-id="${escapeHtml(tmdbId)}" data-issue-media-type="${escapeHtml(mediaType)}" data-issue-title="${escapeHtml(title)}"` : "disabled"}>
               <span class="material-icons">visibility</span>
             </button>
+            ${state._isAdmin && issue?.id ? `<button class="je-issue-resolve-btn" type="button" title="${status.label === 'Resolved' ? 'Reopen' : 'Resolve'}" data-issue-id="${escapeHtml(String(issue.id))}" data-issue-action="${status.label === 'Resolved' ? 'open' : 'resolved'}"><span class="material-icons">${status.label === 'Resolved' ? 'replay' : 'check_circle'}</span></button>` : ""}
+            ${state._isAdmin && issue?.id ? `<button class="je-issue-delete-btn" type="button" title="Delete Issue" data-issue-id="${escapeHtml(String(issue.id))}"><span class="material-icons">delete</span></button>` : ""}
           </div>
         </div>
       </div>
@@ -1961,6 +2128,85 @@
         return;
       }
 
+      // Handle issue resolve/reopen button clicks (admin only)
+      const resolveBtn = e.target.closest('.je-issue-resolve-btn');
+      if (resolveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const issueId = resolveBtn.getAttribute('data-issue-id');
+        const action = resolveBtn.getAttribute('data-issue-action');
+        if (issueId && action) issueAction(issueId, action, resolveBtn);
+        return;
+      }
+
+      // Handle issue delete button clicks (admin only)
+      const deleteIssueBtn = e.target.closest('.je-issue-delete-btn');
+      if (deleteIssueBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const issueId = deleteIssueBtn.getAttribute('data-issue-id');
+        if (issueId) {
+          if (window.Dashboard && typeof window.Dashboard.confirm === 'function') {
+            window.Dashboard.confirm('Delete this issue?', 'Delete Issue', function(confirmed) {
+              if (confirmed) issueAction(issueId, 'delete', deleteIssueBtn);
+            });
+          } else if (window.confirm('Delete this issue?')) {
+            issueAction(issueId, 'delete', deleteIssueBtn);
+          }
+        }
+        return;
+      }
+
+      // Handle approve request button clicks (admin only)
+      const approveBtn = e.target.closest('.je-request-approve-btn');
+      if (approveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const requestId = approveBtn.getAttribute('data-request-id');
+        if (requestId) adminAction(requestId, 'approve', approveBtn);
+        return;
+      }
+
+      // Handle decline request button clicks (admin only)
+      const declineBtn = e.target.closest('.je-request-decline-btn');
+      if (declineBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const requestId = declineBtn.getAttribute('data-request-id');
+        if (requestId) {
+          var confirmText = 'Decline this request?';
+          var confirmTitle = 'Decline Request';
+          if (window.Dashboard && typeof window.Dashboard.confirm === 'function') {
+            window.Dashboard.confirm(confirmText, confirmTitle, function(confirmed) {
+              if (confirmed) adminAction(requestId, 'decline', declineBtn);
+            });
+          } else if (window.confirm(confirmTitle + '\n\n' + confirmText)) {
+            adminAction(requestId, 'decline', declineBtn);
+          }
+        }
+        return;
+      }
+
+      // Handle cancel request button clicks
+      const cancelBtn = e.target.closest('.je-request-cancel-btn');
+      if (cancelBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const requestId = cancelBtn.getAttribute('data-request-id');
+        if (requestId) {
+          var confirmText = 'Cancel this request?';
+          var confirmTitle = 'Cancel Request';
+          if (window.Dashboard && typeof window.Dashboard.confirm === 'function') {
+            window.Dashboard.confirm(confirmText, confirmTitle, function(confirmed) {
+              if (confirmed) cancelRequest(requestId, cancelBtn);
+            });
+          } else if (window.confirm(confirmTitle + '\n\n' + confirmText)) {
+            cancelRequest(requestId, cancelBtn);
+          }
+        }
+        return;
+      }
+
       // Handle card clicks to navigate to item
       const card = e.target.closest('.je-download-card, .je-request-card, .je-issue-card');
       if (card) {
@@ -2341,6 +2587,17 @@
    */
   function initialize() {
     console.log(`${logPrefix} Initializing downloads page module`);
+
+    // Detect admin status for approve/decline buttons
+    try {
+      ApiClient.getCurrentUser().then(function(user) {
+        state._isAdmin = user?.Policy?.IsAdministrator === true;
+      }).catch(function(err) {
+        console.warn(`${logPrefix} Failed to detect admin status:`, err);
+      });
+    } catch (err) {
+      console.warn(`${logPrefix} Admin detection error:`, err);
+    }
 
     const config = JE.pluginConfig || {};
     if (!config.DownloadsPageEnabled) {

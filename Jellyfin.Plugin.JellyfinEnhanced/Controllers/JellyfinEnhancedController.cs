@@ -424,8 +424,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             "sortBy", "primaryReleaseDateGte", "primaryReleaseDateLte",
             "firstAirDateGte", "firstAirDateLte",
             "voteAverageGte", "voteAverageLte",
+            "voteCountGte", "voteCountLte",
             "withRuntimeGte", "withRuntimeLte",
-            "certification", "watchRegion", "language"
+            "originalLanguage",
+            "watchProviders", "watchRegion",
+            "certification", "certificationCountry",
+            "withStatus",
+            "language"
         };
 
         /// <summary>
@@ -490,8 +495,28 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // letting Seerr reject the request with a generic error.
             if (!IsAdminUser())
             {
+                // Only enforce permission gates for the routes we actually gate. Reaching this
+                // block means the user already passed the linkage check (line 486), so a null
+                // Seerr lookup here is a transient outage — fail CLOSED on those gated routes
+                // rather than letting the call slip through unchecked.
+                bool isGatedWrite =
+                    (method == HttpMethod.Post && apiPath.StartsWith("/api/v1/request", StringComparison.OrdinalIgnoreCase))
+                    || (method == HttpMethod.Post && apiPath.StartsWith("/api/v1/issue", StringComparison.OrdinalIgnoreCase));
+                bool isGatedIssueRead =
+                    method == HttpMethod.Get
+                    && (apiPath.StartsWith("/api/v1/issue?", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(apiPath, "/api/v1/issue", StringComparison.OrdinalIgnoreCase));
+
                 var seerrUser = await GetJellyseerrUser(jellyfinUserId);
-                if (seerrUser != null)
+                if (seerrUser == null)
+                {
+                    if (isGatedWrite || isGatedIssueRead)
+                    {
+                        _logger.Warning($"Cannot verify Seerr permissions for user {ResolveUserDisplay(jellyfinUserId)} on gated path {apiPath}. Failing closed.");
+                        return StatusCode(502, new { code = "permission_check_failed", message = "Could not verify Seerr permissions. Please try again." });
+                    }
+                }
+                else
                 {
                     var perms = seerrUser.Permissions;
                     bool isSeerrAdmin = JellyseerrPermissionHelper.HasPermission(perms, JellyseerrPermission.ADMIN);
@@ -906,6 +931,54 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public Task<IActionResult> GetJellyseerrRequests([FromQuery] int take = 500, [FromQuery] int skip = 0, [FromQuery] string filter = "all")
         {
             return ProxyJellyseerrRequest($"/api/v1/request?take={take}&skip={skip}&filter={filter}", HttpMethod.Get);
+        }
+
+        [HttpDelete("jellyseerr/request/{requestId}")]
+        [Authorize]
+        public Task<IActionResult> DeleteJellyseerrRequest(int requestId)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/request/{requestId}", HttpMethod.Delete);
+        }
+
+        [HttpPost("jellyseerr/request/{requestId}/approve")]
+        [Authorize]
+        public Task<IActionResult> ApproveJellyseerrRequest(int requestId)
+        {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
+            return ProxyJellyseerrRequest($"/api/v1/request/{requestId}/approve", HttpMethod.Post);
+        }
+
+        [HttpPost("jellyseerr/request/{requestId}/decline")]
+        [Authorize]
+        public Task<IActionResult> DeclineJellyseerrRequest(int requestId)
+        {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
+            return ProxyJellyseerrRequest($"/api/v1/request/{requestId}/decline", HttpMethod.Post);
+        }
+
+        [HttpGet("jellyseerr/user/quota")]
+        [Authorize]
+        public async Task<IActionResult> GetUserQuota()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null || !config.JellyseerrEnabled ||
+                string.IsNullOrEmpty(config.JellyseerrApiKey) ||
+                string.IsNullOrEmpty(config.JellyseerrUrls))
+            {
+                return Ok(new { quotaEnabled = false });
+            }
+
+            var jellyfinUserId = UserHelper.GetCurrentUserId(User)?.ToString();
+            if (string.IsNullOrEmpty(jellyfinUserId))
+                return BadRequest(new { message = "Could not resolve user" });
+
+            var jellyseerrUserId = await GetJellyseerrUserId(jellyfinUserId);
+            if (string.IsNullOrEmpty(jellyseerrUserId))
+                return NotFound(new { message = "User not linked to Seerr" });
+
+            return await ProxyJellyseerrRequest($"/api/v1/user/{jellyseerrUserId}/quota", HttpMethod.Get);
         }
 
         [HttpGet("jellyseerr/tv/{tmdbId}")]
@@ -1357,6 +1430,41 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest($"/api/v1/search/keyword?query={Uri.EscapeDataString(query)}", HttpMethod.Get);
         }
 
+        [HttpGet("jellyseerr/discover/trending")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTrending([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest($"/api/v1/discover/trending?page={page}", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/movies/upcoming")]
+        [Authorize]
+        public Task<IActionResult> DiscoverMoviesUpcoming([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies/upcoming?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/tv/upcoming")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTvUpcoming([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/tv/upcoming?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/movies")]
+        [Authorize]
+        public Task<IActionResult> DiscoverMovies([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies?page={page}"), HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/discover/tv")]
+        [Authorize]
+        public Task<IActionResult> DiscoverTv([FromQuery] int page = 1)
+        {
+            return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/tv?page={page}"), HttpMethod.Get);
+        }
+
         [HttpGet("tmdb/genres/movie")]
         [Authorize]
         public Task<IActionResult> GetTmdbMovieGenres()
@@ -1383,6 +1491,25 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public Task<IActionResult> GetTvGenreSlider()
         {
             return ProxyJellyseerrRequest("/api/v1/discover/genreslider/tv", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/languages")]
+        [Authorize]
+        public Task<IActionResult> GetLanguages()
+        {
+            return ProxyJellyseerrRequest("/api/v1/languages", HttpMethod.Get);
+        }
+
+        [HttpGet("jellyseerr/watchproviders/{type}")]
+        [Authorize]
+        public Task<IActionResult> GetWatchProviders(string type, [FromQuery] string watchRegion = "US")
+        {
+            var validTypes = new[] { "movies", "tv" };
+            if (!validTypes.Contains(type.ToLowerInvariant()))
+            {
+                return Task.FromResult<IActionResult>(BadRequest(new { message = "Type must be 'movies' or 'tv'" }));
+            }
+            return ProxyJellyseerrRequest($"/api/v1/watchproviders/{Uri.EscapeDataString(type)}?watchRegion={Uri.EscapeDataString(watchRegion)}", HttpMethod.Get);
         }
 
         [HttpGet("jellyseerr/overrideRule")]
@@ -2094,6 +2221,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.JellyseerrShowGenreDiscovery,
                 config.JellyseerrShowTagDiscovery,
                 config.JellyseerrShowPersonDiscovery,
+                config.JellyseerrShowTrending,
+                config.JellyseerrShowPopularMovies,
+                config.JellyseerrShowPopularTv,
+                config.JellyseerrShowUpcoming,
+                config.JellyseerrDiscoverPageEnabled,
+                config.JellyseerrDiscoverUsePluginPages,
+                config.JellyseerrDiscoverUseCustomTabs,
                 config.JellyseerrExcludeLibraryItems,
                 config.JellyseerrExcludeBlocklistedItems,
                 config.JellyseerrDisableCache,
@@ -3339,6 +3473,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public async Task<IActionResult> ReportJellyseerrIssue([FromBody] JsonElement issueBody)
         {
             return await ProxyJellyseerrRequest("/api/v1/issue", HttpMethod.Post, issueBody.ToString());
+        }
+
+        [HttpPost("jellyseerr/issue/{id}/comment")]
+        [Authorize]
+        public async Task<IActionResult> AddIssueComment(int id, [FromBody] JsonElement body)
+        {
+            return await ProxyJellyseerrRequest($"/api/v1/issue/{id}/comment", HttpMethod.Post, body.ToString());
+        }
+
+        [HttpPost("jellyseerr/issue/{id}/{status}")]
+        [Authorize]
+        public Task<IActionResult> UpdateIssueStatus(int id, string status)
+        {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
+            var validStatuses = new[] { "open", "resolved" };
+            if (!validStatuses.Contains(status.ToLowerInvariant()))
+            {
+                return Task.FromResult<IActionResult>(BadRequest(new { message = "Status must be 'open' or 'resolved'" }));
+            }
+            return ProxyJellyseerrRequest($"/api/v1/issue/{id}/{Uri.EscapeDataString(status)}", HttpMethod.Post);
+        }
+
+        [HttpDelete("jellyseerr/issue/{id}")]
+        [Authorize]
+        public Task<IActionResult> DeleteIssue(int id)
+        {
+            if (!IsAdminUser())
+                return Task.FromResult<IActionResult>(Forbid());
+            return ProxyJellyseerrRequest($"/api/v1/issue/{id}", HttpMethod.Delete);
         }
 
         [HttpPost("UploadBrandingImage")]

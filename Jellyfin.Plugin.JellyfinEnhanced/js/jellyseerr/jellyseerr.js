@@ -126,7 +126,7 @@
             searchDeduplicator = JE.seamlessScroll?.createDeduplicator() || null;
 
             const data = await search(query, 1, { skipCache });
-            let results = data.results || [];
+            let results = (data.results || []).filter(r => r.mediaType !== 'person');
             searchCurrentPage = data.page || 1;
             searchTotalPages = data.totalPages || 1;
             searchHasMore = searchCurrentPage < searchTotalPages;
@@ -167,7 +167,7 @@
                 const data = await search(query, nextPage);
                 if (lastProcessedQuery !== query) return; // query changed during fetch
 
-                let results = data.results || [];
+                let results = (data.results || []).filter(r => r.mediaType !== 'person');
                 searchCurrentPage = data.page || nextPage;
                 searchTotalPages = data.totalPages || searchTotalPages;
                 searchHasMore = searchCurrentPage < searchTotalPages;
@@ -288,7 +288,8 @@
                 searchDeduplicator = JE.seamlessScroll?.createDeduplicator() || null;
 
                 const data = await search(query, 1);
-                let results = await prepareResultsWithCollections(data.results || []);
+                const filtered = (data.results || []).filter(r => r.mediaType !== 'person');
+                let results = await prepareResultsWithCollections(filtered);
                 if (JE.hiddenContent) results = JE.hiddenContent.filterJellyseerrResults(results, 'search');
 
                 searchCurrentPage = data.page || 1;
@@ -527,14 +528,11 @@
                             }
                         }
                     } catch (error) {
-                        let errorMessage = 'Failed to request 4K version';
-                        if (error.status === 404) {
+                        let errorMessage = error?.serverMessage || error?.responseJSON?.message || 'Failed to request 4K version';
+                        if (error.status === 404 && !error.serverMessage) {
                             errorMessage = 'User not found';
-                        } else if (error.responseJSON?.message) {
-                            errorMessage = error.responseJSON.message;
                         }
-                        // Escape API error before display to prevent reflected XSS
-                        JE.toast(escapeHtml(errorMessage), 4000);
+                        JE.toast(escapeHtml(errorMessage), 5000);
                         item.disabled = false;
                         item.innerHTML = `<span>Request in 4K</span>`;
                     }

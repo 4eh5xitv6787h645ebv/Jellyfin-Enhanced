@@ -251,6 +251,7 @@ async function refreshModalData(data, mediaType, modal, refreshBtn) {
         renderActions(data, mediaType);
         if (mediaType === 'tv') {
             enrichSeasonCardsWithJellyfinLinks(data, modal);
+            refreshSeasonRequestButtons(data, modal);
         }
 
         refreshBtn.classList.remove('loading');
@@ -266,7 +267,8 @@ async function refreshModalData(data, mediaType, modal, refreshBtn) {
 
 function getSeasonStatusInfo(data, seasonNumber) {
     const seasons = data?.mediaInfo?.seasons;
-    if (!Array.isArray(seasons) || !seasonNumber) return null;
+    // seasonNumber 0 (Specials) is valid; only reject undefined/null.
+    if (!Array.isArray(seasons) || seasonNumber == null) return null;
     return seasons.find(s => Number(s?.seasonNumber) === Number(seasonNumber)) || null;
 }
 
@@ -306,6 +308,167 @@ function buildSeasonAvailabilityLinks(seasonInfo, jellyfinSeasonId = null, jelly
 
     if (!pills.length) return '';
     return `<div class="season-links">${pills.join('')}</div>`;
+}
+
+/**
+ * Returns true if the season has a status that allows requesting (missing or removed).
+ * @param {object|null} seasonInfo
+ */
+function isSeasonRequestable(seasonInfo) {
+    if (!seasonInfo) return true;
+    const status = seasonInfo.status;
+    return status == null || status === 1 || status === 7;
+}
+
+/**
+ * Wires per-season "Request" buttons via delegation on the modal.
+ * Submits a single-season request directly, or hands off to the season
+ * selection modal when advanced options are enabled.
+ *
+ * @param {object} data - TV details payload from Seerr
+ * @param {HTMLElement} modal
+ */
+function wireSeasonRequestButtons(data, modal) {
+    if (!modal || modal._seasonRequestBtnWired) return;
+    modal._seasonRequestBtnWired = true;
+
+    modal.addEventListener('click', async (evt) => {
+        const btn = evt.target.closest('.jellyseerr-season-card-request-btn');
+        if (!btn || !modal.contains(btn)) return;
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        if (btn.disabled) return;
+        const seasonNumber = parseInt(btn.dataset.seasonNumber, 10);
+        if (!Number.isFinite(seasonNumber)) return;
+
+        const seasonInfo = getSeasonStatusInfo(data, seasonNumber);
+        if (!isSeasonRequestable(seasonInfo)) {
+            JE.toast?.(JE.t('jellyseerr_modal_toast_request_fail') || 'Season not available to request', 3000);
+            return;
+        }
+
+        // Advanced options: reuse the season selection modal so users can pick
+        // server / quality / folder. The modal already supports the data payload.
+        if (JE.pluginConfig?.JellyseerrShowAdvanced && JE.jellyseerrUI?.showSeasonSelectionModal) {
+            JE.jellyseerrUI.showSeasonSelectionModal(data.id, 'tv', data.title || data.name, data, false);
+            return;
+        }
+
+        // Direct single-season request via the existing API helper.
+        const originalChildren = Array.from(btn.childNodes).map(n => n.cloneNode(true));
+        btn.disabled = true;
+        while (btn.firstChild) btn.removeChild(btn.firstChild);
+        const requestingSpan = document.createElement('span');
+        requestingSpan.textContent = JE.t('jellyseerr_btn_requesting') || 'Requesting...';
+        btn.appendChild(requestingSpan);
+
+        try {
+            const result = await JE.jellyseerrAPI.requestTvSeasons(data.id, [seasonNumber], {}, data, false);
+            // Validate the upstream response shape — Seerr returns a request record with id/media
+            // on success. An empty {} (e.g. 204 No Content from a misbehaving proxy) is truthy
+            // but is NOT a real request — surface that as a failure rather than silently
+            // marking the season Requested.
+            if (!result || (!result.id && !result.media)) {
+                throw new Error(JE.t('jellyseerr_modal_toast_request_fail') || 'Request did not return a valid record');
+            }
+
+            // Optimistically reflect requested status so the button hides immediately.
+            // The 'jellyseerr-tv-requested' listener will then re-render with fresh data.
+            const mediaInfo = data.mediaInfo || (data.mediaInfo = {});
+            mediaInfo.seasons = mediaInfo.seasons || [];
+            const existing = mediaInfo.seasons.find(s => Number(s?.seasonNumber) === seasonNumber);
+            if (existing) {
+                if (existing.status == null || existing.status === 1 || existing.status === 7) existing.status = 2;
+            } else {
+                mediaInfo.seasons.push({ seasonNumber, status: 2 });
+            }
+            refreshSeasonRequestButtons(data, modal);
+        } catch (e) {
+            const msg = (e && (e.serverMessage || e.message)) || JE.t('jellyseerr_modal_toast_request_fail') || 'Request failed';
+            JE.toast?.(escapeHtml(msg), 4500);
+            // Restore the original button content
+            btn.disabled = false;
+            while (btn.firstChild) btn.removeChild(btn.firstChild);
+            originalChildren.forEach(c => btn.appendChild(c));
+        }
+    });
+}
+
+/**
+ * Re-renders the inline Request slot on each visible season card.
+ * Builds DOM nodes (no innerHTML on user content) and replaces the slot's children.
+ */
+function refreshSeasonRequestButtons(data, modal = currentModal) {
+    if (!modal) return;
+    const cards = modal.querySelectorAll('.season-card[data-season-number]');
+    cards.forEach(card => {
+        const sNum = parseInt(card.getAttribute('data-season-number'), 10);
+        if (!Number.isFinite(sNum)) return;
+        const slot = card.querySelector('[data-season-request]');
+        if (!slot) return;
+        while (slot.firstChild) slot.removeChild(slot.firstChild);
+        const btn = buildSeasonRequestButtonNode(data, sNum);
+        if (btn) slot.appendChild(btn);
+    });
+}
+
+/**
+ * DOM-builder version of buildSeasonRequestButtonHtml — used by the refresh path
+ * to avoid setting innerHTML with composed strings.
+ */
+function buildSeasonRequestButtonNode(data, seasonNumber) {
+    const seasonInfo = getSeasonStatusInfo(data, seasonNumber);
+    if (!isSeasonRequestable(seasonInfo)) return null;
+    if (JE.pluginConfig?.JellyseerrEnabled === false) return null;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'jellyseerr-season-card-request-btn';
+    btn.dataset.seasonNumber = String(seasonNumber);
+    btn.dataset.tmdbId = String(data.id);
+    const label = JE.t('jellyseerr_modal_request') || 'Request';
+    const seasonLabel = seasonNumber === 0 ? 'Specials' : `Season ${seasonNumber}`;
+    btn.title = `${label} ${seasonLabel}`;
+
+    const icon = document.createElement('span');
+    icon.className = 'material-icons';
+    icon.textContent = 'download';
+    const text = document.createElement('span');
+    text.textContent = label;
+    btn.appendChild(icon);
+    btn.appendChild(text);
+    return btn;
+}
+
+/**
+ * Builds the per-season inline "Request" button shown on missing-season cards
+ * within the more-info-modal. Renders a button when the season is requestable
+ * (status null/unknown/deleted) and not already in library.
+ *
+ * Click behavior:
+ * - If JellyseerrShowAdvanced is enabled, opens the season selection modal
+ *   pre-targeted at this season so the user can pick advanced options.
+ * - Otherwise, fires a direct season request via the existing API helper.
+ *
+ * @param {object} data - Seerr TV details (full payload)
+ * @param {number} seasonNumber - The season this button is for
+ * @returns {string} HTML for the button (empty string if not requestable)
+ */
+function buildSeasonRequestButtonHtml(data, seasonNumber) {
+    const seasonInfo = getSeasonStatusInfo(data, seasonNumber);
+    if (!isSeasonRequestable(seasonInfo)) return '';
+
+    // Hide on series the viewer can't request (best-effort: backend still enforces).
+    const enabled = JE.pluginConfig?.JellyseerrEnabled !== false;
+    if (!enabled) return '';
+
+    const labelText = JE.t('jellyseerr_modal_request') || 'Request';
+    return `
+        <button type="button" class="jellyseerr-season-card-request-btn" data-season-number="${escapeHtml(String(seasonNumber))}" data-tmdb-id="${escapeHtml(String(data.id))}" title="${escapeHtml(labelText + ' ' + (seasonNumber === 0 ? 'Specials' : 'Season ' + seasonNumber))}">
+            <span class="material-icons">download</span><span>${escapeHtml(labelText)}</span>
+        </button>
+    `;
 }
 
 async function fetchJellyfinSeasonMap(seriesId) {
@@ -482,6 +645,7 @@ function showModal(data, mediaType) {
     renderActions(data, mediaType);
     if (mediaType === 'tv') {
         enrichSeasonCardsWithJellyfinLinks(data, modal);
+        wireSeasonRequestButtons(data, modal);
     }
 
     // Listen for TV season requests to update status
@@ -506,6 +670,8 @@ function showModal(data, mediaType) {
 
             renderActions(data, mediaType);
             enrichSeasonCardsWithJellyfinLinks(data, modal);
+            // Re-render the per-season Request buttons so freshly-requested seasons drop the button.
+            refreshSeasonRequestButtons(data, modal);
         };
         document.addEventListener('jellyseerr-tv-requested', handleTvRequest);
         modal._cleanupTvListener = () => document.removeEventListener('jellyseerr-tv-requested', handleTvRequest);
@@ -1253,10 +1419,13 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                 mountRequestedChip(data, 'movie', false, response);
             } catch (error) {
                 mainButton.disabled = false;
-                // Escape API error before innerHTML to prevent reflected XSS
-                const errorMessage = error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
-                mainButton.innerHTML = `<span>${escapeHtml(errorMessage)}</span>${JE.jellyseerrUIIcons?.error || ''}`;
+                const errorMessage = error?.serverMessage || error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                while (mainButton.firstChild) mainButton.removeChild(mainButton.firstChild);
+                var errSpan = document.createElement('span');
+                errSpan.textContent = errorMessage;
+                mainButton.appendChild(errSpan);
                 mainButton.classList.add('jellyseerr-button-error');
+                JE.toast?.(escapeHtml(errorMessage), 5000);
             }
         });
 
@@ -1323,7 +1492,9 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                     close4k();
                 } catch (error) {
                     option.disabled = false;
-                    option.textContent = error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                    var errMsg = error?.serverMessage || error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                    option.textContent = errMsg;
+                    JE.toast?.(escapeHtml(errMsg), 5000);
                 }
             });
         }
@@ -1360,15 +1531,48 @@ function buildMovieActions(data, actionMount, chipMount, show4kOption) {
                 mountRequestedChip(data, 'movie', false);
             } catch (error) {
                 requestButton.disabled = false;
-                // Escape API error before innerHTML to prevent reflected XSS
-                const errorMessage = error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
-                requestButton.innerHTML = `<span>${escapeHtml(errorMessage)}</span>${JE.jellyseerrUIIcons?.error || ''}`;
+                const errorMessage = error?.serverMessage || error?.responseJSON?.message || JE.t('jellyseerr_btn_error');
+                while (requestButton.firstChild) requestButton.removeChild(requestButton.firstChild);
+                var errSpan = document.createElement('span');
+                errSpan.textContent = errorMessage;
+                requestButton.appendChild(errSpan);
                 requestButton.classList.add('jellyseerr-button-error');
+                JE.toast?.(escapeHtml(errorMessage), 5000);
             }
         });
         container.appendChild(requestButton);
     }
     return container;
+}
+
+/**
+ * Builds a quota info line showing remaining requests.
+ * @param {object} quota - Quota data from Seerr ({movie:{limit,remaining,days},tv:{...}})
+ * @param {string} mediaType - 'movie' or 'tv'
+ * @returns {HTMLElement|null}
+ */
+function buildQuotaLine(quota, mediaType) {
+    var q = mediaType === 'tv' ? quota.tv : quota.movie;
+    if (!q || !q.limit || q.limit <= 0) return null;
+
+    var line = document.createElement('div');
+    line.className = 'je-more-info-quota';
+    line.style.cssText = 'font-size:0.8em;opacity:0.7;margin-bottom:0.5em;';
+
+    var remaining = typeof q.remaining === 'number' ? q.remaining : q.limit;
+    var text = remaining + ' of ' + q.limit + ' requests remaining';
+    if (q.days) text += ' (resets in ' + q.days + 'd)';
+
+    line.textContent = text;
+
+    if (remaining <= 0) {
+        line.style.color = '#ff6b6b';
+        line.style.opacity = '1';
+    } else if (remaining <= Math.ceil(q.limit * 0.25)) {
+        line.style.color = '#ffa726';
+    }
+
+    return line;
 }
 
 function buildStatusChip(status, status4k, isMovie, downloads = [], downloads4k = [], jellyfinMediaId = null, jellyfinMediaId4k = null, is4kChip = false) {
@@ -1663,9 +1867,27 @@ function renderActions(data, mediaType) {
     const actionMount = currentModal.querySelector('[data-mount="je-actions"]');
     const chipMount = currentModal.querySelector('[data-mount="je-status-chip"]');
     const downloadsMount = currentModal.querySelector('[data-mount="je-downloads"]');
-    if (actionMount) actionMount.innerHTML = '';
-    if (chipMount) chipMount.innerHTML = '';
-    if (downloadsMount) downloadsMount.innerHTML = '';
+    if (actionMount) {
+        while (actionMount.firstChild) actionMount.removeChild(actionMount.firstChild);
+    }
+    if (chipMount) {
+        while (chipMount.firstChild) chipMount.removeChild(chipMount.firstChild);
+    }
+    if (downloadsMount) {
+        while (downloadsMount.firstChild) downloadsMount.removeChild(downloadsMount.firstChild);
+    }
+
+    // Fetch and display quota info (non-blocking)
+    if (actionMount && JE.jellyseerrAPI?.fetchUserQuota) {
+        var modalRef = currentModal;
+        JE.jellyseerrAPI.fetchUserQuota().then(function(quota) {
+            if (!quota || currentModal !== modalRef || !document.contains(actionMount)) return;
+            var quotaLine = buildQuotaLine(quota, mediaType);
+            if (quotaLine && actionMount.parentElement) {
+                actionMount.parentElement.insertBefore(quotaLine, actionMount);
+            }
+        }).catch(function() {});
+    }
 
     if (mediaType === 'movie') {
         const mediaInfo = data.mediaInfo || {};
@@ -1865,6 +2087,7 @@ function buildSeasonsSection(data) {
                                     ${season.airDate && isValidDate(season.airDate) ? ` \u2022 ${escapeHtml(season.airDate.substring(0, 4))}` : ''}
                                 </div>
                                 <div data-season-links>${buildSeasonAvailabilityLinks(seasonInfo, seasonJellyfinId, seasonJellyfinId4k)}</div>
+                                <div data-season-request>${buildSeasonRequestButtonHtml(data, sNum)}</div>
                                 ${season.overview ? `<div class="season-overview">${escapeHtml(season.overview)}</div>` : ''}
                             </div>
                         </div>
@@ -2991,6 +3214,34 @@ function injectStyles() {
         .je-more-info-modal a[is="emby-linkbutton"].season-link-chip:hover {
             filter: brightness(1.08);
             transform: translateY(-1px);
+        }
+
+        .je-more-info-modal .jellyseerr-season-card-request-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.45rem;
+            padding: 0.32rem 0.7rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1;
+            color: #fff;
+            background: var(--accent, #00a4dc);
+            border: 1px solid transparent;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: filter 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+        }
+        .je-more-info-modal .jellyseerr-season-card-request-btn:hover:not(:disabled) {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+        .je-more-info-modal .jellyseerr-season-card-request-btn:disabled {
+            opacity: 0.55;
+            cursor: progress;
+        }
+        .je-more-info-modal .jellyseerr-season-card-request-btn .material-icons {
+            font-size: 16px;
         }
 
         @media (max-width: 1024px) {

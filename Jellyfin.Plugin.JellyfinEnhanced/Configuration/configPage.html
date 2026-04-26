@@ -1026,6 +1026,46 @@
                                     </div>
                                 </div>
                             </details>
+
+                            <details class="je-details-section">
+                                <summary>Home Page Sections</summary>
+                                <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowTrending" is="emby-checkbox" type="checkbox"/><span>Show "Trending" section on home page</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowTrending">
+                                        <div class="fieldDescription je-field-desc-md">Displays trending movies and TV shows from Seerr on the Jellyfin home page.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowPopularMovies" is="emby-checkbox" type="checkbox"/><span>Show "Popular Movies" section on home page</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowPopularMovies">
+                                        <div class="fieldDescription je-field-desc-md">Displays popular movies from Seerr on the Jellyfin home page.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowPopularTv" is="emby-checkbox" type="checkbox"/><span>Show "Popular TV" section on home page</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowPopularTv">
+                                        <div class="fieldDescription je-field-desc-md">Displays popular TV shows from Seerr on the Jellyfin home page.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowUpcoming" is="emby-checkbox" type="checkbox"/><span>Show "Upcoming" sections on home page</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowUpcoming">
+                                        <div class="fieldDescription je-field-desc-md">Displays upcoming movies and TV shows from Seerr on the Jellyfin home page.</div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <details class="je-details-section">
+                                <summary>Discover Page</summary>
+                                <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="jellyseerrDiscoverPageEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Discover Page</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrDiscoverPageEnabled">
+                                        <div class="fieldDescription je-field-desc-md">Adds a "Discover" link to the navigation showing Trending, Popular, and Upcoming sections from Seerr.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrDiscoverUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Discover Page</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrDiscoverUsePluginPages">
+                                        <div class="fieldDescription je-field-desc-md">Replaces the default Discover page with a <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> implementation.<br><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrDiscoverUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs for Discover (instead of sidebar)</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrDiscoverUseCustomTabs">
+                                        <div class="fieldDescription je-field-desc-md">Renders the Discover page as a tab on the home screen using <a class="sectionTitle" target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> instead of the JE sidebar.</div>
+                                    </div>
+                                </div>
+                            </details>
                         </div>
                     </fieldset>
 
@@ -3767,6 +3807,13 @@
                 document.querySelector('#jellyseerrShowTagDiscovery').checked = config.JellyseerrShowTagDiscovery !== false;
                 document.querySelector('#jellyseerrShowPersonDiscovery').checked = config.JellyseerrShowPersonDiscovery !== false;
                 document.querySelector('#jellyseerrShowCollectionDiscovery').checked = config.JellyseerrShowCollectionDiscovery !== false;
+                document.querySelector('#jellyseerrShowTrending').checked = config.JellyseerrShowTrending !== false;
+                document.querySelector('#jellyseerrShowPopularMovies').checked = config.JellyseerrShowPopularMovies !== false;
+                document.querySelector('#jellyseerrShowPopularTv').checked = config.JellyseerrShowPopularTv !== false;
+                document.querySelector('#jellyseerrShowUpcoming').checked = config.JellyseerrShowUpcoming !== false;
+                document.querySelector('#jellyseerrDiscoverPageEnabled').checked = !!config.JellyseerrDiscoverPageEnabled;
+                document.querySelector('#jellyseerrDiscoverUsePluginPages').checked = !!config.JellyseerrDiscoverUsePluginPages;
+                document.querySelector('#jellyseerrDiscoverUseCustomTabs').checked = !!config.JellyseerrDiscoverUseCustomTabs;
                 document.querySelector('#jellyseerrShowReportButton').checked = !!config.JellyseerrShowReportButton;
                 document.querySelector('#jellyseerrShowIssueIndicator').checked = !!config.JellyseerrShowIssueIndicator;
                 document.querySelector('#jellyseerrExcludeBlocklistedItems').checked = !!config.JellyseerrExcludeBlocklistedItems;
@@ -3993,6 +4040,13 @@
             config.JellyseerrShowTagDiscovery = document.querySelector('#jellyseerrShowTagDiscovery').checked;
             config.JellyseerrShowPersonDiscovery = document.querySelector('#jellyseerrShowPersonDiscovery').checked;
             config.JellyseerrShowCollectionDiscovery = document.querySelector('#jellyseerrShowCollectionDiscovery').checked;
+            config.JellyseerrShowTrending = document.querySelector('#jellyseerrShowTrending').checked;
+            config.JellyseerrShowPopularMovies = document.querySelector('#jellyseerrShowPopularMovies').checked;
+            config.JellyseerrShowPopularTv = document.querySelector('#jellyseerrShowPopularTv').checked;
+            config.JellyseerrShowUpcoming = document.querySelector('#jellyseerrShowUpcoming').checked;
+            config.JellyseerrDiscoverPageEnabled = document.querySelector('#jellyseerrDiscoverPageEnabled').checked;
+            config.JellyseerrDiscoverUsePluginPages = document.querySelector('#jellyseerrDiscoverUsePluginPages').checked;
+            config.JellyseerrDiscoverUseCustomTabs = document.querySelector('#jellyseerrDiscoverUseCustomTabs').checked;
             config.JellyseerrShowReportButton = document.querySelector('#jellyseerrShowReportButton').checked;
             config.JellyseerrShowIssueIndicator = document.querySelector('#jellyseerrShowIssueIndicator').checked;
             config.ShowElsewhereOnJellyseerr = document.querySelector('#showElsewhereOnJellyseerr').checked;
@@ -4958,7 +5012,8 @@
             { parent: 'autoSeasonRequestEnabled', label: 'Enable Automatic Season Requests', children: ['autoSeasonRequestRequireAllWatched', 'autoSeasonRequestThresholdValue'] },
             { parent: 'preventWatchlistReAddition', label: 'Prevent re-adding removed items', children: ['watchlistMemoryRetentionDays'] },
             { parent: 'bookmarksEnabled', label: 'Enable Bookmarks', children: ['bookmarksUsePluginPages', 'bookmarksUseCustomTabs'] },
-            { parent: 'hiddenContentEnabled', label: 'Enable Hidden Content', children: ['hiddenContentUsePluginPages', 'hiddenContentUseCustomTabs'] }
+            { parent: 'hiddenContentEnabled', label: 'Enable Hidden Content', children: ['hiddenContentUsePluginPages', 'hiddenContentUseCustomTabs'] },
+            { parent: 'jellyseerrDiscoverPageEnabled', label: 'Enable Discover Page', children: ['jellyseerrDiscoverUsePluginPages', 'jellyseerrDiscoverUseCustomTabs'] }
         ];
 
         /**
