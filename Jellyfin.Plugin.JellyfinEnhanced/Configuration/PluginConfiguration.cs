@@ -122,6 +122,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             JellyseerrDisableCache = false;
             JellyseerrResponseCacheTtlMinutes = 10;
             JellyseerrUserIdCacheTtlMinutes = 30;
+            JellyseerrFilterByParentalRating = true;
+            JellyseerrDeepFilterListings = true;
 
             // Arr Links Settings
             ArrLinksEnabled = false;
@@ -325,6 +327,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool JellyseerrDisableCache { get; set; }
         public int JellyseerrResponseCacheTtlMinutes { get; set; }
         public int JellyseerrUserIdCacheTtlMinutes { get; set; }
+
+        // Both defaults are duplicated in the constructor so upgrading servers without
+        // these XML keys in their stored config still get the safer behavior.
+        public bool JellyseerrFilterByParentalRating { get; set; } = true;
+        public bool JellyseerrDeepFilterListings { get; set; } = true;
 
         // Arr Links Settings
         public bool ArrLinksEnabled { get; set; }

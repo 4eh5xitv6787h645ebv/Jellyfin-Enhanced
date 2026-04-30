@@ -34,6 +34,7 @@ using MediaBrowser.Controller.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Database.Implementations;
+using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,6 +55,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
         private readonly Services.TagCacheService _tagCacheService;
         private readonly MediaBrowser.Controller.Session.ISessionManager _sessionManager;
+        private readonly MediaBrowser.Model.Globalization.ILocalizationManager _localizationManager;
+        private readonly MediaBrowser.Controller.Configuration.IServerConfigurationManager? _serverConfigurationManager;
 
         // Server-side cache for proxied avatar images to avoid re-fetching from
         // upstream Seerr on every request. Entries expire after 1 hour.
@@ -130,7 +133,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             IItemRepository itemRepository,
             IDbContextFactory<JellyfinDbContext> dbContextFactory,
             Services.TagCacheService tagCacheService,
-            MediaBrowser.Controller.Session.ISessionManager sessionManager)
+            MediaBrowser.Controller.Session.ISessionManager sessionManager,
+            MediaBrowser.Model.Globalization.ILocalizationManager localizationManager,
+            MediaBrowser.Controller.Configuration.IServerConfigurationManager? serverConfigurationManager = null)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -143,6 +148,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _dbContextFactory = dbContextFactory;
             _tagCacheService = tagCacheService;
             _sessionManager = sessionManager;
+            _localizationManager = localizationManager;
+            _serverConfigurationManager = serverConfigurationManager;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId, bool bypassCache = false, bool allowAutoImport = true)
@@ -460,6 +467,802 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                    apiPath.Contains("/search?");
         }
 
+        private static bool IsRequestSubmissionPath(string apiPath)
+        {
+            if (string.IsNullOrEmpty(apiPath)) return false;
+            return apiPath.StartsWith("/api/v1/request", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // /discover/movies and /discover/tv accept TMDB's certificationLte upstream;
+        // /discover/genreslider/* etc don't (they don't return media rows).
+        private static (bool IsDiscover, string? MediaType) ClassifyDiscoverPath(string apiPath)
+        {
+            if (string.IsNullOrEmpty(apiPath)) return (false, null);
+            if (apiPath.IndexOf("/api/v1/discover/movies", StringComparison.OrdinalIgnoreCase) >= 0)
+                return (true, "movie");
+            if (apiPath.IndexOf("/api/v1/discover/tv", StringComparison.OrdinalIgnoreCase) >= 0)
+                return (true, "tv");
+            if (apiPath.IndexOf("/api/v1/discover/", StringComparison.OrdinalIgnoreCase) >= 0)
+                return (true, null);
+            return (false, null);
+        }
+
+        private string AugmentDiscoverPathWithCertLte(string apiPath, JellyseerrParentalFilter.FilterContext ctx)
+        {
+            var (isDiscover, mediaType) = ClassifyDiscoverPath(apiPath);
+            if (!isDiscover || string.IsNullOrEmpty(mediaType) || ctx == null) return apiPath;
+
+            // Caller-provided `certification` wins — they may be picking a stricter value than the user's max.
+            if (apiPath.IndexOf("certification=", StringComparison.OrdinalIgnoreCase) >= 0
+                || apiPath.IndexOf("certificationLte=", StringComparison.OrdinalIgnoreCase) >= 0)
+                return apiPath;
+
+            var certLte = JellyseerrParentalFilter.MapMaxScoreToCertLte(
+                mediaType, ctx.MaxScore, ctx.MaxSubScore, ctx.PreferredCountry, _localizationManager);
+            if (string.IsNullOrEmpty(certLte) || string.IsNullOrEmpty(ctx.PreferredCountry))
+            {
+                _logger.Debug($"Parental filter: no certificationLte resolved for {mediaType} country={ctx.PreferredCountry} maxScore={ctx.MaxScore} — falling back to post-response filter only.");
+                return apiPath;
+            }
+
+            var sep = apiPath.Contains('?') ? '&' : '?';
+            return $"{apiPath}{sep}certificationLte={Uri.EscapeDataString(certLte)}&certificationCountry={Uri.EscapeDataString(ctx.PreferredCountry)}";
+        }
+
+        // Bypass = admin or setting off; Apply = filter; Unverifiable = non-admin
+        // we couldn't resolve, caller fails closed with 503 so a transient lookup
+        // failure can't silently lift parental controls.
+        private enum ParentalContextOutcome { Bypass, Apply, Unverifiable }
+
+        private (ParentalContextOutcome Outcome, JellyseerrParentalFilter.FilterContext? Ctx) BuildParentalContext(
+            string jellyfinUserId,
+            Configuration.PluginConfiguration config)
+        {
+            if (config == null || !config.JellyseerrFilterByParentalRating) return (ParentalContextOutcome.Bypass, null);
+            if (IsAdminUser()) return (ParentalContextOutcome.Bypass, null);
+            if (!Guid.TryParse(jellyfinUserId, out var guid))
+            {
+                _logger.Error($"Parental filter: authenticated principal yielded malformed user id '{jellyfinUserId}' — failing closed.");
+                return (ParentalContextOutcome.Unverifiable, null);
+            }
+
+            User? user;
+            try { user = _userManager.GetUserById(guid); }
+            catch (Exception ex)
+            {
+                _logger.Error($"Parental filter: GetUserById threw for non-admin {ResolveUserDisplay(jellyfinUserId)} — failing closed: {ex.GetType().Name}: {ex.Message}");
+                return (ParentalContextOutcome.Unverifiable, null);
+            }
+            if (user == null)
+            {
+                _logger.Error($"Parental filter: GetUserById returned null for non-admin {ResolveUserDisplay(jellyfinUserId)} — failing closed.");
+                return (ParentalContextOutcome.Unverifiable, null);
+            }
+
+            // Empty MetadataCountryCode falls back to US (TMDB always carries US);
+            // a thrown exception fails closed so we don't silently filter with the wrong country dictionary.
+            string? country;
+            try { country = _serverConfigurationManager?.Configuration?.MetadataCountryCode; }
+            catch (Exception ex)
+            {
+                _logger.Error($"Parental filter: server config read threw for non-admin {ResolveUserDisplay(jellyfinUserId)} — failing closed: {ex.GetType().Name}: {ex.Message}");
+                return (ParentalContextOutcome.Unverifiable, null);
+            }
+            if (string.IsNullOrEmpty(country)) country = "US";
+
+            return (ParentalContextOutcome.Apply, new JellyseerrParentalFilter.FilterContext(user, _localizationManager, country));
+        }
+
+        private IActionResult ParentalUnverifiableResult() => StatusCode(503, new
+        {
+            code = "parental_unverifiable",
+            message = "Could not verify your account's content settings right now. Please try again in a moment, or contact your administrator if this keeps happening."
+        });
+
+        // Reason maps to a stable subcode for the UI; message stays generic.
+        private IActionResult ParentalBlockedResult(string? reason)
+        {
+            string subcode = reason switch
+            {
+                "Adult content blocked" => "adult",
+                "Blocked tag" => "blocked_tag",
+                "Not in allowed tags" => "not_in_allowed_tags",
+                "Unrated item blocked" => "unrated",
+                "Unrecognized rating blocked" => "unrecognized_rating",
+                _ when reason != null && reason.StartsWith("Rating ", StringComparison.Ordinal) => "rating",
+                _ => "other",
+            };
+            return StatusCode(403, new
+            {
+                code = "parental_blocked",
+                subcode,
+                message = "This title isn't available with your current account settings. If you believe this is a mistake, please contact your administrator."
+            });
+        }
+
+        // Tier 2: probes upstream detail per row, caches per (mediaType, tmdbId, country),
+        // then applies IsMetaAllowed. Falls through to surface filter on parse error or
+        // when ctx is null — listing filter is best-effort, Tier 3 detail/request 403 is
+        // the hard guarantee.
+        private async Task<string> ApplyDeepListingFilterAsync(
+            string responseJson,
+            string apiPath,
+            JellyseerrParentalFilter.FilterContext ctx,
+            string jellyseerrUserId)
+        {
+            if (string.IsNullOrEmpty(responseJson) || ctx == null) return responseJson;
+
+            JsonDocument doc;
+            try { doc = JsonDocument.Parse(responseJson); }
+            catch (JsonException ex)
+            {
+                _logger.Warning($"Deep filter: response JSON unparseable for {apiPath} (len={responseJson.Length}); passing through: {ex.Message}");
+                return responseJson;
+            }
+            using (doc)
+            {
+                var root = doc.RootElement;
+                if (root.ValueKind != JsonValueKind.Object) return responseJson;
+
+                var arrayProps = new List<string>();
+                if (root.TryGetProperty("results", out var r) && r.ValueKind == JsonValueKind.Array) arrayProps.Add("results");
+                if (root.TryGetProperty("parts", out var p) && p.ValueKind == JsonValueKind.Array) arrayProps.Add("parts");
+                if (root.TryGetProperty("cast", out var c) && c.ValueKind == JsonValueKind.Array) arrayProps.Add("cast");
+                if (root.TryGetProperty("crew", out var cr) && cr.ValueKind == JsonValueKind.Array) arrayProps.Add("crew");
+                if (arrayProps.Count == 0) return responseJson;
+
+                // Collection `parts` rows don't carry mediaType — collections only
+                // contain movies, so we pass "movie" as the inferred default.
+                var toProbe = new HashSet<(string MediaType, int TmdbId)>();
+                foreach (var name in arrayProps)
+                {
+                    var arr = root.GetProperty(name);
+                    var defaultMt = string.Equals(name, "parts", StringComparison.Ordinal) ? "movie" : null;
+                    foreach (var item in arr.EnumerateArray())
+                    {
+                        if (item.ValueKind != JsonValueKind.Object) continue;
+                        if (!TryReadListingTarget(item, defaultMt, out var mt, out var id)) continue;
+                        if (JellyseerrParentalFilter.GetCachedTmdbMeta(mt, id, ctx.PreferredCountry) != null) continue;
+                        toProbe.Add((mt, id));
+                    }
+                }
+
+                if (toProbe.Count > 0)
+                {
+                    await ProbeBatchAsync(toProbe, ctx.PreferredCountry, jellyseerrUserId);
+                }
+
+                int totalRemoved = 0;
+                var keptByField = new Dictionary<string, List<JsonElement>>();
+                foreach (var name in arrayProps)
+                {
+                    var arr = root.GetProperty(name);
+                    var defaultMt = string.Equals(name, "parts", StringComparison.Ordinal) ? "movie" : null;
+                    var kept = new List<JsonElement>();
+                    foreach (var item in arr.EnumerateArray())
+                    {
+                        if (IsDeepListingItemAllowed(item, defaultMt, ctx)) kept.Add(item);
+                        else totalRemoved++;
+                    }
+                    keptByField[name] = kept;
+                }
+
+                if (totalRemoved == 0) return responseJson;
+
+                using var stream = new System.IO.MemoryStream();
+                using (var writer = new Utf8JsonWriter(stream))
+                {
+                    writer.WriteStartObject();
+                    foreach (var prop in root.EnumerateObject())
+                    {
+                        if (keptByField.TryGetValue(prop.Name, out var kept))
+                        {
+                            writer.WritePropertyName(prop.Name);
+                            writer.WriteStartArray();
+                            foreach (var k in kept) k.WriteTo(writer);
+                            writer.WriteEndArray();
+                        }
+                        else if (prop.NameEquals("totalResults") && prop.Value.ValueKind == JsonValueKind.Number
+                                 && prop.Value.TryGetInt64(out var total))
+                        {
+                            writer.WriteNumber("totalResults", Math.Max(0, total - totalRemoved));
+                        }
+                        else
+                        {
+                            prop.WriteTo(writer);
+                        }
+                    }
+                    writer.WriteEndObject();
+                }
+                return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+            }
+        }
+
+        // Without refill, a deep-filtered TMDB page typically shrinks 20 → 2-7 rows,
+        // which makes infinite scroll feel broken. We walk subsequent upstream pages
+        // up to a small budget. Budget=2 means worst-case 3 fetches + ~60 probes per
+        // listing call. Important under concurrent load: genre-discovery fires
+        // /discover/tv AND /discover/movies in parallel for each scroll, so per-call
+        // cost gets doubled by upstream contention. A larger budget compounds
+        // dramatically — observed live: budget=5 with 2 concurrent client requests
+        // produced 6+ second per-request times deep into the scroll history.
+        private const int DeepFilterRefillTargetCount = 20;
+        private const int DeepFilterRefillMaxExtraFetches = 2;
+
+        // Caps concurrent probes across the whole plugin. 16 slots fully parallelize
+        // a 20-row page without storming upstream when multiple users scroll.
+        private static readonly System.Threading.SemaphoreSlim _probeSemaphore = new System.Threading.SemaphoreSlim(16, 16);
+
+        // In-flight probe coalescing: when two concurrent listing requests both
+        // need to probe (movie, 12345, AU), only one upstream call fires — the
+        // second awaits the first's result. Saves duplicate upstream load when
+        // genre-discovery fires /discover/tv and /discover/movies concurrently
+        // and the same items appear in similar/recommendations of both.
+        private static readonly ConcurrentDictionary<string, Task> _probesInFlight = new();
+
+        private async Task ProbeBatchAsync(
+            HashSet<(string MediaType, int TmdbId)> targets,
+            string? country,
+            string jellyseerrUserId)
+        {
+            var tasks = targets.Select(target =>
+            {
+                var key = $"{target.MediaType.ToLowerInvariant()}:{target.TmdbId}:{(country ?? "").ToUpperInvariant()}";
+                return _probesInFlight.GetOrAdd(key, _ => RunProbeAsync(key, target.MediaType, target.TmdbId, country, jellyseerrUserId));
+            }).ToArray();
+            await Task.WhenAll(tasks);
+        }
+
+        private async Task RunProbeAsync(string key, string mediaType, int tmdbId, string? country, string jellyseerrUserId)
+        {
+            try
+            {
+                await _probeSemaphore.WaitAsync();
+                try { await ProbeAndCacheTmdbItemAsync(mediaType, tmdbId, country, jellyseerrUserId); }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Deep filter probe threw for {mediaType}/{tmdbId}: {ex.GetType().Name}: {ex.Message}");
+                }
+                finally { _probeSemaphore.Release(); }
+            }
+            finally { _probesInFlight.TryRemove(key, out _); }
+        }
+
+        // Refill fans the upstream page fetches out in parallel. Shared probe
+        // semaphore limits total upstream load.
+        private async Task<string> RefillDeepFilteredListingAsync(
+            string initialFiltered,
+            string apiPath,
+            JellyseerrParentalFilter.FilterContext ctx,
+            string jellyseerrUserId)
+        {
+            if (string.IsNullOrEmpty(initialFiltered) || ctx == null) return initialFiltered;
+
+            // Only refill `results` (collections/credits aren't paginated).
+            if (!TryGetResultsListingState(initialFiltered, out var keptCount, out var rootIsResults)) return initialFiltered;
+            if (!rootIsResults) return initialFiltered;
+            if (keptCount >= DeepFilterRefillTargetCount) return initialFiltered;
+            if (!TryGetPageParam(apiPath, out var currentPage)) return initialFiltered;
+
+            var accumulated = initialFiltered;
+            int extraFetches = 0;
+            while (keptCount < DeepFilterRefillTargetCount && extraFetches < DeepFilterRefillMaxExtraFetches)
+            {
+                currentPage++;
+                var nextPath = ReplacePageParam(apiPath, currentPage);
+                var (outcome, nextJson) = await FetchSeerrJsonRaw(nextPath, jellyseerrUserId);
+                if (outcome != SeerrProbeOutcome.Success || string.IsNullOrEmpty(nextJson)) break;
+
+                var nextSurfaceFiltered = JellyseerrParentalFilter.FilterListingByPath(nextJson, ctx, apiPath, _logger);
+                var nextDeepFiltered = await ApplyDeepListingFilterAsync(nextSurfaceFiltered, apiPath, ctx, jellyseerrUserId);
+                if (!TryCountResultsArray(nextJson, out var rawCountOnNext) || rawCountOnNext == 0) break;
+
+                int prevKept = keptCount;
+                accumulated = MergeListingResponses(accumulated, nextDeepFiltered);
+                if (!TryGetResultsListingState(accumulated, out keptCount, out _)) break;
+                if (keptCount == prevKept)
+                {
+                    _logger.Debug($"Refill: no new kept rows at upstream page {currentPage} for {apiPath} — stopping merge.");
+                    break;
+                }
+                extraFetches++;
+            }
+
+            return accumulated;
+        }
+
+        private static bool TryGetResultsListingState(string json, out int keptCount, out bool rootIsResults)
+        {
+            keptCount = 0;
+            rootIsResults = false;
+            if (string.IsNullOrEmpty(json)) return false;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind != JsonValueKind.Object) return false;
+                if (doc.RootElement.TryGetProperty("results", out var arr) && arr.ValueKind == JsonValueKind.Array)
+                {
+                    keptCount = arr.GetArrayLength();
+                    rootIsResults = true;
+                    return true;
+                }
+                return false;
+            }
+            catch (JsonException) { return false; }
+        }
+
+        private static bool TryCountResultsArray(string json, out int count)
+        {
+            count = 0;
+            if (string.IsNullOrEmpty(json)) return false;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind != JsonValueKind.Object) return false;
+                if (!doc.RootElement.TryGetProperty("results", out var arr) || arr.ValueKind != JsonValueKind.Array) return false;
+                count = arr.GetArrayLength();
+                return true;
+            }
+            catch (JsonException) { return false; }
+        }
+
+        private static bool TryGetPageParam(string apiPath, out int page)
+        {
+            page = 0;
+            var q = apiPath.IndexOf('?');
+            if (q < 0) return false;
+            var qs = apiPath.Substring(q + 1);
+            foreach (var pair in qs.Split('&'))
+            {
+                var eq = pair.IndexOf('=');
+                if (eq <= 0) continue;
+                if (!pair.AsSpan(0, eq).Equals("page".AsSpan(), StringComparison.OrdinalIgnoreCase)) continue;
+                var val = Uri.UnescapeDataString(pair.Substring(eq + 1));
+                if (int.TryParse(val, out var n) && n > 0)
+                {
+                    page = n;
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        private static string ReplacePageParam(string apiPath, int newPage)
+        {
+            var q = apiPath.IndexOf('?');
+            if (q < 0) return apiPath;
+            var prefix = apiPath.Substring(0, q + 1);
+            var qs = apiPath.Substring(q + 1);
+            var parts = qs.Split('&');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                var eq = parts[i].IndexOf('=');
+                if (eq > 0 && parts[i].AsSpan(0, eq).Equals("page".AsSpan(), StringComparison.OrdinalIgnoreCase))
+                {
+                    parts[i] = $"page={newPage}";
+                    return prefix + string.Join('&', parts);
+                }
+            }
+            return apiPath;
+        }
+
+        // Substitutes the top-level `page` number with newPage. No-op if page isn't
+        // a number or the JSON can't be parsed.
+        private static string RewriteResponsePage(string json, int newPage)
+        {
+            if (string.IsNullOrEmpty(json)) return json;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind != JsonValueKind.Object) return json;
+                if (!doc.RootElement.TryGetProperty("page", out var pageEl)
+                    || pageEl.ValueKind != JsonValueKind.Number) return json;
+
+                using var stream = new System.IO.MemoryStream();
+                using (var writer = new Utf8JsonWriter(stream))
+                {
+                    writer.WriteStartObject();
+                    foreach (var prop in doc.RootElement.EnumerateObject())
+                    {
+                        if (prop.NameEquals("page")) writer.WriteNumber("page", newPage);
+                        else prop.WriteTo(writer);
+                    }
+                    writer.WriteEndObject();
+                }
+                return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+            }
+            catch (JsonException) { return json; }
+        }
+
+        // Appends b's results to a's, deduping by (mediaType, id|tmdbId).
+        // Preserves a's other top-level fields.
+        private static string MergeListingResponses(string a, string b)
+        {
+            try
+            {
+                using var docA = JsonDocument.Parse(a);
+                using var docB = JsonDocument.Parse(b);
+                if (docA.RootElement.ValueKind != JsonValueKind.Object) return a;
+                if (docB.RootElement.ValueKind != JsonValueKind.Object) return a;
+                if (!docA.RootElement.TryGetProperty("results", out var arrA) || arrA.ValueKind != JsonValueKind.Array) return a;
+                if (!docB.RootElement.TryGetProperty("results", out var arrB) || arrB.ValueKind != JsonValueKind.Array) return a;
+
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var item in arrA.EnumerateArray())
+                {
+                    var k = MakeRowKey(item);
+                    if (k != null) seen.Add(k);
+                }
+
+                using var stream = new System.IO.MemoryStream();
+                using (var writer = new Utf8JsonWriter(stream))
+                {
+                    writer.WriteStartObject();
+                    foreach (var prop in docA.RootElement.EnumerateObject())
+                    {
+                        if (prop.NameEquals("results"))
+                        {
+                            writer.WritePropertyName("results");
+                            writer.WriteStartArray();
+                            foreach (var item in arrA.EnumerateArray()) item.WriteTo(writer);
+                            foreach (var item in arrB.EnumerateArray())
+                            {
+                                var k = MakeRowKey(item);
+                                if (k != null && !seen.Add(k)) continue; // duplicate, skip
+                                item.WriteTo(writer);
+                            }
+                            writer.WriteEndArray();
+                        }
+                        else
+                        {
+                            prop.WriteTo(writer);
+                        }
+                    }
+                    writer.WriteEndObject();
+                }
+                return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+            }
+            catch (JsonException) { return a; }
+        }
+
+        private static string? MakeRowKey(JsonElement item)
+        {
+            if (item.ValueKind != JsonValueKind.Object) return null;
+            string? mt = null;
+            if (item.TryGetProperty("mediaType", out var mtEl) && mtEl.ValueKind == JsonValueKind.String)
+                mt = mtEl.GetString();
+            if (string.IsNullOrEmpty(mt)) return null;
+
+            // Prefer tmdbId (watchlist), fall back to id (search/cast/crew).
+            int rowId = 0;
+            if (item.TryGetProperty("tmdbId", out var tEl)
+                && tEl.ValueKind == JsonValueKind.Number
+                && tEl.TryGetInt32(out rowId)
+                && rowId > 0) { }
+            else if (item.TryGetProperty("id", out var idEl)
+                && idEl.ValueKind == JsonValueKind.Number
+                && idEl.TryGetInt32(out rowId)
+                && rowId > 0) { }
+            else return null;
+
+            return $"{mt.ToLowerInvariant()}:{rowId}";
+        }
+
+        // Watchlist rows have Seerr's internal id in `id` and the TMDB id in `tmdbId`,
+        // so we prefer `tmdbId` to avoid probing the wrong endpoint. Search/cast/crew
+        // rows put the TMDB id directly in `id`. Collection `parts` rows lack
+        // `mediaType` entirely — caller passes "movie" via defaultMediaType.
+        private static bool TryReadListingTarget(JsonElement item, string? defaultMediaType, out string mediaType, out int tmdbId)
+        {
+            mediaType = "";
+            tmdbId = 0;
+            if (item.ValueKind != JsonValueKind.Object) return false;
+
+            if (item.TryGetProperty("mediaType", out var mtEl)
+                && mtEl.ValueKind == JsonValueKind.String
+                && !string.IsNullOrEmpty(mtEl.GetString()))
+            {
+                var mt = mtEl.GetString()!;
+                if (string.Equals(mt, "person", StringComparison.OrdinalIgnoreCase)) return false;
+                mediaType = mt;
+            }
+            else if (!string.IsNullOrEmpty(defaultMediaType))
+            {
+                if (string.Equals(defaultMediaType, "person", StringComparison.OrdinalIgnoreCase)) return false;
+                mediaType = defaultMediaType!;
+            }
+            else return false;
+
+            if (item.TryGetProperty("tmdbId", out var tEl)
+                && tEl.ValueKind == JsonValueKind.Number
+                && tEl.TryGetInt32(out tmdbId)
+                && tmdbId > 0)
+                return true;
+            if (item.TryGetProperty("id", out var idEl)
+                && idEl.ValueKind == JsonValueKind.Number
+                && idEl.TryGetInt32(out tmdbId)
+                && tmdbId > 0)
+                return true;
+            return false;
+        }
+
+        private static bool TryReadListingTarget(JsonElement item, out string mediaType, out int tmdbId)
+            => TryReadListingTarget(item, null, out mediaType, out tmdbId);
+
+        private async Task ProbeAndCacheTmdbItemAsync(string mediaType, int tmdbId, string? country, string jellyseerrUserId)
+        {
+            string detailPath;
+            JellyseerrParentalFilter.DetailType detailType;
+            if (string.Equals(mediaType, "movie", StringComparison.OrdinalIgnoreCase))
+            {
+                detailPath = $"/api/v1/movie/{tmdbId}";
+                detailType = JellyseerrParentalFilter.DetailType.Movie;
+            }
+            else if (string.Equals(mediaType, "tv", StringComparison.OrdinalIgnoreCase))
+            {
+                detailPath = $"/api/v1/tv/{tmdbId}";
+                detailType = JellyseerrParentalFilter.DetailType.Series;
+            }
+            else { return; }
+
+            var (outcome, json) = await FetchSeerrJsonRaw(detailPath, jellyseerrUserId);
+            if (outcome != SeerrProbeOutcome.Success || string.IsNullOrEmpty(json))
+            {
+                _logger.Debug($"Deep filter probe non-success for {mediaType}/{tmdbId}: outcome={outcome}");
+                return;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var meta = JellyseerrParentalFilter.BuildMetaFromDetail(doc.RootElement, detailType, country);
+                JellyseerrParentalFilter.StoreTmdbMeta(mediaType, tmdbId, country, meta);
+            }
+            catch (JsonException ex)
+            {
+                _logger.Warning($"Deep filter: parse failed for {mediaType}/{tmdbId} (len={json.Length}): {ex.Message}");
+            }
+        }
+
+        // Falls back to surface check (adult flag only) when not in cache, so adult
+        // stripping remains the floor.
+        private bool IsDeepListingItemAllowed(JsonElement item, string? defaultMediaType, JellyseerrParentalFilter.FilterContext ctx)
+        {
+            if (!TryReadListingTarget(item, defaultMediaType, out var mediaType, out var tmdbId))
+                return JellyseerrParentalFilter.IsListingItemAllowed(item, ctx);
+
+            var meta = JellyseerrParentalFilter.GetCachedTmdbMeta(mediaType, tmdbId, ctx.PreferredCountry);
+            if (meta == null)
+                return JellyseerrParentalFilter.IsListingItemAllowed(item, ctx);
+
+            var dt = string.Equals(mediaType, "movie", StringComparison.OrdinalIgnoreCase)
+                ? JellyseerrParentalFilter.DetailType.Movie
+                : JellyseerrParentalFilter.DetailType.Series;
+            return JellyseerrParentalFilter.IsMetaAllowed(meta, dt, ctx).Allowed;
+        }
+
+        private async Task<(IActionResult? Override, string Content)> ApplyParentalFilterAsync(
+            string responseContent,
+            string apiPath,
+            HttpMethod method,
+            JellyseerrParentalFilter.FilterContext? ctx,
+            string jellyseerrUserId)
+        {
+            if (ctx == null) return (null, responseContent);
+
+            if (method == HttpMethod.Get)
+            {
+                var detailType = JellyseerrParentalFilter.ClassifyDetailPath(apiPath);
+                if (detailType != JellyseerrParentalFilter.DetailType.None)
+                {
+                    // Seasons don't carry contentRatings — gate them via the parent series.
+                    if (TryParseSeriesIdFromSeasonPath(apiPath, out var seriesId))
+                    {
+                        var (probeOutcome, seriesJson) = await FetchSeerrJsonRaw($"/api/v1/tv/{seriesId}", jellyseerrUserId);
+                        if (probeOutcome == SeerrProbeOutcome.UpstreamError)
+                        {
+                            _logger.Warning($"Parental filter: parent series {seriesId} probe failed for user {ctx.User.Username} (season under TV-MA could leak); failing closed.");
+                            return (ParentalUnverifiableResult(), responseContent);
+                        }
+                        if (probeOutcome == SeerrProbeOutcome.NotFound)
+                        {
+                            return (null, responseContent);
+                        }
+                        try
+                        {
+                            using var sdoc = JsonDocument.Parse(seriesJson!);
+                            var sdec = JellyseerrParentalFilter.IsDetailAllowed(sdoc.RootElement, JellyseerrParentalFilter.DetailType.Series, ctx);
+                            if (!sdec.Allowed)
+                            {
+                                _logger.Info($"Parental filter blocked Seerr season under series {seriesId} for user {ctx.User.Username}: {sdec.Reason}");
+                                return (ParentalBlockedResult(sdec.Reason), responseContent);
+                            }
+                        }
+                        catch (JsonException ex)
+                        {
+                            _logger.Warning($"Parental filter: parent series {seriesId} returned unparseable JSON for user {ctx.User.Username} (len={seriesJson?.Length ?? 0}); failing closed: {ex.Message}");
+                            return (ParentalUnverifiableResult(), responseContent);
+                        }
+                        return (null, responseContent);
+                    }
+
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(responseContent);
+                        var dec = JellyseerrParentalFilter.IsDetailAllowed(doc.RootElement, detailType, ctx);
+                        if (!dec.Allowed)
+                        {
+                            _logger.Info($"Parental filter blocked Seerr detail {apiPath} for user {ctx.User.Username}: {dec.Reason}");
+                            return (ParentalBlockedResult(dec.Reason), responseContent);
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.Warning($"Parental filter: detail JSON for {apiPath} unparseable for user {ctx.User.Username}; failing closed: {ex.Message}");
+                        return (ParentalUnverifiableResult(), responseContent);
+                    }
+                    return (null, responseContent);
+                }
+
+                if (JellyseerrParentalFilter.IsListingPath(apiPath))
+                {
+                    var surfaceFiltered = JellyseerrParentalFilter.FilterListingByPath(responseContent, ctx, apiPath, _logger);
+
+                    var cfg = JellyfinEnhanced.Instance?.Configuration;
+                    if (cfg != null && cfg.JellyseerrDeepFilterListings && ctx.HasRatingOrTagRestriction)
+                    {
+                        var deepFiltered = await ApplyDeepListingFilterAsync(surfaceFiltered, apiPath, ctx, jellyseerrUserId);
+                        var refilled = await RefillDeepFilteredListingAsync(deepFiltered, apiPath, ctx, jellyseerrUserId);
+                        return (null, refilled);
+                    }
+                    return (null, surfaceFiltered);
+                }
+            }
+
+            return (null, responseContent);
+        }
+
+        // /api/v1/tv/{seriesId}/season/{seasonNumber}  →  out int seriesId
+        private static bool TryParseSeriesIdFromSeasonPath(string apiPath, out int seriesId)
+        {
+            seriesId = 0;
+            if (string.IsNullOrEmpty(apiPath)) return false;
+            var path = apiPath;
+            var q = path.IndexOf('?');
+            if (q >= 0) path = path.Substring(0, q);
+            var parts = path.TrimEnd('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 6) return false;
+            if (!parts[0].Equals("api", StringComparison.OrdinalIgnoreCase)) return false;
+            if (!parts[1].Equals("v1", StringComparison.OrdinalIgnoreCase)) return false;
+            if (!parts[2].Equals("tv", StringComparison.OrdinalIgnoreCase)) return false;
+            if (!parts[4].Equals("season", StringComparison.OrdinalIgnoreCase)) return false;
+            return int.TryParse(parts[3], out seriesId) && seriesId > 0;
+        }
+
+        // Fail closed on probe error so a transient outage can't pass an unblocked
+        // POST through to Seerr (Seerr has no parental controls of its own).
+        // Body parse failures return null — let upstream produce its own 4xx.
+        private async Task<IActionResult?> ValidateRequestParentalAsync(
+            string? content,
+            JellyseerrParentalFilter.FilterContext ctx,
+            string jellyseerrUserId)
+        {
+            if (string.IsNullOrEmpty(content)) return null;
+
+            string? mediaType;
+            int tmdbId;
+            try
+            {
+                using var doc = JsonDocument.Parse(content);
+                if (doc.RootElement.ValueKind != JsonValueKind.Object) return null;
+                if (!doc.RootElement.TryGetProperty("mediaType", out var mtEl)
+                    || mtEl.ValueKind != JsonValueKind.String) return null;
+                mediaType = mtEl.GetString();
+                if (string.IsNullOrWhiteSpace(mediaType)) return null;
+
+                if (!doc.RootElement.TryGetProperty("mediaId", out var midEl)
+                    || midEl.ValueKind != JsonValueKind.Number
+                    || !midEl.TryGetInt32(out tmdbId)
+                    || tmdbId <= 0) return null;
+            }
+            catch (JsonException) { return null; }
+
+            string detailPath;
+            JellyseerrParentalFilter.DetailType detailType;
+            if (string.Equals(mediaType, "movie", StringComparison.OrdinalIgnoreCase))
+            {
+                detailPath = $"/api/v1/movie/{tmdbId}";
+                detailType = JellyseerrParentalFilter.DetailType.Movie;
+            }
+            else if (string.Equals(mediaType, "tv", StringComparison.OrdinalIgnoreCase))
+            {
+                detailPath = $"/api/v1/tv/{tmdbId}";
+                detailType = JellyseerrParentalFilter.DetailType.Series;
+            }
+            else return null;
+
+            var (probeOutcome, detailJson) = await FetchSeerrJsonRaw(detailPath, jellyseerrUserId);
+            if (probeOutcome == SeerrProbeOutcome.NotFound) return null;
+            if (probeOutcome == SeerrProbeOutcome.UpstreamError)
+            {
+                _logger.Warning($"Parental filter: upstream error probing tmdbId={tmdbId} ({mediaType}) for user {ctx.User.Username}; failing closed.");
+                return ParentalUnverifiableResult();
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(detailJson!);
+                var dec = JellyseerrParentalFilter.IsDetailAllowed(doc.RootElement, detailType, ctx);
+                if (!dec.Allowed)
+                {
+                    _logger.Info($"Parental filter blocked Seerr request for tmdbId={tmdbId} ({mediaType}) by user {ctx.User.Username}: {dec.Reason}");
+                    return ParentalBlockedResult(dec.Reason);
+                }
+            }
+            catch (JsonException ex)
+            {
+                _logger.Warning($"Parental filter: detail JSON unparseable during request validation for tmdbId={tmdbId} (user {ctx.User.Username}); failing closed: {ex.Message}");
+                return ParentalUnverifiableResult();
+            }
+            return null;
+        }
+
+        // NotFound (404/410) → let upstream's 4xx flow to the user. UpstreamError
+        // (everything else: 400/401/403/429/5xx/network) → caller fails closed.
+        private enum SeerrProbeOutcome { Success, NotFound, UpstreamError }
+
+        private async Task<(SeerrProbeOutcome Outcome, string? Content)> FetchSeerrJsonRaw(string apiPath, string jellyseerrUserId)
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null
+                || string.IsNullOrEmpty(config.JellyseerrUrls)
+                || string.IsNullOrEmpty(config.JellyseerrApiKey))
+            {
+                _logger.Warning($"FetchSeerrJsonRaw: Seerr not configured, cannot probe {apiPath}");
+                return (SeerrProbeOutcome.UpstreamError, null);
+            }
+
+            var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(15);
+            int upstreamFailures = 0;
+            int notFoundCount = 0;
+
+            foreach (var url in urls)
+            {
+                var trimmedUrl = url.Trim();
+                try
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Get, $"{trimmedUrl.TrimEnd('/')}{apiPath}");
+                    req.Headers.Add("X-Api-Key", config.JellyseerrApiKey);
+                    req.Headers.Add("X-Api-User", jellyseerrUserId);
+                    using var resp = await httpClient.SendAsync(req);
+                    if (resp.IsSuccessStatusCode)
+                        return (SeerrProbeOutcome.Success, await resp.Content.ReadAsStringAsync());
+
+                    int status = (int)resp.StatusCode;
+                    if (status == 404 || status == 410)
+                    {
+                        notFoundCount++;
+                    }
+                    else
+                    {
+                        upstreamFailures++;
+                        _logger.Warning($"FetchSeerrJsonRaw: {apiPath} at {trimmedUrl} returned {status}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    upstreamFailures++;
+                    _logger.Warning($"FetchSeerrJsonRaw: {apiPath} at {trimmedUrl} threw {ex.GetType().Name}: {ex.Message}");
+                }
+            }
+
+            if (upstreamFailures == 0 && notFoundCount > 0) return (SeerrProbeOutcome.NotFound, null);
+            return (SeerrProbeOutcome.UpstreamError, null);
+        }
+
         private async Task<IActionResult> ProxyJellyseerrRequest(string apiPath, HttpMethod method, string? content = null)
         {
             var config = JellyfinEnhanced.Instance?.Configuration;
@@ -482,6 +1285,44 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 _logger.Warning($"Could not find a Jellyseerr user for Jellyfin user {ResolveUserDisplay(jellyfinUserId)}. Aborting request.");
                 return NotFound(new { message = "Current Jellyfin user is not linked to a Jellyseerr user." });
+            }
+
+            var (parentalOutcome, parentalCtx) = BuildParentalContext(jellyfinUserId, config);
+            if (parentalOutcome == ParentalContextOutcome.Unverifiable)
+                return ParentalUnverifiableResult();
+
+            // Tier 1 — inject certificationLte for TMDB Discover. Must run BEFORE
+            // cache-key computation so different users get different cache entries.
+            if (parentalCtx != null && parentalCtx.HasRatingOrTagRestriction && method == HttpMethod.Get)
+                apiPath = AugmentDiscoverPathWithCertLte(apiPath, parentalCtx);
+
+            // Tier 2 page-window mapping: with refill, client page N consumes (1 + Max
+            // extra) upstream pages. Map client page N → upstream start page
+            // (N-1)*window+1 so client pages don't overlap upstream ranges (otherwise
+            // every other client page is mostly duplicates of the previous one).
+            // Capture the original client page so we can rewrite it back into the
+            // response body before caching/returning.
+            int? clientOriginalPage = null;
+            if (parentalCtx != null
+                && parentalCtx.HasRatingOrTagRestriction
+                && config.JellyseerrDeepFilterListings
+                && method == HttpMethod.Get
+                && JellyseerrParentalFilter.IsListingPath(apiPath)
+                && TryGetPageParam(apiPath, out var origPage)
+                && origPage > 1)
+            {
+                clientOriginalPage = origPage;
+                int upstreamStart = (origPage - 1) * (DeepFilterRefillMaxExtraFetches + 1) + 1;
+                apiPath = ReplacePageParam(apiPath, upstreamStart);
+            }
+
+            // Pre-flight: block parental-rejected POST submissions before they hit upstream.
+            if (parentalCtx != null
+                && method == HttpMethod.Post
+                && IsRequestSubmissionPath(apiPath))
+            {
+                var rejection = await ValidateRequestParentalAsync(content, parentalCtx, jellyseerrUserId);
+                if (rejection != null) return rejection;
             }
 
             // Enforce Seerr permissions for write operations and sensitive reads.
@@ -526,9 +1367,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
-            // Check server-side response cache for cacheable endpoints
+            // f0=bypass, f1=filter on (surface only), f2=filter on (deep) — encoding
+            // both toggles so flipping either invalidates cached entries. Per-user
+            // pref changes settle on TTL expiry (accepted tradeoff).
             bool isCacheable = IsCacheableApiPath(apiPath, method) && !config.JellyseerrDisableCache;
-            var cacheKey = $"{jellyfinUserId}:{apiPath}";
+            string filterToken = parentalCtx == null
+                ? "f0"
+                : (config.JellyseerrDeepFilterListings ? "f2" : "f1");
+            var cacheKey = $"{jellyfinUserId}:{filterToken}:{apiPath}";
             if (isCacheable)
             {
                 lock (_responseCacheLock)
@@ -582,12 +1428,25 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                     if (response.IsSuccessStatusCode)
                     {
+                        // Blocked details return 403 directly and skip the cache write.
+                        var (overrideResult, finalContent) = await ApplyParentalFilterAsync(
+                            responseContent, apiPath, method, parentalCtx, jellyseerrUserId);
+                        if (overrideResult != null)
+                        {
+                            return overrideResult;
+                        }
+
+                        // Rewrite response.page back to the client's view so the
+                        // frontend's "next page" math advances by 1, not by the window.
+                        if (clientOriginalPage.HasValue)
+                            finalContent = RewriteResponsePage(finalContent, clientOriginalPage.Value);
+
                         // Cache successful responses for cacheable endpoints
                         if (isCacheable)
                         {
                             lock (_responseCacheLock)
                             {
-                                _responseCache[cacheKey] = (responseContent, DateTime.UtcNow);
+                                _responseCache[cacheKey] = (finalContent, DateTime.UtcNow);
 
                                 // Evict stale entries periodically (every 50 writes or when over capacity)
                                 if (_responseCache.Count > 200 || _responseCache.Count % 50 == 0)
@@ -602,7 +1461,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             }
                         }
 
-                        return Content(responseContent, "application/json");
+                        return Content(finalContent, "application/json");
                     }
 
                     _logger.Warning($"Request to Seerr for user {ResolveUserDisplay(jellyfinUserId)} failed. URL: {trimmedUrl}, Path: {apiPath}, Status: {response.StatusCode}, Response: {responseContent}");

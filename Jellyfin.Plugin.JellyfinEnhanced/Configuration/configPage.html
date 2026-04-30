@@ -957,6 +957,14 @@
                             <div class="je-setting-description" data-desc-for="jellyseerrShowAdvanced">
                                 <div class="fieldDescription je-field-desc-xl">Enable this if you want users to be able to choose between Servers, Quality and Paths while requesting. <br/> Note: This will disregard any Override Rules set in Seerr.</div>
                             </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrFilterByParentalRating" is="emby-checkbox" type="checkbox"/><span>Apply Jellyfin parental controls to Seerr</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrFilterByParentalRating">
+                                <div class="fieldDescription je-field-desc-xl">Applies each user's Jellyfin content settings — their max allowed rating, blocked or allowed tags, and the rule that hides items with no rating — to everything they see and request through Seerr. The same rules that already govern what they can see in your Jellyfin library now also apply to Seerr search, browsing, and request buttons. Adult content is always hidden when this is on, and administrators are never filtered.<br/><br/>If a restricted user tries to view or request a blocked title, they'll see a friendly <i>"This title isn't available with your current account settings"</i> message instead of an error.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrDeepFilterListings" is="emby-checkbox" type="checkbox"/><span>Also apply controls to search and recommendation lists</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrDeepFilterListings">
+                                <div class="fieldDescription je-field-desc-xl">Also removes blocked titles from <b>search results</b>, <b>"similar" and "recommended" rows</b>, <b>watchlists</b>, <b>collection contents</b>, and <b>actor filmographies</b> — so blocked titles never show up in the first place.<br/><br/>Without this, restricted users may see blocked titles as cards in those rows. Clicking on them still shows the "not available" message, but having them appear at all can be confusing.<br/><br/>The first search on a fresh topic may take a moment longer while the server checks each item's rating; results are then cached for about an hour so repeat searches feel instant. Turn this off if you'd rather have the absolute fastest searches and don't mind blocked titles appearing in lists.</div>
+                            </div>
                         </div>
                     </fieldset>
 
@@ -3763,6 +3771,8 @@
                 document.querySelector('#jellyseerrEnable4kTvRequests').checked = !!config.JellyseerrEnable4KTvRequests;
                 document.querySelector('#jellyseerrUseMoreInfoModal').checked = !!config.JellyseerrUseMoreInfoModal;
                 document.querySelector('#jellyseerrShowAdvanced').checked = config.JellyseerrShowAdvanced;
+                document.querySelector('#jellyseerrFilterByParentalRating').checked = config.JellyseerrFilterByParentalRating !== false;
+                document.querySelector('#jellyseerrDeepFilterListings').checked = config.JellyseerrDeepFilterListings !== false;
                 document.querySelector('#jellyseerrShowSimilar').checked = config.JellyseerrShowSimilar !== false;
                 document.querySelector('#jellyseerrShowRecommended').checked = config.JellyseerrShowRecommended !== false;
                 document.querySelector('#jellyseerrShowRequestMoreOnSeries').checked = config.JellyseerrShowRequestMoreOnSeries !== false;
@@ -3985,6 +3995,8 @@
             config.JellyseerrEnable4KTvRequests = document.querySelector('#jellyseerrEnable4kTvRequests').checked;
             config.JellyseerrUseMoreInfoModal = document.querySelector('#jellyseerrUseMoreInfoModal').checked;
             config.JellyseerrShowAdvanced = document.querySelector('#jellyseerrShowAdvanced').checked;
+            config.JellyseerrFilterByParentalRating = document.querySelector('#jellyseerrFilterByParentalRating').checked;
+            config.JellyseerrDeepFilterListings = document.querySelector('#jellyseerrDeepFilterListings').checked;
             config.JellyseerrShowSimilar = document.querySelector('#jellyseerrShowSimilar').checked;
             config.JellyseerrShowRecommended = document.querySelector('#jellyseerrShowRecommended').checked;
             config.JellyseerrShowRequestMoreOnSeries = document.querySelector('#jellyseerrShowRequestMoreOnSeries').checked;
@@ -4950,6 +4962,8 @@
             { parent: 'useIcons', label: 'Use Icons', children: ['iconStyle'] },
             { parent: 'letterboxdEnabled', label: 'Enable Letterboxd', children: ['showLetterboxdLinkAsText'] },
             { parent: 'enableCustomSplashScreen', label: 'Enable Custom Splash Screen', children: ['splashScreenImageUrl'] },
+            { parent: 'jellyseerrEnabled', label: 'Enable Seerr integration', children: ['jellyseerrFilterByParentalRating', 'jellyseerrDeepFilterListings'] },
+            { parent: 'jellyseerrFilterByParentalRating', label: 'Apply Jellyfin parental controls to Seerr', children: ['jellyseerrDeepFilterListings'] },
             { parent: 'jellyseerrShowSearchResults', label: 'Show Seerr Results in Search', children: ['showCollectionsInSearch'] },
             { parent: 'jellyseerrShowReportButton', label: 'Show Report Issue button', children: ['jellyseerrShowIssueIndicator'] },
             { parent: 'downloadsPageEnabled', label: 'Enable Requests Page', children: ['showDownloadsInRequests', 'downloadsPageShowIssues', 'downloadsUsePluginPages', 'downloadsUseCustomTabs', 'downloadsPagePollingEnabled'] },

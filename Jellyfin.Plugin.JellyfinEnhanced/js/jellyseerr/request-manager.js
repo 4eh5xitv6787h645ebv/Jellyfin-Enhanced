@@ -110,7 +110,19 @@
                 }
 
                 lastStatus = response.status;
-                lastError = new Error(`HTTP ${response.status}`);
+
+                // Mirror ApiClient.ajax error shape (responseJSON + status) so existing
+                // catch sites can surface the server-provided message in their toast.
+                let bodyText = '';
+                try { bodyText = await response.text(); } catch { /* empty body */ }
+                let bodyJson = null;
+                if (bodyText) {
+                    try { bodyJson = JSON.parse(bodyText); } catch { /* not JSON */ }
+                }
+                lastError = new Error(`HTTP ${response.status}${bodyJson?.message ? ` — ${bodyJson.message}` : ''}`);
+                lastError.status = response.status;
+                lastError.responseJSON = bodyJson;
+                lastError.responseText = bodyText;
 
                 if (!isRetryable(null, response.status)) {
                     throw lastError;

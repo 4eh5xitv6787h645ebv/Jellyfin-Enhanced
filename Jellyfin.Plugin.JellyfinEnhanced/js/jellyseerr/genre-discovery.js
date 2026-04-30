@@ -417,92 +417,80 @@
 
         isLoading = true;
 
-        // Track page state before increment so we can roll back on failure
         const prevTvPage = tvCurrentPage;
         const prevMoviePage = movieCurrentPage;
+        const signal = currentAbortController?.signal;
 
-        try {
-            const signal = currentAbortController?.signal;
-            const promises = [];
-
-            // Determine which endpoints to fetch based on filter mode
-            const needTv = (filterMode === 'mixed' || filterMode === 'tv') && tvHasMorePages && currentGenreIds.tv;
-            const needMovies = (filterMode === 'mixed' || filterMode === 'movies') && movieHasMorePages && currentGenreIds.movie;
-
-            if (needTv) {
-                tvCurrentPage++;
-                promises.push(
-                    fetchTvDiscover(currentGenreIds.tv, tvCurrentPage, signal)
-                        .then(r => ({ type: 'tv', data: r }))
-                );
-            }
-            if (needMovies) {
-                movieCurrentPage++;
-                promises.push(
-                    fetchMovieDiscover(currentGenreIds.movie, movieCurrentPage, signal)
-                        .then(r => ({ type: 'movie', data: r }))
-                );
-            }
-
-            if (promises.length === 0) {
-                hasMorePages = false;
-                return;
-            }
-
-            const results = await Promise.all(promises);
-
+        // Render results for one source independently — TV/movies are fetched
+        // concurrently and rendered as each resolves, so a slow TV response no
+        // longer blocks movies from showing up (and vice versa).
+        const renderSource = (type, items) => {
             if (signal?.aborted) return;
-
-            let newTvResults = [];
-            let newMovieResults = [];
-
-            results.forEach(r => {
-                if (r.type === 'tv') {
-                    newTvResults = r.data.results || [];
-                    tvHasMorePages = tvCurrentPage < (r.data.totalPages || 1);
-                    cachedTvResults = [...cachedTvResults, ...newTvResults];
-                } else {
-                    newMovieResults = r.data.results || [];
-                    movieHasMorePages = movieCurrentPage < (r.data.totalPages || 1);
-                    cachedMovieResults = [...cachedMovieResults, ...newMovieResults];
-                }
-            });
-
-            updateHasMorePages(filterMode);
-
-            // Get items to add based on filter mode
-            let itemsToAdd;
-            if (filterMode === 'tv') {
-                itemsToAdd = newTvResults;
-            } else if (filterMode === 'movies') {
-                itemsToAdd = newMovieResults;
-            } else {
-                itemsToAdd = JE.discoveryFilter?.interleaveArrays(newTvResults, newMovieResults) ||
-                             [...newTvResults, ...newMovieResults];
-            }
-
-            if (itemsToAdd.length === 0) return;
-
-            // Deduplicate items using deduplicator (if available)
+            if (!items || items.length === 0) return;
+            let toAdd = items;
             if (itemDeduplicator) {
-                itemsToAdd = itemDeduplicator.filter(itemsToAdd);
-                if (itemsToAdd.length === 0) return;
+                toAdd = itemDeduplicator.filter(toAdd);
+                if (toAdd.length === 0) return;
             }
-
             const itemsContainer = document.querySelector('.jellyseerr-genre-discovery-section .itemsContainer');
             if (itemsContainer) {
-                const fragment = createCardsFragment(itemsToAdd);
-                if (fragment.childNodes.length > 0) {
-                    itemsContainer.appendChild(fragment);
-                }
+                const fragment = createCardsFragment(toAdd);
+                if (fragment.childNodes.length > 0) itemsContainer.appendChild(fragment);
             }
-        } catch (error) {
-            // Roll back page counters on failure so retry fetches the same page
-            tvCurrentPage = prevTvPage;
-            movieCurrentPage = prevMoviePage;
-            if (error.name === 'AbortError') return;
-            console.error(`${logPrefix} Error loading more items:`, error);
-            throw error; // Re-throw for seamlessScroll retry handling
+        };
+
+        const tasks = [];
+        const needTv = (filterMode === 'mixed' || filterMode === 'tv') && tvHasMorePages && currentGenreIds.tv;
+        const needMovies = (filterMode === 'mixed' || filterMode === 'movies') && movieHasMorePages && currentGenreIds.movie;
+
+        if (needTv) {
+            tvCurrentPage++;
+            tasks.push((async () => {
+                try {
+                    const r = await fetchTvDiscover(currentGenreIds.tv, tvCurrentPage, signal);
+                    if (signal?.aborted) return;
+                    const items = r?.results || [];
+                    // totalPages tells us when upstream is genuinely exhausted.
+                    // Don't treat empty-after-filter as "no more" — heavy parental
+                    // filters routinely return 0 items per page on early pages but
+                    // later pages may still have allowed content.
+                    tvHasMorePages = tvCurrentPage < (r?.totalPages || 1);
+                    cachedTvResults = [...cachedTvResults, ...items];
+                    if (filterMode !== 'movies') renderSource('tv', items);
+                } catch (err) {
+                    tvCurrentPage = prevTvPage;
+                    if (err?.name === 'AbortError') return;
+                    console.error(`${logPrefix} TV load failed:`, err);
+                }
+            })());
+        }
+        if (needMovies) {
+            movieCurrentPage++;
+            tasks.push((async () => {
+                try {
+                    const r = await fetchMovieDiscover(currentGenreIds.movie, movieCurrentPage, signal);
+                    if (signal?.aborted) return;
+                    const items = r?.results || [];
+                    movieHasMorePages = movieCurrentPage < (r?.totalPages || 1);
+                    cachedMovieResults = [...cachedMovieResults, ...items];
+                    if (filterMode !== 'tv') renderSource('movie', items);
+                } catch (err) {
+                    movieCurrentPage = prevMoviePage;
+                    if (err?.name === 'AbortError') return;
+                    console.error(`${logPrefix} Movie load failed:`, err);
+                }
+            })());
+        }
+
+        if (tasks.length === 0) {
+            hasMorePages = false;
+            isLoading = false;
+            return;
+        }
+
+        try {
+            await Promise.allSettled(tasks);
+            updateHasMorePages(filterMode);
         } finally {
             isLoading = false;
         }
