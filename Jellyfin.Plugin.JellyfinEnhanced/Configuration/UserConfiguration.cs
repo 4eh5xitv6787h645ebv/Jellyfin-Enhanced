@@ -30,6 +30,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool ShowFileSizes { get; set; }
         public bool ShowAudioLanguages { get; set; }
         public bool QualityTagsEnabled { get; set; }
+        public bool ShowResolutionTag { get; set; } = true;
+        public bool ShowSourceTag { get; set; } = true;
+        public bool ShowDynamicRangeTag { get; set; } = true;
+        public bool ShowSpecialFormatTag { get; set; } = true;
+        public bool ShowVideoCodecTag { get; set; } = true;
+        public bool ShowAudioInfoTag { get; set; } = true;
+        // Per-category stack order within the master quality-tags container.
+        // Lower numbers render first. Defaults match the prior hard-coded order.
+        public int ResolutionTagOrder { get; set; } = 1;
+        public int SourceTagOrder { get; set; } = 2;
+        public int DynamicRangeTagOrder { get; set; } = 3;
+        public int SpecialFormatTagOrder { get; set; } = 4;
+        public int VideoCodecTagOrder { get; set; } = 5;
+        public int AudioInfoTagOrder { get; set; } = 6;
         public bool GenreTagsEnabled { get; set; }
         public bool LanguageTagsEnabled { get; set; }
         public bool RatingTagsEnabled { get; set; }

@@ -204,6 +204,39 @@
                             <div class="je-setting-description" data-desc-for="qualityTagsEnabled">
                                 <div class="fieldDescription je-field-desc-sm">This feature is a slightly modified version of the original script by <a class="sectionTitle" href="https://github.com/BobHasNoSoul/Jellyfin-Qualitytags/" target="_blank">BobHasNoSoul</a></div>
                             </div>
+                            <div id="qualityCategoriesAdmin" style="margin-left: 24px; margin-bottom: 8px;">
+                                <div class="fieldDescription je-field-desc-sm" style="margin-bottom: 6px;">Pick which categories of quality tags should appear, and the order they stack within the chosen corner. Use the ▲ / ▼ buttons to reorder.</div>
+                                <div class="je-quality-cat-admin-row" data-cat-key="ShowResolutionTag" data-order-key="ResolutionTagOrder" data-default-order="1" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                    <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showResolutionTag" is="emby-checkbox" type="checkbox"/><span>Show resolution (4K, 1080p, ...)</span></label></div>
+                                    <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
+                                    <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                </div>
+                                <div class="je-quality-cat-admin-row" data-cat-key="ShowSourceTag" data-order-key="SourceTagOrder" data-default-order="2" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                    <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showSourceTag" is="emby-checkbox" type="checkbox"/><span>Show source (BluRay, DVD, HDTV, VHS, ...)</span></label></div>
+                                    <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
+                                    <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                </div>
+                                <div class="je-quality-cat-admin-row" data-cat-key="ShowDynamicRangeTag" data-order-key="DynamicRangeTagOrder" data-default-order="3" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                    <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showDynamicRangeTag" is="emby-checkbox" type="checkbox"/><span>Show dynamic range (HDR, HDR10+, Dolby Vision)</span></label></div>
+                                    <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
+                                    <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                </div>
+                                <div class="je-quality-cat-admin-row" data-cat-key="ShowSpecialFormatTag" data-order-key="SpecialFormatTagOrder" data-default-order="4" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                    <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showSpecialFormatTag" is="emby-checkbox" type="checkbox"/><span>Show special format (IMAX, 3D)</span></label></div>
+                                    <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
+                                    <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                </div>
+                                <div class="je-quality-cat-admin-row" data-cat-key="ShowVideoCodecTag" data-order-key="VideoCodecTagOrder" data-default-order="5" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                    <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showVideoCodecTag" is="emby-checkbox" type="checkbox"/><span>Show video codec (HEVC, H264, AV1, ...)</span></label></div>
+                                    <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
+                                    <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                </div>
+                                <div class="je-quality-cat-admin-row" data-cat-key="ShowAudioInfoTag" data-order-key="AudioInfoTagOrder" data-default-order="6" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                                    <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showAudioInfoTag" is="emby-checkbox" type="checkbox"/><span>Show audio info (Atmos, DTS, 5.1, 7.1, ...)</span></label></div>
+                                    <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
+                                    <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                </div>
+                            </div>
 
                             <div class="je-tag-row">
                                 <div class="checkboxContainer"><label><input id="genreTagsEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Genre Tags</span></label></div>
@@ -3761,6 +3794,67 @@
         // of its single config write.
         var _jeCustomTabOwnedCache = Object.create(null);
 
+        // Reorders the 6 quality-category admin rows to match the saved per-category
+        // *Order values, then refreshes button enable states. Called from loadConfig.
+        function renderQualityCatOrderAdmin(config) {
+            var container = document.getElementById('qualityCategoriesAdmin');
+            if (!container) return;
+            var rows = Array.from(container.querySelectorAll('.je-quality-cat-admin-row'));
+            rows.sort(function (a, b) {
+                var aOrder = parseInt(config[a.dataset.orderKey], 10);
+                var bOrder = parseInt(config[b.dataset.orderKey], 10);
+                if (!Number.isFinite(aOrder)) aOrder = parseInt(a.dataset.defaultOrder, 10);
+                if (!Number.isFinite(bOrder)) bOrder = parseInt(b.dataset.defaultOrder, 10);
+                if (aOrder !== bOrder) return aOrder - bOrder;
+                return parseInt(a.dataset.defaultOrder, 10) - parseInt(b.dataset.defaultOrder, 10);
+            });
+            rows.forEach(function (row) { container.appendChild(row); });
+            refreshQualityCatAdminArrows(container);
+        }
+
+        // Updates the disabled/opacity styling on the up/down buttons so the
+        // top row can't go up and the bottom row can't go down.
+        function refreshQualityCatAdminArrows(container) {
+            var rows = container.querySelectorAll('.je-quality-cat-admin-row');
+            rows.forEach(function (row, idx) {
+                var up = row.querySelector('.je-cat-up');
+                var down = row.querySelector('.je-cat-down');
+                var first = idx === 0;
+                var last = idx === rows.length - 1;
+                if (up) {
+                    up.disabled = first;
+                    up.style.opacity = first ? '0.4' : '1';
+                    up.style.cursor = first ? 'not-allowed' : 'pointer';
+                }
+                if (down) {
+                    down.disabled = last;
+                    down.style.opacity = last ? '0.4' : '1';
+                    down.style.cursor = last ? 'not-allowed' : 'pointer';
+                }
+            });
+        }
+
+        // Wire up/down arrow clicks for the admin quality-category list.
+        // Uses event delegation on the container so this only registers once.
+        (function () {
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest && e.target.closest('#qualityCategoriesAdmin .je-cat-up, #qualityCategoriesAdmin .je-cat-down');
+                if (!btn || btn.disabled) return;
+                e.preventDefault();
+                var row = btn.closest('.je-quality-cat-admin-row');
+                if (!row) return;
+                var isUp = btn.classList.contains('je-cat-up');
+                var sibling = isUp ? row.previousElementSibling : row.nextElementSibling;
+                if (!sibling || !sibling.classList.contains('je-quality-cat-admin-row')) return;
+                if (isUp) {
+                    row.parentNode.insertBefore(row, sibling);
+                } else {
+                    row.parentNode.insertBefore(sibling, row);
+                }
+                refreshQualityCatAdminArrows(row.parentNode);
+            });
+        })();
+
         function loadConfig() {
             Dashboard.showLoadingMsg();
             checkInstalledPlugins();
@@ -3820,6 +3914,15 @@
                 document.querySelector('#showAudioLanguages').checked = config.ShowAudioLanguages;
                 document.querySelector('#removeContinueWatchingEnabled').checked = config.RemoveContinueWatchingEnabled;
                 document.querySelector('#qualityTagsEnabled').checked = config.QualityTagsEnabled;
+                document.querySelector('#showResolutionTag').checked = config.ShowResolutionTag !== false;
+                document.querySelector('#showSourceTag').checked = config.ShowSourceTag !== false;
+                document.querySelector('#showDynamicRangeTag').checked = config.ShowDynamicRangeTag !== false;
+                document.querySelector('#showSpecialFormatTag').checked = config.ShowSpecialFormatTag !== false;
+                document.querySelector('#showVideoCodecTag').checked = config.ShowVideoCodecTag !== false;
+                document.querySelector('#showAudioInfoTag').checked = config.ShowAudioInfoTag !== false;
+                // Restore stack order: rows are visually reordered to match
+                // current saved order values (ties broken by default order).
+                if (typeof renderQualityCatOrderAdmin === 'function') renderQualityCatOrderAdmin(config);
                 document.querySelector('#genreTagsEnabled').checked = config.GenreTagsEnabled;
                 document.querySelector('#peopleTagsEnabled').checked = config.PeopleTagsEnabled;
                 const qPos = (config.QualityTagsPosition || 'top-left');
@@ -4084,6 +4187,19 @@
             config.ShowAudioLanguages = document.querySelector('#showAudioLanguages').checked;
             config.RemoveContinueWatchingEnabled = document.querySelector('#removeContinueWatchingEnabled').checked;
             config.QualityTagsEnabled = document.querySelector('#qualityTagsEnabled').checked;
+            config.ShowResolutionTag = document.querySelector('#showResolutionTag').checked;
+            config.ShowSourceTag = document.querySelector('#showSourceTag').checked;
+            config.ShowDynamicRangeTag = document.querySelector('#showDynamicRangeTag').checked;
+            config.ShowSpecialFormatTag = document.querySelector('#showSpecialFormatTag').checked;
+            config.ShowVideoCodecTag = document.querySelector('#showVideoCodecTag').checked;
+            config.ShowAudioInfoTag = document.querySelector('#showAudioInfoTag').checked;
+            // Persist current visual stack order. Each admin row reads its current
+            // DOM position (1-based) into the corresponding *Order config key.
+            const adminCatRows = document.querySelectorAll('#qualityCategoriesAdmin .je-quality-cat-admin-row');
+            adminCatRows.forEach((row, idx) => {
+                const orderKey = row.dataset.orderKey;
+                if (orderKey) config[orderKey] = idx + 1;
+            });
             config.GenreTagsEnabled = document.querySelector('#genreTagsEnabled').checked;
             config.LanguageTagsEnabled = document.querySelector('#languageTagsEnabled').checked;
             config.RatingTagsEnabled = document.querySelector('#ratingTagsEnabled').checked;
@@ -5096,7 +5212,7 @@
             { parent: 'showUserReviews', label: 'Enable User Reviews', children: ['hideReviewsFromHiddenUsers', 'hideReviewsFromDisabledUsers'] },
             { parent: 'randomButtonEnabled', label: 'Enable Random Button', children: ['randomUnwatchedOnly', 'randomIncludeMovies', 'randomIncludeShows'] },
             { parent: 'showWatchProgress', label: 'Show watch progress', children: ['watchProgressDefaultMode', 'watchProgressTimeFormat'] },
-            { parent: 'qualityTagsEnabled', label: 'Enable Quality Tags', children: ['qualityTagsPosition'], noHint: true },
+            { parent: 'qualityTagsEnabled', label: 'Enable Quality Tags', children: ['qualityTagsPosition', 'showResolutionTag', 'showSourceTag', 'showDynamicRangeTag', 'showSpecialFormatTag', 'showVideoCodecTag', 'showAudioInfoTag'], noHint: true },
             { parent: 'genreTagsEnabled', label: 'Enable Genre Tags', children: ['genreTagsPosition'], noHint: true },
             { parent: 'languageTagsEnabled', label: 'Enable Language Tags', children: ['languageTagsPosition'], noHint: true },
             { parent: 'ratingTagsEnabled', label: 'Enable Rating Tags', children: ['ratingTagsPosition'], noHint: true },

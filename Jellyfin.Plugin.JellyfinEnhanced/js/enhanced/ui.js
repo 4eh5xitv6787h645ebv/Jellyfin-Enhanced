@@ -884,6 +884,38 @@
                                         <div data-pos="bottom-right" style="border-radius:2px; transition:background 0.2s;"></div>
                                     </div>
                                 </label>
+                                <div id="qualityTagsSubToggles" style="margin: 8px 0 0 30px; display: ${JE.currentSettings.qualityTagsEnabled ? 'block' : 'none'};">
+                                    ${(() => {
+                                        const cats = [
+                                            { id: 'showResolutionTagToggle',    settingKey: 'showResolutionTag',    orderKey: 'resolutionTagOrder',    defaultOrder: 1, labelKey: 'panel_settings_ui_quality_tags_resolution' },
+                                            { id: 'showSourceTagToggle',        settingKey: 'showSourceTag',        orderKey: 'sourceTagOrder',        defaultOrder: 2, labelKey: 'panel_settings_ui_quality_tags_source' },
+                                            { id: 'showDynamicRangeTagToggle',  settingKey: 'showDynamicRangeTag',  orderKey: 'dynamicRangeTagOrder',  defaultOrder: 3, labelKey: 'panel_settings_ui_quality_tags_dynamic_range' },
+                                            { id: 'showSpecialFormatTagToggle', settingKey: 'showSpecialFormatTag', orderKey: 'specialFormatTagOrder', defaultOrder: 4, labelKey: 'panel_settings_ui_quality_tags_special_format' },
+                                            { id: 'showVideoCodecTagToggle',    settingKey: 'showVideoCodecTag',    orderKey: 'videoCodecTagOrder',    defaultOrder: 5, labelKey: 'panel_settings_ui_quality_tags_video_codec' },
+                                            { id: 'showAudioInfoTagToggle',     settingKey: 'showAudioInfoTag',     orderKey: 'audioInfoTagOrder',     defaultOrder: 6, labelKey: 'panel_settings_ui_quality_tags_audio_info' },
+                                        ];
+                                        // Sort categories by current order setting (lower first), tie-broken by default order.
+                                        const sorted = cats.slice().sort((a, b) => {
+                                            const ao = Number.isFinite(JE.currentSettings[a.orderKey]) ? JE.currentSettings[a.orderKey] : a.defaultOrder;
+                                            const bo = Number.isFinite(JE.currentSettings[b.orderKey]) ? JE.currentSettings[b.orderKey] : b.defaultOrder;
+                                            if (ao !== bo) return ao - bo;
+                                            return a.defaultOrder - b.defaultOrder;
+                                        });
+                                        return sorted.map((c, idx) => {
+                                            const checked = JE.currentSettings[c.settingKey] !== false ? 'checked' : '';
+                                            const upDisabled = idx === 0 ? 'disabled' : '';
+                                            const downDisabled = idx === sorted.length - 1 ? 'disabled' : '';
+                                            return `
+                                                <div class="je-quality-cat-row" data-cat-key="${c.settingKey}" data-order-key="${c.orderKey}" data-default-order="${c.defaultOrder}" style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                                                    <input type="checkbox" id="${c.id}" ${checked} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer; flex-shrink:0;">
+                                                    <span style="font-size:13px; flex:1;">${JE.t(c.labelKey)}</span>
+                                                    <button type="button" class="je-cat-up" ${upDisabled} aria-label="Move up" style="background:transparent; border:1px solid rgba(255,255,255,0.2); border-radius:3px; padding:2px 6px; color:inherit; cursor:${idx === 0 ? 'not-allowed' : 'pointer'}; opacity:${idx === 0 ? '0.4' : '1'}; font-size:12px; line-height:1;">▲</button>
+                                                    <button type="button" class="je-cat-down" ${downDisabled} aria-label="Move down" style="background:transparent; border:1px solid rgba(255,255,255,0.2); border-radius:3px; padding:2px 6px; color:inherit; cursor:${idx === sorted.length - 1 ? 'not-allowed' : 'pointer'}; opacity:${idx === sorted.length - 1 ? '0.4' : '1'}; font-size:12px; line-height:1;">▼</button>
+                                                </div>
+                                            `;
+                                        }).join('');
+                                    })()}
+                                </div>
                             </div>
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
@@ -1382,6 +1414,88 @@
         addSettingToggleListener('showAudioLanguagesToggle', 'showAudioLanguages', 'feature_audio_language_display');
         addSettingToggleListener('removeContinueWatchingToggle', 'removeContinueWatchingEnabled', 'feature_remove_continue_watching');
         addSettingToggleListener('qualityTagsToggle', 'qualityTagsEnabled', 'feature_quality_tags', true);
+        // Show/hide the nested resolution/video-format/audio-info sub-toggle group
+        // when the master quality-tags toggle changes.
+        const qualityMasterToggle = document.getElementById('qualityTagsToggle');
+        const qualitySubGroup = document.getElementById('qualityTagsSubToggles');
+        if (qualityMasterToggle && qualitySubGroup) {
+            qualityMasterToggle.addEventListener('change', () => {
+                qualitySubGroup.style.display = qualityMasterToggle.checked ? 'block' : 'none';
+            });
+        }
+        // 6 quality-tag category sub-toggles + up/down stack reordering.
+        // Sub-toggles only filter tags (no re-fetch); ↑/↓ swap order values
+        // with the neighbor row. Both trigger reinitializeQualityTags so
+        // existing cards re-render with the new settings.
+        if (qualitySubGroup) {
+            qualitySubGroup.addEventListener('change', (e) => {
+                const target = e.target;
+                if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+                const row = target.closest('.je-quality-cat-row');
+                if (!row) return;
+                const settingKey = row.dataset.catKey;
+                if (!settingKey) return;
+                JE.currentSettings[settingKey] = target.checked;
+                JE.saveUserSettings('settings.json', JE.currentSettings);
+                if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
+                    JE.reinitializeQualityTags();
+                }
+                resetAutoCloseTimer();
+            });
+            qualitySubGroup.addEventListener('click', (e) => {
+                const btn = e.target.closest('.je-cat-up, .je-cat-down');
+                if (!btn || btn.disabled) return;
+                const row = btn.closest('.je-quality-cat-row');
+                if (!row) return;
+                const isUp = btn.classList.contains('je-cat-up');
+                const sibling = isUp ? row.previousElementSibling : row.nextElementSibling;
+                if (!sibling || !sibling.classList.contains('je-quality-cat-row')) return;
+                // Swap orderKey settings, then re-render the sub-toggle group.
+                const aOrderKey = row.dataset.orderKey;
+                const bOrderKey = sibling.dataset.orderKey;
+                const aDef = parseInt(row.dataset.defaultOrder, 10);
+                const bDef = parseInt(sibling.dataset.defaultOrder, 10);
+                const aCurrent = Number.isFinite(JE.currentSettings[aOrderKey]) ? JE.currentSettings[aOrderKey] : aDef;
+                const bCurrent = Number.isFinite(JE.currentSettings[bOrderKey]) ? JE.currentSettings[bOrderKey] : bDef;
+                JE.currentSettings[aOrderKey] = bCurrent;
+                JE.currentSettings[bOrderKey] = aCurrent;
+                JE.saveUserSettings('settings.json', JE.currentSettings);
+                // Reorder the rows in-place: visually swap them so the user
+                // sees the change immediately without rebuilding the panel.
+                if (isUp) {
+                    sibling.parentNode.insertBefore(row, sibling);
+                } else {
+                    sibling.parentNode.insertBefore(sibling, row);
+                }
+                refreshQualityCatArrowStates(qualitySubGroup);
+                if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
+                    JE.reinitializeQualityTags();
+                }
+                resetAutoCloseTimer();
+            });
+        }
+
+        // Updates the disabled / cursor / opacity styles on all up/down arrows
+        // to reflect each row's current position (top row can't go up, etc.).
+        function refreshQualityCatArrowStates(group) {
+            const rows = group.querySelectorAll('.je-quality-cat-row');
+            rows.forEach((row, idx) => {
+                const upBtn = row.querySelector('.je-cat-up');
+                const downBtn = row.querySelector('.je-cat-down');
+                const isFirst = idx === 0;
+                const isLast = idx === rows.length - 1;
+                if (upBtn) {
+                    upBtn.disabled = isFirst;
+                    upBtn.style.cursor = isFirst ? 'not-allowed' : 'pointer';
+                    upBtn.style.opacity = isFirst ? '0.4' : '1';
+                }
+                if (downBtn) {
+                    downBtn.disabled = isLast;
+                    downBtn.style.cursor = isLast ? 'not-allowed' : 'pointer';
+                    downBtn.style.opacity = isLast ? '0.4' : '1';
+                }
+            });
+        }
         addSettingToggleListener('genreTagsToggle', 'genreTagsEnabled', 'feature_genre_tags', true);
         addSettingToggleListener('pauseScreenToggle', 'pauseScreenEnabled', 'feature_custom_pause_screen', true);
 

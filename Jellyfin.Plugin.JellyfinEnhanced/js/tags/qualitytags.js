@@ -48,12 +48,35 @@
         // The types of Jellyfin items that are eligible for quality tags.
         const MEDIA_TYPES = new Set(['Movie', 'Episode', 'Series', 'Season']);
 
-        // Sort tags for consistent display order (Resolution > Codec > Features)
+        // Within-category sort orders (more important = lower index inside each category).
         const resolutionOrder = ['8K', '4K', '1440p', '1080p', '720p', '480p', 'LOW-RES', 'SD'];
+        const sourceOrder = ['BluRay', 'HD DVD', 'DVD', 'VHS', 'HDTV', 'Physical'];
+        const dynamicRangeOrder = ['Dolby Vision', 'HDR10+', 'HDR10', 'HDR'];
+        const specialFormatOrder = ['IMAX', '3D'];
         const codecOrder = ['AV1', 'HEVC', 'H265', 'VP9', 'H264', 'VP8', 'XVID', 'DIVX', 'WMV', 'MPEG2', 'MPEG4', 'MJPEG', 'THEORA'];
-        const videoOrder = ['IMAX', 'Dolby Vision', 'HDR10+', 'HDR10', 'HDR', '3D'];
         const audioOrder = ['ATMOS', 'DTS-X', 'TRUEHD', 'DTS', 'Dolby Digital+', '7.1', '5.1'];
-        const featureOrder = [...videoOrder, ...audioOrder];
+
+        // Categories drive sub-toggle visibility and stack order. The user can
+        // re-rank these to change the vertical order of tags within a card
+        // (e.g. resolution from first to third). Settings:
+        //   showXxxTag: per-user enable/disable for the category.
+        //   xxxTagOrder: integer 1..N for stack position.
+        //   defaultOrder: hardcoded fallback when neither user nor admin set a value.
+        const CATEGORIES = [
+            { key: 'resolution',    items: resolutionOrder,    settingKey: 'showResolutionTag',    pluginKey: 'ShowResolutionTag',    orderUserKey: 'resolutionTagOrder',    orderPluginKey: 'ResolutionTagOrder',    defaultOrder: 1 },
+            { key: 'source',        items: sourceOrder,        settingKey: 'showSourceTag',        pluginKey: 'ShowSourceTag',        orderUserKey: 'sourceTagOrder',        orderPluginKey: 'SourceTagOrder',        defaultOrder: 2 },
+            { key: 'dynamicRange',  items: dynamicRangeOrder,  settingKey: 'showDynamicRangeTag',  pluginKey: 'ShowDynamicRangeTag',  orderUserKey: 'dynamicRangeTagOrder',  orderPluginKey: 'DynamicRangeTagOrder',  defaultOrder: 3 },
+            { key: 'specialFormat', items: specialFormatOrder, settingKey: 'showSpecialFormatTag', pluginKey: 'ShowSpecialFormatTag', orderUserKey: 'specialFormatTagOrder', orderPluginKey: 'SpecialFormatTagOrder', defaultOrder: 4 },
+            { key: 'videoCodec',    items: codecOrder,         settingKey: 'showVideoCodecTag',    pluginKey: 'ShowVideoCodecTag',    orderUserKey: 'videoCodecTagOrder',    orderPluginKey: 'VideoCodecTagOrder',    defaultOrder: 5 },
+            { key: 'audio',         items: audioOrder,         settingKey: 'showAudioInfoTag',     pluginKey: 'ShowAudioInfoTag',     orderUserKey: 'audioInfoTagOrder',     orderPluginKey: 'AudioInfoTagOrder',     defaultOrder: 6 },
+        ];
+
+        // Map normalized tag label -> category key. Built once per init.
+        const TAG_TO_CATEGORY = new Map();
+        for (const cat of CATEGORIES) {
+            for (const item of cat.items) TAG_TO_CATEGORY.set(item, cat.key);
+        }
+        const CATEGORY_BY_KEY = new Map(CATEGORIES.map(c => [c.key, c]));
 
         // Color definitions for each quality tag.
         const qualityColors = {
@@ -175,14 +198,19 @@
             badge.textContent = label;
             badge.className = overlayClass;
 
+            // Class names preserved for backward compatibility with any user
+            // custom CSS targeting them. New tags (source, dynamic range, special
+            // format) are folded into the closest existing class.
             if (resolutionOrder.includes(normalizedLabel)) {
                 badge.classList.add('resolution');
             } else if (codecOrder.includes(normalizedLabel)) {
                 badge.classList.add('video-format');
-            } else if (videoOrder.includes(normalizedLabel)) {
+            } else if (dynamicRangeOrder.includes(normalizedLabel) || specialFormatOrder.includes(normalizedLabel)) {
                 badge.classList.add('video-codec');
             } else if (audioOrder.includes(normalizedLabel)) {
                 badge.classList.add('audio-codec');
+            } else if (sourceOrder.includes(normalizedLabel)) {
+                badge.classList.add('source-quality');
             } else {
                 badge.classList.add('other-quality');
             }
@@ -663,7 +691,56 @@
 
         // --- DOM MANIPULATION ---
         /**
-         * Injects the quality tag container into the specified element.
+         * Reads a per-user boolean setting, falling back to the admin plugin
+         * default and then to the provided fallback (categories default true).
+         * @param {string} userKey - JE.currentSettings key.
+         * @param {string} pluginKey - JE.pluginConfig key.
+         * @param {boolean} fallback
+         * @returns {boolean}
+         */
+        function readBool(userKey, pluginKey, fallback) {
+            const userVal = JE.currentSettings?.[userKey];
+            if (typeof userVal === 'boolean') return userVal;
+            const adminVal = JE.pluginConfig?.[pluginKey];
+            if (typeof adminVal === 'boolean') return adminVal;
+            return fallback;
+        }
+
+        /**
+         * Reads a per-user integer setting, falling back to the admin plugin
+         * default and then to the provided fallback. Used for category stack order.
+         * @param {string} userKey - JE.currentSettings key.
+         * @param {string} pluginKey - JE.pluginConfig key.
+         * @param {number} fallback
+         * @returns {number}
+         */
+        function readInt(userKey, pluginKey, fallback) {
+            const userVal = JE.currentSettings?.[userKey];
+            if (Number.isFinite(userVal)) return userVal;
+            const adminVal = JE.pluginConfig?.[pluginKey];
+            if (Number.isFinite(adminVal)) return adminVal;
+            return fallback;
+        }
+
+        /**
+         * Determines which category bucket a tag belongs to.
+         * @param {string} tag - A single quality tag (possibly composite like "ATMOS 7.1").
+         * @returns {string|null} Category key, or null if uncategorized.
+         */
+        function categorize(tag) {
+            const norm = normalizeQualityLabel(tag);
+            const direct = TAG_TO_CATEGORY.get(norm);
+            if (direct) return direct;
+            // Bare channel layouts (e.g. "2.0") fall into audio.
+            if (/^\d+\.\d+$/.test(tag)) return 'audio';
+            return null;
+        }
+
+        /**
+         * Injects the quality tag container into the specified element. Tags are
+         * grouped by user-defined category, filtered by per-category enable flags,
+         * sorted by per-category stack order (defaults preserve the prior layout),
+         * and rendered as a single overlay container in the master corner.
          * @param {HTMLElement} container - The card/poster element to add tags to.
          * @param {Array<string>} qualities - The array of quality strings to display.
          */
@@ -674,46 +751,61 @@
             const existing = container.querySelector(`.${containerClass}`);
             if (existing) existing.remove();
 
+            // Bucket tags by category, dropping any whose category is disabled
+            // or uncategorized.
+            const buckets = new Map(); // categoryKey -> string[]
+            for (const q of qualities) {
+                const catKey = categorize(q);
+                if (!catKey) continue;
+                const cat = CATEGORY_BY_KEY.get(catKey);
+                if (!readBool(cat.settingKey, cat.pluginKey, true)) continue;
+                if (!buckets.has(catKey)) buckets.set(catKey, []);
+                buckets.get(catKey).push(q);
+            }
+            if (buckets.size === 0) return;
+
+            // Within each bucket, sort by within-category priority (e.g.
+            // 4K before 1080p, ATMOS before DTS). Resolutions also collapse
+            // to the single best entry.
+            for (const [catKey, tags] of buckets) {
+                const cat = CATEGORY_BY_KEY.get(catKey);
+                tags.sort((a, b) => {
+                    const aKey = normalizeQualityLabel(a);
+                    const bKey = normalizeQualityLabel(b);
+                    const aIdx = cat.items.indexOf(aKey);
+                    const bIdx = cat.items.indexOf(bKey);
+                    return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
+                });
+                if (catKey === 'resolution' && tags.length > 1) {
+                    tags.length = 1; // keep only the best resolution
+                }
+            }
+
+            // Sort categories by user-defined stack order (lower number first).
+            // Tie-broken by hardcoded default order so the result is deterministic.
+            const categoriesSorted = [...buckets.keys()].map((key) => {
+                const cat = CATEGORY_BY_KEY.get(key);
+                return {
+                    key,
+                    cat,
+                    order: readInt(cat.orderUserKey, cat.orderPluginKey, cat.defaultOrder),
+                };
+            }).sort((a, b) => {
+                if (a.order !== b.order) return a.order - b.order;
+                return a.cat.defaultOrder - b.cat.defaultOrder;
+            });
+
             // Ensure container is positioned (avoids forced reflow from getComputedStyle)
             container.style.position = 'relative';
 
             const qualityContainer = document.createElement('div');
             qualityContainer.className = containerClass;
 
-            // Show only the best resolution tag
-            const resolutions = qualities.filter(q => resolutionOrder.includes(q));
-            if (resolutions.length > 1) {
-                resolutions.sort((a, b) => resolutionOrder.indexOf(a) - resolutionOrder.indexOf(b));
-                qualities = qualities.filter(q => !resolutionOrder.includes(q) || q === resolutions[0]);
+            for (const { key } of categoriesSorted) {
+                for (const q of buckets.get(key)) {
+                    qualityContainer.appendChild(createResponsiveLabel(q));
+                }
             }
-
-            const sortedQualities = qualities.sort((a, b) => {
-                const aKey = normalizeQualityLabel(a);
-                const bKey = normalizeQualityLabel(b);
-
-                const aIsRes = resolutionOrder.includes(aKey);
-                const bIsRes = resolutionOrder.includes(bKey);
-                const aIsCodec = codecOrder.includes(aKey);
-                const bIsCodec = codecOrder.includes(bKey);
-
-                // Resolution first
-                if (aIsRes && !bIsRes) return -1;
-                if (!aIsRes && bIsRes) return 1;
-                if (aIsRes && bIsRes) return resolutionOrder.indexOf(aKey) - resolutionOrder.indexOf(bKey);
-
-                // Codec second
-                if (aIsCodec && !bIsCodec) return -1;
-                if (!aIsCodec && bIsCodec) return 1;
-                if (aIsCodec && bIsCodec) return codecOrder.indexOf(aKey) - codecOrder.indexOf(bKey);
-
-                // Features last
-                return featureOrder.indexOf(aKey) - featureOrder.indexOf(bKey);
-            });
-
-            sortedQualities.forEach((quality) => {
-                const label = createResponsiveLabel(quality);
-                qualityContainer.appendChild(label);
-            });
 
             container.appendChild(qualityContainer);
             markCardTagged(container);
