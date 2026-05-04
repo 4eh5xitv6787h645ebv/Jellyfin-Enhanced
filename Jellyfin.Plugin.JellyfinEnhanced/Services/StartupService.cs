@@ -24,13 +24,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly WatchlistMonitor _watchlistMonitor;
         private readonly TagCacheService _tagCacheService;
         private readonly TagCacheMonitor _tagCacheMonitor;
+        private readonly SeerrScanTriggerService _seerrScanTriggerService;
 
         public string Name => "Jellyfin Enhanced Startup";
         public string Key => "JellyfinEnhancedStartup";
         public string Description => "Injects the Jellyfin Enhanced script using the File Transformation plugin and performs necessary cleanups.";
         public string Category => "Jellyfin Enhanced";
 
-        public StartupService(Logger logger, IApplicationPaths applicationPaths, AutoSeasonRequestMonitor autoSeasonRequestMonitor, AutoMovieRequestMonitor autoMovieRequestMonitor, WatchlistMonitor watchlistMonitor, TagCacheService tagCacheService, TagCacheMonitor tagCacheMonitor)
+        public StartupService(Logger logger, IApplicationPaths applicationPaths, AutoSeasonRequestMonitor autoSeasonRequestMonitor, AutoMovieRequestMonitor autoMovieRequestMonitor, WatchlistMonitor watchlistMonitor, TagCacheService tagCacheService, TagCacheMonitor tagCacheMonitor, SeerrScanTriggerService seerrScanTriggerService)
         {
             _logger = logger;
             _applicationPaths = applicationPaths;
@@ -39,6 +40,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             _watchlistMonitor = watchlistMonitor;
             _tagCacheService = tagCacheService;
             _tagCacheMonitor = tagCacheMonitor;
+            _seerrScanTriggerService = seerrScanTriggerService;
         }
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
@@ -56,6 +58,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 // Initialize watchlist monitoring
                 _watchlistMonitor.Initialize();
+
+                // Initialize on-demand Seerr recently-added scan trigger
+                _seerrScanTriggerService.Initialize();
 
                 // Load tag cache from disk. New/changed items are picked up by the
                 // monitor via Jellyfin's library scan events (ItemAdded/ItemUpdated).
