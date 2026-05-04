@@ -894,7 +894,6 @@
                                             { id: 'showVideoCodecTagToggle',    settingKey: 'showVideoCodecTag',    orderKey: 'videoCodecTagOrder',    defaultOrder: 5, labelKey: 'panel_settings_ui_quality_tags_video_codec' },
                                             { id: 'showAudioInfoTagToggle',     settingKey: 'showAudioInfoTag',     orderKey: 'audioInfoTagOrder',     defaultOrder: 6, labelKey: 'panel_settings_ui_quality_tags_audio_info' },
                                         ];
-                                        // Sort categories by current order setting (lower first), tie-broken by default order.
                                         const sorted = cats.slice().sort((a, b) => {
                                             const ao = Number.isFinite(JE.currentSettings[a.orderKey]) ? JE.currentSettings[a.orderKey] : a.defaultOrder;
                                             const bo = Number.isFinite(JE.currentSettings[b.orderKey]) ? JE.currentSettings[b.orderKey] : b.defaultOrder;
@@ -1414,8 +1413,7 @@
         addSettingToggleListener('showAudioLanguagesToggle', 'showAudioLanguages', 'feature_audio_language_display');
         addSettingToggleListener('removeContinueWatchingToggle', 'removeContinueWatchingEnabled', 'feature_remove_continue_watching');
         addSettingToggleListener('qualityTagsToggle', 'qualityTagsEnabled', 'feature_quality_tags', true);
-        // Show/hide the nested resolution/video-format/audio-info sub-toggle group
-        // when the master quality-tags toggle changes.
+        // Toggle nested sub-toggle group with the master switch.
         const qualityMasterToggle = document.getElementById('qualityTagsToggle');
         const qualitySubGroup = document.getElementById('qualityTagsSubToggles');
         if (qualityMasterToggle && qualitySubGroup) {
@@ -1423,10 +1421,7 @@
                 qualitySubGroup.style.display = qualityMasterToggle.checked ? 'block' : 'none';
             });
         }
-        // 6 quality-tag category sub-toggles + up/down stack reordering.
-        // Sub-toggles only filter tags (no re-fetch); ↑/↓ swap order values
-        // with the neighbor row. Both trigger reinitializeQualityTags so
-        // existing cards re-render with the new settings.
+        // Sub-toggles filter only; ↑/↓ swap order with the neighbor row.
         if (qualitySubGroup) {
             qualitySubGroup.addEventListener('change', (e) => {
                 const target = e.target;
@@ -1450,7 +1445,6 @@
                 const isUp = btn.classList.contains('je-cat-up');
                 const sibling = isUp ? row.previousElementSibling : row.nextElementSibling;
                 if (!sibling || !sibling.classList.contains('je-quality-cat-row')) return;
-                // Swap orderKey settings, then re-render the sub-toggle group.
                 const aOrderKey = row.dataset.orderKey;
                 const bOrderKey = sibling.dataset.orderKey;
                 const aDef = parseInt(row.dataset.defaultOrder, 10);
@@ -1460,8 +1454,6 @@
                 JE.currentSettings[aOrderKey] = bCurrent;
                 JE.currentSettings[bOrderKey] = aCurrent;
                 JE.saveUserSettings('settings.json', JE.currentSettings);
-                // Reorder the rows in-place: visually swap them so the user
-                // sees the change immediately without rebuilding the panel.
                 if (isUp) {
                     sibling.parentNode.insertBefore(row, sibling);
                 } else {
@@ -1475,8 +1467,10 @@
             });
         }
 
-        // Updates the disabled / cursor / opacity styles on all up/down arrows
-        // to reflect each row's current position (top row can't go up, etc.).
+        /**
+         * Refresh ↑/↓ disabled state for the first/last rows.
+         * @param {HTMLElement} group
+         */
         function refreshQualityCatArrowStates(group) {
             const rows = group.querySelectorAll('.je-quality-cat-row');
             rows.forEach((row, idx) => {

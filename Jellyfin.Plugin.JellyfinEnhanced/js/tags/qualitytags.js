@@ -56,12 +56,7 @@
         const codecOrder = ['AV1', 'HEVC', 'H265', 'VP9', 'H264', 'VP8', 'XVID', 'DIVX', 'WMV', 'MPEG2', 'MPEG4', 'MJPEG', 'THEORA'];
         const audioOrder = ['ATMOS', 'DTS-X', 'TRUEHD', 'DTS', 'Dolby Digital+', '7.1', '5.1'];
 
-        // Categories drive sub-toggle visibility and stack order. The user can
-        // re-rank these to change the vertical order of tags within a card
-        // (e.g. resolution from first to third). Settings:
-        //   showXxxTag: per-user enable/disable for the category.
-        //   xxxTagOrder: integer 1..N for stack position.
-        //   defaultOrder: hardcoded fallback when neither user nor admin set a value.
+        // showXxxTag = enable, xxxTagOrder = 1..N stack position.
         const CATEGORIES = [
             { key: 'resolution',    items: resolutionOrder,    settingKey: 'showResolutionTag',    pluginKey: 'ShowResolutionTag',    orderUserKey: 'resolutionTagOrder',    orderPluginKey: 'ResolutionTagOrder',    defaultOrder: 1 },
             { key: 'source',        items: sourceOrder,        settingKey: 'showSourceTag',        pluginKey: 'ShowSourceTag',        orderUserKey: 'sourceTagOrder',        orderPluginKey: 'SourceTagOrder',        defaultOrder: 2 },
@@ -71,7 +66,6 @@
             { key: 'audio',         items: audioOrder,         settingKey: 'showAudioInfoTag',     pluginKey: 'ShowAudioInfoTag',     orderUserKey: 'audioInfoTagOrder',     orderPluginKey: 'AudioInfoTagOrder',     defaultOrder: 6 },
         ];
 
-        // Map normalized tag label -> category key. Built once per init.
         const TAG_TO_CATEGORY = new Map();
         for (const cat of CATEGORIES) {
             for (const item of cat.items) TAG_TO_CATEGORY.set(item, cat.key);
@@ -198,9 +192,7 @@
             badge.textContent = label;
             badge.className = overlayClass;
 
-            // Class names preserved for backward compatibility with any user
-            // custom CSS targeting them. New tags (source, dynamic range, special
-            // format) are folded into the closest existing class.
+            // Existing class names preserved for backward-compat with user CSS.
             if (resolutionOrder.includes(normalizedLabel)) {
                 badge.classList.add('resolution');
             } else if (codecOrder.includes(normalizedLabel)) {
@@ -691,10 +683,9 @@
 
         // --- DOM MANIPULATION ---
         /**
-         * Reads a per-user boolean setting, falling back to the admin plugin
-         * default and then to the provided fallback (categories default true).
-         * @param {string} userKey - JE.currentSettings key.
-         * @param {string} pluginKey - JE.pluginConfig key.
+         * Resolve user setting → admin default → fallback.
+         * @param {string} userKey
+         * @param {string} pluginKey
          * @param {boolean} fallback
          * @returns {boolean}
          */
@@ -707,10 +698,9 @@
         }
 
         /**
-         * Reads a per-user integer setting, falling back to the admin plugin
-         * default and then to the provided fallback. Used for category stack order.
-         * @param {string} userKey - JE.currentSettings key.
-         * @param {string} pluginKey - JE.pluginConfig key.
+         * Resolve numeric user setting → admin default → fallback.
+         * @param {string} userKey
+         * @param {string} pluginKey
          * @param {number} fallback
          * @returns {number}
          */
@@ -723,9 +713,9 @@
         }
 
         /**
-         * Determines which category bucket a tag belongs to.
-         * @param {string} tag - A single quality tag (possibly composite like "ATMOS 7.1").
-         * @returns {string|null} Category key, or null if uncategorized.
+         * Map a tag to its category key, or null if uncategorized.
+         * @param {string} tag
+         * @returns {string|null}
          */
         function categorize(tag) {
             const norm = normalizeQualityLabel(tag);
@@ -737,12 +727,9 @@
         }
 
         /**
-         * Injects the quality tag container into the specified element. Tags are
-         * grouped by user-defined category, filtered by per-category enable flags,
-         * sorted by per-category stack order (defaults preserve the prior layout),
-         * and rendered as a single overlay container in the master corner.
-         * @param {HTMLElement} container - The card/poster element to add tags to.
-         * @param {Array<string>} qualities - The array of quality strings to display.
+         * Render the quality tag overlay, filtered + ordered per user settings.
+         * @param {HTMLElement} container
+         * @param {Array<string>} qualities
          */
         function insertOverlay(container, qualities) {
             if (!container) return;
@@ -751,9 +738,7 @@
             const existing = container.querySelector(`.${containerClass}`);
             if (existing) existing.remove();
 
-            // Bucket tags by category, dropping any whose category is disabled
-            // or uncategorized.
-            const buckets = new Map(); // categoryKey -> string[]
+            const buckets = new Map();
             for (const q of qualities) {
                 const catKey = categorize(q);
                 if (!catKey) continue;
@@ -764,9 +749,6 @@
             }
             if (buckets.size === 0) return;
 
-            // Within each bucket, sort by within-category priority (e.g.
-            // 4K before 1080p, ATMOS before DTS). Resolutions also collapse
-            // to the single best entry.
             for (const [catKey, tags] of buckets) {
                 const cat = CATEGORY_BY_KEY.get(catKey);
                 tags.sort((a, b) => {
@@ -776,13 +758,11 @@
                     const bIdx = cat.items.indexOf(bKey);
                     return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
                 });
-                if (catKey === 'resolution' && tags.length > 1) {
-                    tags.length = 1; // keep only the best resolution
-                }
+                // Keep only the best resolution.
+                if (catKey === 'resolution' && tags.length > 1) tags.length = 1;
             }
 
-            // Sort categories by user-defined stack order (lower number first).
-            // Tie-broken by hardcoded default order so the result is deterministic.
+            // Tie-break by defaultOrder so the result is deterministic.
             const categoriesSorted = [...buckets.keys()].map((key) => {
                 const cat = CATEGORY_BY_KEY.get(key);
                 return {

@@ -3794,8 +3794,7 @@
         // of its single config write.
         var _jeCustomTabOwnedCache = Object.create(null);
 
-        // Reorders the 6 quality-category admin rows to match the saved per-category
-        // *Order values, then refreshes button enable states. Called from loadConfig.
+        // Reorders admin category rows to match saved *Order values.
         function renderQualityCatOrderAdmin(config) {
             var container = document.getElementById('qualityCategoriesAdmin');
             if (!container) return;
