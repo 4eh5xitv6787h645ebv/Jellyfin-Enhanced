@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Speciaal formaat (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Videocodec (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Audio-info (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Omhoog verplaatsen",
+    "panel_settings_ui_quality_tags_move_down": "Omlaag verplaatsen",
     "panel_settings_ui_rating_tags": "Beoordelingslabels tonen",
     "panel_settings_ui_rating_tags_desc": "Toon TMDB- en Rotten Tomatoes-beoordelingen op posters.",
     "panel_settings_ui_people_tags": "Persoonslabels tonen",

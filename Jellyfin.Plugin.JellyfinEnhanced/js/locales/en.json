@@ -106,6 +106,8 @@
     "panel_settings_ui_quality_tags_special_format": "Special format (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Video codec (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Audio info (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Move up",
+    "panel_settings_ui_quality_tags_move_down": "Move down",
     "panel_settings_ui_rating_tags": "Show Rating Tags",
     "panel_settings_ui_rating_tags_desc": "Display TMDB and Rotten Tomatoes ratings on posters.",
     "panel_settings_ui_people_tags": "Show People Tags",

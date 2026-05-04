@@ -1013,8 +1013,8 @@
                                                         <input type="checkbox" id="${c.id}" ${checked} style="accent-color:${toggleAccentColor};">
                                                         <span class="je-quality-cat-label">${JE.t(c.labelKey)}</span>
                                                     </label>
-                                                    <button type="button" class="je-cat-btn je-cat-up" ${upDisabled} aria-label="Move up"><span class="material-icons" aria-hidden="true">arrow_upward</span></button>
-                                                    <button type="button" class="je-cat-btn je-cat-down" ${downDisabled} aria-label="Move down"><span class="material-icons" aria-hidden="true">arrow_downward</span></button>
+                                                    <button type="button" class="je-cat-btn je-cat-up" ${upDisabled} aria-label="${JE.t('panel_settings_ui_quality_tags_move_up')}"><span class="material-icons" aria-hidden="true">arrow_upward</span></button>
+                                                    <button type="button" class="je-cat-btn je-cat-down" ${downDisabled} aria-label="${JE.t('panel_settings_ui_quality_tags_move_down')}"><span class="material-icons" aria-hidden="true">arrow_downward</span></button>
                                                 </div>
                                             `;
                                         }).join('');

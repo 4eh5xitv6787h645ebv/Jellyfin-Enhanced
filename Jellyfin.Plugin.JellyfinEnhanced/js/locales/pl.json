@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Format specjalny (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Kodek wideo (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Informacje audio (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Przesuń w górę",
+    "panel_settings_ui_quality_tags_move_down": "Przesuń w dół",
     "panel_settings_ui_rating_tags": "Pokaż tagi ocen",
     "panel_settings_ui_rating_tags_desc": "Wyświetl oceny TMDB i Rotten Tomatoes na plakatach.",
     "panel_settings_ui_people_tags": "Pokaż tagi osób",

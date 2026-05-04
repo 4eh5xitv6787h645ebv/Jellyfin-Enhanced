@@ -106,6 +106,8 @@
     "panel_settings_ui_quality_tags_special_format": "Formato especial (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Codec de vídeo (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Informação de áudio (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Mover para cima",
+    "panel_settings_ui_quality_tags_move_down": "Mover para baixo",
     "panel_settings_ui_remove_continue_watching": "Adicionar Botão 'Remover de Continuar Assistindo'",
     "panel_settings_ui_remove_continue_watching_desc": "Adiciona uma opção de remoção no menu de ações dos itens de Continuar a assistir. Os itens ocultos aparecem na página de gestão de conteúdo oculto, onde cada entrada tem um botão «Voltar a Continuar a assistir». Retomar um item oculto desoculta-o automaticamente. A posição de reprodução é sempre preservada.",
     "hidden_content_add_back_to_cw": "Voltar a Continuar a assistir",

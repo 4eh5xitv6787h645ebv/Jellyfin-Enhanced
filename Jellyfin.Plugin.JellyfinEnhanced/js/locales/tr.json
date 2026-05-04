@@ -106,6 +106,8 @@
     "panel_settings_ui_quality_tags_special_format": "Özel format (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Video kodeği (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Ses bilgisi (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Yukarı taşı",
+    "panel_settings_ui_quality_tags_move_down": "Aşağı taşı",
     "panel_settings_ui_remove_continue_watching": "‘İzlemeye Devam Et’ Kaldır Düğmesi Ekle",
     "panel_settings_ui_remove_continue_watching_desc": "İzlemeye Devam Et öğelerinin eylem menüsüne bir kaldırma seçeneği ekler. Gizlenen öğeler, her girişte «İzlemeye Devam Et’e geri ekle» düğmesi bulunan gizli içerik yönetim sayfasında görünür. Gizli bir öğeyi sürdürmek onu otomatik olarak gizlemez. Oynatma konumu her zaman korunur.",
     "hidden_content_add_back_to_cw": "İzlemeye Devam Et'e geri ekle",

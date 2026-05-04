@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Spesialformat (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Videokodek (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Lydinfo (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Flytt opp",
+    "panel_settings_ui_quality_tags_move_down": "Flytt ned",
     "panel_settings_ui_rating_tags": "Vis rangeringmerkelapper",
     "panel_settings_ui_rating_tags_desc": "Vis rangeringmerkelapper (f.eks. IMDb, TMDb) på postere.",
     "panel_settings_ui_people_tags": "Vis merkelapper for personer",

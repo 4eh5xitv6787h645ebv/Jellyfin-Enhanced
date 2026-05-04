@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Špeciálny formát (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Video kodek (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Informácie o zvuku (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Posunúť nahor",
+    "panel_settings_ui_quality_tags_move_down": "Posunúť nadol",
     "panel_settings_ui_rating_tags": "Zobraziť tagy hodnotenia",
     "panel_settings_ui_rating_tags_desc": "Zobraziť hodnotenia TMDB a Rotten Tomatoes na plagátoch.",
     "panel_settings_ui_people_tags": "Zobraziť tagy ľudí",

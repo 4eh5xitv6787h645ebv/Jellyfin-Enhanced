@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Formato especial (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Códec de vídeo (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Información de audio (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Mover arriba",
+    "panel_settings_ui_quality_tags_move_down": "Mover abajo",
     "panel_settings_ui_remove_continue_watching": "Añadir botón Quitar de Seguir viendo",
     "panel_settings_ui_rating_tags": "Mostrar etiquetas de valoración",
     "panel_settings_ui_rating_tags_desc": "Mostrar valoraciones de TMDB y Rotten Tomatoes en los pósters.",

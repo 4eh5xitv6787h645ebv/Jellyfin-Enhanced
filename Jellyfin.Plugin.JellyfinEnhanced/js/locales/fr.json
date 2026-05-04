@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Format spécial (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Codec vidéo (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Infos audio (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Déplacer vers le haut",
+    "panel_settings_ui_quality_tags_move_down": "Déplacer vers le bas",
     "panel_settings_ui_remove_continue_watching": "Ajouter le bouton Supprimer de Continuer à regarder",
     "panel_settings_ui_rating_tags": "Afficher les tags de note",
     "panel_settings_ui_rating_tags_desc": "Afficher les notes TMDB et Rotten Tomatoes sur les affiches.",

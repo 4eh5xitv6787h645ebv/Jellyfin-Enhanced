@@ -104,6 +104,8 @@
     "panel_settings_ui_quality_tags_special_format": "Специален формат (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Видео кодек (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Аудио информация (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Премести нагоре",
+    "panel_settings_ui_quality_tags_move_down": "Премести надолу",
     "panel_settings_ui_rating_tags": "Показване на етикети за оценка",
     "panel_settings_ui_rating_tags_desc": "Показва оценки от TMDB и Rotten Tomatoes върху постерите.",
     "panel_settings_ui_people_tags": "Показване на етикети за участници",

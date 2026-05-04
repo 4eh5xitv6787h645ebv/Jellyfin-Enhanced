@@ -104,6 +104,8 @@
     "panel_settings_ui_quality_tags_special_format": "تنسيق خاص (IMAX، 3D)",
     "panel_settings_ui_quality_tags_video_codec": "ترميز الفيديو (HEVC، H264، AV1، ...)",
     "panel_settings_ui_quality_tags_audio_info": "معلومات الصوت (Atmos، DTS، 5.1، 7.1، ...)",
+    "panel_settings_ui_quality_tags_move_up": "نقل لأعلى",
+    "panel_settings_ui_quality_tags_move_down": "نقل لأسفل",
     "panel_settings_ui_rating_tags": "عرض إشارات التقييم",
     "panel_settings_ui_rating_tags_desc": "عرض تقييمات TMDB و Rotten Tomatoes على الملصقات.",
     "panel_settings_ui_people_tags": "عرض إشارات الأشخاص",

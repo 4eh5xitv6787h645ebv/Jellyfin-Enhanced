@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "特殊格式 (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "影片編碼 (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "音訊資訊 (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "上移",
+    "panel_settings_ui_quality_tags_move_down": "下移",
     "panel_settings_ui_rating_tags": "顯示評分標籤",
     "panel_settings_ui_rating_tags_desc": "在海報上顯示 TMDB 及 Rotten Tomatoes 評分。",
     "panel_settings_ui_people_tags": "顯示人物標籤",

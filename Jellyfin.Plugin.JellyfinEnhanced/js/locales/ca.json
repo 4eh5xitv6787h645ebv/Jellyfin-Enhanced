@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Format especial (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Còdec de vídeo (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Informació d'àudio (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Mou cap amunt",
+    "panel_settings_ui_quality_tags_move_down": "Mou cap avall",
     "panel_settings_ui_remove_continue_watching": "Afegir el botó Treure de Continuar veient",
     "panel_settings_ui_rating_tags": "Mostrar les etiquetes de valoració",
     "panel_settings_ui_rating_tags_desc": "Mostrar valoracions de TMDB i Rotten Tomatoes als pòsters.",

@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Specialformat (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Videokodek (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Ljudinfo (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Flytta upp",
+    "panel_settings_ui_quality_tags_move_down": "Flytta ned",
     "panel_settings_ui_rating_tags": "Visa betygstaggar",
     "panel_settings_ui_rating_tags_desc": "Visa TMDB och Rotten Tomatoes betyg på affischer.",
     "panel_settings_ui_people_tags": "Visa taggar för personer",

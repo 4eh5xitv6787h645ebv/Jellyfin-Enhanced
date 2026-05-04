@@ -102,6 +102,8 @@
     "panel_settings_ui_quality_tags_special_format": "Special Treasures (IMAX, 3D)",
     "panel_settings_ui_quality_tags_video_codec": "Picture Recipe (HEVC, H264, AV1, ...)",
     "panel_settings_ui_quality_tags_audio_info": "Soundin' Tales (Atmos, DTS, 5.1, 7.1, ...)",
+    "panel_settings_ui_quality_tags_move_up": "Hoist higher",
+    "panel_settings_ui_quality_tags_move_down": "Lower th' rigging",
     "panel_settings_ui_rating_tags": "Show Reputation Marks",
     "panel_settings_ui_rating_tags_desc": "Display TMDB 'n Rotten Tomatoes reputation on treasure posters.",
     "panel_settings_ui_people_tags": "Show Crew Info Tags",
