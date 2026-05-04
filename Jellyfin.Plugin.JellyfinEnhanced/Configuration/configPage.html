@@ -1092,6 +1092,10 @@
                             <div class="je-setting-description" data-desc-for="jellyseerrShowAdvanced">
                                 <div class="fieldDescription je-field-desc-xl">Enable this if you want users to be able to choose between Servers, Quality and Paths while requesting. <br/> Note: This will disregard any Override Rules set in Seerr.</div>
                             </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrShowQuotaInfo" is="emby-checkbox" type="checkbox"/><span>Show request quota info</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrShowQuotaInfo">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, request modals display a chip showing the user's request usage and when their next slot frees up. Quota errors get a detailed dialog instead of a vanishing toast.</div>
+                            </div>
                         </div>
                     </fieldset>
 
@@ -1293,7 +1297,40 @@
                         </div>
                     </fieldset>
 
-<fieldset>
+                    <fieldset>
+                        <legend class="sectionTitle">Recently Added Sync to Seerr</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="triggerSeerrScanOnItemAdded" is="emby-checkbox" type="checkbox"/><span>Trigger Seerr recently-added scan when new Jellyfin items are added</span></label></div>
+                            <div class="je-setting-description" data-desc-for="triggerSeerrScanOnItemAdded">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    When Jellyfin reports new library items added, enabling this triggers the "Jellyfin Recently Added Scan" job so that request statuses are immediately updated instead of waiting till next schedule run. Events are debounced, so a bulk import collapses into a single trigger.<br/><br/>
+                                    <strong>Tip:</strong> With this enabled, you can set Seerr's recently-added scan Frequency to a much longer interval (60 minutes) to reduce noise.
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="seerrScanDebounceSeconds">Debounce (seconds):</label>
+                                <input id="seerrScanDebounceSeconds" is="emby-input" type="number" min="5" max="3600" step="1"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="seerrScanDebounceSeconds">
+                                <div class="fieldDescription je-field-desc-mt-sm je-field-desc-md">
+                                    Wait this many seconds after the LAST item added before firing the scan. Default 60. Range 5 to 3600.
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <button id="triggerSeerrScanNowBtn" is="emby-button" type="button" class="raised"><span>Trigger scan now</span></button>
+                                <span id="triggerSeerrScanNowStatus" class="material-icons" aria-hidden="true"></span>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="triggerSeerrScanNowBtn">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Uses the Seerr URL and API key entered in the Setup section above. If multiple URLs are configured, the first reachable one is used.
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
                         <legend class="sectionTitle">Watchlist</legend>
                         <div class="configSection">
                             <div class="checkboxContainer"><label><input id="addRequestedMediaToWatchlist" is="emby-checkbox" type="checkbox"/><span>Add requested media to Watchlist</span></label></div>
@@ -3983,6 +4020,7 @@
                 document.querySelector('#jellyseerrEnable4kTvRequests').checked = !!config.JellyseerrEnable4KTvRequests;
                 document.querySelector('#jellyseerrUseMoreInfoModal').checked = !!config.JellyseerrUseMoreInfoModal;
                 document.querySelector('#jellyseerrShowAdvanced').checked = config.JellyseerrShowAdvanced;
+                document.querySelector('#jellyseerrShowQuotaInfo').checked = config.JellyseerrShowQuotaInfo !== false;
                 document.querySelector('#jellyseerrShowSimilar').checked = config.JellyseerrShowSimilar !== false;
                 document.querySelector('#jellyseerrShowRecommended').checked = config.JellyseerrShowRecommended !== false;
                 document.querySelector('#jellyseerrShowRequestMoreOnSeries').checked = config.JellyseerrShowRequestMoreOnSeries !== false;
@@ -4025,6 +4063,8 @@
                 loadBlockedUsersList(config.JellyseerrImportBlockedUsers || '');
                 document.querySelector('#preventWatchlistReAddition').checked = config.PreventWatchlistReAddition !== false;
                 document.querySelector('#watchlistMemoryRetentionDays').value = config.WatchlistMemoryRetentionDays || 365;
+                document.querySelector('#triggerSeerrScanOnItemAdded').checked = config.TriggerSeerrScanOnItemAdded === true;
+                document.querySelector('#seerrScanDebounceSeconds').value = config.SeerrScanDebounceSeconds || 60;
                 document.querySelector('#bookmarksEnabled').checked = config.BookmarksEnabled !== false;
                 document.querySelector('#bookmarksUsePluginPages').checked = config.BookmarksUsePluginPages === true;
                 document.querySelector('#bookmarksUseCustomTabs').checked = config.BookmarksUseCustomTabs === true;
@@ -4249,6 +4289,7 @@
             config.JellyseerrEnable4KTvRequests = document.querySelector('#jellyseerrEnable4kTvRequests').checked;
             config.JellyseerrUseMoreInfoModal = document.querySelector('#jellyseerrUseMoreInfoModal').checked;
             config.JellyseerrShowAdvanced = document.querySelector('#jellyseerrShowAdvanced').checked;
+            config.JellyseerrShowQuotaInfo = document.querySelector('#jellyseerrShowQuotaInfo').checked;
             config.JellyseerrShowSimilar = document.querySelector('#jellyseerrShowSimilar').checked;
             config.JellyseerrShowRecommended = document.querySelector('#jellyseerrShowRecommended').checked;
             config.JellyseerrShowRequestMoreOnSeries = document.querySelector('#jellyseerrShowRequestMoreOnSeries').checked;
@@ -4303,6 +4344,9 @@
 
             const retentionDays = parseInt(document.querySelector('#watchlistMemoryRetentionDays').value);
             config.WatchlistMemoryRetentionDays = isNaN(retentionDays) || retentionDays < 1 ? 365 : Math.min(retentionDays, 3650);
+            config.TriggerSeerrScanOnItemAdded = document.querySelector('#triggerSeerrScanOnItemAdded').checked;
+            const seerrScanDebounce = parseInt(document.querySelector('#seerrScanDebounceSeconds').value);
+            config.SeerrScanDebounceSeconds = isNaN(seerrScanDebounce) || seerrScanDebounce < 5 ? 60 : Math.min(seerrScanDebounce, 3600);
             config.BookmarksEnabled = document.querySelector('#bookmarksEnabled').checked;
             config.BookmarksUsePluginPages = document.querySelector('#bookmarksUsePluginPages').checked;
             config.BookmarksUseCustomTabs = document.querySelector('#bookmarksUseCustomTabs').checked;
@@ -5251,6 +5295,7 @@
             { parent: 'autoMovieRequestEnabled', label: 'Enable Automatic Movie Requests', children: ['autoMovieRequestTriggerOnStart', 'autoMovieRequestTriggerOnMinutesWatched', 'autoMovieRequestMinutesWatched', 'autoMovieRequestCheckReleaseDate', 'autoMovieRequestQualityMode', 'autoMovieRequestFallbackOn4k'] },
             { parent: 'autoSeasonRequestEnabled', label: 'Enable Automatic Season Requests', children: ['autoSeasonRequestRequireAllWatched', 'autoSeasonRequestThresholdValue'] },
             { parent: 'preventWatchlistReAddition', label: 'Prevent re-adding removed items', children: ['watchlistMemoryRetentionDays'] },
+            { parent: 'triggerSeerrScanOnItemAdded', label: 'Trigger Seerr scan on item added', children: ['seerrScanDebounceSeconds'] },
             { parent: 'bookmarksEnabled', label: 'Enable Bookmarks', children: ['bookmarksUsePluginPages', 'bookmarksUseCustomTabs'] },
             { parent: 'hiddenContentEnabled', label: 'Enable Hidden Content', children: ['hiddenContentUsePluginPages', 'hiddenContentUseCustomTabs'] }
         ];
@@ -6655,6 +6700,54 @@
             }
         });
         testJellyseerrBtn.addEventListener('click', testJellyseerrConnection);
+
+        async function triggerSeerrScanNow() {
+            const urls = (document.querySelector('#jellyseerrUrls').value || '').split('\n').map(u => u.trim()).filter(Boolean);
+            const apiKey = (document.querySelector('#JellyseerrApiKey').value || '').trim();
+            const btn = document.querySelector('#triggerSeerrScanNowBtn');
+            const status = document.querySelector('#triggerSeerrScanNowStatus');
+
+            if (!urls.length || !apiKey) {
+                Dashboard.alert({ title: 'Missing Information', message: 'Please provide at least one Seerr URL and an API key in the Setup section above.' });
+                return;
+            }
+
+            btn.disabled = true;
+            status.textContent = 'sync';
+            status.className = 'material-icons status-check';
+            status.style.color = '#00a4dc';
+
+            let triggered = false;
+            let lastError = '';
+            for (const url of urls) {
+                try {
+                    const triggerUrl = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/trigger-recently-added-scan', { url: url });
+                    const res = await ApiClient.ajax({ type: 'POST', url: triggerUrl, dataType: 'json', headers: { 'X-Arr-ApiKey': apiKey } });
+                    if (res && res.ok) {
+                        triggered = true;
+                        break;
+                    }
+                } catch (e) {
+                    console.error('Seerr scan trigger failed for ' + url + ':', e);
+                    lastError = connectionErrorMessage(e, 'Seerr', url);
+                }
+            }
+
+            btn.disabled = false;
+            status.classList.remove('status-check');
+
+            if (triggered) {
+                status.textContent = 'check_circle';
+                status.style.color = '#52b54b';
+                Dashboard.alert({ title: 'Scan Triggered', message: 'Seerr accepted the recently-added scan request.' });
+            } else {
+                status.textContent = 'error';
+                status.style.color = '#dc3545';
+                Dashboard.alert({ title: 'Trigger Failed', message: lastError || 'Could not trigger a scan against any provided URL.' });
+            }
+        }
+
+        document.querySelector('#triggerSeerrScanNowBtn').addEventListener('click', triggerSeerrScanNow);
 
         /**
          * Quick Action: re-test every external-service connection by proxying
