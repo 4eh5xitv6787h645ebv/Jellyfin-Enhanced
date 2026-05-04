@@ -357,6 +357,88 @@
               max-width: 96%;
               box-sizing: border-box;
             }
+            /* Quality-tag category sub-panel — themed expander + reorderable
+               rows. Lives inside the user Settings panel under the master
+               Quality Tags toggle. Visual treatment mirrors the rest of the
+               panel: subtle borders, accent on hover, material-icon arrows
+               that match other JE icon buttons. */
+            #jellyfin-enhanced-panel .je-quality-cat-wrap { margin: 8px 0 0 30px; }
+            #jellyfin-enhanced-panel .je-quality-cat-expander {
+                background: transparent;
+                border: none;
+                color: rgba(255,255,255,0.7);
+                cursor: pointer;
+                padding: 4px 0;
+                font: inherit;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                transition: color 0.15s;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-expander:hover { color: #fff; }
+            #jellyfin-enhanced-panel .je-cat-chevron {
+                font-size: 18px !important;
+                transition: transform 0.2s ease;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-expander[aria-expanded="true"] .je-cat-chevron {
+                transform: rotate(90deg);
+                color: var(--primary-accent-color, #00a4dc);
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-list {
+                margin: 6px 0 0 30px;
+                padding: 8px 10px;
+                background: rgba(0,0,0,0.18);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 6px;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 4px 2px;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-row + .je-quality-cat-row {
+                border-top: 1px solid rgba(255,255,255,0.06);
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-label-wrap {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                min-width: 0;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-label-wrap input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+                cursor: pointer;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-label { font-size: 13px; }
+            #jellyfin-enhanced-panel .je-cat-btn {
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.15);
+                color: rgba(255,255,255,0.85);
+                border-radius: 4px;
+                padding: 3px 6px;
+                cursor: pointer;
+                line-height: 1;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.15s, border-color 0.15s, color 0.15s;
+            }
+            #jellyfin-enhanced-panel .je-cat-btn .material-icons { font-size: 16px !important; }
+            #jellyfin-enhanced-panel .je-cat-btn:not([disabled]):hover {
+                background: rgba(255,255,255,0.1);
+                border-color: var(--primary-accent-color, rgba(255,255,255,0.35));
+                color: #fff;
+            }
+            #jellyfin-enhanced-panel .je-cat-btn[disabled] {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
         `;
         document.head.appendChild(style);
     };
@@ -884,13 +966,13 @@
                                         <div data-pos="bottom-right" style="border-radius:2px; transition:background 0.2s;"></div>
                                     </div>
                                 </label>
-                                <div id="qualityTagsSubWrap" style="margin: 8px 0 0 30px; display: ${JE.currentSettings.qualityTagsEnabled ? 'block' : 'none'};">
-                                    <button type="button" id="qualityTagsSubToggleExpander" aria-expanded="false" style="background:transparent; border:none; color:rgba(255,255,255,0.7); cursor:pointer; padding:2px 0; font-size:12px; display:flex; align-items:center; gap:6px;">
-                                        <span class="je-cat-chevron" aria-hidden="true" style="display:inline-block; transition:transform 0.15s;">▶</span>
+                                <div id="qualityTagsSubWrap" class="je-quality-cat-wrap" style="display: ${JE.currentSettings.qualityTagsEnabled ? 'block' : 'none'};">
+                                    <button type="button" id="qualityTagsSubToggleExpander" class="je-quality-cat-expander" aria-expanded="false">
+                                        <span class="material-icons je-cat-chevron" aria-hidden="true">chevron_right</span>
                                         <span>Configure tag categories</span>
                                     </button>
                                 </div>
-                                <div id="qualityTagsSubToggles" style="margin: 6px 0 0 30px; display: none;">
+                                <div id="qualityTagsSubToggles" class="je-quality-cat-list" style="display: none;">
                                     ${(() => {
                                         const cats = [
                                             { id: 'showResolutionTagToggle',    settingKey: 'showResolutionTag',    pluginKey: 'ShowResolutionTag',    orderKey: 'resolutionTagOrder',    orderPluginKey: 'ResolutionTagOrder',    defaultOrder: 1, labelKey: 'panel_settings_ui_quality_tags_resolution' },
@@ -926,11 +1008,13 @@
                                             const upDisabled = idx === 0 ? 'disabled' : '';
                                             const downDisabled = idx === sorted.length - 1 ? 'disabled' : '';
                                             return `
-                                                <div class="je-quality-cat-row" data-cat-key="${c.settingKey}" data-order-key="${c.orderKey}" data-default-order="${c.defaultOrder}" style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-                                                    <input type="checkbox" id="${c.id}" ${checked} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer; flex-shrink:0;">
-                                                    <span style="font-size:13px; flex:1;">${JE.t(c.labelKey)}</span>
-                                                    <button type="button" class="je-cat-up" ${upDisabled} aria-label="Move up" style="background:transparent; border:1px solid rgba(255,255,255,0.2); border-radius:3px; padding:2px 6px; color:inherit; cursor:${idx === 0 ? 'not-allowed' : 'pointer'}; opacity:${idx === 0 ? '0.4' : '1'}; font-size:12px; line-height:1;">▲</button>
-                                                    <button type="button" class="je-cat-down" ${downDisabled} aria-label="Move down" style="background:transparent; border:1px solid rgba(255,255,255,0.2); border-radius:3px; padding:2px 6px; color:inherit; cursor:${idx === sorted.length - 1 ? 'not-allowed' : 'pointer'}; opacity:${idx === sorted.length - 1 ? '0.4' : '1'}; font-size:12px; line-height:1;">▼</button>
+                                                <div class="je-quality-cat-row" data-cat-key="${c.settingKey}" data-order-key="${c.orderKey}" data-default-order="${c.defaultOrder}">
+                                                    <label class="je-quality-cat-label-wrap">
+                                                        <input type="checkbox" id="${c.id}" ${checked} style="accent-color:${toggleAccentColor};">
+                                                        <span class="je-quality-cat-label">${JE.t(c.labelKey)}</span>
+                                                    </label>
+                                                    <button type="button" class="je-cat-btn je-cat-up" ${upDisabled} aria-label="Move up"><span class="material-icons" aria-hidden="true">arrow_upward</span></button>
+                                                    <button type="button" class="je-cat-btn je-cat-down" ${downDisabled} aria-label="Move down"><span class="material-icons" aria-hidden="true">arrow_downward</span></button>
                                                 </div>
                                             `;
                                         }).join('');
@@ -1447,19 +1531,16 @@
                 if (!qualityMasterToggle.checked && qualitySubGroup && qualitySubExpander) {
                     qualitySubGroup.style.display = 'none';
                     qualitySubExpander.setAttribute('aria-expanded', 'false');
-                    const chev = qualitySubExpander.querySelector('.je-cat-chevron');
-                    if (chev) chev.style.transform = '';
                 }
             });
         }
-        // Expand or collapse the 6 category rows when the user clicks the chevron
+        // Expand or collapse the 6 category rows when the user clicks the chevron.
+        // The chevron rotation is driven by CSS via the aria-expanded attribute.
         if (qualitySubExpander && qualitySubGroup) {
             qualitySubExpander.addEventListener('click', () => {
                 const expanded = qualitySubExpander.getAttribute('aria-expanded') === 'true';
                 qualitySubExpander.setAttribute('aria-expanded', expanded ? 'false' : 'true');
                 qualitySubGroup.style.display = expanded ? 'none' : 'block';
-                const chev = qualitySubExpander.querySelector('.je-cat-chevron');
-                if (chev) chev.style.transform = expanded ? '' : 'rotate(90deg)';
             });
         }
         // Wire the per-category sub-toggle controls via event delegation

@@ -204,39 +204,39 @@
                             <div class="je-setting-description" data-desc-for="qualityTagsEnabled">
                                 <div class="fieldDescription je-field-desc-sm">This feature is a slightly modified version of the original script by <a class="sectionTitle" href="https://github.com/BobHasNoSoul/Jellyfin-Qualitytags/" target="_blank">BobHasNoSoul</a></div>
                             </div>
-                            <details id="qualityCategoriesAdminDetails" style="margin-left: 24px; margin-bottom: 8px;">
-                                <summary style="cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.8); padding: 4px 0;">Configure tag categories</summary>
-                                <div id="qualityCategoriesAdmin" style="margin-top: 6px;">
-                                    <div class="fieldDescription je-field-desc-sm" style="margin-bottom: 6px;">Pick which categories of quality tags should appear, and the order they stack within the chosen corner. Use the ▲ / ▼ buttons to reorder.</div>
-                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowResolutionTag" data-order-key="ResolutionTagOrder" data-default-order="1" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                                        <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showResolutionTag" is="emby-checkbox" type="checkbox"/><span>Show resolution (4K, 1080p, ...)</span></label></div>
-                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
-                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                            <details id="qualityCategoriesAdminDetails" class="je-details-section">
+                                <summary>Configure tag categories</summary>
+                                <div id="qualityCategoriesAdmin" class="je-details-body">
+                                    <div class="fieldDescription je-field-desc-sm">Pick which categories of quality tags should appear, and the order they stack within the chosen corner. Use the <i class="material-icons je-cat-arrow-icon" aria-hidden="true">arrow_upward</i> / <i class="material-icons je-cat-arrow-icon" aria-hidden="true">arrow_downward</i> buttons to reorder.</div>
+                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowResolutionTag" data-order-key="ResolutionTagOrder" data-default-order="1">
+                                        <div class="checkboxContainer"><label><input id="showResolutionTag" is="emby-checkbox" type="checkbox"/><span>Show resolution (4K, 1080p, ...)</span></label></div>
+                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up"><i class="material-icons" aria-hidden="true">arrow_upward</i></button>
+                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down"><i class="material-icons" aria-hidden="true">arrow_downward</i></button>
                                     </div>
-                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowSourceTag" data-order-key="SourceTagOrder" data-default-order="2" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                                        <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showSourceTag" is="emby-checkbox" type="checkbox"/><span>Show source (BluRay, DVD, HDTV, VHS, ...)</span></label></div>
-                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
-                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowSourceTag" data-order-key="SourceTagOrder" data-default-order="2">
+                                        <div class="checkboxContainer"><label><input id="showSourceTag" is="emby-checkbox" type="checkbox"/><span>Show source (BluRay, DVD, HDTV, VHS, ...)</span></label></div>
+                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up"><i class="material-icons" aria-hidden="true">arrow_upward</i></button>
+                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down"><i class="material-icons" aria-hidden="true">arrow_downward</i></button>
                                     </div>
-                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowDynamicRangeTag" data-order-key="DynamicRangeTagOrder" data-default-order="3" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                                        <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showDynamicRangeTag" is="emby-checkbox" type="checkbox"/><span>Show dynamic range (HDR, HDR10+, Dolby Vision)</span></label></div>
-                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
-                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowDynamicRangeTag" data-order-key="DynamicRangeTagOrder" data-default-order="3">
+                                        <div class="checkboxContainer"><label><input id="showDynamicRangeTag" is="emby-checkbox" type="checkbox"/><span>Show dynamic range (HDR, HDR10+, Dolby Vision)</span></label></div>
+                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up"><i class="material-icons" aria-hidden="true">arrow_upward</i></button>
+                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down"><i class="material-icons" aria-hidden="true">arrow_downward</i></button>
                                     </div>
-                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowSpecialFormatTag" data-order-key="SpecialFormatTagOrder" data-default-order="4" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                                        <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showSpecialFormatTag" is="emby-checkbox" type="checkbox"/><span>Show special format (IMAX, 3D)</span></label></div>
-                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
-                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowSpecialFormatTag" data-order-key="SpecialFormatTagOrder" data-default-order="4">
+                                        <div class="checkboxContainer"><label><input id="showSpecialFormatTag" is="emby-checkbox" type="checkbox"/><span>Show special format (IMAX, 3D)</span></label></div>
+                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up"><i class="material-icons" aria-hidden="true">arrow_upward</i></button>
+                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down"><i class="material-icons" aria-hidden="true">arrow_downward</i></button>
                                     </div>
-                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowVideoCodecTag" data-order-key="VideoCodecTagOrder" data-default-order="5" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                                        <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showVideoCodecTag" is="emby-checkbox" type="checkbox"/><span>Show video codec (HEVC, H264, AV1, ...)</span></label></div>
-                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
-                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowVideoCodecTag" data-order-key="VideoCodecTagOrder" data-default-order="5">
+                                        <div class="checkboxContainer"><label><input id="showVideoCodecTag" is="emby-checkbox" type="checkbox"/><span>Show video codec (HEVC, H264, AV1, ...)</span></label></div>
+                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up"><i class="material-icons" aria-hidden="true">arrow_upward</i></button>
+                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down"><i class="material-icons" aria-hidden="true">arrow_downward</i></button>
                                     </div>
-                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowAudioInfoTag" data-order-key="AudioInfoTagOrder" data-default-order="6" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                                        <div class="checkboxContainer" style="margin:0; flex:1;"><label><input id="showAudioInfoTag" is="emby-checkbox" type="checkbox"/><span>Show audio info (Atmos, DTS, 5.1, 7.1, ...)</span></label></div>
-                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up">▲</button>
-                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down">▼</button>
+                                    <div class="je-quality-cat-admin-row" data-cat-key="ShowAudioInfoTag" data-order-key="AudioInfoTagOrder" data-default-order="6">
+                                        <div class="checkboxContainer"><label><input id="showAudioInfoTag" is="emby-checkbox" type="checkbox"/><span>Show audio info (Atmos, DTS, 5.1, 7.1, ...)</span></label></div>
+                                        <button type="button" class="raised raised-mini je-cat-up" aria-label="Move up"><i class="material-icons" aria-hidden="true">arrow_upward</i></button>
+                                        <button type="button" class="raised raised-mini je-cat-down" aria-label="Move down"><i class="material-icons" aria-hidden="true">arrow_downward</i></button>
                                     </div>
                                 </div>
                             </details>

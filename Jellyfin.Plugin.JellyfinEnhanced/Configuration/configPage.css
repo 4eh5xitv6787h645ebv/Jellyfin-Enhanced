@@ -1541,6 +1541,45 @@ body.je-has-introskipper .je-needs-introskipper { display: none !important; }
     }
 }
 
+/* Quality-tag category rows inside the admin <details>. Visual treatment
+   matches the rest of the form: a single horizontal row holding a checkbox
+   container, plus reorder buttons that stay quiet by default and hint at
+   their action on hover. */
+.je-quality-cat-admin-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+.je-quality-cat-admin-row > .checkboxContainer {
+    flex: 1;
+    margin: 0;
+    min-width: 0;
+}
+.je-quality-cat-admin-row > .je-cat-up,
+.je-quality-cat-admin-row > .je-cat-down {
+    flex-shrink: 0;
+    min-width: 32px;
+    padding: 4px 6px;
+    line-height: 1;
+}
+.je-quality-cat-admin-row > .je-cat-up .material-icons,
+.je-quality-cat-admin-row > .je-cat-down .material-icons {
+    font-size: 18px !important;
+    vertical-align: middle;
+}
+.je-quality-cat-admin-row > button[disabled] {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+/* Inline reorder-icon hints that live in the descriptive sentence above the
+   list — show them at text size, not button size. */
+.je-cat-arrow-icon {
+    font-size: 14px !important;
+    vertical-align: -2px;
+    opacity: 0.85;
+}
+
 /* Custom Tabs auto-manage toggles — hidden by default. Revealed only when
    the Custom Tabs plugin is detected AND its config schema matches what
    Jellyfin Enhanced knows how to write. JS sets `je-has-customtabs-compat`
