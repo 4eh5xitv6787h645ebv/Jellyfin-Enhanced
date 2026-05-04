@@ -259,8 +259,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         /// backed up to <c>{file}.pre-case-merge-{ts}</c>) and the source
         /// folder is renamed to <c>{name}.migrated-{ts}</c> for forensic
         /// recovery rather than deleted outright.
-        /// </summary>
-        /// <summary>
         /// Per-instance unique suffix so multiple migration steps in the same
         /// millisecond produce distinct backup / .migrated- names. Combined
         /// with a millisecond timestamp this is collision-free in practice.
