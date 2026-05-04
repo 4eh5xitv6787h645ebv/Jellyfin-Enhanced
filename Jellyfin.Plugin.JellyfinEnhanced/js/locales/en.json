@@ -99,6 +99,7 @@
     "panel_settings_ui_language_tags": "Show Language Tags",
     "panel_settings_ui_language_tags_desc": "Display audio language flags on posters.",
     "panel_settings_ui_quality_tags_desc": "Display 4K, HDR, etc., tags on posters.",
+    "panel_settings_ui_quality_tags_categories_label": "Configure tag categories",
     "panel_settings_ui_quality_tags_resolution": "Resolution (4K, 1080p, ...)",
     "panel_settings_ui_quality_tags_source": "Source (BluRay, DVD, HDTV, ...)",
     "panel_settings_ui_quality_tags_dynamic_range": "Dynamic range (HDR, HDR10+, Dolby Vision)",

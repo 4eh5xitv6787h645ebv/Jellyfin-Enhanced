@@ -969,7 +969,7 @@
                                 <div id="qualityTagsSubWrap" class="je-quality-cat-wrap" style="display: ${JE.currentSettings.qualityTagsEnabled ? 'block' : 'none'};">
                                     <button type="button" id="qualityTagsSubToggleExpander" class="je-quality-cat-expander" aria-expanded="false">
                                         <span class="material-icons je-cat-chevron" aria-hidden="true">chevron_right</span>
-                                        <span>Configure tag categories</span>
+                                        <span>${JE.t('panel_settings_ui_quality_tags_categories_label')}</span>
                                     </button>
                                 </div>
                                 <div id="qualityTagsSubToggles" class="je-quality-cat-list" style="display: none;">
