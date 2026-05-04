@@ -884,7 +884,13 @@
                                         <div data-pos="bottom-right" style="border-radius:2px; transition:background 0.2s;"></div>
                                     </div>
                                 </label>
-                                <div id="qualityTagsSubToggles" style="margin: 8px 0 0 30px; display: ${JE.currentSettings.qualityTagsEnabled ? 'block' : 'none'};">
+                                <div id="qualityTagsSubWrap" style="margin: 8px 0 0 30px; display: ${JE.currentSettings.qualityTagsEnabled ? 'block' : 'none'};">
+                                    <button type="button" id="qualityTagsSubToggleExpander" aria-expanded="false" style="background:transparent; border:none; color:rgba(255,255,255,0.7); cursor:pointer; padding:2px 0; font-size:12px; display:flex; align-items:center; gap:6px;">
+                                        <span class="je-cat-chevron" aria-hidden="true" style="display:inline-block; transition:transform 0.15s;">▶</span>
+                                        <span>Configure tag categories</span>
+                                    </button>
+                                </div>
+                                <div id="qualityTagsSubToggles" style="margin: 6px 0 0 30px; display: none;">
                                     ${(() => {
                                         const cats = [
                                             { id: 'showResolutionTagToggle',    settingKey: 'showResolutionTag',    orderKey: 'resolutionTagOrder',    defaultOrder: 1, labelKey: 'panel_settings_ui_quality_tags_resolution' },
@@ -1413,12 +1419,32 @@
         addSettingToggleListener('showAudioLanguagesToggle', 'showAudioLanguages', 'feature_audio_language_display');
         addSettingToggleListener('removeContinueWatchingToggle', 'removeContinueWatchingEnabled', 'feature_remove_continue_watching');
         addSettingToggleListener('qualityTagsToggle', 'qualityTagsEnabled', 'feature_quality_tags', true);
-        // Show or hide the nested category sub-toggles when the master quality-tags toggle changes
+        // Show or hide the nested category section when the master quality-tags toggle changes
         const qualityMasterToggle = document.getElementById('qualityTagsToggle');
+        const qualitySubWrap = document.getElementById('qualityTagsSubWrap');
         const qualitySubGroup = document.getElementById('qualityTagsSubToggles');
-        if (qualityMasterToggle && qualitySubGroup) {
+        const qualitySubExpander = document.getElementById('qualityTagsSubToggleExpander');
+        if (qualityMasterToggle && qualitySubWrap) {
             qualityMasterToggle.addEventListener('change', () => {
-                qualitySubGroup.style.display = qualityMasterToggle.checked ? 'block' : 'none';
+                qualitySubWrap.style.display = qualityMasterToggle.checked ? 'block' : 'none';
+                // Collapse the category list when the feature is turned off so it
+                // returns collapsed the next time the user enables it
+                if (!qualityMasterToggle.checked && qualitySubGroup && qualitySubExpander) {
+                    qualitySubGroup.style.display = 'none';
+                    qualitySubExpander.setAttribute('aria-expanded', 'false');
+                    const chev = qualitySubExpander.querySelector('.je-cat-chevron');
+                    if (chev) chev.style.transform = '';
+                }
+            });
+        }
+        // Expand or collapse the 6 category rows when the user clicks the chevron
+        if (qualitySubExpander && qualitySubGroup) {
+            qualitySubExpander.addEventListener('click', () => {
+                const expanded = qualitySubExpander.getAttribute('aria-expanded') === 'true';
+                qualitySubExpander.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                qualitySubGroup.style.display = expanded ? 'none' : 'block';
+                const chev = qualitySubExpander.querySelector('.je-cat-chevron');
+                if (chev) chev.style.transform = expanded ? '' : 'rotate(90deg)';
             });
         }
         // Wire the per-category sub-toggle controls via event delegation
