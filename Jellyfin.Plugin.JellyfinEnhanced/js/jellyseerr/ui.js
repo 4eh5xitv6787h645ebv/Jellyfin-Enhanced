@@ -1913,34 +1913,6 @@
     // 403 with {"message":"Movie Quota exceeded."} — these helpers render a
     // proactive chip and a detailed dialog instead of a vanishing toast.
 
-    const _quotaTFallbackWarned = new Set();
-
-    // JE.t with a guaranteed inline English fallback (JE.t returns the raw key on miss).
-    // Wrapped in try/catch because a corrupt remote locale (cached from GitHub) can
-    // contain non-string values for a key, causing JE.t's internal text.replace to throw.
-    function tWithFallback(key, fallback, params) {
-        let result;
-        try {
-            result = JE.t(key, params);
-        } catch (_) {
-            result = null;
-        }
-        if (typeof result === 'string' && result !== key) return result;
-
-        if (!_quotaTFallbackWarned.has(key)) {
-            _quotaTFallbackWarned.add(key);
-            console.debug(`${logPrefix} Missing translation '${key}', using inline fallback.`);
-        }
-        let out = fallback;
-        if (params) {
-            for (const [k, v] of Object.entries(params)) {
-                // Replacement function avoids $&/$1 backreference footguns.
-                out = out.replace(new RegExp(`\\{${k}\\}`, 'g'), () => String(v));
-            }
-        }
-        return out;
-    }
-
     // Detect Seerr quota-exceeded errors (403 with "Quota exceeded" message).
     // Returns false when the admin has disabled quota info — falls back to the toast.
     function isQuotaError(error) {
@@ -1956,28 +1928,15 @@
         if (!Number.isFinite(ts)) return '';
 
         const deltaMs = ts - Date.now();
-        if (deltaMs <= 0) {
-            return tWithFallback('jellyseerr_quota_reset_now',
-                'Next slot should be available — try again now.');
-        }
+        if (deltaMs <= 0) return JE.t('jellyseerr_quota_reset_now');
 
         const minutes = Math.round(deltaMs / 60_000);
         const hours = Math.round(deltaMs / 3_600_000);
         const days = Math.round(deltaMs / 86_400_000);
 
-        if (minutes < 60) {
-            return tWithFallback('jellyseerr_quota_reset_in_minutes',
-                'Next slot frees in about {minutes} min',
-                { minutes: Math.max(1, minutes) });
-        }
-        if (hours < 36) {
-            return tWithFallback('jellyseerr_quota_reset_in_hours',
-                'Next slot frees in about {hours} h',
-                { hours });
-        }
-        return tWithFallback('jellyseerr_quota_reset_in_days',
-            'Next slot frees in about {days} days',
-            { days });
+        if (minutes < 60) return JE.t('jellyseerr_quota_reset_in_minutes', { minutes: Math.max(1, minutes) });
+        if (hours < 36) return JE.t('jellyseerr_quota_reset_in_hours', { hours });
+        return JE.t('jellyseerr_quota_reset_in_days', { days });
     }
 
     function formatQuotaLine(q, type) {
@@ -1988,13 +1947,11 @@
         const restricted = !!q.restricted;
         const unlimited = limit <= 0;
 
-        const labelKey = type === 'tv' ? 'jellyseerr_quota_label_tv' : 'jellyseerr_quota_label_movie';
-        const labelFallback = type === 'tv' ? 'Series' : 'Movies';
-        const label = tWithFallback(labelKey, labelFallback);
+        const label = JE.t(type === 'tv' ? 'jellyseerr_quota_label_tv' : 'jellyseerr_quota_label_movie');
 
         if (unlimited) {
             return {
-                text: tWithFallback('jellyseerr_quota_unlimited', '{label}: Unlimited', { label }),
+                text: JE.t('jellyseerr_quota_unlimited', { label }),
                 restricted: false,
                 unlimited: true,
                 resetText: ''
@@ -2002,11 +1959,8 @@
         }
 
         const usagePart = days > 0
-            ? tWithFallback('jellyseerr_quota_usage_window',
-                '{label}: {used}/{limit} used in the last {days} days',
-                { label, used, limit, days })
-            : tWithFallback('jellyseerr_quota_usage', '{label}: {used}/{limit} used',
-                { label, used, limit });
+            ? JE.t('jellyseerr_quota_usage_window', { label, used, limit, days })
+            : JE.t('jellyseerr_quota_usage', { label, used, limit });
 
         return {
             text: usagePart,
@@ -2036,10 +1990,7 @@
         if (line.restricted) {
             const sub = document.createElement('div');
             sub.className = 'jellyseerr-quota-chip-sub';
-            sub.textContent = tWithFallback(
-                'jellyseerr_quota_restricted_hint',
-                'Limit reached. New requests will be rejected until older ones age out of the window.'
-            );
+            sub.textContent = JE.t('jellyseerr_quota_restricted_hint');
             chip.appendChild(sub);
         }
 
@@ -2075,12 +2026,9 @@
             }
         }
 
-        lines.push(tWithFallback(
-            'jellyseerr_quota_dialog_hint',
-            'Older requests roll out of the window automatically — try again once one expires, or ask an admin to raise your limit.'
-        ));
+        lines.push(JE.t('jellyseerr_quota_dialog_hint'));
 
-        const title = tWithFallback('jellyseerr_quota_dialog_title', 'Request limit reached');
+        const title = JE.t('jellyseerr_quota_dialog_title');
         // Dashboard.alert sanitizes message as HTML, collapsing \n. Use <br><br>
         // for visible paragraph breaks; escape every line first since the upstream
         // Seerr message could contain HTML metacharacters.
@@ -2114,7 +2062,6 @@
     // Exposed so jellyseerr.js / more-info-modal.js can use the same dialog + chip.
     ui.isQuotaError = isQuotaError;
     ui.showQuotaErrorDialog = showQuotaErrorDialog;
-    ui.tWithFallback = tWithFallback;
     ui.buildQuotaChip = buildQuotaChip;
 
     /**
@@ -2710,9 +2657,7 @@
                     const total = selectedMovies.length;
                     let toastText = `${requestedLabel} ${successCount} of ${total} ${moviesLabel}`;
                     if (otherFailures > 0) {
-                        toastText += ' ' + tWithFallback(
-                            'jellyseerr_toast_collection_failed_count',
-                            '({count} failed)', { count: otherFailures });
+                        toastText += ' ' + JE.t('jellyseerr_toast_collection_failed_count', { count: otherFailures });
                     }
                     JE.toast(toastText, 4000);
                     if (quotaHitError) {
