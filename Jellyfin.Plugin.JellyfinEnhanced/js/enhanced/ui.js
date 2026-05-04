@@ -1413,7 +1413,7 @@
         addSettingToggleListener('showAudioLanguagesToggle', 'showAudioLanguages', 'feature_audio_language_display');
         addSettingToggleListener('removeContinueWatchingToggle', 'removeContinueWatchingEnabled', 'feature_remove_continue_watching');
         addSettingToggleListener('qualityTagsToggle', 'qualityTagsEnabled', 'feature_quality_tags', true);
-        // Toggle nested sub-toggle group with the master switch.
+        // Show or hide the nested category sub-toggles when the master quality-tags toggle changes
         const qualityMasterToggle = document.getElementById('qualityTagsToggle');
         const qualitySubGroup = document.getElementById('qualityTagsSubToggles');
         if (qualityMasterToggle && qualitySubGroup) {
@@ -1421,8 +1421,9 @@
                 qualitySubGroup.style.display = qualityMasterToggle.checked ? 'block' : 'none';
             });
         }
-        // Sub-toggles filter only; ↑/↓ swap order with the neighbor row.
+        // Wire the per-category sub-toggle controls via event delegation
         if (qualitySubGroup) {
+            // Persist sub-toggle state and re-render existing cards with the new filter
             qualitySubGroup.addEventListener('change', (e) => {
                 const target = e.target;
                 if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
@@ -1437,6 +1438,7 @@
                 }
                 resetAutoCloseTimer();
             });
+            // Handle ↑/↓ stack reorder buttons
             qualitySubGroup.addEventListener('click', (e) => {
                 const btn = e.target.closest('.je-cat-up, .je-cat-down');
                 if (!btn || btn.disabled) return;
@@ -1445,6 +1447,8 @@
                 const isUp = btn.classList.contains('je-cat-up');
                 const sibling = isUp ? row.previousElementSibling : row.nextElementSibling;
                 if (!sibling || !sibling.classList.contains('je-quality-cat-row')) return;
+
+                // Swap the order values between the two rows
                 const aOrderKey = row.dataset.orderKey;
                 const bOrderKey = sibling.dataset.orderKey;
                 const aDef = parseInt(row.dataset.defaultOrder, 10);
@@ -1454,6 +1458,8 @@
                 JE.currentSettings[aOrderKey] = bCurrent;
                 JE.currentSettings[bOrderKey] = aCurrent;
                 JE.saveUserSettings('settings.json', JE.currentSettings);
+
+                // Move the row in the DOM so the user sees the change immediately
                 if (isUp) {
                     sibling.parentNode.insertBefore(row, sibling);
                 } else {
@@ -1468,8 +1474,8 @@
         }
 
         /**
-         * Refresh ↑/↓ disabled state for the first/last rows.
-         * @param {HTMLElement} group
+         * Updates ↑/↓ button enabled state to reflect each row's position in the list
+         * @param {HTMLElement} group - The container holding the category rows
          */
         function refreshQualityCatArrowStates(group) {
             const rows = group.querySelectorAll('.je-quality-cat-row');

@@ -683,11 +683,11 @@
 
         // --- DOM MANIPULATION ---
         /**
-         * Resolve user setting → admin default → fallback.
-         * @param {string} userKey
-         * @param {string} pluginKey
-         * @param {boolean} fallback
-         * @returns {boolean}
+         * Reads a boolean from per-user settings, falling back to the admin default and then the supplied default
+         * @param {string} userKey - Key on JE.currentSettings
+         * @param {string} pluginKey - Key on JE.pluginConfig
+         * @param {boolean} fallback - Returned when neither source has a boolean value
+         * @returns {boolean} The resolved boolean
          */
         function readBool(userKey, pluginKey, fallback) {
             const userVal = JE.currentSettings?.[userKey];
@@ -698,11 +698,11 @@
         }
 
         /**
-         * Resolve numeric user setting → admin default → fallback.
-         * @param {string} userKey
-         * @param {string} pluginKey
-         * @param {number} fallback
-         * @returns {number}
+         * Reads a number from per-user settings, falling back to the admin default and then the supplied default
+         * @param {string} userKey - Key on JE.currentSettings
+         * @param {string} pluginKey - Key on JE.pluginConfig
+         * @param {number} fallback - Returned when neither source has a finite number
+         * @returns {number} The resolved number
          */
         function readInt(userKey, pluginKey, fallback) {
             const userVal = JE.currentSettings?.[userKey];
@@ -713,9 +713,9 @@
         }
 
         /**
-         * Map a tag to its category key, or null if uncategorized.
-         * @param {string} tag
-         * @returns {string|null}
+         * Determines which category a quality tag belongs to
+         * @param {string} tag - A quality tag, possibly composite (e.g. "ATMOS 7.1")
+         * @returns {string|null} The category key, or null if uncategorized
          */
         function categorize(tag) {
             const norm = normalizeQualityLabel(tag);
@@ -727,9 +727,9 @@
         }
 
         /**
-         * Render the quality tag overlay, filtered + ordered per user settings.
-         * @param {HTMLElement} container
-         * @param {Array<string>} qualities
+         * Renders the quality tag overlay onto a poster card
+         * @param {HTMLElement} container - The card element to receive the overlay
+         * @param {Array<string>} qualities - Detected quality tags, unfiltered
          */
         function insertOverlay(container, qualities) {
             if (!container) return;
@@ -738,6 +738,7 @@
             const existing = container.querySelector(`.${containerClass}`);
             if (existing) existing.remove();
 
+            // Bucket each tag by category, dropping disabled and uncategorized tags
             const buckets = new Map();
             for (const q of qualities) {
                 const catKey = categorize(q);
@@ -749,6 +750,7 @@
             }
             if (buckets.size === 0) return;
 
+            // Sort each bucket by within-category priority and keep only the best resolution
             for (const [catKey, tags] of buckets) {
                 const cat = CATEGORY_BY_KEY.get(catKey);
                 tags.sort((a, b) => {
@@ -758,11 +760,10 @@
                     const bIdx = cat.items.indexOf(bKey);
                     return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
                 });
-                // Keep only the best resolution.
                 if (catKey === 'resolution' && tags.length > 1) tags.length = 1;
             }
 
-            // Tie-break by defaultOrder so the result is deterministic.
+            // Sort categories by user stack order, tie-broken by defaultOrder for determinism
             const categoriesSorted = [...buckets.keys()].map((key) => {
                 const cat = CATEGORY_BY_KEY.get(key);
                 return {
