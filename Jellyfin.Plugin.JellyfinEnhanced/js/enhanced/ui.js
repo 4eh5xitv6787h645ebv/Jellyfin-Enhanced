@@ -893,21 +893,36 @@
                                 <div id="qualityTagsSubToggles" style="margin: 6px 0 0 30px; display: none;">
                                     ${(() => {
                                         const cats = [
-                                            { id: 'showResolutionTagToggle',    settingKey: 'showResolutionTag',    orderKey: 'resolutionTagOrder',    defaultOrder: 1, labelKey: 'panel_settings_ui_quality_tags_resolution' },
-                                            { id: 'showSourceTagToggle',        settingKey: 'showSourceTag',        orderKey: 'sourceTagOrder',        defaultOrder: 2, labelKey: 'panel_settings_ui_quality_tags_source' },
-                                            { id: 'showDynamicRangeTagToggle',  settingKey: 'showDynamicRangeTag',  orderKey: 'dynamicRangeTagOrder',  defaultOrder: 3, labelKey: 'panel_settings_ui_quality_tags_dynamic_range' },
-                                            { id: 'showSpecialFormatTagToggle', settingKey: 'showSpecialFormatTag', orderKey: 'specialFormatTagOrder', defaultOrder: 4, labelKey: 'panel_settings_ui_quality_tags_special_format' },
-                                            { id: 'showVideoCodecTagToggle',    settingKey: 'showVideoCodecTag',    orderKey: 'videoCodecTagOrder',    defaultOrder: 5, labelKey: 'panel_settings_ui_quality_tags_video_codec' },
-                                            { id: 'showAudioInfoTagToggle',     settingKey: 'showAudioInfoTag',     orderKey: 'audioInfoTagOrder',     defaultOrder: 6, labelKey: 'panel_settings_ui_quality_tags_audio_info' },
+                                            { id: 'showResolutionTagToggle',    settingKey: 'showResolutionTag',    pluginKey: 'ShowResolutionTag',    orderKey: 'resolutionTagOrder',    orderPluginKey: 'ResolutionTagOrder',    defaultOrder: 1, labelKey: 'panel_settings_ui_quality_tags_resolution' },
+                                            { id: 'showSourceTagToggle',        settingKey: 'showSourceTag',        pluginKey: 'ShowSourceTag',        orderKey: 'sourceTagOrder',        orderPluginKey: 'SourceTagOrder',        defaultOrder: 2, labelKey: 'panel_settings_ui_quality_tags_source' },
+                                            { id: 'showDynamicRangeTagToggle',  settingKey: 'showDynamicRangeTag',  pluginKey: 'ShowDynamicRangeTag',  orderKey: 'dynamicRangeTagOrder',  orderPluginKey: 'DynamicRangeTagOrder',  defaultOrder: 3, labelKey: 'panel_settings_ui_quality_tags_dynamic_range' },
+                                            { id: 'showSpecialFormatTagToggle', settingKey: 'showSpecialFormatTag', pluginKey: 'ShowSpecialFormatTag', orderKey: 'specialFormatTagOrder', orderPluginKey: 'SpecialFormatTagOrder', defaultOrder: 4, labelKey: 'panel_settings_ui_quality_tags_special_format' },
+                                            { id: 'showVideoCodecTagToggle',    settingKey: 'showVideoCodecTag',    pluginKey: 'ShowVideoCodecTag',    orderKey: 'videoCodecTagOrder',    orderPluginKey: 'VideoCodecTagOrder',    defaultOrder: 5, labelKey: 'panel_settings_ui_quality_tags_video_codec' },
+                                            { id: 'showAudioInfoTagToggle',     settingKey: 'showAudioInfoTag',     pluginKey: 'ShowAudioInfoTag',     orderKey: 'audioInfoTagOrder',     orderPluginKey: 'AudioInfoTagOrder',     defaultOrder: 6, labelKey: 'panel_settings_ui_quality_tags_audio_info' },
                                         ];
+                                        // Resolve to the effective enable/order (user override → admin default → hardcoded)
+                                        // so the panel reflects what's actually rendering, even when the user has
+                                        // never customized and inherits the admin value.
+                                        const effEnable = (c) => {
+                                            const u = JE.currentSettings[c.settingKey];
+                                            if (typeof u === 'boolean') return u;
+                                            const a = JE.pluginConfig?.[c.pluginKey];
+                                            return typeof a === 'boolean' ? a : true;
+                                        };
+                                        const effOrder = (c) => {
+                                            const u = JE.currentSettings[c.orderKey];
+                                            if (Number.isFinite(u)) return u;
+                                            const a = JE.pluginConfig?.[c.orderPluginKey];
+                                            return Number.isFinite(a) ? a : c.defaultOrder;
+                                        };
                                         const sorted = cats.slice().sort((a, b) => {
-                                            const ao = Number.isFinite(JE.currentSettings[a.orderKey]) ? JE.currentSettings[a.orderKey] : a.defaultOrder;
-                                            const bo = Number.isFinite(JE.currentSettings[b.orderKey]) ? JE.currentSettings[b.orderKey] : b.defaultOrder;
+                                            const ao = effOrder(a);
+                                            const bo = effOrder(b);
                                             if (ao !== bo) return ao - bo;
                                             return a.defaultOrder - b.defaultOrder;
                                         });
                                         return sorted.map((c, idx) => {
-                                            const checked = JE.currentSettings[c.settingKey] !== false ? 'checked' : '';
+                                            const checked = effEnable(c) ? 'checked' : '';
                                             const upDisabled = idx === 0 ? 'disabled' : '';
                                             const downDisabled = idx === sorted.length - 1 ? 'disabled' : '';
                                             return `
@@ -1474,23 +1489,23 @@
                 const sibling = isUp ? row.previousElementSibling : row.nextElementSibling;
                 if (!sibling || !sibling.classList.contains('je-quality-cat-row')) return;
 
-                // Swap the order values between the two rows
-                const aOrderKey = row.dataset.orderKey;
-                const bOrderKey = sibling.dataset.orderKey;
-                const aDef = parseInt(row.dataset.defaultOrder, 10);
-                const bDef = parseInt(sibling.dataset.defaultOrder, 10);
-                const aCurrent = Number.isFinite(JE.currentSettings[aOrderKey]) ? JE.currentSettings[aOrderKey] : aDef;
-                const bCurrent = Number.isFinite(JE.currentSettings[bOrderKey]) ? JE.currentSettings[bOrderKey] : bDef;
-                JE.currentSettings[aOrderKey] = bCurrent;
-                JE.currentSettings[bOrderKey] = aCurrent;
-                JE.saveUserSettings('settings.json', JE.currentSettings);
-
                 // Move the row in the DOM so the user sees the change immediately
                 if (isUp) {
                     sibling.parentNode.insertBefore(row, sibling);
                 } else {
                     sibling.parentNode.insertBefore(sibling, row);
                 }
+
+                // Normalize order values to 1..N from visual position so any
+                // pre-existing duplicates (e.g. admin set two rows to the same
+                // value via XML) self-heal on the next user reorder.
+                const allRows = qualitySubGroup.querySelectorAll('.je-quality-cat-row');
+                allRows.forEach((r, idx) => {
+                    const orderKey = r.dataset.orderKey;
+                    if (orderKey) JE.currentSettings[orderKey] = idx + 1;
+                });
+                JE.saveUserSettings('settings.json', JE.currentSettings);
+
                 refreshQualityCatArrowStates(qualitySubGroup);
                 if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
                     JE.reinitializeQualityTags();

@@ -3797,21 +3797,33 @@
         // of its single config write.
         var _jeCustomTabOwnedCache = Object.create(null);
 
+        // Tracks whether the most recent `renderQualityCatOrderAdmin` call ran
+        // to completion. If false at save time, we skip writing positional
+        // *Order values back to config so a render failure can't clobber the
+        // user's saved order with default DOM positions.
+        var _qualityCatRenderOK = false;
+
         // Reorders the admin quality-category rows to match the saved *Order values from the plugin config
         function renderQualityCatOrderAdmin(config) {
-            var container = document.getElementById('qualityCategoriesAdmin');
-            if (!container) return;
-            var rows = Array.from(container.querySelectorAll('.je-quality-cat-admin-row'));
-            rows.sort(function (a, b) {
-                var aOrder = parseInt(config[a.dataset.orderKey], 10);
-                var bOrder = parseInt(config[b.dataset.orderKey], 10);
-                if (!Number.isFinite(aOrder)) aOrder = parseInt(a.dataset.defaultOrder, 10);
-                if (!Number.isFinite(bOrder)) bOrder = parseInt(b.dataset.defaultOrder, 10);
-                if (aOrder !== bOrder) return aOrder - bOrder;
-                return parseInt(a.dataset.defaultOrder, 10) - parseInt(b.dataset.defaultOrder, 10);
-            });
-            rows.forEach(function (row) { container.appendChild(row); });
-            refreshQualityCatAdminArrows(container);
+            _qualityCatRenderOK = false;
+            try {
+                var container = document.getElementById('qualityCategoriesAdmin');
+                if (!container) return;
+                var rows = Array.from(container.querySelectorAll('.je-quality-cat-admin-row'));
+                rows.sort(function (a, b) {
+                    var aOrder = parseInt(config[a.dataset.orderKey], 10);
+                    var bOrder = parseInt(config[b.dataset.orderKey], 10);
+                    if (!Number.isFinite(aOrder)) aOrder = parseInt(a.dataset.defaultOrder, 10);
+                    if (!Number.isFinite(bOrder)) bOrder = parseInt(b.dataset.defaultOrder, 10);
+                    if (aOrder !== bOrder) return aOrder - bOrder;
+                    return parseInt(a.dataset.defaultOrder, 10) - parseInt(b.dataset.defaultOrder, 10);
+                });
+                rows.forEach(function (row) { container.appendChild(row); });
+                refreshQualityCatAdminArrows(container);
+                _qualityCatRenderOK = true;
+            } catch (err) {
+                console.error('Jellyfin Enhanced: renderQualityCatOrderAdmin failed; will skip *Order save', err);
+            }
         }
 
         // Updates the disabled/opacity styling on the up/down buttons so the
@@ -3845,15 +3857,17 @@
                 e.preventDefault();
                 var row = btn.closest('.je-quality-cat-admin-row');
                 if (!row) return;
+                var parent = row.parentNode;
+                if (!parent) return;
                 var isUp = btn.classList.contains('je-cat-up');
                 var sibling = isUp ? row.previousElementSibling : row.nextElementSibling;
                 if (!sibling || !sibling.classList.contains('je-quality-cat-admin-row')) return;
                 if (isUp) {
-                    row.parentNode.insertBefore(row, sibling);
+                    parent.insertBefore(row, sibling);
                 } else {
-                    row.parentNode.insertBefore(sibling, row);
+                    parent.insertBefore(sibling, row);
                 }
-                refreshQualityCatAdminArrows(row.parentNode);
+                refreshQualityCatAdminArrows(parent);
             });
         })();
 
@@ -4197,11 +4211,15 @@
             config.ShowAudioInfoTag = document.querySelector('#showAudioInfoTag').checked;
             // Persist current visual stack order. Each admin row reads its current
             // DOM position (1-based) into the corresponding *Order config key.
-            const adminCatRows = document.querySelectorAll('#qualityCategoriesAdmin .je-quality-cat-admin-row');
-            adminCatRows.forEach((row, idx) => {
-                const orderKey = row.dataset.orderKey;
-                if (orderKey) config[orderKey] = idx + 1;
-            });
+            // Skipped if the load-time render failed — otherwise we'd clobber the
+            // user's saved order with default DOM positions.
+            if (_qualityCatRenderOK) {
+                const adminCatRows = document.querySelectorAll('#qualityCategoriesAdmin .je-quality-cat-admin-row');
+                adminCatRows.forEach((row, idx) => {
+                    const orderKey = row.dataset.orderKey;
+                    if (orderKey) config[orderKey] = idx + 1;
+                });
+            }
             config.GenreTagsEnabled = document.querySelector('#genreTagsEnabled').checked;
             config.LanguageTagsEnabled = document.querySelector('#languageTagsEnabled').checked;
             config.RatingTagsEnabled = document.querySelector('#ratingTagsEnabled').checked;

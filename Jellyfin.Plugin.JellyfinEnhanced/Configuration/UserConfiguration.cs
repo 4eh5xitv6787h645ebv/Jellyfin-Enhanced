@@ -30,20 +30,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool ShowFileSizes { get; set; }
         public bool ShowAudioLanguages { get; set; }
         public bool QualityTagsEnabled { get; set; }
-        public bool ShowResolutionTag { get; set; } = true;
-        public bool ShowSourceTag { get; set; } = true;
-        public bool ShowDynamicRangeTag { get; set; } = true;
-        public bool ShowSpecialFormatTag { get; set; } = true;
-        public bool ShowVideoCodecTag { get; set; } = true;
-        public bool ShowAudioInfoTag { get; set; } = true;
-        // Per-category stack order within the master quality-tags container.
-        // Lower numbers render first. Defaults match the prior hard-coded order.
-        public int ResolutionTagOrder { get; set; } = 1;
-        public int SourceTagOrder { get; set; } = 2;
-        public int DynamicRangeTagOrder { get; set; } = 3;
-        public int SpecialFormatTagOrder { get; set; } = 4;
-        public int VideoCodecTagOrder { get; set; } = 5;
-        public int AudioInfoTagOrder { get; set; } = 6;
+        // Nullable so a missing key in an existing pre-PR settings.json stays
+        // null after deserialization and the frontend falls through to the
+        // admin default via readBool/readInt. Without this, missing keys
+        // would coerce to true/1..N forever.
+        public bool? ShowResolutionTag { get; set; }
+        public bool? ShowSourceTag { get; set; }
+        public bool? ShowDynamicRangeTag { get; set; }
+        public bool? ShowSpecialFormatTag { get; set; }
+        public bool? ShowVideoCodecTag { get; set; }
+        public bool? ShowAudioInfoTag { get; set; }
+        public int? ResolutionTagOrder { get; set; }
+        public int? SourceTagOrder { get; set; }
+        public int? DynamicRangeTagOrder { get; set; }
+        public int? SpecialFormatTagOrder { get; set; }
+        public int? VideoCodecTagOrder { get; set; }
+        public int? AudioInfoTagOrder { get; set; }
         public bool GenreTagsEnabled { get; set; }
         public bool LanguageTagsEnabled { get; set; }
         public bool RatingTagsEnabled { get; set; }

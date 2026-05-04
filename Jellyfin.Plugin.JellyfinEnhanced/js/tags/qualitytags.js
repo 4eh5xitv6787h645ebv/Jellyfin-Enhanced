@@ -193,6 +193,8 @@
             badge.className = overlayClass;
 
             // Existing class names preserved for backward-compat with user CSS.
+            // Source tags (BluRay/DVD/etc.) keep `.other-quality` from the
+            // pre-PR behavior so user CSS targeting that class still matches.
             if (resolutionOrder.includes(normalizedLabel)) {
                 badge.classList.add('resolution');
             } else if (codecOrder.includes(normalizedLabel)) {
@@ -201,8 +203,6 @@
                 badge.classList.add('video-codec');
             } else if (audioOrder.includes(normalizedLabel)) {
                 badge.classList.add('audio-codec');
-            } else if (sourceOrder.includes(normalizedLabel)) {
-                badge.classList.add('source-quality');
             } else {
                 badge.classList.add('other-quality');
             }
@@ -738,17 +738,30 @@
             const existing = container.querySelector(`.${containerClass}`);
             if (existing) existing.remove();
 
-            // Bucket each tag by category, dropping disabled and uncategorized tags
+            // Bucket each tag by category. Disabled categories drop their tags.
+            // Uncategorized labels (e.g. stale cache entries from a prior plugin
+            // version) collect in `otherBucket` so they still render — preserves
+            // the pre-PR `.other-quality` rendering behavior.
             const buckets = new Map();
+            const otherBucket = [];
             for (const q of qualities) {
                 const catKey = categorize(q);
-                if (!catKey) continue;
-                const cat = CATEGORY_BY_KEY.get(catKey);
-                if (!readBool(cat.settingKey, cat.pluginKey, true)) continue;
-                if (!buckets.has(catKey)) buckets.set(catKey, []);
-                buckets.get(catKey).push(q);
+                if (catKey) {
+                    const cat = CATEGORY_BY_KEY.get(catKey);
+                    if (!readBool(cat.settingKey, cat.pluginKey, true)) continue;
+                    if (!buckets.has(catKey)) buckets.set(catKey, []);
+                    buckets.get(catKey).push(q);
+                } else {
+                    otherBucket.push(q);
+                }
             }
-            if (buckets.size === 0) return;
+            if (buckets.size === 0 && otherBucket.length === 0) {
+                // Clear stale dataset attribute so a future re-init / re-render
+                // can rebuild the overlay rather than treating the card as tagged.
+                const card = container.closest('.card');
+                if (card?.dataset) delete card.dataset[TAGGED_ATTR];
+                return;
+            }
 
             // Sort each bucket by within-category priority and keep only the best resolution
             for (const [catKey, tags] of buckets) {
@@ -786,6 +799,10 @@
                 for (const q of buckets.get(key)) {
                     qualityContainer.appendChild(createResponsiveLabel(q));
                 }
+            }
+            // Render any uncategorized tags last, in original input order.
+            for (const q of otherBucket) {
+                qualityContainer.appendChild(createResponsiveLabel(q));
             }
 
             container.appendChild(qualityContainer);
