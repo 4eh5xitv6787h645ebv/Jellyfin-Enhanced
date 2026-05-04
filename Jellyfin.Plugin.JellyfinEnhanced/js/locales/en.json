@@ -106,7 +106,7 @@
     "panel_settings_ui_hide_tags_on_hover": "Hide Tags on Hover",
     "panel_settings_ui_hide_tags_on_hover_desc": "Fade tag overlays when hovering over cards so buttons are easier to see",
     "panel_settings_ui_remove_continue_watching": "Add Remove from Continue Watching Button",
-    "panel_settings_ui_remove_continue_watching_desc": "Adds a non-destructive Remove option to the action sheet on Continue Watching cards. Hidden items appear in Hidden Content's management page, where each entry has an \"Add back to Continue Watching\" button. Resuming a hidden item also unhides it automatically. Your playback position is always preserved.",
+    "panel_settings_ui_remove_continue_watching_desc": "Adds a Remove option to the action sheet on Continue Watching Items. Removed items appear in Hidden Content's management page, where each entry has an \"Add back to Continue Watching\" button. Resuming a hidden item also unhides it automatically. Your playback position is always preserved.",
     "hidden_content_add_back_to_cw": "Add back to Continue Watching",
     "hidden_content_scope_cw_label": "Continue Watching only",
     "hidden_content_scope_nextup_label": "Next Up only",
