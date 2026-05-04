@@ -357,6 +357,88 @@
               max-width: 96%;
               box-sizing: border-box;
             }
+            /* Quality-tag category sub-panel — themed expander + reorderable
+               rows. Lives inside the user Settings panel under the master
+               Quality Tags toggle. Visual treatment mirrors the rest of the
+               panel: subtle borders, accent on hover, material-icon arrows
+               that match other JE icon buttons. */
+            #jellyfin-enhanced-panel .je-quality-cat-wrap { margin: 8px 0 0 30px; }
+            #jellyfin-enhanced-panel .je-quality-cat-expander {
+                background: transparent;
+                border: none;
+                color: rgba(255,255,255,0.7);
+                cursor: pointer;
+                padding: 4px 0;
+                font: inherit;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                transition: color 0.15s;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-expander:hover { color: #fff; }
+            #jellyfin-enhanced-panel .je-cat-chevron {
+                font-size: 18px !important;
+                transition: transform 0.2s ease;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-expander[aria-expanded="true"] .je-cat-chevron {
+                transform: rotate(90deg);
+                color: var(--primary-accent-color, #00a4dc);
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-list {
+                margin: 6px 0 0 30px;
+                padding: 8px 10px;
+                background: rgba(0,0,0,0.18);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 6px;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 4px 2px;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-row + .je-quality-cat-row {
+                border-top: 1px solid rgba(255,255,255,0.06);
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-label-wrap {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                min-width: 0;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-label-wrap input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+                cursor: pointer;
+            }
+            #jellyfin-enhanced-panel .je-quality-cat-label { font-size: 13px; }
+            #jellyfin-enhanced-panel .je-cat-btn {
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.15);
+                color: rgba(255,255,255,0.85);
+                border-radius: 4px;
+                padding: 3px 6px;
+                cursor: pointer;
+                line-height: 1;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.15s, border-color 0.15s, color 0.15s;
+            }
+            #jellyfin-enhanced-panel .je-cat-btn .material-icons { font-size: 16px !important; }
+            #jellyfin-enhanced-panel .je-cat-btn:not([disabled]):hover {
+                background: rgba(255,255,255,0.1);
+                border-color: var(--primary-accent-color, rgba(255,255,255,0.35));
+                color: #fff;
+            }
+            #jellyfin-enhanced-panel .je-cat-btn[disabled] {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
         `;
         document.head.appendChild(style);
     };
@@ -884,6 +966,60 @@
                                         <div data-pos="bottom-right" style="border-radius:2px; transition:background 0.2s;"></div>
                                     </div>
                                 </label>
+                                <div id="qualityTagsSubWrap" class="je-quality-cat-wrap" style="display: ${JE.currentSettings.qualityTagsEnabled ? 'block' : 'none'};">
+                                    <button type="button" id="qualityTagsSubToggleExpander" class="je-quality-cat-expander" aria-expanded="false">
+                                        <span class="material-icons je-cat-chevron" aria-hidden="true">chevron_right</span>
+                                        <span>${JE.t('panel_settings_ui_quality_tags_categories_label')}</span>
+                                    </button>
+                                </div>
+                                <div id="qualityTagsSubToggles" class="je-quality-cat-list" style="display: none;">
+                                    ${(() => {
+                                        const cats = [
+                                            { id: 'showResolutionTagToggle',    settingKey: 'showResolutionTag',    pluginKey: 'ShowResolutionTag',    orderKey: 'resolutionTagOrder',    orderPluginKey: 'ResolutionTagOrder',    defaultOrder: 1, labelKey: 'panel_settings_ui_quality_tags_resolution' },
+                                            { id: 'showSourceTagToggle',        settingKey: 'showSourceTag',        pluginKey: 'ShowSourceTag',        orderKey: 'sourceTagOrder',        orderPluginKey: 'SourceTagOrder',        defaultOrder: 2, labelKey: 'panel_settings_ui_quality_tags_source' },
+                                            { id: 'showDynamicRangeTagToggle',  settingKey: 'showDynamicRangeTag',  pluginKey: 'ShowDynamicRangeTag',  orderKey: 'dynamicRangeTagOrder',  orderPluginKey: 'DynamicRangeTagOrder',  defaultOrder: 3, labelKey: 'panel_settings_ui_quality_tags_dynamic_range' },
+                                            { id: 'showSpecialFormatTagToggle', settingKey: 'showSpecialFormatTag', pluginKey: 'ShowSpecialFormatTag', orderKey: 'specialFormatTagOrder', orderPluginKey: 'SpecialFormatTagOrder', defaultOrder: 4, labelKey: 'panel_settings_ui_quality_tags_special_format' },
+                                            { id: 'showVideoCodecTagToggle',    settingKey: 'showVideoCodecTag',    pluginKey: 'ShowVideoCodecTag',    orderKey: 'videoCodecTagOrder',    orderPluginKey: 'VideoCodecTagOrder',    defaultOrder: 5, labelKey: 'panel_settings_ui_quality_tags_video_codec' },
+                                            { id: 'showAudioInfoTagToggle',     settingKey: 'showAudioInfoTag',     pluginKey: 'ShowAudioInfoTag',     orderKey: 'audioInfoTagOrder',     orderPluginKey: 'AudioInfoTagOrder',     defaultOrder: 6, labelKey: 'panel_settings_ui_quality_tags_audio_info' },
+                                        ];
+                                        // Resolve to the effective enable/order (user override → admin default → hardcoded)
+                                        // so the panel reflects what's actually rendering, even when the user has
+                                        // never customized and inherits the admin value.
+                                        const effEnable = (c) => {
+                                            const u = JE.currentSettings[c.settingKey];
+                                            if (typeof u === 'boolean') return u;
+                                            const a = JE.pluginConfig?.[c.pluginKey];
+                                            return typeof a === 'boolean' ? a : true;
+                                        };
+                                        const effOrder = (c) => {
+                                            const u = JE.currentSettings[c.orderKey];
+                                            if (Number.isFinite(u)) return u;
+                                            const a = JE.pluginConfig?.[c.orderPluginKey];
+                                            return Number.isFinite(a) ? a : c.defaultOrder;
+                                        };
+                                        const sorted = cats.slice().sort((a, b) => {
+                                            const ao = effOrder(a);
+                                            const bo = effOrder(b);
+                                            if (ao !== bo) return ao - bo;
+                                            return a.defaultOrder - b.defaultOrder;
+                                        });
+                                        return sorted.map((c, idx) => {
+                                            const checked = effEnable(c) ? 'checked' : '';
+                                            const upDisabled = idx === 0 ? 'disabled' : '';
+                                            const downDisabled = idx === sorted.length - 1 ? 'disabled' : '';
+                                            return `
+                                                <div class="je-quality-cat-row" data-cat-key="${c.settingKey}" data-order-key="${c.orderKey}" data-default-order="${c.defaultOrder}">
+                                                    <label class="je-quality-cat-label-wrap">
+                                                        <input type="checkbox" id="${c.id}" ${checked} style="accent-color:${toggleAccentColor};">
+                                                        <span class="je-quality-cat-label">${JE.t(c.labelKey)}</span>
+                                                    </label>
+                                                    <button type="button" class="je-cat-btn je-cat-up" ${upDisabled} aria-label="${JE.t('panel_settings_ui_quality_tags_move_up')}"><span class="material-icons" aria-hidden="true">arrow_upward</span></button>
+                                                    <button type="button" class="je-cat-btn je-cat-down" ${downDisabled} aria-label="${JE.t('panel_settings_ui_quality_tags_move_down')}"><span class="material-icons" aria-hidden="true">arrow_downward</span></button>
+                                                </div>
+                                            `;
+                                        }).join('');
+                                    })()}
+                                </div>
                             </div>
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
@@ -1382,6 +1518,106 @@
         addSettingToggleListener('showAudioLanguagesToggle', 'showAudioLanguages', 'feature_audio_language_display');
         addSettingToggleListener('removeContinueWatchingToggle', 'removeContinueWatchingEnabled', 'feature_remove_continue_watching');
         addSettingToggleListener('qualityTagsToggle', 'qualityTagsEnabled', 'feature_quality_tags', true);
+        // Show or hide the nested category section when the master quality-tags toggle changes
+        const qualityMasterToggle = document.getElementById('qualityTagsToggle');
+        const qualitySubWrap = document.getElementById('qualityTagsSubWrap');
+        const qualitySubGroup = document.getElementById('qualityTagsSubToggles');
+        const qualitySubExpander = document.getElementById('qualityTagsSubToggleExpander');
+        if (qualityMasterToggle && qualitySubWrap) {
+            qualityMasterToggle.addEventListener('change', () => {
+                qualitySubWrap.style.display = qualityMasterToggle.checked ? 'block' : 'none';
+                // Collapse the category list when the feature is turned off so it
+                // returns collapsed the next time the user enables it
+                if (!qualityMasterToggle.checked && qualitySubGroup && qualitySubExpander) {
+                    qualitySubGroup.style.display = 'none';
+                    qualitySubExpander.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+        // Expand or collapse the 6 category rows when the user clicks the chevron.
+        // The chevron rotation is driven by CSS via the aria-expanded attribute.
+        if (qualitySubExpander && qualitySubGroup) {
+            qualitySubExpander.addEventListener('click', () => {
+                const expanded = qualitySubExpander.getAttribute('aria-expanded') === 'true';
+                qualitySubExpander.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                qualitySubGroup.style.display = expanded ? 'none' : 'block';
+            });
+        }
+        // Wire the per-category sub-toggle controls via event delegation
+        if (qualitySubGroup) {
+            // Persist sub-toggle state and re-render existing cards with the new filter
+            qualitySubGroup.addEventListener('change', (e) => {
+                const target = e.target;
+                if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+                const row = target.closest('.je-quality-cat-row');
+                if (!row) return;
+                const settingKey = row.dataset.catKey;
+                if (!settingKey) return;
+                JE.currentSettings[settingKey] = target.checked;
+                JE.saveUserSettings('settings.json', JE.currentSettings);
+                if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
+                    JE.reinitializeQualityTags();
+                }
+                resetAutoCloseTimer();
+            });
+            // Handle ↑/↓ stack reorder buttons
+            qualitySubGroup.addEventListener('click', (e) => {
+                const btn = e.target.closest('.je-cat-up, .je-cat-down');
+                if (!btn || btn.disabled) return;
+                const row = btn.closest('.je-quality-cat-row');
+                if (!row) return;
+                const isUp = btn.classList.contains('je-cat-up');
+                const sibling = isUp ? row.previousElementSibling : row.nextElementSibling;
+                if (!sibling || !sibling.classList.contains('je-quality-cat-row')) return;
+
+                // Move the row in the DOM so the user sees the change immediately
+                if (isUp) {
+                    sibling.parentNode.insertBefore(row, sibling);
+                } else {
+                    sibling.parentNode.insertBefore(sibling, row);
+                }
+
+                // Normalize order values to 1..N from visual position so any
+                // pre-existing duplicates (e.g. admin set two rows to the same
+                // value via XML) self-heal on the next user reorder.
+                const allRows = qualitySubGroup.querySelectorAll('.je-quality-cat-row');
+                allRows.forEach((r, idx) => {
+                    const orderKey = r.dataset.orderKey;
+                    if (orderKey) JE.currentSettings[orderKey] = idx + 1;
+                });
+                JE.saveUserSettings('settings.json', JE.currentSettings);
+
+                refreshQualityCatArrowStates(qualitySubGroup);
+                if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
+                    JE.reinitializeQualityTags();
+                }
+                resetAutoCloseTimer();
+            });
+        }
+
+        /**
+         * Updates ↑/↓ button enabled state to reflect each row's position in the list
+         * @param {HTMLElement} group - The container holding the category rows
+         */
+        function refreshQualityCatArrowStates(group) {
+            const rows = group.querySelectorAll('.je-quality-cat-row');
+            rows.forEach((row, idx) => {
+                const upBtn = row.querySelector('.je-cat-up');
+                const downBtn = row.querySelector('.je-cat-down');
+                const isFirst = idx === 0;
+                const isLast = idx === rows.length - 1;
+                if (upBtn) {
+                    upBtn.disabled = isFirst;
+                    upBtn.style.cursor = isFirst ? 'not-allowed' : 'pointer';
+                    upBtn.style.opacity = isFirst ? '0.4' : '1';
+                }
+                if (downBtn) {
+                    downBtn.disabled = isLast;
+                    downBtn.style.cursor = isLast ? 'not-allowed' : 'pointer';
+                    downBtn.style.opacity = isLast ? '0.4' : '1';
+                }
+            });
+        }
         addSettingToggleListener('genreTagsToggle', 'genreTagsEnabled', 'feature_genre_tags', true);
         addSettingToggleListener('pauseScreenToggle', 'pauseScreenEnabled', 'feature_custom_pause_screen', true);
 

@@ -57,6 +57,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             HideReviewsFromDisabledUsers = true;
             PauseScreenEnabled = true;
             QualityTagsEnabled = false;
+            ShowResolutionTag = true;
+            ShowSourceTag = true;
+            ShowDynamicRangeTag = true;
+            ShowSpecialFormatTag = true;
+            ShowVideoCodecTag = true;
+            ShowAudioInfoTag = true;
+            ResolutionTagOrder = 1;
+            SourceTagOrder = 2;
+            DynamicRangeTagOrder = 3;
+            SpecialFormatTagOrder = 4;
+            VideoCodecTagOrder = 5;
+            AudioInfoTagOrder = 6;
             GenreTagsEnabled = false;
             LanguageTagsEnabled = false;
             RatingTagsEnabled = false;
@@ -302,6 +314,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool PauseScreenEnabled { get; set; }
         public int PauseScreenDelaySeconds { get; set; } = 5;
         public bool QualityTagsEnabled { get; set; }
+        public bool ShowResolutionTag { get; set; } = true;
+        public bool ShowSourceTag { get; set; } = true;
+        public bool ShowDynamicRangeTag { get; set; } = true;
+        public bool ShowSpecialFormatTag { get; set; } = true;
+        public bool ShowVideoCodecTag { get; set; } = true;
+        public bool ShowAudioInfoTag { get; set; } = true;
+        public int ResolutionTagOrder { get; set; } = 1;
+        public int SourceTagOrder { get; set; } = 2;
+        public int DynamicRangeTagOrder { get; set; } = 3;
+        public int SpecialFormatTagOrder { get; set; } = 4;
+        public int VideoCodecTagOrder { get; set; } = 5;
+        public int AudioInfoTagOrder { get; set; } = 6;
         public bool LanguageTagsEnabled { get; set; }
         public bool RatingTagsEnabled { get; set; }
         public bool PeopleTagsEnabled { get; set; }

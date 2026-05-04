@@ -102,6 +102,12 @@
             pauseScreenEnabled: true,
             pauseScreenDelaySeconds: 5,
             qualityTagsEnabled: false, genreTagsEnabled: false, languageTagsEnabled: false, ratingTagsEnabled: false, peopleTagsEnabled: false, tagsHideOnHover: false,
+            // Quality category sub-toggle defaults are null so loadSettings preserves
+            // a missing/null user value, letting readBool/readInt in qualitytags.js
+            // fall through to the admin pluginConfig default. This is what makes
+            // admin-side category disables propagate to existing pre-PR users.
+            showResolutionTag: null, showSourceTag: null, showDynamicRangeTag: null, showSpecialFormatTag: null, showVideoCodecTag: null, showAudioInfoTag: null,
+            resolutionTagOrder: null, sourceTagOrder: null, dynamicRangeTagOrder: null, specialFormatTagOrder: null, videoCodecTagOrder: null, audioInfoTagOrder: null,
             qualityTagsPosition: 'top-left', genreTagsPosition: 'top-right', languageTagsPosition: 'bottom-left', ratingTagsPosition: 'bottom-right',
             showRatingInPlayer: true,
             reviewsExpandedByDefault: false,
