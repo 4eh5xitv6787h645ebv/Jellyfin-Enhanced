@@ -282,12 +282,13 @@
             params.push(`language=${encodeURIComponent(filters.originalLanguage)}`);
         }
         if (allow('genre') && filters.genres) {
-            // Storage uses pipes; URL separator depends on genresMode:
+            // Seerr's discover schema accepts `genre` (forwarded to TMDB as
+            // with_genres). It rejects `withGenres` outright with HTTP 400.
             //   genresMode='all' → comma (TMDB AND — must have every genre)
             //   default 'any'    → pipe (TMDB OR  — must have any one)
             const ids = String(filters.genres).split('|').filter(Boolean);
             const sep = filters.genresMode === 'all' ? ',' : '|';
-            params.push(`withGenres=${encodeURIComponent(ids.join(sep))}`);
+            params.push(`genre=${encodeURIComponent(ids.join(sep))}`);
         }
 
         return params.length > 0 ? '&' + params.join('&') : '';
@@ -477,6 +478,8 @@
                     else selected.add(id);
                     setTagSelected(tag, selected.has(id));
                     wrapper.dataset.value = Array.from(selected).join('|');
+                    // Tell the panel (auto-apply listener picks this up)
+                    wrapper.dispatchEvent(new CustomEvent('je-genre-changed'));
                 });
                 wrapper.appendChild(tag);
             });
@@ -597,6 +600,7 @@
                 wrapper.querySelectorAll('.je-filter-mode-btn').forEach(x => {
                     x.setAttribute('aria-pressed', x.dataset.mode === b.mode ? 'true' : 'false');
                 });
+                wrapper.dispatchEvent(new CustomEvent('je-mode-changed'));
             });
             wrapper.appendChild(btn);
         });
@@ -848,22 +852,6 @@
             toggle.setAttribute('aria-expanded', String(!isOpen));
         });
 
-        resetBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            Object.entries(inputs).forEach(([k, el]) => {
-                if ((k === 'genres' || k === 'genresMode') && typeof el._reset === 'function') {
-                    el._reset();
-                } else {
-                    el.value = '';
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            });
-            resetAdvancedFilters(moduleName);
-            refreshBadge();
-            if (typeof onApply === 'function') onApply();
-        });
-
         // Coerce a raw input value into a finite integer within [min, max], or '' if invalid.
         // Number inputs accept characters like 'e' which produce NaN — drop those rather than
         // letting them flow into TMDB query strings as 'abc-01-01'.
@@ -888,13 +876,63 @@
             return String(rounded);
         }
 
-        applyBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        /**
+         * Live max-only clamp fired on every keystroke. Snapping the maximum
+         * mid-typing means a user who types `515` in a 0-10 field sees the
+         * field collapse to `10` immediately. The min is *not* clamped here so
+         * partial values like `2` (en route to `2010`) aren't mangled.
+         */
+        function clampOnTyping(input) {
+            const v = input.value;
+            if (v === '' || v === '-') return;
+            const n = parseFloat(v);
+            if (!Number.isFinite(n)) return;
+            const max = parseFloat(input.max);
+            if (Number.isFinite(max) && n > max) {
+                input.value = String(max);
+            }
+        }
+
+        /**
+         * Final normalisation when focus leaves an input. Clamps to [min, max],
+         * rounds to step precision (1 for ints, 0.1 for ratings), and drops
+         * non-finite values back to empty.
+         */
+        function finalizeOnBlur(input) {
+            const v = input.value;
+            if (v === '') return;
+            const n = parseFloat(v);
+            if (!Number.isFinite(n)) {
+                input.value = '';
+                return;
+            }
+            const min = parseFloat(input.min);
+            const max = parseFloat(input.max);
+            let result = n;
+            if (Number.isFinite(min) && result < min) result = min;
+            if (Number.isFinite(max) && result > max) result = max;
+            const stepStr = String(input.step || '1');
+            const step = parseFloat(stepStr);
+            if (Number.isFinite(step) && step > 0 && step < 1) {
+                const decimals = stepStr.includes('.') ? stepStr.split('.')[1].length : 0;
+                result = Number(result.toFixed(decimals));
+            } else {
+                result = Math.round(result);
+            }
+            input.value = String(result);
+        }
+
+        /**
+         * Reads inputs, runs the same clamp/swap/store pipeline as the Apply
+         * button used to do, and triggers `onApply` so the section refetches.
+         * Called from the Apply button (immediate) and from the auto-apply
+         * timer (debounced via scheduleAutoApply).
+         */
+        function commitAndApply() {
             const next = readInputs();
 
-            // Validate + clamp numeric inputs before they reach the URL builder.
-            // Bounds match the input field max attributes — see `<input>` setup above.
+            // Validate + clamp numeric inputs (defence-in-depth — typing/blur
+            // already clamps but this catches anything that slipped through).
             if ('yearFrom' in next) next.yearFrom = clampInt(next.yearFrom, 1874, 2100);
             if ('yearTo' in next) next.yearTo = clampInt(next.yearTo, 1874, 2100);
             if ('runtimeFrom' in next) next.runtimeFrom = clampInt(next.runtimeFrom, 0, 1000);
@@ -937,6 +975,93 @@
             setAdvancedFilters(moduleName, next);
             refreshBadge();
             if (typeof onApply === 'function') onApply();
+        }
+
+        // Auto-apply: a short debounce so rapid changes (typing, tabbing
+        // between fields, multi-genre toggling) collapse into one refetch.
+        let autoApplyTimer = null;
+        function scheduleAutoApply() {
+            if (autoApplyTimer) clearTimeout(autoApplyTimer);
+            autoApplyTimer = setTimeout(() => {
+                autoApplyTimer = null;
+                commitAndApply();
+            }, 400);
+        }
+        function cancelAutoApply() {
+            if (autoApplyTimer) {
+                clearTimeout(autoApplyTimer);
+                autoApplyTimer = null;
+            }
+        }
+
+        // Wire numeric inputs: live max-clamp on typing + finalize+auto-apply on blur.
+        ['yearFrom', 'yearTo', 'runtimeFrom', 'runtimeTo',
+         'minRating', 'maxRating', 'minVotes', 'maxVotes'].forEach(key => {
+            const el = inputs[key];
+            if (!el) return;
+            let lastBlurValue = el.value;
+            el.addEventListener('input', () => clampOnTyping(el));
+            el.addEventListener('blur', () => {
+                finalizeOnBlur(el);
+                if (el.value !== lastBlurValue) {
+                    lastBlurValue = el.value;
+                    scheduleAutoApply();
+                }
+            });
+            // Pressing Enter inside an input should commit immediately.
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    cancelAutoApply();
+                    finalizeOnBlur(el);
+                    lastBlurValue = el.value;
+                    commitAndApply();
+                }
+            });
+        });
+
+        // Wire the language select.
+        if (inputs.originalLanguage) {
+            inputs.originalLanguage.addEventListener('change', () => scheduleAutoApply());
+        }
+
+        // Wire genre tag toggles + AND/OR mode toggle (debounced — multi-click rapid changes).
+        if (inputs.genres) {
+            inputs.genres.addEventListener('je-genre-changed', () => scheduleAutoApply());
+        }
+        if (inputs.genresMode) {
+            inputs.genresMode.addEventListener('je-mode-changed', () => scheduleAutoApply());
+        }
+
+        resetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            cancelAutoApply();
+            Object.entries(inputs).forEach(([k, el]) => {
+                if ((k === 'genres' || k === 'genresMode') && typeof el._reset === 'function') {
+                    el._reset();
+                } else {
+                    el.value = '';
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            resetAdvancedFilters(moduleName);
+            refreshBadge();
+            if (typeof onApply === 'function') onApply();
+        });
+
+        applyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            cancelAutoApply();
+            // Make sure any focused input commits its blur normalisation before
+            // we commit (otherwise the blur would fire after our read).
+            if (document.activeElement
+                && typeof document.activeElement.blur === 'function'
+                && Object.values(inputs).includes(document.activeElement)) {
+                document.activeElement.blur();
+            }
+            commitAndApply();
         });
 
         refreshBadge();

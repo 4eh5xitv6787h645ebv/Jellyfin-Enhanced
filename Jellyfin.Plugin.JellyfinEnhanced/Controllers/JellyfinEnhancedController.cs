@@ -420,13 +420,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return jellyseerrUserId;
         }
 
+        // Param names accepted by Seerr's /discover/* Zod schema. Anything else
+        // is rejected with HTTP 400 ("Unknown query parameter ..."). Verified
+        // against Jellyseerr's discover.js QueryFilterOptions schema.
         private static readonly string[] DiscoverFilterParams = {
             "sortBy", "primaryReleaseDateGte", "primaryReleaseDateLte",
             "firstAirDateGte", "firstAirDateLte",
             "voteAverageGte", "voteAverageLte",
             "voteCountGte", "voteCountLte",
             "withRuntimeGte", "withRuntimeLte",
-            "withGenres",
+            "genre",  // multi-genre filter — Seerr rejects "withGenres" outright
             "certification", "language"
         };
 
