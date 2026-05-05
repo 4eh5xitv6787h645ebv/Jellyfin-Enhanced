@@ -374,29 +374,19 @@
     }
 
     /**
-     * Builds a styled select element pre-populated with options.
+     * Builds a select element pre-populated with options. Uses the
+     * `.je-filter-input` class for theme-aware styling.
      * @param {Array<{value: string, label: string}>} options
      * @param {string} currentValue
      * @returns {HTMLSelectElement}
      */
     function buildSelect(options, currentValue) {
         const select = document.createElement('select');
-        select.style.cssText = `
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.9);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 4px;
-            padding: 3px 8px;
-            font-size: inherit;
-            font-family: inherit;
-            cursor: pointer;
-            outline: none;
-        `;
+        select.className = 'je-filter-input';
         options.forEach(opt => {
             const o = document.createElement('option');
             o.value = opt.value;
             o.textContent = opt.label;
-            o.style.cssText = 'background:#1a1a2e;color:#fff;';
             if (currentValue === opt.value) o.selected = true;
             select.appendChild(o);
         });
@@ -404,36 +394,27 @@
     }
 
     /**
-     * Builds a styled number input.
+     * Builds a number input. Uses the `.je-filter-input` class for theme-aware
+     * styling; `width` is no longer applied inline because the input flexes
+     * inside `.je-filter-range` (paired ranges) or `.je-filter-group` (single).
      * @param {Object} opts
      * @param {string} opts.placeholder
      * @param {number} opts.min
      * @param {number} opts.max
      * @param {string|number} [opts.step] - Step value (e.g. 0.1 for decimal ratings)
      * @param {string} opts.value
-     * @param {string} opts.width - CSS width value (e.g., '5.5em')
      * @returns {HTMLInputElement}
      */
-    function buildNumberInput({ placeholder, min, max, step, value, width }) {
+    function buildNumberInput({ placeholder, min, max, step, value }) {
         const input = document.createElement('input');
         input.type = 'number';
+        input.className = 'je-filter-input';
         input.min = String(min);
         input.max = String(max);
         if (step != null) input.step = String(step);
         input.placeholder = placeholder;
         input.value = value || '';
         input.inputMode = step && String(step).indexOf('.') !== -1 ? 'decimal' : 'numeric';
-        input.style.cssText = `
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.9);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 4px;
-            padding: 3px 8px;
-            font-size: inherit;
-            font-family: inherit;
-            outline: none;
-            width: ${width};
-        `;
         return input;
     }
 
@@ -456,29 +437,14 @@
     function buildGenreSelector(currentValue) {
         const wrapper = document.createElement('div');
         wrapper.className = 'jellyseerr-discovery-genre-selector';
-        wrapper.style.cssText = `
-            display:flex;flex-wrap:wrap;gap:0.3em;
-            max-width:48em;
-            min-height:1.6em;
-            align-items:flex-start;
-        `;
         wrapper.dataset.value = currentValue || '';
 
         const selected = new Set(
             String(currentValue || '').split('|').filter(Boolean)
         );
 
-        function applyTagStyle(tag, isSelected) {
-            tag.style.cssText = `
-                padding: 3px 10px;
-                border: 1px solid ${isSelected ? 'rgba(98,148,221,0.7)' : 'rgba(255,255,255,0.25)'};
-                border-radius: 12px;
-                background: ${isSelected ? 'rgba(98,148,221,0.55)' : 'rgba(255,255,255,0.05)'};
-                color: ${isSelected ? '#fff' : 'rgba(255,255,255,0.85)'};
-                font-size: 0.8em;
-                font-family: inherit;
-                cursor: pointer;
-            `;
+        function setTagSelected(tag, isSelected) {
+            tag.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
         }
 
         function renderGenres(genres) {
@@ -486,16 +452,17 @@
             genres.forEach(genre => {
                 const tag = document.createElement('button');
                 tag.type = 'button';
+                tag.className = 'je-filter-genre-tag';
                 tag.dataset.genreId = String(genre.id);
                 tag.textContent = genre.name;
-                applyTagStyle(tag, selected.has(String(genre.id)));
+                setTagSelected(tag, selected.has(String(genre.id)));
                 tag.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     const id = tag.dataset.genreId;
                     if (selected.has(id)) selected.delete(id);
                     else selected.add(id);
-                    applyTagStyle(tag, selected.has(id));
+                    setTagSelected(tag, selected.has(id));
                     wrapper.dataset.value = Array.from(selected).join('|');
                 });
                 wrapper.appendChild(tag);
@@ -505,8 +472,8 @@
         function renderMessage(text) {
             clearChildren(wrapper);
             const span = document.createElement('span');
+            span.className = 'je-filter-genre-empty';
             span.textContent = text;
-            span.style.cssText = 'color:rgba(255,255,255,0.45);font-size:0.85em;';
             wrapper.appendChild(span);
         }
 
@@ -528,7 +495,7 @@
             selected.clear();
             wrapper.dataset.value = '';
             wrapper.querySelectorAll('button[data-genre-id]').forEach(btn => {
-                applyTagStyle(btn, false);
+                setTagSelected(btn, false);
             });
         };
 
@@ -536,27 +503,41 @@
     }
 
     /**
-     * Wraps a label and control in a small vertical group.
+     * Wraps a label and control(s) in a vertical filter group. Multi-control
+     * arrays are placed in a `.je-filter-range` row.
      * @param {string} label
      * @param {HTMLElement|HTMLElement[]} control
+     * @param {Object} [opts]
+     * @param {boolean} [opts.fullWidth] - Span the full grid (used by Genres)
      * @returns {HTMLElement}
      */
-    function makeFieldGroup(label, control) {
+    function makeFieldGroup(label, control, opts) {
         const group = document.createElement('div');
-        group.style.cssText = 'display:flex;flex-direction:column;gap:0.25em;font-size:0.85em;';
+        group.className = 'je-filter-group' + (opts?.fullWidth ? ' je-filter-group--full' : '');
         const lbl = document.createElement('label');
+        lbl.className = 'je-filter-label';
         lbl.textContent = label;
-        lbl.style.cssText = 'color:rgba(255,255,255,0.55);font-size:0.8em;';
         group.appendChild(lbl);
         if (Array.isArray(control)) {
             const row = document.createElement('div');
-            row.style.cssText = 'display:flex;align-items:center;gap:0.3em;';
+            row.className = 'je-filter-range';
             control.forEach(c => row.appendChild(c));
             group.appendChild(row);
         } else {
             group.appendChild(control);
         }
         return group;
+    }
+
+    /**
+     * Builds the en/em-dash separator used between range inputs.
+     * @returns {HTMLSpanElement}
+     */
+    function buildRangeSeparator() {
+        const sep = document.createElement('span');
+        sep.className = 'je-filter-range__sep';
+        sep.textContent = '–';
+        return sep;
     }
 
     /**
@@ -586,50 +567,41 @@
         const applyLabel = JE.t('jellyseerr_discover_filter_apply');
         const resetLabel = JE.t('jellyseerr_discover_filter_reset');
 
+        // Toggle button — chrome lives in the stylesheet
         const toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'jellyseerr-filter-toggle-btn';
         toggle.setAttribute('aria-expanded', 'false');
-        toggle.style.cssText = `
-            display:inline-flex;align-items:center;gap:0.35em;
-            padding:4px 10px;
-            background:rgba(255,255,255,0.05);
-            color:rgba(255,255,255,0.85);
-            border:1px solid rgba(255,255,255,0.2);
-            border-radius:4px;
-            cursor:pointer;
-            font-size:0.85em;font-family:inherit;
-        `;
+
+        const tuneIcon = document.createElement('span');
+        tuneIcon.className = 'material-icons';
+        tuneIcon.setAttribute('aria-hidden', 'true');
+        tuneIcon.textContent = 'tune';
+        tuneIcon.style.fontSize = '1.05em';
+
         const labelSpan = document.createElement('span');
         labelSpan.textContent = filtersLabel;
+
         const badgeSpan = document.createElement('span');
         badgeSpan.className = 'filter-count-badge';
-        badgeSpan.style.cssText = `
-            display:none;
-            background:rgba(98,148,221,0.65);
-            color:#fff;border-radius:10px;
-            padding:0 6px;font-size:0.8em;font-weight:600;
-            min-width:1.4em;text-align:center;
-        `;
+
         const arrowSpan = document.createElement('span');
         arrowSpan.className = 'material-icons toggle-arrow';
-        arrowSpan.style.cssText = 'font-size:1.1em;';
+        arrowSpan.setAttribute('aria-hidden', 'true');
         arrowSpan.textContent = 'expand_more';
-        toggle.append(labelSpan, badgeSpan, arrowSpan);
 
+        toggle.append(tuneIcon, labelSpan, badgeSpan, arrowSpan);
+
+        // Panel — display/hide is driven by data-state attribute (CSS rule)
         const panel = document.createElement('div');
         panel.className = 'jellyseerr-discovery-filter-panel';
+        panel.dataset.state = 'closed';
         panel.hidden = true;
-        panel.style.cssText = `
-            display:none;flex-wrap:wrap;gap:0.7em 1.4em;
-            padding:0.8em 1em;
-            margin-top:0.1em;
-            background:rgba(255,255,255,0.04);
-            border:1px solid rgba(255,255,255,0.12);
-            border-radius:6px;
-            align-items:flex-end;
-            width:100%;
-        `;
+
+        // Inner grid that holds all filter groups
+        const grid = document.createElement('div');
+        grid.className = 'je-filter-grid';
+        panel.appendChild(grid);
 
         const current = getAdvancedFilters(moduleName);
         const inputs = {};
@@ -639,16 +611,13 @@
             // future-release dates. TMDB itself doesn't enforce hard year bounds.
             const fromInput = buildNumberInput({
                 placeholder: fromPlaceholder, min: 1874, max: 2100,
-                value: current.yearFrom, width: '5.5em'
+                value: current.yearFrom
             });
             const toInput = buildNumberInput({
                 placeholder: toPlaceholder, min: 1874, max: 2100,
-                value: current.yearTo, width: '5.5em'
+                value: current.yearTo
             });
-            const dash = document.createElement('span');
-            dash.textContent = '–';
-            dash.style.color = 'rgba(255,255,255,0.4)';
-            panel.appendChild(makeFieldGroup(yearLabel, [fromInput, dash, toInput]));
+            grid.appendChild(makeFieldGroup(yearLabel, [fromInput, buildRangeSeparator(), toInput]));
             inputs.yearFrom = fromInput;
             inputs.yearTo = toInput;
         }
@@ -656,16 +625,13 @@
         if (supportedFilters.includes('rating')) {
             const minInput = buildNumberInput({
                 placeholder: minPlaceholder, min: 0, max: 10, step: '0.1',
-                value: current.minRating, width: '4.5em'
+                value: current.minRating
             });
             const maxInput = buildNumberInput({
                 placeholder: maxPlaceholder, min: 0, max: 10, step: '0.1',
-                value: current.maxRating, width: '4.5em'
+                value: current.maxRating
             });
-            const dash = document.createElement('span');
-            dash.textContent = '–';
-            dash.style.color = 'rgba(255,255,255,0.4)';
-            panel.appendChild(makeFieldGroup(ratingLabel, [minInput, dash, maxInput]));
+            grid.appendChild(makeFieldGroup(ratingLabel, [minInput, buildRangeSeparator(), maxInput]));
             inputs.minRating = minInput;
             inputs.maxRating = maxInput;
         }
@@ -675,74 +641,58 @@
             // but generous enough to never clamp a realistic input.
             const minInput = buildNumberInput({
                 placeholder: minPlaceholder, min: 0, max: 1000000,
-                value: current.minVotes, width: '6em'
+                value: current.minVotes
             });
             const maxInput = buildNumberInput({
                 placeholder: maxPlaceholder, min: 0, max: 1000000,
-                value: current.maxVotes, width: '6em'
+                value: current.maxVotes
             });
-            const dash = document.createElement('span');
-            dash.textContent = '–';
-            dash.style.color = 'rgba(255,255,255,0.4)';
-            panel.appendChild(makeFieldGroup(votesLabel, [minInput, dash, maxInput]));
+            grid.appendChild(makeFieldGroup(votesLabel, [minInput, buildRangeSeparator(), maxInput]));
             inputs.minVotes = minInput;
             inputs.maxVotes = maxInput;
         }
 
         if (supportedFilters.includes('runtime')) {
             // Runtime range capped at 1000 minutes (~16 hours) to accommodate
-            // unusually long experimental films (Sátántangó: 432 min, Logistics: ~857 hrs is the outlier).
+            // unusually long experimental films (Sátántangó: 432 min, etc).
             const fromInput = buildNumberInput({
                 placeholder: minPlaceholder, min: 0, max: 1000,
-                value: current.runtimeFrom, width: '4.5em'
+                value: current.runtimeFrom
             });
             const toInput = buildNumberInput({
                 placeholder: maxPlaceholder, min: 0, max: 1000,
-                value: current.runtimeTo, width: '4.5em'
+                value: current.runtimeTo
             });
-            const dash = document.createElement('span');
-            dash.textContent = '–';
-            dash.style.color = 'rgba(255,255,255,0.4)';
-            panel.appendChild(makeFieldGroup(runtimeLabel, [fromInput, dash, toInput]));
+            grid.appendChild(makeFieldGroup(runtimeLabel, [fromInput, buildRangeSeparator(), toInput]));
             inputs.runtimeFrom = fromInput;
             inputs.runtimeTo = toInput;
         }
 
         if (supportedFilters.includes('language')) {
             const select = buildSelect(LANGUAGE_OPTIONS, current.originalLanguage);
-            panel.appendChild(makeFieldGroup(languageLabel, select));
+            grid.appendChild(makeFieldGroup(languageLabel, select));
             inputs.originalLanguage = select;
         }
 
         if (supportedFilters.includes('genre')) {
             const genreContainer = buildGenreSelector(current.genres);
-            // Genre selector spans full width because the tag list can wrap
-            const group = makeFieldGroup(genresLabel, genreContainer);
-            group.style.flexBasis = '100%';
-            panel.appendChild(group);
+            grid.appendChild(makeFieldGroup(genresLabel, genreContainer, { fullWidth: true }));
             inputs.genres = genreContainer;
         }
 
+        // Action row
         const actions = document.createElement('div');
-        actions.style.cssText = 'display:flex;gap:0.5em;margin-left:auto;align-self:flex-end;';
+        actions.className = 'je-filter-actions';
 
         const resetBtn = document.createElement('button');
         resetBtn.type = 'button';
+        resetBtn.className = 'je-filter-action-btn je-filter-action-btn--reset';
         resetBtn.textContent = resetLabel;
-        resetBtn.style.cssText = `
-            background:transparent;color:rgba(255,255,255,0.75);
-            border:1px solid rgba(255,255,255,0.2);border-radius:4px;
-            padding:5px 14px;cursor:pointer;font-size:0.85em;font-family:inherit;
-        `;
 
         const applyBtn = document.createElement('button');
         applyBtn.type = 'button';
+        applyBtn.className = 'je-filter-action-btn je-filter-action-btn--apply';
         applyBtn.textContent = applyLabel;
-        applyBtn.style.cssText = `
-            background:rgba(98,148,221,0.55);color:#fff;
-            border:1px solid rgba(98,148,221,0.75);border-radius:4px;
-            padding:5px 16px;cursor:pointer;font-size:0.85em;font-weight:600;font-family:inherit;
-        `;
 
         actions.append(resetBtn, applyBtn);
         panel.appendChild(actions);
@@ -766,7 +716,7 @@
             const count = countActiveAdvancedFilters(moduleName);
             if (count > 0) {
                 badgeSpan.textContent = String(count);
-                badgeSpan.style.display = 'inline-block';
+                badgeSpan.style.display = 'inline-flex';
             } else {
                 badgeSpan.style.display = 'none';
             }
@@ -775,10 +725,9 @@
         toggle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const isOpen = panel.style.display !== 'none';
-            panel.style.display = isOpen ? 'none' : 'flex';
+            const isOpen = panel.dataset.state === 'open';
+            panel.dataset.state = isOpen ? 'closed' : 'open';
             panel.hidden = isOpen;
-            arrowSpan.textContent = isOpen ? 'expand_more' : 'expand_less';
             toggle.setAttribute('aria-expanded', String(!isOpen));
         });
 
@@ -965,11 +914,11 @@
 
         const container = document.createElement('div');
         container.className = 'jellyseerr-discovery-filter';
-        container.style.cssText = 'display:inline-flex;gap:0;font-size:0.85em;vertical-align:middle;';
+        container.setAttribute('role', 'group');
 
-        const allLabel = (typeof JE?.t === 'function') ? JE.t('jellyseerr_discover_all') || 'All' : 'All';
-        const moviesLabel = (typeof JE?.t === 'function') ? JE.t('jellyseerr_card_badge_movie') || 'Movies' : 'Movies';
-        const seriesLabel = (typeof JE?.t === 'function') ? JE.t('jellyseerr_card_badge_series') || 'Series' : 'Series';
+        const allLabel = JE.t('jellyseerr_discover_all');
+        const moviesLabel = JE.t('jellyseerr_card_badge_movie');
+        const seriesLabel = JE.t('jellyseerr_card_badge_series');
 
         const buttons = [
             { mode: FILTER_MODES.MIXED, label: allLabel },
@@ -977,32 +926,13 @@
             { mode: FILTER_MODES.TV, label: seriesLabel }
         ];
 
-        buttons.forEach((btn, index) => {
+        buttons.forEach(btn => {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'jellyseerr-filter-btn';
             button.setAttribute('data-mode', btn.mode);
+            button.setAttribute('aria-pressed', currentMode === btn.mode ? 'true' : 'false');
             button.textContent = btn.label;
-
-            // Segmented button styling
-            let borderRadius = '0';
-            if (index === 0) borderRadius = '4px 0 0 4px';
-            if (index === buttons.length - 1) borderRadius = '0 4px 4px 0';
-
-            const isActive = currentMode === btn.mode;
-            button.style.cssText = `
-                padding: 4px 10px;
-                border: 1px solid rgba(255,255,255,0.3);
-                border-radius: ${borderRadius};
-                background: ${isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)'};
-                color: rgba(255,255,255,0.8);
-                cursor: pointer;
-                font-size: inherit;
-                font-family: inherit;
-                margin-left: ${index > 0 ? '-1px' : '0'};
-                transition: background 0.15s, border-color 0.15s;
-                font-weight: ${isActive ? '600' : '400'};
-            `;
 
             button.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -1013,27 +943,13 @@
 
                 setFilterMode(moduleName, newMode);
 
-                // Update button states
+                // Reflect new mode via aria-pressed; CSS handles the visual swap
                 container.querySelectorAll('.jellyseerr-filter-btn').forEach(b => {
-                    const isNowActive = b.getAttribute('data-mode') === newMode;
-                    b.style.background = isNowActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)';
-                    b.style.fontWeight = isNowActive ? '600' : '400';
+                    b.setAttribute('aria-pressed',
+                        b.getAttribute('data-mode') === newMode ? 'true' : 'false');
                 });
 
-                if (onFilterChange) {
-                    onFilterChange(newMode);
-                }
-            });
-
-            // Hover effects
-            button.addEventListener('mouseenter', () => {
-                if (getFilterMode(moduleName) !== btn.mode) {
-                    button.style.background = 'rgba(255,255,255,0.1)';
-                }
-            });
-            button.addEventListener('mouseleave', () => {
-                const isActive = getFilterMode(moduleName) === btn.mode;
-                button.style.background = isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)';
+                if (onFilterChange) onFilterChange(newMode);
             });
 
             container.appendChild(button);
@@ -1053,32 +969,19 @@
 
         const container = document.createElement('div');
         container.className = 'jellyseerr-discovery-sort';
-        container.style.cssText = 'display:inline-flex;align-items:center;gap:0.4em;font-size:0.85em;margin-left:auto;';
 
         const label = document.createElement('span');
+        label.className = 'je-sort-label';
         label.textContent = 'Sort:';
-        label.style.cssText = 'color:rgba(255,255,255,0.5);';
         container.appendChild(label);
 
         const select = document.createElement('select');
         select.className = 'jellyseerr-sort-select';
-        select.style.cssText = `
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.85);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 4px;
-            padding: 3px 8px;
-            font-size: inherit;
-            font-family: inherit;
-            cursor: pointer;
-            outline: none;
-        `;
 
         SORT_OPTIONS.forEach(opt => {
             const option = document.createElement('option');
             option.value = opt.value;
             option.textContent = opt.label;
-            option.style.cssText = 'background:#1a1a2e;color:#fff;';
             if (currentSort === opt.value) option.selected = true;
             select.appendChild(option);
         });
@@ -1116,16 +1019,13 @@
         const opts = options || {};
         const wrapper = document.createElement('div');
         wrapper.className = 'jellyseerr-discovery-header-wrapper';
-        wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.4em;margin-bottom:1em;width:100%;';
 
         const header = document.createElement('div');
         header.className = 'jellyseerr-discovery-header';
-        header.style.cssText = 'display:flex;align-items:baseline;gap:1em;flex-wrap:wrap;width:100%;';
 
         const titleElement = document.createElement('h2');
         titleElement.className = 'sectionTitle sectionTitle-cards';
         titleElement.textContent = title;
-        titleElement.style.margin = '0';
         header.appendChild(titleElement);
 
         if (showFilter) {
@@ -1385,7 +1285,9 @@
     }
 
     /**
-     * Injects CSS rules for fast filter visibility (once per page)
+     * Injects the discovery filter stylesheet (theme-aware via CSS vars).
+     * One <style> tag per page; all filter UI references the class names below
+     * so the inline JS keeps no rgba/colour values.
      */
     function injectFilterStyles() {
         if (document.getElementById('jellyseerr-filter-styles')) return;
@@ -1393,8 +1295,305 @@
         const style = document.createElement('style');
         style.id = 'jellyseerr-filter-styles';
         style.textContent = `
+            /* Media-type quick filter (existing) */
             .filter-movies [data-media-type="tv"] { display: none !important; }
             .filter-tv [data-media-type="movie"] { display: none !important; }
+
+            /* === Section header === */
+            .jellyseerr-discovery-header-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 0.55em;
+                margin-bottom: 1.1em;
+                width: 100%;
+            }
+            .jellyseerr-discovery-header {
+                display: flex;
+                align-items: center;
+                gap: 0.7em 1em;
+                flex-wrap: wrap;
+                width: 100%;
+            }
+            .jellyseerr-discovery-header h2.sectionTitle {
+                margin: 0 !important;
+                flex-shrink: 1;
+            }
+
+            /* === All / Movies / Series segmented control === */
+            .jellyseerr-discovery-filter {
+                display: inline-flex;
+                gap: 0;
+                font-size: 0.85em;
+                vertical-align: middle;
+                flex-shrink: 0;
+            }
+            .jellyseerr-filter-btn {
+                padding: 0.35em 0.95em;
+                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
+                background: transparent;
+                color: var(--theme-text-color, inherit);
+                cursor: pointer;
+                font-size: inherit;
+                font-family: inherit;
+                line-height: 1.3;
+                transition: background 0.15s, border-color 0.15s, color 0.15s;
+                opacity: 0.85;
+            }
+            .jellyseerr-filter-btn:not(:first-child) { margin-left: -1px; }
+            .jellyseerr-filter-btn:first-child { border-radius: 4px 0 0 4px; }
+            .jellyseerr-filter-btn:last-child { border-radius: 0 4px 4px 0; }
+            .jellyseerr-filter-btn:hover { background: var(--je-hover-bg, rgba(127,127,127,0.12)); opacity: 1; }
+            .jellyseerr-filter-btn[aria-pressed="true"] {
+                background: var(--theme-primary-color, #00a4dc);
+                border-color: var(--theme-primary-color, #00a4dc);
+                color: var(--theme-accent-text-color, #fff);
+                font-weight: 600;
+                opacity: 1;
+            }
+
+            /* === Sort dropdown === */
+            .jellyseerr-discovery-sort {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45em;
+                font-size: 0.85em;
+                margin-left: auto;
+                flex-shrink: 0;
+            }
+            .jellyseerr-discovery-sort > .je-sort-label {
+                color: var(--theme-text-color, inherit);
+                opacity: 0.6;
+            }
+            .jellyseerr-sort-select {
+                background: var(--je-input-bg, rgba(127,127,127,0.1));
+                color: var(--theme-text-color, inherit);
+                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
+                border-radius: 4px;
+                padding: 0.35em 0.7em;
+                font-size: inherit;
+                font-family: inherit;
+                cursor: pointer;
+                outline: none;
+            }
+            .jellyseerr-sort-select:focus { border-color: var(--theme-primary-color, #00a4dc); }
+            .jellyseerr-sort-select option { background: var(--background-color, #1a1a2e); color: var(--theme-text-color, #fff); }
+
+            /* === Filters toggle button === */
+            .jellyseerr-filter-toggle-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45em;
+                padding: 0.4em 0.9em;
+                border-radius: 4px;
+                background: var(--je-input-bg, rgba(127,127,127,0.08));
+                color: var(--theme-text-color, inherit);
+                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
+                cursor: pointer;
+                font-size: 0.85em;
+                font-family: inherit;
+                line-height: 1.3;
+                transition: background 0.15s, border-color 0.15s;
+            }
+            .jellyseerr-filter-toggle-btn:hover { background: var(--je-hover-bg, rgba(127,127,127,0.16)); }
+            .jellyseerr-filter-toggle-btn[aria-expanded="true"] {
+                background: var(--je-hover-bg, rgba(127,127,127,0.18));
+                border-color: var(--je-border-color-strong, rgba(127,127,127,0.55));
+            }
+            .jellyseerr-filter-toggle-btn .filter-count-badge {
+                display: none;
+                background: var(--theme-primary-color, #00a4dc);
+                color: var(--theme-accent-text-color, #fff);
+                border-radius: 999px;
+                padding: 0.05em 0.55em;
+                font-size: 0.78em;
+                font-weight: 600;
+                line-height: 1.4;
+                min-width: 1.5em;
+                text-align: center;
+            }
+            .jellyseerr-filter-toggle-btn .toggle-arrow {
+                font-size: 1.15em;
+                transition: transform 0.2s;
+                opacity: 0.75;
+            }
+            .jellyseerr-filter-toggle-btn[aria-expanded="true"] .toggle-arrow { transform: rotate(180deg); }
+
+            /* === Filter panel === */
+            .jellyseerr-discovery-filter-panel {
+                display: none;
+                width: 100%;
+                padding: 1.2em 1.4em;
+                background: var(--je-panel-bg, rgba(127,127,127,0.07));
+                border: 1px solid var(--je-border-color, rgba(127,127,127,0.22));
+                border-radius: 8px;
+                box-sizing: border-box;
+                animation: je-filter-fade-in 0.18s ease-out;
+            }
+            .jellyseerr-discovery-filter-panel[data-state="open"] { display: block; }
+            @keyframes je-filter-fade-in {
+                from { opacity: 0; transform: translateY(-4px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+
+            /* === Filter grid === */
+            .je-filter-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 1.05em 1.3em;
+                align-items: start;
+            }
+            .je-filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.35em;
+                min-width: 0;
+            }
+            .je-filter-group--full { grid-column: 1 / -1; }
+            .je-filter-label {
+                font-size: 0.78em;
+                font-weight: 600;
+                color: var(--theme-text-color, inherit);
+                opacity: 0.75;
+                text-transform: uppercase;
+                letter-spacing: 0.045em;
+            }
+
+            /* === Range row === */
+            .je-filter-range {
+                display: flex;
+                align-items: center;
+                gap: 0.45em;
+            }
+            .je-filter-range > input { flex: 1 1 0; min-width: 0; }
+            .je-filter-range > .je-filter-range__sep {
+                color: var(--theme-text-color, inherit);
+                opacity: 0.4;
+                user-select: none;
+            }
+
+            /* === Number / select inputs === */
+            .je-filter-input {
+                background: var(--je-input-bg, rgba(127,127,127,0.1));
+                color: var(--theme-text-color, inherit);
+                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
+                border-radius: 4px;
+                padding: 0.4em 0.6em;
+                font-size: inherit;
+                font-family: inherit;
+                outline: none;
+                width: 100%;
+                box-sizing: border-box;
+                transition: border-color 0.15s, box-shadow 0.15s;
+            }
+            .je-filter-input:hover { border-color: var(--je-border-color-strong, rgba(127,127,127,0.55)); }
+            .je-filter-input:focus {
+                border-color: var(--theme-primary-color, #00a4dc);
+                box-shadow: 0 0 0 1px var(--theme-primary-color, #00a4dc);
+            }
+            .je-filter-input::placeholder {
+                color: var(--theme-text-color, inherit);
+                opacity: 0.4;
+            }
+            select.je-filter-input { cursor: pointer; }
+            select.je-filter-input option {
+                background: var(--background-color, #1a1a2e);
+                color: var(--theme-text-color, #fff);
+            }
+
+            /* === Genre selector === */
+            .jellyseerr-discovery-genre-selector {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.45em;
+                max-height: 14em;
+                overflow-y: auto;
+                padding: 0.35em 0.1em;
+                align-content: flex-start;
+                border-radius: 4px;
+                scrollbar-width: thin;
+            }
+            .je-filter-genre-tag {
+                padding: 0.42em 0.95em;
+                border: 1px solid var(--je-border-color, rgba(127,127,127,0.4));
+                border-radius: 999px;
+                background: transparent;
+                color: var(--theme-text-color, inherit);
+                font-size: 0.83em;
+                font-family: inherit;
+                cursor: pointer;
+                transition: background 0.15s, border-color 0.15s, color 0.15s;
+                line-height: 1.2;
+                white-space: nowrap;
+            }
+            .je-filter-genre-tag:hover {
+                background: var(--je-hover-bg, rgba(127,127,127,0.12));
+                border-color: var(--je-border-color-strong, rgba(127,127,127,0.6));
+            }
+            .je-filter-genre-tag[aria-pressed="true"] {
+                background: var(--theme-primary-color, #00a4dc);
+                border-color: var(--theme-primary-color, #00a4dc);
+                color: var(--theme-accent-text-color, #fff);
+                font-weight: 500;
+            }
+            .je-filter-genre-tag[aria-pressed="true"]:hover { filter: brightness(1.08); }
+            .je-filter-genre-empty {
+                color: var(--theme-text-color, inherit);
+                opacity: 0.5;
+                font-size: 0.85em;
+                padding: 0.3em 0;
+            }
+
+            /* === Action buttons === */
+            .je-filter-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 0.6em;
+                margin-top: 1.2em;
+                padding-top: 1em;
+                border-top: 1px solid var(--je-divider-color, rgba(127,127,127,0.18));
+            }
+            .je-filter-action-btn {
+                padding: 0.55em 1.4em;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.88em;
+                font-family: inherit;
+                font-weight: 500;
+                border: 1px solid transparent;
+                transition: background 0.15s, border-color 0.15s, filter 0.15s;
+                line-height: 1.3;
+            }
+            .je-filter-action-btn--reset {
+                background: transparent;
+                color: var(--theme-text-color, inherit);
+                border-color: var(--je-border-color, rgba(127,127,127,0.4));
+                opacity: 0.85;
+            }
+            .je-filter-action-btn--reset:hover {
+                background: var(--je-hover-bg, rgba(127,127,127,0.12));
+                border-color: var(--je-border-color-strong, rgba(127,127,127,0.65));
+                opacity: 1;
+            }
+            .je-filter-action-btn--apply {
+                background: var(--theme-primary-color, #00a4dc);
+                color: var(--theme-accent-text-color, #fff);
+                border-color: var(--theme-primary-color, #00a4dc);
+                font-weight: 600;
+            }
+            .je-filter-action-btn--apply:hover { filter: brightness(1.08); }
+            .je-filter-action-btn:focus-visible {
+                outline: 2px solid var(--theme-primary-color, #00a4dc);
+                outline-offset: 2px;
+            }
+
+            /* === Tighten on narrow viewports === */
+            @media (max-width: 600px) {
+                .jellyseerr-discovery-filter-panel { padding: 0.95em 1em; }
+                .je-filter-grid { gap: 0.85em 0.9em; grid-template-columns: 1fr; }
+                .je-filter-actions { flex-direction: column-reverse; align-items: stretch; }
+                .je-filter-action-btn { width: 100%; }
+                .jellyseerr-discovery-sort { margin-left: 0; }
+            }
         `;
         document.head.appendChild(style);
     }
