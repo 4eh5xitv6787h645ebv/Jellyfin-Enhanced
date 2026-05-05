@@ -426,7 +426,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             "voteAverageGte", "voteAverageLte",
             "voteCountGte", "voteCountLte",
             "withRuntimeGte", "withRuntimeLte",
-            "withOriginalLanguage", "withGenres",
+            "withGenres",
             "certification", "language"
         };
 

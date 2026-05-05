@@ -272,7 +272,10 @@
             if (filters.runtimeTo) params.push(`withRuntimeLte=${encodeURIComponent(filters.runtimeTo)}`);
         }
         if (allow('language') && filters.originalLanguage) {
-            params.push(`withOriginalLanguage=${encodeURIComponent(filters.originalLanguage)}`);
+            // Seerr accepts `language` for original-language filtering. The route's
+            // `withOriginalLanguage` arg is rejected with HTTP 400 in the Seerr
+            // versions tested against this plugin (Sept 2025+).
+            params.push(`language=${encodeURIComponent(filters.originalLanguage)}`);
         }
         if (allow('genre') && filters.genres) {
             // TMDB withGenres: pipe = OR semantics (item matches any selected genre)
@@ -632,12 +635,14 @@
         const inputs = {};
 
         if (supportedFilters.includes('year')) {
+            // Year range covers earliest TMDB-tracked cinema (1874) through reasonable
+            // future-release dates. TMDB itself doesn't enforce hard year bounds.
             const fromInput = buildNumberInput({
-                placeholder: fromPlaceholder, min: 1900, max: 2100,
+                placeholder: fromPlaceholder, min: 1874, max: 2100,
                 value: current.yearFrom, width: '5.5em'
             });
             const toInput = buildNumberInput({
-                placeholder: toPlaceholder, min: 1900, max: 2100,
+                placeholder: toPlaceholder, min: 1874, max: 2100,
                 value: current.yearTo, width: '5.5em'
             });
             const dash = document.createElement('span');
@@ -666,12 +671,14 @@
         }
 
         if (supportedFilters.includes('votes')) {
+            // Vote count caps at 1,000,000 — far above the most-voted TMDB title (~50k)
+            // but generous enough to never clamp a realistic input.
             const minInput = buildNumberInput({
-                placeholder: minPlaceholder, min: 0, max: 999999,
+                placeholder: minPlaceholder, min: 0, max: 1000000,
                 value: current.minVotes, width: '6em'
             });
             const maxInput = buildNumberInput({
-                placeholder: maxPlaceholder, min: 0, max: 999999,
+                placeholder: maxPlaceholder, min: 0, max: 1000000,
                 value: current.maxVotes, width: '6em'
             });
             const dash = document.createElement('span');
@@ -683,12 +690,14 @@
         }
 
         if (supportedFilters.includes('runtime')) {
+            // Runtime range capped at 1000 minutes (~16 hours) to accommodate
+            // unusually long experimental films (Sátántangó: 432 min, Logistics: ~857 hrs is the outlier).
             const fromInput = buildNumberInput({
-                placeholder: minPlaceholder, min: 0, max: 600,
+                placeholder: minPlaceholder, min: 0, max: 1000,
                 value: current.runtimeFrom, width: '4.5em'
             });
             const toInput = buildNumberInput({
-                placeholder: maxPlaceholder, min: 0, max: 600,
+                placeholder: maxPlaceholder, min: 0, max: 1000,
                 value: current.runtimeTo, width: '4.5em'
             });
             const dash = document.createElement('span');
@@ -819,14 +828,15 @@
             const next = readInputs();
 
             // Validate + clamp numeric inputs before they reach the URL builder.
-            if ('yearFrom' in next) next.yearFrom = clampInt(next.yearFrom, 1900, 2100);
-            if ('yearTo' in next) next.yearTo = clampInt(next.yearTo, 1900, 2100);
-            if ('runtimeFrom' in next) next.runtimeFrom = clampInt(next.runtimeFrom, 0, 600);
-            if ('runtimeTo' in next) next.runtimeTo = clampInt(next.runtimeTo, 0, 600);
+            // Bounds match the input field max attributes — see `<input>` setup above.
+            if ('yearFrom' in next) next.yearFrom = clampInt(next.yearFrom, 1874, 2100);
+            if ('yearTo' in next) next.yearTo = clampInt(next.yearTo, 1874, 2100);
+            if ('runtimeFrom' in next) next.runtimeFrom = clampInt(next.runtimeFrom, 0, 1000);
+            if ('runtimeTo' in next) next.runtimeTo = clampInt(next.runtimeTo, 0, 1000);
             if ('minRating' in next) next.minRating = clampFloat(next.minRating, 0, 10, 1);
             if ('maxRating' in next) next.maxRating = clampFloat(next.maxRating, 0, 10, 1);
-            if ('minVotes' in next) next.minVotes = clampInt(next.minVotes, 0, 999999);
-            if ('maxVotes' in next) next.maxVotes = clampInt(next.maxVotes, 0, 999999);
+            if ('minVotes' in next) next.minVotes = clampInt(next.minVotes, 0, 1000000);
+            if ('maxVotes' in next) next.maxVotes = clampInt(next.maxVotes, 0, 1000000);
 
             // Drop any keys that clamped to '' so they aren't stored.
             Object.keys(next).forEach(k => { if (next[k] === '') delete next[k]; });
