@@ -25,7 +25,10 @@
         'minRating', 'maxRating',
         'minVotes', 'maxVotes',
         'runtimeFrom', 'runtimeTo',
-        'originalLanguage', 'genres'
+        'originalLanguage',
+        // genresMode is a meta-field ('any' or 'all') controlling how genres
+        // combine; counted separately so the badge doesn't double-count it.
+        'genres', 'genresMode'
     ];
 
     // ISO 639-1 codes — top languages by TMDB content volume
@@ -226,6 +229,7 @@
         if (f.runtimeFrom || f.runtimeTo) n += 1;
         if (f.originalLanguage) n += 1;
         if (f.genres) n += 1;
+        // genresMode is metadata, not an independent filter — never counted.
         return n;
     }
 
@@ -278,8 +282,12 @@
             params.push(`language=${encodeURIComponent(filters.originalLanguage)}`);
         }
         if (allow('genre') && filters.genres) {
-            // TMDB withGenres: pipe = OR semantics (item matches any selected genre)
-            params.push(`withGenres=${encodeURIComponent(filters.genres)}`);
+            // Storage uses pipes; URL separator depends on genresMode:
+            //   genresMode='all' → comma (TMDB AND — must have every genre)
+            //   default 'any'    → pipe (TMDB OR  — must have any one)
+            const ids = String(filters.genres).split('|').filter(Boolean);
+            const sep = filters.genresMode === 'all' ? ',' : '|';
+            params.push(`withGenres=${encodeURIComponent(ids.join(sep))}`);
         }
 
         return params.length > 0 ? '&' + params.join('&') : '';
@@ -312,6 +320,7 @@
             if (k === 'minVotes' || k === 'maxVotes') return allowSet.has('votes');
             if (k === 'originalLanguage') return allowSet.has('language');
             if (k === 'genres') return allowSet.has('genre');
+            // genresMode alone (without genres) does nothing
             return false;
         });
         if (!anyActive) return results;
@@ -326,10 +335,11 @@
             ? filters.originalLanguage.toLowerCase() : '';
         const minRuntime = (allowSet.has('runtime') && filters.runtimeFrom) ? parseInt(filters.runtimeFrom, 10) : null;
         const maxRuntime = (allowSet.has('runtime') && filters.runtimeTo) ? parseInt(filters.runtimeTo, 10) : null;
-        // OR semantics — keep items matching ANY of the selected genres (matches pipe-separated server-side)
+        // Genre filter — semantic depends on genresMode (default 'any' = OR)
         const wantedGenres = (allowSet.has('genre') && filters.genres)
             ? String(filters.genres).split('|').map(g => parseInt(g, 10)).filter(Number.isFinite)
             : [];
+        const requireAllGenres = filters.genresMode === 'all';
 
         return results.filter(item => {
             if (yearFrom != null || yearTo != null) {
@@ -367,7 +377,10 @@
             if (wantedGenres.length > 0) {
                 const itemGenres = item.genreIds || item.genre_ids || [];
                 if (!Array.isArray(itemGenres) || itemGenres.length === 0) return false;
-                if (!wantedGenres.some(g => itemGenres.includes(g))) return false;
+                const ok = requireAllGenres
+                    ? wantedGenres.every(g => itemGenres.includes(g))
+                    : wantedGenres.some(g => itemGenres.includes(g));
+                if (!ok) return false;
             }
             return true;
         });
@@ -504,20 +517,33 @@
 
     /**
      * Wraps a label and control(s) in a vertical filter group. Multi-control
-     * arrays are placed in a `.je-filter-range` row.
+     * arrays are placed in a `.je-filter-range` row. If `headerExtra` is given,
+     * the label and that element share a row at the top (used to put the
+     * AND/OR toggle next to the Genres label).
      * @param {string} label
      * @param {HTMLElement|HTMLElement[]} control
      * @param {Object} [opts]
      * @param {boolean} [opts.fullWidth] - Span the full grid (used by Genres)
+     * @param {HTMLElement} [opts.headerExtra] - Element to render right of label
      * @returns {HTMLElement}
      */
     function makeFieldGroup(label, control, opts) {
         const group = document.createElement('div');
         group.className = 'je-filter-group' + (opts?.fullWidth ? ' je-filter-group--full' : '');
+
         const lbl = document.createElement('label');
         lbl.className = 'je-filter-label';
         lbl.textContent = label;
-        group.appendChild(lbl);
+
+        if (opts?.headerExtra) {
+            const header = document.createElement('div');
+            header.className = 'je-filter-group-header';
+            header.append(lbl, opts.headerExtra);
+            group.appendChild(header);
+        } else {
+            group.appendChild(lbl);
+        }
+
         if (Array.isArray(control)) {
             const row = document.createElement('div');
             row.className = 'je-filter-range';
@@ -527,6 +553,90 @@
             group.appendChild(control);
         }
         return group;
+    }
+
+    /**
+     * Builds the AND/OR toggle for the genre selector.
+     *  - `any` (default) → OR semantics, server uses pipe `|`
+     *  - `all`           → AND semantics, server uses comma `,`
+     * The selected mode is stored on the wrapper's `dataset.value`.
+     * @param {string} currentMode - 'any' or 'all'
+     * @returns {HTMLElement}
+     */
+    function buildGenreModeToggle(currentMode) {
+        const initial = (currentMode === 'all') ? 'all' : 'any';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'je-filter-mode-toggle';
+        wrapper.setAttribute('role', 'group');
+        wrapper.dataset.value = initial;
+
+        const matchAnyLabel = JE.t('jellyseerr_discover_filter_match_any');
+        const matchAllLabel = JE.t('jellyseerr_discover_filter_match_all');
+        const matchTitle = JE.t('jellyseerr_discover_filter_match_title');
+
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'je-filter-mode-label';
+        labelSpan.textContent = matchTitle;
+        wrapper.appendChild(labelSpan);
+
+        const buttons = [
+            { mode: 'any', label: matchAnyLabel },
+            { mode: 'all', label: matchAllLabel }
+        ];
+        buttons.forEach(b => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'je-filter-mode-btn';
+            btn.dataset.mode = b.mode;
+            btn.setAttribute('aria-pressed', initial === b.mode ? 'true' : 'false');
+            btn.textContent = b.label;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                wrapper.dataset.value = b.mode;
+                wrapper.querySelectorAll('.je-filter-mode-btn').forEach(x => {
+                    x.setAttribute('aria-pressed', x.dataset.mode === b.mode ? 'true' : 'false');
+                });
+            });
+            wrapper.appendChild(btn);
+        });
+
+        wrapper._reset = () => {
+            wrapper.dataset.value = 'any';
+            wrapper.querySelectorAll('.je-filter-mode-btn').forEach(x => {
+                x.setAttribute('aria-pressed', x.dataset.mode === 'any' ? 'true' : 'false');
+            });
+        };
+
+        return wrapper;
+    }
+
+    /**
+     * Renders an in-container "no results match this filter" message.
+     * Called by each section when an Apply yields zero items.
+     * @param {HTMLElement} container - The items container to populate
+     */
+    function renderNoFilterResults(container) {
+        if (!container) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'je-filter-empty-msg';
+        const icon = document.createElement('span');
+        icon.className = 'material-icons';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = 'filter_alt_off';
+        const text = document.createElement('span');
+        text.textContent = JE.t('jellyseerr_discover_no_filter_results');
+        wrap.append(icon, text);
+        container.appendChild(wrap);
+    }
+
+    /**
+     * Removes any previously-rendered "no results" message from the container.
+     * @param {HTMLElement} container
+     */
+    function clearNoFilterResults(container) {
+        if (!container) return;
+        container.querySelectorAll('.je-filter-empty-msg').forEach(el => el.remove());
     }
 
     /**
@@ -676,8 +786,13 @@
 
         if (supportedFilters.includes('genre')) {
             const genreContainer = buildGenreSelector(current.genres);
-            grid.appendChild(makeFieldGroup(genresLabel, genreContainer, { fullWidth: true }));
+            const modeToggle = buildGenreModeToggle(current.genresMode);
+            grid.appendChild(makeFieldGroup(genresLabel, genreContainer, {
+                fullWidth: true,
+                headerExtra: modeToggle
+            }));
             inputs.genres = genreContainer;
+            inputs.genresMode = modeToggle;
         }
 
         // Action row
@@ -691,7 +806,9 @@
 
         const applyBtn = document.createElement('button');
         applyBtn.type = 'button';
-        applyBtn.className = 'je-filter-action-btn je-filter-action-btn--apply';
+        // Combine Jellyfin's themed `.button-submit` (every theme styles it) with
+        // a layout class for our compact panel padding.
+        applyBtn.className = 'button-submit je-filter-action-btn je-filter-action-btn--apply';
         applyBtn.textContent = applyLabel;
 
         actions.append(resetBtn, applyBtn);
@@ -701,8 +818,8 @@
             const out = {};
             Object.entries(inputs).forEach(([k, el]) => {
                 let v;
-                if (k === 'genres') {
-                    // Genre selector stores its pipe-separated value on dataset
+                if (k === 'genres' || k === 'genresMode') {
+                    // These widgets store their value on dataset.value
                     v = String(el.dataset?.value || '').trim();
                 } else {
                     v = String(el.value || '').trim();
@@ -735,7 +852,7 @@
             e.preventDefault();
             e.stopPropagation();
             Object.entries(inputs).forEach(([k, el]) => {
-                if (k === 'genres' && typeof el._reset === 'function') {
+                if ((k === 'genres' || k === 'genresMode') && typeof el._reset === 'function') {
                     el._reset();
                 } else {
                     el.value = '';
@@ -1458,6 +1575,73 @@
                 letter-spacing: 0.045em;
             }
 
+            /* Group header (label + extra widget on the right) */
+            .je-filter-group-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.7em;
+                flex-wrap: wrap;
+            }
+
+            /* AND / OR mode toggle */
+            .je-filter-mode-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4em;
+                font-size: 0.78em;
+            }
+            .je-filter-mode-toggle .je-filter-mode-label {
+                color: var(--theme-text-color, inherit);
+                opacity: 0.55;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                font-weight: 500;
+            }
+            .je-filter-mode-btn {
+                padding: 0.32em 0.85em;
+                background: transparent;
+                color: var(--theme-text-color, inherit);
+                border: 1px solid var(--je-border-color, rgba(127,127,127,0.4));
+                cursor: pointer;
+                font-family: inherit;
+                font-size: inherit;
+                line-height: 1.3;
+                opacity: 0.78;
+                transition: background 0.15s, opacity 0.15s, color 0.15s, border-color 0.15s;
+            }
+            .je-filter-mode-btn + .je-filter-mode-btn { margin-left: -1px; }
+            .je-filter-mode-btn:first-of-type { border-radius: 4px 0 0 4px; }
+            .je-filter-mode-btn:last-of-type { border-radius: 0 4px 4px 0; }
+            .je-filter-mode-btn:hover {
+                background: var(--je-hover-bg, rgba(127,127,127,0.12));
+                opacity: 1;
+            }
+            .je-filter-mode-btn[aria-pressed="true"] {
+                background: var(--theme-primary-color, #00a4dc);
+                border-color: var(--theme-primary-color, #00a4dc);
+                color: var(--theme-accent-text-color, #fff);
+                opacity: 1;
+                font-weight: 600;
+            }
+
+            /* No-results message inside an items container */
+            .je-filter-empty-msg {
+                grid-column: 1 / -1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.6em;
+                padding: 2.5em 1em;
+                color: var(--theme-text-color, inherit);
+                opacity: 0.55;
+                font-size: 0.95em;
+                text-align: center;
+                width: 100%;
+            }
+            .je-filter-empty-msg .material-icons { font-size: 2.4em; opacity: 0.7; }
+
             /* === Range row === */
             .je-filter-range {
                 display: flex;
@@ -1574,11 +1758,19 @@
                 border-color: var(--je-border-color-strong, rgba(127,127,127,0.65));
                 opacity: 1;
             }
+            /* Apply uses Jellyfin's .button-submit class so each theme's accent
+               styling kicks in. Keep these as fallbacks (and to override the
+               full-width default that .button-submit gets in some themes). */
             .je-filter-action-btn--apply {
                 background: var(--theme-primary-color, #00a4dc);
                 color: var(--theme-accent-text-color, #fff);
                 border-color: var(--theme-primary-color, #00a4dc);
                 font-weight: 600;
+                width: auto;
+                min-width: 5em;
+                margin: 0;
+                text-transform: none;
+                letter-spacing: normal;
             }
             .je-filter-action-btn--apply:hover { filter: brightness(1.08); }
             .je-filter-action-btn:focus-visible {
@@ -1622,6 +1814,8 @@
         buildFilterQueryParams,
         applyClientSideFilters,
         getTmdbGenresAsync,
+        renderNoFilterResults,
+        clearNoFilterResults,
         interleaveArrays,
         filterByMediaType,
         hasBothTypes,

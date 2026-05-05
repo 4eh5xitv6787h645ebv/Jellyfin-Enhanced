@@ -367,6 +367,9 @@
                 if (itemDeduplicator) {
                     displayResults.forEach(item => itemDeduplicator.add(item));
                 }
+            } else if ((JE.discoveryFilter?.countActiveAdvancedFilters?.(MODULE_NAME) || 0) > 0) {
+                // Filtered to zero with active advanced filters — explain rather than show empty
+                JE.discoveryFilter.renderNoFilterResults(itemsContainer);
             }
 
             JE.discoveryFilter.applyFilterVisibility(itemsContainer, filterMode);

@@ -382,6 +382,12 @@
         const nextChunk = currentPagedResults.slice(renderedCount, renderedCount + PAGE_SIZE);
         if (nextChunk.length === 0) {
             hasMorePages = false;
+            // On reset (Apply / sort / filter switch) — show no-results message if filters
+            // genuinely yielded nothing AND any advanced filter is active.
+            if (reset && renderedCount === 0
+                && (JE.discoveryFilter?.countActiveAdvancedFilters?.(MODULE_NAME) || 0) > 0) {
+                JE.discoveryFilter.renderNoFilterResults(itemsContainer);
+            }
             return;
         }
 

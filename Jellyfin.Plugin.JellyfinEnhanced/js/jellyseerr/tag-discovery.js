@@ -288,6 +288,8 @@
                 if (itemDeduplicator) {
                     displayResults.forEach(item => itemDeduplicator.add(item));
                 }
+            } else if ((JE.discoveryFilter?.countActiveAdvancedFilters?.(MODULE_NAME) || 0) > 0) {
+                JE.discoveryFilter.renderNoFilterResults(itemsContainer);
             }
 
             JE.discoveryFilter.applyFilterVisibility(itemsContainer, filterMode);
