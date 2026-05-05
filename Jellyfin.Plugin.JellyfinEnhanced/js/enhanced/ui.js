@@ -784,7 +784,7 @@
                         <div style="flex: 1; min-width: 400px;">
                             <h3 style="margin: 0 0 12px 0; font-size: 18px; color: ${primaryAccentColor}; font-family: inherit;">${JE.t('panel_shortcuts_player')}</h3>
                             <div style="display: grid; gap: 8px; font-size: 14px;">
-                                ${['CycleAspectRatio', 'ShowPlaybackInfo', 'SubtitleMenu', 'CycleSubtitleTracks', 'CycleAudioTracks', 'IncreasePlaybackSpeed', 'DecreasePlaybackSpeed', 'ResetPlaybackSpeed', 'BookmarkCurrentTime', 'OpenEpisodePreview', 'SkipIntroOutro', 'FrameStepBack', 'FrameStepForward'].map(action => {
+                                ${['CycleAspectRatio', 'ShowPlaybackInfo', 'SubtitleMenu', 'CycleSubtitleTracks', 'CycleAudioTracks', 'IncreasePlaybackSpeed', 'DecreasePlaybackSpeed', 'ResetPlaybackSpeed', 'BookmarkCurrentTime', 'OpenEpisodePreview', 'SkipIntroOutro', 'FrameStepBack', 'FrameStepForward', 'JumpToLastPosition'].map(action => {
                                     const a = (JE.pluginConfig.Shortcuts || []).find(s => s.Name === action);
                                     const fallbackLabel = a?.Label || action;
                                     return `
