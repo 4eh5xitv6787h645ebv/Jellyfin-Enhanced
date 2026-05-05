@@ -78,6 +78,7 @@
     "panel_settings_subtitles_style": "Stile",
     "panel_settings_subtitles_size": "Dimensione",
     "panel_settings_subtitles_font": "Font",
+    "panel_settings_subtitles_position": "Posizione",
     "panel_settings_disable_custom_styles": "Disabilita stili personalizzati",
     "panel_settings_disable_custom_styles_desc": "Usa gli stili dei sottotitoli predefiniti di Jellyfin",
     "panel_settings_random_button": "Impostazioni pulsante casuale",

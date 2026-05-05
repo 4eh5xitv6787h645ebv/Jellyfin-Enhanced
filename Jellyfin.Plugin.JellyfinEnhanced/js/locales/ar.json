@@ -78,6 +78,7 @@
     "panel_settings_subtitles_style": "النمط",
     "panel_settings_subtitles_size": "الحجم",
     "panel_settings_subtitles_font": "الخط",
+    "panel_settings_subtitles_position": "الموضع",
     "panel_settings_disable_custom_styles": "تعطيل الأنماط المخصصة",
     "panel_settings_disable_custom_styles_desc": "استخدام أنماط الترجمة الافتراضية في Jellyfin",
     "panel_settings_random_button": "إعدادات الزر العشوائي",
