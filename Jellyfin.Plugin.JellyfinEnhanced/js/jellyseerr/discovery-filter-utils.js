@@ -21,26 +21,11 @@
     ];
 
     const ADVANCED_FILTER_FIELDS = [
-        'yearFrom', 'yearTo', 'minRating', 'minVotes',
-        'runtimeFrom', 'runtimeTo', 'originalLanguage', 'watchRegion'
-    ];
-
-    const RATING_OPTIONS = [
-        { value: '', label: 'Any' },
-        { value: '5', label: '5+' },
-        { value: '6', label: '6+' },
-        { value: '7', label: '7+' },
-        { value: '8', label: '8+' },
-        { value: '9', label: '9+' }
-    ];
-
-    const VOTE_OPTIONS = [
-        { value: '', label: 'Any' },
-        { value: '50', label: '50+' },
-        { value: '200', label: '200+' },
-        { value: '500', label: '500+' },
-        { value: '1000', label: '1000+' },
-        { value: '5000', label: '5000+' }
+        'yearFrom', 'yearTo',
+        'minRating', 'maxRating',
+        'minVotes', 'maxVotes',
+        'runtimeFrom', 'runtimeTo',
+        'originalLanguage', 'genres'
     ];
 
     // ISO 639-1 codes — top languages by TMDB content volume
@@ -78,48 +63,41 @@
         { value: 'ro', label: 'Romanian' }
     ];
 
-    // ISO 3166-1 alpha-2 region codes used by TMDB watch-provider filtering
-    const REGION_OPTIONS = [
-        { value: '', label: 'Any' },
-        { value: 'US', label: 'United States' },
-        { value: 'GB', label: 'United Kingdom' },
-        { value: 'CA', label: 'Canada' },
-        { value: 'AU', label: 'Australia' },
-        { value: 'NZ', label: 'New Zealand' },
-        { value: 'IE', label: 'Ireland' },
-        { value: 'DE', label: 'Germany' },
-        { value: 'FR', label: 'France' },
-        { value: 'IT', label: 'Italy' },
-        { value: 'ES', label: 'Spain' },
-        { value: 'PT', label: 'Portugal' },
-        { value: 'NL', label: 'Netherlands' },
-        { value: 'BE', label: 'Belgium' },
-        { value: 'AT', label: 'Austria' },
-        { value: 'CH', label: 'Switzerland' },
-        { value: 'SE', label: 'Sweden' },
-        { value: 'NO', label: 'Norway' },
-        { value: 'DK', label: 'Denmark' },
-        { value: 'FI', label: 'Finland' },
-        { value: 'PL', label: 'Poland' },
-        { value: 'CZ', label: 'Czechia' },
-        { value: 'JP', label: 'Japan' },
-        { value: 'KR', label: 'South Korea' },
-        { value: 'CN', label: 'China' },
-        { value: 'TW', label: 'Taiwan' },
-        { value: 'HK', label: 'Hong Kong' },
-        { value: 'IN', label: 'India' },
-        { value: 'TH', label: 'Thailand' },
-        { value: 'ID', label: 'Indonesia' },
-        { value: 'PH', label: 'Philippines' },
-        { value: 'VN', label: 'Vietnam' },
-        { value: 'BR', label: 'Brazil' },
-        { value: 'MX', label: 'Mexico' },
-        { value: 'AR', label: 'Argentina' },
-        { value: 'TR', label: 'Turkey' },
-        { value: 'ZA', label: 'South Africa' },
-        { value: 'AE', label: 'UAE' },
-        { value: 'SA', label: 'Saudi Arabia' }
-    ];
+    // TMDB genres are fetched lazily on first use and cached for the session.
+    let cachedTmdbGenres = null;
+    let inflightTmdbGenresPromise = null;
+
+    /**
+     * Fetches the union of TMDB movie + TV genres, sorted by name, deduped by ID.
+     * Cached after the first successful response so each panel render is cheap.
+     * @returns {Promise<Array<{id: number, name: string}>>}
+     */
+    async function getTmdbGenresAsync() {
+        if (cachedTmdbGenres) return cachedTmdbGenres;
+        if (inflightTmdbGenresPromise) return inflightTmdbGenresPromise;
+
+        inflightTmdbGenresPromise = (async () => {
+            try {
+                const [tvResp, movieResp] = await Promise.all([
+                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/tv', 'genres-utils').catch(() => []),
+                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/movie', 'genres-utils').catch(() => [])
+                ]);
+                const map = new Map();
+                (Array.isArray(tvResp) ? tvResp : []).forEach(g => {
+                    if (g && typeof g.id === 'number' && g.name) map.set(g.id, { id: g.id, name: g.name });
+                });
+                (Array.isArray(movieResp) ? movieResp : []).forEach(g => {
+                    if (g && typeof g.id === 'number' && g.name) map.set(g.id, { id: g.id, name: g.name });
+                });
+                cachedTmdbGenres = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+                return cachedTmdbGenres;
+            } finally {
+                inflightTmdbGenresPromise = null;
+            }
+        })();
+
+        return inflightTmdbGenresPromise;
+    }
 
     /**
      * Gets the current filter mode for a module from runtime state.
@@ -243,11 +221,11 @@
         if (!f) return 0;
         let n = 0;
         if (f.yearFrom || f.yearTo) n += 1;
-        if (f.minRating) n += 1;
-        if (f.minVotes) n += 1;
+        if (f.minRating || f.maxRating) n += 1;
+        if (f.minVotes || f.maxVotes) n += 1;
         if (f.runtimeFrom || f.runtimeTo) n += 1;
         if (f.originalLanguage) n += 1;
-        if (f.watchRegion) n += 1;
+        if (f.genres) n += 1;
         return n;
     }
 
@@ -281,11 +259,13 @@
                 else params.push(`primaryReleaseDateLte=${encodeURIComponent(dateTo)}`);
             }
         }
-        if (allow('rating') && filters.minRating) {
-            params.push(`voteAverageGte=${encodeURIComponent(filters.minRating)}`);
+        if (allow('rating')) {
+            if (filters.minRating) params.push(`voteAverageGte=${encodeURIComponent(filters.minRating)}`);
+            if (filters.maxRating) params.push(`voteAverageLte=${encodeURIComponent(filters.maxRating)}`);
         }
-        if (allow('votes') && filters.minVotes) {
-            params.push(`voteCountGte=${encodeURIComponent(filters.minVotes)}`);
+        if (allow('votes')) {
+            if (filters.minVotes) params.push(`voteCountGte=${encodeURIComponent(filters.minVotes)}`);
+            if (filters.maxVotes) params.push(`voteCountLte=${encodeURIComponent(filters.maxVotes)}`);
         }
         if (allow('runtime')) {
             if (filters.runtimeFrom) params.push(`withRuntimeGte=${encodeURIComponent(filters.runtimeFrom)}`);
@@ -294,8 +274,9 @@
         if (allow('language') && filters.originalLanguage) {
             params.push(`withOriginalLanguage=${encodeURIComponent(filters.originalLanguage)}`);
         }
-        if (allow('region') && filters.watchRegion) {
-            params.push(`watchRegion=${encodeURIComponent(filters.watchRegion)}`);
+        if (allow('genre') && filters.genres) {
+            // TMDB withGenres: pipe = OR semantics (item matches any selected genre)
+            params.push(`withGenres=${encodeURIComponent(filters.genres)}`);
         }
 
         return params.length > 0 ? '&' + params.join('&') : '';
@@ -324,10 +305,10 @@
             // Map field → category so we only consider allowed ones
             if (k === 'yearFrom' || k === 'yearTo') return allowSet.has('year');
             if (k === 'runtimeFrom' || k === 'runtimeTo') return allowSet.has('runtime');
-            if (k === 'minRating') return allowSet.has('rating');
-            if (k === 'minVotes') return allowSet.has('votes');
+            if (k === 'minRating' || k === 'maxRating') return allowSet.has('rating');
+            if (k === 'minVotes' || k === 'maxVotes') return allowSet.has('votes');
             if (k === 'originalLanguage') return allowSet.has('language');
-            if (k === 'watchRegion') return allowSet.has('region');
+            if (k === 'genres') return allowSet.has('genre');
             return false;
         });
         if (!anyActive) return results;
@@ -335,11 +316,17 @@
         const yearFrom = (allowSet.has('year') && filters.yearFrom) ? parseInt(filters.yearFrom, 10) : null;
         const yearTo = (allowSet.has('year') && filters.yearTo) ? parseInt(filters.yearTo, 10) : null;
         const minRating = (allowSet.has('rating') && filters.minRating) ? parseFloat(filters.minRating) : null;
+        const maxRating = (allowSet.has('rating') && filters.maxRating) ? parseFloat(filters.maxRating) : null;
         const minVotes = (allowSet.has('votes') && filters.minVotes) ? parseInt(filters.minVotes, 10) : null;
+        const maxVotes = (allowSet.has('votes') && filters.maxVotes) ? parseInt(filters.maxVotes, 10) : null;
         const wantedLang = (allowSet.has('language') && filters.originalLanguage)
             ? filters.originalLanguage.toLowerCase() : '';
         const minRuntime = (allowSet.has('runtime') && filters.runtimeFrom) ? parseInt(filters.runtimeFrom, 10) : null;
         const maxRuntime = (allowSet.has('runtime') && filters.runtimeTo) ? parseInt(filters.runtimeTo, 10) : null;
+        // OR semantics — keep items matching ANY of the selected genres (matches pipe-separated server-side)
+        const wantedGenres = (allowSet.has('genre') && filters.genres)
+            ? String(filters.genres).split('|').map(g => parseInt(g, 10)).filter(Number.isFinite)
+            : [];
 
         return results.filter(item => {
             if (yearFrom != null || yearTo != null) {
@@ -351,13 +338,17 @@
                 if (yearFrom != null && (!year || year < yearFrom)) return false;
                 if (yearTo != null && year && year > yearTo) return false;
             }
-            if (minRating != null) {
+            if (minRating != null || maxRating != null) {
                 const r = Number(item.voteAverage ?? item.vote_average ?? 0);
-                if (!Number.isFinite(r) || r < minRating) return false;
+                if (!Number.isFinite(r)) return false;
+                if (minRating != null && r < minRating) return false;
+                if (maxRating != null && r > maxRating) return false;
             }
-            if (minVotes != null) {
+            if (minVotes != null || maxVotes != null) {
                 const v = Number(item.voteCount ?? item.vote_count ?? 0);
-                if (!Number.isFinite(v) || v < minVotes) return false;
+                if (!Number.isFinite(v)) return false;
+                if (minVotes != null && v < minVotes) return false;
+                if (maxVotes != null && v > maxVotes) return false;
             }
             if (wantedLang) {
                 const lang = String(item.originalLanguage ?? item.original_language ?? '').toLowerCase();
@@ -369,6 +360,11 @@
                 // data — fail closed so the result list reflects the constraint.
                 if (minRuntime != null && (!Number.isFinite(rt) || rt < minRuntime)) return false;
                 if (maxRuntime != null && rt > 0 && rt > maxRuntime) return false;
+            }
+            if (wantedGenres.length > 0) {
+                const itemGenres = item.genreIds || item.genre_ids || [];
+                if (!Array.isArray(itemGenres) || itemGenres.length === 0) return false;
+                if (!wantedGenres.some(g => itemGenres.includes(g))) return false;
             }
             return true;
         });
@@ -410,18 +406,20 @@
      * @param {string} opts.placeholder
      * @param {number} opts.min
      * @param {number} opts.max
+     * @param {string|number} [opts.step] - Step value (e.g. 0.1 for decimal ratings)
      * @param {string} opts.value
      * @param {string} opts.width - CSS width value (e.g., '5.5em')
      * @returns {HTMLInputElement}
      */
-    function buildNumberInput({ placeholder, min, max, value, width }) {
+    function buildNumberInput({ placeholder, min, max, step, value, width }) {
         const input = document.createElement('input');
         input.type = 'number';
         input.min = String(min);
         input.max = String(max);
+        if (step != null) input.step = String(step);
         input.placeholder = placeholder;
         input.value = value || '';
-        input.inputMode = 'numeric';
+        input.inputMode = step && String(step).indexOf('.') !== -1 ? 'decimal' : 'numeric';
         input.style.cssText = `
             background: rgba(255,255,255,0.08);
             color: rgba(255,255,255,0.9);
@@ -434,6 +432,104 @@
             width: ${width};
         `;
         return input;
+    }
+
+    /**
+     * Removes all child nodes of an element using DOM APIs (no innerHTML).
+     * @param {HTMLElement} el
+     */
+    function clearChildren(el) {
+        while (el && el.firstChild) el.removeChild(el.firstChild);
+    }
+
+    /**
+     * Builds the multi-select genre tag chooser.
+     * Genres are loaded asynchronously via `getTmdbGenresAsync`. Each tag is a
+     * toggleable button; selected IDs are stored on the container's
+     * `dataset.value` as a pipe-separated string (matches TMDB OR semantics).
+     * @param {string} currentValue - Pipe-separated genre IDs currently selected
+     * @returns {HTMLElement}
+     */
+    function buildGenreSelector(currentValue) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'jellyseerr-discovery-genre-selector';
+        wrapper.style.cssText = `
+            display:flex;flex-wrap:wrap;gap:0.3em;
+            max-width:48em;
+            min-height:1.6em;
+            align-items:flex-start;
+        `;
+        wrapper.dataset.value = currentValue || '';
+
+        const selected = new Set(
+            String(currentValue || '').split('|').filter(Boolean)
+        );
+
+        function applyTagStyle(tag, isSelected) {
+            tag.style.cssText = `
+                padding: 3px 10px;
+                border: 1px solid ${isSelected ? 'rgba(98,148,221,0.7)' : 'rgba(255,255,255,0.25)'};
+                border-radius: 12px;
+                background: ${isSelected ? 'rgba(98,148,221,0.55)' : 'rgba(255,255,255,0.05)'};
+                color: ${isSelected ? '#fff' : 'rgba(255,255,255,0.85)'};
+                font-size: 0.8em;
+                font-family: inherit;
+                cursor: pointer;
+            `;
+        }
+
+        function renderGenres(genres) {
+            clearChildren(wrapper);
+            genres.forEach(genre => {
+                const tag = document.createElement('button');
+                tag.type = 'button';
+                tag.dataset.genreId = String(genre.id);
+                tag.textContent = genre.name;
+                applyTagStyle(tag, selected.has(String(genre.id)));
+                tag.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = tag.dataset.genreId;
+                    if (selected.has(id)) selected.delete(id);
+                    else selected.add(id);
+                    applyTagStyle(tag, selected.has(id));
+                    wrapper.dataset.value = Array.from(selected).join('|');
+                });
+                wrapper.appendChild(tag);
+            });
+        }
+
+        function renderMessage(text) {
+            clearChildren(wrapper);
+            const span = document.createElement('span');
+            span.textContent = text;
+            span.style.cssText = 'color:rgba(255,255,255,0.45);font-size:0.85em;';
+            wrapper.appendChild(span);
+        }
+
+        // Show a placeholder while genres load asynchronously
+        renderMessage('Loading…');
+
+        getTmdbGenresAsync().then(genres => {
+            if (!Array.isArray(genres) || genres.length === 0) {
+                renderMessage('No genres available');
+                return;
+            }
+            renderGenres(genres);
+        }).catch(() => {
+            renderMessage('Could not load genres');
+        });
+
+        // Reset hook used by the panel's reset button
+        wrapper._reset = () => {
+            selected.clear();
+            wrapper.dataset.value = '';
+            wrapper.querySelectorAll('button[data-genre-id]').forEach(btn => {
+                applyTagStyle(btn, false);
+            });
+        };
+
+        return wrapper;
     }
 
     /**
@@ -475,11 +571,11 @@
 
         const filtersLabel = JE.t('jellyseerr_discover_filters');
         const yearLabel = JE.t('jellyseerr_discover_filter_year');
-        const ratingLabel = JE.t('jellyseerr_discover_filter_min_rating');
-        const votesLabel = JE.t('jellyseerr_discover_filter_min_votes');
+        const ratingLabel = JE.t('jellyseerr_discover_filter_rating');
+        const votesLabel = JE.t('jellyseerr_discover_filter_votes');
         const runtimeLabel = JE.t('jellyseerr_discover_filter_runtime');
         const languageLabel = JE.t('jellyseerr_discover_filter_language');
-        const regionLabel = JE.t('jellyseerr_discover_filter_region');
+        const genresLabel = JE.t('jellyseerr_discover_filter_genres');
         const fromPlaceholder = JE.t('jellyseerr_discover_filter_from');
         const toPlaceholder = JE.t('jellyseerr_discover_filter_to');
         const minPlaceholder = JE.t('jellyseerr_discover_filter_min');
@@ -553,15 +649,37 @@
         }
 
         if (supportedFilters.includes('rating')) {
-            const select = buildSelect(RATING_OPTIONS, current.minRating);
-            panel.appendChild(makeFieldGroup(ratingLabel, select));
-            inputs.minRating = select;
+            const minInput = buildNumberInput({
+                placeholder: minPlaceholder, min: 0, max: 10, step: '0.1',
+                value: current.minRating, width: '4.5em'
+            });
+            const maxInput = buildNumberInput({
+                placeholder: maxPlaceholder, min: 0, max: 10, step: '0.1',
+                value: current.maxRating, width: '4.5em'
+            });
+            const dash = document.createElement('span');
+            dash.textContent = '–';
+            dash.style.color = 'rgba(255,255,255,0.4)';
+            panel.appendChild(makeFieldGroup(ratingLabel, [minInput, dash, maxInput]));
+            inputs.minRating = minInput;
+            inputs.maxRating = maxInput;
         }
 
         if (supportedFilters.includes('votes')) {
-            const select = buildSelect(VOTE_OPTIONS, current.minVotes);
-            panel.appendChild(makeFieldGroup(votesLabel, select));
-            inputs.minVotes = select;
+            const minInput = buildNumberInput({
+                placeholder: minPlaceholder, min: 0, max: 999999,
+                value: current.minVotes, width: '6em'
+            });
+            const maxInput = buildNumberInput({
+                placeholder: maxPlaceholder, min: 0, max: 999999,
+                value: current.maxVotes, width: '6em'
+            });
+            const dash = document.createElement('span');
+            dash.textContent = '–';
+            dash.style.color = 'rgba(255,255,255,0.4)';
+            panel.appendChild(makeFieldGroup(votesLabel, [minInput, dash, maxInput]));
+            inputs.minVotes = minInput;
+            inputs.maxVotes = maxInput;
         }
 
         if (supportedFilters.includes('runtime')) {
@@ -587,10 +705,13 @@
             inputs.originalLanguage = select;
         }
 
-        if (supportedFilters.includes('region')) {
-            const select = buildSelect(REGION_OPTIONS, current.watchRegion);
-            panel.appendChild(makeFieldGroup(regionLabel, select));
-            inputs.watchRegion = select;
+        if (supportedFilters.includes('genre')) {
+            const genreContainer = buildGenreSelector(current.genres);
+            // Genre selector spans full width because the tag list can wrap
+            const group = makeFieldGroup(genresLabel, genreContainer);
+            group.style.flexBasis = '100%';
+            panel.appendChild(group);
+            inputs.genres = genreContainer;
         }
 
         const actions = document.createElement('div');
@@ -620,7 +741,13 @@
         function readInputs() {
             const out = {};
             Object.entries(inputs).forEach(([k, el]) => {
-                const v = (el.value || '').trim();
+                let v;
+                if (k === 'genres') {
+                    // Genre selector stores its pipe-separated value on dataset
+                    v = String(el.dataset?.value || '').trim();
+                } else {
+                    v = String(el.value || '').trim();
+                }
                 if (v) out[k] = v;
             });
             return out;
@@ -649,10 +776,13 @@
         resetBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            Object.values(inputs).forEach(el => { el.value = ''; });
-            // Trigger native change event so dependent UI (if any) refreshes
-            Object.values(inputs).forEach(el => {
-                el.dispatchEvent(new Event('change', { bubbles: true }));
+            Object.entries(inputs).forEach(([k, el]) => {
+                if (k === 'genres' && typeof el._reset === 'function') {
+                    el._reset();
+                } else {
+                    el.value = '';
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             });
             resetAdvancedFilters(moduleName);
             refreshBadge();
@@ -671,6 +801,18 @@
             return String(n);
         }
 
+        // Same as clampInt but allows decimal precision (used for ratings 0.0-10.0).
+        function clampFloat(value, min, max, decimals) {
+            if (value === '' || value == null) return '';
+            const n = parseFloat(value);
+            if (!Number.isFinite(n)) return '';
+            const clamped = Math.max(min, Math.min(max, n));
+            const rounded = decimals != null
+                ? Number(clamped.toFixed(decimals))
+                : clamped;
+            return String(rounded);
+        }
+
         applyBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -681,6 +823,11 @@
             if ('yearTo' in next) next.yearTo = clampInt(next.yearTo, 1900, 2100);
             if ('runtimeFrom' in next) next.runtimeFrom = clampInt(next.runtimeFrom, 0, 600);
             if ('runtimeTo' in next) next.runtimeTo = clampInt(next.runtimeTo, 0, 600);
+            if ('minRating' in next) next.minRating = clampFloat(next.minRating, 0, 10, 1);
+            if ('maxRating' in next) next.maxRating = clampFloat(next.maxRating, 0, 10, 1);
+            if ('minVotes' in next) next.minVotes = clampInt(next.minVotes, 0, 999999);
+            if ('maxVotes' in next) next.maxVotes = clampInt(next.maxVotes, 0, 999999);
+
             // Drop any keys that clamped to '' so they aren't stored.
             Object.keys(next).forEach(k => { if (next[k] === '') delete next[k]; });
 
@@ -689,28 +836,28 @@
             if (inputs.yearTo) inputs.yearTo.value = next.yearTo || '';
             if (inputs.runtimeFrom) inputs.runtimeFrom.value = next.runtimeFrom || '';
             if (inputs.runtimeTo) inputs.runtimeTo.value = next.runtimeTo || '';
+            if (inputs.minRating) inputs.minRating.value = next.minRating || '';
+            if (inputs.maxRating) inputs.maxRating.value = next.maxRating || '';
+            if (inputs.minVotes) inputs.minVotes.value = next.minVotes || '';
+            if (inputs.maxVotes) inputs.maxVotes.value = next.maxVotes || '';
 
-            // Swap reversed ranges so the request is well-formed.
-            if (next.yearFrom && next.yearTo) {
-                const a = parseInt(next.yearFrom, 10);
-                const b = parseInt(next.yearTo, 10);
-                if (a > b) {
-                    next.yearFrom = String(b);
-                    next.yearTo = String(a);
-                    if (inputs.yearFrom) inputs.yearFrom.value = next.yearFrom;
-                    if (inputs.yearTo) inputs.yearTo.value = next.yearTo;
+            // Swap reversed numeric ranges so the request is well-formed.
+            const swapPairs = [
+                ['yearFrom', 'yearTo'],
+                ['runtimeFrom', 'runtimeTo'],
+                ['minRating', 'maxRating'],
+                ['minVotes', 'maxVotes']
+            ];
+            swapPairs.forEach(([loKey, hiKey]) => {
+                if (!next[loKey] || !next[hiKey]) return;
+                const a = parseFloat(next[loKey]);
+                const b = parseFloat(next[hiKey]);
+                if (Number.isFinite(a) && Number.isFinite(b) && a > b) {
+                    [next[loKey], next[hiKey]] = [next[hiKey], next[loKey]];
+                    if (inputs[loKey]) inputs[loKey].value = next[loKey];
+                    if (inputs[hiKey]) inputs[hiKey].value = next[hiKey];
                 }
-            }
-            if (next.runtimeFrom && next.runtimeTo) {
-                const a = parseInt(next.runtimeFrom, 10);
-                const b = parseInt(next.runtimeTo, 10);
-                if (a > b) {
-                    next.runtimeFrom = String(b);
-                    next.runtimeTo = String(a);
-                    if (inputs.runtimeFrom) inputs.runtimeFrom.value = next.runtimeFrom;
-                    if (inputs.runtimeTo) inputs.runtimeTo.value = next.runtimeTo;
-                }
-            }
+            });
             setAdvancedFilters(moduleName, next);
             refreshBadge();
             if (typeof onApply === 'function') onApply();
@@ -1249,10 +1396,7 @@
     JE.discoveryFilter = {
         MODES: FILTER_MODES,
         SORT_OPTIONS,
-        RATING_OPTIONS,
-        VOTE_OPTIONS,
         LANGUAGE_OPTIONS,
-        REGION_OPTIONS,
         ADVANCED_FILTER_FIELDS,
         getFilterMode,
         setFilterMode,
@@ -1268,6 +1412,7 @@
         countActiveAdvancedFilters,
         buildFilterQueryParams,
         applyClientSideFilters,
+        getTmdbGenresAsync,
         interleaveArrays,
         filterByMediaType,
         hasBothTypes,

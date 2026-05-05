@@ -253,8 +253,9 @@
     }
 
     // Advanced filters supported on this section.
-    // Genre uses TMDB Discover for both TV and movies, so all server-side filters apply.
-    const SUPPORTED_ADVANCED_FILTERS = ['year', 'rating', 'votes', 'runtime', 'language', 'region'];
+    // Genre filter is omitted because the page is already scoped to a single genre —
+    // exposing another genre filter would be redundant.
+    const SUPPORTED_ADVANCED_FILTERS = ['year', 'rating', 'votes', 'runtime', 'language'];
 
     /**
      * Creates the section container with optional filter and sort controls

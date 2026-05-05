@@ -424,10 +424,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             "sortBy", "primaryReleaseDateGte", "primaryReleaseDateLte",
             "firstAirDateGte", "firstAirDateLte",
             "voteAverageGte", "voteAverageLte",
-            "voteCountGte",
+            "voteCountGte", "voteCountLte",
             "withRuntimeGte", "withRuntimeLte",
-            "withOriginalLanguage",
-            "certification", "watchRegion", "language"
+            "withOriginalLanguage", "withGenres",
+            "certification", "language"
         };
 
         /// <summary>

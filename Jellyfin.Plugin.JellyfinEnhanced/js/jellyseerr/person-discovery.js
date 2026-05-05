@@ -219,9 +219,10 @@
         return sorted;
     }
 
-    // Person credits aren't a TMDB Discover endpoint, so filtering is client-side.
-    // Runtime / region don't apply (no streaming-provider data, varied TV runtimes).
-    const PERSON_ADVANCED_FILTER_KEYS = ['year', 'rating', 'votes', 'language'];
+    // Person credits aren't a TMDB Discover endpoint, so filtering is client-side over
+    // the cached combined_credits payload. Genre is supported via genreIds; runtime
+    // is excluded because TV episodes have varying runtimes.
+    const PERSON_ADVANCED_FILTER_KEYS = ['year', 'rating', 'votes', 'language', 'genre'];
 
     /**
      * Gets filtered results based on current filter mode and active advanced filters.

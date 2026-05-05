@@ -315,8 +315,8 @@
     }
 
     // Network discovery splits across TV (network) + movie (studio), both via TMDB Discover.
-    // All server-side filters apply to both halves.
-    const SUPPORTED_ADVANCED_FILTERS = ['year', 'rating', 'votes', 'runtime', 'language', 'region'];
+    // Genre refines the studio-scoped result set further.
+    const SUPPORTED_ADVANCED_FILTERS = ['year', 'rating', 'votes', 'runtime', 'language', 'genre'];
 
     /**
      * Creates the section container with optional filter and sort controls.

@@ -184,8 +184,9 @@
         return JE.discoveryFilter.createCardsFragment(results, { cardClass: 'portraitCard' });
     }
 
-    // Tag/keyword discovery hits TMDB Discover for both TV and movies — full filter set applies.
-    const SUPPORTED_ADVANCED_FILTERS = ['year', 'rating', 'votes', 'runtime', 'language', 'region'];
+    // Tag/keyword discovery hits TMDB Discover for both TV and movies. Genre refines
+    // the keyword-scoped result set further.
+    const SUPPORTED_ADVANCED_FILTERS = ['year', 'rating', 'votes', 'runtime', 'language', 'genre'];
 
     /**
      * Creates the section container with optional filter and sort controls
