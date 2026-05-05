@@ -729,67 +729,41 @@
         const current = getAdvancedFilters(moduleName);
         const inputs = {};
 
-        if (supportedFilters.includes('year')) {
-            // Year range covers earliest TMDB-tracked cinema (1874) through reasonable
-            // future-release dates. TMDB itself doesn't enforce hard year bounds.
+        // Numeric range filters share the same shape: two number inputs with
+        // a separator, clamped to [min, max] (with optional decimal `step` for
+        // ratings). Year uses From/To placeholders; the others use Min/Max.
+        // Bounds: year covers earliest TMDB-tracked cinema (1874) through 2100;
+        // votes caps at 1,000,000 (far above the most-voted title ~50k);
+        // runtime caps at 1000 min to fit experimental long-form (Sátántangó).
+        const RANGE_FILTERS = [
+            { key: 'year',    minKey: 'yearFrom',    maxKey: 'yearTo',
+              label: yearLabel,    min: 1874, max: 2100,
+              fromPh: fromPlaceholder, toPh: toPlaceholder },
+            { key: 'rating',  minKey: 'minRating',   maxKey: 'maxRating',
+              label: ratingLabel,  min: 0, max: 10, step: '0.1', decimals: 1,
+              fromPh: minPlaceholder, toPh: maxPlaceholder },
+            { key: 'votes',   minKey: 'minVotes',    maxKey: 'maxVotes',
+              label: votesLabel,   min: 0, max: 1000000,
+              fromPh: minPlaceholder, toPh: maxPlaceholder },
+            { key: 'runtime', minKey: 'runtimeFrom', maxKey: 'runtimeTo',
+              label: runtimeLabel, min: 0, max: 1000,
+              fromPh: minPlaceholder, toPh: maxPlaceholder }
+        ];
+
+        RANGE_FILTERS.forEach(rf => {
+            if (!supportedFilters.includes(rf.key)) return;
             const fromInput = buildNumberInput({
-                placeholder: fromPlaceholder, min: 1874, max: 2100,
-                value: current.yearFrom
+                placeholder: rf.fromPh, min: rf.min, max: rf.max, step: rf.step,
+                value: current[rf.minKey]
             });
             const toInput = buildNumberInput({
-                placeholder: toPlaceholder, min: 1874, max: 2100,
-                value: current.yearTo
+                placeholder: rf.toPh, min: rf.min, max: rf.max, step: rf.step,
+                value: current[rf.maxKey]
             });
-            grid.appendChild(makeFieldGroup(yearLabel, [fromInput, buildRangeSeparator(), toInput]));
-            inputs.yearFrom = fromInput;
-            inputs.yearTo = toInput;
-        }
-
-        if (supportedFilters.includes('rating')) {
-            const minInput = buildNumberInput({
-                placeholder: minPlaceholder, min: 0, max: 10, step: '0.1',
-                value: current.minRating
-            });
-            const maxInput = buildNumberInput({
-                placeholder: maxPlaceholder, min: 0, max: 10, step: '0.1',
-                value: current.maxRating
-            });
-            grid.appendChild(makeFieldGroup(ratingLabel, [minInput, buildRangeSeparator(), maxInput]));
-            inputs.minRating = minInput;
-            inputs.maxRating = maxInput;
-        }
-
-        if (supportedFilters.includes('votes')) {
-            // Vote count caps at 1,000,000 — far above the most-voted TMDB title (~50k)
-            // but generous enough to never clamp a realistic input.
-            const minInput = buildNumberInput({
-                placeholder: minPlaceholder, min: 0, max: 1000000,
-                value: current.minVotes
-            });
-            const maxInput = buildNumberInput({
-                placeholder: maxPlaceholder, min: 0, max: 1000000,
-                value: current.maxVotes
-            });
-            grid.appendChild(makeFieldGroup(votesLabel, [minInput, buildRangeSeparator(), maxInput]));
-            inputs.minVotes = minInput;
-            inputs.maxVotes = maxInput;
-        }
-
-        if (supportedFilters.includes('runtime')) {
-            // Runtime range capped at 1000 minutes (~16 hours) to accommodate
-            // unusually long experimental films (Sátántangó: 432 min, etc).
-            const fromInput = buildNumberInput({
-                placeholder: minPlaceholder, min: 0, max: 1000,
-                value: current.runtimeFrom
-            });
-            const toInput = buildNumberInput({
-                placeholder: maxPlaceholder, min: 0, max: 1000,
-                value: current.runtimeTo
-            });
-            grid.appendChild(makeFieldGroup(runtimeLabel, [fromInput, buildRangeSeparator(), toInput]));
-            inputs.runtimeFrom = fromInput;
-            inputs.runtimeTo = toInput;
-        }
+            grid.appendChild(makeFieldGroup(rf.label, [fromInput, buildRangeSeparator(), toInput]));
+            inputs[rf.minKey] = fromInput;
+            inputs[rf.maxKey] = toInput;
+        });
 
         if (supportedFilters.includes('language')) {
             const select = buildSelect(LANGUAGE_OPTIONS, current.originalLanguage);
@@ -940,47 +914,34 @@
         function commitAndApply() {
             const next = readInputs();
 
-            // Validate + clamp numeric inputs (defence-in-depth — typing/blur
-            // already clamps but this catches anything that slipped through).
-            if ('yearFrom' in next) next.yearFrom = clampInt(next.yearFrom, 1874, 2100);
-            if ('yearTo' in next) next.yearTo = clampInt(next.yearTo, 1874, 2100);
-            if ('runtimeFrom' in next) next.runtimeFrom = clampInt(next.runtimeFrom, 0, 1000);
-            if ('runtimeTo' in next) next.runtimeTo = clampInt(next.runtimeTo, 0, 1000);
-            if ('minRating' in next) next.minRating = clampFloat(next.minRating, 0, 10, 1);
-            if ('maxRating' in next) next.maxRating = clampFloat(next.maxRating, 0, 10, 1);
-            if ('minVotes' in next) next.minVotes = clampInt(next.minVotes, 0, 1000000);
-            if ('maxVotes' in next) next.maxVotes = clampInt(next.maxVotes, 0, 1000000);
+            // Defence-in-depth clamp + reflect-back + swap, driven by RANGE_FILTERS.
+            // Live `clampOnTyping`/`finalizeOnBlur` already handle typing-time, this
+            // only catches anything that slipped through (e.g. programmatic mutation).
+            RANGE_FILTERS.forEach(rf => {
+                const clamper = rf.step ? clampFloat : clampInt;
+                if (rf.minKey in next) next[rf.minKey] = clamper(next[rf.minKey], rf.min, rf.max, rf.decimals);
+                if (rf.maxKey in next) next[rf.maxKey] = clamper(next[rf.maxKey], rf.min, rf.max, rf.decimals);
+            });
 
             // Drop any keys that clamped to '' so they aren't stored.
             Object.keys(next).forEach(k => { if (next[k] === '') delete next[k]; });
 
-            // Reflect clamped values in the inputs so the user sees what was kept.
-            if (inputs.yearFrom) inputs.yearFrom.value = next.yearFrom || '';
-            if (inputs.yearTo) inputs.yearTo.value = next.yearTo || '';
-            if (inputs.runtimeFrom) inputs.runtimeFrom.value = next.runtimeFrom || '';
-            if (inputs.runtimeTo) inputs.runtimeTo.value = next.runtimeTo || '';
-            if (inputs.minRating) inputs.minRating.value = next.minRating || '';
-            if (inputs.maxRating) inputs.maxRating.value = next.maxRating || '';
-            if (inputs.minVotes) inputs.minVotes.value = next.minVotes || '';
-            if (inputs.maxVotes) inputs.maxVotes.value = next.maxVotes || '';
-
-            // Swap reversed numeric ranges so the request is well-formed.
-            const swapPairs = [
-                ['yearFrom', 'yearTo'],
-                ['runtimeFrom', 'runtimeTo'],
-                ['minRating', 'maxRating'],
-                ['minVotes', 'maxVotes']
-            ];
-            swapPairs.forEach(([loKey, hiKey]) => {
-                if (!next[loKey] || !next[hiKey]) return;
-                const a = parseFloat(next[loKey]);
-                const b = parseFloat(next[hiKey]);
-                if (Number.isFinite(a) && Number.isFinite(b) && a > b) {
-                    [next[loKey], next[hiKey]] = [next[hiKey], next[loKey]];
-                    if (inputs[loKey]) inputs[loKey].value = next[loKey];
-                    if (inputs[hiKey]) inputs[hiKey].value = next[hiKey];
+            // Reflect clamped values in the inputs so the user sees what was kept,
+            // and swap reversed ranges (lo > hi) into a well-formed request.
+            RANGE_FILTERS.forEach(rf => {
+                if (inputs[rf.minKey]) inputs[rf.minKey].value = next[rf.minKey] || '';
+                if (inputs[rf.maxKey]) inputs[rf.maxKey].value = next[rf.maxKey] || '';
+                if (next[rf.minKey] && next[rf.maxKey]) {
+                    const a = parseFloat(next[rf.minKey]);
+                    const b = parseFloat(next[rf.maxKey]);
+                    if (Number.isFinite(a) && Number.isFinite(b) && a > b) {
+                        [next[rf.minKey], next[rf.maxKey]] = [next[rf.maxKey], next[rf.minKey]];
+                        if (inputs[rf.minKey]) inputs[rf.minKey].value = next[rf.minKey];
+                        if (inputs[rf.maxKey]) inputs[rf.maxKey].value = next[rf.maxKey];
+                    }
                 }
             });
+
             setAdvancedFilters(moduleName, next);
             refreshBadge();
             if (typeof onApply === 'function') onApply();
@@ -1008,8 +969,7 @@
         }
 
         // Wire numeric inputs: live max-clamp on typing + finalize+auto-apply on blur.
-        ['yearFrom', 'yearTo', 'runtimeFrom', 'runtimeTo',
-         'minRating', 'maxRating', 'minVotes', 'maxVotes'].forEach(key => {
+        RANGE_FILTERS.flatMap(rf => [rf.minKey, rf.maxKey]).forEach(key => {
             const el = inputs[key];
             if (!el) return;
             let lastBlurValue = el.value;
@@ -1560,392 +1520,22 @@
     }
 
     /**
-     * Injects the discovery filter stylesheet (theme-aware via CSS vars).
-     * One <style> tag per page; all filter UI references the class names below
-     * so the inline JS keeps no rgba/colour values.
+     * Injects the discovery filter stylesheet via a <link> tag pointing at the
+     * plugin's static `discovery-filter.css` (served by the controller's
+     * `[HttpGet("js/{**path}")]` route). Routed through `ApiClient.getUrl()`
+     * so reverse-proxy BaseUrl deployments resolve correctly.
      */
     function injectFilterStyles() {
         if (document.getElementById('jellyseerr-filter-styles')) return;
 
-        const style = document.createElement('style');
-        style.id = 'jellyseerr-filter-styles';
-        style.textContent = `
-            /* Media-type quick filter (existing) */
-            .filter-movies [data-media-type="tv"] { display: none !important; }
-            .filter-tv [data-media-type="movie"] { display: none !important; }
-
-            /* === Section header === */
-            .jellyseerr-discovery-header-wrapper {
-                display: flex;
-                flex-direction: column;
-                gap: 0.55em;
-                margin-bottom: 1.1em;
-                width: 100%;
-            }
-            .jellyseerr-discovery-header {
-                display: flex;
-                align-items: center;
-                gap: 0.7em 1em;
-                flex-wrap: wrap;
-                width: 100%;
-            }
-            .jellyseerr-discovery-header h2.sectionTitle {
-                margin: 0 !important;
-                flex-shrink: 1;
-            }
-
-            /* === All / Movies / Series segmented control === */
-            .jellyseerr-discovery-filter {
-                display: inline-flex;
-                gap: 0;
-                font-size: 0.85em;
-                vertical-align: middle;
-                flex-shrink: 0;
-            }
-            .jellyseerr-filter-btn {
-                padding: 0.35em 0.95em;
-                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
-                background: transparent;
-                color: var(--theme-text-color, inherit);
-                cursor: pointer;
-                font-size: inherit;
-                font-family: inherit;
-                line-height: 1.3;
-                transition: background 0.15s, border-color 0.15s, color 0.15s;
-                opacity: 0.85;
-            }
-            .jellyseerr-filter-btn:not(:first-child) { margin-left: -1px; }
-            .jellyseerr-filter-btn:first-child { border-radius: 4px 0 0 4px; }
-            .jellyseerr-filter-btn:last-child { border-radius: 0 4px 4px 0; }
-            .jellyseerr-filter-btn:hover { background: var(--je-hover-bg, rgba(127,127,127,0.12)); opacity: 1; }
-            .jellyseerr-filter-btn[aria-pressed="true"] {
-                background: var(--theme-primary-color, #00a4dc);
-                border-color: var(--theme-primary-color, #00a4dc);
-                color: var(--theme-accent-text-color, #fff);
-                font-weight: 600;
-                opacity: 1;
-            }
-
-            /* === Sort dropdown === */
-            .jellyseerr-discovery-sort {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.45em;
-                font-size: 0.85em;
-                margin-left: auto;
-                flex-shrink: 0;
-            }
-            .jellyseerr-discovery-sort > .je-sort-label {
-                color: var(--theme-text-color, inherit);
-                opacity: 0.6;
-            }
-            .jellyseerr-sort-select {
-                background: var(--je-input-bg, rgba(127,127,127,0.1));
-                color: var(--theme-text-color, inherit);
-                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
-                border-radius: 4px;
-                padding: 0.35em 0.7em;
-                font-size: inherit;
-                font-family: inherit;
-                cursor: pointer;
-                outline: none;
-            }
-            .jellyseerr-sort-select:focus { border-color: var(--theme-primary-color, #00a4dc); }
-            .jellyseerr-sort-select option { background: var(--background-color, #1a1a2e); color: var(--theme-text-color, #fff); }
-
-            /* === Filters toggle button === */
-            .jellyseerr-filter-toggle-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.45em;
-                padding: 0.4em 0.9em;
-                border-radius: 4px;
-                background: var(--je-input-bg, rgba(127,127,127,0.08));
-                color: var(--theme-text-color, inherit);
-                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
-                cursor: pointer;
-                font-size: 0.85em;
-                font-family: inherit;
-                line-height: 1.3;
-                transition: background 0.15s, border-color 0.15s;
-            }
-            .jellyseerr-filter-toggle-btn:hover { background: var(--je-hover-bg, rgba(127,127,127,0.16)); }
-            .jellyseerr-filter-toggle-btn[aria-expanded="true"] {
-                background: var(--je-hover-bg, rgba(127,127,127,0.18));
-                border-color: var(--je-border-color-strong, rgba(127,127,127,0.55));
-            }
-            .jellyseerr-filter-toggle-btn .filter-count-badge {
-                display: none;
-                background: var(--theme-primary-color, #00a4dc);
-                color: var(--theme-accent-text-color, #fff);
-                border-radius: 999px;
-                padding: 0.05em 0.55em;
-                font-size: 0.78em;
-                font-weight: 600;
-                line-height: 1.4;
-                min-width: 1.5em;
-                text-align: center;
-            }
-            .jellyseerr-filter-toggle-btn .toggle-arrow {
-                font-size: 1.15em;
-                transition: transform 0.2s;
-                opacity: 0.75;
-            }
-            .jellyseerr-filter-toggle-btn[aria-expanded="true"] .toggle-arrow { transform: rotate(180deg); }
-
-            /* === Filter panel === */
-            .jellyseerr-discovery-filter-panel {
-                display: none;
-                width: 100%;
-                padding: 1.2em 1.4em;
-                background: var(--je-panel-bg, rgba(127,127,127,0.07));
-                border: 1px solid var(--je-border-color, rgba(127,127,127,0.22));
-                border-radius: 8px;
-                box-sizing: border-box;
-                animation: je-filter-fade-in 0.18s ease-out;
-            }
-            .jellyseerr-discovery-filter-panel[data-state="open"] { display: block; }
-            @keyframes je-filter-fade-in {
-                from { opacity: 0; transform: translateY(-4px); }
-                to   { opacity: 1; transform: translateY(0); }
-            }
-
-            /* === Filter grid === */
-            .je-filter-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 1.05em 1.3em;
-                align-items: start;
-            }
-            .je-filter-group {
-                display: flex;
-                flex-direction: column;
-                gap: 0.35em;
-                min-width: 0;
-            }
-            .je-filter-group--full { grid-column: 1 / -1; }
-            .je-filter-label {
-                font-size: 0.78em;
-                font-weight: 600;
-                color: var(--theme-text-color, inherit);
-                opacity: 0.75;
-                text-transform: uppercase;
-                letter-spacing: 0.045em;
-            }
-
-            /* Group header (label + extra widget on the right) */
-            .je-filter-group-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 0.7em;
-                flex-wrap: wrap;
-            }
-
-            /* AND / OR mode toggle */
-            .je-filter-mode-toggle {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.4em;
-                font-size: 0.78em;
-            }
-            .je-filter-mode-toggle .je-filter-mode-label {
-                color: var(--theme-text-color, inherit);
-                opacity: 0.55;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                font-weight: 500;
-            }
-            .je-filter-mode-btn {
-                padding: 0.32em 0.85em;
-                background: transparent;
-                color: var(--theme-text-color, inherit);
-                border: 1px solid var(--je-border-color, rgba(127,127,127,0.4));
-                cursor: pointer;
-                font-family: inherit;
-                font-size: inherit;
-                line-height: 1.3;
-                opacity: 0.78;
-                transition: background 0.15s, opacity 0.15s, color 0.15s, border-color 0.15s;
-            }
-            .je-filter-mode-btn + .je-filter-mode-btn { margin-left: -1px; }
-            .je-filter-mode-btn:first-of-type { border-radius: 4px 0 0 4px; }
-            .je-filter-mode-btn:last-of-type { border-radius: 0 4px 4px 0; }
-            .je-filter-mode-btn:hover {
-                background: var(--je-hover-bg, rgba(127,127,127,0.12));
-                opacity: 1;
-            }
-            .je-filter-mode-btn[aria-pressed="true"] {
-                background: var(--theme-primary-color, #00a4dc);
-                border-color: var(--theme-primary-color, #00a4dc);
-                color: var(--theme-accent-text-color, #fff);
-                opacity: 1;
-                font-weight: 600;
-            }
-
-            /* No-results message inside an items container */
-            .je-filter-empty-msg {
-                grid-column: 1 / -1;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 0.6em;
-                padding: 2.5em 1em;
-                color: var(--theme-text-color, inherit);
-                opacity: 0.55;
-                font-size: 0.95em;
-                text-align: center;
-                width: 100%;
-            }
-            .je-filter-empty-msg .material-icons { font-size: 2.4em; opacity: 0.7; }
-
-            /* === Range row === */
-            .je-filter-range {
-                display: flex;
-                align-items: center;
-                gap: 0.45em;
-            }
-            .je-filter-range > input { flex: 1 1 0; min-width: 0; }
-            .je-filter-range > .je-filter-range__sep {
-                color: var(--theme-text-color, inherit);
-                opacity: 0.4;
-                user-select: none;
-            }
-
-            /* === Number / select inputs === */
-            .je-filter-input {
-                background: var(--je-input-bg, rgba(127,127,127,0.1));
-                color: var(--theme-text-color, inherit);
-                border: 1px solid var(--je-border-color, rgba(127,127,127,0.35));
-                border-radius: 4px;
-                padding: 0.4em 0.6em;
-                font-size: inherit;
-                font-family: inherit;
-                outline: none;
-                width: 100%;
-                box-sizing: border-box;
-                transition: border-color 0.15s, box-shadow 0.15s;
-            }
-            .je-filter-input:hover { border-color: var(--je-border-color-strong, rgba(127,127,127,0.55)); }
-            .je-filter-input:focus {
-                border-color: var(--theme-primary-color, #00a4dc);
-                box-shadow: 0 0 0 1px var(--theme-primary-color, #00a4dc);
-            }
-            .je-filter-input::placeholder {
-                color: var(--theme-text-color, inherit);
-                opacity: 0.4;
-            }
-            select.je-filter-input { cursor: pointer; }
-            select.je-filter-input option {
-                background: var(--background-color, #1a1a2e);
-                color: var(--theme-text-color, #fff);
-            }
-
-            /* === Genre selector === */
-            .jellyseerr-discovery-genre-selector {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.45em;
-                max-height: 14em;
-                overflow-y: auto;
-                padding: 0.35em 0.1em;
-                align-content: flex-start;
-                border-radius: 4px;
-                scrollbar-width: thin;
-            }
-            .je-filter-genre-tag {
-                padding: 0.42em 0.95em;
-                border: 1px solid var(--je-border-color, rgba(127,127,127,0.4));
-                border-radius: 999px;
-                background: transparent;
-                color: var(--theme-text-color, inherit);
-                font-size: 0.83em;
-                font-family: inherit;
-                cursor: pointer;
-                transition: background 0.15s, border-color 0.15s, color 0.15s;
-                line-height: 1.2;
-                white-space: nowrap;
-            }
-            .je-filter-genre-tag:hover {
-                background: var(--je-hover-bg, rgba(127,127,127,0.12));
-                border-color: var(--je-border-color-strong, rgba(127,127,127,0.6));
-            }
-            .je-filter-genre-tag[aria-pressed="true"] {
-                background: var(--theme-primary-color, #00a4dc);
-                border-color: var(--theme-primary-color, #00a4dc);
-                color: var(--theme-accent-text-color, #fff);
-                font-weight: 500;
-            }
-            .je-filter-genre-tag[aria-pressed="true"]:hover { filter: brightness(1.08); }
-            .je-filter-genre-empty {
-                color: var(--theme-text-color, inherit);
-                opacity: 0.5;
-                font-size: 0.85em;
-                padding: 0.3em 0;
-            }
-
-            /* === Action buttons === */
-            .je-filter-actions {
-                display: flex;
-                justify-content: flex-end;
-                gap: 0.6em;
-                margin-top: 1.2em;
-                padding-top: 1em;
-                border-top: 1px solid var(--je-divider-color, rgba(127,127,127,0.18));
-            }
-            .je-filter-action-btn {
-                padding: 0.55em 1.4em;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 0.88em;
-                font-family: inherit;
-                font-weight: 500;
-                border: 1px solid transparent;
-                transition: background 0.15s, border-color 0.15s, filter 0.15s;
-                line-height: 1.3;
-            }
-            .je-filter-action-btn--reset {
-                background: transparent;
-                color: var(--theme-text-color, inherit);
-                border-color: var(--je-border-color, rgba(127,127,127,0.4));
-                opacity: 0.85;
-            }
-            .je-filter-action-btn--reset:hover {
-                background: var(--je-hover-bg, rgba(127,127,127,0.12));
-                border-color: var(--je-border-color-strong, rgba(127,127,127,0.65));
-                opacity: 1;
-            }
-            /* Apply uses Jellyfin's .button-submit class so each theme's accent
-               styling kicks in. Keep these as fallbacks (and to override the
-               full-width default that .button-submit gets in some themes). */
-            .je-filter-action-btn--apply {
-                background: var(--theme-primary-color, #00a4dc);
-                color: var(--theme-accent-text-color, #fff);
-                border-color: var(--theme-primary-color, #00a4dc);
-                font-weight: 600;
-                width: auto;
-                min-width: 5em;
-                margin: 0;
-                text-transform: none;
-                letter-spacing: normal;
-            }
-            .je-filter-action-btn--apply:hover { filter: brightness(1.08); }
-            .je-filter-action-btn:focus-visible {
-                outline: 2px solid var(--theme-primary-color, #00a4dc);
-                outline-offset: 2px;
-            }
-
-            /* === Tighten on narrow viewports === */
-            @media (max-width: 600px) {
-                .jellyseerr-discovery-filter-panel { padding: 0.95em 1em; }
-                .je-filter-grid { gap: 0.85em 0.9em; grid-template-columns: 1fr; }
-                .je-filter-actions { flex-direction: column-reverse; align-items: stretch; }
-                .je-filter-action-btn { width: 100%; }
-                .jellyseerr-discovery-sort { margin-left: 0; }
-            }
-        `;
-        document.head.appendChild(style);
+        const link = document.createElement('link');
+        link.id = 'jellyseerr-filter-styles';
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = (typeof ApiClient !== 'undefined' && typeof ApiClient.getUrl === 'function')
+            ? ApiClient.getUrl('/JellyfinEnhanced/js/jellyseerr/discovery-filter.css')
+            : '/JellyfinEnhanced/js/jellyseerr/discovery-filter.css';
+        document.head.appendChild(link);
     }
 
     // Inject styles on load
