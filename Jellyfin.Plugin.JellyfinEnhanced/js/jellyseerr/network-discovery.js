@@ -803,6 +803,8 @@
             currentAbortController = null;
         }
         cleanupScrollObserver();
+        document.querySelector('.jellyseerr-network-discovery-section .jellyseerr-discovery-header-wrapper')
+            ?._cancelAutoApply?.();
         processedPages.clear();
 
         // Reset pagination state

@@ -72,18 +72,21 @@
 
     /**
      * Fetches the union of TMDB movie + TV genres, sorted by name, deduped by ID.
-     * Cached after the first successful response so each panel render is cheap.
+     * Cached after the first SUCCESSFUL non-empty response. An empty result
+     * (both endpoints returning nothing) is treated as a failure rather than a
+     * positive empty cache — TMDB's genre list is fundamental, never legitimately
+     * empty, so caching empty would lock a session out of the genre filter.
      * @returns {Promise<Array<{id: number, name: string}>>}
      */
     async function getTmdbGenresAsync() {
-        if (cachedTmdbGenres) return cachedTmdbGenres;
+        if (cachedTmdbGenres && cachedTmdbGenres.length > 0) return cachedTmdbGenres;
         if (inflightTmdbGenresPromise) return inflightTmdbGenresPromise;
 
         inflightTmdbGenresPromise = (async () => {
             try {
                 const [tvResp, movieResp] = await Promise.all([
-                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/tv', 'genres-utils').catch(() => []),
-                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/movie', 'genres-utils').catch(() => [])
+                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/tv', 'genres-utils').catch(() => null),
+                    fetchWithManagedRequest('/JellyfinEnhanced/tmdb/genres/movie', 'genres-utils').catch(() => null)
                 ]);
                 const map = new Map();
                 (Array.isArray(tvResp) ? tvResp : []).forEach(g => {
@@ -92,7 +95,13 @@
                 (Array.isArray(movieResp) ? movieResp : []).forEach(g => {
                     if (g && typeof g.id === 'number' && g.name) map.set(g.id, { id: g.id, name: g.name });
                 });
-                cachedTmdbGenres = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+                const merged = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+                if (merged.length === 0) {
+                    // Don't cache — let the next call retry the proxy
+                    console.warn('🪼 Jellyfin Enhanced: discoveryFilter: TMDB genres returned empty; will retry on next request');
+                    return [];
+                }
+                cachedTmdbGenres = merged;
                 return cachedTmdbGenres;
             } finally {
                 inflightTmdbGenresPromise = null;
@@ -979,8 +988,12 @@
 
         // Auto-apply: a short debounce so rapid changes (typing, tabbing
         // between fields, multi-genre toggling) collapse into one refetch.
+        // `suppressAutoApply` blocks programmatic input/blur/change events
+        // (fired by Apply/Reset) from scheduling a redundant trailing apply.
         let autoApplyTimer = null;
+        let suppressAutoApply = false;
         function scheduleAutoApply() {
+            if (suppressAutoApply) return;
             if (autoApplyTimer) clearTimeout(autoApplyTimer);
             autoApplyTimer = setTimeout(() => {
                 autoApplyTimer = null;
@@ -1036,37 +1049,53 @@
         resetBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            cancelAutoApply();
-            Object.entries(inputs).forEach(([k, el]) => {
-                if ((k === 'genres' || k === 'genresMode') && typeof el._reset === 'function') {
-                    el._reset();
-                } else {
-                    el.value = '';
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            });
-            resetAdvancedFilters(moduleName);
-            refreshBadge();
-            if (typeof onApply === 'function') onApply();
+            // Suppress so the change-events we dispatch below don't enqueue
+            // a redundant trailing apply.
+            suppressAutoApply = true;
+            try {
+                cancelAutoApply();
+                Object.entries(inputs).forEach(([k, el]) => {
+                    if ((k === 'genres' || k === 'genresMode') && typeof el._reset === 'function') {
+                        el._reset();
+                    } else {
+                        el.value = '';
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+                resetAdvancedFilters(moduleName);
+                refreshBadge();
+                if (typeof onApply === 'function') onApply();
+            } finally {
+                suppressAutoApply = false;
+            }
         });
 
         applyBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            cancelAutoApply();
-            // Make sure any focused input commits its blur normalisation before
-            // we commit (otherwise the blur would fire after our read).
-            if (document.activeElement
-                && typeof document.activeElement.blur === 'function'
-                && Object.values(inputs).includes(document.activeElement)) {
-                document.activeElement.blur();
+            // Suppress so any blur our manual blur() call provokes won't
+            // schedule a redundant trailing apply 400ms later.
+            suppressAutoApply = true;
+            try {
+                cancelAutoApply();
+                // Flush any focused input's blur normalisation before we read.
+                if (document.activeElement
+                    && typeof document.activeElement.blur === 'function'
+                    && Object.values(inputs).includes(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+                commitAndApply();
+            } finally {
+                suppressAutoApply = false;
             }
-            commitAndApply();
         });
 
         refreshBadge();
 
-        return { toggle, panel, refreshBadge };
+        // Expose cancelAutoApply so a section's cleanup() can stop the timer
+        // before the panel is torn down. Otherwise a blur+navigation race would
+        // resurrect filters via setAdvancedFilters after cleanup wiped them.
+        return { toggle, panel, refreshBadge, cancelAutoApply };
     }
 
     /**
@@ -1293,6 +1322,10 @@
                 // The toggle button sits inside the header row; the panel sits below it.
                 header.appendChild(built.toggle);
                 wrapper.appendChild(built.panel);
+                // Section's cleanup() looks this up to cancel a pending auto-apply
+                // before the section is torn down (otherwise the timer fires after
+                // teardown and resurrects filters via setAdvancedFilters).
+                wrapper._cancelAutoApply = built.cancelAutoApply;
             }
         }
 

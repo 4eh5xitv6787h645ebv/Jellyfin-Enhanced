@@ -384,7 +384,9 @@
             hasMorePages = false;
             // On reset (Apply / sort / filter switch) — show no-results message if filters
             // genuinely yielded nothing AND any advanced filter is active.
-            if (reset && renderedCount === 0
+            // (`renderedCount === 0` is guaranteed here because reset:true zeroes it
+            // above and we only reach this branch before any append.)
+            if (reset
                 && (JE.discoveryFilter?.countActiveAdvancedFilters?.(MODULE_NAME) || 0) > 0) {
                 JE.discoveryFilter.renderNoFilterResults(itemsContainer);
             }
@@ -614,6 +616,8 @@
             currentAbortController = null;
         }
         cleanupScrollObserver();
+        document.querySelector('.jellyseerr-person-discovery-section .jellyseerr-discovery-header-wrapper')
+            ?._cancelAutoApply?.();
         processedPages.clear();
 
         // Reset pagination state

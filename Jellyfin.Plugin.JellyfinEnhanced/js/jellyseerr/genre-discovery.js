@@ -735,6 +735,10 @@
             currentAbortController = null;
         }
         cleanupScrollObserver();
+        // Cancel any pending auto-apply timer so it can't fire after teardown
+        // and resurrect filter state via setAdvancedFilters.
+        document.querySelector('.jellyseerr-genre-discovery-section .jellyseerr-discovery-header-wrapper')
+            ?._cancelAutoApply?.();
         processedPages.clear();
 
         // Reset pagination state

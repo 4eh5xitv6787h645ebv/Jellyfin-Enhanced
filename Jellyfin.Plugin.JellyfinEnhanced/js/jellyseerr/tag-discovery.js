@@ -633,6 +633,8 @@
             currentAbortController = null;
         }
         cleanupScrollObserver();
+        document.querySelector('.jellyseerr-tag-discovery-section .jellyseerr-discovery-header-wrapper')
+            ?._cancelAutoApply?.();
         processedPages.clear();
 
         // Reset pagination state
