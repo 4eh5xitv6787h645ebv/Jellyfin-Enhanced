@@ -427,7 +427,7 @@ function showModal(data, mediaType) {
 
     // Add event listeners
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
+        if (e.target === modal || e.target.classList.contains('modal-overlay')) {
             moreInfoModal.close();
         }
     });
