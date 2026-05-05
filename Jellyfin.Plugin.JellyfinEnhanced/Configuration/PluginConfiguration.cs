@@ -21,6 +21,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             EnableCustomSplashScreen = false;
             SplashScreenImageUrl = "/web/assets/img/banner-light.png";
 
+            // Poster Tag Burn-in (issue 590) — admin-global, server-rendered tag overlays
+            // composited into poster image responses so non-web clients (Swiftfin, Findroid,
+            // jellyfin-androidtv, Roku, etc.) see tags too.
+            EnablePosterTags = false;
+            PosterTagGenre = true;
+            PosterTagRating = true;
+            PosterTagFingerprint = "v1";
+
             // Jellyfin Elsewhere Settings
             ElsewhereEnabled = true;
             TMDB_API_KEY = "";
@@ -275,6 +283,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public int HelpPanelAutocloseDelay { get; set; }
         public bool EnableCustomSplashScreen { get; set; }
         public string SplashScreenImageUrl { get; set; }
+
+        // Poster Tag Burn-in (issue 590)
+        public bool EnablePosterTags { get; set; }
+        public bool PosterTagGenre { get; set; } = true;
+        public bool PosterTagRating { get; set; } = true;
+        public string PosterTagFingerprint { get; set; } = "v1";
 
 
         // Jellyfin Elsewhere Settings

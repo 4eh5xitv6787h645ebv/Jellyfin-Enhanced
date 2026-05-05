@@ -1,10 +1,12 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using MediaBrowser.Controller;
@@ -40,6 +42,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddScoped<IEventConsumer<PlaybackStartEventArgs>, ContinueWatchingPlaybackConsumer>();
             serviceCollection.AddHostedService<ContinueWatchingLibraryHook>();
             serviceCollection.Configure<MvcOptions>(o => o.Filters.AddService<HiddenContentResponseFilter>());
+
+            // Poster Tag Burn-in (issue 590) — server-rendered tag overlays composited
+            // into poster bytes so Swiftfin/Findroid/Roku/AndroidTV clients see tags too.
+            serviceCollection.AddSingleton<PosterTagComposer>();
+            serviceCollection.AddSingleton<PosterTagCache>();
+            serviceCollection.AddSingleton<PosterTagRenderer>();
+            serviceCollection.AddSingleton<IStartupFilter, PosterTagStartupFilter>();
         }
     }
 }

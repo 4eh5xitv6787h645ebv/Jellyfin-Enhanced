@@ -1878,6 +1878,21 @@
                                     </div>
                                 </div>
 
+                            <div class="checkboxContainer je-main-feature"><label><input id="enablePosterTags" is="emby-checkbox" type="checkbox"/><span>Burn Tags Into Posters (issue 590)</span></label></div>
+                            <div class="je-setting-description" data-desc-for="enablePosterTags">
+                                <div class="fieldDescription">
+                                    Server-renders genre and rating chips directly into poster image responses so non-web Jellyfin clients (Swiftfin on iOS / tvOS, Findroid, jellyfin-androidtv, Roku) see tags too. Admin-global; uses a disk cache (~256 MB) to amortize cost.
+                                </div>
+                                <div class="je-info-banner-inline-center">
+                                    <i class="material-icons je-bottom-info-icon">info</i>
+                                    <div>
+                                        Native clients aggressively cache poster bytes locally. After enabling, users may need to clear their app cache or wait for it to expire to see the tags.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="posterTagGenre" is="emby-checkbox" type="checkbox"/><span>Show genre chip</span></label></div>
+                            <div class="checkboxContainer"><label><input id="posterTagRating" is="emby-checkbox" type="checkbox"/><span>Show community rating chip</span></label></div>
+
                             <div class="je-branding-grid">
                                 <div class="je-branding-card">
                                     <label class="je-branding-label-bold">Icon Transparent</label>
@@ -3927,6 +3942,9 @@
                 // Load all other settings
                 document.querySelector('#enableCustomSplashScreen').checked = config.EnableCustomSplashScreen;
                 document.querySelector('#splashScreenImageUrl').value = config.SplashScreenImageUrl;
+                document.querySelector('#enablePosterTags').checked = !!config.EnablePosterTags;
+                document.querySelector('#posterTagGenre').checked = config.PosterTagGenre !== false;
+                document.querySelector('#posterTagRating').checked = config.PosterTagRating !== false;
                 document.querySelector('#disableAllShortcuts').checked = config.DisableAllShortcuts;
                 document.querySelector('#ToastDuration').value = config.ToastDuration;
                 document.querySelector('#HelpPanelAutocloseDelay').value = config.HelpPanelAutocloseDelay;
@@ -4216,6 +4234,11 @@
             config.Shortcuts = finalShortcuts;
             config.EnableCustomSplashScreen = document.querySelector('#enableCustomSplashScreen').checked;
             config.SplashScreenImageUrl = document.querySelector('#splashScreenImageUrl').value;
+            config.EnablePosterTags = document.querySelector('#enablePosterTags').checked;
+            config.PosterTagGenre = document.querySelector('#posterTagGenre').checked;
+            config.PosterTagRating = document.querySelector('#posterTagRating').checked;
+            // Bump fingerprint so cache regenerates whenever any tag toggle changes
+            config.PosterTagFingerprint = `v1-g${config.PosterTagGenre ? 1 : 0}-r${config.PosterTagRating ? 1 : 0}-${config.EnablePosterTags ? 1 : 0}`;
             config.DisableAllShortcuts = document.querySelector('#disableAllShortcuts').checked;
             config.ToastDuration = parseInt(document.querySelector('#ToastDuration').value, 10);
             config.HelpPanelAutocloseDelay = parseInt(document.querySelector('#HelpPanelAutocloseDelay').value, 10);
@@ -5283,6 +5306,7 @@
             { parent: 'useIcons', label: 'Use Icons', children: ['iconStyle'] },
             { parent: 'letterboxdEnabled', label: 'Enable Letterboxd', children: ['showLetterboxdLinkAsText'] },
             { parent: 'enableCustomSplashScreen', label: 'Enable Custom Splash Screen', children: ['splashScreenImageUrl'] },
+            { parent: 'enablePosterTags', label: 'Burn Tags Into Posters', children: ['posterTagGenre', 'posterTagRating'] },
             { parent: 'jellyseerrShowSearchResults', label: 'Show Seerr Results in Search', children: ['showCollectionsInSearch'] },
             { parent: 'jellyseerrShowReportButton', label: 'Show Report Issue button', children: ['jellyseerrShowIssueIndicator'] },
             { parent: 'downloadsPageEnabled', label: 'Enable Requests Page', children: ['showDownloadsInRequests', 'downloadsPageShowIssues', 'downloadsUsePluginPages', 'downloadsUseCustomTabs', 'downloadsPagePollingEnabled'] },
