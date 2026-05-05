@@ -111,8 +111,10 @@
                 throw new DOMException('Aborted', 'AbortError');
             }
             const sortBy = JE.discoveryFilter?.getTvSortMode(MODULE_NAME) || '';
+            const advanced = JE.discoveryFilter?.buildFilterQueryParams(MODULE_NAME, { isTv: true }) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/tv/keyword/${keywordId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (advanced) path += advanced;
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -136,8 +138,10 @@
                 throw new DOMException('Aborted', 'AbortError');
             }
             const sortBy = JE.discoveryFilter?.getSortMode(MODULE_NAME) || '';
+            const advanced = JE.discoveryFilter?.buildFilterQueryParams(MODULE_NAME, { isTv: false }) || '';
             let path = `/JellyfinEnhanced/jellyseerr/discover/movies/keyword/${keywordId}?page=${page}`;
             if (sortBy) path += `&sortBy=${encodeURIComponent(sortBy)}`;
+            if (advanced) path += advanced;
             const response = await fetchWithManagedRequest(path, { signal });
             if (signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
@@ -180,15 +184,19 @@
         return JE.discoveryFilter.createCardsFragment(results, { cardClass: 'portraitCard' });
     }
 
+    // Tag/keyword discovery hits TMDB Discover for both TV and movies — full filter set applies.
+    const SUPPORTED_ADVANCED_FILTERS = ['year', 'rating', 'votes', 'runtime', 'language', 'region'];
+
     /**
      * Creates the section container with optional filter and sort controls
      * @param {string} title - Section heading text
      * @param {boolean} showFilter - Whether to show the All/Movies/Series filter
      * @param {Function} onFilterChange - Callback when filter changes: (newMode) => void
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
+     * @param {Function} [onAdvancedFiltersApply] - Callback when advanced filters Apply/Reset
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onAdvancedFiltersApply) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-tag-discovery-section padded-left padded-right';
         section.setAttribute('data-jellyseerr-tag-discovery', 'true');
@@ -196,7 +204,13 @@
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(
+                title, MODULE_NAME, showFilter, onFilterChange, onSortChange,
+                {
+                    supportedAdvancedFilters: SUPPORTED_ADVANCED_FILTERS,
+                    onAdvancedFiltersApply
+                }
+            );
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -542,6 +556,7 @@
             // Always start each section on defaults instead of persisting previous choice.
             JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
             JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+            JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
             // Get current filter mode
             const filterMode = JE.discoveryFilter?.getFilterMode(MODULE_NAME) || 'mixed';
 
@@ -564,7 +579,7 @@
             if (existing) existing.remove();
 
             const sectionTitle = JE.t('discovery_more_with_tag', { tag: tagName });
-            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
+            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange, handleSortChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 
             const fragment = createCardsFragment(displayResults);
@@ -639,6 +654,7 @@
         itemDeduplicator = null;
         JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
         JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+        JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
     }
 
     /**

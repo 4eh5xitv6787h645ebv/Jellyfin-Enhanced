@@ -219,17 +219,24 @@
         return sorted;
     }
 
+    // Person credits aren't a TMDB Discover endpoint, so filtering is client-side.
+    // Runtime / region don't apply (no streaming-provider data, varied TV runtimes).
+    const PERSON_ADVANCED_FILTER_KEYS = ['year', 'rating', 'votes', 'language'];
+
     /**
-     * Gets filtered results based on current filter mode
+     * Gets filtered results based on current filter mode and active advanced filters.
      * @param {string} mode - 'mixed', 'movies', or 'tv'
      * @returns {Array}
      */
     function getFilteredResults(mode) {
-        const sorted = applySortOrder(cachedAllResults);
         const filter = JE.discoveryFilter;
-        if (!filter) {
-            return sorted;
-        }
+        // Apply advanced filters (year/rating/votes/language) before sort and media-type split
+        const advancedFiltered = filter?.applyClientSideFilters
+            ? filter.applyClientSideFilters(cachedAllResults, MODULE_NAME, PERSON_ADVANCED_FILTER_KEYS)
+            : cachedAllResults;
+
+        const sorted = applySortOrder(advancedFiltered);
+        if (!filter) return sorted;
 
         if (mode === filter.MODES.MOVIES) {
             return filter.filterByMediaType(sorted, mode);
@@ -269,7 +276,7 @@
      * @param {Function} [onSortChange] - Callback when sort changes: () => void
      * @returns {HTMLElement} The section element
      */
-    function createSectionContainer(title, showFilter, onFilterChange, onSortChange) {
+    function createSectionContainer(title, showFilter, onFilterChange, onSortChange, onAdvancedFiltersApply) {
         const section = document.createElement('div');
         section.className = 'verticalSection jellyseerr-person-discovery-section';
         section.setAttribute('data-jellyseerr-person-discovery', 'true');
@@ -277,7 +284,13 @@
 
         // Use shared header helper if available, otherwise create basic header
         if (JE.discoveryFilter?.createSectionHeader) {
-            const header = JE.discoveryFilter.createSectionHeader(title, MODULE_NAME, showFilter, onFilterChange, onSortChange);
+            const header = JE.discoveryFilter.createSectionHeader(
+                title, MODULE_NAME, showFilter, onFilterChange, onSortChange,
+                {
+                    supportedAdvancedFilters: PERSON_ADVANCED_FILTER_KEYS,
+                    onAdvancedFiltersApply
+                }
+            );
             section.appendChild(header);
         } else {
             const titleElement = document.createElement('h2');
@@ -329,14 +342,22 @@
     }
 
     /**
-     * Gets the full result set for a given filter mode, falling back to all results if empty.
+     * Gets the full result set for a given filter mode.
+     * Falls back to the unfiltered cache only when we can confirm NO advanced filters
+     * are active. If the discoveryFilter API can't be reached (load-order regression),
+     * we treat the filter state as unknown and refuse to fall through — better to
+     * show an empty section than silently mask an active filter.
      * @param {string} mode - 'mixed', 'movies', or 'tv'
      * @returns {Array}
      */
     function getPagedResultsForMode(mode) {
         let results = getFilteredResults(mode);
         if (results.length === 0 && cachedAllResults.length > 0) {
-            results = cachedAllResults;
+            const filterApi = JE.discoveryFilter;
+            const canCount = filterApi && typeof filterApi.countActiveAdvancedFilters === 'function';
+            if (canCount && filterApi.countActiveAdvancedFilters(MODULE_NAME) === 0) {
+                results = cachedAllResults;
+            }
         }
         return results;
     }
@@ -506,6 +527,7 @@
             // Always start each section on defaults instead of persisting previous choice.
             JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
             JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+            JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
             // Get current filter mode
             const filterMode = JE.discoveryFilter?.getFilterMode(MODULE_NAME) || 'mixed';
 
@@ -532,7 +554,7 @@
 
             // Create and insert section
             const sectionTitle = JE.t('discovery_more_from_person', { person: personInfo.name });
-            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange);
+            const section = createSectionContainer(sectionTitle, hasBoth, handleFilterChange, handleSortChange, handleSortChange);
             const itemsContainer = section.querySelector('.itemsContainer');
 
             // Seed first page and let seamless scroll load the rest.
@@ -600,6 +622,7 @@
         cachedAllResults = [];
         JE.discoveryFilter?.resetFilterMode?.(MODULE_NAME);
         JE.discoveryFilter?.resetSortMode?.(MODULE_NAME);
+        JE.discoveryFilter?.resetAdvancedFilters?.(MODULE_NAME);
     }
 
     /**

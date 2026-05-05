@@ -10,12 +10,115 @@
     };
     const runtimeFilterModes = new Map();
     const runtimeSortModes = new Map();
+    // Per-module map of advanced-filter values (year range, rating, votes, runtime, language, region)
+    const runtimeAdvancedFilters = new Map();
 
     const SORT_OPTIONS = [
         { value: '', label: 'Popular' },
         { value: 'vote_average.desc', label: 'Top Rated' },
         { value: 'release_date.desc', label: 'Newest' },
         { value: 'release_date.asc', label: 'Oldest' }
+    ];
+
+    const ADVANCED_FILTER_FIELDS = [
+        'yearFrom', 'yearTo', 'minRating', 'minVotes',
+        'runtimeFrom', 'runtimeTo', 'originalLanguage', 'watchRegion'
+    ];
+
+    const RATING_OPTIONS = [
+        { value: '', label: 'Any' },
+        { value: '5', label: '5+' },
+        { value: '6', label: '6+' },
+        { value: '7', label: '7+' },
+        { value: '8', label: '8+' },
+        { value: '9', label: '9+' }
+    ];
+
+    const VOTE_OPTIONS = [
+        { value: '', label: 'Any' },
+        { value: '50', label: '50+' },
+        { value: '200', label: '200+' },
+        { value: '500', label: '500+' },
+        { value: '1000', label: '1000+' },
+        { value: '5000', label: '5000+' }
+    ];
+
+    // ISO 639-1 codes — top languages by TMDB content volume
+    const LANGUAGE_OPTIONS = [
+        { value: '', label: 'Any' },
+        { value: 'en', label: 'English' },
+        { value: 'es', label: 'Spanish' },
+        { value: 'fr', label: 'French' },
+        { value: 'de', label: 'German' },
+        { value: 'it', label: 'Italian' },
+        { value: 'pt', label: 'Portuguese' },
+        { value: 'ru', label: 'Russian' },
+        { value: 'ja', label: 'Japanese' },
+        { value: 'ko', label: 'Korean' },
+        { value: 'zh', label: 'Chinese' },
+        { value: 'hi', label: 'Hindi' },
+        { value: 'ta', label: 'Tamil' },
+        { value: 'te', label: 'Telugu' },
+        { value: 'ar', label: 'Arabic' },
+        { value: 'tr', label: 'Turkish' },
+        { value: 'th', label: 'Thai' },
+        { value: 'vi', label: 'Vietnamese' },
+        { value: 'id', label: 'Indonesian' },
+        { value: 'nl', label: 'Dutch' },
+        { value: 'pl', label: 'Polish' },
+        { value: 'sv', label: 'Swedish' },
+        { value: 'da', label: 'Danish' },
+        { value: 'no', label: 'Norwegian' },
+        { value: 'fi', label: 'Finnish' },
+        { value: 'cs', label: 'Czech' },
+        { value: 'he', label: 'Hebrew' },
+        { value: 'uk', label: 'Ukrainian' },
+        { value: 'el', label: 'Greek' },
+        { value: 'hu', label: 'Hungarian' },
+        { value: 'ro', label: 'Romanian' }
+    ];
+
+    // ISO 3166-1 alpha-2 region codes used by TMDB watch-provider filtering
+    const REGION_OPTIONS = [
+        { value: '', label: 'Any' },
+        { value: 'US', label: 'United States' },
+        { value: 'GB', label: 'United Kingdom' },
+        { value: 'CA', label: 'Canada' },
+        { value: 'AU', label: 'Australia' },
+        { value: 'NZ', label: 'New Zealand' },
+        { value: 'IE', label: 'Ireland' },
+        { value: 'DE', label: 'Germany' },
+        { value: 'FR', label: 'France' },
+        { value: 'IT', label: 'Italy' },
+        { value: 'ES', label: 'Spain' },
+        { value: 'PT', label: 'Portugal' },
+        { value: 'NL', label: 'Netherlands' },
+        { value: 'BE', label: 'Belgium' },
+        { value: 'AT', label: 'Austria' },
+        { value: 'CH', label: 'Switzerland' },
+        { value: 'SE', label: 'Sweden' },
+        { value: 'NO', label: 'Norway' },
+        { value: 'DK', label: 'Denmark' },
+        { value: 'FI', label: 'Finland' },
+        { value: 'PL', label: 'Poland' },
+        { value: 'CZ', label: 'Czechia' },
+        { value: 'JP', label: 'Japan' },
+        { value: 'KR', label: 'South Korea' },
+        { value: 'CN', label: 'China' },
+        { value: 'TW', label: 'Taiwan' },
+        { value: 'HK', label: 'Hong Kong' },
+        { value: 'IN', label: 'India' },
+        { value: 'TH', label: 'Thailand' },
+        { value: 'ID', label: 'Indonesia' },
+        { value: 'PH', label: 'Philippines' },
+        { value: 'VN', label: 'Vietnam' },
+        { value: 'BR', label: 'Brazil' },
+        { value: 'MX', label: 'Mexico' },
+        { value: 'AR', label: 'Argentina' },
+        { value: 'TR', label: 'Turkey' },
+        { value: 'ZA', label: 'South Africa' },
+        { value: 'AE', label: 'UAE' },
+        { value: 'SA', label: 'Saudi Arabia' }
     ];
 
     /**
@@ -85,6 +188,537 @@
      */
     function resetSortMode(moduleName) {
         runtimeSortModes.delete(moduleName);
+    }
+
+    /**
+     * Returns the current advanced filter values for a module.
+     * Always returns a complete object — empty fields use ''.
+     * @param {string} moduleName
+     * @returns {Object}
+     */
+    function getAdvancedFilters(moduleName) {
+        const stored = runtimeAdvancedFilters.get(moduleName) || {};
+        const out = {};
+        ADVANCED_FILTER_FIELDS.forEach(k => { out[k] = stored[k] || ''; });
+        return out;
+    }
+
+    /**
+     * Sets/replaces the advanced filter values for a module.
+     * Only known fields with non-empty values are stored.
+     * @param {string} moduleName
+     * @param {Object} filters
+     */
+    function setAdvancedFilters(moduleName, filters) {
+        const cleaned = {};
+        ADVANCED_FILTER_FIELDS.forEach(k => {
+            const v = filters?.[k];
+            if (v != null && String(v).trim() !== '') {
+                cleaned[k] = String(v).trim();
+            }
+        });
+        if (Object.keys(cleaned).length === 0) {
+            runtimeAdvancedFilters.delete(moduleName);
+        } else {
+            runtimeAdvancedFilters.set(moduleName, cleaned);
+        }
+    }
+
+    /**
+     * Resets advanced filters for a module back to empty/default.
+     * @param {string} moduleName
+     */
+    function resetAdvancedFilters(moduleName) {
+        runtimeAdvancedFilters.delete(moduleName);
+    }
+
+    /**
+     * Returns the count of active (non-empty) advanced filters for a module,
+     * grouping the year-from/year-to and runtime-from/runtime-to pairs as one.
+     * @param {string} moduleName
+     * @returns {number}
+     */
+    function countActiveAdvancedFilters(moduleName) {
+        const f = runtimeAdvancedFilters.get(moduleName);
+        if (!f) return 0;
+        let n = 0;
+        if (f.yearFrom || f.yearTo) n += 1;
+        if (f.minRating) n += 1;
+        if (f.minVotes) n += 1;
+        if (f.runtimeFrom || f.runtimeTo) n += 1;
+        if (f.originalLanguage) n += 1;
+        if (f.watchRegion) n += 1;
+        return n;
+    }
+
+    /**
+     * Builds an "&key=value" query string suffix for the active advanced filters,
+     * adapted for the target media type.
+     * Year range maps to primaryReleaseDate* for movies, firstAirDate* for TV.
+     * @param {string} moduleName
+     * @param {Object} [opts]
+     * @param {boolean} [opts.isTv=false] - Whether this is for a TV-side request
+     * @param {Array<string>} [opts.allowed] - If set, only emit params for these filter keys
+     * @returns {string}
+     */
+    function buildFilterQueryParams(moduleName, opts = {}) {
+        const filters = getAdvancedFilters(moduleName);
+        const isTv = opts.isTv === true;
+        const allowed = Array.isArray(opts.allowed) ? new Set(opts.allowed) : null;
+        const allow = (key) => !allowed || allowed.has(key);
+
+        const params = [];
+
+        if (allow('year')) {
+            if (filters.yearFrom) {
+                const dateFrom = `${filters.yearFrom}-01-01`;
+                if (isTv) params.push(`firstAirDateGte=${encodeURIComponent(dateFrom)}`);
+                else params.push(`primaryReleaseDateGte=${encodeURIComponent(dateFrom)}`);
+            }
+            if (filters.yearTo) {
+                const dateTo = `${filters.yearTo}-12-31`;
+                if (isTv) params.push(`firstAirDateLte=${encodeURIComponent(dateTo)}`);
+                else params.push(`primaryReleaseDateLte=${encodeURIComponent(dateTo)}`);
+            }
+        }
+        if (allow('rating') && filters.minRating) {
+            params.push(`voteAverageGte=${encodeURIComponent(filters.minRating)}`);
+        }
+        if (allow('votes') && filters.minVotes) {
+            params.push(`voteCountGte=${encodeURIComponent(filters.minVotes)}`);
+        }
+        if (allow('runtime')) {
+            if (filters.runtimeFrom) params.push(`withRuntimeGte=${encodeURIComponent(filters.runtimeFrom)}`);
+            if (filters.runtimeTo) params.push(`withRuntimeLte=${encodeURIComponent(filters.runtimeTo)}`);
+        }
+        if (allow('language') && filters.originalLanguage) {
+            params.push(`withOriginalLanguage=${encodeURIComponent(filters.originalLanguage)}`);
+        }
+        if (allow('region') && filters.watchRegion) {
+            params.push(`watchRegion=${encodeURIComponent(filters.watchRegion)}`);
+        }
+
+        return params.length > 0 ? '&' + params.join('&') : '';
+    }
+
+    /**
+     * Applies the current advanced filters to an array of items client-side.
+     * Used by Person discovery, which doesn't go through TMDB Discover API.
+     * Only the filter keys present in `allowed` are evaluated.
+     * @param {Array} results
+     * @param {string} moduleName
+     * @param {Array<string>} [allowed] - Defaults to year/rating/votes/language
+     * @returns {Array}
+     */
+    function applyClientSideFilters(results, moduleName, allowed) {
+        if (!Array.isArray(results) || results.length === 0) return results;
+        const filters = getAdvancedFilters(moduleName);
+        // Use Array.isArray so an explicit empty-array means "no filters allowed"
+        const allowSet = Array.isArray(allowed)
+            ? new Set(allowed)
+            : new Set(['year', 'rating', 'votes', 'language']);
+
+        // Short-circuit: nothing to do if no allowed-and-active filter exists
+        const anyActive = ADVANCED_FILTER_FIELDS.some(k => {
+            if (!filters[k]) return false;
+            // Map field → category so we only consider allowed ones
+            if (k === 'yearFrom' || k === 'yearTo') return allowSet.has('year');
+            if (k === 'runtimeFrom' || k === 'runtimeTo') return allowSet.has('runtime');
+            if (k === 'minRating') return allowSet.has('rating');
+            if (k === 'minVotes') return allowSet.has('votes');
+            if (k === 'originalLanguage') return allowSet.has('language');
+            if (k === 'watchRegion') return allowSet.has('region');
+            return false;
+        });
+        if (!anyActive) return results;
+
+        const yearFrom = (allowSet.has('year') && filters.yearFrom) ? parseInt(filters.yearFrom, 10) : null;
+        const yearTo = (allowSet.has('year') && filters.yearTo) ? parseInt(filters.yearTo, 10) : null;
+        const minRating = (allowSet.has('rating') && filters.minRating) ? parseFloat(filters.minRating) : null;
+        const minVotes = (allowSet.has('votes') && filters.minVotes) ? parseInt(filters.minVotes, 10) : null;
+        const wantedLang = (allowSet.has('language') && filters.originalLanguage)
+            ? filters.originalLanguage.toLowerCase() : '';
+        const minRuntime = (allowSet.has('runtime') && filters.runtimeFrom) ? parseInt(filters.runtimeFrom, 10) : null;
+        const maxRuntime = (allowSet.has('runtime') && filters.runtimeTo) ? parseInt(filters.runtimeTo, 10) : null;
+
+        return results.filter(item => {
+            if (yearFrom != null || yearTo != null) {
+                const dateStr = item.releaseDate || item.firstAirDate
+                    || item.release_date || item.first_air_date || '';
+                const year = dateStr ? parseInt(String(dateStr).slice(0, 4), 10) : 0;
+                // Items with unknown year are excluded only when a yearFrom is set;
+                // a yearTo-only filter ("released before 2010") keeps unknown-year items.
+                if (yearFrom != null && (!year || year < yearFrom)) return false;
+                if (yearTo != null && year && year > yearTo) return false;
+            }
+            if (minRating != null) {
+                const r = Number(item.voteAverage ?? item.vote_average ?? 0);
+                if (!Number.isFinite(r) || r < minRating) return false;
+            }
+            if (minVotes != null) {
+                const v = Number(item.voteCount ?? item.vote_count ?? 0);
+                if (!Number.isFinite(v) || v < minVotes) return false;
+            }
+            if (wantedLang) {
+                const lang = String(item.originalLanguage ?? item.original_language ?? '').toLowerCase();
+                if (lang !== wantedLang) return false;
+            }
+            if (minRuntime != null || maxRuntime != null) {
+                const rt = Number(item.runtime ?? 0);
+                // When user explicitly sets a min runtime, exclude items with no runtime
+                // data — fail closed so the result list reflects the constraint.
+                if (minRuntime != null && (!Number.isFinite(rt) || rt < minRuntime)) return false;
+                if (maxRuntime != null && rt > 0 && rt > maxRuntime) return false;
+            }
+            return true;
+        });
+    }
+
+    /**
+     * Builds a styled select element pre-populated with options.
+     * @param {Array<{value: string, label: string}>} options
+     * @param {string} currentValue
+     * @returns {HTMLSelectElement}
+     */
+    function buildSelect(options, currentValue) {
+        const select = document.createElement('select');
+        select.style.cssText = `
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: inherit;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+        `;
+        options.forEach(opt => {
+            const o = document.createElement('option');
+            o.value = opt.value;
+            o.textContent = opt.label;
+            o.style.cssText = 'background:#1a1a2e;color:#fff;';
+            if (currentValue === opt.value) o.selected = true;
+            select.appendChild(o);
+        });
+        return select;
+    }
+
+    /**
+     * Builds a styled number input.
+     * @param {Object} opts
+     * @param {string} opts.placeholder
+     * @param {number} opts.min
+     * @param {number} opts.max
+     * @param {string} opts.value
+     * @param {string} opts.width - CSS width value (e.g., '5.5em')
+     * @returns {HTMLInputElement}
+     */
+    function buildNumberInput({ placeholder, min, max, value, width }) {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = String(min);
+        input.max = String(max);
+        input.placeholder = placeholder;
+        input.value = value || '';
+        input.inputMode = 'numeric';
+        input.style.cssText = `
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: inherit;
+            font-family: inherit;
+            outline: none;
+            width: ${width};
+        `;
+        return input;
+    }
+
+    /**
+     * Wraps a label and control in a small vertical group.
+     * @param {string} label
+     * @param {HTMLElement|HTMLElement[]} control
+     * @returns {HTMLElement}
+     */
+    function makeFieldGroup(label, control) {
+        const group = document.createElement('div');
+        group.style.cssText = 'display:flex;flex-direction:column;gap:0.25em;font-size:0.85em;';
+        const lbl = document.createElement('label');
+        lbl.textContent = label;
+        lbl.style.cssText = 'color:rgba(255,255,255,0.55);font-size:0.8em;';
+        group.appendChild(lbl);
+        if (Array.isArray(control)) {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:0.3em;';
+            control.forEach(c => row.appendChild(c));
+            group.appendChild(row);
+        } else {
+            group.appendChild(control);
+        }
+        return group;
+    }
+
+    /**
+     * Builds the toggle button + collapsible filter panel.
+     * Only the filters listed in `supportedFilters` are rendered, so each
+     * section can opt out of filters that don't apply to it.
+     *
+     * @param {string} moduleName - e.g., 'genre', 'tag', 'network', 'person'
+     * @param {Array<string>} supportedFilters - Subset of ['year','rating','votes','runtime','language','region']
+     * @param {Function} onApply - Callback when Apply or Reset is clicked. Called with no args.
+     * @returns {{toggle: HTMLElement, panel: HTMLElement, refreshBadge: Function}|null}
+     */
+    function buildFilterToggleAndPanel(moduleName, supportedFilters, onApply) {
+        if (!Array.isArray(supportedFilters) || supportedFilters.length === 0) return null;
+
+        const filtersLabel = JE.t('jellyseerr_discover_filters');
+        const yearLabel = JE.t('jellyseerr_discover_filter_year');
+        const ratingLabel = JE.t('jellyseerr_discover_filter_min_rating');
+        const votesLabel = JE.t('jellyseerr_discover_filter_min_votes');
+        const runtimeLabel = JE.t('jellyseerr_discover_filter_runtime');
+        const languageLabel = JE.t('jellyseerr_discover_filter_language');
+        const regionLabel = JE.t('jellyseerr_discover_filter_region');
+        const fromPlaceholder = JE.t('jellyseerr_discover_filter_from');
+        const toPlaceholder = JE.t('jellyseerr_discover_filter_to');
+        const minPlaceholder = JE.t('jellyseerr_discover_filter_min');
+        const maxPlaceholder = JE.t('jellyseerr_discover_filter_max');
+        const applyLabel = JE.t('jellyseerr_discover_filter_apply');
+        const resetLabel = JE.t('jellyseerr_discover_filter_reset');
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'jellyseerr-filter-toggle-btn';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.style.cssText = `
+            display:inline-flex;align-items:center;gap:0.35em;
+            padding:4px 10px;
+            background:rgba(255,255,255,0.05);
+            color:rgba(255,255,255,0.85);
+            border:1px solid rgba(255,255,255,0.2);
+            border-radius:4px;
+            cursor:pointer;
+            font-size:0.85em;font-family:inherit;
+        `;
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = filtersLabel;
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = 'filter-count-badge';
+        badgeSpan.style.cssText = `
+            display:none;
+            background:rgba(98,148,221,0.65);
+            color:#fff;border-radius:10px;
+            padding:0 6px;font-size:0.8em;font-weight:600;
+            min-width:1.4em;text-align:center;
+        `;
+        const arrowSpan = document.createElement('span');
+        arrowSpan.className = 'material-icons toggle-arrow';
+        arrowSpan.style.cssText = 'font-size:1.1em;';
+        arrowSpan.textContent = 'expand_more';
+        toggle.append(labelSpan, badgeSpan, arrowSpan);
+
+        const panel = document.createElement('div');
+        panel.className = 'jellyseerr-discovery-filter-panel';
+        panel.hidden = true;
+        panel.style.cssText = `
+            display:none;flex-wrap:wrap;gap:0.7em 1.4em;
+            padding:0.8em 1em;
+            margin-top:0.1em;
+            background:rgba(255,255,255,0.04);
+            border:1px solid rgba(255,255,255,0.12);
+            border-radius:6px;
+            align-items:flex-end;
+            width:100%;
+        `;
+
+        const current = getAdvancedFilters(moduleName);
+        const inputs = {};
+
+        if (supportedFilters.includes('year')) {
+            const fromInput = buildNumberInput({
+                placeholder: fromPlaceholder, min: 1900, max: 2100,
+                value: current.yearFrom, width: '5.5em'
+            });
+            const toInput = buildNumberInput({
+                placeholder: toPlaceholder, min: 1900, max: 2100,
+                value: current.yearTo, width: '5.5em'
+            });
+            const dash = document.createElement('span');
+            dash.textContent = '–';
+            dash.style.color = 'rgba(255,255,255,0.4)';
+            panel.appendChild(makeFieldGroup(yearLabel, [fromInput, dash, toInput]));
+            inputs.yearFrom = fromInput;
+            inputs.yearTo = toInput;
+        }
+
+        if (supportedFilters.includes('rating')) {
+            const select = buildSelect(RATING_OPTIONS, current.minRating);
+            panel.appendChild(makeFieldGroup(ratingLabel, select));
+            inputs.minRating = select;
+        }
+
+        if (supportedFilters.includes('votes')) {
+            const select = buildSelect(VOTE_OPTIONS, current.minVotes);
+            panel.appendChild(makeFieldGroup(votesLabel, select));
+            inputs.minVotes = select;
+        }
+
+        if (supportedFilters.includes('runtime')) {
+            const fromInput = buildNumberInput({
+                placeholder: minPlaceholder, min: 0, max: 600,
+                value: current.runtimeFrom, width: '4.5em'
+            });
+            const toInput = buildNumberInput({
+                placeholder: maxPlaceholder, min: 0, max: 600,
+                value: current.runtimeTo, width: '4.5em'
+            });
+            const dash = document.createElement('span');
+            dash.textContent = '–';
+            dash.style.color = 'rgba(255,255,255,0.4)';
+            panel.appendChild(makeFieldGroup(runtimeLabel, [fromInput, dash, toInput]));
+            inputs.runtimeFrom = fromInput;
+            inputs.runtimeTo = toInput;
+        }
+
+        if (supportedFilters.includes('language')) {
+            const select = buildSelect(LANGUAGE_OPTIONS, current.originalLanguage);
+            panel.appendChild(makeFieldGroup(languageLabel, select));
+            inputs.originalLanguage = select;
+        }
+
+        if (supportedFilters.includes('region')) {
+            const select = buildSelect(REGION_OPTIONS, current.watchRegion);
+            panel.appendChild(makeFieldGroup(regionLabel, select));
+            inputs.watchRegion = select;
+        }
+
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;gap:0.5em;margin-left:auto;align-self:flex-end;';
+
+        const resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.textContent = resetLabel;
+        resetBtn.style.cssText = `
+            background:transparent;color:rgba(255,255,255,0.75);
+            border:1px solid rgba(255,255,255,0.2);border-radius:4px;
+            padding:5px 14px;cursor:pointer;font-size:0.85em;font-family:inherit;
+        `;
+
+        const applyBtn = document.createElement('button');
+        applyBtn.type = 'button';
+        applyBtn.textContent = applyLabel;
+        applyBtn.style.cssText = `
+            background:rgba(98,148,221,0.55);color:#fff;
+            border:1px solid rgba(98,148,221,0.75);border-radius:4px;
+            padding:5px 16px;cursor:pointer;font-size:0.85em;font-weight:600;font-family:inherit;
+        `;
+
+        actions.append(resetBtn, applyBtn);
+        panel.appendChild(actions);
+
+        function readInputs() {
+            const out = {};
+            Object.entries(inputs).forEach(([k, el]) => {
+                const v = (el.value || '').trim();
+                if (v) out[k] = v;
+            });
+            return out;
+        }
+
+        function refreshBadge() {
+            const count = countActiveAdvancedFilters(moduleName);
+            if (count > 0) {
+                badgeSpan.textContent = String(count);
+                badgeSpan.style.display = 'inline-block';
+            } else {
+                badgeSpan.style.display = 'none';
+            }
+        }
+
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isOpen = panel.style.display !== 'none';
+            panel.style.display = isOpen ? 'none' : 'flex';
+            panel.hidden = isOpen;
+            arrowSpan.textContent = isOpen ? 'expand_more' : 'expand_less';
+            toggle.setAttribute('aria-expanded', String(!isOpen));
+        });
+
+        resetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            Object.values(inputs).forEach(el => { el.value = ''; });
+            // Trigger native change event so dependent UI (if any) refreshes
+            Object.values(inputs).forEach(el => {
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            resetAdvancedFilters(moduleName);
+            refreshBadge();
+            if (typeof onApply === 'function') onApply();
+        });
+
+        // Coerce a raw input value into a finite integer within [min, max], or '' if invalid.
+        // Number inputs accept characters like 'e' which produce NaN — drop those rather than
+        // letting them flow into TMDB query strings as 'abc-01-01'.
+        function clampInt(value, min, max) {
+            if (value === '' || value == null) return '';
+            const n = parseInt(value, 10);
+            if (!Number.isFinite(n)) return '';
+            if (n < min) return String(min);
+            if (n > max) return String(max);
+            return String(n);
+        }
+
+        applyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const next = readInputs();
+
+            // Validate + clamp numeric inputs before they reach the URL builder.
+            if ('yearFrom' in next) next.yearFrom = clampInt(next.yearFrom, 1900, 2100);
+            if ('yearTo' in next) next.yearTo = clampInt(next.yearTo, 1900, 2100);
+            if ('runtimeFrom' in next) next.runtimeFrom = clampInt(next.runtimeFrom, 0, 600);
+            if ('runtimeTo' in next) next.runtimeTo = clampInt(next.runtimeTo, 0, 600);
+            // Drop any keys that clamped to '' so they aren't stored.
+            Object.keys(next).forEach(k => { if (next[k] === '') delete next[k]; });
+
+            // Reflect clamped values in the inputs so the user sees what was kept.
+            if (inputs.yearFrom) inputs.yearFrom.value = next.yearFrom || '';
+            if (inputs.yearTo) inputs.yearTo.value = next.yearTo || '';
+            if (inputs.runtimeFrom) inputs.runtimeFrom.value = next.runtimeFrom || '';
+            if (inputs.runtimeTo) inputs.runtimeTo.value = next.runtimeTo || '';
+
+            // Swap reversed ranges so the request is well-formed.
+            if (next.yearFrom && next.yearTo) {
+                const a = parseInt(next.yearFrom, 10);
+                const b = parseInt(next.yearTo, 10);
+                if (a > b) {
+                    next.yearFrom = String(b);
+                    next.yearTo = String(a);
+                    if (inputs.yearFrom) inputs.yearFrom.value = next.yearFrom;
+                    if (inputs.yearTo) inputs.yearTo.value = next.yearTo;
+                }
+            }
+            if (next.runtimeFrom && next.runtimeTo) {
+                const a = parseInt(next.runtimeFrom, 10);
+                const b = parseInt(next.runtimeTo, 10);
+                if (a > b) {
+                    next.runtimeFrom = String(b);
+                    next.runtimeTo = String(a);
+                    if (inputs.runtimeFrom) inputs.runtimeFrom.value = next.runtimeFrom;
+                    if (inputs.runtimeTo) inputs.runtimeTo.value = next.runtimeTo;
+                }
+            }
+            setAdvancedFilters(moduleName, next);
+            refreshBadge();
+            if (typeof onApply === 'function') onApply();
+        });
+
+        refreshBadge();
+
+        return { toggle, panel, refreshBadge };
     }
 
     /**
@@ -303,18 +937,33 @@
     }
 
     /**
-     * Creates a section header with title, optional filter control, and sort dropdown
+     * Creates a section header with title, optional media-type filter, sort dropdown,
+     * and an optional advanced-filters toggle + collapsible panel.
+     *
+     * Returns the wrapper element. The wrapper contains a header row plus the panel
+     * as a sibling so the panel can flow below the row.
+     *
      * @param {string} title - Section title text
      * @param {string} moduleName - Module name for filter persistence
-     * @param {boolean} showFilter - Whether to show the filter control
-     * @param {Function} onFilterChange - Callback when filter changes
+     * @param {boolean} showFilter - Whether to show the All/Movies/Series filter
+     * @param {Function} onFilterChange - Callback when media-type filter changes
      * @param {Function} [onSortChange] - Callback when sort changes
-     * @returns {HTMLElement} - The header element
+     * @param {Object} [options]
+     * @param {Array<string>} [options.supportedAdvancedFilters] - Subset of
+     *     ['year','rating','votes','runtime','language','region']
+     * @param {Function} [options.onAdvancedFiltersApply] - Callback when Apply or Reset
+     *     is clicked in the advanced filter panel
+     * @returns {HTMLElement} - The header wrapper element
      */
-    function createSectionHeader(title, moduleName, showFilter, onFilterChange, onSortChange) {
+    function createSectionHeader(title, moduleName, showFilter, onFilterChange, onSortChange, options) {
+        const opts = options || {};
+        const wrapper = document.createElement('div');
+        wrapper.className = 'jellyseerr-discovery-header-wrapper';
+        wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.4em;margin-bottom:1em;width:100%;';
+
         const header = document.createElement('div');
         header.className = 'jellyseerr-discovery-header';
-        header.style.cssText = 'display:flex;align-items:baseline;gap:1em;margin-bottom:1em;flex-wrap:wrap;width:100%;';
+        header.style.cssText = 'display:flex;align-items:baseline;gap:1em;flex-wrap:wrap;width:100%;';
 
         const titleElement = document.createElement('h2');
         titleElement.className = 'sectionTitle sectionTitle-cards';
@@ -332,7 +981,23 @@
             header.appendChild(sortControl);
         }
 
-        return header;
+        wrapper.appendChild(header);
+
+        const advancedFilters = opts.supportedAdvancedFilters;
+        if (Array.isArray(advancedFilters) && advancedFilters.length > 0) {
+            const built = buildFilterToggleAndPanel(
+                moduleName,
+                advancedFilters,
+                opts.onAdvancedFiltersApply
+            );
+            if (built) {
+                // The toggle button sits inside the header row; the panel sits below it.
+                header.appendChild(built.toggle);
+                wrapper.appendChild(built.panel);
+            }
+        }
+
+        return wrapper;
     }
 
     /**
@@ -584,6 +1249,11 @@
     JE.discoveryFilter = {
         MODES: FILTER_MODES,
         SORT_OPTIONS,
+        RATING_OPTIONS,
+        VOTE_OPTIONS,
+        LANGUAGE_OPTIONS,
+        REGION_OPTIONS,
+        ADVANCED_FILTER_FIELDS,
         getFilterMode,
         setFilterMode,
         resetFilterMode,
@@ -591,6 +1261,13 @@
         getTvSortMode,
         setSortMode,
         resetSortMode,
+        // Advanced filter API
+        getAdvancedFilters,
+        setAdvancedFilters,
+        resetAdvancedFilters,
+        countActiveAdvancedFilters,
+        buildFilterQueryParams,
+        applyClientSideFilters,
         interleaveArrays,
         filterByMediaType,
         hasBothTypes,
