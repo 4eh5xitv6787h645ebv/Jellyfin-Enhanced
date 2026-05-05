@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Microsoft.AspNetCore.Http;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
@@ -16,12 +18,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
         private readonly RequestDelegate _next;
         private readonly Logger _logger;
         private readonly PosterTagRenderer _renderer;
+        private readonly UserConfigurationManager _userConfig;
 
-        public PosterTagMiddleware(RequestDelegate next, Logger logger, PosterTagRenderer renderer)
+        public PosterTagMiddleware(RequestDelegate next, Logger logger, PosterTagRenderer renderer, UserConfigurationManager userConfig)
         {
             _next = next;
             _logger = logger;
             _renderer = renderer;
+            _userConfig = userConfig;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -117,11 +121,33 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
                     return;
                 }
 
+                // Resolve the requesting user from the auth claims that
+                // Jellyfin's UseAuthentication middleware populated during _next.
+                // Anonymous requests (or requests where auth produced no user)
+                // fall back to admin defaults via a null UserSettings.
+                var userId = UserHelper.GetCurrentUserId(context.User);
+                UserSettings? userSettings = null;
+                if (userId.HasValue && userId.Value != Guid.Empty)
+                {
+                    try
+                    {
+                        var idN = userId.Value.ToString("N");
+                        if (_userConfig.UserConfigurationExists(idN, "settings.json"))
+                        {
+                            userSettings = _userConfig.GetUserConfiguration<UserSettings>(idN, "settings.json");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning($"[PosterTags] Failed to read UserSettings for {userId} ({ex.GetType().Name}): {ex.Message}; using admin defaults");
+                    }
+                }
+
                 var sourceBytes = bufferedBody.ToArray();
                 byte[] modified;
                 try
                 {
-                    modified = await _renderer.RenderAsync(itemId.Value, sourceBytes, contentType, config).ConfigureAwait(false);
+                    modified = await _renderer.RenderAsync(itemId.Value, sourceBytes, contentType, config, userSettings, userId).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

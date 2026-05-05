@@ -47,6 +47,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // into poster bytes so Swiftfin/Findroid/Roku/AndroidTV clients see tags too.
             serviceCollection.AddSingleton<PosterTagComposer>();
             serviceCollection.AddSingleton<PosterTagCache>();
+            serviceCollection.AddSingleton<PosterTagResolver>();
             serviceCollection.AddSingleton<PosterTagRenderer>();
             serviceCollection.AddSingleton<IStartupFilter, PosterTagStartupFilter>();
         }

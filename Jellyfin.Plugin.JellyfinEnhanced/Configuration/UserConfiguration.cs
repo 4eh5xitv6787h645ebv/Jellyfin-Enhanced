@@ -29,11 +29,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string WatchProgressTimeFormat { get; set; } = "hours";
         public bool ShowFileSizes { get; set; }
         public bool ShowAudioLanguages { get; set; }
-        public bool QualityTagsEnabled { get; set; }
-        // Nullable so a missing key in an existing pre-PR settings.json stays
-        // null after deserialization and the frontend falls through to the
-        // admin default via readBool/readInt. Without this, missing keys
-        // would coerce to true/1..N forever.
+        // Nullable so a missing key in an existing pre-feature settings.json
+        // stays null after deserialization and falls through to the admin
+        // default. The web client's readBool helper already does this on the
+        // JS side; the server-side poster burn-in (issue 590) requires the
+        // same pattern so users who upgraded from before the tag features
+        // existed get admin defaults instead of being silently pinned to false.
+        public bool? QualityTagsEnabled { get; set; }
         public bool? ShowResolutionTag { get; set; }
         public bool? ShowSourceTag { get; set; }
         public bool? ShowDynamicRangeTag { get; set; }
@@ -46,10 +48,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public int? SpecialFormatTagOrder { get; set; }
         public int? VideoCodecTagOrder { get; set; }
         public int? AudioInfoTagOrder { get; set; }
-        public bool GenreTagsEnabled { get; set; }
-        public bool LanguageTagsEnabled { get; set; }
-        public bool RatingTagsEnabled { get; set; }
-        public bool PeopleTagsEnabled { get; set; }
+        public bool? GenreTagsEnabled { get; set; }
+        public bool? LanguageTagsEnabled { get; set; }
+        public bool? RatingTagsEnabled { get; set; }
+        public bool? PeopleTagsEnabled { get; set; }
         public bool TagsHideOnHover { get; set; }
         public string QualityTagsPosition { get; set; } = "top-left";
         public string GenreTagsPosition { get; set; } = "top-right";

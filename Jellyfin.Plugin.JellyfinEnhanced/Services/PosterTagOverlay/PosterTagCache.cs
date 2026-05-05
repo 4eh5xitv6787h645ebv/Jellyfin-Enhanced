@@ -27,14 +27,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
             HydrateIndex();
         }
 
-        public string BuildKey(Guid itemId, byte[] sourceBytes, PosterTagSet tags, string fingerprint)
+        public string BuildKey(Guid itemId, byte[] sourceBytes, PosterTagSet tags, string fingerprint, Guid? userId)
         {
             // Hash the source bytes so a Jellyfin re-encode (different size/quality)
             // produces a different cache entry. Cheap relative to a full Skia compose.
-            var sb = new StringBuilder(96);
+            // Include userId so per-user tag config does not bleed across users.
+            var sb = new StringBuilder(160);
             sb.Append(itemId.ToString("N"));
-            sb.Append('|').Append(tags.Genre ?? string.Empty);
-            sb.Append('|').Append(tags.Rating?.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty);
+            sb.Append('|').Append(userId?.ToString("N") ?? "anon");
+
+            // Sort chips into a stable order so the same logical tag set always
+            // produces the same cache key, regardless of HashSet/Dictionary
+            // enumeration variability across runtime restarts.
+            var sortedChips = tags.Chips.OrderBy(c => (int)c.Kind)
+                                        .ThenBy(c => c.Order)
+                                        .ThenBy(c => (int)c.Corner)
+                                        .ThenBy(c => c.Label, StringComparer.Ordinal);
+            foreach (var chip in sortedChips)
+            {
+                sb.Append('|').Append((int)chip.Kind).Append(':').Append(chip.Label).Append(':').Append((int)chip.Corner).Append(':').Append((int)chip.Style).Append(':').Append(chip.Order);
+            }
             sb.Append('|').Append(fingerprint);
             sb.Append('|').Append(sourceBytes.Length);
 
