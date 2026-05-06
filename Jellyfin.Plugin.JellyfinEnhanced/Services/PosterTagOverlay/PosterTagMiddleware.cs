@@ -43,7 +43,46 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
                 return;
             }
 
+            // The web client (jellyfin-web) already renders the JE tag overlays
+            // as DOM/CSS chips on top of the <img>. Burning chips into the bytes
+            // for that client produces visible double-tags — the user sees both
+            // the server-side burn AND the JS overlay. Skip the burn for web
+            // clients; native clients (Swiftfin / Findroid / Roku / AndroidTV)
+            // do not run the JS so they need the burn.
+            if (IsWebClientRequest(context))
+            {
+                await _next(context).ConfigureAwait(false);
+                return;
+            }
+
             await HandlePosterRequest(context, config).ConfigureAwait(false);
+        }
+
+        private static bool IsWebClientRequest(HttpContext context)
+        {
+            // Primary signal: Authorization / X-Emby-Authorization header carries
+            // a Client="Jellyfin Web" field for browser-based clients.
+            var auth = context.Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(auth))
+            {
+                auth = context.Request.Headers["X-Emby-Authorization"].ToString();
+            }
+            if (!string.IsNullOrEmpty(auth)
+                && auth.IndexOf("Client=\"Jellyfin Web\"", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            // Fallback: jellyfin-web fetches images with a Referer that lands on
+            // /web/ on the same origin. Native clients have no Referer.
+            var referer = context.Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(referer)
+                && referer.IndexOf("/web/", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static bool IsCandidatePosterRequest(HttpContext context)
