@@ -418,8 +418,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
 
         public static EffectivePosterTagSettings Compose(PluginConfiguration admin, UserSettings? user)
         {
-            // user nullable values fall back to admin; admin values fall back to
-            // hardcoded defaults already supplied by the property initializers.
+            // Native clients (Swiftfin, Plethorafin, Findroid, Roku, etc.) hit
+            // Jellyfin's image endpoint anonymously — no Authorization header,
+            // no api_key — because Jellyfin allows anonymous image fetches.
+            // We can't resolve the user, so admin's PluginConfiguration becomes
+            // the authoritative source. Admin's existing tag toggles + position
+            // strings (the same ones the web client falls back to) drive the
+            // burn-in for every native client. Authenticated callers (rare but
+            // possible) can still override via UserSettings.
             bool? userGenre = user?.GenreTagsEnabled;
             bool? userRating = user?.RatingTagsEnabled;
             bool? userLanguage = user?.LanguageTagsEnabled;
@@ -427,15 +433,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
 
             var s = new EffectivePosterTagSettings
             {
-                GenreEnabled = (userGenre ?? admin.PosterTagGenre) && admin.EnablePosterTags,
-                RatingEnabled = (userRating ?? admin.PosterTagRating) && admin.EnablePosterTags,
-                LanguageEnabled = (userLanguage ?? false) && admin.EnablePosterTags,
-                QualityEnabled = (userQuality ?? false) && admin.EnablePosterTags,
+                GenreEnabled = (userGenre ?? admin.GenreTagsEnabled) && admin.EnablePosterTags,
+                RatingEnabled = (userRating ?? admin.RatingTagsEnabled) && admin.EnablePosterTags,
+                LanguageEnabled = (userLanguage ?? admin.LanguageTagsEnabled) && admin.EnablePosterTags,
+                QualityEnabled = (userQuality ?? admin.QualityTagsEnabled) && admin.EnablePosterTags,
 
-                GenreCorner = PosterTagSet.ParseCorner(user?.GenreTagsPosition, TagCorner.BottomRight),
-                RatingCorner = PosterTagSet.ParseCorner(user?.RatingTagsPosition, TagCorner.BottomRight),
-                LanguageCorner = PosterTagSet.ParseCorner(user?.LanguageTagsPosition, TagCorner.BottomLeft),
-                QualityCorner = PosterTagSet.ParseCorner(user?.QualityTagsPosition, TagCorner.TopLeft),
+                GenreCorner = PosterTagSet.ParseCorner(user?.GenreTagsPosition ?? admin.GenreTagsPosition, TagCorner.BottomRight),
+                RatingCorner = PosterTagSet.ParseCorner(user?.RatingTagsPosition ?? admin.RatingTagsPosition, TagCorner.BottomRight),
+                LanguageCorner = PosterTagSet.ParseCorner(user?.LanguageTagsPosition ?? admin.LanguageTagsPosition, TagCorner.BottomLeft),
+                QualityCorner = PosterTagSet.ParseCorner(user?.QualityTagsPosition ?? admin.QualityTagsPosition, TagCorner.TopLeft),
 
                 QualityResolution = user?.ShowResolutionTag ?? admin.ShowResolutionTag,
                 QualitySource = user?.ShowSourceTag ?? admin.ShowSourceTag,
@@ -460,10 +466,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTagOverlay
         {
             var sb = new StringBuilder(64);
             sb.Append(admin.PosterTagFingerprint).Append('|');
-            sb.Append((user?.GenreTagsEnabled ?? admin.PosterTagGenre) ? '1' : '0');
-            sb.Append((user?.RatingTagsEnabled ?? admin.PosterTagRating) ? '1' : '0');
-            sb.Append((user?.LanguageTagsEnabled ?? false) ? '1' : '0');
-            sb.Append((user?.QualityTagsEnabled ?? false) ? '1' : '0');
+            sb.Append((user?.GenreTagsEnabled ?? admin.GenreTagsEnabled) ? '1' : '0');
+            sb.Append((user?.RatingTagsEnabled ?? admin.RatingTagsEnabled) ? '1' : '0');
+            sb.Append((user?.LanguageTagsEnabled ?? admin.LanguageTagsEnabled) ? '1' : '0');
+            sb.Append((user?.QualityTagsEnabled ?? admin.QualityTagsEnabled) ? '1' : '0');
             sb.Append('|');
             sb.Append(user?.GenreTagsPosition ?? string.Empty).Append('-');
             sb.Append(user?.RatingTagsPosition ?? string.Empty).Append('-');
