@@ -15,6 +15,43 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 ## FIXED
 
+### B9 — JE tabs render on a second line below native Home / Favourites tabs
+
+**Symptom (user report):** "now please make it inline with the other tabs"
+
+**Root cause:** Jellyfin nests three layers in the home page header:
+
+```
+.headerTabs                       (header chrome)
+  .tabs-viewmenubar.emby-tabs     (centred wrapper)
+    .emby-tabs-slider             (the actual flex row of buttons)
+      <button>Home</button>
+      <button>Favourites</button>
+```
+
+The previous tabs-manager appended JE buttons to the OUTER `.headerTabs`
+element. Jellyfin's `.emby-tabs-slider` is a horizontally centred flex
+row, so JE buttons appended outside it landed in a separate row,
+visually offset BELOW Home / Favourites.
+
+**Fix:** `findStrip()` now drills into `.emby-tabs-slider` (preferred),
+falling back to `.tabs-viewmenubar` and finally `.headerTabs` if the
+inner layers haven't built yet (paint() is idempotent and re-runs on
+viewshow / heartbeat). Buttons appended into the slider become siblings
+of Home / Favourites and inherit the same flex layout.
+
+**Verified by `test-tab-screenshot.js`:** strip children sequence is
+now `[Home, Favourites, Calendar, Requests, Bookmarks, Hidden Content]`
+— all six buttons inline. Pre-fix screenshot showed JE buttons on a
+second row; post-fix shows a single row.
+
+All five regression suites still green:
+- `test-no-hard-refresh.js` — 7/7 pass
+- `test-home-via-item.js` — bookmarks tab works (the user's exact reproduction)
+- `test-tabs-reentry.js` — JE tabs survive home re-entry
+- `test-route-404.js` — 4/4 routes mount
+- `test-configpage-deep.js` — 10/10 pass
+
 ### B8 — Custom tabs broken after home-button navigation through item details
 
 **Symptoms (user report):**

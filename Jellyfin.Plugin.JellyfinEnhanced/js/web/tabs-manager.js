@@ -60,14 +60,28 @@
 
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
-  // Find the active home-page tab strip. Jellyfin can have multiple
-  // .headerTabs elements in the DOM at once (each non-active page is
-  // hidden but kept around).
+  // Find the live inline tab row. Jellyfin nests three layers:
+  //
+  //   .headerTabs                       (header chrome)
+  //     .tabs-viewmenubar.emby-tabs     (centred wrapper)
+  //       .emby-tabs-slider             (the actual flex row of buttons)
+  //         <button>Home</button>
+  //         <button>Favourites</button>
+  //
+  // Appending JE buttons to .emby-tabs-slider places them INLINE with
+  // the native tabs (same visual row, same flex container). Appending
+  // anywhere outside puts them on a second line below.
   function findStrip() {
     var candidates = [
+      '#indexPage:not(.hide) .headerTabs .emby-tabs-slider',
+      '.mainAnimatedPage:not(.hide) #indexPage .headerTabs .emby-tabs-slider',
+      '#indexPage .headerTabs .emby-tabs-slider',
+      '.headerTabs .emby-tabs-slider',
+      // Fallbacks in case the inner slider hasn't been built yet — paint
+      // is idempotent and will rerun when the slider appears.
+      '#indexPage:not(.hide) .headerTabs .tabs-viewmenubar',
+      '.headerTabs .tabs-viewmenubar',
       '#indexPage:not(.hide) .headerTabs',
-      '.mainAnimatedPage:not(.hide) #indexPage .headerTabs',
-      '#indexPage .headerTabs',
       '.headerTabs',
     ];
     for (var i = 0; i < candidates.length; i++) {
