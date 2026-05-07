@@ -43,6 +43,21 @@
   var pending = null;
   var allowedIds = null; // null = trust WebHost, otherwise the live admin-enabled list
   var deferredRouteId = null; // captured on hash redirect; consumed when the home page mounts
+  var stylesInjected = false;
+
+  // Match the Jellyfin home-page tab content padding so JE routes don't
+  // render flush against the viewport edges. Idempotent.
+  function ensureRouteStyles() {
+    if (stylesInjected) return;
+    if (document.getElementById('je-route-host-styles')) { stylesInjected = true; return; }
+    var style = document.createElement('style');
+    style.id = 'je-route-host-styles';
+    style.textContent = [
+      '.je-route-host { padding: 12px 3vw; box-sizing: border-box; }'
+    ].join('\n');
+    document.head.appendChild(style);
+    stylesInjected = true;
+  }
 
   function getRouteId() {
     // Three sources, in priority order:
@@ -164,7 +179,9 @@
       container = document.createElement('div');
       container.setAttribute(ATTR, routeId);
       container.className = 'je-route-host';
-      container.style.padding = '0';
+      // Padding matches the home-page tab content (padding: 12px 3vw)
+      // so JE pages don't sit flush against the viewport edges.
+      ensureRouteStyles();
       host.appendChild(container);
     }
 

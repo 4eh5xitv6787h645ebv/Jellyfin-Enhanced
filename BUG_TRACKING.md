@@ -15,6 +15,57 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 ## FIXED
 
+### B12 — JE route content sits flush against the viewport edges
+
+**Symptom (user report):** "fix the spacing of the page when it loads
+as its right on the edge of the webpage"
+
+**Root cause:** the route hijacker created its container with
+`container.style.padding = '0'` and the matching `.je-route-host`
+class had no CSS rule, so the rendered page (Hidden Content / Bookmarks
+/ Calendar / Requests) had no left/right padding.
+
+**Fix:** added an idempotent style block injected by the route
+hijacker on first mount: `.je-route-host { padding: 12px 3vw;
+box-sizing: border-box; }`. Same `12px 3vw` value the home-page tab
+content uses, so JE pages match Jellyfin's standard inset.
+
+**Verified by `test-spacing-error.js`:**
+- pre-fix: child element `x=0, w=1400` (flush against viewport)
+- post-fix: child element `x=42, w=1316` (42 px = 3vw of 1400 width)
+
+Screenshot confirms visible left/right padding on the Hidden Content
+page.
+
+### B13 — `Cannot find module './'` console error from main.jellyfin.bundle
+
+**User report:** "what is this error in the console and does it need
+fixing — main.jellyfin.bundle…7b1ecac16383c50fb:2 Uncaught (in
+promise) Error: Cannot find module './'"
+
+**Diagnosis:** the error chain (i function in main.jellyfin.bundle →
+chunk 81954 → setTimeout) is webpack's lazy-import runtime failing to
+resolve a module for an unknown route. Jellyfin's SPA router does
+something like `import('./pages/' + routeName)`; when `routeName`
+came from the `/JellyfinEnhanced/<id>` URL — which Jellyfin's bundle
+doesn't know — webpack threw asynchronously as `Cannot find
+module './'`.
+
+**Status: fixed by B11.** The B11 inline-preempt now intercepts
+clicks, hashchange/popstate, AND `history.pushState` /
+`replaceState` BEFORE Jellyfin's router gets a chance to see the JE
+URL. The router never tries the dynamic import, so the error never
+fires.
+
+**Verified:** four post-B11 Playwright runs (`test-module-error.js`
+hammering JE routes via cold-load, location.hash assignment, and
+sidebar clicks; `test-jellyfin-bug.js` for a baseline non-JE bogus
+route; `test-sidebar-click.js` with full pageerror/console.error
+capture; the regular `test-route-404.js` × 4 routes) — none captured
+the error after the B11 fix landed. If it still appears in your
+session, do a full hard refresh / clear the browser cache so the
+updated inline preempt loads.
+
 ### B11 — In-app sidebar click to JE route shows Page not found
 
 **Symptoms (user report):**
