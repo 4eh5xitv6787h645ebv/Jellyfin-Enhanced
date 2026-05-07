@@ -8,17 +8,15 @@ using Microsoft.Net.Http.Headers;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 {
-    /// <summary>
-    /// Replaces JE-supplied branding assets (icons, banners, favicon, apple
-    /// touch icon) when the admin has uploaded a custom version. Mirrors the
-    /// patterns the old TransformationPatches used, but serves directly from
-    /// our own middleware so we don't depend on File Transformation.
-    ///
-    /// Reads are async, cached in memory by (path, mtime), and tagged with
-    /// a strong ETag so subsequent requests can short-circuit at the 304
-    /// stage. Custom branding upload mutates the file's mtime, which busts
-    /// the cache automatically.
-    /// </summary>
+    // Replaces JE-supplied branding assets (icons, banners, favicon, apple
+    // touch icon) when the admin has uploaded a custom version. Mirrors the
+    // patterns the old TransformationPatches used, but serves directly from
+    // our own middleware so we don't depend on File Transformation.
+    //
+    // Reads are async, cached in memory by (path, mtime), and tagged with
+    // a strong ETag so subsequent requests can short-circuit at the 304
+    // stage. Custom branding upload mutates the file's mtime, which busts
+    // the cache automatically.
     public sealed class BrandingAssetMiddleware
     {
         private static readonly (Regex Pattern, string FileName)[] Mappings =
@@ -59,13 +57,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 
         private async Task<CachedAsset?> GetAssetAsync(string fileName)
         {
+            string? path = null;
             try
             {
                 var dir = JellyfinEnhanced.BrandingDirectory;
                 if (string.IsNullOrWhiteSpace(dir)) return null;
 
-                var path = Path.Combine(dir, fileName);
-                if (!File.Exists(path)) return null;
+                path = Path.Combine(dir, fileName);
+                if (!File.Exists(path))
+                {
+                    // Custom override deleted — drop any stale cache entry so
+                    // the working set reflects the on-disk truth.
+                    Cache.TryRemove(path, out _);
+                    return null;
+                }
 
                 var info = new FileInfo(path);
                 var mtimeTicks = info.LastWriteTimeUtc.Ticks;
@@ -76,16 +81,25 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
                 }
 
                 var bytes = await File.ReadAllBytesAsync(path).ConfigureAwait(false);
-                if (bytes.Length == 0) return null;
+                if (bytes.Length == 0)
+                {
+                    _logger.LogWarning("Custom branding asset {File} is empty; serving the default Jellyfin asset.", path);
+                    return null;
+                }
 
                 var etag = "W/\"" + bytes.Length.ToString(CultureInfo.InvariantCulture) + "-" + mtimeTicks.ToString(CultureInfo.InvariantCulture) + "\"";
                 var fresh = new CachedAsset(bytes, mtimeTicks, etag);
                 Cache[path] = fresh;
                 return fresh;
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException ex)
             {
-                _logger.LogDebug(ex, "Could not load custom branding asset {File}", fileName);
+                _logger.LogWarning(ex, "Permission denied reading custom branding asset {File}; serving the default Jellyfin asset.", path ?? fileName);
+                return null;
+            }
+            catch (IOException ex)
+            {
+                _logger.LogWarning(ex, "IO error reading custom branding asset {File}; serving the default Jellyfin asset.", path ?? fileName);
                 return null;
             }
         }

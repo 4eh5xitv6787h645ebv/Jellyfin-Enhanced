@@ -4,12 +4,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 {
-    /// <summary>
-    /// Inserts JE's request-time middleware at the front of Jellyfin's pipeline.
-    /// Replaces the on-disk index.html mutation and the File Transformation
-    /// dependency with content rewriting at request time, eliminating the
-    /// hard-refresh requirement after install / update / config change.
-    /// </summary>
+    // Inserts JE's request-time middleware at the front of Jellyfin's pipeline.
+    // Replaces the on-disk index.html mutation and the File Transformation
+    // dependency with content rewriting at request time so install / update /
+    // config-change cycles don't require a manual hard refresh.
     public sealed class JeStartupFilter : IStartupFilter
     {
         private readonly ILogger<JeStartupFilter> _logger;

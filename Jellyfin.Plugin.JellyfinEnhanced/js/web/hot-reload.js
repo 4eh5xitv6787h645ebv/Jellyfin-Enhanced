@@ -22,6 +22,12 @@
   var current = Object.create(null);
   var primed = false;
   var timer = null;
+  var consecutiveFailures = 0;
+  // Re-warn at base-10 thresholds (3, 30, 300, 3000) so an admin who opens
+  // DevTools mid-outage immediately sees the failure mode instead of an
+  // empty console — and so a long outage's warning isn't a single message
+  // buried hours ago.
+  var WARN_THRESHOLDS = [3, 30, 300, 3000];
 
   function basePath() {
     return window.__JE_BASE_PATH__ || '';
@@ -44,10 +50,22 @@
     timer = setTimeout(poll, ms);
   }
 
+  function versionUrl() {
+    var ApiClient = window.ApiClient;
+    if (ApiClient && typeof ApiClient.getUrl === 'function') {
+      return ApiClient.getUrl('JellyfinEnhanced/web/version');
+    }
+    return basePath() + '/JellyfinEnhanced/web/version';
+  }
+
   function poll() {
-    fetch(basePath() + '/JellyfinEnhanced/web/version', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
+    fetch(versionUrl(), { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('hot-reload poll status ' + r.status);
+        return r.json();
+      })
       .then(function (body) {
+        consecutiveFailures = 0;
         if (!body || !body.versions) return;
         var v = body.versions;
         for (var i = 0; i < TOPICS.length; i++) {
@@ -62,7 +80,12 @@
         }
         primed = true;
       })
-      .catch(function () { /* swallow — next tick will retry */ })
+      .catch(function (err) {
+        consecutiveFailures++;
+        if (WARN_THRESHOLDS.indexOf(consecutiveFailures) !== -1) {
+          console.warn('[JE HotReload] version poll has failed ' + consecutiveFailures + ' times in a row', err);
+        }
+      })
       .finally(schedule);
   }
 

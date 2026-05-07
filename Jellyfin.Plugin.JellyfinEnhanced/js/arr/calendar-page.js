@@ -4,18 +4,10 @@
   "use strict";
 
   const JE = window.JellyfinEnhanced;
-  const sidebar = document.querySelector('.mainDrawer-scrollContainer');
-  // The JE web subsystem (Web/HtmlInjectionMiddleware + js/web/*) is now the
-  // exclusive provider of standalone pages, so the legacy "Plugin Pages
-  // installed?" probe always answers yes from this module's perspective.
-  const pluginPagesExists = true;
 
-  // State management
   const state = {
     events: [],
     isLoading: false,
-    pageVisible: false,
-    previousPage: null,
     currentDate: new Date(),
     viewMode: getDefaultViewMode(),
     rangeStart: null,
@@ -31,14 +23,12 @@
       forceOnlyRequested: false,
     },
     userDataMap: new Map(),
-    activeFilters: new Set(), // Track active filters
+    activeFilters: new Set(),
     filterMatchMode: "any",
     filterInvert: false,
     requestedItems: new Set(),
     requestedLoaded: false,
     requestedLoading: false,
-    locationSignature: null,
-    locationUnsubscribe: null,
     _customTabContainer: null,
   };
 
@@ -1193,49 +1183,6 @@
   }
 
 
-  // Use event-based navigation detection (pushState/hashchange/popstate via je:navigate)
-  function startLocationWatcher() {
-    if (state.locationUnsubscribe) return;
-
-    state.locationSignature = `${window.location.pathname}${window.location.hash}`;
-
-    const check = () => {
-      const signature = `${window.location.pathname}${window.location.hash}`;
-      if (signature !== state.locationSignature) {
-        state.locationSignature = signature;
-        handleNavigation();
-      }
-    };
-
-    state.locationUnsubscribe = JE.helpers?.onNavigate
-      ? JE.helpers.onNavigate(check)
-      : (() => {
-          const t = setInterval(check, 150);
-          return () => clearInterval(t);
-        })();
-  }
-
-  /**
-   * Intercept hash/popstate changes for our route before Jellyfin router
-   */
-  function interceptNavigation(e) {
-    const url = e?.newURL ? new URL(e.newURL) : window.location;
-    const hash = url.hash;
-    const path = url.pathname;
-    const matches = hash.startsWith("#/calendar") || path === "/calendar";
-    if (matches) {
-      if (e?.stopImmediatePropagation) e.stopImmediatePropagation();
-      if (e?.preventDefault) e.preventDefault();
-      showPage();
-    }
-  }
-
-  function stopLocationWatcher() {
-    if (state.locationUnsubscribe) {
-      state.locationUnsubscribe();
-      state.locationUnsubscribe = null;
-    }
-  }
 
   // Load calendar settings from plugin config
   function loadSettings() {
@@ -1518,9 +1465,9 @@
       state.requestedItems = requested;
       state.requestedLoaded = true;
       state.requestedLoading = false;
-      if (state.pageVisible) {
-        renderPage();
-      }
+      // Render unconditionally — renderPage() is no-op-safe when its host
+      // element is missing, and the legacy pageVisible flag is gone.
+      renderPage();
     }
   }
 
@@ -2439,36 +2386,6 @@
     `;
   }
 
-  // Create or get page container element
-  function createPageContainer() {
-    let page = document.getElementById("je-calendar-page");
-    if (!page) {
-      page = document.createElement("div");
-      page.id = "je-calendar-page";
-      page.className = "page type-interior mainAnimatedPage hide";
-      page.setAttribute("data-title", "Calendar");
-      page.setAttribute("data-backbutton", "true");
-      page.setAttribute("data-url", "#/calendar");
-      page.setAttribute("data-type", "custom");
-      page.innerHTML = `
-        <div data-role="content">
-          <div class="content-primary je-calendar-page">
-            <div id="je-calendar-container" style="padding-top: 5em; padding-left: 0.5em; padding-right: 0.5em;"></div>
-          </div>
-        </div>
-      `;
-
-      const mainContent = document.querySelector(".mainAnimatedPages");
-      if (mainContent) {
-        mainContent.appendChild(page);
-      } else {
-        document.body.appendChild(page);
-      }
-    }
-
-    return page;
-  }
-
   /**
    * Render the full page.
    * @param {HTMLElement} [targetContainer] - Optional container to render into
@@ -2480,15 +2397,14 @@
     if (targetContainer) {
       state._customTabContainer = targetContainer;
       container = targetContainer;
-    } else if (state._customTabContainer && document.contains(state._customTabContainer)
-      && window.location.hash.indexOf('userpluginsettings') === -1) {
-      // Re-use stored custom tab container, but not on Plugin Pages route
+    } else if (state._customTabContainer && document.contains(state._customTabContainer)) {
       container = state._customTabContainer;
     } else {
+      // No live mount target — the legacy standalone-page fallback that
+      // built its own container is gone. The web subsystem will re-bind
+      // a container on the next renderForCustomTab() invocation.
       state._customTabContainer = null;
-      const page = createPageContainer();
-      container = document.getElementById("je-calendar-container");
-      if (!page || !container) return;
+      return;
     }
 
     if (typeof state.sidebarCollapsed !== "boolean") {
@@ -2565,210 +2481,6 @@
         node.classList.add(`je-display-${state.settings.displayMode}`);
       }
     });
-  }
-
-  /**
-   * Show page
-   */
-  function showPage() {
-    if (state.pageVisible) return;
-
-    const config = JE.pluginConfig || {};
-    if (!config.CalendarPageEnabled) return;
-    if (pluginPagesExists && config.CalendarUsePluginPages) return;
-
-    state.pageVisible = true;
-
-    injectStyles();
-    const page = createPageContainer();
-
-    if (window.location.hash !== "#/calendar") {
-      history.pushState({ page: "calendar" }, "Calendar", "#/calendar");
-    }
-
-    const activePage = document.querySelector(".mainAnimatedPage:not(.hide):not(#je-calendar-page)");
-    if (activePage) {
-      state.previousPage = activePage;
-      activePage.classList.add("hide");
-      activePage.dispatchEvent(
-        new CustomEvent("viewhide", {
-          bubbles: true,
-          detail: { type: "interior" },
-        }),
-      );
-    }
-
-    page.classList.remove("hide");
-
-    page.dispatchEvent(
-      new CustomEvent("viewshow", {
-        bubbles: true,
-        detail: {
-          type: "custom",
-          isRestored: false,
-          options: {},
-        },
-      }),
-    );
-
-    page.dispatchEvent(
-      new CustomEvent("pageshow", {
-        bubbles: true,
-        detail: {},
-      }),
-    );
-
-    // Only load data once (guard against showPage retries)
-    if (!state.isLoading) {
-      loadAllData();
-    }
-  }
-
-  /**
-   * Hide page
-   */
-  function hidePage() {
-    if (!state.pageVisible) return;
-
-    const page = document.getElementById("je-calendar-page");
-    if (page) {
-      page.classList.add("hide");
-      page.dispatchEvent(
-        new CustomEvent("viewhide", {
-          bubbles: true,
-          detail: { type: "custom" },
-        }),
-      );
-    }
-
-    // Restore the previous page if Jellyfin's router hasn't already shown another page
-    if (state.previousPage && !document.querySelector(".mainAnimatedPage:not(.hide):not(#je-calendar-page)")) {
-      state.previousPage.classList.remove("hide");
-      state.previousPage.dispatchEvent(
-        new CustomEvent("viewshow", {
-          bubbles: true,
-          detail: { type: "interior", isRestored: true },
-        }),
-      );
-    }
-
-    state.pageVisible = false;
-    state.previousPage = null;
-    stopLocationWatcher();
-  }
-
-  /**
-   * Handle navigation
-   */
-  function handleNavigation() {
-    const hash = window.location.hash;
-    const path = window.location.pathname;
-    if (hash === "#/calendar" || path === "/calendar") {
-      showPage();
-    } else if (state.pageVisible) {
-      hidePage();
-    }
-  }
-
-  /**
-   * Handle viewshow events
-   */
-  function handleViewShow(e) {
-    const targetPage = e.target;
-    if (state.pageVisible && targetPage && targetPage.id !== "je-calendar-page") {
-      hidePage();
-    }
-  }
-
-  /**
-   * Handle nav click
-   */
-  function handleNavClick(e) {
-    if (!state.pageVisible) return;
-
-    const btn = e.target.closest(".headerTabs button, .navMenuOption, .headerButton");
-    if (btn && !btn.classList.contains("je-nav-calendar-item")) {
-      hidePage();
-    }
-  }
-
-  /**
-   * Inject navigation item into sidebar
-   */
-  function injectNavigation() {
-    const config = JE.pluginConfig || {};
-    if (!config.CalendarPageEnabled) return;
-    if (pluginPagesExists && config.CalendarUsePluginPages) return;
-    if (config.CalendarUseCustomTabs) return; // Skip if using custom tabs
-
-    // Hide plugin page link if it exists
-    const pluginPageItem = sidebar?.querySelector(
-      'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.CalendarPage"]'
-    );
-
-    if (pluginPageItem) {
-      pluginPageItem.style.setProperty('display', 'none', 'important');
-    }
-
-    // Check if already exists
-    if (document.querySelector(".je-nav-calendar-item")) {
-      return;
-    }
-
-    const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-
-    if (jellyfinEnhancedSection) {
-      const navItem = document.createElement("a");
-      navItem.setAttribute('is', 'emby-linkbutton');
-      navItem.className =
-        "navMenuOption lnkMediaFolder emby-button je-nav-calendar-item";
-      navItem.href = "#";
-      navItem.innerHTML = `
-        <span class="navMenuOptionIcon material-icons">calendar_today</span>
-        <span class="sectionName navMenuOptionText">${window.JellyfinEnhanced.t("calendar_title")}</span>
-      `;
-      navItem.addEventListener("click", (e) => {
-        e.preventDefault();
-        showPage();
-      });
-
-      jellyfinEnhancedSection.appendChild(navItem);
-      console.log(`${logPrefix} Navigation item injected`);
-    } else {
-      console.log(`${logPrefix} jellyfinEnhancedSection not found, will wait for it`);
-    }
-  }
-
-  /**
-   * Setup navigation watcher - observes only when link is missing
-   */
-  function setupNavigationWatcher() {
-    const config = JE.pluginConfig || {};
-    if (!config.CalendarPageEnabled) return;
-    if (pluginPagesExists && config.CalendarUsePluginPages) return;
-    if (config.CalendarUseCustomTabs) return; // Don't watch if using custom tabs
-
-    // Use MutationObserver to watch for sidebar changes, but disconnect after re-injection
-    const observer = new MutationObserver(() => {
-      // Re-check config each time to avoid injecting when settings change
-      const currentConfig = JE.pluginConfig || {};
-      if (currentConfig.CalendarUseCustomTabs) return;
-      if (pluginPagesExists && currentConfig.CalendarUsePluginPages) return;
-
-      if (!document.querySelector('.je-nav-calendar-item')) {
-        const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-        if (jellyfinEnhancedSection) {
-          console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
-          injectNavigation();
-        }
-      }
-    });
-
-    // Observe the main drawer
-    const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
-    if (navDrawer) {
-      observer.observe(navDrawer, { childList: true, subtree: true });
-    }
   }
 
   const escapeHtml = JE.escapeHtml;
@@ -2956,11 +2668,10 @@
     loadAllData();
   }
 
-  // Export to JE namespace
+  // Export to JE namespace. The web subsystem mounts the calendar through
+  // renderForCustomTab; the in-place showPage/hidePage path is gone.
   JE.calendarPage = {
     initialize,
-    showPage,
-    hidePage,
     refresh: loadAllData,
     setViewMode,
     shiftPeriod,

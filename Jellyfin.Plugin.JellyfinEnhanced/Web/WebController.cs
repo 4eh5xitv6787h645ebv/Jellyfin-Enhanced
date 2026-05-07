@@ -7,11 +7,9 @@ using Microsoft.Net.Http.Headers;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 {
-    /// <summary>
-    /// Endpoints for the JE web subsystem. The bootstrap script and the
-    /// version probe are intentionally unauthenticated so they can be loaded
-    /// before the user signs in. Sidebar and tab metadata require auth.
-    /// </summary>
+    // Endpoints for the JE web subsystem. The bootstrap script and the
+    // version probe are intentionally unauthenticated so they can be loaded
+    // before the user signs in. Sidebar and tab metadata require auth.
     [ApiController]
     [Route("JellyfinEnhanced/web")]
     public sealed class WebController : ControllerBase
@@ -49,9 +47,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
         public ActionResult<object> Sidebar()
         {
             var c = JellyfinEnhanced.Instance?.Configuration;
-            var entries = new List<object>();
+            // Return 503 when config isn't ready instead of an empty list so
+            // the client retries on the next hot-reload tick rather than
+            // treating the empty success as authoritative and wiping the UI.
+            if (c is null) return StatusCode(503, new { error = "config-not-ready" });
 
-            if (c is null) return new { entries };
+            var entries = new List<object>();
 
             if (c.CalendarPageEnabled && c.CalendarUsePluginPages)
             {
@@ -78,9 +79,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
         public ActionResult<object> Tabs()
         {
             var c = JellyfinEnhanced.Instance?.Configuration;
-            var entries = new List<object>();
+            if (c is null) return StatusCode(503, new { error = "config-not-ready" });
 
-            if (c is null) return new { entries };
+            var entries = new List<object>();
 
             if (c.CalendarPageEnabled && c.CalendarUseCustomTabs)
             {

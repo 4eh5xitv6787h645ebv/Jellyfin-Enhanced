@@ -1874,8 +1874,11 @@
             const manageBtn = document.getElementById('manageHiddenContentBtn');
             if (manageBtn) {
                 manageBtn.addEventListener('click', () => {
+                    // Route to the JE web subsystem's hidden-content page when
+                    // available; fall back to the floating management panel
+                    // otherwise.
                     if (JE.pluginConfig?.HiddenContentEnabled && JE.hiddenContentPage) {
-                        JE.hiddenContentPage.showPage();
+                        location.hash = '#/JellyfinEnhanced/hiddenContent';
                     } else {
                         JE.hiddenContent.showManagementPanel();
                     }

@@ -4,11 +4,6 @@
   "use strict";
 
   const JE = window.JellyfinEnhanced;
-  const sidebar = document.querySelector('.mainDrawer-scrollContainer');
-  // JE web subsystem (Web/HtmlInjectionMiddleware + js/web/*) provides the
-  // page surface — the legacy "Plugin Pages installed?" probe always
-  // answers yes from this module's perspective.
-  const pluginPagesExists = true;
 
   // State management
   const state = {
@@ -24,15 +19,12 @@
     issuesFilter: "open",
     isLoading: false,
     pollTimer: null,
-    pageVisible: false,
-    previousPage: null,
-    locationSignature: null,
-    locationUnsubscribe: null,
     downloadsActiveTab: "all",
     downloadsSearchQuery: "",
     downloadsSearchVisible: false,
     searchDebounceTimer: null,
     _customTabContainer: null,
+    _pollMount: null,
   };
 
   // Status color mapping - using theme-aware colors
@@ -1626,14 +1618,14 @@
     if (targetContainer) {
       state._customTabContainer = targetContainer;
       container = targetContainer;
-    } else if (state._customTabContainer && document.contains(state._customTabContainer)
-      && window.location.hash.indexOf('userpluginsettings') === -1) {
-      // Re-use stored custom tab container, but not on Plugin Pages route
+    } else if (state._customTabContainer && document.contains(state._customTabContainer)) {
       container = state._customTabContainer;
     } else {
+      // No live mount target — the legacy standalone-page fallback that
+      // built its own #je-downloads-container is gone. The web subsystem
+      // will rebind a container on the next renderForCustomTab() call.
       state._customTabContainer = null;
-      container = document.getElementById("je-downloads-container");
-      if (!container) return;
+      return;
     }
 
     let html = "";
@@ -1974,160 +1966,12 @@
   }
 
   /**
-   * Create the downloads page container with proper Jellyfin page structure
-   */
-  function createPageContainer() {
-    let page = document.getElementById("je-downloads-page");
-    if (!page) {
-      page = document.createElement("div");
-      page.id = "je-downloads-page";
-      // Use Jellyfin's page classes for proper integration
-      page.className = "page type-interior mainAnimatedPage hide";
-      // Data attributes for header/back button integration
-      page.setAttribute("data-title", JE.t?.("requests_requests") || "Requests");
-      page.setAttribute("data-backbutton", "true");
-      page.setAttribute("data-url", "#/downloads");
-      page.setAttribute("data-type", "custom");
-      page.innerHTML = `
-        <div data-role="content">
-          <div class="content-primary je-downloads-page">
-            <div id="je-downloads-container" style="padding-top: 5em;"></div>
-          </div>
-        </div>
-      `;
-
-      const mainContent = document.querySelector(".mainAnimatedPages");
-      if (mainContent) {
-        mainContent.appendChild(page);
-      } else {
-        document.body.appendChild(page);
-      }
-    }
-    return page;
-  }
-
-  /**
-   * Show the downloads page with proper Jellyfin integration
-   */
-  function showPage() {
-    if (state.pageVisible) return;
-
-    state.pageVisible = true;
-
-    // Ensure page exists first
-    const page = createPageContainer();
-    if (!page) {
-      console.error(`${logPrefix} Failed to create page container`);
-      state.pageVisible = false;
-      return;
-    }
-
-    if (window.location.hash !== "#/downloads") {
-      history.pushState({ page: "downloads" }, "Requests", "#/downloads");
-    }
-
-    // Hide other Jellyfin pages - but track which one was active so we can restore it
-    const activePage = document.querySelector(
-      ".mainAnimatedPage:not(.hide):not(#je-downloads-page)",
-    );
-    if (activePage) {
-      state.previousPage = activePage;
-      activePage.classList.add("hide");
-      // Dispatch viewhide for the page we're leaving
-      activePage.dispatchEvent(
-        new CustomEvent("viewhide", {
-          bubbles: true,
-          detail: { type: "interior" },
-        }),
-      );
-    }
-
-    // Show our page
-    page.classList.remove("hide");
-
-    // Dispatch viewshow event so Jellyfin's libraryMenu updates header/back button
-    page.dispatchEvent(
-      new CustomEvent("viewshow", {
-        bubbles: true,
-        detail: {
-          type: "custom",
-          isRestored: false,
-          options: {},
-        },
-      }),
-    );
-
-    // Also dispatch pageshow for other integrations
-    page.dispatchEvent(
-      new CustomEvent("pageshow", {
-        bubbles: true,
-        detail: {
-          type: "custom",
-          isRestored: false,
-        },
-      }),
-    );
-
-    // Only load data once (guard against showPage retries)
-    if (!state.isLoading) {
-      loadAllData();
-      startPolling();
-    }
-  }
-
-  /**
-   * Hide the downloads page and clean up header state
-   */
-  function hidePage() {
-    if (!state.pageVisible) return;
-
-    const page = document.getElementById("je-downloads-page");
-    if (page) {
-      page.classList.add("hide");
-
-      // Dispatch viewhide event so Jellyfin knows we're leaving
-      page.dispatchEvent(
-        new CustomEvent("viewhide", {
-          bubbles: true,
-          detail: { type: "custom" },
-        }),
-      );
-    }
-
-    // Restore the previous page if Jellyfin's router hasn't already shown another page
-    // This handles the case where user clicks browser back button
-    // But NOT when clicking header tabs (Jellyfin handles those via viewshow events)
-    if (
-      state.previousPage &&
-      !document.querySelector(
-        ".mainAnimatedPage:not(.hide):not(#je-downloads-page)",
-      )
-    ) {
-      state.previousPage.classList.remove("hide");
-      // Dispatch viewshow so the page re-initializes properly
-      state.previousPage.dispatchEvent(
-        new CustomEvent("viewshow", {
-          bubbles: true,
-          detail: { type: "interior", isRestored: true },
-        }),
-      );
-    }
-
-    state.pageVisible = false;
-    state.previousPage = null;
-    clearAvatarObjectUrlCache(true);
-    stopPolling();
-    stopLocationWatcher();
-  }
-
-  /**
    * Start polling for updates
    */
   function startPolling() {
     stopPolling();
     const config = JE.pluginConfig || {};
 
-    // Check if polling is enabled
     if (!config.DownloadsPagePollingEnabled) {
       return;
     }
@@ -2135,31 +1979,29 @@
     const intervalSeconds = config.DownloadsPollIntervalSeconds !== undefined
       ? config.DownloadsPollIntervalSeconds
       : 30;
+    const interval = intervalSeconds * 1000;
 
-
-    // Check visibility across all view modes: normal page, plugin pages, or custom tabs
-    const isVisible = state.pageVisible || state._pluginPageVisible || state._customTabMode;
-    if (!isVisible) {
+    // The mount point is the page or tab pane the renderer wrote into. We
+    // poll only as long as that element is still attached to the document.
+    // The web subsystem (route-hijacker, tabs-manager) unmounts our DOM on
+    // navigation, so this is the truth source for "am I still visible" —
+    // no separate visibility flags to keep in sync.
+    const mount = state._pollMount;
+    if (!mount || !document.contains(mount)) {
+      console.debug(`${logPrefix} startPolling skipped: no live mount element`);
       return;
     }
 
-    const interval = intervalSeconds * 1000;
     state.pollTimer = setInterval(() => {
-      // Stop the timer entirely if the page is no longer visible in any mode —
-      // this catches navigation away via custom tabs / plugin pages where hidePage()
-      // is never called and the timer would otherwise run indefinitely.
-      const currentlyVisible = state.pageVisible || state._pluginPageVisible || state._customTabMode;
-      if (!currentlyVisible) {
+      if (!mount || !document.contains(mount)) {
         stopPolling();
         return;
       }
-      // Also skip if the browser tab is hidden (user switched tabs / minimised)
       if (document.visibilityState === 'hidden') return;
       if (!state.isLoading) {
         loadAllData();
       }
     }, interval);
-
   }
 
   /**
@@ -2241,103 +2083,6 @@
   }
 
   /**
-   * Inject navigation item into sidebar
-   */
-  function injectNavigation() {
-    const config = JE.pluginConfig || {};
-    if (!config.DownloadsPageEnabled) return;
-    if (pluginPagesExists && config.DownloadsUsePluginPages) return;
-    if (config.DownloadsUseCustomTabs) return; // Skip sidebar injection if using custom tabs
-
-    // Hide plugin page link if it exists
-    const pluginPageItem = sidebar?.querySelector(
-      'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.DownloadsPage"]'
-    );
-
-    if (pluginPageItem) {
-      pluginPageItem.style.setProperty('display', 'none', 'important');
-    }
-
-    // Check if already exists
-    if (document.querySelector(".je-nav-downloads-item")) {
-      return;
-    }
-
-    const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-
-    if (jellyfinEnhancedSection) {
-      const navItem = document.createElement("a");
-      navItem.setAttribute('is', 'emby-linkbutton');
-      navItem.className =
-        "navMenuOption lnkMediaFolder emby-button je-nav-downloads-item";
-      navItem.href = "#";
-      const labelRequests = (JE.t && JE.t('requests_requests')) || 'Requests';
-      navItem.innerHTML = `
-        <span class="navMenuOptionIcon material-icons">download</span>
-        <span class="sectionName navMenuOptionText">${labelRequests}</span>
-      `;
-      navItem.addEventListener("click", (e) => {
-        e.preventDefault();
-        showPage();
-      });
-
-      jellyfinEnhancedSection.appendChild(navItem);
-      console.log(`${logPrefix} Navigation item injected`);
-    } else {
-      console.log(`${logPrefix} jellyfinEnhancedSection not found, will wait for it`);
-    }
-  }
-
-  /**
-   * Setup navigation watcher - observes only when link is missing
-   */
-  function setupNavigationWatcher() {
-    const config = JE.pluginConfig || {};
-    if (!config.DownloadsPageEnabled) return;
-    if (pluginPagesExists && config.DownloadsUsePluginPages) return;
-    if (config.DownloadsUseCustomTabs) return; // Don't watch if using custom tabs
-
-    // Use MutationObserver to watch for sidebar changes, but disconnect after re-injection
-    const observer = new MutationObserver(() => {
-      // Re-check config each time to avoid injecting when settings change
-      const currentConfig = JE.pluginConfig || {};
-      if (currentConfig.DownloadsUseCustomTabs) return;
-      if (pluginPagesExists && currentConfig.DownloadsUsePluginPages) return;
-
-      if (!document.querySelector('.je-nav-downloads-item')) {
-        const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-        if (jellyfinEnhancedSection) {
-          console.log(`${logPrefix} Sidebar rebuilt, re-injecting navigation`);
-          injectNavigation();
-        }
-      }
-    });
-
-    // Observe the main drawer
-    const navDrawer = document.querySelector('.mainDrawer, .navDrawer, body');
-    if (navDrawer) {
-      observer.observe(navDrawer, { childList: true, subtree: true });
-    }
-  }
-
-  /**
-   * Handle URL hash changes
-   */
-  function handleNavigation() {
-    const hash = window.location.hash;
-    const path = window.location.pathname;
-    if (hash === "#/downloads" || path === "/downloads") {
-      console.log(`${logPrefix} handleNavigation matched downloads (hash=${hash} path=${path})`);
-      // Show page to win races against Jellyfin's router rendering 404
-      showPage();
-    } else if (state.pageVisible || state._pluginPageVisible) {
-      // Stop polling immediately when navigating away in any mode
-      console.log(`${logPrefix} handleNavigation hiding page (hash=${hash} path=${path})`);
-      hidePage();
-    }
-  }
-
-  /**
    * Initialize the downloads page module
    */
   function initialize() {
@@ -2377,68 +2122,23 @@
   }
 
   /**
-   * Intercept hash/popstate changes for our route before Jellyfin router
-   */
-  function interceptNavigation(e) {
-    const url = e?.newURL ? new URL(e.newURL) : window.location;
-    const hash = url.hash;
-    const path = url.pathname;
-    const matches = hash === "#/downloads" || path === "/downloads";
-    if (matches) {
-      if (e?.stopImmediatePropagation) e.stopImmediatePropagation();
-      if (e?.preventDefault) e.preventDefault();
-      showPage();
-    }
-  }
-
-  // Use event-based navigation detection (pushState/hashchange/popstate via je:navigate)
-  function startLocationWatcher() {
-    if (state.locationUnsubscribe) return;
-
-    state.locationSignature = `${window.location.pathname}${window.location.hash}`;
-
-    const check = () => {
-      const signature = `${window.location.pathname}${window.location.hash}`;
-      if (signature !== state.locationSignature) {
-        state.locationSignature = signature;
-        handleNavigation();
-      }
-    };
-
-    state.locationUnsubscribe = JE.helpers?.onNavigate
-      ? JE.helpers.onNavigate(check)
-      : (() => {
-          // Fallback: narrow poller if helpers not yet available
-          const t = setInterval(check, 150);
-          return () => clearInterval(t);
-        })();
-  }
-
-  function stopLocationWatcher() {
-    if (state.locationUnsubscribe) {
-      state.locationUnsubscribe();
-      state.locationUnsubscribe = null;
-    }
-  }
-
-  /**
-   * Render content for custom tabs (without page state management).
+   * Render content for custom tabs / web-subsystem mounts (without page
+   * state management).
    * @param {HTMLElement} [targetContainer] - Optional container element to
    *   render into, avoiding global getElementById lookups.
    */
   function renderForCustomTab(targetContainer) {
-    state._customTabMode = true;
+    state._pollMount = targetContainer || null;
     injectStyles();
     renderPage(targetContainer);
     loadAllData();
     startPolling();
   }
 
-  // Export to JE namespace
+  // Export to JE namespace. The web subsystem mounts the requests page
+  // through renderForCustomTab; the in-place showPage/hidePage path is gone.
   JE.downloadsPage = {
     initialize,
-    showPage,
-    hidePage,
     refresh: loadAllData,
     startPolling,
     stopPolling,

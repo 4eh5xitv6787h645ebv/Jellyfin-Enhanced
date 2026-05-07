@@ -41,6 +41,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         // config so users don't see broken links pointing at our deleted
         // wrapper pages. PP itself remains functional for any other plugins
         // that still rely on it.
+        //
+        // Writes go through a temp file + File.Replace so a crash mid-write
+        // can't truncate the config that another plugin (e.g. HomeScreenSections)
+        // also writes to. Last-writer-wins is still possible if PP is
+        // concurrently writing too — accepted because PP only writes on its
+        // own startup, and our cleanup is idempotent (next boot re-runs
+        // until clean).
         private void CleanupLegacyPluginPagesConfig()
         {
             try
@@ -64,7 +71,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 if (toRemove.Count == 0) return;
 
                 foreach (var p in toRemove) pages.Remove(p);
-                File.WriteAllText(ppConfigPath, config.ToString(Formatting.Indented));
+
+                var tmpPath = ppConfigPath + ".je-tmp";
+                File.WriteAllText(tmpPath, config.ToString(Formatting.Indented));
+                File.Replace(tmpPath, ppConfigPath, ppConfigPath + ".je-bak");
                 _logger.Info($"Removed {toRemove.Count} legacy JE entries from Plugin Pages config.");
             }
             catch (Exception ex)

@@ -8,9 +8,9 @@
  *
  * The actual page renderers live in:
  *   - JE.calendarPage.renderForCustomTab
- *   - JE.requestsPage.renderForCustomTab
+ *   - JE.downloadsPage.renderForCustomTab     (the "Requests" feature)
  *   - JE.hiddenContentPage.renderForCustomTab
- *   - JE.bookmarksLibrary.renderForCustomTab (added in bookmarks-library.js)
+ *   - JE.bookmarksLibrary.renderForCustomTab  (added in bookmarks-library.js)
  */
 (function (JE) {
   'use strict';
@@ -27,7 +27,7 @@
 
   function attachAfterReady() {
     bind('calendar',      function () { return JE.calendarPage && JE.calendarPage.renderForCustomTab; });
-    bind('downloads',     function () { return JE.requestsPage && JE.requestsPage.renderForCustomTab; });
+    bind('downloads',     function () { return JE.downloadsPage && JE.downloadsPage.renderForCustomTab; });
     bind('hiddenContent', function () { return JE.hiddenContentPage && JE.hiddenContentPage.renderForCustomTab; });
     bind('bookmarks',     function () { return JE.bookmarksLibrary && JE.bookmarksLibrary.renderForCustomTab; });
   }

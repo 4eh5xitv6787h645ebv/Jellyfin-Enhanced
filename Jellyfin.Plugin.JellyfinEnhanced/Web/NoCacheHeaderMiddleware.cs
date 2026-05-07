@@ -3,12 +3,10 @@ using Microsoft.Net.Http.Headers;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 {
-    /// <summary>
-    /// Forces revalidation on /web/index.html and JE-owned endpoints so plugin
-    /// updates and config changes propagate to clients without a hard refresh.
-    /// Asset URLs (the bootstrap, the main script) carry their own version
-    /// query string for cache busting and are not touched here.
-    /// </summary>
+    // Forces revalidation on /web/index.html and JE-owned endpoints so plugin
+    // updates and config changes propagate to clients without a hard refresh.
+    // Asset URLs (the bootstrap, the main script) carry their own version
+    // query string for cache busting and are not touched here.
     public sealed class NoCacheHeaderMiddleware
     {
         private readonly RequestDelegate _next;
@@ -43,11 +41,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
         {
             if (string.IsNullOrEmpty(path)) return false;
 
-            return path.Equals("/web", StringComparison.OrdinalIgnoreCase)
-                || path.Equals("/web/", StringComparison.OrdinalIgnoreCase)
-                || path.Equals("/web/index.html", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/JellyfinEnhanced/web/version", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/JellyfinEnhanced/web/bootstrap.js", StringComparison.OrdinalIgnoreCase);
+            // Suffix matching covers Jellyfin sub-path mounts (BaseUrl set in
+            // network.xml or a reverse-proxy that doesn't strip the prefix).
+            return path.EndsWith("/web", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith("/web/", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith("/web/index.html", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith("/JellyfinEnhanced/web/version", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith("/JellyfinEnhanced/web/bootstrap.js", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

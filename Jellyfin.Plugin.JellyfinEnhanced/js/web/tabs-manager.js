@@ -37,11 +37,16 @@
     stylesInjected = true;
     var style = document.createElement('style');
     style.id = 'je-tabs-manager-styles';
+    // !important on .tabContent.je-muted is needed because Jellyfin sets
+    // display:block inline on the active native pane — without !important
+    // the inline style wins and the native pane bleeds through under our
+    // custom tab content.
     style.textContent = [
       '.je-custom-tab-button.is-active { color: var(--mdc-theme-primary, #00a4dc); }',
       '.je-custom-tab-pane { display: none; padding: 12px 3vw; }',
       '.je-custom-tab-pane.is-active { display: block; }',
-      '.je-custom-tab-pane > .je-custom-tab-mount { width: 100%; }'
+      '.je-custom-tab-pane > .je-custom-tab-mount { width: 100%; }',
+      '#indexPage .tabContent.je-muted { display: none !important; }'
     ].join('\n');
     document.head.appendChild(style);
   }
@@ -98,9 +103,14 @@
       if (matchP) {
         var mount = p.querySelector('.je-custom-tab-mount');
         clear(mount);
-        if (JE.WebHost && JE.WebHost.has(id)) {
-          JE.WebHost.render(id, mount);
+        // Use the render() return value, not has(): a registered renderer
+        // that throws would otherwise leave us with the native panes muted
+        // and the custom pane empty.
+        if (JE.WebHost && JE.WebHost.render(id, mount)) {
           renderedAny = true;
+        } else {
+          console.warn('[JE TabsManager] no render output for tab "' + id + '" — leaving native tab visible');
+          p.classList.remove('is-active');
         }
       }
     }
@@ -125,6 +135,17 @@
   function injectButtonsAndPanes() {
     var strip = getStrip();
     if (!strip) return false;
+
+    // If the user is currently viewing a custom tab whose id is no longer
+    // in the entries list (admin disabled it), surface the native panes
+    // again before we tear down the dead button. Without this the user
+    // sees a blank area until they manually click a native tab.
+    var activeId = null;
+    var activeBtn = strip.querySelector('[' + TAB_BUTTON_ATTR + '].is-active');
+    if (activeBtn) activeId = activeBtn.getAttribute(TAB_BUTTON_ATTR);
+    if (activeId && !entries.some(function (e) { return e.id === activeId; })) {
+      unhideNative();
+    }
 
     var existing = strip.querySelectorAll('[' + TAB_BUTTON_ATTR + ']');
     for (var x = 0; x < existing.length; x++) existing[x].parentNode.removeChild(existing[x]);
@@ -159,10 +180,23 @@
   }
 
   function fetchEntries() {
-    return fetch(basePath() + '/JellyfinEnhanced/web/tabs', { credentials: 'same-origin', cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : { entries: [] }; })
-      .then(function (body) { entries = (body && body.entries) || []; })
-      .catch(function () { entries = []; });
+    var ApiClient = window.ApiClient;
+    if (!ApiClient || typeof ApiClient.ajax !== 'function') {
+      return Promise.resolve();
+    }
+    return ApiClient.ajax({
+      type: 'GET',
+      url: ApiClient.getUrl('JellyfinEnhanced/web/tabs'),
+      dataType: 'json'
+    })
+      .then(function (body) {
+        // Only replace on success — preserve last-good entries on a
+        // transient 5xx / auth blip.
+        if (body && Array.isArray(body.entries)) entries = body.entries;
+      })
+      .catch(function (err) {
+        console.warn('[JE TabsManager] tabs fetch failed', err);
+      });
   }
 
   // The home page tab strip is replaced when the user navigates between
@@ -171,7 +205,7 @@
   function startObserver() {
     if (observer) return;
 
-    var bootstrapTries = 0;
+    var tries = 0;
     function tryBootstrap() {
       var spaContainer = document.querySelector('.mainAnimatedPages, .skinBody');
       if (spaContainer) {
@@ -184,8 +218,10 @@
         injectButtonsAndPanes();
         return;
       }
-      if (++bootstrapTries > 600) return;
-      setTimeout(tryBootstrap, 50);
+      tries++;
+      // Backoff but never give up — see sidebar-manager.js for the rationale.
+      var delay = tries < 20 ? 50 : tries < 60 ? 250 : tries < 120 ? 1000 : 5000;
+      setTimeout(tryBootstrap, delay);
     }
     tryBootstrap();
   }
@@ -201,6 +237,10 @@
         });
       }
     },
-    refresh: function () { return fetchEntries().then(injectButtonsAndPanes); }
+    refresh: function () { return fetchEntries().then(injectButtonsAndPanes); },
+    // Public hook so route-hijacker can drop the .je-muted state when its
+    // mount fails — without this, leaving a JE route with a still-active
+    // custom tab would leave the home page with no visible content.
+    unhideNative: unhideNative
   };
 })(window.JellyfinEnhanced = window.JellyfinEnhanced || {});

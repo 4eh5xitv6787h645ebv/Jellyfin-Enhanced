@@ -5,14 +5,19 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 {
-    /// <summary>
-    /// Stable hash of plugin assembly version + the subset of plugin config
-    /// that affects rendered UI (sidebar entries, home tabs, branding).
-    /// Bumps when an admin toggles a feature so the bootstrap script's cache
-    /// key changes and clients re-fetch on the next request — no hard refresh.
-    /// </summary>
+    // Stable hash of plugin assembly version + the subset of plugin config
+    // that affects rendered UI (sidebar entries, home tabs, branding).
+    // Bumps when an admin toggles a feature so the bootstrap script's cache
+    // key changes and clients re-fetch on the next request — no hard refresh.
+    //
+    // The hash material is salted with a per-server random GUID generated
+    // once and held in memory. That defeats the dictionary attack where an
+    // anonymous caller (the version endpoint is AllowAnonymous so the
+    // bootstrap can fetch it pre-login) precomputes hashes for every combo
+    // of feature toggles and reads back which features the admin has on.
     public static class ConfigVersion
     {
+        private static readonly string _salt = Guid.NewGuid().ToString("N");
         private static readonly object _lock = new();
         private static string _cached = string.Empty;
         private static DateTime _cachedAt = DateTime.MinValue;
@@ -92,7 +97,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 
         private static string Hash(string material)
         {
-            var bytes = Encoding.UTF8.GetBytes(material);
+            var bytes = Encoding.UTF8.GetBytes(_salt + "|" + material);
             var sha = SHA256.HashData(bytes);
             return Convert.ToHexString(sha)[..12];
         }

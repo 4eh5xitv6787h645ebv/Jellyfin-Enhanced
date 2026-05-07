@@ -5,14 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 {
-    /// <summary>
-    /// Buffers responses for /web/index.html (and its variants) and injects a
-    /// reference to JE's bootstrap script before <c>&lt;/body&gt;</c>.
-    ///
-    /// The bootstrap URL carries the current config-version hash as a query
-    /// parameter so browsers and service workers always pick up the latest
-    /// build without a manual hard refresh.
-    /// </summary>
+    // Buffers responses for /web/index.html (and its variants) and injects a
+    // reference to JE's bootstrap script before </body>. The bootstrap URL
+    // carries the current config-version hash so browsers and service workers
+    // always pick up the latest build without a manual hard refresh.
     public sealed class HtmlInjectionMiddleware
     {
         private const string BootstrapPath = "/JellyfinEnhanced/web/bootstrap.js";
@@ -65,7 +61,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
                 using var reader = new StreamReader(buffer, Encoding.UTF8, true, -1, true);
                 var html = await reader.ReadToEndAsync().ConfigureAwait(false);
 
-                var modified = Inject(html, context.Request.PathBase);
+                var modified = Inject(html);
                 var bytes = Encoding.UTF8.GetBytes(modified);
 
                 context.Response.Headers.Remove("Content-Encoding");
@@ -98,10 +94,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
 
         private static bool IsIndexHtmlRequest(PathString path)
         {
+            // Match against both /web/* and /<base>/web/* paths because some
+            // Jellyfin configurations (BaseUrl set in network.xml, reverse-
+            // proxy rewrites) keep the prefix on Request.Path rather than
+            // moving it to PathBase. Suffix matching is enough for our
+            // purposes — there's only one /web/ tree per Jellyfin instance.
             var value = path.Value ?? string.Empty;
-            return value.Equals("/web", StringComparison.OrdinalIgnoreCase)
+            if (value.Length == 0) return false;
+
+            if (value.Equals("/web", StringComparison.OrdinalIgnoreCase)
                 || value.Equals("/web/", StringComparison.OrdinalIgnoreCase)
-                || value.Equals("/web/index.html", StringComparison.OrdinalIgnoreCase);
+                || value.Equals("/web/index.html", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return value.EndsWith("/web", StringComparison.OrdinalIgnoreCase)
+                || value.EndsWith("/web/", StringComparison.OrdinalIgnoreCase)
+                || value.EndsWith("/web/index.html", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool ShouldInject(HttpResponse response)
@@ -129,7 +139,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
                 && contentType.Contains("text/html", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static string Inject(string html, PathString pathBase)
+        private static string Inject(string html)
         {
             // Idempotency: if a previous injection is still present, strip it
             // before re-injecting with the current version hash.
@@ -143,9 +153,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
                 }
             }
 
+            // Use a relative URL so the browser resolves the bootstrap against
+            // the page's actual location. Works for /web/index.html (where the
+            // resolved URL is /JellyfinEnhanced/...) and for /<base>/web/index.html
+            // (where the resolved URL is /<base>/JellyfinEnhanced/...) without
+            // any path manipulation here.
             var version = ConfigVersion.Current;
-            var basePath = pathBase.HasValue ? pathBase.Value : string.Empty;
-            var src = $"{basePath}{BootstrapPath}?v={version}";
+            var src = $"..{BootstrapPath}?v={version}";
             var tag = $"<script {ScriptMarker} src=\"{src}\" defer></script>";
 
             var bodyClose = html.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);

@@ -37,12 +37,20 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
 
+  // Hash-fragment URLs only — defends against javascript:/data:/file: schemes
+  // sneaking in if an attacker ever gets to write the server-side response
+  // (e.g. via a corrupted JE config file with elevated access). Server-side
+  // we only emit "#/JellyfinEnhanced/<id>", so this is defense in depth.
+  function safeUrl(url) {
+    return (typeof url === 'string' && /^#\//.test(url)) ? url : '#/home';
+  }
+
   function makeLink(item) {
     var a = document.createElement('a');
     a.setAttribute('is', 'emby-linkbutton');
     a.setAttribute('data-itemid', 'je-' + item.id);
     a.className = 'lnkMediaFolder navMenuOption emby-button ' + ENTRY_CLASS;
-    a.href = item.url;
+    a.href = safeUrl(item.url);
 
     var iconSpan = document.createElement('span');
     iconSpan.className = 'material-icons navMenuOptionIcon ' + (item.icon || 'extension');
@@ -96,27 +104,42 @@
   }
 
   function fetchEntries() {
-    return fetch(basePath() + '/JellyfinEnhanced/web/sidebar', { credentials: 'same-origin', cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : { entries: [] }; })
+    // ApiClient.ajax attaches Jellyfin's X-Emby-Token / X-MediaBrowser-Token
+    // header automatically — raw fetch returns 401 because the [Authorize]
+    // attribute on the controller refuses it.
+    var ApiClient = window.ApiClient;
+    if (!ApiClient || typeof ApiClient.ajax !== 'function') {
+      return Promise.resolve();
+    }
+    return ApiClient.ajax({
+      type: 'GET',
+      url: ApiClient.getUrl('JellyfinEnhanced/web/sidebar'),
+      dataType: 'json'
+    })
       .then(function (body) {
-        entries = (body && body.entries) || [];
+        // Only replace entries on success. A transient 5xx / auth blip
+        // would otherwise wipe the user's sidebar links until the next
+        // hot-reload tick.
+        if (body && Array.isArray(body.entries)) entries = body.entries;
       })
-      .catch(function () { entries = []; });
+      .catch(function (err) {
+        console.warn('[JE SidebarManager] sidebar fetch failed', err);
+      });
   }
 
   // Two-phase observer to avoid burning CPU on every body mutation:
-  //   1. A lightweight watcher waits for the drawer host to appear.
+  //   1. A lightweight watcher waits for the drawer host to appear. The
+  //      poll interval backs off but never gives up — Jellyfin's drawer
+  //      can be lazily mounted if the user hasn't opened it yet, and we
+  //      need to still attach if they open it minutes after login.
   //   2. Once we have the host, we observe ONLY its subtree, and repaint
   //      whenever the drawer is rebuilt (user switch / theme change) or
   //      our managed links are removed.
   function startObserver() {
     if (observer) return;
 
-    var hostObserver = null;
-    var bootstrapTries = 0;
-
     function attach(host) {
-      hostObserver = new MutationObserver(function (records) {
+      var hostObserver = new MutationObserver(function (records) {
         // Cheap pre-filter: only react when nodes were actually added or
         // removed. Class/text mutations on existing nodes don't matter.
         for (var i = 0; i < records.length; i++) {
@@ -133,11 +156,15 @@
       observer = hostObserver;
     }
 
+    var tries = 0;
     function tryBootstrap() {
       var host = document.querySelector(HOST_SELECTOR);
       if (host) { attach(host); paint(); return; }
-      if (++bootstrapTries > 600) return; // ~30s
-      setTimeout(tryBootstrap, 50);
+      tries++;
+      // 50ms for the first second, then 250ms, then 1s, then 5s indefinitely.
+      // Drawer eventually gets mounted; we just don't burn CPU waiting.
+      var delay = tries < 20 ? 50 : tries < 60 ? 250 : tries < 120 ? 1000 : 5000;
+      setTimeout(tryBootstrap, delay);
     }
     tryBootstrap();
   }
