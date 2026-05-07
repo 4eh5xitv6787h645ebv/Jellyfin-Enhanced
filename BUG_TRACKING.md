@@ -15,6 +15,56 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 ## FIXED
 
+### B10 — Cold load on `#/JellyfinEnhanced/<id>` flashes "Page not found"
+
+**Symptom (user report):** "fix the pluginpages one. on
+http://192.168.0.84:8097/web/#/JellyfinEnhanced/downloads i get page
+not found"
+
+**Reproduced via Playwright (`test-cold-load.js`):**
+
+```
+@0ms   hash=#/JellyfinEnhanced/downloads  pageNotFound=true   active=null
+@100ms hash=#/JellyfinEnhanced/downloads  pageNotFound=true   active=null
+@250ms hash=#/home                        pageNotFound=false  active=downloads
+```
+
+**Root cause:** the JS-side `route-hijacker.js` `preempt()` listener
+catches hashchange events fine, but on a TRUE cold load (user pastes
+the URL into the address bar, opens it in a new tab, or refreshes a
+page that's at a JE route) Jellyfin's SPA bundles run before our
+deferred plugin script. The bundle's React notFound view paints
+before our redirect.
+
+**Fix:** `Web/HtmlInjectionMiddleware.cs` injects a tiny inline
+`<script>` immediately after `<head>` — runs SYNCHRONOUSLY during
+HTML parse, BEFORE any deferred bundle executes. If the URL hash
+matches `#/JellyfinEnhanced/<id>`, it stashes the id in
+sessionStorage and `location.replace()`s to `#/home`. By the time
+Jellyfin's router runs, the URL is already `#/home`, so no notFound
+view is ever painted. `RouteHijacker.init()` reads the stashed id and
+mounts the JE route once the plugin's JS finishes loading.
+
+**Verified by `test-true-cold.js`** (a TRUE cold load — fresh tab to
+`/web/#/JellyfinEnhanced/downloads` after auth was seeded in a
+separate tab):
+
+```
+@0ms   hash=#/home  preemptHit=downloads  pendingRoute=downloads  pageNotFound=false  active=null
+@1000ms hash=#/home  preemptHit=downloads  pendingRoute=null       pageNotFound=false  active=downloads
+```
+
+`pageNotFound=false` at every sample. The 1s delay before mount is
+the JE plugin's normal cold-start time (loading 60+ component scripts).
+
+All 6 regression suites still green:
+- `test-no-hard-refresh.js` — 7/7 pass
+- `test-home-via-item.js` — bookmarks tab works (B8 reproduction)
+- `test-tabs-reentry.js` — tabs survive home re-entry (B7 reproduction)
+- `test-route-404.js` — 4/4 routes mount (B6 reproduction)
+- `test-configpage-deep.js` — 10/10 pass
+- `test-true-cold.js` — pageNotFound=false on true cold load (NEW)
+
 ### B9 — JE tabs render on a second line below native Home / Favourites tabs
 
 **Symptom (user report):** "now please make it inline with the other tabs"

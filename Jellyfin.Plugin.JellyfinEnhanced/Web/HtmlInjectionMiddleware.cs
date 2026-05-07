@@ -139,19 +139,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
                 && contentType.Contains("text/html", StringComparison.OrdinalIgnoreCase);
         }
 
+        private const string PreemptMarker = "data-je-preempt";
+
+        // Tiny inline script that runs SYNCHRONOUSLY during HTML parse,
+        // before Jellyfin's SPA router has a chance to read the URL. If
+        // the user landed on a JE route directly (deep link, refresh on
+        // a sidebar entry, paste-into-address-bar), rewrite the hash to
+        // #/home BEFORE the router runs so it never paints its built-in
+        // notFound view. The intended route id is stashed in
+        // sessionStorage and consumed by RouteHijacker.init() once the
+        // plugin's JS finishes loading. This eliminates the brief
+        // "Page not found" flash observed on cold loads.
+        private const string PreemptScript =
+            "<script " + PreemptMarker + ">(function(){var h=location.hash||'';var p='#/JellyfinEnhanced/';if(h.indexOf(p)!==0)return;var rest=h.slice(p.length);var stop=rest.indexOf('?');if(stop>=0)rest=rest.slice(0,stop);if(!rest)return;try{sessionStorage.setItem('__JE_PENDING_ROUTE__',rest);}catch(_){}location.replace(location.pathname+location.search+'#/home');})();</script>";
+
         private static string Inject(string html)
         {
-            // Idempotency: if a previous injection is still present, strip it
-            // before re-injecting with the current version hash.
-            var startIdx = html.IndexOf("<script " + ScriptMarker, StringComparison.OrdinalIgnoreCase);
-            if (startIdx >= 0)
-            {
-                var endIdx = html.IndexOf("</script>", startIdx, StringComparison.OrdinalIgnoreCase);
-                if (endIdx >= 0)
-                {
-                    html = html.Remove(startIdx, endIdx - startIdx + "</script>".Length);
-                }
-            }
+            // Idempotency: if previous injections are still present, strip
+            // them before re-injecting with the current version hash.
+            html = StripExistingTag(html, ScriptMarker);
+            html = StripExistingTag(html, PreemptMarker);
 
             // Use a relative URL so the browser resolves the bootstrap against
             // the page's actual location. Works for /web/index.html (where the
@@ -162,6 +169,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
             var src = $"..{BootstrapPath}?v={version}";
             var tag = $"<script {ScriptMarker} src=\"{src}\" defer></script>";
 
+            // The preempt runs as early as possible — inject it immediately
+            // after <head> so it executes before any defer'd / inlined
+            // Jellyfin scripts later in the document.
+            var headClose = html.IndexOf("<head>", StringComparison.OrdinalIgnoreCase);
+            if (headClose >= 0)
+            {
+                var insertAt = headClose + "<head>".Length;
+                html = string.Concat(html.AsSpan(0, insertAt), PreemptScript, html.AsSpan(insertAt));
+            }
+
             var bodyClose = html.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
             if (bodyClose >= 0)
             {
@@ -169,6 +186,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
             }
 
             return html + tag;
+        }
+
+        private static string StripExistingTag(string html, string marker)
+        {
+            var startIdx = html.IndexOf("<script " + marker, StringComparison.OrdinalIgnoreCase);
+            if (startIdx < 0) return html;
+            var endIdx = html.IndexOf("</script>", startIdx, StringComparison.OrdinalIgnoreCase);
+            if (endIdx < 0) return html;
+            return html.Remove(startIdx, endIdx - startIdx + "</script>".Length);
         }
     }
 }

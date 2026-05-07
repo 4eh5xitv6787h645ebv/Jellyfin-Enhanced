@@ -224,8 +224,20 @@
       document.addEventListener('viewshow', evaluate);
       document.addEventListener('viewbeforeshow', evaluate);
 
-      // Also pre-empt on init in case the user landed directly on a JE
-      // hash (deep link, browser refresh).
+      // The inline preempt script in HtmlInjectionMiddleware runs during
+      // HTML parse and rewrites the hash to /home, then stashes the
+      // intended route id in sessionStorage. Honor that here so the
+      // user lands on the JE page they asked for, not on Home.
+      try {
+        var pending = sessionStorage.getItem('__JE_PENDING_ROUTE__');
+        if (pending) {
+          sessionStorage.removeItem('__JE_PENDING_ROUTE__');
+          deferredRouteId = pending;
+        }
+      } catch (_) { /* sessionStorage may be unavailable in some contexts */ }
+
+      // Belt-and-braces: if the URL still has a JE hash (the inline
+      // preempt was somehow skipped), let the JS-side preempt handle it.
       preempt(null);
       evaluate();
 
