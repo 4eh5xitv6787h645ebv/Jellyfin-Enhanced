@@ -45,11 +45,24 @@
   var deferredRouteId = null; // captured on hash redirect; consumed when the home page mounts
 
   function getRouteId() {
-    // Two sources: the visible URL (the user navigated directly to a JE
-    // route) AND a captured pending id (we redirected the URL to #/home
-    // earlier so Jellyfin's router wouldn't paint its notFound view, and
-    // need to remember which JE route we're now mounting).
+    // Three sources, in priority order:
+    //   1. A previously-captured pending id (we're mid-mount).
+    //   2. sessionStorage — the inline preempt in <head> stashes the
+    //      requested route there whenever it intercepts a JE hash.
+    //      Drain it on every read so the next nav starts clean.
+    //   3. The visible URL (user navigated directly to a JE route on
+    //      a Jellyfin instance that doesn't have the inline preempt
+    //      installed for some reason).
     if (deferredRouteId) return deferredRouteId;
+    try {
+      var stash = sessionStorage.getItem('__JE_PENDING_ROUTE__');
+      if (stash) {
+        sessionStorage.removeItem('__JE_PENDING_ROUTE__');
+        deferredRouteId = stash;
+        return stash;
+      }
+    } catch (_) { /* sessionStorage unavailable */ }
+
     var hash = location.hash || '';
     if (hash.indexOf(PREFIX) !== 0) return null;
     var rest = hash.slice(PREFIX.length);
@@ -213,9 +226,12 @@
 
   JE.RouteHijacker = {
     init: function () {
-      // CAPTURE-PHASE listeners run BEFORE Jellyfin's router so we can
-      // redirect /JellyfinEnhanced/<id> → /home before the router paints
-      // its notFound view.
+      // The inline preempt in <head> already installed capture-phase
+      // hashchange / popstate listeners that redirect JE hashes to
+      // #/home and stash the route id in sessionStorage. Our listeners
+      // here are belt-and-braces (in case the inline preempt is missing
+      // for any reason) and they're also responsible for triggering the
+      // mount via evaluate().
       window.addEventListener('hashchange', preempt, true);
       window.addEventListener('popstate', preempt, true);
 
@@ -223,21 +239,12 @@
       window.addEventListener('popstate', evaluate);
       document.addEventListener('viewshow', evaluate);
       document.addEventListener('viewbeforeshow', evaluate);
+      // The inline preempt fires this custom event whenever it stashes
+      // a route id from a click / pushState that didn't change the URL
+      // (sidebar click while already on #/home, etc.). Without this the
+      // route never mounts because no native event triggers evaluate().
+      window.addEventListener('je-route-pending', evaluate);
 
-      // The inline preempt script in HtmlInjectionMiddleware runs during
-      // HTML parse and rewrites the hash to /home, then stashes the
-      // intended route id in sessionStorage. Honor that here so the
-      // user lands on the JE page they asked for, not on Home.
-      try {
-        var pending = sessionStorage.getItem('__JE_PENDING_ROUTE__');
-        if (pending) {
-          sessionStorage.removeItem('__JE_PENDING_ROUTE__');
-          deferredRouteId = pending;
-        }
-      } catch (_) { /* sessionStorage may be unavailable in some contexts */ }
-
-      // Belt-and-braces: if the URL still has a JE hash (the inline
-      // preempt was somehow skipped), let the JS-side preempt handle it.
       preempt(null);
       evaluate();
 

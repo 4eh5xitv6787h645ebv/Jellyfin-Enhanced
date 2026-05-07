@@ -15,6 +15,57 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 ## FIXED
 
+### B11 — In-app sidebar click to JE route shows Page not found
+
+**Symptoms (user report):**
+"if i am on the home page and click on the sidebar page eg HC. Itll
+take me to this url ../#/JellyfinEnhanced/hiddenContent but i still
+get Page not found. but if i refresh the page the url changes to
+../#/home but then it shows the HC page."
+
+**Reproduced via Playwright (`test-sidebar-click.js`):** sidebar click
+fires `pageNotFound=true` from 50ms onward; the URL persists as
+`#/JellyfinEnhanced/hiddenContent` because Jellyfin's emby-linkbutton
+navigates via `history.pushState()`, which fires NEITHER hashchange
+NOR popstate. My capture-phase preempt listeners never trigger.
+
+**Root cause:** Jellyfin uses three different navigation mechanisms
+depending on context:
+1. Browser address-bar / refresh — fires hashchange + load.
+2. `<a href>` clicks — fires hashchange.
+3. `emby-linkbutton` clicks — calls `history.pushState()` (silent).
+
+The previous preempt only handled #1 (load) and #2 (hashchange).
+Mechanism #3 was silent: URL changed but no event fired, so the route
+hijacker only learned about the route via the next `viewshow` — by
+which time Jellyfin had already painted notFound.
+
+**Fix:** the inline preempt now installs THREE interception layers:
+1. Initial-load URL parse + hashchange/popstate listeners (existing).
+2. **NEW:** capture-phase `click` listener on document for `<a>`
+   elements with href starting with `#/JellyfinEnhanced/` —
+   preventDefault, stash route id, redirect to `#/home`.
+3. **NEW:** wrappers around `history.pushState` /
+   `history.replaceState` — if the requested URL matches a JE route,
+   stash the id and substitute `#/home`.
+
+A new custom `je-route-pending` event is dispatched after every stash
+so RouteHijacker.evaluate() runs and mounts the route, even when no
+native event fires (URL was already `#/home` before the stash).
+
+**Verified by `test-sidebar-click.js`:** clicking the Hidden Content
+sidebar entry while on home now shows `pageNotFound=false`, hash
+stays at `#/home`, and `mounted=true` within 50ms.
+
+All 7 regression suites still green:
+- `test-no-hard-refresh.js` — 7/7
+- `test-home-via-item.js` — bookmarks works (B8 reproduction)
+- `test-tabs-reentry.js` — tabs survive home re-entry (B7)
+- `test-route-404.js` — 4/4 routes mount (B6)
+- `test-configpage-deep.js` — 10/10
+- `test-true-cold.js` — pageNotFound=false on cold load (B10)
+- `test-sidebar-click.js` — pageNotFound=false on in-app click (NEW)
+
 ### B10 — Cold load on `#/JellyfinEnhanced/<id>` flashes "Page not found"
 
 **Symptom (user report):** "fix the pluginpages one. on

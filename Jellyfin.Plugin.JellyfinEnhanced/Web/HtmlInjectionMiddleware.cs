@@ -142,16 +142,42 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
         private const string PreemptMarker = "data-je-preempt";
 
         // Tiny inline script that runs SYNCHRONOUSLY during HTML parse,
-        // before Jellyfin's SPA router has a chance to read the URL. If
-        // the user landed on a JE route directly (deep link, refresh on
-        // a sidebar entry, paste-into-address-bar), rewrite the hash to
-        // #/home BEFORE the router runs so it never paints its built-in
-        // notFound view. The intended route id is stashed in
-        // sessionStorage and consumed by RouteHijacker.init() once the
-        // plugin's JS finishes loading. This eliminates the brief
-        // "Page not found" flash observed on cold loads.
+        // before Jellyfin's SPA router has a chance to read the URL or
+        // register its own listeners.
+        //
+        // Three interception layers — Jellyfin navigates via different
+        // mechanisms depending on context, and we have to cover all of
+        // them or the user will see a "Page not found" flash:
+        //
+        //  1. URL parse on load — if the page was opened directly with a
+        //     JE hash, rewrite to #/home and stash the id.
+        //  2. hashchange / popstate listeners (capture phase, registered
+        //     here so they fire before Jellyfin's deferred bundles).
+        //  3. CRITICAL: click capture on links with href starting with
+        //     "#/JellyfinEnhanced/", PLUS history.pushState /
+        //     history.replaceState wrappers. Jellyfin's emby-linkbutton
+        //     handles in-app sidebar clicks via pushState, which does
+        //     NOT fire hashchange or popstate — without these wrappers,
+        //     a sidebar click lands on a JE URL that Jellyfin's router
+        //     paints as notFound.
+        //
+        // The route id is stashed in sessionStorage on every match.
+        // RouteHijacker reads sessionStorage on every evaluate().
         private const string PreemptScript =
-            "<script " + PreemptMarker + ">(function(){var h=location.hash||'';var p='#/JellyfinEnhanced/';if(h.indexOf(p)!==0)return;var rest=h.slice(p.length);var stop=rest.indexOf('?');if(stop>=0)rest=rest.slice(0,stop);if(!rest)return;try{sessionStorage.setItem('__JE_PENDING_ROUTE__',rest);}catch(_){}location.replace(location.pathname+location.search+'#/home');})();</script>";
+            "<script " + PreemptMarker + ">(function(){"
+            + "var P='#/JellyfinEnhanced/';"
+            + "function extract(href){if(typeof href!=='string')return null;var i=href.indexOf('#');var h=i>=0?href.slice(i):href;if(h.indexOf(P)!==0)return null;var r=h.slice(P.length);var q=r.indexOf('?');if(q>=0)r=r.slice(0,q);return r||null;}"
+            + "function stash(id){try{sessionStorage.setItem('__JE_PENDING_ROUTE__',id);}catch(_){}try{window.dispatchEvent(new CustomEvent('je-route-pending',{detail:{id:id}}));}catch(_){}}"
+            + "function goHome(){if(location.hash!=='#/home')location.replace(location.pathname+location.search+'#/home');}"
+            + "function preempt(e){var src=e&&e.newURL?e.newURL:location.href;var id=extract(src);if(!id)return;stash(id);goHome();if(e&&e.stopImmediatePropagation)e.stopImmediatePropagation();}"
+            + "preempt(null);"
+            + "window.addEventListener('hashchange',preempt,true);"
+            + "window.addEventListener('popstate',preempt,true);"
+            + "document.addEventListener('click',function(e){if(e.defaultPrevented||e.button)return;var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;var id=extract(a.getAttribute('href'));if(!id)return;e.preventDefault();e.stopImmediatePropagation();stash(id);goHome();},true);"
+            + "var op=history.pushState,or=history.replaceState;"
+            + "history.pushState=function(s,t,u){var id=extract(u);if(id){stash(id);return op.call(this,s,t,location.pathname+location.search+'#/home');}return op.apply(this,arguments);};"
+            + "history.replaceState=function(s,t,u){var id=extract(u);if(id){stash(id);return or.call(this,s,t,location.pathname+location.search+'#/home');}return or.apply(this,arguments);};"
+            + "})();</script>";
 
         private static string Inject(string html)
         {
