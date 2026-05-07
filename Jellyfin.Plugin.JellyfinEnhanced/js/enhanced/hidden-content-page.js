@@ -7,9 +7,10 @@
 
   const JE = window.JellyfinEnhanced;
   const sidebar = document.querySelector('.mainDrawer-scrollContainer');
-  const pluginPagesExists = !!sidebar?.querySelector(
-    'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.HiddenContentPage"]'
-  );
+  // JE web subsystem (Web/HtmlInjectionMiddleware + js/web/*) provides the
+  // page surface — the legacy "Plugin Pages installed?" probe always
+  // answers yes from this module's perspective.
+  const pluginPagesExists = true;
 
   // ============================================================
   // State
@@ -446,31 +447,15 @@
 
     injectStyles();
 
-    // Re-render listener runs in BOTH native and Plugin-Pages modes; gated on container presence (state.pageVisible isn't set in Plugin-Pages mode).
+    // The page may be mounted via the WebHost route hijacker or via the
+    // tabs manager, so the change listener targets whatever container our
+    // renderer last mounted into.
     window.addEventListener('je-hidden-content-changed', () => {
       const container = document.getElementById('je-hidden-content-container');
       if (container && document.contains(container)) {
         renderPage(container);
       }
     });
-
-    const usingPluginPages = pluginPagesExists && config.HiddenContentUsePluginPages;
-    if (usingPluginPages) {
-      console.log(`${logPrefix} Hidden content page is injected via Plugin Pages`);
-      return;
-    }
-
-    injectNavigation();
-    setupNavigationWatcher();
-
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
-    document.addEventListener("viewshow", handleViewShow);
-    document.addEventListener("click", handleNavClick);
-    window.addEventListener("hashchange", handleNavigation);
-    window.addEventListener("popstate", handleNavigation);
-
-    handleNavigation();
 
     console.log(`${logPrefix} Hidden content page module initialized`);
   }

@@ -899,12 +899,14 @@
     locationTimer: null,
   };
 
-  /** Re-evaluated each call so it stays correct even when the sidebar renders late. */
+  /**
+   * The JE web subsystem (js/web/*) provides the bookmarks page surface
+   * via WebHost + RouteHijacker, so the legacy standalone fallback is
+   * suppressed whenever the user has BookmarksUsePluginPages turned on.
+   */
   function isPluginPagesActive() {
     const config = JE?.pluginConfig || {};
-    if (!config.BookmarksUsePluginPages) return false;
-    const sb = document.querySelector('.mainDrawer-scrollContainer');
-    return !!sb?.querySelector('a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]');
+    return !!config.BookmarksUsePluginPages;
   }
 
   // ============================================================
@@ -1229,36 +1231,9 @@
         hookViewEvents();
         document.addEventListener('je-bookmarks-updated', renderIfSectionExists);
 
-        // Sidebar navigation (when neither Plugin Pages nor Custom Tabs is handling it)
-        if (!isPluginPagesActive() && !JE.pluginConfig?.BookmarksUseCustomTabs) {
-          injectNavigation();
-          setupNavigationWatcher();
-          window.addEventListener('hashchange', interceptNavigation, true);
-          window.addEventListener('popstate', interceptNavigation, true);
-          document.addEventListener('viewshow', handleViewShow);
-          document.addEventListener('click', handleNavClick);
-          window.addEventListener('hashchange', handleNavigation);
-          window.addEventListener('popstate', handleNavigation);
-          handleNavigation();
-        }
-
-        // Watch for section being injected by CustomTabs. Observe document.body
-        // (not .mainAnimatedPages) because Jellyfin replaces .mainAnimatedPages
-        // when navigating to the admin dashboard — an observer bound to the old
-        // element would become orphaned after returning to home (issue 536).
-        // Routes to the shared multiplexed body observer.
-        let mountPending = false;
-        JE.helpers.createObserver('bookmarks-library-custom-tab', () => {
-          if (!mountPending) {
-            mountPending = true;
-            requestAnimationFrame(() => {
-              mountPending = false;
-              renderIfSectionExists();
-            });
-          }
-        }, document.body, { childList: true, subtree: true });
-
-        // Try immediate render in case tab is already visible
+        // The JE web subsystem (route hijacker + tabs manager) is the only
+        // surface for the bookmarks library now. The legacy in-place
+        // sidebar-link injector and #/bookmarks URL handler are retired.
         renderIfSectionExists();
         console.log(`${logPrefix} ✓ Ready`);
       }
@@ -2630,6 +2605,20 @@
 
     setTimeout(() => modal.style.opacity = '1', 10);
   }
+
+  // Public surface used by JE.WebHost (route hijacker + tabs manager).
+  // Wraps the existing renderBookmarksLibrary so the consumer doesn't have to
+  // know about the .sections.bookmarks marker class the legacy CustomTabs
+  // mount expected.
+  JE.bookmarksLibrary = {
+    renderForCustomTab: function (el) {
+      if (!el) return;
+      el.classList.add('sections', 'bookmarks');
+      el.classList.remove('hide');
+      el.style.removeProperty('display');
+      renderBookmarksLibrary(el);
+    }
+  };
 
   // Initialize
   if (document.readyState === 'loading') {

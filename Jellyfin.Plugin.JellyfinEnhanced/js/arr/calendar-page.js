@@ -5,9 +5,10 @@
 
   const JE = window.JellyfinEnhanced;
   const sidebar = document.querySelector('.mainDrawer-scrollContainer');
-  const pluginPagesExists = !!sidebar?.querySelector(
-    'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.CalendarPage"]'
-  );
+  // The JE web subsystem (Web/HtmlInjectionMiddleware + js/web/*) is now the
+  // exclusive provider of standalone pages, so the legacy "Plugin Pages
+  // installed?" probe always answers yes from this module's perspective.
+  const pluginPagesExists = true;
 
   // State management
   const state = {
@@ -1180,28 +1181,13 @@
     injectStyles();
     loadSettings();
 
-    const usingPluginPages = pluginPagesExists && config.CalendarUsePluginPages;
-    if (usingPluginPages) {
-      console.log(`${logPrefix} Calendar page is injected via Plugin Pages`);
-      return;
-    }
-
-    // Page-specific setup for custom tabs or dedicated page mode
-    // Inject navigation and set up one-time re-injection on sidebar rebuild
-    injectNavigation();
-    setupNavigationWatcher();
-
-    // Setup event listeners
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
-    document.addEventListener("viewshow", handleViewShow);
-    document.addEventListener("click", handleNavClick);
+    // The JE web subsystem (js/web/route-hijacker, tabs-manager) is the
+    // only surface for this page now — the legacy in-place sidebar-link
+    // injection and #/calendar URL handler are no longer needed. Click
+    // events for calendar items are still wired below because the page
+    // body itself fires them whether it's mounted as a tab or as a
+    // standalone route.
     document.addEventListener("click", handleEventClick);
-
-    startLocationWatcher();
-
-    // Check location on init
-    handleNavigation();
 
     console.log(`${logPrefix} Calendar page module initialized`);
   }

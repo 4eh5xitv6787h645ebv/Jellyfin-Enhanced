@@ -379,32 +379,10 @@
             JE.t = window.JellyfinEnhanced.t; // Ensure the real function is assigned
             await loadPrivateConfig();
 
-            // Clear stale UseCustomTabs / UsePluginPages config flags when those
-            // plugins are not installed.  Settings persist after uninstall, which
-            // causes sidebar injection to be skipped even though the delivery
-            // plugin is no longer present.
-            try {
-                const installedPlugins = await ApiClient.ajax({
-                    type: 'GET', url: ApiClient.getUrl('/Plugins'), dataType: 'json'
-                });
-                if (!Array.isArray(installedPlugins)) throw new Error('Unexpected /Plugins response');
-                const hasCustomTabs = installedPlugins.some(p => p.Name === 'Custom Tabs');
-                const hasPluginPages = installedPlugins.some(p => p.Name === 'Plugin Pages');
-                if (!hasCustomTabs) {
-                    JE.pluginConfig.BookmarksUseCustomTabs = false;
-                    JE.pluginConfig.CalendarUseCustomTabs = false;
-                    JE.pluginConfig.HiddenContentUseCustomTabs = false;
-                    JE.pluginConfig.DownloadsUseCustomTabs = false;
-                }
-                if (!hasPluginPages) {
-                    JE.pluginConfig.BookmarksUsePluginPages = false;
-                    JE.pluginConfig.HiddenContentUsePluginPages = false;
-                    JE.pluginConfig.DownloadsUsePluginPages = false;
-                    JE.pluginConfig.CalendarUsePluginPages = false;
-                }
-            } catch (e) {
-                console.warn('🪼 Jellyfin Enhanced: Could not verify installed plugins:', e);
-            }
+            // The legacy "is Custom Tabs / Plugin Pages plugin installed?"
+            // probe is gone — JE provides those surfaces itself, so the
+            // UseCustomTabs / UsePluginPages flags now mean "show as tab"
+            // and "show as page" with no external dependency required.
 
             // Check if server has triggered a translation cache clear
             const serverTranslationClearTs = JE.pluginConfig.ClearTranslationCacheTimestamp || 0;
@@ -500,6 +478,14 @@
             // Stage 3: Load ALL component scripts
             const basePath = '/JellyfinEnhanced/js';
             const allComponentScripts = [
+                // web subsystem (replaces File Transformation, Plugin Pages, Custom Tabs)
+                'web/page-host.js',
+                'web/hot-reload.js',
+                'web/sidebar-manager.js',
+                'web/route-hijacker.js',
+                'web/tabs-manager.js',
+                'web/web-kickoff.js',
+
                 // enhanced
                 'enhanced/config.js',
                 'enhanced/helpers.js',
@@ -510,7 +496,6 @@
                 'enhanced/playback.js',
                 'enhanced/hidden-content.js',
                 'enhanced/hidden-content-page.js',
-                'enhanced/hidden-content-custom-tab.js',
                 'enhanced/subtitles.js',
                 'enhanced/themer.js',
                 'enhanced/ui.js',
@@ -553,8 +538,6 @@
                 'arr/arr-tag-links.js',
                 'arr/requests-page.js',
                 'arr/calendar-page.js',
-                'arr/requests-custom-tab.js',
-                'arr/calendar-custom-tab.js',
 
                 // extras
                 'extras/colored-activity-icons.js',
@@ -655,6 +638,11 @@
             if (JE.pluginConfig?.HiddenContentEnabled && typeof JE.initializeHiddenContentPage === 'function') {
                 JE.initializeHiddenContentPage();
             }
+
+            // Self-hosted web subsystem — registers WebHost renderers and starts
+            // the sidebar / route / tabs / hot-reload subsystems. Must run after
+            // every renderForCustomTab provider has loaded onto JE.*.
+            if (typeof JE.WebKickoff?.start === 'function') JE.WebKickoff.start();
 
             console.log('🪼 Jellyfin Enhanced: All components initialized successfully.');
 

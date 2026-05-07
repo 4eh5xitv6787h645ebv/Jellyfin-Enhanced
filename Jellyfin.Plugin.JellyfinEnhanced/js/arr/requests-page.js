@@ -5,9 +5,10 @@
 
   const JE = window.JellyfinEnhanced;
   const sidebar = document.querySelector('.mainDrawer-scrollContainer');
-  const pluginPagesExists = !!sidebar?.querySelector(
-    'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.DownloadsPage"]',
-  );
+  // JE web subsystem (Web/HtmlInjectionMiddleware + js/web/*) provides the
+  // page surface — the legacy "Plugin Pages installed?" probe always
+  // answers yes from this module's perspective.
+  const pluginPagesExists = true;
 
   // State management
   const state = {
@@ -2350,49 +2351,14 @@
 
     injectStyles();
 
-    const usingPluginPages = pluginPagesExists && config.DownloadsUsePluginPages;
-    if (usingPluginPages) {
-      console.log(`${logPrefix} Downloads page is injected via Plugin Pages`);
-      return;
-    }
-
-    // Page-specific setup for custom tabs or dedicated page mode
-    createPageContainer();
-
-    // Inject navigation and set up one-time re-injection on sidebar rebuild
-    injectNavigation();
-    setupNavigationWatcher();
-
-    // Intercept router changes before Jellyfin handles them
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
-
-    // Listen for hash changes - handles browser back/forward and direct URL changes
-    window.addEventListener("hashchange", handleNavigation);
-    window.addEventListener("popstate", handleNavigation);
-
-    startLocationWatcher();
-
-    // Listen for Jellyfin's viewshow events - hide our page when other pages show
-    document.addEventListener("viewshow", (e) => {
-      const targetPage = e.target;
-      if (
-        state.pageVisible &&
-        targetPage &&
-        targetPage.id !== "je-downloads-page"
-      ) {
-        hidePage();
-      }
-    });
-
-    // Listen for clicks on header navigation buttons (Home, Favorites, etc.)
-    // These buttons use Jellyfin's internal router and may not change the hash immediately
+    // Web subsystem (js/web/route-hijacker, tabs-manager) is the only
+    // navigation surface for this page now. The legacy in-place
+    // sidebar-link injection and #/downloads URL handler are gone, so
+    // here we only wire body-level click handlers that have to fire
+    // regardless of where the page is mounted (tab vs full route).
     document.addEventListener(
       "click",
       (e) => {
-        if (!state.pageVisible) return;
-
-        // Handle play button clicks
         const playBtn = e.target.closest(".je-request-watch-btn");
         if (playBtn) {
           e.preventDefault();
@@ -2402,23 +2368,10 @@
           if (mediaId && window.Emby?.Page?.showItem) {
             window.Emby.Page.showItem(mediaId);
           }
-          return;
-        }
-
-        const btn = e.target.closest(
-          ".headerTabs button, .navMenuOption, .headerButton",
-        );
-        if (btn && !btn.classList.contains("je-nav-downloads-item")) {
-          // Hide our page immediately - don't try to manage other pages
-          // Jellyfin's router will handle showing the correct page
-          hidePage();
         }
       },
       true,
     );
-
-    // Check current URL on init
-    handleNavigation();
 
     console.log(`${logPrefix} Downloads page module initialized`);
   }
