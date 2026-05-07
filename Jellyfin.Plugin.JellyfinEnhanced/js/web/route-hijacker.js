@@ -241,6 +241,17 @@
     }, 30);
   }
 
+  // Public unmount — called by tabs-manager when the user activates a
+  // custom home tab while a JE route is currently mounted. Without this
+  // the route container stays visible underneath the tab content (both
+  // are children of #indexPage; activating a tab pane just adds it to
+  // the page without removing the route).
+  function publicUnmount() {
+    if (lastRouteId === null) return;
+    unmount();
+    deferredRouteId = null;
+  }
+
   JE.RouteHijacker = {
     init: function () {
       // The inline preempt in <head> already installed capture-phase
@@ -275,7 +286,8 @@
       }
     },
     isJeRoute: function () { return getRouteId() !== null; },
-    activeRouteId: function () { return lastRouteId; }
+    activeRouteId: function () { return lastRouteId; },
+    unmount: publicUnmount
   };
 
   // Per-source "ever succeeded" tracking. Until BOTH sources have at least

@@ -139,6 +139,15 @@
   }
 
   function activate(id) {
+    // If the user activated a custom tab while a JE sidebar route was
+    // mounted, unmount the route first — otherwise both render stacked
+    // inside the same #indexPage. This keeps the home-tab interaction
+    // semantically equivalent to clicking a native Jellyfin tab.
+    if (JE.RouteHijacker && typeof JE.RouteHijacker.activeRouteId === 'function'
+        && JE.RouteHijacker.activeRouteId() && typeof JE.RouteHijacker.unmount === 'function') {
+      try { JE.RouteHijacker.unmount(); } catch (_) { /* noop */ }
+    }
+
     // Make sure pane state is fresh BEFORE rendering: this prunes panes
     // that are stuck in a stale (now-hidden) #indexPage and ensures the
     // visible indexPage has its own pane with id=<id>.
@@ -243,7 +252,9 @@
       }
 
       // Wire native-tab clicks (idempotent via _jeBound) so picking a
-      // built-in Jellyfin tab clears our active state.
+      // built-in Jellyfin tab clears our active state. Also unmount any
+      // active JE route, otherwise it stays visible stacked underneath
+      // the native tab content.
       strip.querySelectorAll('button.emby-tab-button:not(.je-custom-tab-button)').forEach(function (b) {
         if (b._jeBound) return;
         b._jeBound = true;
@@ -251,6 +262,10 @@
           document.querySelectorAll('[' + TAB_BUTTON_ATTR + ']').forEach(function (x) { x.classList.remove('is-active'); });
           document.querySelectorAll('[' + TAB_PANE_ATTR + ']').forEach(function (x) { x.classList.remove('is-active'); });
           unhideNative();
+          if (JE.RouteHijacker && typeof JE.RouteHijacker.activeRouteId === 'function'
+              && JE.RouteHijacker.activeRouteId() && typeof JE.RouteHijacker.unmount === 'function') {
+            try { JE.RouteHijacker.unmount(); } catch (_) { /* noop */ }
+          }
         });
       });
     } finally {

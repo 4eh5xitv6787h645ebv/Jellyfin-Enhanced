@@ -15,6 +15,43 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 ## FIXED
 
+### B14 — Custom tab content stacks on top of an active JE sidebar route
+
+**Symptom (user report):** "now if i go to sidebar page then go to a
+custom tab it shows both one on top another"
+
+**Reproduced via Playwright (`test-route-tab-stacking.js`):** activate
+Hidden Content via sidebar → click Bookmarks custom tab → both
+`hasRouteContainer:true` AND `hasActivePane:true` simultaneously,
+producing the visual stack.
+
+**Root cause:** the route hijacker mounted its container as a child of
+`#indexPage` and hid sibling children. But it intentionally SKIPPED
+elements whose computed display was already `none` — including the
+JE custom tab panes (which default to `display:none`). When the user
+then activated a custom tab, the pane's `.is-active` class flipped
+its display to `block` while the route container stayed visible.
+
+**Fix:**
+- `js/web/route-hijacker.js` exposes a public `unmount()` method
+  (was previously only callable internally on navigation).
+- `js/web/tabs-manager.js` `activate()` calls
+  `JE.RouteHijacker.unmount()` first if a JE route is currently
+  mounted, so the route DOM is gone before the tab pane appears.
+- The native-tab click handler (Home / Favourites) now also calls
+  `unmount()` for the same reason — clicking a built-in Jellyfin tab
+  while a JE route is mounted should also clear the route.
+
+**Verified (`test-route-tab-stacking.js`):**
+```
+STEP 2 (route → custom tab):   hasRouteContainer:false  activePaneId:bookmarks  🟢
+STEP 3 (route → native tab):   hasRouteContainer:false  activePaneId:null       🟢
+```
+
+All 8 regression suites still green:
+no-hard-refresh, home-via-item, tabs-reentry, route-404 (4/4),
+configpage-deep, true-cold, sidebar-click, route-tab-stacking (NEW).
+
 ### B12 — JE route content sits flush against the viewport edges
 
 **Symptom (user report):** "fix the spacing of the page when it loads
