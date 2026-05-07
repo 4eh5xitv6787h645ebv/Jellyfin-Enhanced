@@ -12,14 +12,11 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using MediaBrowser.Controller.Configuration;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 using MediaBrowser.Common.Net;
-using System.Reflection;
-using System.Runtime.Loader;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced
 {
@@ -35,9 +32,45 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             _applicationPaths = applicationPaths;
             _logger = logger;
             _logger.Info($"{PluginName} v{Version} initialized. Plugin logs will be written to: {_logger.CurrentLogFilePath}");
-            CleanupOldScript();
-            CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
+            CleanupLegacyPluginPagesConfig();
             BackfillMissingDefaultShortcuts();
+        }
+
+        // One-time housekeeping for installs that previously had Plugin Pages
+        // managing JE's sidebar entries. We strip those JE entries from PP's
+        // config so users don't see broken links pointing at our deleted
+        // wrapper pages. PP itself remains functional for any other plugins
+        // that still rely on it.
+        private void CleanupLegacyPluginPagesConfig()
+        {
+            try
+            {
+                var ppConfigPath = Path.Combine(_applicationPaths.PluginConfigurationsPath, "Jellyfin.Plugin.PluginPages", "config.json");
+                if (!File.Exists(ppConfigPath)) return;
+
+                var raw = File.ReadAllText(ppConfigPath);
+                if (string.IsNullOrWhiteSpace(raw)) return;
+
+                var config = JObject.Parse(raw);
+                var pages = config.Value<JArray>("pages");
+                if (pages == null) return;
+
+                var ourPrefix = typeof(JellyfinEnhanced).Namespace + ".";
+                var toRemove = pages
+                    .OfType<JObject>()
+                    .Where(p => (p.Value<string>("Id") ?? string.Empty).StartsWith(ourPrefix, StringComparison.Ordinal))
+                    .ToList();
+
+                if (toRemove.Count == 0) return;
+
+                foreach (var p in toRemove) pages.Remove(p);
+                File.WriteAllText(ppConfigPath, config.ToString(Formatting.Indented));
+                _logger.Info($"Removed {toRemove.Count} legacy JE entries from Plugin Pages config.");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Could not clean legacy Plugin Pages config: {ex.Message}");
+            }
         }
 
         // Dedupes Shortcuts (XmlSerializer appends to constructor-initialized lists, doubling on each restart)
@@ -144,248 +177,40 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
         }
 
-        public void InjectScript()
-        {
-            UpdateIndexHtml(true);
-        }
+        // index.html injection now happens in Web/HtmlInjectionMiddleware at request time.
+        // No on-disk mutation, no Plugin Pages config, no File Transformation dependency.
 
         public override void OnUninstalling()
         {
-            UpdateIndexHtml(false);
+            CleanupLegacyOnDiskScript();
             base.OnUninstalling();
         }
-        private void CleanupOldScript()
+
+        // One-time housekeeping for installs that previously wrote a script
+        // tag into web/index.html via the now-deleted UpdateIndexHtml path.
+        private void CleanupLegacyOnDiskScript()
         {
             try
             {
                 var indexPath = IndexHtmlPath;
-                if (!File.Exists(indexPath))
-                {
-                    _logger.Error($"Could not find index.html at path: {indexPath}");
-                    return;
-                }
+                if (!File.Exists(indexPath)) return;
 
                 var content = File.ReadAllText(indexPath);
-                var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
+                var regex = new System.Text.RegularExpressions.Regex(
+                    $"<script[^>]*plugin=[\"']{System.Text.RegularExpressions.Regex.Escape(Name)}[\"'][^>]*>\\s*</script>\\n?");
 
                 if (regex.IsMatch(content))
                 {
-                    _logger.Info("Found old Jellyfin Enhanced script tag in index.html. Removing it now.");
                     content = regex.Replace(content, string.Empty);
                     File.WriteAllText(indexPath, content);
-                    _logger.Info("Successfully removed old script tag.");
+                    _logger.Info("Removed legacy on-disk script tag from index.html.");
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error($"Error during cleanup of old script from index.html: {ex.Message}");
+                _logger.Error($"Could not clean legacy script tag from index.html: {ex.Message}");
             }
         }
-        private void CheckPluginPages(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, int pluginPageConfigVersion)
-        {
-            try
-            {
-            string pluginPagesConfig = Path.Combine(applicationPaths.PluginConfigurationsPath, "Jellyfin.Plugin.PluginPages", "config.json");
-
-            JObject config = new JObject();
-            if (!File.Exists(pluginPagesConfig))
-            {
-                FileInfo info = new FileInfo(pluginPagesConfig);
-                info.Directory?.Create();
-            }
-            else
-            {
-                config = JObject.Parse(File.ReadAllText(pluginPagesConfig));
-            }
-
-            if (!config.ContainsKey("pages"))
-            {
-                config.Add("pages", new JArray());
-            }
-
-            var namespaceName = typeof(JellyfinEnhanced).Namespace;
-
-            JObject? hssPageConfig = config.Value<JArray>("pages")!.FirstOrDefault(x =>
-                x.Value<string>("Id") == namespaceName) as JObject;
-
-            if (hssPageConfig != null)
-            {
-                if ((hssPageConfig.Value<int?>("Version") ?? 0) < pluginPageConfigVersion)
-                {
-                    config.Value<JArray>("pages")!.Remove(hssPageConfig);
-                }
-            }
-
-            Assembly? pluginPagesAssembly = AssemblyLoadContext.All.SelectMany(x => x.Assemblies).FirstOrDefault(x => x.FullName?.Contains("Jellyfin.Plugin.PluginPages") ?? false);
-
-            Version earliestVersionWithSubUrls = new Version("2.4.1.0");
-            bool supportsSubUrls = pluginPagesAssembly != null && pluginPagesAssembly.GetName().Version >= earliestVersionWithSubUrls;
-
-            string rootUrl = serverConfigurationManager.GetNetworkConfiguration().BaseUrl.TrimStart('/').Trim();
-            if (!string.IsNullOrEmpty(rootUrl))
-            {
-                rootUrl = $"/{rootUrl}";
-            }
-
-            var pluginConfig = Configuration;
-
-            bool calendarExists = config.Value<JArray>("pages")!
-                .Any(x => x.Value<string>("Id") == $"{namespaceName}.CalendarPage");
-
-            bool downloadsExists = config.Value<JArray>("pages")!
-                .Any(x => x.Value<string>("Id") == $"{namespaceName}.DownloadsPage");
-
-            bool bookmarksExists = config.Value<JArray>("pages")!
-                .Any(x => x.Value<string>("Id") == $"{namespaceName}.BookmarksPage");
-
-            bool hiddenContentExists = config.Value<JArray>("pages")!
-                .Any(x => x.Value<string>("Id") == $"{namespaceName}.HiddenContentPage");
-
-            // Only add calendar page if it's enabled and using plugin pages
-            if (!calendarExists && pluginConfig.CalendarPageEnabled && pluginConfig.CalendarUsePluginPages)
-            {
-                config.Value<JArray>("pages")!.Add(new JObject
-                {
-                    { "Id", $"{namespaceName}.CalendarPage" },
-                    { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/calendarPage" },
-                    { "DisplayText", "Calendar" },
-                    { "Icon", "calendar_today" },
-                    { "Version", pluginPageConfigVersion }
-                });
-            }
-            // Remove calendar page if it exists but is now disabled or not using plugin pages
-            else if (calendarExists && (!pluginConfig.CalendarPageEnabled || !pluginConfig.CalendarUsePluginPages))
-            {
-                var calendarPage = config.Value<JArray>("pages")!
-                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.CalendarPage");
-                if (calendarPage != null)
-                {
-                    config.Value<JArray>("pages")!.Remove(calendarPage);
-                }
-            }
-
-            // Only add downloads page if it's enabled and using plugin pages
-            if (!downloadsExists && pluginConfig.DownloadsPageEnabled && pluginConfig.DownloadsUsePluginPages)
-            {
-                config.Value<JArray>("pages")!.Add(new JObject
-                {
-                    { "Id", $"{namespaceName}.DownloadsPage" },
-                    { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/downloadsPage" },
-                    { "DisplayText", "Requests" },
-                    { "Icon", "download" },
-                    { "Version", pluginPageConfigVersion }
-                });
-            }
-            // Remove downloads page if it exists but is now disabled or not using plugin pages
-            else if (downloadsExists && (!pluginConfig.DownloadsPageEnabled || !pluginConfig.DownloadsUsePluginPages))
-            {
-                var downloadsPage = config.Value<JArray>("pages")!
-                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.DownloadsPage");
-                if (downloadsPage != null)
-                {
-                    config.Value<JArray>("pages")!.Remove(downloadsPage);
-                }
-            }
-
-            // Only add bookmarks page if it's enabled and using plugin pages
-            if (!bookmarksExists && pluginConfig.BookmarksEnabled && pluginConfig.BookmarksUsePluginPages)
-            {
-                config.Value<JArray>("pages")!.Add(new JObject
-                {
-                    { "Id", $"{namespaceName}.BookmarksPage" },
-                    { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/bookmarksPage" },
-                    { "DisplayText", "Bookmarks" },
-                    { "Icon", "bookmark" },
-                    { "Version", pluginPageConfigVersion }
-                });
-            }
-            // Remove bookmarks page if it exists but is now disabled or not using plugin pages
-            else if (bookmarksExists && (!pluginConfig.BookmarksEnabled || !pluginConfig.BookmarksUsePluginPages))
-            {
-                var bookmarksPage = config.Value<JArray>("pages")!
-                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.BookmarksPage");
-                if (bookmarksPage != null)
-                {
-                    config.Value<JArray>("pages")!.Remove(bookmarksPage);
-                }
-            }
-
-            // Only add hidden content page if it's enabled and using plugin pages
-            if (!hiddenContentExists && pluginConfig.HiddenContentEnabled && pluginConfig.HiddenContentUsePluginPages)
-            {
-                config.Value<JArray>("pages")!.Add(new JObject
-                {
-                    { "Id", $"{namespaceName}.HiddenContentPage" },
-                    { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/hiddenContentPage" },
-                    { "DisplayText", "Hidden Content" },
-                    { "Icon", "visibility_off" },
-                    { "Version", pluginPageConfigVersion }
-                });
-            }
-            // Remove hidden content page if it exists but is now disabled or not using plugin pages
-            else if (hiddenContentExists && (!pluginConfig.HiddenContentEnabled || !pluginConfig.HiddenContentUsePluginPages))
-            {
-                var hiddenContentPage = config.Value<JArray>("pages")!
-                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.HiddenContentPage");
-                if (hiddenContentPage != null)
-                {
-                    config.Value<JArray>("pages")!.Remove(hiddenContentPage);
-                }
-            }
-
-            File.WriteAllText(pluginPagesConfig, config.ToString(Formatting.Indented));
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error while updating Plugin Pages configuration: {ex.Message}");
-            }
-        }
-        private void UpdateIndexHtml(bool inject)
-        {
-            try
-            {
-                var indexPath = IndexHtmlPath;
-                if (!File.Exists(indexPath))
-                {
-                    _logger.Error($"Could not find index.html at path: {indexPath}");
-                    return;
-                }
-
-                var content = File.ReadAllText(indexPath);
-                var scriptUrl = $"../JellyfinEnhanced/script?v={Version}";
-                var scriptTag = $"<script plugin=\"{Name}\" version=\"{Version}\" src=\"{scriptUrl}\" defer></script>";
-                var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
-
-                // Remove any old versions of the script tag first
-                content = regex.Replace(content, string.Empty);
-
-                if (inject)
-                {
-                    var closingBodyTag = "</body>";
-                    if (content.Contains(closingBodyTag))
-                    {
-                        content = content.Replace(closingBodyTag, $"{scriptTag}\n{closingBodyTag}");
-                        _logger.Info($"Successfully injected/updated the {PluginName} script.");
-                    }
-                    else
-                    {
-                        _logger.Warning("Could not find </body> tag in index.html. Script not injected.");
-                        return; // Return early if injection point not found
-                    }
-                }
-                else
-                {
-                    _logger.Info($"Successfully removed the {PluginName} script from index.html during uninstall.");
-                }
-
-                File.WriteAllText(indexPath, content);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error while trying to update index.html: {ex.Message}");
-            }
-        }
-
         public IEnumerable<PluginPageInfo> GetPages()
         {
             return new[]
@@ -401,27 +226,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             };
         }
 
-        public IEnumerable<PluginPageInfo> GetViews()
-        {
-            return new[]
-            {
-                new PluginPageInfo {
-                    Name = "calendarPage",
-                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.CalendarPage.html"
-                },
-                new PluginPageInfo {
-                    Name = "downloadsPage",
-                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.DownloadsPage.html"
-                },
-                new PluginPageInfo {
-                    Name = "bookmarksPage",
-                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.BookmarksPage.html"
-                },
-                new PluginPageInfo {
-                    Name = "hiddenContentPage",
-                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.HiddenContentPage.html"
-                }
-            };
-        }
+        // GetViews() removed — JE no longer ships standalone wrapper pages
+        // because we don't depend on Plugin Pages. Page rendering happens via
+        // js/web/route-hijacker.js, which mounts the existing renderForCustomTab
+        // implementations into the live SPA when the user navigates to
+        // #/JellyfinEnhanced/<id>.
     }
 }

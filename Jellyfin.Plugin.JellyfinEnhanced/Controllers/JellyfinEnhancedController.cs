@@ -6087,39 +6087,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return Ok(itemIds.FirstOrDefault());
         }
 
-        [Authorize]
-        [HttpGet("{viewName}")]
-        public ActionResult GetView([FromRoute] string viewName)
-        {
-            if (JellyfinEnhanced.Instance == null)
-            {
-                return BadRequest("No plugin instance found");
-            }
-
-            IEnumerable<PluginPageInfo> pages = JellyfinEnhanced.Instance.GetViews();
-
-            if (pages == null)
-            {
-                return NotFound("Pages is null or empty");
-            }
-
-            PluginPageInfo? view = pages.FirstOrDefault(pageInfo => pageInfo?.Name == viewName, null);
-
-            if (view == null)
-            {
-                return NotFound("No matching view found");
-            }
-
-            Stream? stream = JellyfinEnhanced.Instance.GetType().Assembly.GetManifestResourceStream(view.EmbeddedResourcePath);
-
-            if (stream == null)
-            {
-                _logger.Warning($"Failed to get resource {view.EmbeddedResourcePath}");
-                return NotFound();
-            }
-
-            return File(stream, MimeTypes.GetMimeType(view.EmbeddedResourcePath));
-        }
+        // GetView() removed — Plugin Pages dependency dropped. Standalone JE
+        // pages are rendered client-side by js/web/route-hijacker.js into the
+        // live SPA, so the server no longer needs to serve wrapper HTML.
     }
     /// <summary>
     /// Helper class for TMDB person data enrichment
