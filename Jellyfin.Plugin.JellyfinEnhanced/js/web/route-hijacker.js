@@ -37,18 +37,46 @@
   var HOST_SELECTOR = '#indexPage:not(.hide), .mainAnimatedPage:not(.hide) #indexPage, .page.libraryPage:not(.hide) #indexPage';
   var FALLBACK_SELECTOR = '#indexPage';
   var PREFIX = '#/JellyfinEnhanced/';
+  var HOME_HASH = '#/home';
 
   var lastRouteId = null;
   var pending = null;
   var allowedIds = null; // null = trust WebHost, otherwise the live admin-enabled list
+  var deferredRouteId = null; // captured on hash redirect; consumed when the home page mounts
 
   function getRouteId() {
+    // Two sources: the visible URL (the user navigated directly to a JE
+    // route) AND a captured pending id (we redirected the URL to #/home
+    // earlier so Jellyfin's router wouldn't paint its notFound view, and
+    // need to remember which JE route we're now mounting).
+    if (deferredRouteId) return deferredRouteId;
     var hash = location.hash || '';
     if (hash.indexOf(PREFIX) !== 0) return null;
     var rest = hash.slice(PREFIX.length);
     var stop = rest.indexOf('?');
     if (stop >= 0) rest = rest.slice(0, stop);
     return rest || null;
+  }
+
+  // Catch the hashchange BEFORE Jellyfin's router does. If the hash matches
+  // a JE route, redirect to #/home (which Jellyfin recognises) and stash
+  // the route id for our mount step. Without this, the SPA paints its
+  // built-in "Page not found" view because /JellyfinEnhanced/<id> isn't a
+  // real Jellyfin route.
+  function preempt(e) {
+    var hashSource = e && e.newURL ? e.newURL : window.location.href;
+    var hashIdx = hashSource.indexOf('#');
+    var hash = hashIdx >= 0 ? hashSource.slice(hashIdx) : '';
+    if (hash.indexOf(PREFIX) !== 0) return;
+    var rest = hash.slice(PREFIX.length);
+    var stop = rest.indexOf('?');
+    if (stop >= 0) rest = rest.slice(0, stop);
+    if (!rest) return;
+    deferredRouteId = rest;
+    if (location.hash !== HOME_HASH) {
+      location.replace(location.pathname + location.search + HOME_HASH);
+    }
+    if (e && e.stopImmediatePropagation) e.stopImmediatePropagation();
   }
 
   function clear(node) {
@@ -150,24 +178,33 @@
     pending = setTimeout(function () {
       pending = null;
       var id = getRouteId();
-      if (!id) {
-        if (lastRouteId !== null) unmount();
+      // Once we've consumed the deferred id, unstash so a subsequent
+      // navigate-away clears state cleanly.
+      var hashLooksJe = (location.hash || '').indexOf(PREFIX) === 0;
+      if (!id || (!hashLooksJe && !deferredRouteId)) {
+        if (lastRouteId !== null) {
+          unmount();
+          deferredRouteId = null;
+        }
         return;
       }
       if (!isAllowed(id)) {
-        // Admin disabled the page after we mounted it (or the URL points
-        // at a feature this user can't access). Bounce to home cleanly.
         if (lastRouteId !== null) unmount();
-        if (location.hash !== '#/home') location.hash = '#/home';
+        deferredRouteId = null;
+        if (location.hash !== HOME_HASH) location.replace(location.pathname + location.search + HOME_HASH);
         return;
       }
       if (id !== lastRouteId && lastRouteId !== null) {
-        // JE→JE transition: tear down the old DOM before mounting new.
         unmount();
       }
       var deadline = Date.now() + 1500;
       var tryMount = function () {
-        if (mount(id)) return;
+        if (mount(id)) {
+          // Successful mount — the deferred id has been honored, the
+          // visible URL is #/home, our content is showing.
+          deferredRouteId = null;
+          return;
+        }
         if (Date.now() < deadline) requestAnimationFrame(tryMount);
       };
       tryMount();
@@ -176,10 +213,20 @@
 
   JE.RouteHijacker = {
     init: function () {
+      // CAPTURE-PHASE listeners run BEFORE Jellyfin's router so we can
+      // redirect /JellyfinEnhanced/<id> → /home before the router paints
+      // its notFound view.
+      window.addEventListener('hashchange', preempt, true);
+      window.addEventListener('popstate', preempt, true);
+
       window.addEventListener('hashchange', evaluate);
       window.addEventListener('popstate', evaluate);
       document.addEventListener('viewshow', evaluate);
       document.addEventListener('viewbeforeshow', evaluate);
+
+      // Also pre-empt on init in case the user landed directly on a JE
+      // hash (deep link, browser refresh).
+      preempt(null);
       evaluate();
 
       if (JE.HotReload) {

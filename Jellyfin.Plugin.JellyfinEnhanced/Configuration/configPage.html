@@ -3715,8 +3715,6 @@
                 document.querySelector('#bookmarksEnabled').checked = config.BookmarksEnabled !== false;
                 document.querySelector('#bookmarksUsePluginPages').checked = config.BookmarksUsePluginPages === true;
                 document.querySelector('#bookmarksUseCustomTabs').checked = config.BookmarksUseCustomTabs === true;
-                var __bAuto = document.querySelector('#bookmarksAutoCreateCustomTab');
-                if (__bAuto) __bAuto.checked = config.BookmarksAutoCreateCustomTab === true;
                 document.querySelector('#useIcons').checked = config.UseIcons !== false;
                 document.querySelector('#iconStyle').value = config.IconStyle || 'emoji';
                 document.querySelector('#arrLinksEnabled').checked = config.ArrLinksEnabled;
@@ -3771,16 +3769,12 @@
                 document.querySelector('#downloadsPageShowIssues').checked = config.DownloadsPageShowIssues === true;
                 document.querySelector('#downloadsUsePluginPages').checked = config.DownloadsUsePluginPages !== false;
                 document.querySelector('#downloadsUseCustomTabs').checked = config.DownloadsUseCustomTabs === true;
-                var __dAuto = document.querySelector('#downloadsAutoCreateCustomTab');
-                if (__dAuto) __dAuto.checked = config.DownloadsAutoCreateCustomTab === true;
                 document.querySelector('#downloadsPagePollingEnabled').checked = config.DownloadsPagePollingEnabled !== false;
                 document.querySelector('#downloadsPollIntervalSeconds').value = (config.DownloadsPollIntervalSeconds !== undefined && config.DownloadsPollIntervalSeconds !== null) ? config.DownloadsPollIntervalSeconds : 30;
 
                 // Calendar Page settings
                 document.querySelector('#calendarPageEnabled').checked = config.CalendarPageEnabled !== false;
                 document.querySelector('#calendarUseCustomTabs').checked = config.CalendarUseCustomTabs === true;
-                var __cAuto = document.querySelector('#calendarAutoCreateCustomTab');
-                if (__cAuto) __cAuto.checked = config.CalendarAutoCreateCustomTab === true;
                 document.querySelector('#calendarUsePluginPages').checked = config.CalendarUsePluginPages !== false;
                 document.querySelector('#calendarFirstDayOfWeek').value = config.CalendarFirstDayOfWeek || 'Monday';
                 document.querySelector('#calendarTimeFormat').value = config.CalendarTimeFormat || '5pm/5:30pm';
@@ -3794,8 +3788,6 @@
                 document.querySelector('#hiddenContentEnabled').checked = config.HiddenContentEnabled || false;
                 document.querySelector('#hiddenContentUsePluginPages').checked = config.HiddenContentUsePluginPages === true;
                 document.querySelector('#hiddenContentUseCustomTabs').checked = config.HiddenContentUseCustomTabs === true;
-                var __hAuto = document.querySelector('#hiddenContentAutoCreateCustomTab');
-                if (__hAuto) __hAuto.checked = config.HiddenContentAutoCreateCustomTab === true;
 
                 // Hidden Content per-user defaults, same name as on the user side, prefixed HiddenContentDefault*.
                 var __hcDefaults = [
@@ -3997,8 +3989,6 @@
             config.BookmarksEnabled = document.querySelector('#bookmarksEnabled').checked;
             config.BookmarksUsePluginPages = document.querySelector('#bookmarksUsePluginPages').checked;
             config.BookmarksUseCustomTabs = document.querySelector('#bookmarksUseCustomTabs').checked;
-            var __bAutoSave = document.querySelector('#bookmarksAutoCreateCustomTab');
-            config.BookmarksAutoCreateCustomTab = !!(__bAutoSave && __bAutoSave.checked);
             config.UseIcons = document.querySelector('#useIcons').checked;
             config.IconStyle = document.querySelector('#iconStyle').value;
 
@@ -4055,14 +4045,10 @@
             const pollInterval = parseInt(document.querySelector('#downloadsPollIntervalSeconds').value, 10);
             config.DownloadsPollIntervalSeconds = pollInterval >= 30 ? pollInterval : 30;
             config.DownloadsUseCustomTabs = document.querySelector('#downloadsUseCustomTabs').checked;
-            var __dAutoSave = document.querySelector('#downloadsAutoCreateCustomTab');
-            config.DownloadsAutoCreateCustomTab = !!(__dAutoSave && __dAutoSave.checked);
 
             // Calendar Page settings
             config.CalendarPageEnabled = document.querySelector('#calendarPageEnabled').checked;
             config.CalendarUseCustomTabs = document.querySelector('#calendarUseCustomTabs').checked;
-            var __cAutoSave = document.querySelector('#calendarAutoCreateCustomTab');
-            config.CalendarAutoCreateCustomTab = !!(__cAutoSave && __cAutoSave.checked);
             config.CalendarUsePluginPages = document.querySelector('#calendarUsePluginPages').checked;
             config.CalendarFirstDayOfWeek = document.querySelector('#calendarFirstDayOfWeek').value || 'Monday';
             config.CalendarTimeFormat = document.querySelector('#calendarTimeFormat').value || '5pm/5:30pm';
@@ -4076,8 +4062,6 @@
             config.HiddenContentEnabled = document.querySelector('#hiddenContentEnabled').checked;
             config.HiddenContentUsePluginPages = document.querySelector('#hiddenContentUsePluginPages').checked;
             config.HiddenContentUseCustomTabs = document.querySelector('#hiddenContentUseCustomTabs').checked;
-            var __hAutoSave = document.querySelector('#hiddenContentAutoCreateCustomTab');
-            config.HiddenContentAutoCreateCustomTab = !!(__hAutoSave && __hAutoSave.checked);
 
             // Hidden Content per-user defaults
             [
@@ -5373,21 +5357,11 @@
             var tabSwitch = bool('autoPauseEnabled') || bool('autoResumeEnabled') || bool('autoPipEnabled');
             feat('Tab-switch actions', tabSwitch, 'playback', 'Auto-pause / resume / PiP');
 
-            // Pages
-            var bookmarksWarn = bool('bookmarksEnabled') && (
-                (bool('bookmarksUsePluginPages') && hasPluginPages !== true) ||
-                (bool('bookmarksUseCustomTabs')  && hasCustomTabs  !== true)
-            );
-            feat('Bookmarks', bool('bookmarksEnabled'), 'pages',
-                bookmarksWarn ? 'Missing required integration plugin' : 'Enabled',
-                bookmarksWarn);
-            var hcWarn = bool('hiddenContentEnabled') && (
-                (bool('hiddenContentUsePluginPages') && hasPluginPages !== true) ||
-                (bool('hiddenContentUseCustomTabs')  && hasCustomTabs  !== true)
-            );
-            feat('Hidden Content', bool('hiddenContentEnabled'), 'pages',
-                hcWarn ? 'Missing required integration plugin' : 'Enabled',
-                hcWarn);
+            // Pages — JE's web subsystem provides the sidebar-page and
+            // home-tab surfaces directly, so the *UsePluginPages /
+            // *UseCustomTabs toggles no longer require external plugins.
+            feat('Bookmarks', bool('bookmarksEnabled'), 'pages', 'Enabled', false);
+            feat('Hidden Content', bool('hiddenContentEnabled'), 'pages', 'Enabled', false);
             var reqWarn = bool('downloadsPageEnabled') && !seerrConfigured() && !anyArrConfigured();
             feat('Requests Page', bool('downloadsPageEnabled'), 'pages',
                 reqWarn ? 'Enabled but neither Seerr nor *arr is configured' : 'Enabled',
@@ -5397,16 +5371,11 @@
                 calWarn ? 'Enabled but no *arr instance is configured' : 'Enabled',
                 calWarn);
 
-            // Custom splash screen / branding. Splash-screen URL works without
-            // any extra plugin, but the branding image uploads (icons/favicon/
-            // logos) require File Transformation to actually replace the web
-            // assets — surface a warning when the splash is enabled and File
-            // Transformation is missing.
+            // Custom splash / branding — JE's BrandingAssetMiddleware now
+            // serves uploaded icons/favicon/logo overrides directly, so no
+            // external File Transformation plugin is required.
             var splashOn = bool('enableCustomSplashScreen');
-            var splashWarn = splashOn && hasFileTransformation !== true;
-            feat('Custom splash / branding', splashOn, 'extras',
-                splashWarn ? 'Enabled but File Transformation plugin missing (uploaded images won\'t apply)' : 'Enabled',
-                splashWarn);
+            feat('Custom splash / branding', splashOn, 'extras', 'Enabled', false);
 
             // Extras
             var elsewhereWarn = bool('elsewhereEnabled') && !val('TMDB_API_KEY');

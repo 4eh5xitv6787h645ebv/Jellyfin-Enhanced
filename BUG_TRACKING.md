@@ -15,6 +15,147 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 ## FIXED
 
+### B7 — Custom tabs disappear when returning to home from another page
+
+**Symptoms (user report):** "It works if you are on home and then click a
+custom tab but as soon as you go to a different page then back to home
+and try the custom tabs they do not work. you have to refresh the page
+to get them to work."
+
+**Reproduced via Playwright (`test-tabs-reentry.js`)** — initial home
+load shows 4 JE buttons / 4 panes; navigate to /dashboard → return to
+home → 0 buttons / 0 panes. Bug confirmed.
+
+**Root cause:** the previous tabs-manager scoped its MutationObserver
+to `.mainAnimatedPages`. Jellyfin destroys and rebuilds that container
+on navigation, leaving the observer orphaned (a known JE gotcha — see
+issue #536 in JE memory). When the user returned to home, the observer
+was attached to a detached parent and never re-fired.
+
+**Fix:** `js/web/tabs-manager.js` rewritten from scratch. New triggers
+for paint:
+1. `viewshow` event on `document` — fires after every SPA navigation.
+2. 1-Hz polling safety net (cheap, idempotent — `paint()` no-ops when
+   the strip already has all our buttons).
+3. Hot-reload `tabs` topic for live admin config changes.
+4. Initial WebKickoff fire-and-forget.
+
+`paint()` is idempotent: if a tab button already exists for an entry id
+it is left alone. Stale buttons (entry removed by hot-reload) and stray
+panes from a previous home-page instance are removed in the same pass.
+
+**Verified by `test-tabs-reentry.js`:**
+- Step 1 (initial home): 4/4 buttons + 4/4 panes ✓
+- Step 3 (back to home from /dashboard): 4/4 ✓ (was 0/0 before fix)
+- Step 4 (back from /movies.html): 4/4 ✓
+
+Also:
+- `test-no-hard-refresh.js`: 7/7 still pass.
+- `test-configpage-deep.js`: 10/10 still pass.
+- `test-route-404.js`: 4/4 routes mount.
+
+The new file is written from scratch and does not adapt or include any
+third-party Custom Tabs code.
+
+### B6 — `#/JellyfinEnhanced/<id>` shows Jellyfin's "Page not found" view
+
+**Symptoms (user report):** "http://192.168.0.84:8097/web/#/JellyfinEnhanced/bookmarks
+shows Page not found - This is not the page you are looking for."
+
+**Root cause:** Jellyfin's SPA router has no route registered for
+`/JellyfinEnhanced/*`, so it paints its built-in notFound view. My
+RouteHijacker mounted the JE page content correctly into `#indexPage`,
+but `#indexPage` was hidden because the SPA had switched to the notFound
+view.
+
+**Fix:** `js/web/route-hijacker.js` `preempt()` listener installed on
+the capture phase of `hashchange` / `popstate`. When the new hash matches
+`#/JellyfinEnhanced/<id>`, we redirect to `#/home` (which Jellyfin DOES
+recognise) and stash the JE route id for the mount step. The visible URL
+becomes `#/home` but the content is the JE page; the browser back button
+behaves correctly.
+
+**Verified by `test-route-404.js`:** all 4 routes mount with
+`notFoundFound: false` (was `true` for all of them before the fix).
+
+### B5 — Stale "Missing required integration plugin" warnings
+
+**Symptoms (carried over from review-loop iteration 2):** Pages and
+Branding sections in the Overview dashboard reported "Missing required
+integration plugin" when the JE web subsystem was already providing the
+surface. Misleads admins into installing PP/CT/FT.
+
+**Fix:** Dashboard predicates simplified — `feat('Bookmarks', enabled,
+'pages', 'Enabled', false)` etc. No more probe-dependent warnings.
+
+### B4 — `loadConfig` had no `.catch`
+
+**Symptoms (carried over from review-loop iteration 2):** A 5xx / auth
+blip on `getPluginConfiguration` left the loading overlay up forever
+with no admin-visible error.
+
+**Fix:** Added `.catch` that logs to console, hides the loading overlay,
+and shows a `Dashboard.alert`.
+
+### B1 — Config page broken: tabs don't switch / save button missing / settings unchangeable
+
+**Symptoms (user report):** "configuration page for jellyfin enhanced is broken.
+can't change settings move or do anything", then "tabs aren't working hidden
+content requests page are in the wrong spots on tab Overview not in Pages and
+the save button is missing."
+
+**Root cause (Playwright-confirmed):** Four orphan `</div>` tags after each
+`<input id="*UseCustomTabs">` checkbox, left behind when an earlier Python
+regex pass removed the surrounding "auto-create Custom Tabs entry"
+sub-blocks. The HTML parser auto-closed the form when it hit the first
+unbalanced `</div>`, truncating the form at the Pages tab.
+
+```html
+<div class="checkboxContainer"><label><input id="bookmarksUseCustomTabs"...></label></div>
+                            </div>   <!-- stray, orphaned -->
+```
+
+The DOM that the browser actually built after the parser repair:
+
+| Form children (broken) | Form children (fixed) |
+|---|---|
+| 5 (overview, display, playback, pages, FIELDSET) | 12 (overview, display, playback, pages, seerr, arr, elsewhere, extras, keyboard, docs, save dock + apply hint) |
+
+Submit buttons in DOM jumped from **0 → 1**.
+
+**Fix:** Removed the orphan `</div>` after each of the 4 `*UseCustomTabs`
+checkboxes (`bookmarks`, `hiddenContent`, `downloads`, `calendar`).
+Verified by counting `<div>` open/close tags inside the form — delta
+went from `-4` to `0`.
+
+**Playwright verification (`test-tab-debug.js`):**
+
+```
+before: active tab = overview
+after click: active tab = display          ← tab switching restored
+display content active = true              ← inactive tabs hide correctly
+form.children count = 12                   ← all tabs reattached
+submit buttons in DOM: 1                   ← save button rebuilt
+save btn: rect=189x40 display=flex ...     ← save dock visible
+```
+
+`test-configpage-deep.js`: tabs switch 4/4, save button click succeeds,
+still on page.
+
+### B2 — `CUSTOM_TAB_MANAGED_ENTRIES` ReferenceError on every config page load
+
+Pre-existing finding from this same review session, fixed in commit
+`548c6a1` ("fix(configpage): reintroduce CUSTOM_TAB_MANAGED_ENTRIES as
+empty array"). Listed here for completeness so the tracker is the
+single source of truth.
+
+### B3 — Custom Tabs / Plugin Pages / File Transformation external plugins disabled in jellyfin-dev
+
+User-driven test setup, not a bug — user asked us to confirm JE works on a
+clean install without those three external plugins. Verified by
+`test-no-hard-refresh.js` (7/7 pass) and `test-baseurl.js` (sub-path
+mount works).
+
 ### B1 — Config page broken: tabs don't switch / save button missing / settings unchangeable
 
 **Symptoms (user report):** "configuration page for jellyfin enhanced is broken.
