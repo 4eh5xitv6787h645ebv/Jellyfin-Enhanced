@@ -62,7 +62,7 @@
 
   // Find the active home-page tab strip. Jellyfin can have multiple
   // .headerTabs elements in the DOM at once (each non-active page is
-  // hidden but kept around). We want the one inside the visible #indexPage.
+  // hidden but kept around).
   function findStrip() {
     var candidates = [
       '#indexPage:not(.hide) .headerTabs',
@@ -77,12 +77,27 @@
     return null;
   }
 
-  function findPaneHost(strip) {
-    // Pane host lives inside the same #indexPage as the strip we just
-    // matched, NOT a sibling — otherwise on a multi-mainAnimatedPage
-    // setup we'd append the pane to the wrong page.
-    var indexPage = strip.closest('#indexPage') || document.querySelector('#indexPage:not(.hide)') || document.getElementById('indexPage');
-    return indexPage || null;
+  // Pick the currently-visible #indexPage. Jellyfin's SPA keeps the
+  // previous home instance around hidden when you navigate back to home
+  // via the header home button, so a naive `getElementById('indexPage')`
+  // returns the OLD one — our panes end up in the wrong page and the
+  // user sees the JE tabs as "not working".
+  function visibleIndexPage() {
+    var pages = document.querySelectorAll('#indexPage');
+    for (var i = 0; i < pages.length; i++) {
+      var p = pages[i];
+      if (p.classList.contains('hide')) continue;
+      // Check the nearest mainAnimatedPage too — Jellyfin marks transitions
+      // by hiding the wrapping page, not always the #indexPage child.
+      var wrap = p.closest('.mainAnimatedPage');
+      if (wrap && wrap.classList.contains('hide')) continue;
+      // And check for inline `display:none` set during SPA transitions.
+      try {
+        if (getComputedStyle(p).display === 'none') continue;
+      } catch (_) { /* fall through */ }
+      return p;
+    }
+    return pages[0] || null;
   }
 
   function makeButton(item) {
@@ -110,11 +125,26 @@
   }
 
   function activate(id) {
+    // Make sure pane state is fresh BEFORE rendering: this prunes panes
+    // that are stuck in a stale (now-hidden) #indexPage and ensures the
+    // visible indexPage has its own pane with id=<id>.
+    paint();
+
     var buttons = document.querySelectorAll('[' + TAB_BUTTON_ATTR + ']');
     for (var i = 0; i < buttons.length; i++) {
       buttons[i].classList.toggle('is-active', buttons[i].getAttribute(TAB_BUTTON_ATTR) === id);
     }
-    var panes = document.querySelectorAll('[' + TAB_PANE_ATTR + ']');
+
+    // Only operate on panes inside the currently-visible #indexPage.
+    // Without this guard, multiple #indexPages (Jellyfin keeps the old
+    // home alive when you navigate back via the header home button)
+    // produce duplicate panes — activate() finds the first one (which
+    // may be in the hidden page) and the user sees the JE content
+    // stacked under the Favourites pane in the visible page.
+    var visible = visibleIndexPage();
+    if (!visible) return;
+
+    var panes = visible.querySelectorAll('[' + TAB_PANE_ATTR + ']');
     var renderedAny = false;
     for (var j = 0; j < panes.length; j++) {
       var p = panes[j];
@@ -131,12 +161,21 @@
         }
       }
     }
-    var indexPage = document.getElementById('indexPage');
-    if (indexPage) {
-      var native = indexPage.querySelectorAll('.tabContent');
-      for (var k = 0; k < native.length; k++) {
-        native[k].classList.toggle('je-muted', renderedAny);
-      }
+
+    // Mute native panes ONLY in the visible indexPage so the home
+    // page that the user is actually looking at switches to JE content.
+    var native = visible.querySelectorAll('.tabContent');
+    for (var k = 0; k < native.length; k++) {
+      native[k].classList.toggle('je-muted', renderedAny);
+    }
+
+    // Strip leftover .je-muted from any other (hidden) #indexPage so
+    // they're clean if Jellyfin transitions back to them later.
+    var allPages = document.querySelectorAll('#indexPage');
+    for (var m = 0; m < allPages.length; m++) {
+      if (allPages[m] === visible) continue;
+      var stale = allPages[m].querySelectorAll('.tabContent.je-muted');
+      for (var n = 0; n < stale.length; n++) stale[n].classList.remove('je-muted');
     }
   }
 
@@ -151,50 +190,46 @@
     try {
       injectStyles();
       var strip = findStrip();
-      if (!strip) return;
+      var visible = visibleIndexPage();
+      // We need both: a strip to host buttons, and a visible #indexPage to
+      // host panes. If either is missing this paint pass is a no-op.
+      if (!strip || !visible) return;
 
-      // Idempotent guard — every entry whose id already has a button +
-      // pane in the DOM is left alone. We only do work when the strip is
-      // missing one (which happens after a SPA rebuild).
-      var allPresent = entries.length > 0 && entries.every(function (e) {
-        return strip.querySelector('[' + TAB_BUTTON_ATTR + '="' + e.id + '"]');
-      });
-      if (allPresent) return;
-
-      // Drop stale buttons (entry removed by hot-reload) and any nodes
-      // pointing at a different #indexPage instance.
+      // BUTTONS — drop ones that aren't in the live entries list
+      // (admin removed a feature). Idempotent insert for the rest.
       strip.querySelectorAll('[' + TAB_BUTTON_ATTR + ']').forEach(function (b) {
         if (!entries.some(function (e) { return e.id === b.getAttribute(TAB_BUTTON_ATTR); })) {
           b.parentNode && b.parentNode.removeChild(b);
         }
       });
-
-      // Drop stale panes anywhere in the document (a previous home-page
-      // instance's panes may still be in the tree).
-      document.querySelectorAll('[' + TAB_PANE_ATTR + ']').forEach(function (p) {
-        var stillValid = entries.some(function (e) { return e.id === p.getAttribute(TAB_PANE_ATTR); });
-        if (!stillValid) p.parentNode && p.parentNode.removeChild(p);
-      });
-
-      // Inject any missing buttons.
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
         if (strip.querySelector('[' + TAB_BUTTON_ATTR + '="' + e.id + '"]')) continue;
         strip.appendChild(makeButton(e));
       }
 
-      // Inject any missing panes into the active home page.
-      var paneHost = findPaneHost(strip);
-      if (paneHost) {
-        for (var j = 0; j < entries.length; j++) {
-          var ee = entries[j];
-          if (paneHost.querySelector('[' + TAB_PANE_ATTR + '="' + ee.id + '"]')) continue;
-          paneHost.appendChild(makePane(ee));
+      // PANES — every pane must live inside the *currently-visible*
+      // #indexPage. Strip any panes that ended up in a stale (hidden)
+      // page, then add what's missing in the visible one. Without this
+      // step, navigating back to home via the header home button leaves
+      // the panes in the previous indexPage instance, and clicking a
+      // JE tab activates a pane that's hidden — producing the user-
+      // reported "tabs don't work" symptom.
+      document.querySelectorAll('[' + TAB_PANE_ATTR + ']').forEach(function (p) {
+        var inVisible = visible.contains(p);
+        var stillValid = entries.some(function (ee) { return ee.id === p.getAttribute(TAB_PANE_ATTR); });
+        if (!inVisible || !stillValid) {
+          p.parentNode && p.parentNode.removeChild(p);
         }
+      });
+      for (var j = 0; j < entries.length; j++) {
+        var ee = entries[j];
+        if (visible.querySelector('[' + TAB_PANE_ATTR + '="' + ee.id + '"]')) continue;
+        visible.appendChild(makePane(ee));
       }
 
-      // Wire native-tab clicks to deactivate our tabs / panes when the
-      // user picks a built-in Jellyfin tab. Idempotent via _jeBound.
+      // Wire native-tab clicks (idempotent via _jeBound) so picking a
+      // built-in Jellyfin tab clears our active state.
       strip.querySelectorAll('button.emby-tab-button:not(.je-custom-tab-button)').forEach(function (b) {
         if (b._jeBound) return;
         b._jeBound = true;

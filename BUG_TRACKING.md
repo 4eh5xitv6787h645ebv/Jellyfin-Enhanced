@@ -15,6 +15,74 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 ## FIXED
 
+### B8 — Custom tabs broken after home-button navigation through item details
+
+**Symptoms (user report):**
+- "if i am on bookmarks tab then click on the superman movie then click home the tabs do not work"
+- "though they start working again if i go from the home page and back to it without clicking that button"
+- "or if i click the favourites tab then the added tabs start working after that"
+- "sometimes that is not everytime. sometimes the new tabs load in the same page but under the favourites items."
+
+**Reproduced via Playwright (`test-home-via-item.js`):** home → click
+Bookmarks JE tab → navigate to a movie's details page → click the
+header `.headerHomeButton` → back on home. Pre-fix snapshot:
+
+```
+indexPagesInDom: 2
+indexPageStates: [
+  { hidden: false, panes: 4 },   // visible: 4 panes
+  { hidden: true,  panes: 4 }    // stale: 4 panes (duplicates!)
+]
+totalJePanes: 8
+```
+
+**Root cause:** Jellyfin's SPA keeps the previous home `#indexPage`
+alive (hidden) when the user navigates back via the header home button,
+and creates a fresh `#indexPage` for the new visit. The previous
+tabs-manager's `paint()` selected `getElementById('indexPage')` which
+returns the FIRST instance — sometimes the visible one, sometimes the
+hidden one. That:
+1. Caused JE panes to land in the wrong page (under Favourites rather
+   than replacing them — exactly the user's "panes load under
+   Favourites items" symptom).
+2. Caused `.je-muted` to be applied to the wrong page's `.tabContent`
+   panes (so native panes stayed visible in the active page).
+3. Accumulated duplicate panes (8 total when the user expects 4),
+   leaving the user clicking buttons that activated invisible panes.
+
+**Fix:** `js/web/tabs-manager.js` `visibleIndexPage()` helper picks the
+currently-visible `#indexPage` (filters by `hide` class on the page,
+its `.mainAnimatedPage` ancestor, AND inline `display:none`). Both
+`paint()` and `activate()` now operate exclusively on that page:
+- `paint()` removes any pane that's not inside the visible indexPage,
+  then ensures every entry has a pane there.
+- `activate()` calls `paint()` first (fresh pane state), then queries
+  panes only inside the visible indexPage, and toggles `.je-muted`
+  scoped to that page. Stale `.je-muted` on other (hidden) indexPages
+  is also stripped to avoid confused state if Jellyfin transitions
+  back to them.
+
+**Verified by `test-home-via-item.js`:**
+
+```
+STEP 4a — immediately after home-button click
+indexPagesInDom: 2
+indexPageStates: [
+  { hidden: false, panes: 4 },   // visible: 4 panes (correct)
+  { hidden: true,  panes: 0 }    // stale: 0 panes (cleaned up)
+]
+totalJePanes: 4   ← was 8
+
+STEP 5 — try clicking a JE tab now
+🟢 bookmarks tab works
+```
+
+Plus all other regressions hold:
+- `test-no-hard-refresh.js` — 7/7 pass.
+- `test-tabs-reentry.js` — 4/4 buttons after dashboard / library round-trip.
+- `test-route-404.js` — 4/4 routes mount.
+- `test-configpage-deep.js` — 10/10 pass.
+
 ### B7 — Custom tabs disappear when returning to home from another page
 
 **Symptoms (user report):** "It works if you are on home and then click a
