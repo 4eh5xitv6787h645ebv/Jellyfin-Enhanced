@@ -3479,12 +3479,11 @@
 
         // ==================== End Multi-Instance Arr Management ====================
 
-        // Cache of the four "JE owns this Custom Tabs entry" booleans from the
-        // most recently loaded config. Sync uses these to decide whether a
-        // matching CT entry was created by JE (safe to delete) or by the admin
-        // (must not touch). saveConfig writes the updated values back as part
-        // of its single config write.
+        // Custom Tabs sync is a no-op now (the JE web subsystem owns the tab
+        // surface). We keep the empty array and cache so the existing
+        // forEach call sites still type-check without us touching them.
         var _jeCustomTabOwnedCache = Object.create(null);
+        var CUSTOM_TAB_MANAGED_ENTRIES = [];
 
         // Tracks whether the most recent `renderQualityCatOrderAdmin` call ran
         // to completion. If false at save time, we skip writing positional
