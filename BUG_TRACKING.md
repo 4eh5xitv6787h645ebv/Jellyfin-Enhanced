@@ -13,6 +13,129 @@ Tests: `/tmp/je-e2e-test/test-no-hard-refresh.js`, `test-baseurl.js`,
 
 (none)
 
+## FEATURES
+
+### F1 — Auto-reload all signed-in clients when admin saves a config change
+
+**Request:** When admin saves a plugin setting, every signed-in client should
+refresh itself so the change takes effect — without each user manually
+hitting reload. Don't reload during media playback; prefer to time it for
+when the user is doing nothing; fall back to a reload on home navigation.
+Opt-in via an admin toggle.
+
+**Implementation summary:**
+
+- `Web/ConfigVersion.cs` — folded the plugin config file's
+  `File.GetLastWriteTimeUtc(...).Ticks` into the SHA-256 hash material so
+  EVERY admin save bumps the digest, not just changes inside the curated
+  sidebar/tabs subset.
+- `Configuration/PluginConfiguration.cs` — added
+  `bool AutoReloadOnConfigChange` (default `false`).
+- `Controllers/JellyfinEnhancedController.cs` — exposed
+  `AutoReloadOnConfigChange` in the `GetPublicConfig` response so the
+  client can opt in.
+- `Configuration/configPage.html` — Live Updates fieldset on the Display
+  tab with a single checkbox.
+- `js/web/auto-reload.js` (new) — JE.AutoReload module.
+  - Subscribes to `JE.HotReload.on('config', …)`.
+  - 30 s post-boot grace window — first config bump after page load is
+    just the baseline being established, not a real save.
+  - Reload guards: never during media playback (covers `<video>/<audio>`
+    not paused, `playbackManager.isPlaying()`, and `#/video|#/audio`
+    routes); prefer 30 s of input idle (mousemove / keydown / touchstart
+    / wheel / pointerdown); fall back to reload on `viewshow` of
+    `#indexPage` or hash matching `/home`.
+  - **Loop guard** (adopted from FT plugin PR #57): max 3 reloads per 60 s
+    via `sessionStorage['__JE_AR_RELOADS__']`. If exceeded, degrades to
+    `JE.toast(...)` if available, otherwise `console.warn`. Defense in
+    depth against pathological feedback loops.
+- `js/web/hot-reload.js` — added a debounced (500 ms) `poke()` that brings
+  the next poll forward on `visibilitychange`, `window focus`, and
+  `hashchange` (also adopted from FT plugin PR #57). Materially improves
+  latency when a user tabs back in.
+- `js/web/web-kickoff.js` — wired `JE.AutoReload.init()`.
+- `js/plugin.js` — added `web/auto-reload.js` to the loader list.
+
+**Verified by:** `/tmp/je-e2e-test/test-auto-reload.js` —
+
+```
+initial: {"enabled":true,"state":{"pendingReload":false,"idle":false,"playing":false,"loopGuardTripped":false}}
+Waiting 35s for grace window to expire…
+Saving a config change (ToastDuration bump)…
+Watching for client reload (up to 30s)…
+🟢 client reloaded after config change
+```
+
+**Diagnostic-counter cleanup:** during debug we instrumented HotReload /
+AutoReload / WebKickoff with `__JE_HR_*`, `__JE_AR_*`, `__JE_WK_*`
+counters and a `sessionStorage['__JE_HR_START_CALLS_PERSIST__']` ring.
+All removed after the feature converged. The only remaining
+sessionStorage key is `__JE_AR_RELOADS__`, which is the legitimate
+loop-guard log, not a diagnostic.
+
+**Review iterations:**
+
+- *iter-1* (3 parallel reviewers: code-reviewer + silent-failure-hunter +
+  security-reviewer). Findings:
+  - CRITICAL: `ConfigVersion.ReadConfigMtime()` silently swallowed all FS
+    errors and returned `0`, which collapsed the hash material back to
+    just sidebar+tabs and silently masked saves outside that subset.
+    Fixed by logging via `_logger.Warning` and falling back to
+    `DateTime.UtcNow.Ticks`.
+  - HIGH: file-write/poll race and filesystem mtime granularity
+    (FAT/NFS/overlayfs round to ~1s). Fixed by adding a monotonic
+    `_saveCounter` mixed into the hash material; counter is
+    incremented from a `JellyfinEnhanced.SaveConfiguration` override.
+  - HIGH: `window.playbackManager` was dead code in modern Jellyfin web
+    10.10+ (it's an ES module export, never on `window`). Replaced
+    with DOM-observable signals (`.videoPlayerContainer:not(.hide)`,
+    `.nowPlayingBar:not(.hide)`, `body.osdShown`) plus the existing
+    `<video>/<audio>` and `#/video|#/audio` heuristics.
+  - MEDIUM: AutoReload `pollTimer` leak — set on every config emit,
+    never cleared after a successful reload or loop-guard trip. Fixed
+    by extracting `stopTickPolling()` and calling it in both branches.
+  - Security review: clean, ship.
+
+- *iter-2* (re-review of fixes). Findings:
+  - HIGH: `OnConfigSaved` was `Increment` then `Invalidate`, leaving a
+    window where a /version request between the two saw stale cache.
+    Fixed by holding `_lock` around both writes.
+  - HIGH: scope expansion — `ClearTranslationCacheTask` calls
+    `SaveConfiguration()` directly, bypassing the original
+    `UpdateConfiguration` override. Fixed by overriding
+    `SaveConfiguration()` instead so all save paths fire
+    `OnConfigSaved`.
+
+- *iter-3* (sanity pass after iter-2 fixes). Findings:
+  - HIGH: switching from `UpdateConfiguration` override to `SaveConfiguration`
+    override LOST coverage on the HTTP `/Plugins/{id}/Configuration`
+    admin-save path. Verified empirically by adding a probe log line
+    inside the override — two HTTP saves produced zero probe entries,
+    only the internal direct callers (shortcut normalizer at startup,
+    `ClearTranslationCacheTask`) hit the override. Fixed by overriding
+    BOTH `UpdateConfiguration` AND `SaveConfiguration` and routing
+    them through a shared `NotifyConfigSaved()` helper — idempotent if
+    a future Jellyfin version chains the two methods (counter
+    increments twice on one save, hash differs, client reloads once).
+
+- *iter-4* (sanity pass after iter-3 fix): clean.
+
+**Debug story (kept short for the next person who hits this):** the test
+initially reported the client never reloaded. Three red herrings before
+the real diagnosis:
+
+1. We thought the server hash wasn't bumping after a save → ruled out by
+   curling /version before/after a save; mtime-in-hash was working.
+2. We thought HotReload's `current[topic] !== nextVal` check was wrong →
+   ruled out by adding a per-poll value trace; the check was fine.
+3. Finally noticed `performance.getEntriesByType('navigation')[0].type`
+   was `"reload"` — i.e., **AutoReload had successfully reloaded the
+   page**; the test's `nav > 1` check just doesn't catch that. Updated
+   the assertion to check `navType === 'reload'`.
+
+Lesson: when a feature triggers `location.reload()`, your assertion has
+to look at navigation TYPE, not navigation count.
+
 ## FIXED
 
 ### B14 — Custom tab content stacks on top of an active JE sidebar route

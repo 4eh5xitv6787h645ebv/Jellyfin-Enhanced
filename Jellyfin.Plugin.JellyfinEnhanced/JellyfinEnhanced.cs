@@ -196,6 +196,55 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             base.OnUninstalling();
         }
 
+        // Called whenever the plugin's config is persisted to disk — both
+        // by the standard /Plugins/{id}/Configuration HTTP endpoint (via
+        // BasePlugin.UpdateConfiguration → SaveConfiguration) and by our
+        // own internal save paths (e.g. shortcut normalization on startup,
+        // ClearTranslationCacheTask). Notifies the ConfigVersion module so
+        // /JellyfinEnhanced/web/version reflects the new state on the next
+        // request — no waiting for the 2s cache nor for the file mtime to
+        // settle on filesystems with coarse mtime granularity.
+        public override void SaveConfiguration()
+        {
+            base.SaveConfiguration();
+            NotifyConfigSaved();
+        }
+
+        // Overriding both is intentional. In Jellyfin's BasePlugin<T>,
+        // UpdateConfiguration assigns the new configuration THEN calls
+        // SaveConfiguration() — but in the version of MediaBrowser.Common
+        // shipped with the Jellyfin we target, the runtime dispatches the
+        // HTTP-driven save through UpdateConfiguration without routing it
+        // back through the overridable parameterless SaveConfiguration()
+        // (verified empirically: a /Plugins/{id}/Configuration POST does
+        // NOT hit a SaveConfiguration() override). So we hook BOTH:
+        //   • UpdateConfiguration covers the HTTP admin-save path
+        //   • SaveConfiguration covers our internal direct callers
+        //     (ClearTranslationCacheTask, shortcut normalization).
+        // NotifyConfigSaved is idempotent — double-firing on the same save
+        // bumps the counter once more, which is harmless (hash differs,
+        // client picks up the same change once).
+        public override void UpdateConfiguration(BasePluginConfiguration configuration)
+        {
+            base.UpdateConfiguration(configuration);
+            NotifyConfigSaved();
+        }
+
+        private void NotifyConfigSaved()
+        {
+            try { Web.ConfigVersion.OnConfigSaved(); }
+            catch (Exception ex) { _logger.Error($"ConfigVersion.OnConfigSaved threw: {ex}"); }
+        }
+
+        // Surface filesystem failures from ConfigVersion.ReadConfigMtime to
+        // the plugin log so a chronic filesystem permission error isn't
+        // silent. ConfigVersion is a static class and can't depend on the
+        // logger directly, so we route through Instance.
+        public void LogVersionMtimeFailure(Exception ex)
+        {
+            _logger.Warning($"ConfigVersion: failed to read plugin config mtime: {ex.Message}");
+        }
+
         // One-time housekeeping for installs that previously wrote a script
         // tag into web/index.html via the now-deleted UpdateIndexHtml path.
         private void CleanupLegacyOnDiskScript()

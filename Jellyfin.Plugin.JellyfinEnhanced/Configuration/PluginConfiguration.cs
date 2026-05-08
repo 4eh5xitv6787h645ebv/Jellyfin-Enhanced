@@ -21,6 +21,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             EnableCustomSplashScreen = false;
             SplashScreenImageUrl = "/web/assets/img/banner-light.png";
 
+            // Auto-reload on admin config change (web subsystem). When on,
+            // all signed-in clients refresh themselves whenever the admin
+            // saves a config change. Reloads are deferred during media
+            // playback, prefer an idle window (30 s no input), and fall
+            // back to the next home-page navigation if the user is busy.
+            AutoReloadOnConfigChange = false;
+
             // Jellyfin Elsewhere Settings
             ElsewhereEnabled = true;
             TMDB_API_KEY = "";
@@ -276,6 +283,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public int HelpPanelAutocloseDelay { get; set; }
         public bool EnableCustomSplashScreen { get; set; }
         public string SplashScreenImageUrl { get; set; }
+        public bool AutoReloadOnConfigChange { get; set; }
 
 
         // Jellyfin Elsewhere Settings

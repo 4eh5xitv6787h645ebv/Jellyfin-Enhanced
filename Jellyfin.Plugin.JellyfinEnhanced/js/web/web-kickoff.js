@@ -39,6 +39,7 @@
       if (JE.SidebarManager) JE.SidebarManager.init();
       if (JE.RouteHijacker) JE.RouteHijacker.init();
       if (JE.TabsManager) JE.TabsManager.init();
+      if (JE.AutoReload) JE.AutoReload.init();
     }
   };
 })(window.JellyfinEnhanced = window.JellyfinEnhanced || {});

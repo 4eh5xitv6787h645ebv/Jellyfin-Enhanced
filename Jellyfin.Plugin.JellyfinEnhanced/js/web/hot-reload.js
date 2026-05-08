@@ -89,13 +89,24 @@
       .finally(schedule);
   }
 
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') {
-      // Force one immediate check on tab refocus.
+  // Bring the next poll forward on user-attention signals — tab refocus,
+  // window focus, hashchange. Debounced to coalesce burst events (e.g.
+  // visibilitychange + focus arriving back-to-back when a user alt-tabs in).
+  var pokeTimer = null;
+  var POKE_DEBOUNCE_MS = 500;
+  function poke() {
+    if (pokeTimer) return;
+    pokeTimer = setTimeout(function () {
+      pokeTimer = null;
       clearTimeout(timer);
       poll();
-    }
+    }, POKE_DEBOUNCE_MS);
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') poke();
   });
+  window.addEventListener('focus', poke);
+  window.addEventListener('hashchange', poke);
 
   JE.HotReload = {
     on: subscribe,

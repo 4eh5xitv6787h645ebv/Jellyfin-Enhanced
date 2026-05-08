@@ -484,6 +484,7 @@
                 'web/sidebar-manager.js',
                 'web/route-hijacker.js',
                 'web/tabs-manager.js',
+                'web/auto-reload.js',
                 'web/web-kickoff.js',
 
                 // enhanced
