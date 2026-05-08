@@ -23,7 +23,11 @@
  *
  * The opt-in toggle lives in the plugin config (AutoReloadOnConfigChange)
  * and propagates to clients via /JellyfinEnhanced/public-config →
- * JE.pluginConfig.AutoReloadOnConfigChange.
+ * JE.pluginConfig.AutoReloadOnConfigChange. Crucially, the toggle is
+ * re-read from the server inside the 'config' event handler, NOT at
+ * init time — otherwise a client that loaded before the admin flipped
+ * the toggle on would never auto-reload until it was refreshed once
+ * manually, defeating the point on cross-device installs.
  */
 (function (JE) {
   'use strict';
@@ -158,9 +162,24 @@
     else if (isOnHomePage()) performReload();
   }
 
+  // Re-check the toggle at event time, not at init time. A client that
+  // loaded BEFORE the admin enabled AutoReloadOnConfigChange would
+  // otherwise never see auto-reloads — its in-memory JE.pluginConfig
+  // was captured at page load and doesn't change. We refresh the public
+  // config from the server inside the handler so the toggle's *current*
+  // state drives the decision.
+  function fetchPublicConfig() {
+    var base = window.__JE_BASE_PATH__ || '';
+    var ApiClient = window.ApiClient;
+    var url = (ApiClient && typeof ApiClient.getUrl === 'function')
+      ? ApiClient.getUrl('JellyfinEnhanced/public-config')
+      : base + '/JellyfinEnhanced/public-config';
+    return fetch(url, { cache: 'no-store', credentials: 'include' })
+      .then(function (r) { if (!r.ok) throw new Error('public-config ' + r.status); return r.json(); });
+  }
+
   JE.AutoReload = {
     init: function () {
-      if (!JE.pluginConfig || JE.pluginConfig.AutoReloadOnConfigChange !== true) return;
       if (!JE.HotReload) return;
 
       ['mousemove', 'keydown', 'touchstart', 'wheel', 'pointerdown'].forEach(function (evt) {
@@ -172,10 +191,21 @@
         if (elapsed < INITIAL_GRACE_MS) return;
         if (loopGuardTripped) return;
         if (pendingReload) return;
-        pendingReload = true;
-        if (pollTimer) clearInterval(pollTimer);
-        pollTimer = setInterval(tick, POLL_INTERVAL_MS);
-        requestAnimationFrame(tick);
+
+        fetchPublicConfig().then(function (cfg) {
+          // Refresh the in-memory copy so other JE features that read
+          // JE.pluginConfig pick up the latest server state too.
+          JE.pluginConfig = cfg;
+          if (!cfg || cfg.AutoReloadOnConfigChange !== true) return;
+          if (pendingReload) return; // re-check post-await
+          pendingReload = true;
+          if (pollTimer) clearInterval(pollTimer);
+          pollTimer = setInterval(tick, POLL_INTERVAL_MS);
+          requestAnimationFrame(tick);
+        }).catch(function (err) {
+          // Network blip — ignore this event; next config bump will retry.
+          try { console.warn('🪼 Jellyfin Enhanced: AutoReload failed to refresh public-config:', err); } catch (_) { /* noop */ }
+        });
       });
 
       document.addEventListener('viewshow', onViewShow);
