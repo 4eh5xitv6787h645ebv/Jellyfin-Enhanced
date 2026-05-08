@@ -34,16 +34,18 @@
 
   if (JE.AutoReload) return;
 
-  var IDLE_THRESHOLD_MS = 30 * 1000;
-  var POLL_INTERVAL_MS = 5 * 1000;
-  var INITIAL_GRACE_MS = 30 * 1000; // ignore config bumps in the first 30s after page load
-  var RELOAD_LIMIT = 3;
-  var RELOAD_WINDOW_MS = 60 * 1000;
-  var RELOAD_LOG_KEY = '__JE_AR_RELOADS__';
+  var IDLE_THRESHOLD_MS = 10 * 1000;        // user-input quiet period before reload
+  var POLL_INTERVAL_MS  = 2 * 1000;         // tick interval while a reload is pending
+  var INITIAL_GRACE_MS  = 5 * 1000;         // tiny safety margin after page boot
+  var MAX_PENDING_MS    = 60 * 1000;        // force reload even if user keeps interacting
+  var RELOAD_LIMIT      = 3;
+  var RELOAD_WINDOW_MS  = 60 * 1000;
+  var RELOAD_LOG_KEY    = '__JE_AR_RELOADS__';
 
   var bootedAt = Date.now();
   var lastInputAt = bootedAt;
   var pendingReload = false;
+  var pendingSetAt = 0;
   var pollTimer = null;
   var loopGuardTripped = false;
 
@@ -132,11 +134,13 @@
     if (!reserveReloadSlot()) {
       loopGuardTripped = true;
       pendingReload = false;
+      pendingSetAt = 0;
       stopTickPolling();
       showLoopGuardToast();
       return;
     }
     pendingReload = false;
+    pendingSetAt = 0;
     stopTickPolling();
     try {
       console.log('🪼 Jellyfin Enhanced: AutoReload — admin config changed, reloading client.');
@@ -147,7 +151,12 @@
   function tick() {
     if (!pendingReload) return;
     if (isPlayingMedia()) return;
-    if (isIdle()) performReload();
+    var pendingFor = Date.now() - pendingSetAt;
+    // Reload as soon as the user has been idle for 10s, OR force a reload
+    // after MAX_PENDING_MS of pending even if the user keeps interacting —
+    // otherwise a phone user who keeps tapping the screen would never see
+    // the auto-reload fire.
+    if (isIdle() || pendingFor >= MAX_PENDING_MS) performReload();
   }
 
   function onActivity() {
@@ -199,6 +208,7 @@
           if (!cfg || cfg.AutoReloadOnConfigChange !== true) return;
           if (pendingReload) return; // re-check post-await
           pendingReload = true;
+          pendingSetAt = Date.now();
           if (pollTimer) clearInterval(pollTimer);
           pollTimer = setInterval(tick, POLL_INTERVAL_MS);
           requestAnimationFrame(tick);
@@ -209,9 +219,12 @@
       });
 
       document.addEventListener('viewshow', onViewShow);
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') onActivity();
-      });
+      // Note: we deliberately do NOT treat visibilitychange as activity.
+      // On mobile, the user's wakeup gesture (unlock + tap to focus the
+      // app) fires touchstart and updates lastInputAt. Treating
+      // visibility transitions as additional activity would push idle
+      // out further, so a phone that just woke up would never reach the
+      // idle threshold and never auto-reload.
     },
     _state: function () {
       return {
