@@ -2195,6 +2195,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.EnableCustomSplashScreen,
                 config.SplashScreenImageUrl,
                 config.AutoReloadOnConfigChange,
+                config.AutoReloadIdleSeconds,
+                config.AutoReloadGraceSeconds,
+                config.AutoReloadMaxWaitSeconds,
 
                 // Jellyfin Elsewhere Settings
                 config.ElsewhereEnabled,

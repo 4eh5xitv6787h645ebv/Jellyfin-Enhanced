@@ -34,13 +34,38 @@
 
   if (JE.AutoReload) return;
 
-  var IDLE_THRESHOLD_MS = 10 * 1000;        // user-input quiet period before reload
-  var POLL_INTERVAL_MS  = 2 * 1000;         // tick interval while a reload is pending
-  var INITIAL_GRACE_MS  = 5 * 1000;         // tiny safety margin after page boot
-  var MAX_PENDING_MS    = 60 * 1000;        // force reload even if user keeps interacting
-  var RELOAD_LIMIT      = 3;
-  var RELOAD_WINDOW_MS  = 60 * 1000;
-  var RELOAD_LOG_KEY    = '__JE_AR_RELOADS__';
+  // Defaults that match Configuration/PluginConfiguration.cs constructor
+  // values. Admins can override these on the Display tab → Live Updates →
+  // Advanced timing. Effective values are read from JE.pluginConfig at
+  // event time so a config change applies on the next reload cycle
+  // without needing a separate fix-up step.
+  var DEFAULT_IDLE_SECONDS  = 10;
+  var DEFAULT_GRACE_SECONDS = 5;
+  var DEFAULT_MAX_SECONDS   = 60;
+  var POLL_INTERVAL_MS      = 2 * 1000;     // tick interval while a reload is pending — not user-tunable
+  var RELOAD_LIMIT          = 3;
+  var RELOAD_WINDOW_MS      = 60 * 1000;
+  var RELOAD_LOG_KEY        = '__JE_AR_RELOADS__';
+
+  function clampInt(v, def, min, max) {
+    var n = parseInt(v, 10);
+    if (!isFinite(n)) return def;
+    if (n < min) return min;
+    if (n > max) return max;
+    return n;
+  }
+  function idleThresholdMs() {
+    var c = JE.pluginConfig || {};
+    return clampInt(c.AutoReloadIdleSeconds, DEFAULT_IDLE_SECONDS, 0, 600) * 1000;
+  }
+  function initialGraceMs() {
+    var c = JE.pluginConfig || {};
+    return clampInt(c.AutoReloadGraceSeconds, DEFAULT_GRACE_SECONDS, 0, 600) * 1000;
+  }
+  function maxPendingMs() {
+    var c = JE.pluginConfig || {};
+    return clampInt(c.AutoReloadMaxWaitSeconds, DEFAULT_MAX_SECONDS, 5, 3600) * 1000;
+  }
 
   var bootedAt = Date.now();
   var lastInputAt = bootedAt;
@@ -73,7 +98,7 @@
   }
 
   function isIdle() {
-    return (Date.now() - lastInputAt) >= IDLE_THRESHOLD_MS;
+    return (Date.now() - lastInputAt) >= idleThresholdMs();
   }
 
   function isOnHomePage() {
@@ -152,11 +177,12 @@
     if (!pendingReload) return;
     if (isPlayingMedia()) return;
     var pendingFor = Date.now() - pendingSetAt;
-    // Reload as soon as the user has been idle for 10s, OR force a reload
-    // after MAX_PENDING_MS of pending even if the user keeps interacting —
-    // otherwise a phone user who keeps tapping the screen would never see
-    // the auto-reload fire.
-    if (isIdle() || pendingFor >= MAX_PENDING_MS) performReload();
+    // Reload as soon as the user has been idle for the configured idle
+    // threshold, OR force a reload after the configured max-wait — that
+    // backstop ensures a phone user who keeps tapping the screen
+    // eventually picks up the new settings instead of starving the
+    // auto-reload indefinitely.
+    if (isIdle() || pendingFor >= maxPendingMs()) performReload();
   }
 
   function onActivity() {
@@ -197,7 +223,7 @@
 
       JE.HotReload.on('config', function () {
         var elapsed = Date.now() - bootedAt;
-        if (elapsed < INITIAL_GRACE_MS) return;
+        if (elapsed < initialGraceMs()) return;
         if (loopGuardTripped) return;
         if (pendingReload) return;
 

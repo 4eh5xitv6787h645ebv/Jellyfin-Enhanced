@@ -507,8 +507,29 @@
                         <div class="configSection">
                             <div class="checkboxContainer"><label><input id="autoReloadOnConfigChange" is="emby-checkbox" type="checkbox"/><span>Auto-refresh clients when settings change</span></label></div>
                             <div class="je-setting-description" data-desc-for="autoReloadOnConfigChange">
-                                <div class="fieldDescription je-field-desc-xl">When you save a config change here, every signed-in Jellyfin Enhanced client refreshes itself within ~30 seconds so the new settings take effect without anyone having to hit reload. Reloads are skipped while a user is watching or listening to media, prefer an idle moment (no input for 30 s), and fall back to refreshing on the user's next visit to the home page. Off by default — turn this on once you're confident about the auto-reload behaviour.</div>
+                                <div class="fieldDescription je-field-desc-xl">When you save a config change here, every signed-in Jellyfin Enhanced client refreshes itself so the new settings take effect without anyone having to hit reload. Reloads are skipped while a user is watching or listening to media, prefer an idle moment (no input for the configured threshold), and fall back to refreshing on the user's next visit to the home page. Off by default — turn this on once you're confident about the auto-reload behaviour.</div>
                             </div>
+
+                            <details class="je-advanced-block">
+                                <summary><span>Advanced timing</span></summary>
+                                <div class="configSection">
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="autoReloadIdleSeconds">Idle threshold (seconds)</label>
+                                        <input id="autoReloadIdleSeconds" is="emby-input" type="number" min="0" max="600" step="1" />
+                                        <div class="fieldDescription">How long since the last user input (mouse, key, touch, scroll) before AutoReload is allowed to fire. Lower = more responsive, higher = less likely to interrupt mid-gesture. Default 10.</div>
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="autoReloadGraceSeconds">Initial grace window (seconds)</label>
+                                        <input id="autoReloadGraceSeconds" is="emby-input" type="number" min="0" max="600" step="1" />
+                                        <div class="fieldDescription">Config changes detected within this many seconds after a page load are ignored. Set to 0 to react immediately on every page. Default 5.</div>
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel inputLabelUnfocused" for="autoReloadMaxWaitSeconds">Max wait before forcing a reload (seconds)</label>
+                                        <input id="autoReloadMaxWaitSeconds" is="emby-input" type="number" min="5" max="3600" step="1" />
+                                        <div class="fieldDescription">Force a reload after this many seconds even if the user keeps interacting — otherwise a busy user could starve the auto-reload indefinitely. Default 60.</div>
+                                    </div>
+                                </div>
+                            </details>
                         </div>
                     </fieldset>
                 </div>
@@ -3584,6 +3605,9 @@
                 // Load all other settings
                 document.querySelector('#enableCustomSplashScreen').checked = config.EnableCustomSplashScreen;
                 document.querySelector('#autoReloadOnConfigChange').checked = config.AutoReloadOnConfigChange === true;
+                document.querySelector('#autoReloadIdleSeconds').value = config.AutoReloadIdleSeconds ?? 10;
+                document.querySelector('#autoReloadGraceSeconds').value = config.AutoReloadGraceSeconds ?? 5;
+                document.querySelector('#autoReloadMaxWaitSeconds').value = config.AutoReloadMaxWaitSeconds ?? 60;
                 document.querySelector('#splashScreenImageUrl').value = config.SplashScreenImageUrl;
                 document.querySelector('#disableAllShortcuts').checked = config.DisableAllShortcuts;
                 document.querySelector('#ToastDuration').value = config.ToastDuration;
@@ -3866,6 +3890,15 @@
             config.Shortcuts = finalShortcuts;
             config.EnableCustomSplashScreen = document.querySelector('#enableCustomSplashScreen').checked;
             config.AutoReloadOnConfigChange = document.querySelector('#autoReloadOnConfigChange').checked;
+            // Clamp into the documented ranges; fall back to defaults on bad input.
+            const clampInt = (raw, def, min, max) => {
+                const n = parseInt(raw, 10);
+                if (!Number.isFinite(n)) return def;
+                return Math.max(min, Math.min(max, n));
+            };
+            config.AutoReloadIdleSeconds    = clampInt(document.querySelector('#autoReloadIdleSeconds').value,    10, 0, 600);
+            config.AutoReloadGraceSeconds   = clampInt(document.querySelector('#autoReloadGraceSeconds').value,    5, 0, 600);
+            config.AutoReloadMaxWaitSeconds = clampInt(document.querySelector('#autoReloadMaxWaitSeconds').value, 60, 5, 3600);
             config.SplashScreenImageUrl = document.querySelector('#splashScreenImageUrl').value;
             config.DisableAllShortcuts = document.querySelector('#disableAllShortcuts').checked;
             config.ToastDuration = parseInt(document.querySelector('#ToastDuration').value, 10);

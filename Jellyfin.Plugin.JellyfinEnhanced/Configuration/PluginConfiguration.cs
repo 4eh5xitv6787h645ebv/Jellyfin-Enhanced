@@ -27,6 +27,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             // playback, prefer an idle window (30 s no input), and fall
             // back to the next home-page navigation if the user is busy.
             AutoReloadOnConfigChange = false;
+            // Defaults match the constants the JS module uses when these
+            // server-side values are missing — keep them in sync.
+            AutoReloadIdleSeconds    = 10;
+            AutoReloadGraceSeconds   = 5;
+            AutoReloadMaxWaitSeconds = 60;
 
             // Jellyfin Elsewhere Settings
             ElsewhereEnabled = true;
@@ -284,6 +289,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool EnableCustomSplashScreen { get; set; }
         public string SplashScreenImageUrl { get; set; }
         public bool AutoReloadOnConfigChange { get; set; }
+        public int AutoReloadIdleSeconds { get; set; }
+        public int AutoReloadGraceSeconds { get; set; }
+        public int AutoReloadMaxWaitSeconds { get; set; }
 
 
         // Jellyfin Elsewhere Settings
