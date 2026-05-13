@@ -60,7 +60,7 @@
 
   function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
-  // Find the live inline tab row. Jellyfin nests three layers:
+  // Find the live inline tab row. Jellyfin 10/11 nests three layers:
   //
   //   .headerTabs                       (header chrome)
   //     .tabs-viewmenubar.emby-tabs     (centred wrapper)
@@ -71,14 +71,16 @@
   // Appending JE buttons to .emby-tabs-slider places them INLINE with
   // the native tabs (same visual row, same flex container). Appending
   // anywhere outside puts them on a second line below.
+  //
+  // CAVEAT: on Jellyfin 12 these elements still exist as legacy DOM but
+  // are HIDDEN by an ancestor with display:none — the visible nav was
+  // moved to a React/MUI app bar (see findMuiNavStack below).
   function findStrip() {
     var candidates = [
       '#indexPage:not(.hide) .headerTabs .emby-tabs-slider',
       '.mainAnimatedPage:not(.hide) #indexPage .headerTabs .emby-tabs-slider',
       '#indexPage .headerTabs .emby-tabs-slider',
       '.headerTabs .emby-tabs-slider',
-      // Fallbacks in case the inner slider hasn't been built yet — paint
-      // is idempotent and will rerun when the slider appears.
       '#indexPage:not(.hide) .headerTabs .tabs-viewmenubar',
       '.headerTabs .tabs-viewmenubar',
       '#indexPage:not(.hide) .headerTabs',
@@ -86,9 +88,66 @@
     ];
     for (var i = 0; i < candidates.length; i++) {
       var el = document.querySelector(candidates[i]);
-      if (el && document.contains(el)) return el;
+      if (!el || !document.contains(el)) continue;
+      // Skip strips whose ancestry is hidden (Jellyfin 12 leaves the
+      // legacy `.headerTabs` in the DOM under a `display:none` parent).
+      if (!isElementRendered(el)) continue;
+      return el;
     }
     return null;
+  }
+
+  // Jellyfin 12 home-nav adapter. The Material-UI app bar has this shape:
+  //
+  //   <header class="MuiAppBar-root">
+  //     <div class="MuiToolbar-root">
+  //       <div class="MuiStack-root">              ← we inject anchors here
+  //         <a href="#/">Server name</a>
+  //         <a href="#/home?tab=1">Favourites</a>
+  //         <a href="#/movies?...">Movies</a>
+  //         <a href="#/tv?...">Shows</a>
+  //
+  // We clone the className of an existing native anchor so our JE link
+  // inherits all the emotion-generated MUI styles (the `css-XXXX` hash
+  // is build-stable). Clicking the anchor navigates to a JE route which
+  // the route hijacker mounts — no separate pane mechanism needed on
+  // jf12 since native "tabs" are themselves just URL routes.
+  function findMuiNavStack() {
+    var toolbar = document.querySelector('header .MuiToolbar-root, .MuiAppBar-root .MuiToolbar-root');
+    if (!toolbar || !isElementRendered(toolbar)) return null;
+    var stacks = toolbar.querySelectorAll('.MuiStack-root');
+    for (var i = 0; i < stacks.length; i++) {
+      // Pick the stack that already holds nav anchors (Home / Favourites /
+      // library shortcuts) — that's the home-nav row. Other MuiStacks in
+      // the toolbar hold the search icon, cast button, settings icon etc.
+      var stack = stacks[i];
+      var hasNavAnchor = stack.querySelector('a.MuiButtonBase-root[href]');
+      if (hasNavAnchor) return stack;
+    }
+    return null;
+  }
+
+  function isElementRendered(el) {
+    // An element is "rendered" iff getClientRects() is non-empty.
+    // Walking up offsetParent misses some display:none cases on
+    // <header>; getClientRects is the simplest reliable check.
+    try { return el.getClientRects().length > 0; } catch (_) { return false; }
+  }
+
+  function nativeMuiAnchorTemplate(stack) {
+    // Pick the first native anchor inside the stack as a styling template.
+    // We clone its className so our injected button matches MUI styling.
+    return stack.querySelector('a.MuiButtonBase-root[href]');
+  }
+
+  function makeMuiAnchor(item, template) {
+    var a = document.createElement('a');
+    a.className = template ? template.className : 'MuiButtonBase-root MuiButton-root';
+    a.classList.add('je-custom-tab-button');
+    a.setAttribute(TAB_BUTTON_ATTR, item.id);
+    a.setAttribute('href', '#/JellyfinEnhanced/' + item.id);
+    a.textContent = item.title || item.id;
+    return a;
   }
 
   // Pick the currently-visible #indexPage. Jellyfin's SPA keeps the
@@ -207,11 +266,36 @@
     for (var i = 0; i < muted.length; i++) muted[i].classList.remove('je-muted');
   }
 
+  function paintMui() {
+    var stack = findMuiNavStack();
+    if (!stack) return false;
+
+    var template = nativeMuiAnchorTemplate(stack);
+
+    // Drop JE anchors whose ID is no longer in the live entries list.
+    stack.querySelectorAll('a[' + TAB_BUTTON_ATTR + ']').forEach(function (a) {
+      if (!entries.some(function (e) { return e.id === a.getAttribute(TAB_BUTTON_ATTR); })) {
+        a.parentNode && a.parentNode.removeChild(a);
+      }
+    });
+    // Idempotent insert. Append to the end of the stack — Jellyfin 12's
+    // stack uses default order so JE items land after native shortcuts.
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+      if (stack.querySelector('a[' + TAB_BUTTON_ATTR + '="' + e.id + '"]')) continue;
+      stack.appendChild(makeMuiAnchor(e, template));
+    }
+    return true;
+  }
+
   function paint() {
     if (inFlight) return;
     inFlight = true;
     try {
       injectStyles();
+      // Jellyfin 12 path first — the MUI app bar is the user-visible nav
+      // when present, even if the legacy DOM exists alongside.
+      if (paintMui()) return;
       var strip = findStrip();
       var visible = visibleIndexPage();
       // We need both: a strip to host buttons, and a visible #indexPage to
