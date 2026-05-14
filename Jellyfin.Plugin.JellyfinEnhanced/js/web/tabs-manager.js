@@ -150,6 +150,58 @@
     return a;
   }
 
+  // Jellyfin 12 mobile-drawer adapter. On narrow viewports the MUI
+  // toolbar collapses to a hamburger that opens this drawer:
+  //
+  //   <div class="MuiDrawer-root MuiDrawer-anchorLeft">
+  //     <div class="MuiDrawer-paper">
+  //       <div class="MuiBox-root">
+  //         <ul class="MuiList-root">      ← inject <li> items here
+  //           <li class="MuiListItem-root">
+  //             <a class="MuiListItemButton-root">Home</a>
+  //           </li>
+  //
+  // The drawer DOM is present even when closed (just hidden via CSS),
+  // so we can inject any time. Each JE entry becomes an <li> wrapping
+  // an <a> with cloned className → inherits native list-item styling.
+  function findMuiDrawerList() {
+    // Prefer the drawer's primary <ul> — the one containing nav links
+    // (Home / Favourites / library shortcuts). Some Jellyfin builds put
+    // a second <ul> in the drawer's footer for "About" / "Logout" etc.
+    var lists = document.querySelectorAll('.MuiDrawer-root .MuiDrawer-paper .MuiList-root');
+    for (var i = 0; i < lists.length; i++) {
+      var ul = lists[i];
+      if (ul.querySelector('a.MuiListItemButton-root[href]')) return ul;
+    }
+    return null;
+  }
+
+  function nativeMuiDrawerItemTemplate(ul) {
+    // The first nav <li> in the drawer — used as a structural template
+    // so we copy both the <li> and inner <a> classNames precisely.
+    var li = ul.querySelector('li.MuiListItem-root');
+    if (!li) return null;
+    var a = li.querySelector('a.MuiListItemButton-root');
+    return { liClass: li.className, aClass: a ? a.className : null };
+  }
+
+  function makeMuiDrawerItem(item, tmpl) {
+    var li = document.createElement('li');
+    li.className = (tmpl && tmpl.liClass) || 'MuiListItem-root MuiListItem-gutters';
+    li.setAttribute(TAB_BUTTON_ATTR + '-li', item.id);
+    var a = document.createElement('a');
+    a.className = (tmpl && tmpl.aClass) || 'MuiButtonBase-root MuiListItemButton-root';
+    a.classList.add('je-custom-tab-drawer-item');
+    a.setAttribute(TAB_BUTTON_ATTR, item.id);
+    a.setAttribute('href', '#/JellyfinEnhanced/' + item.id);
+    // Match the inner <span> structure Jellyfin uses for icon+label.
+    // Plain text content is fine — Jellyfin's native items also fall back
+    // to text-only when there's no icon configured.
+    a.textContent = item.title || item.id;
+    li.appendChild(a);
+    return li;
+  }
+
   // Pick the currently-visible #indexPage. Jellyfin's SPA keeps the
   // previous home instance around hidden when you navigate back to home
   // via the header home button, so a naive `getElementById('indexPage')`
@@ -268,23 +320,39 @@
 
   function paintMui() {
     var stack = findMuiNavStack();
-    if (!stack) return false;
+    var drawerList = findMuiDrawerList();
+    if (!stack && !drawerList) return false;
 
-    var template = nativeMuiAnchorTemplate(stack);
-
-    // Drop JE anchors whose ID is no longer in the live entries list.
-    stack.querySelectorAll('a[' + TAB_BUTTON_ATTR + ']').forEach(function (a) {
-      if (!entries.some(function (e) { return e.id === a.getAttribute(TAB_BUTTON_ATTR); })) {
-        a.parentNode && a.parentNode.removeChild(a);
+    // Desktop nav stack
+    if (stack) {
+      var template = nativeMuiAnchorTemplate(stack);
+      stack.querySelectorAll('a[' + TAB_BUTTON_ATTR + ']').forEach(function (a) {
+        if (!entries.some(function (e) { return e.id === a.getAttribute(TAB_BUTTON_ATTR); })) {
+          a.parentNode && a.parentNode.removeChild(a);
+        }
+      });
+      for (var i = 0; i < entries.length; i++) {
+        var e = entries[i];
+        if (stack.querySelector('a[' + TAB_BUTTON_ATTR + '="' + e.id + '"]')) continue;
+        stack.appendChild(makeMuiAnchor(e, template));
       }
-    });
-    // Idempotent insert. Append to the end of the stack — Jellyfin 12's
-    // stack uses default order so JE items land after native shortcuts.
-    for (var i = 0; i < entries.length; i++) {
-      var e = entries[i];
-      if (stack.querySelector('a[' + TAB_BUTTON_ATTR + '="' + e.id + '"]')) continue;
-      stack.appendChild(makeMuiAnchor(e, template));
     }
+
+    // Mobile drawer list (always present in DOM, even when closed)
+    if (drawerList) {
+      var liTmpl = nativeMuiDrawerItemTemplate(drawerList);
+      drawerList.querySelectorAll('li[' + TAB_BUTTON_ATTR + '-li]').forEach(function (li) {
+        if (!entries.some(function (e) { return e.id === li.getAttribute(TAB_BUTTON_ATTR + '-li'); })) {
+          li.parentNode && li.parentNode.removeChild(li);
+        }
+      });
+      for (var j = 0; j < entries.length; j++) {
+        var ee = entries[j];
+        if (drawerList.querySelector('li[' + TAB_BUTTON_ATTR + '-li="' + ee.id + '"]')) continue;
+        drawerList.appendChild(makeMuiDrawerItem(ee, liTmpl));
+      }
+    }
+
     return true;
   }
 
