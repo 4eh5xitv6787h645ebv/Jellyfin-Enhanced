@@ -7,6 +7,7 @@ using System.Runtime.Loader;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Tasks;
@@ -25,13 +26,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly TagCacheService _tagCacheService;
         private readonly TagCacheMonitor _tagCacheMonitor;
         private readonly SeerrScanTriggerService _seerrScanTriggerService;
+        private readonly UserConfigurationManager _userConfigurationManager;
 
         public string Name => "Jellyfin Enhanced Startup";
         public string Key => "JellyfinEnhancedStartup";
         public string Description => "Injects the Jellyfin Enhanced script using the File Transformation plugin and performs necessary cleanups.";
         public string Category => "Jellyfin Enhanced";
 
-        public StartupService(Logger logger, IApplicationPaths applicationPaths, AutoSeasonRequestMonitor autoSeasonRequestMonitor, AutoMovieRequestMonitor autoMovieRequestMonitor, WatchlistMonitor watchlistMonitor, TagCacheService tagCacheService, TagCacheMonitor tagCacheMonitor, SeerrScanTriggerService seerrScanTriggerService)
+        public StartupService(Logger logger, IApplicationPaths applicationPaths, AutoSeasonRequestMonitor autoSeasonRequestMonitor, AutoMovieRequestMonitor autoMovieRequestMonitor, WatchlistMonitor watchlistMonitor, TagCacheService tagCacheService, TagCacheMonitor tagCacheMonitor, SeerrScanTriggerService seerrScanTriggerService, UserConfigurationManager userConfigurationManager)
         {
             _logger = logger;
             _applicationPaths = applicationPaths;
@@ -41,6 +43,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             _tagCacheService = tagCacheService;
             _tagCacheMonitor = tagCacheMonitor;
             _seerrScanTriggerService = seerrScanTriggerService;
+            _userConfigurationManager = userConfigurationManager;
         }
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
@@ -84,8 +87,91 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     _logger.Error($"[TagCache] Failed to initialize tag cache (tags will use batch fallback): {ex.Message}");
                 }
 
+                MigrateQualityCategoryUserOverrides();
+
                 _logger.Info("Jellyfin Enhanced Startup Task completed successfully.");
             }, cancellationToken);
+        }
+
+        // Pre-issue-611 the GetUserSettingsSettings seed wrote concrete bool/int values
+        // for the six Show*Tag + *Order fields into every user's settings.json. Those
+        // values shadow the admin defaults forever because per-user values win in
+        // readBool/readInt (qualitytags.js). Null them out once so users inherit the
+        // current admin defaults again. A future user-panel toggle re-sets them.
+        private void MigrateQualityCategoryUserOverrides()
+        {
+            var pluginConfig = JellyfinEnhanced.Instance?.Configuration;
+            if (pluginConfig == null) return;
+            if (pluginConfig.QualityCategoryUserOverridesMigrated) return;
+
+            var userIds = _userConfigurationManager.GetAllUserIds();
+            int touched = 0;
+            int failed = 0;
+            foreach (var userId in userIds)
+            {
+                try
+                {
+                    if (!_userConfigurationManager.UserConfigurationExists(userId, "settings.json")) continue;
+                    // RmwUserConfiguration takes the per-file lock, strict-reads (quarantines
+                    // corrupt files), mutates, and saves atomically. Mirrors how every other
+                    // RMW path in this codebase handles user JSON.
+                    _userConfigurationManager.RmwUserConfiguration<UserSettings>(userId, "settings.json", s =>
+                    {
+                        bool changed =
+                            s.ShowResolutionTag.HasValue ||
+                            s.ShowSourceTag.HasValue ||
+                            s.ShowDynamicRangeTag.HasValue ||
+                            s.ShowSpecialFormatTag.HasValue ||
+                            s.ShowVideoCodecTag.HasValue ||
+                            s.ShowAudioInfoTag.HasValue ||
+                            s.ResolutionTagOrder.HasValue ||
+                            s.SourceTagOrder.HasValue ||
+                            s.DynamicRangeTagOrder.HasValue ||
+                            s.SpecialFormatTagOrder.HasValue ||
+                            s.VideoCodecTagOrder.HasValue ||
+                            s.AudioInfoTagOrder.HasValue;
+                        if (!changed) return 0;
+
+                        s.ShowResolutionTag = null;
+                        s.ShowSourceTag = null;
+                        s.ShowDynamicRangeTag = null;
+                        s.ShowSpecialFormatTag = null;
+                        s.ShowVideoCodecTag = null;
+                        s.ShowAudioInfoTag = null;
+                        s.ResolutionTagOrder = null;
+                        s.SourceTagOrder = null;
+                        s.DynamicRangeTagOrder = null;
+                        s.SpecialFormatTagOrder = null;
+                        s.VideoCodecTagOrder = null;
+                        s.AudioInfoTagOrder = null;
+                        touched++;
+                        return 1;
+                    });
+                }
+                catch (Exception ex)
+                {
+                    failed++;
+                    _logger.Warning($"[Migration 611] Failed for user {userId}: {ex.Message}");
+                }
+            }
+
+            // Only flip the flag when every user completed without throwing — otherwise
+            // a transient disk error or single corrupt settings.json would freeze the
+            // migration as "done" and the stuck users would never be retried.
+            if (failed == 0)
+            {
+                pluginConfig.QualityCategoryUserOverridesMigrated = true;
+                // Logged at Error because the in-memory flag is already true; if persist
+                // fails we lose the bookkeeping and the migration re-runs next startup
+                // (safe — it's idempotent, only touches users with non-null values).
+                try { JellyfinEnhanced.Instance?.SaveConfiguration(); }
+                catch (Exception ex) { _logger.Error($"[Migration 611] Saving plugin config flag failed: {ex.Message}"); }
+                _logger.Info($"[Migration 611] Cleared seeded quality-category overrides for {touched} user(s); admin defaults now apply.");
+            }
+            else
+            {
+                _logger.Warning($"[Migration 611] Cleared {touched} user(s) but {failed} failed; migration will retry on next startup.");
+            }
         }
 
         private void RegisterFileTransformation()

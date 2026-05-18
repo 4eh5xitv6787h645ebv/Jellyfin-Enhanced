@@ -329,6 +329,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool ShowSpecialFormatTag { get; set; } = true;
         public bool ShowVideoCodecTag { get; set; } = true;
         public bool ShowAudioInfoTag { get; set; } = true;
+        // One-shot marker: pre-issue-611 seeding wrote concrete bool/int values into
+        // every user's settings.json for the six Show*Tag and *Order fields. That
+        // froze each user at the admin defaults present at seed time and silently
+        // ignored later admin changes. The StartupService migration nulls those
+        // stuck values once so users inherit the live admin defaults again.
+        public bool QualityCategoryUserOverridesMigrated { get; set; }
         public int ResolutionTagOrder { get; set; } = 1;
         public int SourceTagOrder { get; set; } = 2;
         public int DynamicRangeTagOrder { get; set; } = 3;

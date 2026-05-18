@@ -3094,18 +3094,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         ShowFileSizes = defaultConfig.ShowFileSizes,
                         ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
                         QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
-                        ShowResolutionTag = defaultConfig.ShowResolutionTag,
-                        ShowSourceTag = defaultConfig.ShowSourceTag,
-                        ShowDynamicRangeTag = defaultConfig.ShowDynamicRangeTag,
-                        ShowSpecialFormatTag = defaultConfig.ShowSpecialFormatTag,
-                        ShowVideoCodecTag = defaultConfig.ShowVideoCodecTag,
-                        ShowAudioInfoTag = defaultConfig.ShowAudioInfoTag,
-                        ResolutionTagOrder = defaultConfig.ResolutionTagOrder,
-                        SourceTagOrder = defaultConfig.SourceTagOrder,
-                        DynamicRangeTagOrder = defaultConfig.DynamicRangeTagOrder,
-                        SpecialFormatTagOrder = defaultConfig.SpecialFormatTagOrder,
-                        VideoCodecTagOrder = defaultConfig.VideoCodecTagOrder,
-                        AudioInfoTagOrder = defaultConfig.AudioInfoTagOrder,
+                        // Per-category Show*Tag and *Order fields are intentionally left null.
+                        // UserSettings declares them as bool?/int? so readBool/readInt in
+                        // qualitytags.js falls through to the admin pluginConfig when the
+                        // user value is null. Seeding concrete bools here would freeze each
+                        // user at the admin defaults present at seed time and silently
+                        // ignore later admin changes (issue 611).
                         GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
                         LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
                         RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
@@ -3909,18 +3903,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 ShowFileSizes = defaultConfig.ShowFileSizes,
                 ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
                 QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
-                ShowResolutionTag = defaultConfig.ShowResolutionTag,
-                ShowSourceTag = defaultConfig.ShowSourceTag,
-                ShowDynamicRangeTag = defaultConfig.ShowDynamicRangeTag,
-                ShowSpecialFormatTag = defaultConfig.ShowSpecialFormatTag,
-                ShowVideoCodecTag = defaultConfig.ShowVideoCodecTag,
-                ShowAudioInfoTag = defaultConfig.ShowAudioInfoTag,
-                ResolutionTagOrder = defaultConfig.ResolutionTagOrder,
-                SourceTagOrder = defaultConfig.SourceTagOrder,
-                DynamicRangeTagOrder = defaultConfig.DynamicRangeTagOrder,
-                SpecialFormatTagOrder = defaultConfig.SpecialFormatTagOrder,
-                VideoCodecTagOrder = defaultConfig.VideoCodecTagOrder,
-                AudioInfoTagOrder = defaultConfig.AudioInfoTagOrder,
+                // Per-category Show*Tag and *Order fields are intentionally left null so
+                // each user inherits the current admin defaults via readBool/readInt and
+                // continues to track future admin changes. See GetUserSettingsSettings
+                // for the same rationale (issue 611).
                 GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
                 LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
                 RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
