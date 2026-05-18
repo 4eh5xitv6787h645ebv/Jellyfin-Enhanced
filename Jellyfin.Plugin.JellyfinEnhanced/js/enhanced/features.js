@@ -977,6 +977,27 @@
                 addHideContentButton(itemId, visiblePage);
             }
 
+            // Spoiler Guard — Series detail page (toggle blurs all unwatched
+            // episode images via the server-side filter), Movie detail
+            // page (toggle blurs the movie's own poster/backdrop until the
+            // user has marked it Played), AND Collection (BoxSet) detail
+            // page (toggle blurs the collection's own art).
+            if ((lastDetailsItemType === 'Series' || lastDetailsItemType === 'Movie' || lastDetailsItemType === 'BoxSet')
+                && JE.spoilerBlur
+                && typeof JE.spoilerBlur.addSpoilerBlurButton === 'function') {
+                JE.spoilerBlur.addSpoilerBlurButton(itemId, visiblePage, lastDetailsItemType);
+            }
+            // Preload chapter images on Movie / Episode details so the
+            // player's timeline-hover tooltip later hits browser cache
+            // instead of round-tripping (eliminates "gray box → image
+            // swap" jank on first-hover). No-op when item isn't in the
+            // user's Spoiler Guard list.
+            if ((lastDetailsItemType === 'Movie' || lastDetailsItemType === 'Episode')
+                && JE.spoilerBlur
+                && typeof JE.spoilerBlur.preloadChapterImages === 'function') {
+                JE.spoilerBlur.preloadChapterImages(itemId, lastDetailsItemType);
+            }
+
             // Skip unsupported item types for media features
             if (!FEATURES_SUPPORTED_TYPES.includes(lastDetailsItemType)) {
                 return;

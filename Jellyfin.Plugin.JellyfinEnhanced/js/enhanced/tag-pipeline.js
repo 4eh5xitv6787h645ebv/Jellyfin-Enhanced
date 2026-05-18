@@ -288,7 +288,13 @@
      * A generation counter ensures stale chunk chains from previous scans
      * are cancelled when a new scan starts (e.g., rapid page changes).
      */
+    let isInvalidating = false;
     function runScan() {
+        // While a server-cache invalidation is in flight (after a
+        // Spoiler Guard toggle), suppress concurrent scans so cards
+        // aren't processed against a half-loaded cache and marked done
+        // before the fresh data arrives.
+        if (isInvalidating) return;
         if (!hasAnyEnabledRenderer()) return;
         if (typeof ApiClient === 'undefined') return;
 
@@ -737,6 +743,42 @@
             batchGeneration++;
             firstEpisodeCache.clear();
             parentSeriesCache.clear();
+        },
+        // Bust the server cache so the next scan re-fetches everything
+        // through the spoiler-strip pipeline. Used after toggling
+        // Spoiler Guard for a series/movie so newly-eligible items lose
+        // their cached unstripped tag data.
+        async invalidateServerCache() {
+            // Hold a flag for the duration of the reload so concurrent
+            // scheduleScan() calls (triggered by body MutationObserver
+            // during the await window) no-op instead of processing cards
+            // against the empty cache. Reset processedCards a SECOND time
+            // after load so cards that
+            // were partially marked during the await get re-scanned.
+            isInvalidating = true;
+            try {
+                serverCache = null;
+                serverCacheVersion = 0;
+                serverCacheTimestamp = 0;
+                processedCards = new WeakSet();
+                requestQueue = [];
+                batchGeneration++;
+                firstEpisodeCache.clear();
+                parentSeriesCache.clear();
+                if (typeof loadServerCache === 'function') {
+                    await loadServerCache();
+                }
+                processedCards = new WeakSet();
+            } catch (e) {
+                console.warn(`${logPrefix} invalidateServerCache failed:`, e);
+            } finally {
+                isInvalidating = false;
+            }
+            try {
+                runScan();
+            } catch (e) {
+                console.warn(`${logPrefix} post-invalidate scan failed:`, e);
+            }
         },
         scheduleScan,
     };

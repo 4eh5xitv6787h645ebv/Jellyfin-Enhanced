@@ -12,6 +12,72 @@
 
         const logPrefix = '🪼 Jellyfin Enhanced: Reviews:';
 
+        // Suppress the reviews panel when the current Series OR Movie has
+        // Spoiler Guard enabled by the user AND the admin has
+        // SpoilerStripReviews on. TMDB reviews routinely contain plot
+        // spoilers, and user-written reviews share that risk.
+        // Async because the Spoiler Guard module loads its state lazily;
+        // calling whenLoaded() ensures we have an authoritative answer
+        // even on a cold page load before the state XHR completes.
+        async function shouldSuppressForSpoilerMode(item, mediaType) {
+            try {
+                if (mediaType !== 'Series' && mediaType !== 'Movie') return false;
+                if (!JE.pluginConfig?.SpoilerBlurEnabled) return false;
+                // Default-on if the field is missing (older plugin XML
+                // without the key — server returns the C# default true).
+                var stripReviews = JE.pluginConfig?.SpoilerStripReviews;
+                if (stripReviews === false) return false;
+                if (!JE.spoilerBlur) return false;
+                if (typeof JE.spoilerBlur.whenLoaded === 'function') {
+                    await JE.spoilerBlur.whenLoaded();
+                }
+                // Fail-CLOSED when the initial state load itself failed —
+                // the in-memory enabled-series/movies sets and userPrefs are
+                // unreliable, so we don't know whether THIS item is
+                // spoiler-protected. Without this short-circuit a transient
+                // network blip on /spoiler-blur/series would leak reviews
+                // for every guarded item until the next page navigation.
+                if (typeof JE.spoilerBlur.isLoadOk === 'function' && !JE.spoilerBlur.isLoadOk()) {
+                    console.warn(`${logPrefix} Spoiler Guard state load failed; suppressing reviews fail-closed.`);
+                    return true;
+                }
+                // Honor the user-side opt-out. The admin policy is the cap
+                // (stripReviews === false already returned above), but a user
+                // who set HideReviews=false on their Spoiler Guard prefs has
+                // explicitly asked to see reviews on their guarded items.
+                if (typeof JE.spoilerBlur.getUserPrefs === 'function') {
+                    var userPrefs = JE.spoilerBlur.getUserPrefs() || {};
+                    if (userPrefs.HideReviews === false) return false;
+                }
+                if (mediaType === 'Movie') {
+                    return !!(JE.spoilerBlur.isMovieEnabledFor && JE.spoilerBlur.isMovieEnabledFor(item?.Id || ''));
+                }
+                return !!(JE.spoilerBlur.isEnabledFor && JE.spoilerBlur.isEnabledFor(item?.Id || ''));
+            } catch (e) {
+                // Fail-CLOSED. The "show reviews" path is the
+                // spoiler-leaking path; if any check above throws
+                // (cold-load network blip on whenLoaded, defensive bug in
+                // isEnabledFor, etc.), suppress the panel by default
+                // rather than render unsuppressed.
+                console.warn(`${logPrefix} Spoiler Guard check failed; suppressing reviews:`, e);
+                return true;
+            }
+        }
+
+        // When the suppression decision flips on between two visits to the
+        // same series page (e.g. user just enabled Spoiler Guard in this
+        // session), an existing reviews section may already be in the DOM.
+        // Strip it on suppress.
+        function removeReviewsSection(page) {
+            try {
+                const root = page || document.querySelector('#itemDetailPage:not(.hide)') || document;
+                const sec = root.querySelector('.tmdb-reviews-section');
+                if (sec && sec.parentNode) sec.parentNode.removeChild(sec);
+            } catch (e) {
+                console.warn(`${logPrefix} removeReviewsSection failed:`, e);
+            }
+        }
+
         function fetchReviews(tmdbId, mediaType) {
             const apiMediaType = mediaType === 'Series' ? 'tv' : 'movie';
             const url = `${ApiClient.getUrl(`/JellyfinEnhanced/tmdb/${apiMediaType}/${tmdbId}/reviews`)}?language=en-US&page=1`;
@@ -538,7 +604,7 @@
                     chip.className = 'mediaInfoCriticRating mediaInfoItem je-avg-user-rating-chip';
                     chip.title = tWithFallback('reviews_avg_rating_tooltip',
                         'Average rating from {count} user(s)', { count: ratingsWithValue.length });
-                    chip.innerHTML = `<span class="material-icons starIcon" aria-hidden="true" style="color:#e91e8c;">person_heart</span>${avgDisplay}`;
+                    chip.innerHTML = `<span class="material-symbols-rounded starIcon" aria-hidden="true" style="color:#e91e8c;">person_heart</span>${avgDisplay}`;
 
                     // Insert after starRatingContainer, or after mediaInfoCriticRating if present,
                     // falling back to appending to the mediaInfoItems container
@@ -766,6 +832,11 @@
                     : await ApiClient.getItem(userId, itemId);
                 const mediaType = item?.Type;
 
+                if (await shouldSuppressForSpoilerMode(item, mediaType)) {
+                    removeReviewsSection(contextPage);
+                    return;
+                }
+
                 let tmdbKey = null;
                 let apiMediaType;
 
@@ -780,26 +851,26 @@
                     tmdbKey = String(tmdbId);
                     apiMediaType = 'tv';
                 } else if (mediaType === 'Season') {
-                        let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
-                        if (!seriesTmdbId && item?.SeriesId) {
-                            try {
-                                const series = await ApiClient.getItem(userId, item.SeriesId);
-                                seriesTmdbId = series?.ProviderIds?.Tmdb;
-                            } catch (_) {}
-                        }
-                        if (!seriesTmdbId || item?.IndexNumber == null) return;
-                        tmdbKey = `${seriesTmdbId}:s${item.IndexNumber}`;
-                        apiMediaType = 'tv';
-                    } else if (mediaType === 'Episode') {
-                        let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
-                        if (!seriesTmdbId && item?.SeriesId) {
-                            try {
-                                const series = await ApiClient.getItem(userId, item.SeriesId);
-                                seriesTmdbId = series?.ProviderIds?.Tmdb;
-                            } catch (_) {}
-                        }
-                        if (!seriesTmdbId || item?.ParentIndexNumber == null || item?.IndexNumber == null) return;
-                        tmdbKey = `${seriesTmdbId}:s${item.ParentIndexNumber}:e${item.IndexNumber}`;
+                    let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
+                    if (!seriesTmdbId && item?.SeriesId) {
+                        try {
+                            const series = await ApiClient.getItem(userId, item.SeriesId);
+                            seriesTmdbId = series?.ProviderIds?.Tmdb;
+                        } catch (_) {}
+                    }
+                    if (!seriesTmdbId || item?.IndexNumber == null) return;
+                    tmdbKey = `${seriesTmdbId}:s${item.IndexNumber}`;
+                    apiMediaType = 'tv';
+                } else if (mediaType === 'Episode') {
+                    let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
+                    if (!seriesTmdbId && item?.SeriesId) {
+                        try {
+                            const series = await ApiClient.getItem(userId, item.SeriesId);
+                            seriesTmdbId = series?.ProviderIds?.Tmdb;
+                        } catch (_) {}
+                    }
+                    if (!seriesTmdbId || item?.ParentIndexNumber == null || item?.IndexNumber == null) return;
+                    tmdbKey = `${seriesTmdbId}:s${item.ParentIndexNumber}:e${item.IndexNumber}`;
                     apiMediaType = 'tv';
                 } else {
                     return;
@@ -807,6 +878,9 @@
 
                 if (!tmdbKey) return;
 
+                // Fetch the current user fresh alongside the review data so
+                // admin status reflects the actual live session, not a
+                // potentially-stale JE.currentUser captured at plugin init.
                 const [tmdbReviews, userReviews, currentUser] = await Promise.all([
                     (tmdbReviewsEnabled && (mediaType === 'Movie' || mediaType === 'Series'))
                         ? fetchReviews(tmdbKey.split(':')[0], mediaType)
@@ -834,6 +908,28 @@
             const style = document.createElement('style');
             style.id = styleId;
             style.textContent = `
+                @font-face {
+                    font-family: 'Material Symbols Rounded';
+                    font-style: normal;
+                    font-weight: 100 700;
+                    font-display: block;
+                    src: url(https://fonts.gstatic.com/s/materialsymbolsrounded/v258/syl0-zNym6YjUruM-QrEh7-nyTnjDwKNJ_190FjpZIvDmUSVOK7BDB_Qb9vUSzq3wzLK-P0J-V_Zs-QtQth3-jOcbTCVpeRL2w5rwZu2rIelXxc.woff2) format('woff2');
+                }
+                .material-symbols-rounded {
+                    font-family: 'Material Symbols Rounded';
+                    font-weight: normal;
+                    font-style: normal;
+                    line-height: 1;
+                    letter-spacing: normal;
+                    text-transform: none;
+                    display: inline-block;
+                    white-space: nowrap;
+                    word-wrap: normal;
+                    direction: ltr;
+                    -webkit-font-feature-settings: 'liga';
+                    font-feature-settings: 'liga';
+                    -webkit-font-smoothing: antialiased;
+                }
                 .tmdb-reviews-section { margin: 2em 0 1em 0; display: flex !important; flex-direction: column;}
                 .tmdb-reviews-section summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-tap-highlight-color: transparent;}
                 .tmdb-reviews-section summary .expand-icon { color: rgba(255, 255, 255,.8);transition: transform 0.2s ease-in-out;}
@@ -997,6 +1093,10 @@
                 .je-avg-user-rating-chip .starIcon { color: #e91e8c !important; }
                 /* Remove the padding coming from using critic rating container */
                 .je-avg-user-rating-chip { padding-left: 0 !important; }
+                /* Remove the % added by ElegantFin Theme */
+                .mediaInfoCriticRating.mediaInfoItem.je-avg-user-rating-chip::after {
+                    content: "";
+                }
             `;
             document.head.appendChild(style);
         }
@@ -1015,6 +1115,11 @@
                         ? await JE.helpers.getItemCached(itemId, { userId })
                         : await ApiClient.getItem(userId, itemId);
                     const mediaType = item?.Type;
+
+                    if (await shouldSuppressForSpoilerMode(item, mediaType)) {
+                        removeReviewsSection(visiblePage);
+                        return;
+                    }
 
                     // Resolve tmdbKey and apiMediaType based on item type
                     let tmdbKey = null;
@@ -1057,6 +1162,9 @@
                     }
 
                     if (tmdbKey) {
+                        // See refreshReviews for why we resolve currentUser here
+                        // instead of reading JE.currentUser — same race/staleness
+                        // reasoning.
                         const [tmdbReviews, userReviews, currentUser] = await Promise.all([
                             // TMDB reviews only available for top-level movie/tv, not seasons/episodes
                             (tmdbReviewsEnabled && (mediaType === 'Movie' || mediaType === 'Series'))
