@@ -2142,6 +2142,48 @@
     };
 
     /**
+     * Fetches Jellyfin's actual seasons for a series, returning a map of season number to season info.
+     * Used to verify Seerr's reported availability against the real library state and to match
+     * Jellyfin's season naming in the modal display.
+     * @param {string} seriesId - The Jellyfin item ID of the parent series.
+     * @returns {Promise<Object|null>} Map of seasonNumber -> { id, name }, or null on fetch failure.
+     */
+    async function fetchJellyfinSeasonInfo(seriesId) {
+        const ApiClient = window.ApiClient;
+        const userId = ApiClient?.getCurrentUserId?.();
+        if (!ApiClient || !userId || !seriesId) return null;
+
+        try {
+            const response = await ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl(`/Users/${userId}/Items`, {
+                    ParentId: seriesId,
+                    IncludeItemTypes: 'Season',
+                    Recursive: false,
+                    Fields: 'IndexNumber,Name'
+                }),
+                dataType: 'json'
+            });
+
+            const map = {};
+            const items = Array.isArray(response?.Items) ? response.Items : [];
+            for (const season of items) {
+                const seasonNumber = Number(season?.IndexNumber);
+                if (Number.isFinite(seasonNumber)) {
+                    map[seasonNumber] = {
+                        id: season?.Id || null,
+                        name: season?.Name || null
+                    };
+                }
+            }
+            return map;
+        } catch (error) {
+            console.warn(`${logPrefix} Could not load Jellyfin season info:`, error);
+            return null;
+        }
+    }
+
+    /**
      * Shows the enhanced season selection modal for TV shows.
      * @param {number} tmdbId - TMDB ID of the TV show.
      * @param {string} mediaType - Should be 'tv'.
@@ -2176,6 +2218,15 @@
             JE.toast(JE.t('jellyseerr_toast_no_season_info'), 4000);
             return;
         }
+
+        // Fetch Jellyfin's actual season list for the series so we can:
+        //   1. Override stale Seerr "Available" statuses when the season is missing from the library
+        //   2. Display season names that match Jellyfin's UI (e.g., "Season 3" instead of TheTVDB's "Beast Hunters")
+        // Note: 4K mode uses a separate jellyfinMediaId4k; non-4K uses jellyfinMediaId.
+        const jellyfinShowId = is4k
+            ? (tvDetails.mediaInfo?.jellyfinMediaId4k || null)
+            : (tvDetails.mediaInfo?.jellyfinMediaId || null);
+        let jellyfinSeasonInfo = jellyfinShowId ? await fetchJellyfinSeasonInfo(jellyfinShowId) : null;
 
         const normalizedTitle = String(showTitle || '').trim();
         const isGenericFallbackTitle = ['this show', 'this movie', 'this collection'].includes(normalizedTitle.toLowerCase());
@@ -2279,7 +2330,7 @@
 
         // Populate season list inside the modal (shows immediately, air dates may be empty)
         const seasonList = modalInstance.modalElement.querySelector('.jellyseerr-season-list');
-        updateSeasonList(seasonList, tvDetails, partialRequestsEnabled, enableSpecialEpisodes, is4k);
+        updateSeasonList(seasonList, tvDetails, partialRequestsEnabled, enableSpecialEpisodes, is4k, jellyfinSeasonInfo);
         modalInstance.show();
 
         // Quota chip — runs async so it doesn't block modal open.
@@ -2347,7 +2398,7 @@
             // When all fetches complete, re-render with backfilled dates
             Promise.all([...seasonFetches, tmdbFetch]).then(() => {
                 applyAirDateBackfill(tvDetails);
-                updateSeasonList(seasonList, tvDetails, partialRequestsEnabled, enableSpecialEpisodes, is4k);
+                updateSeasonList(seasonList, tvDetails, partialRequestsEnabled, enableSpecialEpisodes, is4k, jellyfinSeasonInfo);
             });
         }
 
@@ -2394,7 +2445,16 @@
             const freshTvDetails = await fetchTvShowDetails(tmdbId);
             if (freshTvDetails) {
                 applyAirDateBackfill(freshTvDetails);
-                updateSeasonList(seasonList, freshTvDetails, partialRequestsEnabled, enableSpecialEpisodes, is4k);
+                // Refresh Jellyfin season info too — library state may change while the modal is open
+                // (e.g., a download completes and the season appears).
+                const refreshedShowId = is4k
+                    ? (freshTvDetails.mediaInfo?.jellyfinMediaId4k || null)
+                    : (freshTvDetails.mediaInfo?.jellyfinMediaId || null);
+                if (refreshedShowId) {
+                    const refreshedInfo = await fetchJellyfinSeasonInfo(refreshedShowId);
+                    if (refreshedInfo) jellyfinSeasonInfo = refreshedInfo;
+                }
+                updateSeasonList(seasonList, freshTvDetails, partialRequestsEnabled, enableSpecialEpisodes, is4k, jellyfinSeasonInfo);
                 // Update Select All state after refresh
                 if (seasonList._updateSelectAllState) {
                     seasonList._updateSelectAllState();
@@ -2413,7 +2473,7 @@
         }
     };
 
-    function updateSeasonList(seasonListElement, tvDetails, partialRequestsEnabled = true, enableSpecialEpisodes = false, is4kMode = false) {
+    function updateSeasonList(seasonListElement, tvDetails, partialRequestsEnabled = true, enableSpecialEpisodes = false, is4kMode = false, jellyfinSeasonInfo = null) {
         if (!seasonListElement || !tvDetails) return;
 
         const seasonStatusMap = {};
@@ -2449,13 +2509,27 @@
 
             const apiStatus = seasonStatusMap[seasonNumber];
 
-            // If Seerr reports Available (5) but the show has no Jellyfin media ID
-            // for this mode, the library was wiped and Seerr's status is stale —
-            // treat the season as requestable.
+            // Reconcile Seerr's "Available" status with the actual Jellyfin library state. Seerr's
+            // database can lag (or be wrong) — e.g. it may still report a season as Available long
+            // after the files were removed from Jellyfin. Two correction tiers:
+            //   1. Show-level: no Jellyfin show ID -> the whole show is gone, so any "Available"
+            //      claim is stale.
+            //   2. Season-level: when we successfully fetched Jellyfin's season list, an
+            //      "Available" season that isn't actually present in Jellyfin is treated as
+            //      deleted (7) so the user can re-request it.
+            // If we couldn't fetch the Jellyfin season list (null), only the show-level check applies.
             const showJellyfinId = is4kMode
                 ? (tvDetails.mediaInfo?.jellyfinMediaId4k || null)
                 : (tvDetails.mediaInfo?.jellyfinMediaId || null);
-            const effectiveApiStatus = (apiStatus === 5 && !showJellyfinId) ? 7 : apiStatus;
+            const jellyfinSeason = jellyfinSeasonInfo ? jellyfinSeasonInfo[seasonNumber] : null;
+            let effectiveApiStatus = apiStatus;
+            if (apiStatus === 5) {
+                if (!showJellyfinId) {
+                    effectiveApiStatus = 7;
+                } else if (jellyfinSeasonInfo && !jellyfinSeason) {
+                    effectiveApiStatus = 7;
+                }
+            }
 
             const canRequest = !effectiveApiStatus || effectiveApiStatus === 1 || effectiveApiStatus === 7;
 
@@ -2479,14 +2553,15 @@
             // Disable checkbox if partial requests are disabled OR if the season can't be requested
             const checkboxDisabled = !partialRequestsEnabled || !canRequest;
 
-            // Derive a display name: if the API returns just the number (TheTVDB), generate a proper label.
-            // The numeric regex catches bare numbers and zero-padded variants (e.g., "01");
-            // this may also match year-named seasons, which is an acceptable tradeoff.
-            const trimmedName = (season.name || '').trim();
-            const isNumericOnly = trimmedName === String(seasonNumber) || /^0*\d+$/.test(trimmedName);
-            const displayName = (trimmedName && !isNumericOnly)
-                ? trimmedName
-                : (seasonNumber === 0 ? JE.t('jellyseerr_season_specials') : JE.t('jellyseerr_season_name', { number: seasonNumber }));
+            // Derive a display name. Preference order:
+            //   1. Jellyfin's own season Name when the season exists in the library — keeps the modal
+            //      consistent with the rest of the Jellyfin UI (e.g. "Season 3", not TheTVDB's "Beast Hunters").
+            //   2. Localized "Season N" / "Specials" fallback when Jellyfin has no entry for this season.
+            // Seerr's season.name is intentionally not used; it often pulls TheTVDB titles that don't
+            // match what Jellyfin displays elsewhere on the page.
+            const jellyfinName = (jellyfinSeason?.name || '').trim();
+            const displayName = jellyfinName
+                || (seasonNumber === 0 ? JE.t('jellyseerr_season_specials') : JE.t('jellyseerr_season_name', { number: seasonNumber }));
 
             // All interpolated values are escaped via escapeHtml() to prevent XSS
             seasonItem.innerHTML = `
