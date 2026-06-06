@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -2544,11 +2545,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
-        // [AllowAnonymous] (same rationale as /version): this is the lightweight endpoint
-        // clients poll on an interval to detect config changes, so it must stay cheap and
-        // must not fill the log with auth noise when a backgrounded tab's token expires.
-        // It discloses only an opaque monotonically-increasing counter ("the config
-        // changed at some point"), never any configuration content.
+        // Anonymous on purpose (no [Authorize] — same convention as /version above): this is
+        // the lightweight endpoint clients poll on an interval to detect config changes, so
+        // it must stay cheap and must not fill the log with auth noise when a backgrounded
+        // tab's token expires. It discloses only two opaque monotonically-increasing
+        // counters ("the config changed at some point"), never any configuration content,
+        // and reads the in-memory config (no disk I/O per call).
         [HttpGet("config-revision")]
         public ActionResult GetConfigRevision()
         {
@@ -2585,15 +2587,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return new JsonResult(new { success = true, ForceRevision = forceRevision });
         }
 
-        /// <summary>Clamps client-refresh numeric settings to sane ranges before they are exposed to clients.</summary>
+        // Clamps client-refresh numeric settings to sane ranges before they are exposed to clients.
         private static int Clamp(int value, int min, int max) => Math.Min(max, Math.Max(min, value));
 
-        /// <summary>
-        /// Enumerates uploaded custom branding files with their last-write ticks so clients can
-        /// build cache-busted /JellyfinEnhanced/BrandingImage URLs and apply branding at runtime
-        /// without the File Transformation plugin. Returns an empty dictionary when nothing is uploaded.
-        /// </summary>
-        private static Dictionary<string, long> GetBrandingFileStamps()
+        // Latch so a persistent branding-stamp failure logs once instead of on every
+        // public-config request (the endpoint is hot).
+        private static int _brandingStampsWarned;
+
+        // Enumerates uploaded custom branding files with their last-write ticks so clients can
+        // build cache-busted /JellyfinEnhanced/BrandingImage URLs and apply branding at runtime
+        // without the File Transformation plugin. Returns an empty dictionary when nothing is
+        // uploaded.
+        private Dictionary<string, long> GetBrandingFileStamps()
         {
             var stamps = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
             try
@@ -2612,9 +2617,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Branding stamps are best-effort decoration; never fail public-config over them.
+                // Never fail public-config over branding stamps — but say it once: with an
+                // empty map every client silently concludes "no branding uploaded".
+                if (Interlocked.Exchange(ref _brandingStampsWarned, 1) == 0)
+                {
+                    _logger.Warning($"Failed to enumerate custom branding files; uploaded branding will appear missing to clients until this is resolved: {ex.Message}");
+                }
             }
             return stamps;
         }
@@ -4084,7 +4094,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // Per-user settings files changed without going through UpdateConfiguration,
             // so bump the client revision explicitly — connected clients must re-load to
             // pick up the new defaults even when the plugin config itself was a no-op save.
-            JellyfinEnhanced.Instance?.BumpClientConfigRevision("apply-to-all-users");
+            // The flag is surfaced so the config page can avoid promising an automatic
+            // client refresh that will not happen (bump persisted = false).
+            var clientRefreshSignaled = JellyfinEnhanced.Instance?.BumpClientConfigRevision("apply-to-all-users") == true;
 
             return Ok(new
             {
@@ -4093,6 +4105,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 totalUsers = userIds.Count(),
                 skippedSettingsUserIds = skippedSettings,
                 skippedHcUserIds = skippedHc,
+                clientRefreshSignaled,
             });
         }
 
@@ -4451,6 +4464,34 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 if (uploadedFile.Length > maxFileSize)
                     return BadRequest($"File too large (max 10MB)");
 
+                // Validate the bytes, not the client-supplied Content-Type header: .png names
+                // must carry the PNG signature; favicon.ico accepts ICO or PNG bytes (browsers
+                // render PNG-bytes favicons fine). This endpoint serves the files back
+                // anonymously, so never store arbitrary payloads behind an image name.
+                var signature = new byte[8];
+                var signatureLength = 0;
+                using (var probe = uploadedFile.OpenReadStream())
+                {
+                    while (signatureLength < signature.Length)
+                    {
+                        var read = await probe.ReadAsync(signature.AsMemory(signatureLength, signature.Length - signatureLength));
+                        if (read == 0) break;
+                        signatureLength += read;
+                    }
+                }
+                var isPng = signatureLength >= 8
+                            && signature[0] == 0x89 && signature[1] == 0x50 && signature[2] == 0x4E && signature[3] == 0x47
+                            && signature[4] == 0x0D && signature[5] == 0x0A && signature[6] == 0x1A && signature[7] == 0x0A;
+                var isIco = signatureLength >= 4
+                            && signature[0] == 0x00 && signature[1] == 0x00 && signature[2] == 0x01 && signature[3] == 0x00;
+                var expectsIco = normalizedFileName.EndsWith(".ico", StringComparison.OrdinalIgnoreCase);
+                if (expectsIco ? !(isIco || isPng) : !isPng)
+                {
+                    return BadRequest(expectsIco
+                        ? "favicon.ico must be a valid ICO or PNG image"
+                        : "File must be a valid PNG image");
+                }
+
                 // Get branding directory from central location
                 var brandingDir = JellyfinEnhanced.BrandingDirectory;
                 if (string.IsNullOrWhiteSpace(brandingDir))
@@ -4465,7 +4506,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
 
                 _logger.Info($"Successfully uploaded branding image: {normalizedFileName} ({uploadedFile.Length} bytes) to {brandingDir}");
-                return Ok("File uploaded successfully");
+
+                // Branding propagates to clients via the public-config BrandingFiles stamps, so
+                // an upload is a config-adjacent change: bump the revision or no connected
+                // client ever learns about the new image. Surface a failed bump so the admin
+                // is not shown an unqualified success while clients stay stale.
+                var clientRefreshSignaled = JellyfinEnhanced.Instance?.BumpClientConfigRevision($"branding-upload:{normalizedFileName}") == true;
+
+                return Ok(new { message = "File uploaded successfully", clientRefreshSignaled });
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -4506,6 +4554,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 contentType = "application/octet-stream";
             }
 
+            // Clients always reference these through cache-busted URLs (?v=<last-write
+            // ticks>), so long-lived immutable caching is safe and stops this anonymous,
+            // disk-backed endpoint from being re-read per page load. nosniff pins the
+            // declared image type (uploads are signature-validated, belt and braces).
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            Response.Headers.CacheControl = "public, max-age=31536000, immutable";
             return PhysicalFile(filePath, contentType);
         }
 
@@ -4540,7 +4594,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                 System.IO.File.Delete(filePath);
                 _logger.Info($"Deleted branding image: {normalizedFileName} from {brandingDir}");
-                return Ok("File deleted successfully");
+
+                // Same as upload: the removal only reaches clients via the BrandingFiles
+                // stamps in public-config, so bump the revision and surface a failed bump.
+                var clientRefreshSignaled = JellyfinEnhanced.Instance?.BumpClientConfigRevision($"branding-delete:{normalizedFileName}") == true;
+
+                return Ok(new { message = "File deleted successfully", clientRefreshSignaled });
             }
             catch (UnauthorizedAccessException ex)
             {

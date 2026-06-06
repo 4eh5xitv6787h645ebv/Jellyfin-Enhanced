@@ -4,15 +4,16 @@
  * icon, header logo, login banners) to the web client at runtime, served from
  * Jellyfin Enhanced's own /JellyfinEnhanced/BrandingImage endpoint.
  *
- * This replaces the previous hard dependency on the third-party File
- * Transformation plugin for branding. When File Transformation IS installed it
- * still rewrites the default asset bytes at request time (covering edge cases
- * like the pre-JS favicon request); this module works either way.
+ * This replaces the previous dependency on the third-party File Transformation
+ * plugin for branding — Jellyfin Enhanced no longer registers anything with it,
+ * so installing it changes nothing for JE.
  *
  * Honest limitations (documented in the config page too): assets referenced
- * outside the live DOM cannot be replaced at runtime — the PWA manifest icon
- * used by installed web apps, and icons baked into native apps. Those still
- * require modifying jellyfin-web's files on disk (or File Transformation).
+ * outside the live DOM cannot be replaced at runtime — the very first favicon
+ * request a browser makes before any JS runs, the PWA manifest icon used by
+ * installed web apps, and icons baked into native apps. Those would require
+ * modifying jellyfin-web's files on disk, which this plugin deliberately
+ * never does.
  */
 (function() {
     'use strict';
@@ -24,6 +25,7 @@
     const RETRY_DELAYS_MS = [0, 500, 1500, 3000, 6000, 12000];
 
     let brandingFiles = {};   // fileName -> last-write ticks (cache buster), from public-config
+    let warnedFiles = {};     // fileName -> true once a load failure was logged (avoid console spam)
     let sweepsArmed = false;  // one-time retry sweeps after the first init
     let observerWiring = 'none'; // 'none' | 'fallback' | 'helpers'
 
@@ -31,6 +33,11 @@
     function brandingUrl(fileName) {
         return ApiClient.getUrl('/JellyfinEnhanced/BrandingImage') +
             `?fileName=${encodeURIComponent(fileName)}&v=${brandingFiles[fileName]}`;
+    }
+
+    /** Fallback SPA-navigation hook used until JE.helpers is available. */
+    function onFallbackNavigate() {
+        setTimeout(applyAll, 250);
     }
 
     function has(fileName) {
@@ -82,6 +89,9 @@
      * Rewrites <img> tags whose src points at one of Jellyfin's stock logo
      * assets to the uploaded replacement. Marks processed elements via a data
      * attribute so repeated sweeps stay cheap and never loop on our own URLs.
+     * If the uploaded copy fails to load (deleted mid-session, permissions),
+     * a one-shot onerror restores the stock src so users never keep a
+     * broken-image glyph.
      */
     function applyImgSwaps() {
         const swaps = [
@@ -98,6 +108,17 @@
                 if (!src || src.indexOf('BrandingImage') !== -1) return; // never rewrite our own URLs
                 if (src.indexOf(swap.match) === -1) return;
                 img.dataset.jeBranded = stamp;
+                const stockSrc = src;
+                img.addEventListener('error', () => {
+                    // Restore the stock asset and unmark so a later sweep can
+                    // retry once the file is back.
+                    if (!warnedFiles[swap.file]) {
+                        warnedFiles[swap.file] = true;
+                        console.warn(`🪼 Jellyfin Enhanced: uploaded branding image '${swap.file}' failed to load — restoring the stock asset.`);
+                    }
+                    delete img.dataset.jeBranded;
+                    img.src = stockSrc;
+                }, { once: true });
                 img.src = brandingUrl(swap.file);
             });
         });
@@ -122,16 +143,19 @@
         if (style.textContent !== css) style.textContent = css;
     }
 
-    /** Runs every replacement pass once. Safe to call repeatedly. */
+    /**
+     * Runs every replacement pass once. Safe to call repeatedly. Each applier is
+     * guarded independently so a throw in one (e.g. favicon) cannot skip the
+     * others for that sweep.
+     */
     function applyAll() {
-        try {
-            applyFavicon();
-            applyAppleTouchIcon();
-            applyImgSwaps();
-            applyCssOverrides();
-        } catch (e) {
-            console.warn('🪼 Jellyfin Enhanced: branding apply failed:', e);
-        }
+        [applyFavicon, applyAppleTouchIcon, applyImgSwaps, applyCssOverrides].forEach((apply) => {
+            try {
+                apply();
+            } catch (e) {
+                console.warn(`🪼 Jellyfin Enhanced: branding apply step '${apply.name}' failed:`, e);
+            }
+        });
     }
 
     /**
@@ -160,17 +184,22 @@
         // SPA navigations re-render header/login logos. Use JE's shared
         // multiplexed body observer when available; pre-login (helpers not yet
         // loaded) fall back to plain navigation events, then upgrade to the
-        // shared observer when this is called again post-login.
+        // shared observer — and drop the fallback listeners — when this is
+        // called again post-login.
         const JE = window.JellyfinEnhanced;
         if (observerWiring !== 'helpers' && typeof JE?.helpers?.onBodyMutation === 'function') {
             const debounced = typeof JE.helpers.debounce === 'function'
                 ? JE.helpers.debounce(applyAll, 250)
                 : applyAll;
             JE.helpers.onBodyMutation('je-branding', debounced);
+            if (observerWiring === 'fallback') {
+                window.removeEventListener('hashchange', onFallbackNavigate);
+                window.removeEventListener('popstate', onFallbackNavigate);
+            }
             observerWiring = 'helpers';
         } else if (observerWiring === 'none') {
-            window.addEventListener('hashchange', () => setTimeout(applyAll, 250));
-            window.addEventListener('popstate', () => setTimeout(applyAll, 250));
+            window.addEventListener('hashchange', onFallbackNavigate);
+            window.addEventListener('popstate', onFallbackNavigate);
             observerWiring = 'fallback';
         }
     }

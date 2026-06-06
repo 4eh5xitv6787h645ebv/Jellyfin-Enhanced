@@ -31,20 +31,15 @@
 3. Click **Install**
 4. Wait for the installation to complete
 
-### Step 3 (Optional): File Transformation Plugin
+### Step 3: Nothing Else to Install
 
-!!! info "Only needed for read-only web folders"
+!!! info "No companion plugin, no file permissions"
 
-    Jellyfin Enhanced injects its script and applies custom branding **by itself** — no companion plugin is required for normal operation.
+    Jellyfin Enhanced injects its script and applies custom branding **entirely in-process** — it never writes to Jellyfin's web folder, so it works out of the box on read-only and locked-down installs (Docker, read-only container images, package installs).
 
-    Install the optional [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) only if:
+    The [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) that earlier versions relied on is **no longer needed or used** by Jellyfin Enhanced — keep it only if another plugin requires it.
 
-    - Jellyfin cannot write to its own web folder (a read-only `index.html`, e.g. a locked-down or read-only container image), **and**
-    - you'd rather not fix the folder permissions (see [troubleshooting](troubleshooting.md))
-
-    With File Transformation installed, Jellyfin Enhanced automatically uses it to inject the script at request time instead of writing to `index.html`.
-
-If you see `Access to the path '.../index.html' is denied` in the logs, refer to the [troubleshooting steps](troubleshooting.md) — fix the permissions or install File Transformation, whichever you prefer.
+If you see a one-time `Could not scrub the legacy Jellyfin Enhanced script tag` warning in the logs after upgrading, it is harmless — see [troubleshooting](troubleshooting.md#permission-issues).
 
 ### Step 4: Restart Server
 

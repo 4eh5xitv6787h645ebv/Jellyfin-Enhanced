@@ -7,14 +7,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
 {
     public static class TransformationPatches
     {
-        /// <summary>
-        /// Builds the served index.html with the Jellyfin Enhanced script tag injected before
-        /// &lt;/body&gt;. Idempotent: any pre-existing JE tag is removed first, so repeated
-        /// application (or a stale on-disk tag) never produces duplicates. Called by
-        /// <see cref="Web.WebInjectionMiddleware"/> at request time; the file on disk is never modified.
-        /// (Previously also used as the File Transformation plugin callback — that dependency has been
-        /// removed in favour of the in-process middleware.)
-        /// </summary>
+        // Builds the served index.html with the Jellyfin Enhanced script tag injected before
+        // </body>. Idempotent: any pre-existing JE tag is removed first, so repeated
+        // application (or a stale on-disk tag) never produces duplicates. Called by
+        // Web.WebInjectionMiddleware at request time; the file on disk is never modified.
+        // (Previously also used as the File Transformation plugin callback — that dependency
+        // has been removed in favour of the in-process middleware.)
         public static string IndexHtml(PatchRequestPayload content)
         {
             if (string.IsNullOrEmpty(content.Contents))

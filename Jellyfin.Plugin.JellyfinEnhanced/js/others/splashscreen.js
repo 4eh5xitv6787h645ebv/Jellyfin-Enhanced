@@ -295,29 +295,61 @@
         document.head.appendChild(styleElement);
 
         const pluginConfig = window.JellyfinEnhanced?.pluginConfig || {};
-        let imageUrl = pluginConfig.SplashScreenImageUrl || '/web/assets/img/banner-light.png';
+        // Resolve the stock fallback through ApiClient so it works behind a
+        // reverse proxy that mounts Jellyfin at a sub-path (BaseUrl).
+        let imageUrl = pluginConfig.SplashScreenImageUrl
+            || (typeof ApiClient !== 'undefined' && typeof ApiClient.getUrl === 'function'
+                ? ApiClient.getUrl('/web/assets/img/banner-light.png')
+                : '/web/assets/img/banner-light.png');
         // If a custom banner has been uploaded and the splash URL still points at
         // the stock asset, serve JE's uploaded copy directly — replaces the old
         // behaviour where only the File Transformation plugin could rewrite it.
+        // Keep the pre-swap URL so a failed load can fall back to it.
+        const stockImageUrl = imageUrl;
         try {
             const stamps = pluginConfig.BrandingFiles || {};
             if (stamps['banner-light.png'] && imageUrl.indexOf('banner-light') !== -1 && imageUrl.indexOf('BrandingImage') === -1 && typeof ApiClient !== 'undefined') {
                 imageUrl = ApiClient.getUrl('/JellyfinEnhanced/BrandingImage') + '?fileName=banner-light.png&v=' + stamps['banner-light.png'];
             }
-        } catch (e) { /* keep the configured URL */ }
+        } catch (e) {
+            console.debug('🪼 Jellyfin Enhanced: splash branding swap skipped:', e);
+        }
 
         splashElement = document.createElement('div');
         splashElement.className = 'je-loading';
-        splashElement.innerHTML = `
-            <div class="je-loader-content">
-                <h1><img src="${imageUrl}" alt="Server Logo" decoding="async" fetchpriority="high" referrerpolicy="no-referrer"></h1>
-                <div class="je-progress">
-                    <div id="je-progress-bar"></div>
-                    <div class="je-gap"></div>
-                    <div id="je-unfilled-bar"></div>
-                </div>
-            </div>
-        `;
+        // Built with createElement + property assignment (not innerHTML) so the
+        // admin-configured image URL can never break out of the attribute and
+        // inject markup into every user's page.
+        const loaderContent = document.createElement('div');
+        loaderContent.className = 'je-loader-content';
+        const logoHeading = document.createElement('h1');
+        const logoImg = document.createElement('img');
+        // One-shot fallback: if the swapped JE-served banner fails to load
+        // (deleted between this page's config fetch and the splash render),
+        // restore the stock asset instead of leaving a broken-image glyph.
+        if (imageUrl !== stockImageUrl) {
+            logoImg.addEventListener('error', () => {
+                console.warn('🪼 Jellyfin Enhanced: uploaded splash banner failed to load — falling back to the stock asset.');
+                logoImg.src = stockImageUrl;
+            }, { once: true });
+        }
+        logoImg.src = imageUrl;
+        logoImg.alt = 'Server Logo';
+        logoImg.decoding = 'async';
+        logoImg.setAttribute('fetchpriority', 'high');
+        logoImg.referrerPolicy = 'no-referrer';
+        logoHeading.appendChild(logoImg);
+        const progressWrap = document.createElement('div');
+        progressWrap.className = 'je-progress';
+        const progressBar = document.createElement('div');
+        progressBar.id = 'je-progress-bar';
+        const progressGap = document.createElement('div');
+        progressGap.className = 'je-gap';
+        const unfilledBar = document.createElement('div');
+        unfilledBar.id = 'je-unfilled-bar';
+        progressWrap.append(progressBar, progressGap, unfilledBar);
+        loaderContent.append(logoHeading, progressWrap);
+        splashElement.appendChild(loaderContent);
         document.body.appendChild(splashElement);
 
         startProgressAnimation();

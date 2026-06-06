@@ -6,27 +6,48 @@
  * How it works:
  *  - The server bumps a monotonic `ClientConfigRevision` whenever the plugin
  *    configuration materially changes (see JellyfinEnhanced.UpdateConfiguration).
- *  - Each client persists the revision it loaded under a localStorage key scoped
- *    by server id AND user id, then polls the lightweight
- *    `/JellyfinEnhanced/config-revision` endpoint on an interval.
+ *  - Every page load boots with the CURRENT revision (public-config is fetched
+ *    fresh by plugin.js on each load), so the revision this page booted with is
+ *    the per-tab baseline. The module then polls the lightweight
+ *    `/JellyfinEnhanced/config-revision` endpoint and compares against that
+ *    baseline — entirely in memory, per tab. A reload re-boots with the new
+ *    revision, which absorbs it naturally; no cross-tab storage is involved, so
+ *    every tab acts on every change independently (one tab's reload can never
+ *    swallow another tab's).
  *  - When the server reports a newer revision the client acts according to the
- *    mode: reload automatically when safe (Auto), show a persistent notice and
- *    reload on Home (SemiAuto), or show the notice with a manual button only
- *    (NotifyOnly). Disabled ignores ordinary config-change refreshes.
+ *    mode: reload automatically once the user is idle and it is safe (Auto),
+ *    show a persistent notice and reload on Home (SemiAuto), or show the notice
+ *    with a manual button only (NotifyOnly). Disabled ignores ordinary
+ *    config-change refreshes.
  *  - Polling and the lifecycle listeners run in EVERY mode (including Disabled),
  *    because the admin "Force all clients to refresh" override is always honoured
  *    so it can reach any connected client — only the AUTOMATIC refresh-on-change
  *    is gated by the mode.
  *
- * Safety rules (never violated by any mode):
+ * Safety rules for AUTOMATIC (config-change) reloads — never violated:
  *  - Never auto-reload while the client is on the video player route.
  *  - Never auto-reload while any media element has something loaded — playing
  *    OR paused — unless the admin explicitly disabled playback suppression.
- *  - Refresh-loop protection: before reloading, the target revision is stored in
- *    sessionStorage; after the reload the freshly loaded page absorbs that
- *    revision instead of reloading again.
- *  - Reloads use a plain window.location.reload() (normal navigation reload,
- *    not a cache-bypassing hard refresh).
+ *  - Never auto-reload while the user is active (idle timeout), except at the
+ *    moment they navigate onto the Home screen (the reload IS the navigation).
+ *
+ * The admin FORCE channel is the deliberate exception: it reloads immediately,
+ * bypassing playback/idle/home/debounce, because the admin explicitly asked for
+ * it. The only carve-out: editing surfaces (the dashboard, plugin configuration
+ * pages, the Metadata Manager and user preference/profile pages) show the
+ * persistent notice instead of reloading, so the force can never destroy
+ * unsaved edits — including the very form it was triggered from. The deferred
+ * reload happens on the next navigation away.
+ *
+ * Refresh-loop protection: a fresh boot always adopts the booted revision, so a
+ * reload can only loop if the server keeps reporting a newer revision than the
+ * page boots with (e.g. a proxy serving stale public-config). A per-tab
+ * sessionStorage reload budget (3 automatic reloads per rolling 60s window)
+ * bounds that pathological case — and also paces a burst of legitimate rapid
+ * admin saves. A tab that exhausts the budget shows the persistent notice and
+ * AUTOMATICALLY resumes once the window expires; only a tab whose
+ * sessionStorage is unusable (the budget cannot be counted) stays notice-only
+ * for the whole session.
  */
 (function(JE) {
     'use strict';
@@ -42,23 +63,23 @@
     // was hidden/asleep catches a pending refresh almost the instant it comes back —
     // this is what makes a force from another device land on a phone immediately.
     const FORCED_CHECK_MIN_GAP_MS = 800;
-    // Reload-loop safety net (mirrors the File Transformation auto-refresh approach):
-    // never reload more than MAX_RELOADS_PER_WINDOW times within RELOAD_WINDOW_MS. If a
-    // genuine loop ever occurs, fall back to showing the notice instead of reloading.
+    // Reload budget: at most MAX_RELOADS_PER_WINDOW automatic reloads per rolling
+    // RELOAD_WINDOW_MS window (counted in sessionStorage, so it spans reloads).
+    // Every successful automatic reload consumes one — a runaway loop (stale
+    // public-config proxy) is bounded, and a burst of legitimate rapid admin
+    // saves is paced. A blocked tab shows the notice and resumes automatically
+    // when the window expires; the manual button never counts against it.
     const RELOAD_WINDOW_MS = 60000;
     const MAX_RELOADS_PER_WINDOW = 3;
+    // Escalate the quiet fetch-failure handling to a single console.warn after this
+    // many consecutive failures (~5 minutes at the default 5s poll).
+    const FAILURES_BEFORE_WARN = 60;
 
-    // JE.t returns the raw key on miss; substitute the inline fallback. Mirrors enhanced/ui.js.
-    function tWithFallback(key, fallback) {
-        let result;
-        try { result = JE.t(key); } catch (e) { result = null; }
-        return (!result || result === key) ? fallback : result;
-    }
-
-    // Initial values are placeholders; readSettingsFromConfig() overwrites the
-    // tunables from the server config at init. They mirror the shipped defaults.
+    // Initial values are placeholders; initialize() overwrites the tunables from
+    // the server config. They mirror the shipped defaults.
     const state = {
         initialized: false,
+        armed: false,             // false when the config payload was missing/old-server — module stays inert
         mode: MODE_DISABLED,
         pollSeconds: 5,
         idleSeconds: 10,
@@ -67,80 +88,26 @@
         debounceSeconds: 5,
         toastMessage: '',
         showManualButton: true,
-        serverRevision: 0,        // config revision reported by the server (from init or polling)
-        serverForceRevision: 0,   // force-refresh counter reported by the server
-        pendingRevision: null,    // newer-than-seen revision waiting for a safe reload
-        pendingReason: null,      // what first triggered the pending state (for the debounce re-check)
+        // Per-tab revision floors. ack* = the highest revision this tab has acted
+        // on (booted with, reloaded for, or deliberately ignored). All in memory:
+        // a reload re-boots with the current server values, which IS the absorb.
+        ackRevision: 0,
+        ackForceRevision: 0,
+        serverRevision: 0,        // latest revision reported by the server
+        serverForceRevision: 0,   // latest force counter reported by the server
+        pendingRevision: null,    // newer-than-acked revision waiting for a safe reload
+        pendingForceRevision: null, // force deferred because the user is on an editing surface
+        storageBroken: false,     // sessionStorage unusable — budget uncountable, no automatic reloads this session
+        reloadBlocked: false,     // a reload attempt was budget-blocked — notice must carry the button
+        budgetWarned: false,      // one-time console.warn when the budget first blocks
         lastActivityTs: Date.now(),
         lastForcedCheckTs: 0,
         pollTimer: null,
         reloadTimer: null,
-        reloadingNow: false
+        reloadingNow: false,
+        consecutiveFetchFailures: 0,
+        fetchFailureWarned: false
     };
-
-    // ---------------------------------------------------------------------
-    // Storage keys — scoped by server AND user so one browser talking to two
-    // Jellyfin servers (or two users sharing a profile) never cross-pollute.
-    // ---------------------------------------------------------------------
-
-    function getServerId() {
-        try {
-            return ApiClient._serverInfo?.Id ||
-                (typeof ApiClient.serverId === 'function' ? ApiClient.serverId() : ApiClient.serverId) ||
-                'unknown-server';
-        } catch (e) {
-            return 'unknown-server';
-        }
-    }
-
-    function getUserId() {
-        try {
-            return ApiClient.getCurrentUserId() || 'unknown-user';
-        } catch (e) {
-            return 'unknown-user';
-        }
-    }
-
-    function seenKey() {
-        return `JE_client_config_revision_seen:${getServerId()}:${getUserId()}`;
-    }
-
-    // sessionStorage survives a same-tab reload but not a closed tab — exactly
-    // the lifetime needed for "did THIS tab just reload for revision N?".
-    function attemptedKey() {
-        return `JE_client_config_revision_attempted:${getServerId()}:${getUserId()}`;
-    }
-
-    // Force-refresh bookkeeping (separate channel from the config revision).
-    function forceSeenKey() {
-        return `JE_client_force_refresh_seen:${getServerId()}:${getUserId()}`;
-    }
-
-    /** @returns {boolean} True when the current page load was a reload (F5, location.reload) rather than a fresh navigation. */
-    function navigationWasReload() {
-        try {
-            const entries = performance.getEntriesByType?.('navigation');
-            if (entries && entries.length) return entries[0].type === 'reload';
-            return performance.navigation?.type === 1; // deprecated fallback for older WebViews
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function readNumber(storage, key) {
-        try {
-            const raw = storage.getItem(key);
-            if (raw === null || raw === '') return null;
-            const n = Number(raw);
-            return Number.isFinite(n) ? n : null;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function writeNumber(storage, key, value) {
-        try { storage.setItem(key, String(value)); } catch (e) { /* storage full/blocked — non-fatal */ }
-    }
 
     // ---------------------------------------------------------------------
     // Route / playback / idle predicates
@@ -156,6 +123,22 @@
         // Same definition as JE.isVideoPage(), duplicated so this module keeps
         // working even if ui.js failed to load.
         return window.location.hash.startsWith('#/video');
+    }
+
+    /**
+     * True on editing surfaces — pages built around forms whose unsaved state a
+     * reload would destroy: the admin dashboard, plugin configuration pages,
+     * the Metadata Manager, and the user preference/profile pages. Even a
+     * forced reload defers to a notice on these.
+     * @returns {boolean}
+     */
+    function isEditingSurface() {
+        const hash = window.location.hash;
+        return hash.startsWith('#/dashboard')
+            || hash.startsWith('#/configurationpage')
+            || hash.startsWith('#/metadata')
+            || hash.startsWith('#/mypreferences')
+            || hash.startsWith('#/userprofile');
     }
 
     /**
@@ -182,13 +165,13 @@
         return false;
     }
 
-    /** @returns {boolean} True when no idle-timeout has elapsed since the last user input. */
+    /** @returns {boolean} True when the idle-timeout has elapsed since the last user input. */
     function isIdle() {
         return (Date.now() - state.lastActivityTs) >= state.idleSeconds * 1000;
     }
 
     /**
-     * Global safety gate used by every auto-reload path.
+     * Global safety gate used by every automatic-reload path.
      * The video player route is a hard block regardless of settings; media
      * presence and fullscreen are blocked unless the admin explicitly turned
      * playback suppression off.
@@ -196,6 +179,21 @@
      */
     function isSafeToRefresh() {
         if (isPlaybackRoute()) return false;
+        // Editing surfaces hold unsaved form state (config edits, branding
+        // uploads, dashboard/user settings) — an automatic reload would destroy
+        // them. The notice/next-navigation path covers these.
+        if (isEditingSurface()) return false;
+        // An open modal dialog (Edit Metadata, Identify, Add to Collection,
+        // subtitle search...) holds form state on ordinary routes too — and a
+        // user reading one looks exactly like an idle user. Probe the OPEN STATE
+        // (the `.opened` class jellyfin-web adds on open and removes at close),
+        // not the layout: dialogHelper can keep a closed container in the DOM
+        // (so bare `.dialogContainer` over-blocks), and a `dialog-fixedSize`
+        // dialog is `position:fixed` on small viewports (so an `offsetParent`
+        // check under-blocks — it reports null for fixed elements even when
+        // visible). `.dialog.opened` is exact in both cases. Same precedent as
+        // js/enhanced/features.js.
+        if (document.querySelector('.dialogContainer .dialog.opened')) return false;
         if (state.suppressDuringPlayback) {
             if (hasActiveOrPausedMedia()) return false;
             if (document.fullscreenElement) return false; // user is immersed in something
@@ -210,18 +208,31 @@
     function noticeMessage() {
         const custom = (state.toastMessage || '').trim();
         if (custom) return custom;
-        return tWithFallback('client_refresh_notice_message', 'Jellyfin Enhanced settings have changed — refresh to apply the update.');
+        return JE.t('client_refresh_notice_message');
     }
 
     /**
      * Shows (or updates) the persistent "refresh needed" notice. Idempotent:
-     * repeated calls re-use the same element. Hidden automatically while the
-     * user is on the video player route so it never overlays playback.
+     * repeated calls re-use the same element (rebuilt if the force flavour
+     * changed, because the force variant always needs the button). Hidden
+     * automatically while the user is on the video player route so it never
+     * overlays playback.
+     * @param {boolean} [isForce] - True when shown for a deferred/blocked admin force.
      */
-    function showRefreshNeededNotice() {
-        if (state.mode === MODE_DISABLED) return;
+    function showRefreshNeededNotice(isForce) {
+        // Ordinary config-change notices are mode-gated; a force notice is not —
+        // the force channel works even when the mode is Disabled.
+        if (!isForce && state.mode === MODE_DISABLED) return;
 
         let el = document.getElementById(NOTICE_ID);
+        // Rebuild an existing element when it is missing a button it now needs:
+        // the force flavour and a loop-latched session both guarantee one (the
+        // notice is the only way forward), but the element may have been built
+        // earlier without it (e.g. SemiAuto with the manual button turned off).
+        if (el && (isForce || state.reloadBlocked) && !el.querySelector('button')) {
+            el.remove();
+            el = null;
+        }
         if (!el) {
             const themeVars = JE.themer?.getThemeVariables?.() || {};
             el = document.createElement('div');
@@ -260,13 +271,14 @@
             text.className = 'je-refresh-notice-text';
             el.appendChild(text);
 
-            // NotifyOnly always gets the button (the notice would otherwise be a
-            // dead end); other modes honour the admin toggle.
-            if (state.showManualButton || state.mode === MODE_NOTIFY_ONLY) {
+            // NotifyOnly, the force flavour and a loop-latched session always get
+            // the button (the notice would otherwise be a dead end); other modes
+            // honour the admin toggle.
+            if (state.showManualButton || state.mode === MODE_NOTIFY_ONLY || isForce || state.reloadBlocked) {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'je-refresh-notice-btn';
-                btn.textContent = tWithFallback('client_refresh_notice_button', 'Refresh now');
+                btn.textContent = JE.t('client_refresh_notice_button');
                 Object.assign(btn.style, {
                     background: themeVars.primaryAccent || 'rgba(255,255,255,0.15)',
                     color: '#fff',
@@ -299,8 +311,12 @@
     }
 
     function updateNoticeVisibility() {
+        if (state.pendingForceRevision) {
+            showRefreshNeededNotice(true);
+            return;
+        }
         if (!state.pendingRevision) return;
-        if (state.mode === MODE_SEMI_AUTO || state.mode === MODE_NOTIFY_ONLY) {
+        if (state.mode === MODE_SEMI_AUTO || state.mode === MODE_NOTIFY_ONLY || state.reloadBlocked) {
             showRefreshNeededNotice();
         }
     }
@@ -310,114 +326,185 @@
     // ---------------------------------------------------------------------
 
     /**
-     * Rolling-window reload-loop guard (same shape as the File Transformation
-     * auto-refresh): returns false once more than MAX_RELOADS_PER_WINDOW reloads
-     * have been attempted within RELOAD_WINDOW_MS, so a genuine loop can never spin
-     * the page forever. Counts are kept in sessionStorage (per-tab, cleared on close).
+     * Peeks at the rolling reload budget WITHOUT consuming it: true while fewer
+     * than MAX_RELOADS_PER_WINDOW automatic reloads happened within the current
+     * RELOAD_WINDOW_MS window. Counts live in sessionStorage (per-tab, survives
+     * the reload, cleared on tab close) — exactly the lifetime the budget needs.
+     * Self-healing: once the window expires the budget is available again, so a
+     * blocked tab resumes automatically. If sessionStorage is unusable the
+     * budget cannot be counted, so this fails CLOSED for the whole session.
+     * @returns {boolean}
      */
-    function reloadRateLimitOk() {
+    function reloadBudgetAvailable() {
+        if (state.storageBroken) return false;
+        try {
+            const now = Date.now();
+            const s = window.sessionStorage;
+            const count = parseInt(s.getItem('JE_reload_count') || '0', 10);
+            const start = parseInt(s.getItem('JE_reload_start') || '0', 10);
+            if (!Number.isFinite(start) || start === 0 || now - start > RELOAD_WINDOW_MS) return true;
+            return !Number.isFinite(count) || count < MAX_RELOADS_PER_WINDOW;
+        } catch (e) {
+            state.storageBroken = true;
+            console.error('🪼 Jellyfin Enhanced (client refresh): sessionStorage unavailable — automatic reloads disabled for this session (cannot guarantee loop protection).', e);
+            return false;
+        }
+    }
+
+    /**
+     * Records one automatic reload against the rolling budget. Returns false —
+     * and fails the session CLOSED — when the write does not stick: a reload
+     * that cannot be counted must not happen, or a tab whose storage accepts
+     * reads but rejects writes could loop without the budget ever filling up.
+     * @returns {boolean} True when the reload was recorded and may proceed.
+     */
+    function consumeReloadBudget() {
         try {
             const now = Date.now();
             const s = window.sessionStorage;
             let count = parseInt(s.getItem('JE_reload_count') || '0', 10);
             let start = parseInt(s.getItem('JE_reload_start') || '0', 10);
+            if (!Number.isFinite(count)) count = 0;
             if (!Number.isFinite(start) || start === 0 || now - start > RELOAD_WINDOW_MS) {
                 count = 0;
                 start = now;
             }
-            count += 1;
-            s.setItem('JE_reload_count', String(count));
+            s.setItem('JE_reload_count', String(count + 1));
             s.setItem('JE_reload_start', String(start));
-            if (count > MAX_RELOADS_PER_WINDOW) {
-                console.warn(`🪼 Jellyfin Enhanced (client refresh): reload-loop guard tripped (${count} reloads in ${RELOAD_WINDOW_MS / 1000}s) — showing notice instead of reloading.`);
-                return false;
-            }
             return true;
         } catch (e) {
-            return true; // sessionStorage blocked — don't let the guard itself break refresh
+            state.storageBroken = true;
+            console.error('🪼 Jellyfin Enhanced (client refresh): sessionStorage write failed — automatic reloads disabled for this session (cannot count the reload budget).', e);
+            return false;
         }
     }
 
-    /** Marks the page as reloaded-for-this-revision and performs a normal reload. */
+    /**
+     * Shared budget-blocked handling for both reload paths: marks the session so
+     * the notice always carries the button, warns once, and shows the notice.
+     * @param {boolean} isForce - Which notice flavour to show.
+     */
+    function noteReloadBlocked(isForce) {
+        state.reloadBlocked = true;
+        // storageBroken already logged its own console.error and means reloads do
+        // NOT resume — don't follow it with a contradictory "resumes when the
+        // window expires" line. The budget-exhausted case is the one that resumes.
+        if (!state.budgetWarned && !state.storageBroken) {
+            state.budgetWarned = true;
+            console.warn(`🪼 Jellyfin Enhanced (client refresh): reload budget exhausted (${MAX_RELOADS_PER_WINDOW}/${RELOAD_WINDOW_MS / 1000}s) — showing the notice; automatic reloads resume when the window expires.`);
+        }
+        showRefreshNeededNotice(isForce);
+    }
+
+    /**
+     * Reloads the page for the newest pending revision. The manual button bypasses
+     * the budget (a human click is not a loop, and never counts against it);
+     * automatic callers are budget-gated — when blocked, the revision stays
+     * pending and the notice is shown, so the reload happens automatically once
+     * the rolling window expires.
+     * @param {string} reason - What triggered the reload (for the console log).
+     */
     function refreshNow(reason) {
         if (state.reloadingNow) return;
         const target = state.pendingRevision || state.serverRevision;
-        // Loop-guard: if we've reloaded too many times recently, surface the notice
-        // and mark this revision seen so we stop trying, rather than spinning.
-        if (!reloadRateLimitOk()) {
-            writeNumber(window.localStorage, seenKey(), target);
-            showRefreshNeededNotice();
-            return;
+        const manual = reason === 'manual-button';
+        if (!manual) {
+            // Peek enforces the cap; consume records the reload and fails closed
+            // when the write doesn't stick — a reload that cannot be counted must
+            // not happen, or a write-broken tab could loop uncounted. The revision
+            // stays pending either way, so it retries when the window frees up.
+            if (!reloadBudgetAvailable() || !consumeReloadBudget()) {
+                noteReloadBlocked(false);
+                return;
+            }
         }
         state.reloadingNow = true;
-        // Loop protection: the post-reload page reads this marker and absorbs the
-        // revision instead of reloading again.
-        writeNumber(window.sessionStorage, attemptedKey(), target);
         console.log(`🪼 Jellyfin Enhanced (client refresh): reloading for config revision ${target} (${reason}).`);
         window.location.reload();
     }
 
     /**
-     * Admin-forced reload. Reloads IMMEDIATELY, bypassing every safety gate —
-     * playback, paused media, idle, home-only and debounce. Triggered only by the
-     * admin "Force all clients to refresh" action (a higher force-revision than the
-     * one this client last recorded). Loop-protected by recording the force as seen
-     * before reloading, so the reloaded page adopts the value instead of forcing again.
+     * Admin-forced reload. Reloads IMMEDIATELY, bypassing playback, idle,
+     * home-only and debounce — the admin explicitly asked for it. Exception:
+     * editing surfaces defer to a notice (see actOnPendingForce). Loop-safe
+     * because the reloaded page boots with the new force value as its floor.
+     * @returns {boolean} True when a reload is in flight (started now or already underway).
      */
     function forceReloadNow() {
-        if (state.reloadingNow) return;
+        if (state.reloadingNow) return true;
         const target = state.serverForceRevision;
-        // Loop-guard: mark the force seen (so we don't keep retrying it) and show the
-        // notice instead of reloading if we've already reloaded too many times.
-        if (!reloadRateLimitOk()) {
-            writeNumber(window.localStorage, forceSeenKey(), target);
-            showRefreshNeededNotice();
-            return;
+        // Peek + consume BEFORE acking: if the budget is exhausted OR the count
+        // can't be written, keep the force pending (NOT acknowledged) so every
+        // poll retries and updateNoticeVisibility re-shows the notice after the
+        // user navigates — e.g. off the video route, where it is hidden. Acking
+        // before a failed consume would drop the force for this tab forever.
+        if (!reloadBudgetAvailable() || !consumeReloadBudget()) {
+            noteReloadBlocked(true);
+            return false;
         }
+        state.ackForceRevision = Math.max(state.ackForceRevision, target);
+        state.pendingForceRevision = null;
         state.reloadingNow = true;
-        writeNumber(window.localStorage, forceSeenKey(), target);
         console.log(`🪼 Jellyfin Enhanced (client refresh): FORCED reload by admin (force revision ${target}).`);
         window.location.reload();
+        return true;
+    }
+
+    /**
+     * Acts on a deferred admin force: reloads unless the user is on an admin
+     * work surface (then the persistent notice is shown and the reload happens
+     * on the next navigation away).
+     * @returns {boolean} True when a reload is in flight (budget-blocked attempts return false).
+     */
+    function actOnPendingForce() {
+        if (!state.pendingForceRevision) return false;
+        if (state.pendingForceRevision <= state.ackForceRevision) {
+            state.pendingForceRevision = null;
+            return false;
+        }
+        if (isEditingSurface()) {
+            showRefreshNeededNotice(true);
+            return false;
+        }
+        return forceReloadNow();
     }
 
     /**
      * True when the current mode/route/idle/safety state permits an automatic
-     * reload right now. `reason` distinguishes user navigation (which is allowed
-     * to reload immediately on arrival at an eligible route) from background
-     * triggers like polling (which additionally require the client to be idle).
+     * reload right now. Idle is ALWAYS required here — the only idle exemption
+     * is the immediate reload-on-Home-arrival path in maybeRefresh, where the
+     * reload rides the navigation the user just made.
+     * @returns {boolean}
      */
-    function canAutoReloadNow(reason) {
-        if (!state.pendingRevision) return false;
+    function canAutoReloadNow() {
+        if (!state.pendingRevision || state.storageBroken) return false;
         if (state.mode !== MODE_AUTO && state.mode !== MODE_SEMI_AUTO) return false;
         if (!isSafeToRefresh()) return false;
 
-        const navigationTriggered = reason === 'navigate' || reason === 'init';
-
         if (state.mode === MODE_AUTO) {
             if (state.homeOnly && !isHomeRoute()) return false;
-            return navigationTriggered || isIdle();
+            return isIdle();
         }
 
-        // SemiAuto reloads only on the Home screen — either because the user just
-        // navigated there, or because they have been idling on it.
-        return isHomeRoute() && (navigationTriggered || isIdle());
+        // SemiAuto reloads only while idling on the Home screen.
+        return isHomeRoute() && isIdle();
     }
 
     /**
      * Debounced reload: waits ClientRefreshDebounceSeconds after the trigger so
      * several rapid admin saves collapse into a single reload, then re-checks
      * safety before actually pulling the trigger. If conditions changed (user
-     * started playback, navigated into the player...), the reload is dropped and
-     * will be re-attempted by the next poll/navigation event.
+     * started playback, began clicking around, navigated into the player...),
+     * the reload is dropped and re-attempted by the next poll/navigation event.
+     * @param {string} reason - What triggered the schedule (for the eventual log line).
      */
     function scheduleReload(reason) {
         if (state.reloadTimer || state.reloadingNow) return;
-        state.pendingReason = reason;
         const delayMs = Math.max(0, state.debounceSeconds) * 1000;
         state.reloadTimer = setTimeout(() => {
             state.reloadTimer = null;
-            if (canAutoReloadNow(state.pendingReason)) {
-                refreshNow(state.pendingReason);
+            if (canAutoReloadNow()) {
+                refreshNow(reason);
             }
         }, delayMs);
     }
@@ -426,6 +513,8 @@
      * Records a newer server revision as pending. Latest revision wins; the
      * notice and any scheduled reload are shared, so rapid consecutive saves
      * never stack up duplicate notices or extra reloads.
+     * @param {number} revision - The server revision to act on.
+     * @param {string} reason - What surfaced it (poll, navigate, visibility...).
      */
     function markPending(revision, reason) {
         if (!revision) return;
@@ -435,41 +524,30 @@
     }
 
     /**
-     * Central decision point — called on poll results, navigation, visibility
-     * changes and init. Updates the persistent notice and schedules an automatic
+     * Central decision point — called on poll results, navigation and visibility
+     * changes. Updates the persistent notice and starts/schedules an automatic
      * reload when the mode and safety rules allow one.
+     * @param {string} reason - What triggered the evaluation.
      */
     function maybeRefresh(reason) {
         if (state.mode === MODE_DISABLED || !state.pendingRevision) return;
 
         updateNoticeVisibility();
 
-        if (state.mode === MODE_NOTIFY_ONLY) return; // never auto-reload
+        if (state.mode === MODE_NOTIFY_ONLY || state.storageBroken) return; // never auto-reload
 
-        if (!canAutoReloadNow(reason)) return;
-
-        // Navigating ONTO the Home screen reloads straight away — no debounce wait —
-        // so the user sees the new config the moment they land on Home. Every other
-        // trigger (sitting idle on Home, background poll, etc.) still goes through the
-        // debounced path so rapid admin saves collapse into a single reload.
-        if (isImmediateHomeNavigation(reason)) {
-            refreshNow(reason);
+        // Navigating ONTO the Home screen reloads straight away — no debounce, no
+        // idle wait — the reload rides the navigation the user just made, so they
+        // see the new config the moment they land. Every other trigger requires
+        // the user to be idle and goes through the debounced path.
+        if (reason === 'navigate' && isHomeRoute() && isSafeToRefresh()) {
+            refreshNow('navigate-home');
             return;
         }
 
-        scheduleReload(reason);
-    }
+        if (!canAutoReloadNow()) return;
 
-    /**
-     * True when this trigger is the user actively navigating onto the Home route in a
-     * mode that reloads on Home (Auto or SemiAuto). Such an arrival reloads immediately
-     * instead of waiting out the debounce window. A first page load ('init') is excluded
-     * — that page is already fresh, so it uses the normal debounced path.
-     */
-    function isImmediateHomeNavigation(reason) {
-        return reason === 'navigate'
-            && isHomeRoute()
-            && (state.mode === MODE_AUTO || state.mode === MODE_SEMI_AUTO);
+        scheduleReload(reason);
     }
 
     // ---------------------------------------------------------------------
@@ -491,26 +569,64 @@
         });
     }
 
+    /**
+     * One quiet console.debug on the first failure, one console.info on
+     * recovery, and a single console.warn if the endpoint stays unreachable —
+     * so routine server restarts stay silent but a permanently dead endpoint is
+     * eventually visible without spamming every 5 seconds. The rejection reason
+     * is included so a 404 (route gone), 503 and a network drop are
+     * distinguishable from the one log line.
+     * @param {*} err - The fetch rejection reason.
+     */
+    function noteFetchFailure(err) {
+        state.consecutiveFetchFailures += 1;
+        if (state.consecutiveFetchFailures === 1) {
+            console.debug('🪼 Jellyfin Enhanced (client refresh): revision poll failed (offline or server restarting?) — retrying quietly.', err);
+        } else if (state.consecutiveFetchFailures === FAILURES_BEFORE_WARN && !state.fetchFailureWarned) {
+            state.fetchFailureWarned = true;
+            console.warn(`🪼 Jellyfin Enhanced (client refresh): revision poll has failed ${FAILURES_BEFORE_WARN} times in a row — client refresh is inactive until the endpoint recovers. Last error:`, err);
+        }
+    }
+
+    function noteFetchRecovery() {
+        if (state.consecutiveFetchFailures === 0) return;
+        if (state.consecutiveFetchFailures >= FAILURES_BEFORE_WARN) {
+            console.info('🪼 Jellyfin Enhanced (client refresh): revision poll recovered.');
+        }
+        state.consecutiveFetchFailures = 0;
+        state.fetchFailureWarned = false;
+    }
+
     function checkForNewRevision(reason) {
+        // Never act without a trustworthy baseline: an un-armed page (config
+        // fetch failed / pre-feature server) has zero floors, and comparing the
+        // live server values against them would mis-fire reloads.
+        if (!state.armed) return;
+        // Two-argument then: the failure handler covers ONLY the fetch, so a bug
+        // in the decision pipeline below surfaces normally instead of being
+        // swallowed as a phantom network error.
         fetchServerRevision().then(({ rev, force }) => {
-            // Admin force takes priority and ignores every safety gate.
-            const forceSeen = readNumber(window.localStorage, forceSeenKey()) ?? 0;
-            if (force > forceSeen) {
+            noteFetchRecovery();
+
+            // Admin force takes priority and ignores the mode and safety gates
+            // (except editing surfaces — see actOnPendingForce).
+            if (force > state.ackForceRevision) {
                 state.serverForceRevision = Math.max(state.serverForceRevision, force);
-                forceReloadNow();
-                return;
+                state.pendingForceRevision = state.serverForceRevision;
+                if (actOnPendingForce()) return;
             }
-            const seen = readNumber(window.localStorage, seenKey()) ?? 0;
-            if (rev > seen) {
+
+            if (rev > state.ackRevision) {
                 if (state.mode === MODE_DISABLED) {
-                    // Off: ignore ordinary config-change refreshes — adopt the revision so
-                    // it isn't re-evaluated every poll. (The force channel above still acts.)
-                    writeNumber(window.localStorage, seenKey(), rev);
+                    // Off: ignore ordinary config-change refreshes — acknowledge so
+                    // it isn't re-evaluated every poll. (The force channel above
+                    // still acts.)
+                    state.ackRevision = rev;
                 } else {
                     markPending(rev, reason);
                 }
             }
-        }).catch(() => { /* offline or auth hiccup — next poll/online event will retry */ });
+        }, noteFetchFailure);
     }
 
     function startPolling() {
@@ -535,8 +651,11 @@
     // Init
     // ---------------------------------------------------------------------
 
-    function readSettingsFromConfig() {
-        const cfg = JE.pluginConfig || {};
+    /**
+     * Reads the tunables from the server config payload.
+     * @param {object} cfg - The JE.pluginConfig payload.
+     */
+    function readSettingsFromConfig(cfg) {
         const mode = String(cfg.ClientRefreshMode || MODE_DISABLED);
         // Tolerate "Manual" as an alias for NotifyOnly.
         state.mode = (mode === 'Manual') ? MODE_NOTIFY_ONLY : mode;
@@ -549,28 +668,18 @@
             if (!Number.isFinite(n)) return dflt;
             return Math.min(max, Math.max(min, n));
         };
-        // Fast default poll (5s, like the File Transformation auto-refresh) so a force
-        // or config change lands quickly on active clients; backgrounded clients catch
-        // up instantly via the visibility/focus/navigation re-checks above.
+        // Fast default poll (5s) so a force or config change lands quickly on
+        // active clients; backgrounded clients catch up instantly via the
+        // visibility/focus/navigation re-checks.
         state.pollSeconds = clamp(cfg.ClientRefreshPollSeconds, 5, 3600, 5);
         state.idleSeconds = clamp(cfg.ClientRefreshIdleSeconds, 5, 3600, 10);
         state.debounceSeconds = clamp(cfg.ClientRefreshDebounceSeconds, 0, 300, 5);
-        state.homeOnly = cfg.ClientRefreshHomeOnly !== false;
+        // Absent fields match the shipped C# defaults (homeOnly=false; the two
+        // suppress/button toggles=true).
+        state.homeOnly = cfg.ClientRefreshHomeOnly === true;
         state.suppressDuringPlayback = cfg.ClientRefreshSuppressDuringPlayback !== false;
         state.showManualButton = cfg.ClientRefreshShowManualButton !== false;
         state.toastMessage = typeof cfg.ClientRefreshToastMessage === 'string' ? cfg.ClientRefreshToastMessage : '';
-        state.serverRevision = Number(cfg.ClientConfigRevision) || 0;
-        state.serverForceRevision = Number(cfg.ClientForceRefreshRevision) || 0;
-    }
-
-    /**
-     * A fresh page load already reflects any prior force, so adopt the current
-     * force value without reloading. The only force-reload path is the live poll
-     * (forceReloadNow) for already-open clients — this prevents a forced reload
-     * from looping on the page it just produced.
-     */
-    function reconcileForceRevision() {
-        writeNumber(window.localStorage, forceSeenKey(), state.serverForceRevision);
     }
 
     function bindActivityTracking() {
@@ -589,10 +698,13 @@
     function bindNavigationAndLifecycle() {
         const onNavigated = () => {
             updateNoticeVisibility();
-            // Act on anything already pending right away (e.g. immediate reload when
-            // landing on Home), AND re-poll the server (FT-style hashchange→check) so a
-            // client that was hidden/asleep picks up a change or force the moment the
-            // user starts moving around the app.
+            // A force deferred on an editing surface fires the moment the
+            // user navigates away from it.
+            if (actOnPendingForce()) return;
+            // Act on anything already pending right away (e.g. immediate reload
+            // when landing on Home), AND re-poll the server so a client that was
+            // hidden/asleep picks up a change or force the moment the user starts
+            // moving around the app.
             maybeRefresh('navigate');
             forcedCheck('navigate');
         };
@@ -606,6 +718,7 @@
 
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
+                if (actOnPendingForce()) return;
                 forcedCheck('visibility');
                 maybeRefresh('visibility');
             }
@@ -614,87 +727,37 @@
         window.addEventListener('focus', () => forcedCheck('focus'));
     }
 
-    /**
-     * Reconciles the freshly loaded page against the stored seen/attempted
-     * revisions:
-     *  - First run (no stored value): adopt the server revision without reloading.
-     *  - This tab just reloaded for revision N (sessionStorage marker): absorb N —
-     *    this is the refresh-loop protection.
-     *  - Stored revision is older and no reload was attempted (tab was closed or
-     *    offline while the config changed): mark pending and follow mode rules.
-     */
-    function reconcileInitialRevision() {
-        const serverRev = state.serverRevision;
-        const seen = readNumber(window.localStorage, seenKey());
-        const attempted = readNumber(window.sessionStorage, attemptedKey());
-
-        if (attempted !== null) {
-            try { window.sessionStorage.removeItem(attemptedKey()); } catch (e) { /* ignore */ }
-        }
-
-        if (seen === null) {
-            // Feature's first run on this client — initialise quietly.
-            writeNumber(window.localStorage, seenKey(), serverRev);
-            return;
-        }
-
-        if (seen === serverRev) return; // fully up to date
-
-        if (seen > serverRev) {
-            // Revision went backwards (config restored from backup?) — adopt it.
-            writeNumber(window.localStorage, seenKey(), serverRev);
-            return;
-        }
-
-        // seen < serverRev:
-        if (attempted !== null && attempted >= serverRev) {
-            // We reloaded for this exact (or newer) revision moments ago — absorb.
-            writeNumber(window.localStorage, seenKey(), serverRev);
-            console.log(`🪼 Jellyfin Enhanced (client refresh): reloaded page absorbed config revision ${serverRev}.`);
-            return;
-        }
-
-        if (navigationWasReload()) {
-            // The user refreshed the page themselves (F5 / pull-to-refresh) — that
-            // IS the refresh we wanted, so absorb instead of nagging again.
-            writeNumber(window.localStorage, seenKey(), serverRev);
-            console.log(`🪼 Jellyfin Enhanced (client refresh): manual page reload absorbed config revision ${serverRev}.`);
-            return;
-        }
-
-        if (state.mode === MODE_DISABLED) {
-            // Off: ignore ordinary config-change refreshes — adopt silently so nothing
-            // lingers. (An explicit admin force is handled by reconcileForceRevision /
-            // the force channel, independent of mode.)
-            writeNumber(window.localStorage, seenKey(), serverRev);
-            return;
-        }
-
-        // The tab was closed/offline while the config changed and this load has
-        // NOT already reloaded for it. Even though the config payload itself was
-        // fetched fresh, the app shell and scripts may have been served from
-        // cache — mark the refresh as pending and let the mode rules decide
-        // (Auto/SemiAuto reload once safe; NotifyOnly shows the notice). The
-        // attempted-marker written before that reload guarantees the follow-up
-        // page load takes the absorb branch above instead of looping.
-        console.log(`🪼 Jellyfin Enhanced (client refresh): server config revision ${serverRev} is newer than last seen ${seen} — pending refresh.`);
-        markPending(serverRev, 'init');
-    }
-
     function initialize() {
         if (state.initialized) return;
         state.initialized = true;
 
-        readSettingsFromConfig();
+        const cfg = JE.pluginConfig;
+        // No revision in the payload means the config fetch failed (plugin.js
+        // falls back to {}) or the server predates this feature. Without a
+        // trustworthy baseline, arming the poller could mis-fire reloads off
+        // garbage floors — stay inert for this page load; the next full load
+        // re-evaluates.
+        if (!cfg || cfg.ClientConfigRevision === undefined) {
+            console.info('🪼 Jellyfin Enhanced: Client refresh inactive — plugin config unavailable for this page load.');
+            return;
+        }
+        state.armed = true;
 
-        // NOTE: we set up polling + lifecycle even when the mode is Disabled. The mode
+        readSettingsFromConfig(cfg);
+
+        // This page just booted from the current server config, so the booted
+        // revisions ARE the per-tab baseline: everything up to them is reflected
+        // by definition, and anything newer arrived after this page loaded.
+        state.ackRevision = Number(cfg.ClientConfigRevision) || 0;
+        state.ackForceRevision = Number(cfg.ClientForceRefreshRevision) || 0;
+        state.serverRevision = state.ackRevision;
+        state.serverForceRevision = state.ackForceRevision;
+
+        // NOTE: polling + lifecycle run even when the mode is Disabled. The mode
         // gates only the AUTOMATIC refresh-on-config-change behaviour (handled in
         // maybeRefresh, which no-ops on Disabled). The admin "Force all clients to
-        // refresh" override is always honoured so it can reach every client that has
-        // loaded the plugin — including one that loaded while the mode was Off. This is
-        // why a force from another device reliably lands on a phone.
-        reconcileInitialRevision();
-        reconcileForceRevision();
+        // refresh" override is always honoured so it can reach every client that
+        // has loaded the plugin — including one that loaded while the mode was Off.
         bindActivityTracking();
         bindNavigationAndLifecycle();
         startPolling();
@@ -702,7 +765,7 @@
         if (state.mode === MODE_DISABLED) {
             console.log(`🪼 Jellyfin Enhanced: Client refresh mode is Off — automatic refresh disabled, but still listening for an admin force (poll=${state.pollSeconds}s).`);
         } else {
-            console.log(`🪼 Jellyfin Enhanced: Client refresh initialized (mode=${state.mode}, poll=${state.pollSeconds}s, idle=${state.idleSeconds}s, homeOnly=${state.homeOnly}, suppressPlayback=${state.suppressDuringPlayback}).`);
+            console.log(`🪼 Jellyfin Enhanced: Client refresh initialized (mode=${state.mode}, poll=${state.pollSeconds}s, idle=${state.idleSeconds}s, homeOnly=${state.homeOnly}, suppressPlayback=${state.suppressDuringPlayback}, revision=${state.ackRevision}).`);
         }
     }
 

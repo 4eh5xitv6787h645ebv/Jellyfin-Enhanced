@@ -533,6 +533,8 @@
     "hidden_content_experimental_label": "Experimental",
     "active_streams_count": "{count} flux actiu|{count} fluxos actius",
     "active_streams_none": "Cap flux actiu",
+    "client_refresh_notice_message": "Jellyfin Enhanced settings have changed — refresh to apply the update.",
+    "client_refresh_notice_button": "Refresh now",
     "reviews_avg_rating_tooltip": "Valoració mitjana de {count} usuari(s)",
     "panel_settings_subtitles_position_note": "Requereix l'estil de subtítols de Jellyfin a <b>Custom</b> en la configuració del subtítols"
 }

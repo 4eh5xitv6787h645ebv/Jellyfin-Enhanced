@@ -161,12 +161,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         // millisecond still produce strictly increasing revisions.
         private static readonly object _revisionLock = new object();
 
-        /// <summary>
-        /// Compares two configurations while ignoring <see cref="PluginConfiguration.ClientConfigRevision"/>
-        /// (the bookkeeping field must never count as a material change, or every save would bump).
-        /// Uses Newtonsoft JObject + DeepEquals for a semantic, order-independent comparison of
-        /// every public property including nested lists (Shortcuts etc.).
-        /// </summary>
+        // Compares two configurations while ignoring the revision bookkeeping fields (they
+        // must never count as a material change, or every save would bump). Uses Newtonsoft
+        // JObject + DeepEquals: property order does not matter for objects, but arrays
+        // (Shortcuts etc.) compare element-by-element IN ORDER — a pure reorder counts as a
+        // change. That errs toward refreshing clients, which is the safe direction. New
+        // config properties are covered automatically (no field list to maintain).
         private static bool ConfigsMateriallyEqual(PluginConfiguration a, PluginConfiguration b)
         {
             var ja = JObject.FromObject(a);
@@ -181,54 +181,72 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             return JToken.DeepEquals(ja, jb);
         }
 
-        /// <summary>
-        /// Returns the next revision value: strictly greater than <paramref name="previous"/>,
-        /// and equal to "now" in unix-epoch ms whenever that is already greater (so the value
-        /// stays human-readable as a timestamp in the common case).
-        /// </summary>
+        // Returns the next revision value: strictly greater than the previous one, and equal
+        // to "now" in unix-epoch ms whenever that is already greater (so the value stays
+        // human-readable as a timestamp in the common case).
         private static long NextRevision(long previous)
         {
             var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             return Math.Max(previous + 1, nowMs);
         }
 
-        /// <summary>
-        /// Bumps <see cref="PluginConfiguration.ClientConfigRevision"/> and persists it, for
-        /// config-adjacent changes that do not flow through <see cref="UpdateConfiguration"/>
-        /// (e.g. "Apply to all users" rewriting every per-user settings file).
-        /// </summary>
-        public void BumpClientConfigRevision(string reason)
+        // Bumps ClientConfigRevision and persists it, for config-adjacent changes that do not
+        // flow through UpdateConfiguration (per-user settings resets, branding file uploads).
+        // Returns false when the bump could not be persisted — callers can surface that to the
+        // admin instead of implying connected clients will refresh. On a failed save the
+        // in-memory value is reverted so what clients see stays consistent with disk.
+        public bool BumpClientConfigRevision(string reason)
         {
             try
             {
                 lock (_revisionLock)
                 {
                     var config = Configuration;
-                    if (config == null) return;
-                    config.ClientConfigRevision = NextRevision(config.ClientConfigRevision);
-                    SaveConfiguration();
+                    if (config == null) return false;
+                    var previous = config.ClientConfigRevision;
+                    config.ClientConfigRevision = NextRevision(previous);
+                    try
+                    {
+                        SaveConfiguration();
+                    }
+                    catch
+                    {
+                        config.ClientConfigRevision = previous;
+                        throw;
+                    }
                     _logger.Info($"Jellyfin Enhanced: client config revision bumped to {config.ClientConfigRevision} ({reason}).");
+                    return true;
                 }
             }
             catch (Exception ex)
             {
-                _logger.Warning($"Jellyfin Enhanced: failed to bump client config revision ({reason}): {ex.Message}");
+                _logger.Error($"Jellyfin Enhanced: failed to bump client config revision ({reason}); connected clients will NOT auto-refresh for this change: {ex.Message}");
+                return false;
             }
         }
 
-        /// <summary>
-        /// Bumps <see cref="PluginConfiguration.ClientForceRefreshRevision"/> and persists it.
-        /// Backs the admin "Force all clients to refresh" action: connected web clients reload
-        /// immediately on their next poll, bypassing all safety gates. Returns the new value.
-        /// </summary>
+        // Bumps ClientForceRefreshRevision and persists it. Backs the admin "Force all clients
+        // to refresh" action: connected web clients reload immediately on their next poll,
+        // bypassing the safety gates. Returns the new value. A failed save reverts the
+        // in-memory value and rethrows, so the endpoint 500s and no client acts on a value
+        // that would vanish at the next restart.
         public long ForceClientRefresh()
         {
             lock (_revisionLock)
             {
                 var config = Configuration;
                 if (config == null) return 0;
-                config.ClientForceRefreshRevision = NextRevision(config.ClientForceRefreshRevision);
-                SaveConfiguration();
+                var previous = config.ClientForceRefreshRevision;
+                config.ClientForceRefreshRevision = NextRevision(previous);
+                try
+                {
+                    SaveConfiguration();
+                }
+                catch
+                {
+                    config.ClientForceRefreshRevision = previous;
+                    throw;
+                }
                 _logger.Info($"Jellyfin Enhanced: FORCE client refresh triggered — force revision is now {config.ClientForceRefreshRevision}.");
                 return config.ClientForceRefreshRevision;
             }
@@ -296,6 +314,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 _logger.Warning($"Jellyfin Enhanced: failed to clear Seerr caches on config update: {ex.Message}");
             }
         }
+        // One-time migration scrub: removes the <script> tag that pre-middleware versions of
+        // this plugin wrote into index.html on disk. Purely cosmetic under the request-time
+        // injection model — a stale on-disk tag is stripped from every served response by
+        // TransformationPatches.IndexHtml anyway — so every failure here is harmless and
+        // logged below Error severity.
         private void CleanupOldScript()
         {
             try
@@ -303,7 +326,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 var indexPath = IndexHtmlPath;
                 if (!File.Exists(indexPath))
                 {
-                    _logger.Error($"Could not find index.html at path: {indexPath}");
+                    // Normal on servers that do not host the web client (HostWebClient=false,
+                    // externally served jellyfin-web) — nothing to clean.
+                    _logger.Info($"Legacy index.html cleanup skipped — no file at: {indexPath}");
                     return;
                 }
 
@@ -320,7 +345,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
             catch (Exception ex)
             {
-                _logger.Error($"Error during cleanup of old script from index.html: {ex.Message}");
+                _logger.Warning($"Could not scrub the legacy Jellyfin Enhanced script tag from index.html (harmless — the served page is cleaned at request time; remove the <script plugin=\"Jellyfin Enhanced\"> line manually if you want the file clean): {ex.Message}");
             }
         }
         private void CheckPluginPages(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, int pluginPageConfigVersion)

@@ -533,6 +533,8 @@
     "hidden_content_experimental_label": "Deneysel",
     "active_streams_count": "{count} aktif yayın|{count} aktif yayın",
     "active_streams_none": "Aktif yayın yok",
+    "client_refresh_notice_message": "Jellyfin Enhanced settings have changed — refresh to apply the update.",
+    "client_refresh_notice_button": "Refresh now",
     "reviews_avg_rating_tooltip": "Ortalama Puan {count} kullanıcı(s)",
     "panel_settings_subtitles_position_note": "Jellyfin alt başlık stili <b>Custom</b> alt başlık ayarlarında"
 }

@@ -71,14 +71,13 @@ If you see errors like this in a log file:
 Access to the path '/jellyfin/jellyfin-web/index.html' is denied.
 ```
 
-This only affects setups where Jellyfin cannot write to its own web folder — Jellyfin Enhanced needs no extra plugin otherwise.
+**Current versions of Jellyfin Enhanced never write to the web folder** — the script is injected in-process at request time, so read-only web folders work out of the box. This message can only come from:
 
-**Pick either solution:**
+- **An older Jellyfin Enhanced version** (which wrote the script tag into `index.html`): update the plugin.
 
-- Apply a [platform-specific permission fix](#platform-specific-permission-issues) so Jellyfin can write to `index.html`
+- **The one-time legacy cleanup after upgrading**: the plugin tries once to remove the old on-disk script tag. If the folder is read-only this warning is **harmless** — the served page is cleaned at request time anyway. To make it go away, remove the `<script plugin="Jellyfin Enhanced" ...></script>` line from `index.html` manually, or grant write access temporarily.
 
-- Or install the optional [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation), which lets Jellyfin Enhanced inject its script at request time without writing to disk
-
+The platform-specific fixes below only apply to **older plugin versions**.
 
 ### Platform-Specific Permission Issues
 
@@ -92,7 +91,7 @@ Example of a common error:
 System.UnauthorizedAccessException: Access to the path '/jellyfin/jellyfin-web/index.html' is denied.
 ```
 
-If you are **^^not^^ using the [file-transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) plugin**, you'll need to manually map the `index.html` file
+On **older plugin versions** (which wrote into `index.html`), you needed to manually map the `index.html` file
 
 1. Copy the `index.html` file from your container:
   ```bash title="Bash"
@@ -116,10 +115,9 @@ If you are **^^not^^ using the [file-transformation](https://github.com/IAmParad
 <!-- use a custom title -->
 !!! warning "Warning"
 
-    This method won't survive a `jellyfin-web` upgrade. A more durable alternative for Docker:
-
-    1. Install the optional [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) (Jellyfin Enhanced will use it automatically to avoid writing to `index.html`)
-    2. Follow the standard installation process
+    This method won't survive a `jellyfin-web` upgrade — and it is obsolete: current
+    versions of Jellyfin Enhanced never write to `index.html`, so simply updating the
+    plugin is the durable fix.
 
 #### Windows
 

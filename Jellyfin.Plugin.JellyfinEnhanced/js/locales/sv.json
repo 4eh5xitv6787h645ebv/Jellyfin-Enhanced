@@ -533,6 +533,8 @@
     "hidden_content_experimental_label": "Experimentell",
     "active_streams_count": "{count} aktiv ström|{count} aktiva strömmar",
     "active_streams_none": "Inga aktiva strömmar",
+    "client_refresh_notice_message": "Jellyfin Enhanced settings have changed — refresh to apply the update.",
+    "client_refresh_notice_button": "Refresh now",
     "reviews_avg_rating_tooltip": "Genomsnittligt betyg från {count} användare(s)",
     "panel_settings_subtitles_position_note": "Kräver Jellyfin subtitle stil inställd på <b>Custom</b> i undertextinställningar"
 }

@@ -294,61 +294,60 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool DevMode { get; set; }
 
         // Client Refresh Settings
-        /// <summary>
-        /// How connected web clients react when the active JE configuration changes.
-        /// "Disabled"   — no revision polling and no refresh behaviour at all.
-        /// "Auto"       — reload automatically once the client is idle and not on/near playback.
-        /// "SemiAuto"   — show a persistent "refresh needed" notice; reload automatically when
-        ///                the user navigates to Home (never during playback).
-        /// "NotifyOnly" — show the persistent notice with a manual Refresh button; never reload
-        ///                automatically.
-        /// </summary>
+
+        // How connected web clients react when the active JE configuration changes.
+        // "Disabled"   — no automatic refresh behaviour (the admin force channel still works).
+        // "Auto"       — reload automatically once the client is idle and not on/near playback.
+        // "SemiAuto"   — show a persistent "refresh needed" notice; reload automatically when
+        //                the user navigates to Home (never during playback).
+        // "NotifyOnly" — show the persistent notice with a manual Refresh button; never reload
+        //                automatically.
         public string ClientRefreshMode { get; set; }
 
-        /// <summary>Seconds between client revision polls. Clamped to 5–3600 wherever it is consumed. Default 5 for snappy delivery (like the File Transformation auto-refresh).</summary>
+        // Seconds between client revision polls. Clamped to 5-3600 wherever it is consumed.
+        // Default 5 for snappy delivery.
         public int ClientRefreshPollSeconds { get; set; }
 
-        /// <summary>Seconds without user input before Auto mode considers the client idle enough to reload. Clamped to 5–3600.</summary>
+        // Seconds without user input before Auto mode considers the client idle enough to
+        // reload. Clamped to 5-3600.
         public int ClientRefreshIdleSeconds { get; set; }
 
-        /// <summary>When true, Auto mode only reloads while the client is on the Home screen.</summary>
+        // When true, Auto mode only reloads while the client is on the Home screen.
         public bool ClientRefreshHomeOnly { get; set; }
 
-        /// <summary>
-        /// When true (default), clients with loaded media — playing OR paused — are never auto-reloaded.
-        /// The active video player page itself is never auto-reloaded regardless of this flag.
-        /// </summary>
+        // When true (default), clients with loaded media — playing OR paused — are never
+        // auto-reloaded. The active video player page itself is never auto-reloaded
+        // regardless of this flag.
         public bool ClientRefreshSuppressDuringPlayback { get; set; }
 
-        /// <summary>Seconds a client waits after detecting a newer revision before reloading, so rapid consecutive admin saves collapse into one reload. Clamped to 0–300.</summary>
+        // Seconds a client waits after detecting a newer revision before reloading, so rapid
+        // consecutive admin saves collapse into one reload. Clamped to 0-300.
         public int ClientRefreshDebounceSeconds { get; set; }
 
-        /// <summary>Optional custom text for the persistent refresh notice. Empty uses the built-in message.</summary>
+        // Optional custom text for the persistent refresh notice. Empty uses the built-in message.
         public string ClientRefreshToastMessage { get; set; }
 
-        /// <summary>When true, the persistent refresh notice includes a "Refresh now" button.</summary>
+        // When true, the persistent refresh notice includes a "Refresh now" button.
         public bool ClientRefreshShowManualButton { get; set; }
 
-        /// <summary>
-        /// Monotonic revision of the active configuration. Bumped server-side by
-        /// <see cref="JellyfinEnhanced.UpdateConfiguration"/> only when a save materially
-        /// changes the configuration (the comparison ignores this field itself).
-        /// Clients persist the last revision they loaded and reload when the server
-        /// reports a newer one. Derived from unix-epoch milliseconds but guaranteed to
-        /// strictly increase even for multiple saves within the same millisecond.
-        /// Not surfaced in the admin UI.
-        /// </summary>
+        // Monotonic revision of the active configuration. Bumped server-side by
+        // JellyfinEnhanced.UpdateConfiguration only when a save materially changes the
+        // configuration (the comparison ignores this field itself). Each page load boots
+        // with the current value as its per-tab baseline and clients reload when the server
+        // reports a newer one. Derived from unix-epoch milliseconds but guaranteed to
+        // strictly increase even for multiple saves within the same millisecond. Not
+        // surfaced in the admin UI.
         public long ClientConfigRevision { get; set; }
 
-        /// <summary>
-        /// Separate monotonic counter bumped only by the admin "Force all clients to
-        /// refresh" action. When a client sees a higher value than it last recorded it
-        /// reloads IMMEDIATELY, bypassing every safety gate (playback, paused media,
-        /// idle, home-only, debounce). Kept distinct from <see cref="ClientConfigRevision"/>
-        /// so an ordinary config save never triggers a disruptive forced reload, and a
-        /// force never looks like a config change. Preserved verbatim across config saves
-        /// (the admin form round-trips whatever value it last read). Not editable in the UI.
-        /// </summary>
+        // Separate monotonic counter bumped only by the admin "Force all clients to refresh"
+        // action. When a client sees a higher value than the one it booted with it reloads
+        // IMMEDIATELY, bypassing the safety gates (playback, paused media, idle, home-only,
+        // debounce) — editing surfaces (dashboard/config pages/metadata manager/user
+        // preferences) show a notice instead so unsaved edits survive. Kept distinct from
+        // ClientConfigRevision so an ordinary config save never triggers a disruptive
+        // forced reload, and a force never looks like a config change. Preserved verbatim
+        // across config saves (the admin form round-trips whatever value it last read).
+        // Not editable in the UI.
         public long ClientForceRefreshRevision { get; set; }
 
 

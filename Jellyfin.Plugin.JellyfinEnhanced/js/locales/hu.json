@@ -533,6 +533,8 @@
     "hidden_content_experimental_label": "Kísérleti",
     "active_streams_count": "{count} aktív stream",
     "active_streams_none": "Nincs aktív stream",
+    "client_refresh_notice_message": "Jellyfin Enhanced settings have changed — refresh to apply the update.",
+    "client_refresh_notice_button": "Refresh now",
     "reviews_avg_rating_tooltip": "Átlagos értékelés {count} felhasználó(s)",
     "panel_settings_subtitles_position_note": "A Jellyfin feliratstílusát a feliratbeállításokban <b>Egyéni</b> értékre kell állítani"
 }

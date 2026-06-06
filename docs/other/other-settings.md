@@ -30,7 +30,7 @@ Push configuration changes to connected web clients without asking everyone to r
 Upload your own logos, banners, and favicon to personalize your Jellyfin instance.
 
 !!! info "How it is applied"
-    Uploaded images are stored and served by Jellyfin Enhanced itself and applied to web clients at runtime — no extra plugin required. The installed-PWA / home-screen app icon (from Jellyfin's web manifest) and native app icons cannot be replaced this way; the optional [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) additionally rewrites the stock asset files at request time if you want that coverage.
+    Uploaded images are stored and served by Jellyfin Enhanced itself and applied to web clients at runtime — no extra plugin required, and nothing is written into Jellyfin's web folder. The installed-PWA / home-screen app icon (from Jellyfin's web manifest) and native app icons cannot be replaced this way.
 
 | Setting | Description |
 |---|---|

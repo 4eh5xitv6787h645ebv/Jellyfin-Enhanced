@@ -662,8 +662,8 @@ Upload your own logos, banners, and favicon.
 
 **Requirements:**
 
-- No extra plugin — Jellyfin Enhanced serves the uploads and applies them to web clients at runtime (the optional [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) can additionally rewrite the stock asset files at request time)
-- Recommended image formats: PNG, SVG
+- No extra plugin — Jellyfin Enhanced serves the uploads and applies them to web clients at runtime
+- Image formats: PNG (favicon.ico also accepts ICO files)
 - Files stored in: `/plugins/configurations/Jellyfin.Plugin.JellyfinEnhanced/custom_branding/`
 
 ### 🌍 Internationalization

@@ -1935,7 +1935,7 @@
                                 <i class="material-icons je-note-icon">warning_amber</i>
                                 <div>
                                     <strong>Force all clients to refresh now</strong><br>
-                                    Immediately reloads <em>every</em> connected web client, <strong>regardless of what state it is in</strong> — including clients that are mid-playback, paused, or actively being used. This bypasses all the safety rules above. Use it only when a change must reach everyone at once. A client that's backgrounded or asleep (e.g. a phone) reloads the moment it's brought back to the foreground. This works even on clients whose mode is set to <em>Off</em>. Native apps (Android TV, iOS, Roku, …) are not affected.
+                                    Immediately reloads <em>every</em> connected web client, <strong>regardless of what state it is in</strong> — including clients that are mid-playback, paused, or actively being used. This bypasses all the safety rules above. Use it only when a change must reach everyone at once. A client that's backgrounded or asleep (e.g. a phone) reloads the moment it's brought back to the foreground. This works even on clients whose mode is set to <em>Off</em>. Pages with unsaved form state (the dashboard — including this one — the Metadata Manager and user settings pages) show a refresh notice instead of reloading so edits are never lost, and reload on the next navigation. Native apps (Android TV, iOS, Roku, …) are not affected.
                                     <div style="margin-top:10px;">
                                         <button id="forceClientRefreshBtn" type="button" class="emby-button raised">
                                             <i class="material-icons" aria-hidden="true" style="vertical-align:middle;margin-right:6px;">sync_problem</i>Force all clients to refresh
@@ -1963,7 +1963,7 @@
                                 <div class="je-info-banner-compact">
                                     <i class="material-icons je-info-icon-sm">info</i>
                                     <div>
-                                        Uploaded images are stored and served by Jellyfin Enhanced itself and applied to web clients at runtime (favicon, Apple touch icon, header logo and login banners) — no extra plugin required. Limitations: icons referenced outside the page, such as the installed-PWA / home-screen app icon from Jellyfin's web manifest and native app icons, cannot be replaced this way. The optional <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-file-transformation" target="_blank">File Transformation</a> plugin additionally rewrites the stock asset files at request time if you want deeper coverage.
+                                        Uploaded images are stored and served by Jellyfin Enhanced itself and applied to web clients at runtime (favicon, Apple touch icon, header logo and login banners) — no extra plugin required, and nothing is written into Jellyfin's web folder. Limitations: icons referenced outside the page, such as the installed-PWA / home-screen app icon from Jellyfin's web manifest and native app icons, cannot be replaced this way.
                                     </div>
                                 </div>
                             </div>
@@ -1998,7 +1998,7 @@
                                 <div class="je-branding-card">
                                     <label class="je-branding-label-bold">Icon Transparent</label>
                                     <div class="je-branding-dropzone" id="iconTransparentDropZone">
-                                        <input type="file" id="iconTransparentInput" accept="image/*" class="je-branding-file-input" />
+                                        <input type="file" id="iconTransparentInput" accept="image/png" class="je-branding-file-input" />
                                         <div id="iconTransparentPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
                                         <img id="iconTransparentPreview" class="je-branding-preview" style="display:none;" />
                                         <div id="iconTransparentDimensions" class="je-branding-dimensions" style="display:none;"></div>
@@ -2009,7 +2009,7 @@
                                 <div class="je-branding-card">
                                     <label class="je-branding-label-bold">Favicon</label>
                                     <div class="je-branding-dropzone" id="faviconDropZone">
-                                        <input type="file" id="faviconInput" accept="image/*" class="je-branding-file-input" />
+                                        <input type="file" id="faviconInput" accept="image/png,image/x-icon,image/vnd.microsoft.icon,.ico" class="je-branding-file-input" />
                                         <div id="faviconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
                                         <img id="faviconPreview" class="je-branding-preview" style="display:none;" />
                                         <div id="faviconDimensions" class="je-branding-dimensions" style="display:none;"></div>
@@ -2020,7 +2020,7 @@
                                 <div class="je-branding-card">
                                     <label class="je-branding-label-bold">Banner Dark</label>
                                     <div class="je-branding-dropzone" id="bannerDarkDropZone">
-                                        <input type="file" id="bannerDarkInput" accept="image/*" class="je-branding-file-input" />
+                                        <input type="file" id="bannerDarkInput" accept="image/png" class="je-branding-file-input" />
                                         <div id="bannerDarkPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
                                         <img id="bannerDarkPreview" class="je-branding-preview" style="display:none;" />
                                         <div id="bannerDarkDimensions" class="je-branding-dimensions" style="display:none;"></div>
@@ -2031,7 +2031,7 @@
                                 <div class="je-branding-card">
                                     <label class="je-branding-label-bold">Banner Light</label>
                                     <div class="je-branding-dropzone" id="bannerLightDropZone">
-                                        <input type="file" id="bannerLightInput" accept="image/*" class="je-branding-file-input" />
+                                        <input type="file" id="bannerLightInput" accept="image/png" class="je-branding-file-input" />
                                         <div id="bannerLightPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
                                         <img id="bannerLightPreview" class="je-branding-preview" style="display:none;" />
                                         <div id="bannerLightDimensions" class="je-branding-dimensions" style="display:none;"></div>
@@ -2042,7 +2042,7 @@
                                 <div class="je-branding-card">
                                     <label class="je-branding-label-bold">Apple Touch Icon</label>
                                     <div class="je-branding-dropzone" id="touchiconDropZone">
-                                        <input type="file" id="touchiconInput" accept="image/*" class="je-branding-file-input" />
+                                        <input type="file" id="touchiconInput" accept="image/png" class="je-branding-file-input" />
                                         <div id="touchiconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
                                         <img id="touchiconPreview" class="je-branding-preview" style="display:none;" />
                                         <div id="touchiconDimensions" class="je-branding-dimensions" style="display:none;"></div>
@@ -4794,14 +4794,21 @@
                     const syncResult = await runCustomTabsSync(config);
 
                     // Then reset all user settings to match the saved config
-                    await ApiClient.ajax({
+                    const applyResult = await ApiClient.ajax({
                         type: 'POST',
                         url: ApiClient.getUrl('/JellyfinEnhanced/reset-all-users-settings'),
                         dataType: 'json'
                     });
 
                     Dashboard.hideLoadingMsg();
-                    let msg = 'Configuration saved and applied to all users successfully!\n\n' + jeDescribeClientRefreshBehaviour();
+                    let msg = 'Configuration saved and applied to all users successfully!\n\n';
+                    // The server reports whether the client-refresh signal was persisted;
+                    // do not promise an automatic refresh that will not happen.
+                    if (applyResult && applyResult.clientRefreshSignaled === false) {
+                        msg += 'Could not signal connected clients to refresh (see server log) — users must refresh their browsers manually.';
+                    } else {
+                        msg += jeDescribeClientRefreshBehaviour();
+                    }
                     if (syncResult && syncResult.ok === false) {
                         msg += '\n\n(Custom Tabs sync did not complete: ' + (syncResult.detail || 'see console') + ')';
                     }
@@ -4942,10 +4949,22 @@
                 });
 
                 if (response.ok) {
-                    statusDiv.textContent = '✓ Uploaded';
-                    statusDiv.style.color = '#51cf66';
+                    // The server reports whether connected clients were signaled to
+                    // refresh; without it the image only appears after manual reloads.
+                    let signaled = true;
+                    try {
+                        const body = await response.json();
+                        if (body && body.clientRefreshSignaled === false) signaled = false;
+                    } catch (e) { /* older server returns plain text — treat as signaled */ }
+                    if (signaled) {
+                        statusDiv.textContent = '✓ Uploaded';
+                        statusDiv.style.color = '#51cf66';
+                        setTimeout(() => { statusDiv.textContent = ''; }, 3000);
+                    } else {
+                        statusDiv.textContent = '✓ Uploaded, but clients could not be notified (see server log) — users see it after their next reload';
+                        statusDiv.style.color = '#ffa500';
+                    }
                     await refreshBrandingPreview(config);
-                    setTimeout(() => { statusDiv.textContent = ''; }, 3000);
                 } else {
                     const error = await response.text();
                     statusDiv.textContent = `✗ ${error || 'Upload failed'}`;
@@ -5017,15 +5036,26 @@
                 });
 
                 if (response.ok) {
-                    statusDiv.textContent = '✓ Deleted';
-                    statusDiv.style.color = '#51cf66';
+                    // Same client-signal reporting as the upload path.
+                    let signaled = true;
+                    try {
+                        const body = await response.json();
+                        if (body && body.clientRefreshSignaled === false) signaled = false;
+                    } catch (e) { /* older server returns plain text — treat as signaled */ }
+                    if (signaled) {
+                        statusDiv.textContent = '✓ Deleted';
+                        statusDiv.style.color = '#51cf66';
+                        setTimeout(() => { statusDiv.textContent = ''; }, 2000);
+                    } else {
+                        statusDiv.textContent = '✓ Deleted, but clients could not be notified (see server log) — users see it after their next reload';
+                        statusDiv.style.color = '#ffa500';
+                    }
 
                     // Hide dimensions when image is deleted
                     const dimensionsDiv = document.getElementById(config.dimensionsId);
                     if (dimensionsDiv) dimensionsDiv.style.display = 'none';
 
                     await refreshBrandingPreview(config);
-                    setTimeout(() => { statusDiv.textContent = ''; }, 2000);
                 } else {
                     const error = await response.text();
                     statusDiv.textContent = `✗ ${error || 'Delete failed'}`;
@@ -5854,7 +5884,7 @@
          * rendered as "Checking…" rather than asserting missing.
          */
         var OPTIONAL_PLUGINS = [
-            { key: 'fileTransformation', name: 'File Transformation', icon: 'transform',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-file-transformation', purpose: 'Optional. JE injects its script and applies custom branding by itself; install this only if Jellyfin cannot write to its own web folder (read-only index.html) or you want stock asset files rewritten at request time.', getFlag: function(){ return hasFileTransformation; } },
+            { key: 'fileTransformation', name: 'File Transformation', icon: 'transform',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-file-transformation', purpose: 'Not used by Jellyfin Enhanced anymore — the script and custom branding are applied in-process with no file writes, so read-only web folders work out of the box. Only needed if another plugin requires it.', getFlag: function(){ return hasFileTransformation; } },
             { key: 'pluginPages',        name: 'Plugin Pages',        icon: 'view_list',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-pages',               purpose: 'Sidebar pages for Bookmarks, Hidden Content, Requests, Calendar.',                   getFlag: function(){ return hasPluginPages; } },
             { key: 'customTabs',         name: 'Custom Tabs',         icon: 'tab',             url: 'https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs',         purpose: 'Home-page tab entries for Bookmarks, Hidden Content, Requests, Calendar.',          getFlag: function(){ return hasCustomTabs; } },
             { key: 'introSkipper',       name: 'Intro Skipper',       icon: 'skip_next',       url: 'https://github.com/intro-skipper/intro-skipper',                      purpose: 'Source of timestamps for Auto-skip Intro / Auto-skip Outro.',                        getFlag: function(){ return hasIntroSkipper; } },

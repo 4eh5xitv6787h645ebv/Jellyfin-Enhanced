@@ -52,7 +52,7 @@ Quick links:
 > **Jellyfin 10.11+ Required** - From version 11 this plugin only supports Jellyfin 10.11 and newer.
 
 > [!NOTE]
-> Jellyfin Enhanced works on its own — it injects its script and applies custom branding without any companion plugin. The optional [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) is only needed if Jellyfin cannot write to its own web folder (read-only `index.html`); see the [troubleshooting guide](https://n00bcodr.github.io/Jellyfin-Enhanced/installation/troubleshooting/) for fixing permissions instead.
+> Jellyfin Enhanced works entirely on its own — it injects its script and applies custom branding in-process, with no file writes and no companion plugin, including on read-only web folders. The [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) that earlier versions used is no longer needed.
 
 For detailed installation instructions and troubleshooting, see the [Installation Guide](https://n00bcodr.github.io/Jellyfin-Enhanced/installation/installation/).
 
@@ -207,7 +207,7 @@ Other projects by n00bcodr:
 
 Optional companion plugins:
 
-- [File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) - Request-time file rewriting (only needed when Jellyfin's web folder is read-only)
+- [File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) - Request-time file rewriting (no longer used by Jellyfin Enhanced)
 - [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) - Custom navigation tabs
 - [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) - Helps Plugins create custom pages for settings and info
 - [Kefin Tweaks](https://github.com/ranaldsgift/KefinTweaks) - Watchlist and more

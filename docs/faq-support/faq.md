@@ -467,7 +467,7 @@ Yes, via Enhanced panel settings:
 
 | Error | Solution |
 |-------|----------|
-| `Access to the path '/jellyfin/jellyfin-web/index.html' is denied.` | Fix the web folder permissions ([Docker workaround](../installation/troubleshooting.md#docker)) or install the optional [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) |
+| `Access to the path '/jellyfin/jellyfin-web/index.html' is denied.` | Harmless on current versions (one-time legacy cleanup; the script is injected in-process, never written to disk) — see [permission issues](../installation/troubleshooting.md#permission-issues). Update the plugin if you are on an older version |
 | `Access to the path 'C:\Program Files\Jellyfin\Server\jellyfin-web\index.html' is denied.` | Grant "NETWORK SERVICE" Read/Write permissions to Jellyfin folder |
 | Plugin installed but scripts don't load | Run "Jellyfin Enhanced Startup" scheduled task, verify trigger exists |
 | Reviews/Elsewhere/Seerr icons not working | TMDB API may be blocked in your region, see [Seerr troubleshooting](https://docs.seerr.dev/troubleshooting#tmdb-failed-to-retrievefetch-xxx) |
@@ -589,7 +589,7 @@ Yes, via Enhanced panel settings:
 
 ### Optional companion plugins
 
-- [File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) - Request-time file rewriting (only needed when Jellyfin's web folder is read-only)
+- [File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) - Request-time file rewriting (no longer used by Jellyfin Enhanced)
 - [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) - Custom navigation tabs
 - [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) - Helps Plugins create custom pages for settings and info
 - [Kefin Tweaks](https://github.com/ranaldsgift/KefinTweaks) - Watchlist and more

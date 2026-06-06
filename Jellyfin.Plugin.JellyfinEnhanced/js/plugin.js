@@ -340,7 +340,7 @@
                 document.head.appendChild(brandingScript);
             }
         }).catch(() => {
-            console.warn('🪼 Jellyfin Enhanced: Could not fetch config for login image, skipping.');
+            console.warn('🪼 Jellyfin Enhanced: Could not fetch config for the login image and pre-login branding, skipping both.');
         });
     }
 
