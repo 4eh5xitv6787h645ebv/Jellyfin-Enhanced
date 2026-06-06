@@ -71,11 +71,13 @@ If you see errors like this in a log file:
 Access to the path '/jellyfin/jellyfin-web/index.html' is denied.
 ```
 
-**Common Solution:**
+This only affects setups where Jellyfin cannot write to its own web folder — Jellyfin Enhanced needs no extra plugin otherwise.
 
-- Install [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) *(recommended)*
+**Pick either solution:**
 
-- Or, try [platform-specific permission fixes](#platform-specific-permission-issues)
+- Apply a [platform-specific permission fix](#platform-specific-permission-issues) so Jellyfin can write to `index.html`
+
+- Or install the optional [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation), which lets Jellyfin Enhanced inject its script at request time without writing to disk
 
 
 ### Platform-Specific Permission Issues
@@ -114,9 +116,9 @@ If you are **^^not^^ using the [file-transformation](https://github.com/IAmParad
 <!-- use a custom title -->
 !!! warning "Warning"
 
-    This method is not recommended and won't survive a `jellyfin-web` upgrade. The recommended method for Docker:
+    This method won't survive a `jellyfin-web` upgrade. A more durable alternative for Docker:
 
-    1. Install the [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation)
+    1. Install the optional [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) (Jellyfin Enhanced will use it automatically to avoid writing to `index.html`)
     2. Follow the standard installation process
 
 #### Windows

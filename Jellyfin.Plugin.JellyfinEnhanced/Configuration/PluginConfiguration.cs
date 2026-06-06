@@ -22,6 +22,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             SplashScreenImageUrl = "/web/assets/img/banner-light.png";
             DevMode = false;
 
+            // Client Refresh Settings
+            ClientRefreshMode = "Auto";
+            ClientRefreshPollSeconds = 5;
+            ClientRefreshIdleSeconds = 10;
+            ClientRefreshHomeOnly = false;
+            ClientRefreshSuppressDuringPlayback = true;
+            ClientRefreshDebounceSeconds = 5;
+            ClientRefreshToastMessage = "";
+            ClientRefreshShowManualButton = true;
+            ClientConfigRevision = 0;
+            ClientForceRefreshRevision = 0;
+
             // Jellyfin Elsewhere Settings
             ElsewhereEnabled = true;
             TMDB_API_KEY = "";
@@ -280,6 +292,64 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool EnableCustomSplashScreen { get; set; }
         public string SplashScreenImageUrl { get; set; }
         public bool DevMode { get; set; }
+
+        // Client Refresh Settings
+        /// <summary>
+        /// How connected web clients react when the active JE configuration changes.
+        /// "Disabled"   — no revision polling and no refresh behaviour at all.
+        /// "Auto"       — reload automatically once the client is idle and not on/near playback.
+        /// "SemiAuto"   — show a persistent "refresh needed" notice; reload automatically when
+        ///                the user navigates to Home (never during playback).
+        /// "NotifyOnly" — show the persistent notice with a manual Refresh button; never reload
+        ///                automatically.
+        /// </summary>
+        public string ClientRefreshMode { get; set; }
+
+        /// <summary>Seconds between client revision polls. Clamped to 5–3600 wherever it is consumed. Default 5 for snappy delivery (like the File Transformation auto-refresh).</summary>
+        public int ClientRefreshPollSeconds { get; set; }
+
+        /// <summary>Seconds without user input before Auto mode considers the client idle enough to reload. Clamped to 5–3600.</summary>
+        public int ClientRefreshIdleSeconds { get; set; }
+
+        /// <summary>When true, Auto mode only reloads while the client is on the Home screen.</summary>
+        public bool ClientRefreshHomeOnly { get; set; }
+
+        /// <summary>
+        /// When true (default), clients with loaded media — playing OR paused — are never auto-reloaded.
+        /// The active video player page itself is never auto-reloaded regardless of this flag.
+        /// </summary>
+        public bool ClientRefreshSuppressDuringPlayback { get; set; }
+
+        /// <summary>Seconds a client waits after detecting a newer revision before reloading, so rapid consecutive admin saves collapse into one reload. Clamped to 0–300.</summary>
+        public int ClientRefreshDebounceSeconds { get; set; }
+
+        /// <summary>Optional custom text for the persistent refresh notice. Empty uses the built-in message.</summary>
+        public string ClientRefreshToastMessage { get; set; }
+
+        /// <summary>When true, the persistent refresh notice includes a "Refresh now" button.</summary>
+        public bool ClientRefreshShowManualButton { get; set; }
+
+        /// <summary>
+        /// Monotonic revision of the active configuration. Bumped server-side by
+        /// <see cref="JellyfinEnhanced.UpdateConfiguration"/> only when a save materially
+        /// changes the configuration (the comparison ignores this field itself).
+        /// Clients persist the last revision they loaded and reload when the server
+        /// reports a newer one. Derived from unix-epoch milliseconds but guaranteed to
+        /// strictly increase even for multiple saves within the same millisecond.
+        /// Not surfaced in the admin UI.
+        /// </summary>
+        public long ClientConfigRevision { get; set; }
+
+        /// <summary>
+        /// Separate monotonic counter bumped only by the admin "Force all clients to
+        /// refresh" action. When a client sees a higher value than it last recorded it
+        /// reloads IMMEDIATELY, bypassing every safety gate (playback, paused media,
+        /// idle, home-only, debounce). Kept distinct from <see cref="ClientConfigRevision"/>
+        /// so an ordinary config save never triggers a disruptive forced reload, and a
+        /// force never looks like a config change. Preserved verbatim across config saves
+        /// (the admin form round-trips whatever value it last read). Not editable in the UI.
+        /// </summary>
+        public long ClientForceRefreshRevision { get; set; }
 
 
         // Jellyfin Elsewhere Settings

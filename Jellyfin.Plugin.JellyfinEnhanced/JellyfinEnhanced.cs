@@ -147,25 +147,145 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
         }
 
-        public void InjectScript()
-        {
-            UpdateIndexHtml(true);
-        }
-
         public override void OnUninstalling()
         {
-            UpdateIndexHtml(false);
+            // The script is injected at request time by WebInjectionMiddleware — nothing is
+            // written into index.html. This call only scrubs a legacy on-disk <script> tag left
+            // by older Jellyfin Enhanced versions that did write to index.html, so an uninstall
+            // leaves the web folder clean.
+            CleanupOldScript();
             base.OnUninstalling();
         }
 
-        // Flush every Seerr-related cache the moment the admin saves config.
-        // Without this, fixing a bad URL/key/blocklist takes 10-30 minutes to
-        // take effect because of the user-id and response caches — admins see
-        // "still broken" after their fix and assume it didn't work
-        //.
+        // Serializes revision reads/bumps so two saves landing in the same
+        // millisecond still produce strictly increasing revisions.
+        private static readonly object _revisionLock = new object();
+
+        /// <summary>
+        /// Compares two configurations while ignoring <see cref="PluginConfiguration.ClientConfigRevision"/>
+        /// (the bookkeeping field must never count as a material change, or every save would bump).
+        /// Uses Newtonsoft JObject + DeepEquals for a semantic, order-independent comparison of
+        /// every public property including nested lists (Shortcuts etc.).
+        /// </summary>
+        private static bool ConfigsMateriallyEqual(PluginConfiguration a, PluginConfiguration b)
+        {
+            var ja = JObject.FromObject(a);
+            var jb = JObject.FromObject(b);
+            // Neither bookkeeping counter is a material change — they must never make
+            // a save look "changed" (would self-trigger) nor "unchanged" incorrectly.
+            foreach (var field in new[] { nameof(PluginConfiguration.ClientConfigRevision), nameof(PluginConfiguration.ClientForceRefreshRevision) })
+            {
+                ja.Remove(field);
+                jb.Remove(field);
+            }
+            return JToken.DeepEquals(ja, jb);
+        }
+
+        /// <summary>
+        /// Returns the next revision value: strictly greater than <paramref name="previous"/>,
+        /// and equal to "now" in unix-epoch ms whenever that is already greater (so the value
+        /// stays human-readable as a timestamp in the common case).
+        /// </summary>
+        private static long NextRevision(long previous)
+        {
+            var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            return Math.Max(previous + 1, nowMs);
+        }
+
+        /// <summary>
+        /// Bumps <see cref="PluginConfiguration.ClientConfigRevision"/> and persists it, for
+        /// config-adjacent changes that do not flow through <see cref="UpdateConfiguration"/>
+        /// (e.g. "Apply to all users" rewriting every per-user settings file).
+        /// </summary>
+        public void BumpClientConfigRevision(string reason)
+        {
+            try
+            {
+                lock (_revisionLock)
+                {
+                    var config = Configuration;
+                    if (config == null) return;
+                    config.ClientConfigRevision = NextRevision(config.ClientConfigRevision);
+                    SaveConfiguration();
+                    _logger.Info($"Jellyfin Enhanced: client config revision bumped to {config.ClientConfigRevision} ({reason}).");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Jellyfin Enhanced: failed to bump client config revision ({reason}): {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Bumps <see cref="PluginConfiguration.ClientForceRefreshRevision"/> and persists it.
+        /// Backs the admin "Force all clients to refresh" action: connected web clients reload
+        /// immediately on their next poll, bypassing all safety gates. Returns the new value.
+        /// </summary>
+        public long ForceClientRefresh()
+        {
+            lock (_revisionLock)
+            {
+                var config = Configuration;
+                if (config == null) return 0;
+                config.ClientForceRefreshRevision = NextRevision(config.ClientForceRefreshRevision);
+                SaveConfiguration();
+                _logger.Info($"Jellyfin Enhanced: FORCE client refresh triggered — force revision is now {config.ClientForceRefreshRevision}.");
+                return config.ClientForceRefreshRevision;
+            }
+        }
+
+        // Runs on every config save (admin page, API, other plugins' writes through the
+        // plugin configuration endpoint):
+        //  1. Bumps ClientConfigRevision when — and only when — the incoming config
+        //     materially differs from the current one (ignoring the revision field
+        //     itself), so connected clients know to refresh. No-op saves keep the
+        //     old revision and never trigger client reloads.
+        //  2. Flushes every Seerr-related cache. Without this, fixing a bad
+        //     URL/key/blocklist takes 10-30 minutes to take effect because of the
+        //     user-id and response caches — admins see "still broken" after their
+        //     fix and assume it didn't work.
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
-            base.UpdateConfiguration(configuration);
+            lock (_revisionLock)
+            {
+                if (configuration is PluginConfiguration incoming && Configuration is PluginConfiguration previous)
+                {
+                    // The force counter is owned by ForceClientRefresh(), never the config
+                    // form. Always carry the server's current value forward so a save that
+                    // round-tripped a stale value can't roll back a force that happened in
+                    // between (which would strand a forced reload mid-flight).
+                    incoming.ClientForceRefreshRevision = previous.ClientForceRefreshRevision;
+
+                    bool material;
+                    try
+                    {
+                        material = !ConfigsMateriallyEqual(previous, incoming);
+                    }
+                    catch (Exception ex)
+                    {
+                        // If the comparison itself fails, err on the side of refreshing
+                        // clients rather than leaving them on stale config.
+                        _logger.Warning($"Jellyfin Enhanced: config comparison failed, treating save as a material change: {ex.Message}");
+                        material = true;
+                    }
+
+                    if (material)
+                    {
+                        incoming.ClientConfigRevision = NextRevision(previous.ClientConfigRevision);
+                        _logger.Info($"Jellyfin Enhanced: configuration materially changed — client config revision is now {incoming.ClientConfigRevision}.");
+                    }
+                    else
+                    {
+                        // Preserve the current revision verbatim; the client may have
+                        // round-tripped a stale value (or zero) through the form.
+                        incoming.ClientConfigRevision = previous.ClientConfigRevision;
+                        _logger.Info("Jellyfin Enhanced: configuration saved with no material change — client config revision unchanged.");
+                    }
+                }
+
+                base.UpdateConfiguration(configuration);
+            }
+
             try
             {
                 Controllers.JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
@@ -360,58 +480,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             catch (Exception ex)
             {
                 _logger.Error($"Error while updating Plugin Pages configuration: {ex.Message}");
-            }
-        }
-        private void UpdateIndexHtml(bool inject)
-        {
-            try
-            {
-                var indexPath = IndexHtmlPath;
-                if (!File.Exists(indexPath))
-                {
-                    _logger.Error($"Could not find index.html at path: {indexPath}");
-                    return;
-                }
-
-                var content = File.ReadAllText(indexPath);
-                // Append the DLL's last-write timestamp so that every build produces
-                // a distinct cache-busting value, even when the version number hasn't
-                // changed (e.g. during local dev/testing). In production the version
-                // bump alone would suffice, but the timestamp makes dev iterations safe.
-                var dllTimestamp = new FileInfo(typeof(JellyfinEnhanced).Assembly.Location).LastWriteTimeUtc.Ticks;
-                var cacheKey = $"{Version}-{dllTimestamp}";
-                var devMode = Configuration?.DevMode == true;
-                var scriptUrl = $"../JellyfinEnhanced/script?v={cacheKey}";
-                var scriptTag = $"<script plugin=\"{Name}\" version=\"{cacheKey}\" dev=\"{(devMode ? "true" : "false")}\" src=\"{scriptUrl}\" defer></script>";
-                var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
-
-                // Remove any old versions of the script tag first
-                content = regex.Replace(content, string.Empty);
-
-                if (inject)
-                {
-                    var closingBodyTag = "</body>";
-                    if (content.Contains(closingBodyTag))
-                    {
-                        content = content.Replace(closingBodyTag, $"{scriptTag}\n{closingBodyTag}");
-                        _logger.Info($"Successfully injected/updated the {PluginName} script.");
-                    }
-                    else
-                    {
-                        _logger.Warning("Could not find </body> tag in index.html. Script not injected.");
-                        return; // Return early if injection point not found
-                    }
-                }
-                else
-                {
-                    _logger.Info($"Successfully removed the {PluginName} script from index.html during uninstall.");
-                }
-
-                File.WriteAllText(indexPath, content);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error while trying to update index.html: {ex.Message}");
             }
         }
 

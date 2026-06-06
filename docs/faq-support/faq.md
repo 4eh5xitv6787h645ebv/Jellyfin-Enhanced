@@ -347,8 +347,7 @@ See [CSS Customization Guide](../advanced/css-customization.md) for complete CSS
 
 **Requirements:**
 
-- [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) installed
-- Admin access to Jellyfin
+- Admin access to Jellyfin (no extra plugin needed — Jellyfin Enhanced serves and applies the uploads itself)
 
 **Steps:**
 
@@ -468,7 +467,7 @@ Yes, via Enhanced panel settings:
 
 | Error | Solution |
 |-------|----------|
-| `Access to the path '/jellyfin/jellyfin-web/index.html' is denied.` | Install [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) or follow [Docker workaround](../installation/troubleshooting.md#docker) |
+| `Access to the path '/jellyfin/jellyfin-web/index.html' is denied.` | Fix the web folder permissions ([Docker workaround](../installation/troubleshooting.md#docker)) or install the optional [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) |
 | `Access to the path 'C:\Program Files\Jellyfin\Server\jellyfin-web\index.html' is denied.` | Grant "NETWORK SERVICE" Read/Write permissions to Jellyfin folder |
 | Plugin installed but scripts don't load | Run "Jellyfin Enhanced Startup" scheduled task, verify trigger exists |
 | Reviews/Elsewhere/Seerr icons not working | TMDB API may be blocked in your region, see [Seerr troubleshooting](https://docs.seerr.dev/troubleshooting#tmdb-failed-to-retrievefetch-xxx) |
@@ -588,9 +587,9 @@ Yes, via Enhanced panel settings:
 - [Jellyfin-JavaScript-Injector](https://github.com/n00bcodr/Jellyfin-JavaScript-Injector) - Custom script injection
 - [Jellyfish](https://github.com/n00bcodr/Jellyfish/) - Custom Jellyfin theme
 
-### Recommended plugins
+### Optional companion plugins
 
-- [File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) - Safe file modifications
+- [File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) - Request-time file rewriting (only needed when Jellyfin's web folder is read-only)
 - [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) - Custom navigation tabs
 - [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) - Helps Plugins create custom pages for settings and info
 - [Kefin Tweaks](https://github.com/ranaldsgift/KefinTweaks) - Watchlist and more

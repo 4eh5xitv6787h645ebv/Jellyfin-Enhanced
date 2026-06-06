@@ -658,11 +658,11 @@ Upload your own logos, banners, and favicon.
    - Banner Dark (light theme splash)
    - Favicon (browser icon)
 5. Click **Save**
-6. Force refresh browser ++ctrl+f5++
+6. Refresh the browser (uploads are served with cache-busted URLs, so a normal refresh is enough — or enable **Client Refresh** in the Extras tab to push the update to connected clients automatically)
 
 **Requirements:**
 
-- Requires [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation)
+- No extra plugin — Jellyfin Enhanced serves the uploads and applies them to web clients at runtime (the optional [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) can additionally rewrite the stock asset files at request time)
 - Recommended image formats: PNG, SVG
 - Files stored in: `/plugins/configurations/Jellyfin.Plugin.JellyfinEnhanced/custom_branding/`
 

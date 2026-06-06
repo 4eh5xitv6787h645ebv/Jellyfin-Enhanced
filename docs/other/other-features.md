@@ -31,7 +31,7 @@ Upload your own logos, banners, and favicon to personalize your Jellyfin instanc
 
 **Prerequisites:**
 
-- [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) installed
+- None — branding is served and applied by Jellyfin Enhanced itself. (The optional [file-transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) additionally rewrites stock asset files at request time.)
 
 **Configuration:**
 

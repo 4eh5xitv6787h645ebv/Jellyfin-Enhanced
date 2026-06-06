@@ -31,31 +31,20 @@
 3. Click **Install**
 4. Wait for the installation to complete
 
-### Step 3: Install File Transformation Plugin (Recommended)
+### Step 3 (Optional): File Transformation Plugin
 
-<!-- use a custom title -->
-!!! info "Important"
+!!! info "Only needed for read-only web folders"
 
-    **It is highly recommended to install the [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation)**
+    Jellyfin Enhanced injects its script and applies custom branding **by itself** — no companion plugin is required for normal operation.
 
-    Why?
+    Install the optional [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) only if:
 
-    - The File Transformation plugin helps avoid permission issues while modifying `index.html`
-    - Recommended on all installation types:
-        - Docker
-        - Windows
-        - Linux
-        - etc
-    - Without it, you may encounter permission errors
+    - Jellyfin cannot write to its own web folder (a read-only `index.html`, e.g. a locked-down or read-only container image), **and**
+    - you'd rather not fix the folder permissions (see [troubleshooting](troubleshooting.md))
 
+    With File Transformation installed, Jellyfin Enhanced automatically uses it to inject the script at request time instead of writing to `index.html`.
 
-1. In the **Catalog** tab, search for "file-transformation"
-2. Install the **File Transformation** plugin
-3. Restart your Jellyfin server
-4. Then install Jellyfin Enhanced normally
-
-
-If you do not have file-transformation installed, you might encounter permission issues. Refer [troubleshooting steps](troubleshooting.md)
+If you see `Access to the path '.../index.html' is denied` in the logs, refer to the [troubleshooting steps](troubleshooting.md) — fix the permissions or install File Transformation, whichever you prefer.
 
 ### Step 4: Restart Server
 

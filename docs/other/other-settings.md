@@ -4,12 +4,33 @@ Settings for custom branding, icon styles, extras, timeouts, and more — all fo
 
 ---
 
+## Client Refresh
+
+Push configuration changes to connected web clients without asking everyone to refresh manually. When you save a real change on the plugin config page, the server bumps an internal config revision; clients poll for it and react according to the mode you pick. Clients that are offline catch up the next time they open Jellyfin.
+
+| Setting | Description |
+|---|---|
+| **Refresh behaviour** | `Off` (never check), `Automatic` (reload quietly when idle and safe — **default**), `Semi-automatic` (persistent notice + reload when the user goes Home), `Notify only` (persistent notice with a Refresh button, never reloads automatically) |
+| **Check for changes every** | Poll interval in seconds (5–3600, default 5). Clients also re-check the instant they're brought back to the foreground, so a backgrounded phone catches up immediately on wake |
+| **Consider the user idle after** | Automatic mode only reloads in the background after this much inactivity (default 10s) |
+| **Only auto-reload on the Home screen** | Restricts Automatic reloads to the Home screen (default off — Automatic mode may reload on any safe page) |
+| **Never refresh while media is playing or paused** | Strongly recommended (default on). Paused media counts as protected; the video player page itself is never auto-reloaded |
+| **Wait before reloading** | Grace period so several quick saves collapse into one reload (default 5s) |
+| **Notice text** | Optional custom text for the persistent notice |
+| **Show a "Refresh now" button** | Adds a manual refresh button to the notice (Notify-only mode always shows it) |
+
+!!! note "Web clients only"
+    This feature applies to Jellyfin Web (browsers, the web view inside desktop shells, and the web-view Android mobile app). Native apps (Android TV, iOS, Roku, …) don't run plugin web scripts and are unaffected.
+
+!!! tip "Force works even when the mode is Off"
+    The **Force all clients to refresh** button always reaches every connected web client — even ones whose mode is *Off* — because the lightweight version poll runs regardless of mode (only the *automatic* refresh-on-config-change is gated by the mode). A backgrounded or sleeping client (e.g. a phone) reloads the moment it's brought back to the foreground.
+
 ## Custom Branding
 
 Upload your own logos, banners, and favicon to personalize your Jellyfin instance.
 
-!!! info "Requirements"
-    The [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) must be installed.
+!!! info "How it is applied"
+    Uploaded images are stored and served by Jellyfin Enhanced itself and applied to web clients at runtime — no extra plugin required. The installed-PWA / home-screen app icon (from Jellyfin's web manifest) and native app icons cannot be replaced this way; the optional [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) additionally rewrites the stock asset files at request time if you want that coverage.
 
 | Setting | Description |
 |---|---|

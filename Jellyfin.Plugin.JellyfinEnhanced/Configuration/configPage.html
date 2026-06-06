@@ -85,19 +85,6 @@
                 </div>
             </div>
 
-            <div id="fileTransformationWarning" class="je-danger-banner" style="display: none;">
-                <i class="material-icons je-danger-icon">error_outline</i>
-                <div>
-                    <strong class="je-ft-warning-title">Highly Recommended: File Transformation Plugin</strong><br>
-                    It is highly recommended to have the <a href="https://github.com/IAmParadox27/jellyfin-plugin-file-transformation" target="_blank" class="je-ft-warning-link">File Transformation</a> plugin installed. It helps avoid permission issues while modifying <code class="je-ft-warning-code">index.html</code>.
-                    <a href="https://github.com/n00bcodr/Jellyfin-Enhanced?tab=readme-ov-file#-installation" target="_blank" class="je-ft-warning-link">Learn more</a>
-                    <div class="je-ft-warning-actions">
-                        <button id="dismissFtWarningSession" type="button" class="emby-button raised raised-mini">Dismiss</button>
-                        <button id="dismissFtWarningForever" type="button" class="emby-button raised raised-mini">Don't show again</button>
-                    </div>
-                </div>
-            </div>
-
             <form id="JellyfinEnhancedForm">
 
                 <div id="overview" class="jellyfin-tab-content active">
@@ -1872,6 +1859,94 @@
                     </fieldset>
 
                     <fieldset>
+                        <legend class="sectionTitle">Client Refresh</legend>
+                        <div class="configSection">
+                            <div class="je-setting-description">
+                                <div class="fieldDescription je-field-desc-md">
+                                    When you save a real change on this page, connected web clients can pick it up automatically instead of waiting for someone to refresh their browser. Clients are never refreshed while media is playing <em>or paused</em>, and clients that are offline catch up the next time they open Jellyfin.
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="clientRefreshMode">Refresh behaviour</label>
+                                <select is="emby-select" id="clientRefreshMode" name="clientRefreshMode" class="emby-select">
+                                    <option value="Disabled">Off — clients never check for changes</option>
+                                    <option value="Auto">Automatic — reload quietly when the client is idle and safe</option>
+                                    <option value="SemiAuto">Semi-automatic — show a notice, reload when the user goes Home</option>
+                                    <option value="NotifyOnly">Notify only — show a notice with a Refresh button, never reload automatically</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshMode">
+                                <div class="fieldDescription je-field-desc-md">
+                                    How web clients should react after you save a configuration change here.
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="clientRefreshPollSeconds">Check for changes every (seconds)</label>
+                                <input id="clientRefreshPollSeconds" is="emby-input" type="number" min="5" max="3600" step="1"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshPollSeconds">
+                                <div class="fieldDescription je-field-desc-md">How often open clients ask the server whether the configuration changed. 5–3600 seconds. Default: 5 (fast, so a change or a forced refresh lands quickly). Clients also re-check the instant they're brought back to the foreground.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="clientRefreshIdleSeconds">Consider the user idle after (seconds)</label>
+                                <input id="clientRefreshIdleSeconds" is="emby-input" type="number" min="5" max="3600" step="1"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshIdleSeconds">
+                                <div class="fieldDescription je-field-desc-md">Automatic mode only reloads in the background once the user has not clicked, typed or scrolled for this long. 5–3600 seconds. Default: 10.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="clientRefreshHomeOnly" is="emby-checkbox" type="checkbox"/><span>Only auto-reload on the Home screen</span></label></div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshHomeOnly">
+                                <div class="fieldDescription je-field-desc-md">When enabled, Automatic mode waits until the client is on the Home screen before reloading. When disabled, it may reload on any page that is safe (never the video player).</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="clientRefreshSuppressDuringPlayback" is="emby-checkbox" type="checkbox"/><span>Never refresh while media is playing or paused</span></label></div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshSuppressDuringPlayback">
+                                <div class="fieldDescription je-field-desc-md">Strongly recommended. Treats paused media the same as playing media. Even when disabled, the video player page itself is never auto-reloaded.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="clientRefreshDebounceSeconds">Wait before reloading (seconds)</label>
+                                <input id="clientRefreshDebounceSeconds" is="emby-input" type="number" min="0" max="300" step="1"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshDebounceSeconds">
+                                <div class="fieldDescription je-field-desc-md">Short grace period so several quick saves in a row cause only one reload. 0–300 seconds. Default: 5.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="clientRefreshToastMessage">Notice text (optional)</label>
+                                <input id="clientRefreshToastMessage" is="emby-input" type="text" placeholder="Jellyfin Enhanced settings have changed — refresh to apply the update."/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshToastMessage">
+                                <div class="fieldDescription je-field-desc-md">Custom text for the persistent notice shown in Semi-automatic and Notify-only modes. Leave empty to use the built-in message.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="clientRefreshShowManualButton" is="emby-checkbox" type="checkbox"/><span>Show a "Refresh now" button on the notice</span></label></div>
+                            <div class="je-setting-description" data-desc-for="clientRefreshShowManualButton">
+                                <div class="fieldDescription je-field-desc-md">Notify-only mode always includes the button (it is the only way to act on the notice).</div>
+                            </div>
+
+                            <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.05); margin: 12px 0;">
+
+                            <div class="je-note-banner" role="note">
+                                <i class="material-icons je-note-icon">warning_amber</i>
+                                <div>
+                                    <strong>Force all clients to refresh now</strong><br>
+                                    Immediately reloads <em>every</em> connected web client, <strong>regardless of what state it is in</strong> — including clients that are mid-playback, paused, or actively being used. This bypasses all the safety rules above. Use it only when a change must reach everyone at once. A client that's backgrounded or asleep (e.g. a phone) reloads the moment it's brought back to the foreground. This works even on clients whose mode is set to <em>Off</em>. Native apps (Android TV, iOS, Roku, …) are not affected.
+                                    <div style="margin-top:10px;">
+                                        <button id="forceClientRefreshBtn" type="button" class="emby-button raised">
+                                            <i class="material-icons" aria-hidden="true" style="vertical-align:middle;margin-right:6px;">sync_problem</i>Force all clients to refresh
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
                         <legend class="sectionTitle">Developer</legend>
                         <div class="configSection">
                             <div class="checkboxContainer"><label><input id="devMode" is="emby-checkbox" type="checkbox"/><span>Dev Mode</span></label></div>
@@ -1888,8 +1963,7 @@
                                 <div class="je-info-banner-compact">
                                     <i class="material-icons je-info-icon-sm">info</i>
                                     <div>
-                                        Uploading custom icon / favicon / logo images requires the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-file-transformation" target="_blank">File Transformation</a> plugin to be installed — it's what replaces Jellyfin's default web logos at request time. Splash screen URL override below works without it.
-                                        <span class="je-installed-badge" data-plugin="filetransformation"><i class="material-icons" aria-hidden="true">check_circle</i>File Transformation detected</span>
+                                        Uploaded images are stored and served by Jellyfin Enhanced itself and applied to web clients at runtime (favicon, Apple touch icon, header logo and login banners) — no extra plugin required. Limitations: icons referenced outside the page, such as the installed-PWA / home-screen app icon from Jellyfin's web manifest and native app icons, cannot be replaced this way. The optional <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-file-transformation" target="_blank">File Transformation</a> plugin additionally rewrites the stock asset files at request time if you want deeper coverage.
                                     </div>
                                 </div>
                             </div>
@@ -2963,8 +3037,6 @@
         }
 
 
-        /** @type {boolean} Tracks whether the File Transformation warning has been dismissed this session */
-        var ftWarningDismissedSession = false;
         // Plugin detection state.
         //
         // Each `hasX` is tri-state: `null` (not yet probed or probe failed),
@@ -2989,8 +3061,8 @@
 
         /**
          * Checks installed plugins (File Transformation, Plugin Pages, Custom Tabs).
-         * Shows a warning if File Transformation is missing. Updates dependency state
-         * for Plugin Pages / Custom Tabs dependent settings.
+         * Updates dependency state for Plugin Pages / Custom Tabs dependent settings
+         * and feeds the Optional Dependencies dashboard cards.
          * Called during loadConfig() on page load.
          */
         function checkInstalledPlugins() {
@@ -3070,7 +3142,6 @@
                 document.body.classList.toggle('je-has-introskipper',      hasIntroSkipper       === true);
                 document.body.classList.toggle('je-has-inplayerepisodepreview', hasInPlayerEpisodePreview === true);
                 document.body.classList.toggle('je-has-kefintweaks',       hasKefinTweaks        === true);
-                document.body.classList.toggle('je-has-filetransformation', hasFileTransformation === true);
 
                 // If Custom Tabs is present, probe its config to decide whether the
                 // schema matches what we know how to write. Only on success do we
@@ -3081,14 +3152,6 @@
                 } else {
                     document.body.classList.remove('je-has-customtabs-compat');
                     customTabsCompatState = null;
-                }
-
-                // File Transformation warning
-                if (!ftWarningDismissedSession && localStorage.getItem('je_ft_warning_dismissed') !== 'true') {
-                    var warning = document.getElementById('fileTransformationWarning');
-                    if (warning) {
-                        warning.style.display = hasFileTransformation ? 'none' : 'block';
-                    }
                 }
 
                 // Re-run dependencies now that plugin info is available
@@ -3110,7 +3173,7 @@
                 hasFileTransformation = null;
                 hasKefinTweaks = null;
                 customTabsCompatState = null;
-                document.body.classList.remove('je-has-customtabs', 'je-has-pluginpages', 'je-has-introskipper', 'je-has-inplayerepisodepreview', 'je-has-customtabs-compat', 'je-has-kefintweaks', 'je-has-filetransformation');
+                document.body.classList.remove('je-has-customtabs', 'je-has-pluginpages', 'je-has-introskipper', 'je-has-inplayerepisodepreview', 'je-has-customtabs-compat', 'je-has-kefintweaks');
                 setProbeWarning('plugins', "Couldn't reach the Jellyfin /Plugins endpoint to verify which integrations are installed (auth expiry, network, or server issue). Dependency hints and \"plugin detected\" badges are now hidden until you retry.");
                 try { updateAllDependencies(); } catch (e) {
                     console.warn('[JE] updateAllDependencies threw during plugin-detect fallback:', e);
@@ -3122,21 +3185,6 @@
                 }
             });
 
-            // Set up dismiss button handlers
-            var dismissSession = document.getElementById('dismissFtWarningSession');
-            var dismissForever = document.getElementById('dismissFtWarningForever');
-            if (dismissSession) {
-                dismissSession.onclick = function() {
-                    ftWarningDismissedSession = true;
-                    document.getElementById('fileTransformationWarning').style.display = 'none';
-                };
-            }
-            if (dismissForever) {
-                dismissForever.onclick = function() {
-                    localStorage.setItem('je_ft_warning_dismissed', 'true');
-                    document.getElementById('fileTransformationWarning').style.display = 'none';
-                };
-            }
             // Probe-warning retry — re-runs plugin detection (which also re-runs
             // the Custom Tabs config probe inside its .then). One handler only;
             // checkInstalledPlugins is idempotent.
@@ -3976,6 +4024,15 @@
 
                 // Load all other settings
                 document.querySelector('#devMode').checked = config.DevMode;
+                // Client Refresh
+                document.querySelector('#clientRefreshMode').value = config.ClientRefreshMode || 'Auto';
+                document.querySelector('#clientRefreshPollSeconds').value = config.ClientRefreshPollSeconds || 5;
+                document.querySelector('#clientRefreshIdleSeconds').value = config.ClientRefreshIdleSeconds || 10;
+                document.querySelector('#clientRefreshHomeOnly').checked = config.ClientRefreshHomeOnly !== false;
+                document.querySelector('#clientRefreshSuppressDuringPlayback').checked = config.ClientRefreshSuppressDuringPlayback !== false;
+                document.querySelector('#clientRefreshDebounceSeconds').value = (typeof config.ClientRefreshDebounceSeconds === 'number') ? config.ClientRefreshDebounceSeconds : 5;
+                document.querySelector('#clientRefreshToastMessage').value = config.ClientRefreshToastMessage || '';
+                document.querySelector('#clientRefreshShowManualButton').checked = config.ClientRefreshShowManualButton !== false;
                 document.querySelector('#enableCustomSplashScreen').checked = config.EnableCustomSplashScreen;
                 document.querySelector('#splashScreenImageUrl').value = config.SplashScreenImageUrl;
                 document.querySelector('#disableAllShortcuts').checked = config.DisableAllShortcuts;
@@ -4268,6 +4325,21 @@
             });
             config.Shortcuts = finalShortcuts;
             config.DevMode = document.querySelector('#devMode').checked;
+            // Client Refresh. Numeric fields are clamped to the same ranges the
+            // server enforces so the form can never persist out-of-range values.
+            function jeClampInt(id, min, max, dflt) {
+                var n = parseInt(document.querySelector(id).value, 10);
+                if (isNaN(n)) return dflt;
+                return Math.min(max, Math.max(min, n));
+            }
+            config.ClientRefreshMode = document.querySelector('#clientRefreshMode').value || 'Auto';
+            config.ClientRefreshPollSeconds = jeClampInt('#clientRefreshPollSeconds', 5, 3600, 5);
+            config.ClientRefreshIdleSeconds = jeClampInt('#clientRefreshIdleSeconds', 5, 3600, 10);
+            config.ClientRefreshHomeOnly = document.querySelector('#clientRefreshHomeOnly').checked;
+            config.ClientRefreshSuppressDuringPlayback = document.querySelector('#clientRefreshSuppressDuringPlayback').checked;
+            config.ClientRefreshDebounceSeconds = jeClampInt('#clientRefreshDebounceSeconds', 0, 300, 5);
+            config.ClientRefreshToastMessage = document.querySelector('#clientRefreshToastMessage').value;
+            config.ClientRefreshShowManualButton = document.querySelector('#clientRefreshShowManualButton').checked;
             config.EnableCustomSplashScreen = document.querySelector('#enableCustomSplashScreen').checked;
             config.SplashScreenImageUrl = document.querySelector('#splashScreenImageUrl').value;
             config.DisableAllShortcuts = document.querySelector('#disableAllShortcuts').checked;
@@ -4687,6 +4759,27 @@
             return false;
         }
 
+        /**
+         * Human-readable summary of what connected clients will do after this
+         * save, based on the Client Refresh mode currently selected in the form.
+         * Used in save/apply success messages instead of the old blanket
+         * "users must refresh their browsers" copy.
+         */
+        function jeDescribeClientRefreshBehaviour() {
+            var modeEl = document.querySelector('#clientRefreshMode');
+            var mode = modeEl ? modeEl.value : 'Disabled';
+            if (mode === 'Auto') {
+                return 'Connected web clients will reload automatically once they are idle and not playing (or paused on) any media. Offline clients catch up the next time they open Jellyfin.';
+            }
+            if (mode === 'SemiAuto') {
+                return 'Connected web clients will show a refresh notice and reload when their user returns to the Home screen. Offline clients catch up the next time they open Jellyfin.';
+            }
+            if (mode === 'NotifyOnly') {
+                return 'Connected web clients will show a persistent notice with a "Refresh now" button; nothing reloads automatically.';
+            }
+            return 'Client auto-refresh is currently disabled, so settings take effect after users refresh their browsers. Enable "Client Refresh" in the Extras tab to automate this.';
+        }
+
         // Saves current config and applies it to all users
         async function resetAllUserSettings() {
             if (confirm("Are you sure?\n\nThis will save the current configuration and overwrite every per-user default for ALL users on this server.")) {
@@ -4708,7 +4801,7 @@
                     });
 
                     Dashboard.hideLoadingMsg();
-                    let msg = 'Configuration saved and applied to all users successfully!\n\nSettings will take effect after users refresh their browsers.';
+                    let msg = 'Configuration saved and applied to all users successfully!\n\n' + jeDescribeClientRefreshBehaviour();
                     if (syncResult && syncResult.ok === false) {
                         msg += '\n\n(Custom Tabs sync did not complete: ' + (syncResult.detail || 'see console') + ')';
                     }
@@ -5017,6 +5110,34 @@
         form.addEventListener('submit', saveConfig);
         resetAllUserSettingsBtn.addEventListener('click', resetAllUserSettings);
         initAutoMovieQualityMode();
+
+        // "Force all clients to refresh" — admin override. Confirms first (it is
+        // disruptive: it reloads every connected web client regardless of state),
+        // then POSTs to the force endpoint which bumps the force-revision counter.
+        var forceClientRefreshBtn = document.getElementById('forceClientRefreshBtn');
+        if (forceClientRefreshBtn) {
+            forceClientRefreshBtn.addEventListener('click', function() {
+                if (!confirm('Force ALL connected web clients to refresh right now?\n\nThis reloads every client immediately — including any that are mid-playback, paused, or actively in use. It ignores the usual safety rules. A backgrounded or sleeping client (e.g. a phone) reloads the moment it is brought back to the foreground.')) {
+                    return;
+                }
+                forceClientRefreshBtn.disabled = true;
+                ApiClient.ajax({
+                    type: 'POST',
+                    url: ApiClient.getUrl('/JellyfinEnhanced/force-client-refresh'),
+                    dataType: 'json'
+                }).then(function(res) {
+                    Dashboard.alert({
+                        title: 'Refresh triggered',
+                        message: 'All connected web clients will reload within their poll interval. (Force revision: ' + (res && res.ForceRevision ? res.ForceRevision : 'updated') + ')'
+                    });
+                }).catch(function(err) {
+                    console.error('[JE] force-client-refresh failed:', err);
+                    Dashboard.alert({ title: 'Could not trigger refresh', message: 'The force-refresh request failed. Check the browser console and server logs.' });
+                }).then(function() {
+                    forceClientRefreshBtn.disabled = false;
+                });
+            });
+        }
 
         // Live-update the Requests Page requirements banner AND the dependency
         // gates as the admin types into Seerr fields or adds/edits/removes/
@@ -5733,7 +5854,7 @@
          * rendered as "Checking…" rather than asserting missing.
          */
         var OPTIONAL_PLUGINS = [
-            { key: 'fileTransformation', name: 'File Transformation', icon: 'transform',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-file-transformation', purpose: 'Required for custom splash screens, branding images, and media bar integration.', getFlag: function(){ return hasFileTransformation; } },
+            { key: 'fileTransformation', name: 'File Transformation', icon: 'transform',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-file-transformation', purpose: 'Optional. JE injects its script and applies custom branding by itself; install this only if Jellyfin cannot write to its own web folder (read-only index.html) or you want stock asset files rewritten at request time.', getFlag: function(){ return hasFileTransformation; } },
             { key: 'pluginPages',        name: 'Plugin Pages',        icon: 'view_list',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-pages',               purpose: 'Sidebar pages for Bookmarks, Hidden Content, Requests, Calendar.',                   getFlag: function(){ return hasPluginPages; } },
             { key: 'customTabs',         name: 'Custom Tabs',         icon: 'tab',             url: 'https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs',         purpose: 'Home-page tab entries for Bookmarks, Hidden Content, Requests, Calendar.',          getFlag: function(){ return hasCustomTabs; } },
             { key: 'introSkipper',       name: 'Intro Skipper',       icon: 'skip_next',       url: 'https://github.com/intro-skipper/intro-skipper',                      purpose: 'Source of timestamps for Auto-skip Intro / Auto-skip Outro.',                        getFlag: function(){ return hasIntroSkipper; } },
@@ -5906,16 +6027,10 @@
                 calWarn ? 'Enabled but no *arr instance is configured' : 'Enabled',
                 calWarn);
 
-            // Custom splash screen / branding. Splash-screen URL works without
-            // any extra plugin, but the branding image uploads (icons/favicon/
-            // logos) require File Transformation to actually replace the web
-            // assets — surface a warning when the splash is enabled and File
-            // Transformation is missing.
-            var splashOn = bool('enableCustomSplashScreen');
-            var splashWarn = splashOn && hasFileTransformation !== true;
-            feat('Custom splash / branding', splashOn, 'extras',
-                splashWarn ? 'Enabled but File Transformation plugin missing (uploaded images won\'t apply)' : 'Enabled',
-                splashWarn);
+            // Custom splash screen / branding. Both the splash-screen URL and the
+            // uploaded branding images (favicon/logos) are served and applied by
+            // Jellyfin Enhanced itself — no extra plugin involved, so no warning.
+            feat('Custom splash / branding', bool('enableCustomSplashScreen'), 'extras', 'Enabled');
 
             // Extras
             var elsewhereWarn = bool('elsewhereEnabled') && !val('TMDB_API_KEY');

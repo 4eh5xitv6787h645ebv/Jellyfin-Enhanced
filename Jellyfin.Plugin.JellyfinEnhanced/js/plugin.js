@@ -303,7 +303,8 @@
     }
 
     /**
-     * Loads the login image script early (checks config first).
+     * Loads the login image script and runtime branding early (checks config first).
+     * Both run pre-login, so they share this single anonymous public-config fetch.
      */
     function loadLoginImageEarly() {
         if (typeof ApiClient === 'undefined') {
@@ -323,6 +324,20 @@
                 loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + getScriptVersion());
                 loginImageScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load login image script.');
                 document.head.appendChild(loginImageScript);
+            }
+            // Apply uploaded custom branding (favicon/logos) before login so the
+            // login screen is already branded — served by JE's own endpoint, no
+            // File Transformation plugin required.
+            if (config?.BrandingFiles && Object.keys(config.BrandingFiles).length > 0) {
+                const brandingScript = document.createElement('script');
+                brandingScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/branding.js?v=' + getScriptVersion());
+                brandingScript.onload = () => {
+                    if (typeof window.JellyfinEnhanced?.initializeBranding === 'function') {
+                        window.JellyfinEnhanced.initializeBranding(config);
+                    }
+                };
+                brandingScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load branding script.');
+                document.head.appendChild(brandingScript);
             }
         }).catch(() => {
             console.warn('🪼 Jellyfin Enhanced: Could not fetch config for login image, skipping.');
@@ -521,6 +536,7 @@
                 // enhanced
                 'enhanced/config.js',
                 'enhanced/helpers.js',
+                'enhanced/client-refresh.js',
                 'enhanced/tag-pipeline.js',
                 'enhanced/icons.js',
                 'enhanced/features.js',
@@ -581,6 +597,7 @@
                 'extras/plugin-icons.js',
                 'extras/theme-selector.js',
                 'extras/active-streams.js',
+                'extras/branding.js',
 
                 // others
                 'others/letterboxd-links.js',
@@ -629,6 +646,12 @@
             });
 
             // Stage 6: Initialize feature modules
+            // Client refresh first: it must arm its revision bookkeeping/polling even
+            // if a later feature module throws during its own initialization.
+            if (typeof JE.clientRefresh?.initialize === 'function') JE.clientRefresh.initialize();
+            // Runtime branding (favicon/logos) — re-applies post-login with the full
+            // helper set available for SPA re-render coverage.
+            if (typeof JE.initializeBranding === 'function') JE.initializeBranding(JE.pluginConfig);
             if (typeof JE.initializeEnhancedScript === 'function') JE.initializeEnhancedScript();
             if (typeof JE.initializeElsewhereScript === 'function' && JE.pluginConfig?.ElsewhereEnabled) JE.initializeElsewhereScript();
             if (typeof JE.initializeJellyseerrScript === 'function' && JE.pluginConfig?.JellyseerrEnabled && JE.pluginConfig?.JellyseerrShowSearchResults !== false) JE.initializeJellyseerrScript();

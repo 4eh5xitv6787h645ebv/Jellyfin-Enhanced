@@ -2544,6 +2544,81 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
+        // [AllowAnonymous] (same rationale as /version): this is the lightweight endpoint
+        // clients poll on an interval to detect config changes, so it must stay cheap and
+        // must not fill the log with auth noise when a backgrounded tab's token expires.
+        // It discloses only an opaque monotonically-increasing counter ("the config
+        // changed at some point"), never any configuration content.
+        [HttpGet("config-revision")]
+        public ActionResult GetConfigRevision()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+            {
+                return StatusCode(503);
+            }
+            return new JsonResult(new
+            {
+                Revision = config.ClientConfigRevision,
+                ForceRevision = config.ClientForceRefreshRevision
+            });
+        }
+
+        // Admin-only override behind the "Force all clients to refresh" button. Bumps the
+        // dedicated force counter so every polling web client reloads immediately,
+        // bypassing playback/idle/home safety. POST (state-changing) + [Authorize] + admin
+        // check; non-admins are forbidden.
+        [HttpPost("force-client-refresh")]
+        [Authorize]
+        public ActionResult ForceClientRefresh()
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+            var instance = JellyfinEnhanced.Instance;
+            if (instance?.Configuration == null)
+            {
+                return StatusCode(503);
+            }
+            var forceRevision = instance.ForceClientRefresh();
+            return new JsonResult(new { success = true, ForceRevision = forceRevision });
+        }
+
+        /// <summary>Clamps client-refresh numeric settings to sane ranges before they are exposed to clients.</summary>
+        private static int Clamp(int value, int min, int max) => Math.Min(max, Math.Max(min, value));
+
+        /// <summary>
+        /// Enumerates uploaded custom branding files with their last-write ticks so clients can
+        /// build cache-busted /JellyfinEnhanced/BrandingImage URLs and apply branding at runtime
+        /// without the File Transformation plugin. Returns an empty dictionary when nothing is uploaded.
+        /// </summary>
+        private static Dictionary<string, long> GetBrandingFileStamps()
+        {
+            var stamps = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var dir = JellyfinEnhanced.BrandingDirectory;
+                if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
+                {
+                    return stamps;
+                }
+                foreach (var name in BrandingFileNames)
+                {
+                    var path = Path.Combine(dir, name);
+                    if (System.IO.File.Exists(path))
+                    {
+                        stamps[name] = new FileInfo(path).LastWriteTimeUtc.Ticks;
+                    }
+                }
+            }
+            catch
+            {
+                // Branding stamps are best-effort decoration; never fail public-config over them.
+            }
+            return stamps;
+        }
+
         [HttpGet("private-config")]
         [Authorize]
         public ActionResult GetPrivateConfig()
@@ -2638,6 +2713,25 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.HelpPanelAutocloseDelay,
                 config.EnableCustomSplashScreen,
                 config.SplashScreenImageUrl,
+
+                // Client Refresh Settings — all non-sensitive. Numeric values are
+                // clamped here so a hand-edited XML config can't make clients poll
+                // aggressively or sleep forever.
+                config.ClientConfigRevision,
+                config.ClientForceRefreshRevision,
+                config.ClientRefreshMode,
+                ClientRefreshPollSeconds = Clamp(config.ClientRefreshPollSeconds, 5, 3600),
+                ClientRefreshIdleSeconds = Clamp(config.ClientRefreshIdleSeconds, 5, 3600),
+                config.ClientRefreshHomeOnly,
+                config.ClientRefreshSuppressDuringPlayback,
+                ClientRefreshDebounceSeconds = Clamp(config.ClientRefreshDebounceSeconds, 0, 300),
+                config.ClientRefreshToastMessage,
+                config.ClientRefreshShowManualButton,
+
+                // Custom branding files currently uploaded (name -> last-write ticks).
+                // Lets the client apply favicon/logo branding at runtime via
+                // /JellyfinEnhanced/BrandingImage without the File Transformation plugin.
+                BrandingFiles = GetBrandingFileStamps(),
 
                 // Jellyfin Elsewhere Settings
                 config.ElsewhereEnabled,
@@ -3986,6 +4080,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             _logger.Info($"Reset settings for {userCount}/{userIds.Count()} users to plugin defaults. Skipped settings: {skippedSettings.Count}, skipped HC: {skippedHc.Count}.");
+
+            // Per-user settings files changed without going through UpdateConfiguration,
+            // so bump the client revision explicitly — connected clients must re-load to
+            // pick up the new defaults even when the plugin config itself was a no-op save.
+            JellyfinEnhanced.Instance?.BumpClientConfigRevision("apply-to-all-users");
+
             return Ok(new
             {
                 success = true,
@@ -4379,8 +4479,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
+        // Anonymous on purpose: these are public brand assets (favicon, login logo,
+        // apple-touch-icon) that browsers fetch WITHOUT auth headers via <link>/<img>
+        // tags, including on the pre-login screen. Jellyfin serves its own equivalents
+        // under /web/assets unauthenticated too. Upload/delete remain admin-only, and
+        // the filename is allowlisted, so nothing sensitive is exposed.
         [HttpGet("BrandingImage")]
-        [Authorize]
         public IActionResult GetBrandingImage([FromQuery] string? fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))

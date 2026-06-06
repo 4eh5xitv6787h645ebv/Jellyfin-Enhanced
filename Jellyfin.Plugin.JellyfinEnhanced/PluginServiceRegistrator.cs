@@ -3,9 +3,11 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Web;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using MediaBrowser.Controller;
@@ -16,6 +18,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
     {
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
+            // Inject the Jellyfin Enhanced <script> into /web/index.html at request time, in-process,
+            // via an ASP.NET Core IStartupFilter. Self-contained: needs no on-disk edit (works on
+            // read-only web roots) and no File Transformation plugin. The filter lands in the same root
+            // DI container the generic host queries for IEnumerable<IStartupFilter>, so it is applied
+            // automatically and wraps Jellyfin's own pipeline ahead of UseStaticFiles.
+            serviceCollection.AddSingleton<IStartupFilter, WebInjectionStartupFilter>();
+
             serviceCollection.AddSingleton<StartupService>();
             serviceCollection.AddHttpClient();
 

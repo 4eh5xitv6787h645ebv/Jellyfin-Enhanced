@@ -295,7 +295,16 @@
         document.head.appendChild(styleElement);
 
         const pluginConfig = window.JellyfinEnhanced?.pluginConfig || {};
-        const imageUrl = pluginConfig.SplashScreenImageUrl || '/web/assets/img/banner-light.png';
+        let imageUrl = pluginConfig.SplashScreenImageUrl || '/web/assets/img/banner-light.png';
+        // If a custom banner has been uploaded and the splash URL still points at
+        // the stock asset, serve JE's uploaded copy directly — replaces the old
+        // behaviour where only the File Transformation plugin could rewrite it.
+        try {
+            const stamps = pluginConfig.BrandingFiles || {};
+            if (stamps['banner-light.png'] && imageUrl.indexOf('banner-light') !== -1 && imageUrl.indexOf('BrandingImage') === -1 && typeof ApiClient !== 'undefined') {
+                imageUrl = ApiClient.getUrl('/JellyfinEnhanced/BrandingImage') + '?fileName=banner-light.png&v=' + stamps['banner-light.png'];
+            }
+        } catch (e) { /* keep the configured URL */ }
 
         splashElement = document.createElement('div');
         splashElement.className = 'je-loading';
