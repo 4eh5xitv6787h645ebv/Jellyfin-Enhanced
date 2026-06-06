@@ -117,10 +117,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Web
                 return false;
             }
 
+            // The Jellyfin Web shell is served at "<base>/web", "<base>/web/" or
+            // "<base>/web/index.html". This middleware runs ahead of Jellyfin's base-URL
+            // branch (Startup.cs: app.Map(config.BaseUrl, ...)), so when a base URL is
+            // configured the prefix is still present on the path — match the suffix rather
+            // than an absolute path so sub-path installs are injected too. The status/HTML
+            // and "</body>" checks downstream keep this loose match safe.
             var path = request.Path.Value ?? string.Empty;
-            return path.Equals("/web", StringComparison.OrdinalIgnoreCase)
-                   || path.Equals("/web/", StringComparison.OrdinalIgnoreCase)
-                   || path.Equals("/web/index.html", StringComparison.OrdinalIgnoreCase);
+            return path.EndsWith("/web", StringComparison.OrdinalIgnoreCase)
+                   || path.EndsWith("/web/", StringComparison.OrdinalIgnoreCase)
+                   || path.EndsWith("/web/index.html", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
