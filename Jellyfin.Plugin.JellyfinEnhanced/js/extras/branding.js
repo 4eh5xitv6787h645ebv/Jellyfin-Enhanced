@@ -177,6 +177,5 @@
 
     window.JellyfinEnhanced = window.JellyfinEnhanced || {};
     window.JellyfinEnhanced.initializeBranding = initializeBranding;
-    window.JellyfinEnhanced.branding = { apply: applyAll, getUrl: brandingUrl };
 
 })();

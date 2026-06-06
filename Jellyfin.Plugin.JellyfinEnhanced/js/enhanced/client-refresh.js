@@ -55,12 +55,14 @@
         return (!result || result === key) ? fallback : result;
     }
 
+    // Initial values are placeholders; readSettingsFromConfig() overwrites the
+    // tunables from the server config at init. They mirror the shipped defaults.
     const state = {
         initialized: false,
         mode: MODE_DISABLED,
-        pollSeconds: 45,
-        idleSeconds: 60,
-        homeOnly: true,
+        pollSeconds: 5,
+        idleSeconds: 10,
+        homeOnly: false,
         suppressDuringPlayback: true,
         debounceSeconds: 5,
         toastMessage: '',
@@ -73,8 +75,7 @@
         lastForcedCheckTs: 0,
         pollTimer: null,
         reloadTimer: null,
-        reloadingNow: false,
-        noticeEl: null
+        reloadingNow: false
     };
 
     // ---------------------------------------------------------------------
@@ -113,9 +114,6 @@
     // Force-refresh bookkeeping (separate channel from the config revision).
     function forceSeenKey() {
         return `JE_client_force_refresh_seen:${getServerId()}:${getUserId()}`;
-    }
-    function forceAttemptedKey() {
-        return `JE_client_force_refresh_attempted:${getServerId()}:${getUserId()}`;
     }
 
     /** @returns {boolean} True when the current page load was a reload (F5, location.reload) rather than a fresh navigation. */
@@ -284,7 +282,6 @@
             }
 
             document.body.appendChild(el);
-            state.noticeEl = el;
         }
 
         const textEl = el.querySelector('.je-refresh-notice-text');
@@ -299,7 +296,6 @@
     function hideRefreshNeededNotice() {
         const el = document.getElementById(NOTICE_ID);
         if (el) el.remove();
-        state.noticeEl = null;
     }
 
     function updateNoticeVisibility() {
@@ -365,9 +361,8 @@
      * Admin-forced reload. Reloads IMMEDIATELY, bypassing every safety gate —
      * playback, paused media, idle, home-only and debounce. Triggered only by the
      * admin "Force all clients to refresh" action (a higher force-revision than the
-     * one this client last recorded). Loop-protected by stamping the seen + attempted
-     * markers before reloading so the reloaded page absorbs the value instead of
-     * forcing again.
+     * one this client last recorded). Loop-protected by recording the force as seen
+     * before reloading, so the reloaded page adopts the value instead of forcing again.
      */
     function forceReloadNow() {
         if (state.reloadingNow) return;
@@ -381,7 +376,6 @@
         }
         state.reloadingNow = true;
         writeNumber(window.localStorage, forceSeenKey(), target);
-        writeNumber(window.sessionStorage, forceAttemptedKey(), target);
         console.log(`🪼 Jellyfin Enhanced (client refresh): FORCED reload by admin (force revision ${target}).`);
         window.location.reload();
     }
@@ -576,7 +570,6 @@
      * from looping on the page it just produced.
      */
     function reconcileForceRevision() {
-        try { window.sessionStorage.removeItem(forceAttemptedKey()); } catch (e) { /* ignore */ }
         writeNumber(window.localStorage, forceSeenKey(), state.serverForceRevision);
     }
 
