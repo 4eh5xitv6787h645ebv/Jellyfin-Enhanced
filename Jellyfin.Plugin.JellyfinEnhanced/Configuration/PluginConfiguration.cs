@@ -29,6 +29,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             SplashScreenImageUrl = "/web/assets/img/banner-light.png";
             DevMode = false;
 
+            // Live updates (no hard refresh)
+            LiveUpdateEnabled = true;
+            LiveUpdateAutoReload = false;
+            LiveUpdateForceReload = false;
+
             // Jellyfin Elsewhere Settings
             ElsewhereEnabled = true;
             TMDB_API_KEY = "";
@@ -299,6 +304,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool EnableCustomSplashScreen { get; set; }
         public string SplashScreenImageUrl { get; set; }
         public bool DevMode { get; set; }
+
+        // Live-update (no-hard-refresh) behaviour, surfaced in the admin config page.
+        // Enabled: master switch for the client auto-converge poll (JE.liveUpdate).
+        // AutoReload: on a detected new build / saved config change, reload automatically
+        //   instead of showing a "Refresh" prompt (deferred while video is actively playing).
+        // ForceReload: make that reload a hard reload — clear cached assets + unregister
+        //   service workers first, for a guaranteed-fresh load.
+        public bool LiveUpdateEnabled { get; set; }
+        public bool LiveUpdateAutoReload { get; set; }
+        public bool LiveUpdateForceReload { get; set; }
 
 
         // Jellyfin Elsewhere Settings

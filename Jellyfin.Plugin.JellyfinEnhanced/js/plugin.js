@@ -578,6 +578,7 @@
                 'enhanced/bookmarks-library.js',
                 'enhanced/osd-rating.js',
                 'enhanced/pausescreen.js',
+                'enhanced/live-update.js',
 
                 // elsewhere
                 'elsewhere/elsewhere.js',
@@ -719,6 +720,10 @@
             }
 
             console.log('🪼 Jellyfin Enhanced: All components initialized successfully.');
+
+            // Start live convergence (no-hard-refresh): detect new builds / config saves and
+            // converge this open session without a manual reload. Safe no-op if absent.
+            if (typeof JE.liveUpdate?.start === 'function') JE.liveUpdate.start();
 
             // Final Stage: Hide splash screen
             if (typeof JE.hideSplashScreen === 'function') {

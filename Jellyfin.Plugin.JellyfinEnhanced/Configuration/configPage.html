@@ -2086,6 +2086,24 @@
                         </div>
                     </fieldset>
 
+                    <fieldset>
+                        <legend class="sectionTitle">Live Updates</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="liveUpdateEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Live Updates</span></label></div>
+                            <div class="je-setting-description" data-desc-for="liveUpdateEnabled">
+                                <div class="fieldDescription">Lets already-open tabs and devices notice a new plugin build or a saved config change and update without you manually clearing the cache / hard-refreshing. <br>Default: ON.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="liveUpdateAutoReload" is="emby-checkbox" type="checkbox"/><span>Auto-reload on change</span></label></div>
+                            <div class="je-setting-description" data-desc-for="liveUpdateAutoReload">
+                                <div class="fieldDescription">Reload the page automatically when the plugin updates or its config changes, instead of showing a "Refresh" prompt. Ideal for tabs or phones left open for a long time. Auto-reload waits until video playback is paused/finished, so it never interrupts watching. <br>Default: OFF (a dismissible prompt is shown instead).</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="liveUpdateForceReload" is="emby-checkbox" type="checkbox"/><span>Force a hard reload</span></label></div>
+                            <div class="je-setting-description" data-desc-for="liveUpdateForceReload">
+                                <div class="fieldDescription">When reloading (via the prompt or auto-reload), clear cached assets and unregister the service worker first to force a fully fresh load. Normally unnecessary — the plugin already cache-busts its scripts — but guarantees the newest assets on stubborn clients. <br>Default: OFF.</div>
+                            </div>
+                        </div>
+                    </fieldset>
+
                 </div>
 
                 <div id="keyboard" class="jellyfin-tab-content">
@@ -4095,6 +4113,9 @@
 
                 // Load all other settings
                 document.querySelector('#devMode').checked = config.DevMode;
+                document.querySelector('#liveUpdateEnabled').checked = config.LiveUpdateEnabled !== false; // default ON
+                document.querySelector('#liveUpdateAutoReload').checked = config.LiveUpdateAutoReload === true;
+                document.querySelector('#liveUpdateForceReload').checked = config.LiveUpdateForceReload === true;
                 document.querySelector('#maintenanceModeEnabled').checked = config.MaintenanceModeEnabled || false;
                 document.querySelector('#maintenanceModeMessage').value = config.MaintenanceModeMessage || '';
                 document.querySelector('#maintenanceModeNotificationMessage').value = config.MaintenanceModeNotificationMessage || '';
@@ -4407,6 +4428,9 @@
             });
             config.Shortcuts = finalShortcuts;
             config.DevMode = document.querySelector('#devMode').checked;
+            config.LiveUpdateEnabled = document.querySelector('#liveUpdateEnabled').checked;
+            config.LiveUpdateAutoReload = document.querySelector('#liveUpdateAutoReload').checked;
+            config.LiveUpdateForceReload = document.querySelector('#liveUpdateForceReload').checked;
             config.MaintenanceModeEnabled = document.querySelector('#maintenanceModeEnabled').checked;
             config.MaintenanceModeMessage = document.querySelector('#maintenanceModeMessage').value;
             config.MaintenanceModeNotificationMessage = document.querySelector('#maintenanceModeNotificationMessage').value;

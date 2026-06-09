@@ -127,6 +127,68 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
         private string IndexHtmlPath => Path.Combine(_applicationPaths.WebPath, "index.html");
 
+        // Cached DLL last-write timestamp. The loaded assembly file cannot change while
+        // the process runs, so this is computed once. It is the cache-busting component
+        // of CacheKey: every build/redeploy rewrites the DLL and produces a new value,
+        // even when Version is unchanged (local dev iterations).
+        private static long? _dllTimestampTicks;
+        internal static long DllTimestampTicks =>
+            _dllTimestampTicks ??= new FileInfo(typeof(JellyfinEnhanced).Assembly.Location).LastWriteTimeUtc.Ticks;
+
+        // Single source of truth for the script cache-busting key — the ?v= on every injected
+        // script URL. Shared by the on-disk index.html injector (UpdateIndexHtml) and the File
+        // Transformation patch (TransformationPatches.IndexHtml). It includes the DLL timestamp
+        // so a redeploy busts the browser cache. NOTE: this is intentionally NOT used for
+        // live-update reload decisions — those track the plugin Version (see GetRuntimeVersion),
+        // so a same-version redeploy does not force open clients to reload.
+        public string CacheKey => $"{Version}-{DllTimestampTicks}";
+
+        // Config revision the client's live-update poll compares to converge open sessions on a
+        // config change. It is PERSISTED to its own tiny file and advanced ONLY on a real admin
+        // save (UpdateConfiguration) — never by the internal SaveConfiguration() calls such as the
+        // shortcut backfill on startup. That makes it stable across server restarts and
+        // same-version redeploys (which rewrite the config file via backfill but must NOT look
+        // like a config change), while still changing the moment an admin saves settings.
+        private static long? _configRevisionTicks;
+        private static string ConfigRevisionFilePath
+        {
+            get
+            {
+                var cfg = Instance?.ConfigurationFilePath;
+                var dir = string.IsNullOrEmpty(cfg) ? null : Path.GetDirectoryName(cfg);
+                return string.IsNullOrEmpty(dir) ? string.Empty : Path.Combine(dir, "JellyfinEnhanced.configrev");
+            }
+        }
+        public static long ConfigRevisionTicks
+        {
+            get
+            {
+                if (_configRevisionTicks == null)
+                {
+                    try
+                    {
+                        var f = ConfigRevisionFilePath;
+                        _configRevisionTicks = (!string.IsNullOrEmpty(f) && File.Exists(f)
+                            && long.TryParse(File.ReadAllText(f).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))
+                            ? v : 0L;
+                    }
+                    catch { _configRevisionTicks = 0L; }
+                }
+                return _configRevisionTicks.Value;
+            }
+        }
+        private static void BumpConfigRevision()
+        {
+            try
+            {
+                var v = DateTime.UtcNow.Ticks;
+                _configRevisionTicks = v;
+                var f = ConfigRevisionFilePath;
+                if (!string.IsNullOrEmpty(f)) File.WriteAllText(f, v.ToString(CultureInfo.InvariantCulture));
+            }
+            catch { /* best-effort: a missed persist just resets to 0 next restart, harmless */ }
+        }
+
         public static string BrandingDirectory
         {
             get
@@ -166,6 +228,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
             base.UpdateConfiguration(configuration);
+            // Advance the persisted config revision so the client live-update poll converges open
+            // sessions on the new config. Done ONLY here (a real admin save) — not on the internal
+            // SaveConfiguration() backfill — so a restart or same-version redeploy is never
+            // mistaken for a config change.
+            BumpConfigRevision();
             try
             {
                 Controllers.JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
@@ -374,12 +441,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 }
 
                 var content = File.ReadAllText(indexPath);
-                // Append the DLL's last-write timestamp so that every build produces
-                // a distinct cache-busting value, even when the version number hasn't
-                // changed (e.g. during local dev/testing). In production the version
-                // bump alone would suffice, but the timestamp makes dev iterations safe.
-                var dllTimestamp = new FileInfo(typeof(JellyfinEnhanced).Assembly.Location).LastWriteTimeUtc.Ticks;
-                var cacheKey = $"{Version}-{dllTimestamp}";
+                // Version + DLL timestamp: a distinct cache-busting value on every build,
+                // even when the version number is unchanged (local dev). See CacheKey.
+                var cacheKey = CacheKey;
                 var devMode = Configuration?.DevMode == true;
                 var scriptUrl = $"../JellyfinEnhanced/script?v={cacheKey}";
                 var scriptTag = $"<script plugin=\"{Name}\" version=\"{cacheKey}\" dev=\"{(devMode ? "true" : "false")}\" src=\"{scriptUrl}\" defer></script>";

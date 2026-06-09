@@ -17,9 +17,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             }
 
             var pluginName = "Jellyfin Enhanced";
-            var pluginVersion = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown";
-            var dllTimestamp = new FileInfo(typeof(JellyfinEnhanced).Assembly.Location).LastWriteTimeUtc.Ticks;
-            var cacheKey = $"{pluginVersion}-{dllTimestamp}";
+            // Shared cache-busting key (the ?v=) so a redeploy serves fresh script files. This is
+            // for browser caching only; live-update reload decisions track Version. See CacheKey.
+            var cacheKey = JellyfinEnhanced.Instance?.CacheKey ?? "unknown";
             var devMode = JellyfinEnhanced.Instance?.Configuration?.DevMode == true;
 
             var scriptUrl = $"../JellyfinEnhanced/script?v={cacheKey}";

@@ -2547,6 +2547,30 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
+        // [AllowAnonymous]: runtime-version is polled by the client live-update module to
+        // converge open sessions without a manual refresh.
+        //   version       changes only on a real plugin update (the assembly Version). We
+        //                 deliberately do NOT expose the DLL-timestamp cache-key here: it
+        //                 changes on every redeploy/file-touch of the SAME version, which made
+        //                 open clients reload on every dev redeploy even though nothing the user
+        //                 cares about changed. Reloads should track real updates, not file
+        //                 mtimes. (Script ?v= cache-busting still uses the timestamp, so when a
+        //                 reload does happen the browser fetches fresh files.)
+        //   configVersion changes when an admin saves plugin config.
+        // Only these two non-sensitive identifiers are exposed — no settings, secrets or user
+        // data — so anonymous access (matching /version) is fine and lets logged-out tabs converge.
+        // no-store: the endpoint exists to observe change, so it must never be cached.
+        [HttpGet("runtime-version")]
+        public ActionResult GetRuntimeVersion()
+        {
+            Response.Headers["Cache-Control"] = "no-store";
+            return new JsonResult(new
+            {
+                version = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown",
+                configVersion = JellyfinEnhanced.ConfigRevisionTicks
+            });
+        }
+
         [HttpGet("private-config")]
         [Authorize]
         public ActionResult GetPrivateConfig()
@@ -2637,6 +2661,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 // Jellyfin Enhanced Settings
                 TmdbEnabled = tmdbEnabled,
+                // Live-update (no-hard-refresh) client behaviour — non-sensitive booleans.
+                LiveUpdateEnabled = config.LiveUpdateEnabled,
+                LiveUpdateAutoReload = config.LiveUpdateAutoReload,
+                LiveUpdateForceReload = config.LiveUpdateForceReload,
                 config.ToastDuration,
                 config.HelpPanelAutocloseDelay,
                 config.EnableCustomSplashScreen,
