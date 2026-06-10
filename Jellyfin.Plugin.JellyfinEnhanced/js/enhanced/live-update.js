@@ -6,19 +6,22 @@
 // does NOT cache (no fetch handler / Cache Storage), and JE's scripts are loaded with a
 // `?v={cacheKey}` that changes every build. So a *hard* reload (cache clear / Ctrl+Shift+R)
 // is never technically required — a NORMAL reload already picks up new code. The only thing
-// missing was convergence: nothing tells an open tab that a new plugin VERSION or a config
+// missing was convergence: nothing tells an open tab that a new plugin build or a config
 // change happened. This module adds that, cheaply:
 //
 //   • poll /JellyfinEnhanced/runtime-version (tiny, non-sensitive, no-store)
-//   • new version (plugin updated) / config saved -> converge per the admin settings below.
+//   • new build (buildId changed) / config saved (configVersion changed) -> converge per the
+//     admin settings below.
 //   • BroadcastChannel fans a detection out to sibling tabs.
 //
-// IMPORTANT — what counts as "a new build": we compare the plugin **Version**, NOT the
-// DLL-timestamp cache-key. The cache-key changes on every redeploy/file-touch of the SAME
-// version, which previously made open clients reload on every dev redeploy ("reloads all the
-// time even when nothing changed"). Reloads now happen only on a real version bump (or config
-// change). Cache-busting of script URLs still uses the timestamp, so when a reload DOES happen
-// the browser fetches fresh files.
+// IMPORTANT — what counts as "a new build": the server decides via `buildId`.
+//   • Normal: buildId = the plugin **Version**, so reloads track real updates only and a
+//     same-version redeploy/restart does NOT reload open tabs.
+//   • Dev Mode (Developer Settings -> Dev Mode): buildId = the full cache-key (Version + DLL
+//     timestamp), so EVERY redeploy reloads open tabs — convenient while iterating.
+// The client just compares whatever buildId the server returns; it doesn't choose the policy.
+// Cache-busting of script URLs always uses the timestamp, so when a reload happens the browser
+// fetches fresh files.
 //
 // Admin settings (from public-config -> JE.pluginConfig):
 //   LiveUpdateEnabled    master switch (default ON). When off, start() is a no-op.
@@ -44,7 +47,7 @@
     const state = {
         started: false,
         stopped: false,
-        baseVersion: null,       // plugin version the running code came from (seeded from server)
+        baseBuildId: null,       // build identity the running code came from (seeded from server)
         baseConfigVersion: null, // configVersion observed when this tab started
         pendingReload: null,     // reason string while a reload waits for playback to stop
         timer: null,
@@ -227,15 +230,15 @@
         const rv = await fetchRuntimeVersion();
         if (!rv || state.stopped) return;
 
-        const serverVersion = pick(rv, 'version');
+        const serverBuildId = pick(rv, 'buildId');
         const serverConfigVersion = pick(rv, 'configVersion');
-        if (state.baseVersion == null && serverVersion != null) state.baseVersion = serverVersion;
+        if (state.baseBuildId == null && serverBuildId != null) state.baseBuildId = serverBuildId;
         if (state.baseConfigVersion == null && serverConfigVersion != null) state.baseConfigVersion = serverConfigVersion;
 
-        // Real plugin update (version bump) => running code is stale.
-        if (serverVersion != null && state.baseVersion != null && String(serverVersion) !== String(state.baseVersion)) {
-            console.log(LOG, 'plugin update detected (' + state.baseVersion + ' -> ' + serverVersion + ') [' + reason + ']');
-            broadcast({ type: 'build', version: serverVersion });
+        // New build => running code is stale (Version bump, or any redeploy in Dev Mode).
+        if (serverBuildId != null && state.baseBuildId != null && String(serverBuildId) !== String(state.baseBuildId)) {
+            console.log(LOG, 'new build detected (' + state.baseBuildId + ' -> ' + serverBuildId + ') [' + reason + ']');
+            broadcast({ type: 'build', buildId: serverBuildId });
             if (autoReload()) scheduleReload('update');
             else showRefreshBanner(tr('live_update_new_version', 'Jellyfin Enhanced was updated.'));
             return; // a reload will pick up config too
@@ -260,7 +263,7 @@
     function onChannelMessage(ev) {
         const data = ev && ev.data;
         if (!data || state.stopped) return;
-        if (data.type === 'build' && state.baseVersion != null && String(data.version) !== String(state.baseVersion)) {
+        if (data.type === 'build' && state.baseBuildId != null && String(data.buildId) !== String(state.baseBuildId)) {
             if (autoReload()) scheduleReload('broadcast-update');
             else showRefreshBanner(tr('live_update_new_version', 'Jellyfin Enhanced was updated.'));
         } else if (data.type === 'config') {
@@ -274,14 +277,14 @@
         if (!isEnabled()) { console.log(LOG, 'live updates disabled by config; not starting.'); return; }
         state.started = true;
 
-        // Seed BOTH baselines from the authoritative endpoint (the version/config the SERVER is
+        // Seed BOTH baselines from the authoritative endpoint (the build/config the SERVER is
         // on when this page loaded its code). We do NOT read the injected <script> tag: in
         // DevMode it is irrelevant, and trusting it risked false "new build" loops.
         fetchRuntimeVersion().then(function (rv) {
             if (state.stopped || !rv) return;
-            const v = pick(rv, 'version'); if (v != null && state.baseVersion == null) state.baseVersion = v;
+            const bid = pick(rv, 'buildId'); if (bid != null && state.baseBuildId == null) state.baseBuildId = bid;
             const cv = pick(rv, 'configVersion'); if (cv != null && state.baseConfigVersion == null) state.baseConfigVersion = cv;
-            console.log(LOG, 'baseline version ' + state.baseVersion + ' (autoReload=' + autoReload() + ', forceReload=' + forceReload() + ')');
+            console.log(LOG, 'baseline build ' + state.baseBuildId + ' (autoReload=' + autoReload() + ', forceReload=' + forceReload() + ')');
         });
 
         state.timer = setInterval(function () { check('poll'); }, POLL_MS);

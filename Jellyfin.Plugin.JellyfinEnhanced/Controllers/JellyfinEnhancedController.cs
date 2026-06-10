@@ -2549,24 +2549,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         // [AllowAnonymous]: runtime-version is polled by the client live-update module to
         // converge open sessions without a manual refresh.
-        //   version       changes only on a real plugin update (the assembly Version). We
-        //                 deliberately do NOT expose the DLL-timestamp cache-key here: it
-        //                 changes on every redeploy/file-touch of the SAME version, which made
-        //                 open clients reload on every dev redeploy even though nothing the user
-        //                 cares about changed. Reloads should track real updates, not file
-        //                 mtimes. (Script ?v= cache-busting still uses the timestamp, so when a
-        //                 reload does happen the browser fetches fresh files.)
-        //   configVersion changes when an admin saves plugin config.
-        // Only these two non-sensitive identifiers are exposed — no settings, secrets or user
-        // data — so anonymous access (matching /version) is fine and lets logged-out tabs converge.
+        //   buildId       the identity the client compares to decide "is my code stale?".
+        //                 Normal: the plugin Version, so reloads track real updates only and a
+        //                 same-version redeploy/restart does NOT reload open tabs. Dev Mode
+        //                 (Developer Settings -> Dev Mode): the full cache-key (Version + DLL
+        //                 timestamp) instead, so EVERY redeploy of the same version reloads open
+        //                 tabs — convenient while iterating on the plugin. (Script ?v= cache-busting
+        //                 always uses the timestamp, so a reload fetches fresh files either way.)
+        //   configVersion changes when an admin saves plugin config (persisted; stable across restarts).
+        // Only these non-sensitive identifiers are exposed — no settings, secrets or user data —
+        // so anonymous access (matching /version) is fine and lets logged-out tabs converge.
         // no-store: the endpoint exists to observe change, so it must never be cached.
         [HttpGet("runtime-version")]
         public ActionResult GetRuntimeVersion()
         {
             Response.Headers["Cache-Control"] = "no-store";
+            var instance = JellyfinEnhanced.Instance;
+            var devMode = instance?.Configuration?.DevMode == true;
             return new JsonResult(new
             {
-                version = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown",
+                buildId = devMode ? (instance?.CacheKey ?? "unknown") : (instance?.Version.ToString() ?? "unknown"),
                 configVersion = JellyfinEnhanced.ConfigRevisionTicks
             });
         }
