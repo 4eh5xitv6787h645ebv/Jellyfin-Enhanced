@@ -56,6 +56,7 @@
         baseBuildId: null,         // build identity the running code came from (seeded from server)
         baseConfigVersion: null,   // configVersion observed when this tab started
         baseForceReloadId: null,   // admin force-refresh token observed when this tab started
+        lastPublicConfig: null,    // snapshot of public-config to diff against on a config change
         pendingReload: null,       // reason string while a reload waits for a blocker to clear
         timer: null,
         channel: null,
@@ -233,24 +234,37 @@
      * deliberately NOT merged into JE.pluginConfig here: changing one does not un-mount already-
      * rendered UI, so merging would desync the flags from the DOM. Those settle on reload/nav.
      */
+    async function fetchPublicConfig() {
+        if (typeof ApiClient === 'undefined') return null;
+        try { return await ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' }) || null; }
+        catch (_) { return null; }
+    }
+
     async function applyConfigChange() {
-        if (typeof ApiClient === 'undefined') return;
-        let cfg = null;
-        try {
-            cfg = await ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/public-config'), dataType: 'json' });
-        } catch (_) { /* converge next tick */ }
+        const cfg = await fetchPublicConfig();
+        let needsReload = false;
         if (cfg && typeof cfg === 'object') {
+            const base = state.lastPublicConfig;   // last public-config WE saw — apples-to-apples diff
             const merged = Object.assign({}, JE.pluginConfig);
-            ['LiveUpdateEnabled', 'LiveUpdateAutoReload'].forEach(function (k) {
-                const v = pick(cfg, k);
-                if (v !== undefined) merged[k] = v;
+            // Live-apply only the live-update controls. Anything else that changed needs a reload:
+            // structural features (custom tabs, plugin pages, feature toggles) can't be re-mounted
+            // live, but a normal reload re-runs JE and re-renders them — verified: a normal (not hard)
+            // reload converges Custom Tabs / sidebar changes.
+            Object.keys(cfg).forEach(function (k) {
+                if (k === 'LiveUpdateEnabled' || k === 'LiveUpdateAutoReload') { merged[k] = cfg[k]; return; }
+                if (base && String(cfg[k]) !== String(base[k])) needsReload = true;
             });
+            if (!base) needsReload = true;          // no baseline yet (startup race) -> offer refresh
             JE.pluginConfig = merged;
+            state.lastPublicConfig = cfg;
         }
         try { if (JE.themer && typeof JE.themer.init === 'function') JE.themer.init(); } catch (_) {}
         try {
             document.dispatchEvent(new CustomEvent('JellyfinEnhanced:configChanged', { detail: { config: cfg || JE.pluginConfig } }));
         } catch (_) {}
+        // A change we couldn't fully live-apply (custom tabs, feature toggles, …) needs a reload to
+        // show. Offer a one-click soft refresh instead of leaving the admin to hard-refresh.
+        if (needsReload) showRefreshBanner(tr('live_update_settings_changed', 'Jellyfin Enhanced settings changed — refresh to apply.'));
     }
 
     /** One convergence check. Cheap: a single tiny GET, skipped while hidden. */
@@ -344,6 +358,10 @@
             const fr = pick(rv, 'forceReloadId'); if (fr != null && state.baseForceReloadId == null) state.baseForceReloadId = fr;
             dlog(LOG, 'baseline build ' + state.baseBuildId + ' (autoReload=' + autoReload() + ')');
         });
+
+        // Snapshot public-config so a later config change can be diffed (which settings changed) to
+        // decide whether a reload is needed to converge (vs. a fully live-applied theme tweak).
+        fetchPublicConfig().then(function (pc) { if (!state.stopped && pc && state.lastPublicConfig == null) state.lastPublicConfig = pc; });
 
         state.timer = setInterval(function () { check('poll'); }, POLL_MS);
 
