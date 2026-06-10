@@ -217,6 +217,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         public override void OnUninstalling()
         {
             UpdateIndexHtml(false);
+            // Best-effort cleanup of the persisted config-revision file so uninstall leaves no residue.
+            try
+            {
+                var revFile = ConfigRevisionFilePath;
+                if (!string.IsNullOrEmpty(revFile) && File.Exists(revFile)) File.Delete(revFile);
+                _configRevisionTicks = null;
+            }
+            catch { /* best-effort */ }
             base.OnUninstalling();
         }
 

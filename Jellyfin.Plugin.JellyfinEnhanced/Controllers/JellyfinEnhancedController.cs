@@ -2533,17 +2533,23 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
+        // These resource endpoints are loaded by a plain <script>/<link> (no auth header), so they
+        // must stay anonymous. Explicit [AllowAnonymous] documents that and survives any future
+        // class-level [Authorize] hardening.
+        [AllowAnonymous]
         [HttpGet("script")]
         public ActionResult GetMainScript() => GetScriptResource("js/plugin.js");
+        [AllowAnonymous]
         [HttpGet("js/{**path}")]
         public ActionResult GetScript(string path) => GetScriptResource($"js/{path}");
         // Config-page stylesheet lives in Configuration/ next to configPage.html.
+        [AllowAnonymous]
         [HttpGet("Configuration/configPage.css")]
         public ActionResult GetConfigPageStylesheet() => GetScriptResource("Configuration/configPage.css");
-        // [AllowAnonymous]: version is loaded by translations.js cache-buster pre-login.
-        // Information disclosure of the plugin version is acceptable — Jellyfin core
-        // exposes its own version pre-auth too. CVEs against JE are tracked publicly
-        // so attackers do not need this endpoint to fingerprint a vulnerable version.
+        // version is loaded by translations.js cache-buster pre-login. Information disclosure of
+        // the plugin version is acceptable — Jellyfin core exposes its own version pre-auth too;
+        // CVEs against JE are tracked publicly so attackers don't need this to fingerprint a version.
+        [AllowAnonymous]
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
@@ -2567,6 +2573,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         // Only these non-sensitive identifiers are exposed — no settings, secrets or user data —
         // so anonymous access (matching /version) is fine and lets logged-out tabs converge.
         // no-store: the endpoint exists to observe change, so it must never be cached.
+        [AllowAnonymous]
         [HttpGet("runtime-version")]
         public ActionResult GetRuntimeVersion()
         {
@@ -2594,7 +2601,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 return Forbid();
             }
-            _forceReloadTicks = DateTime.UtcNow.Ticks;
+            // Coalesce rapid repeats (double-click / scripted token replay) so a force-refresh
+            // cannot storm every client with back-to-back hard reloads. One bump per 10s window
+            // is plenty — clients converge within the poll interval anyway.
+            var now = DateTime.UtcNow.Ticks;
+            if (now - _forceReloadTicks > TimeSpan.FromSeconds(10).Ticks)
+            {
+                _forceReloadTicks = now;
+            }
             return NoContent();
         }
 
@@ -2647,6 +2661,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         // unauthenticated callers — they only need login-screen toggles like
         // EnableLoginImage. Authenticated callers (any Jellyfin user) get the full
         // payload so client-side "Open in Seerr" deep links still work.
+        [AllowAnonymous]
         [HttpGet("public-config")]
         public ActionResult GetPublicConfig()
         {
