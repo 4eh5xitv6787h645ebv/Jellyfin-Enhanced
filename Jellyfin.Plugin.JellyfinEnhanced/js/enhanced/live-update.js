@@ -12,27 +12,25 @@
 //   • poll /JellyfinEnhanced/runtime-version (tiny, non-sensitive, no-store)
 //   • new build (buildId changed) / config saved (configVersion changed) -> converge per the
 //     admin settings below.
+//   • admin force-refresh (forceReloadId changed) -> hard reload immediately, overriding
+//     everything (the "Force refresh all clients" button on the config page).
 //   • BroadcastChannel fans a detection out to sibling tabs.
 //
-// IMPORTANT — what counts as "a new build": the server decides via `buildId`.
-//   • Normal: buildId = the plugin **Version**, so reloads track real updates only and a
-//     same-version redeploy/restart does NOT reload open tabs.
-//   • Dev Mode (Developer Settings -> Dev Mode): buildId = the full cache-key (Version + DLL
-//     timestamp), so EVERY redeploy reloads open tabs — convenient while iterating.
-// The client just compares whatever buildId the server returns; it doesn't choose the policy.
-// Cache-busting of script URLs always uses the timestamp, so when a reload happens the browser
-// fetches fresh files.
+// What counts as "a new build": the server decides via `buildId` — normally the plugin
+// Version (reload on real updates only); in Dev Mode the Version+DLL-timestamp cache-key
+// (reload on every redeploy). The client just compares whatever buildId the server returns.
+//
+// Auto-reload BLOCKERS (apply to automatic reloads only, NOT the manual Refresh button or the
+// admin force-refresh): never auto-reload while a video is actively playing or while the user
+// is on the JE config page. The reload is deferred (not dropped) and fires once the blocker
+// clears (playback ends / navigate away).
 //
 // Admin settings (from public-config -> JE.pluginConfig):
 //   LiveUpdateEnabled    master switch (default ON). When off, start() is a no-op.
 //   LiveUpdateAutoReload reload automatically on a change instead of showing a "Refresh"
-//                        prompt (default OFF). Auto-reload is DEFERRED while a video is
-//                        actively playing, then fires on pause/end or the next navigation.
-//   LiveUpdateForceReload make the reload a HARD reload: clear Cache Storage + unregister
-//                        service workers before reloading (default OFF).
+//                        prompt (default OFF).
 //
-// Everything here is fully torn down by JE.liveUpdate.stop(): interval, listeners, channel
-// and the banner node are all removed, leaving no residue (required for disable/uninstall).
+// Everything here is fully torn down by JE.liveUpdate.stop().
 (function () {
     'use strict';
 
@@ -47,9 +45,10 @@
     const state = {
         started: false,
         stopped: false,
-        baseBuildId: null,       // build identity the running code came from (seeded from server)
-        baseConfigVersion: null, // configVersion observed when this tab started
-        pendingReload: null,     // reason string while a reload waits for playback to stop
+        baseBuildId: null,         // build identity the running code came from (seeded from server)
+        baseConfigVersion: null,   // configVersion observed when this tab started
+        baseForceReloadId: null,   // admin force-refresh token observed when this tab started
+        pendingReload: null,       // reason string while a reload waits for a blocker to clear
         timer: null,
         channel: null,
         onVisibility: null,
@@ -60,7 +59,6 @@
     function pcfg() { return (JE && JE.pluginConfig) || {}; }
     function isEnabled() { return pcfg().LiveUpdateEnabled !== false; }   // default ON
     function autoReload() { return pcfg().LiveUpdateAutoReload === true; }
-    function forceReload() { return pcfg().LiveUpdateForceReload === true; }
 
     /**
      * Reads a property from a server JSON object case-insensitively, so the module is
@@ -105,12 +103,33 @@
     }
 
     /**
-     * Reload the page to pick up the change. Soft by default (which fully updates the app:
-     * the shell is no-cache and every script URL carries the NEW cacheKey). When ForceReload
-     * is set, first drop Cache Storage + service workers so even stubborn clients load fresh.
+     * True when the user is on the Jellyfin Enhanced plugin config page
+     * (#/configurationpage?name=Jellyfin%20Enhanced). Auto-reloading there would interrupt an
+     * admin editing settings — and a config save is exactly what would trigger it.
      */
-    function triggerReload(reason) {
-        const hard = forceReload();
+    function isOnConfigPage() {
+        try {
+            const h = (window.location.hash || '').toLowerCase();
+            if (h.indexOf('configurationpage') === -1) return false;
+            return decodeURIComponent(h).indexOf('name=jellyfin enhanced') !== -1;
+        } catch (_) { return false; }
+    }
+
+    /**
+     * Auto-reload blockers: never auto-reload while a video is actively playing or while the
+     * user is on the JE config page. The reload is deferred (not dropped) and fires once the
+     * blocker clears. The manual Refresh button and the admin force-refresh bypass this.
+     */
+    function shouldDeferReload() {
+        return isPlaying() || isOnConfigPage();
+    }
+
+    /**
+     * Reload the page to pick up the change. Soft by default (which fully updates the app:
+     * the shell is no-cache and every script URL carries the NEW cacheKey). When `hard`, first
+     * drop Cache Storage + service workers so even stubborn clients load fresh (admin force-refresh).
+     */
+    function triggerReload(reason, hard) {
         console.log(LOG, 'reloading (' + (hard ? 'hard' : 'soft') + ') [' + (reason || 'manual') + ']');
         const doReload = () => { try { location.reload(); } catch (_) { window.location.href = window.location.href; } };
         if (!hard) { doReload(); return; }
@@ -121,19 +140,19 @@
         Promise.allSettled([clearCaches, dropSW]).then(doReload);
     }
 
-    /** Reload now, or defer until playback stops if a video is currently playing. */
+    /** Auto-reload now (soft), or defer until the blocker (playback / config page) clears. */
     function scheduleReload(reason) {
-        if (isPlaying()) {
+        if (shouldDeferReload()) {
             state.pendingReload = reason;
-            console.log(LOG, 'reload deferred until playback stops [' + reason + ']');
+            console.log(LOG, 'reload deferred (playback or config page) [' + reason + ']');
             return;
         }
-        triggerReload(reason);
+        triggerReload(reason, false);
     }
 
     /**
      * Unobtrusive, dismissible banner offering a manual refresh (shown only when auto-reload
-     * is OFF). The Refresh button runs the same triggerReload() (honoring ForceReload).
+     * is OFF). The Refresh button does a soft reload (which fully updates the app).
      */
     function showRefreshBanner(message) {
         if (state.stopped) return;
@@ -169,7 +188,7 @@
             cursor: 'pointer', border: 'none', borderRadius: '6px', padding: '6px 12px',
             fontWeight: '600', color: '#fff', background: accent, whiteSpace: 'nowrap'
         });
-        refresh.addEventListener('click', function () { triggerReload('banner'); });
+        refresh.addEventListener('click', function () { triggerReload('banner', false); });
 
         const close = document.createElement('button');
         close.type = 'button';
@@ -195,8 +214,8 @@
 
     /**
      * Re-fetch the public plugin config and live-apply the safe, idempotent subset (used when
-     * auto-reload is OFF). Structural feature mount/unmount is intentionally NOT re-run here;
-     * those settle on the next navigation/reload.
+     * auto-reload is OFF). Structural feature mount/unmount is NOT re-run here; those settle on
+     * the next navigation/reload.
      */
     async function applyConfigChange() {
         if (typeof ApiClient === 'undefined') return;
@@ -213,29 +232,38 @@
     }
 
     /**
-     * One convergence check. Cheap: a single tiny GET, skipped while hidden or while a reload
-     * is already pending (waiting for playback to stop).
+     * One convergence check. Cheap: a single tiny GET, skipped while hidden.
      */
     async function check(reason) {
         if (state.stopped) return;
-
-        // A reload was deferred because media was playing — fire it once we're idle, else keep
-        // waiting (don't poll/redetect while a reload is already queued).
-        if (state.pendingReload) {
-            if (!isPlaying()) { const why = state.pendingReload; state.pendingReload = null; triggerReload(why); }
-            return;
-        }
-
-        if (document.hidden) return;
+        if (document.hidden) return;        // hidden tabs converge on visibilitychange
         const rv = await fetchRuntimeVersion();
         if (!rv || state.stopped) return;
 
         const serverBuildId = pick(rv, 'buildId');
         const serverConfigVersion = pick(rv, 'configVersion');
+        const serverForceId = pick(rv, 'forceReloadId');
         if (state.baseBuildId == null && serverBuildId != null) state.baseBuildId = serverBuildId;
         if (state.baseConfigVersion == null && serverConfigVersion != null) state.baseConfigVersion = serverConfigVersion;
+        if (state.baseForceReloadId == null && serverForceId != null) state.baseForceReloadId = serverForceId;
 
-        // New build => running code is stale (Version bump, or any redeploy in Dev Mode).
+        // 1. Admin force-refresh — HARD reload immediately, overriding every blocker (playback,
+        //    config page) and the auto-reload setting. "Refresh everyone now, no matter what."
+        if (serverForceId != null && state.baseForceReloadId != null && String(serverForceId) !== String(state.baseForceReloadId)) {
+            console.log(LOG, 'admin force-refresh [' + reason + ']');
+            state.baseForceReloadId = serverForceId;
+            broadcast({ type: 'force' });
+            triggerReload('force', true);
+            return;
+        }
+
+        // 2. A reload was deferred by a blocker — fire it once the blocker clears.
+        if (state.pendingReload) {
+            if (!shouldDeferReload()) { const why = state.pendingReload; state.pendingReload = null; triggerReload(why, false); }
+            return;
+        }
+
+        // 3. New build (Version bump, or any redeploy in Dev Mode) => running code is stale.
         if (serverBuildId != null && state.baseBuildId != null && String(serverBuildId) !== String(state.baseBuildId)) {
             console.log(LOG, 'new build detected (' + state.baseBuildId + ' -> ' + serverBuildId + ') [' + reason + ']');
             broadcast({ type: 'build', buildId: serverBuildId });
@@ -244,14 +272,13 @@
             return; // a reload will pick up config too
         }
 
-        // Config saved.
+        // 4. Config saved.
         if (serverConfigVersion != null && state.baseConfigVersion != null && String(serverConfigVersion) !== String(state.baseConfigVersion)) {
             console.log(LOG, 'config change detected [' + reason + ']');
             state.baseConfigVersion = serverConfigVersion;
             broadcast({ type: 'config', configVersion: serverConfigVersion });
             if (autoReload()) { scheduleReload('config'); return; }
             await applyConfigChange();
-            // If the admin turned live updates off, converge: stop polling now.
             if (!isEnabled()) { console.log(LOG, 'disabled via config; stopping.'); stop(); }
         }
     }
@@ -263,7 +290,9 @@
     function onChannelMessage(ev) {
         const data = ev && ev.data;
         if (!data || state.stopped) return;
-        if (data.type === 'build' && state.baseBuildId != null && String(data.buildId) !== String(state.baseBuildId)) {
+        if (data.type === 'force') {
+            triggerReload('force-broadcast', true); // sibling tab forced -> we force too
+        } else if (data.type === 'build' && state.baseBuildId != null && String(data.buildId) !== String(state.baseBuildId)) {
             if (autoReload()) scheduleReload('broadcast-update');
             else showRefreshBanner(tr('live_update_new_version', 'Jellyfin Enhanced was updated.'));
         } else if (data.type === 'config') {
@@ -277,14 +306,14 @@
         if (!isEnabled()) { console.log(LOG, 'live updates disabled by config; not starting.'); return; }
         state.started = true;
 
-        // Seed BOTH baselines from the authoritative endpoint (the build/config the SERVER is
-        // on when this page loaded its code). We do NOT read the injected <script> tag: in
-        // DevMode it is irrelevant, and trusting it risked false "new build" loops.
+        // Seed baselines from the authoritative endpoint (the build/config/force-token the
+        // SERVER is on when this page loaded). We do NOT read the injected <script> tag.
         fetchRuntimeVersion().then(function (rv) {
             if (state.stopped || !rv) return;
             const bid = pick(rv, 'buildId'); if (bid != null && state.baseBuildId == null) state.baseBuildId = bid;
             const cv = pick(rv, 'configVersion'); if (cv != null && state.baseConfigVersion == null) state.baseConfigVersion = cv;
-            console.log(LOG, 'baseline build ' + state.baseBuildId + ' (autoReload=' + autoReload() + ', forceReload=' + forceReload() + ')');
+            const fr = pick(rv, 'forceReloadId'); if (fr != null && state.baseForceReloadId == null) state.baseForceReloadId = fr;
+            console.log(LOG, 'baseline build ' + state.baseBuildId + ' (autoReload=' + autoReload() + ')');
         });
 
         state.timer = setInterval(function () { check('poll'); }, POLL_MS);

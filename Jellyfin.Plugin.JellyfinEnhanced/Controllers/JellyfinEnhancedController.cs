@@ -2547,6 +2547,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [HttpGet("version")]
         public ActionResult GetVersion() => Content(JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown");
 
+        // In-memory token bumped when an admin clicks "Force refresh all clients" (POST
+        // force-reload). Ephemeral on purpose: a forced refresh is a one-time "everyone reload
+        // now" event; it must NOT survive a restart (which would otherwise re-trigger reloads).
+        private static long _forceReloadTicks;
+
         // [AllowAnonymous]: runtime-version is polled by the client live-update module to
         // converge open sessions without a manual refresh.
         //   buildId       the identity the client compares to decide "is my code stale?".
@@ -2557,6 +2562,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         //                 tabs — convenient while iterating on the plugin. (Script ?v= cache-busting
         //                 always uses the timestamp, so a reload fetches fresh files either way.)
         //   configVersion changes when an admin saves plugin config (persisted; stable across restarts).
+        //   forceReloadId changes when an admin triggers a force-refresh; clients then HARD-reload
+        //                 immediately, overriding all blockers and the auto-reload setting.
         // Only these non-sensitive identifiers are exposed — no settings, secrets or user data —
         // so anonymous access (matching /version) is fine and lets logged-out tabs converge.
         // no-store: the endpoint exists to observe change, so it must never be cached.
@@ -2569,8 +2576,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return new JsonResult(new
             {
                 buildId = devMode ? (instance?.CacheKey ?? "unknown") : (instance?.Version.ToString() ?? "unknown"),
-                configVersion = JellyfinEnhanced.ConfigRevisionTicks
+                configVersion = JellyfinEnhanced.ConfigRevisionTicks,
+                forceReloadId = _forceReloadTicks
             });
+        }
+
+        // Admin-only: force every open Jellyfin Enhanced session to hard-reload immediately,
+        // overriding the auto-reload setting and all blockers (playback, config page). Triggered
+        // by the "Force refresh all clients" button on the config page. Bumps the in-memory token
+        // clients observe on their next runtime-version poll (and via BroadcastChannel for sibling
+        // tabs in the same browser).
+        [HttpPost("force-reload")]
+        [Authorize]
+        public ActionResult ForceReload()
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+            _forceReloadTicks = DateTime.UtcNow.Ticks;
+            return NoContent();
         }
 
         [HttpGet("private-config")]
@@ -2666,7 +2691,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // Live-update (no-hard-refresh) client behaviour — non-sensitive booleans.
                 LiveUpdateEnabled = config.LiveUpdateEnabled,
                 LiveUpdateAutoReload = config.LiveUpdateAutoReload,
-                LiveUpdateForceReload = config.LiveUpdateForceReload,
                 config.ToastDuration,
                 config.HelpPanelAutocloseDelay,
                 config.EnableCustomSplashScreen,

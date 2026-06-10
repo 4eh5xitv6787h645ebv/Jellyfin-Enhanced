@@ -2097,9 +2097,11 @@
                             <div class="je-setting-description" data-desc-for="liveUpdateAutoReload">
                                 <div class="fieldDescription">Reload the page automatically when the plugin updates or its config changes, instead of showing a "Refresh" prompt. Ideal for tabs or phones left open for a long time. Auto-reload waits until video playback is paused/finished, so it never interrupts watching. <br>Default: OFF (a dismissible prompt is shown instead).</div>
                             </div>
-                            <div class="checkboxContainer"><label><input id="liveUpdateForceReload" is="emby-checkbox" type="checkbox"/><span>Force a hard reload</span></label></div>
-                            <div class="je-setting-description" data-desc-for="liveUpdateForceReload">
-                                <div class="fieldDescription">When reloading (via the prompt or auto-reload), clear cached assets and unregister the service worker first to force a fully fresh load. Normally unnecessary — the plugin already cache-busts its scripts — but guarantees the newest assets on stubborn clients. <br>Default: OFF.</div>
+                            <button id="liveUpdateForceRefreshAll" is="emby-button" type="button" class="raised block" style="margin-top:0.6em;">
+                                <span>Force refresh all clients now</span>
+                            </button>
+                            <div class="je-setting-description" data-desc-for="liveUpdateForceRefreshAll">
+                                <div class="fieldDescription">Immediately hard-reloads <em>every</em> open Jellyfin Enhanced session (clearing cached assets), overriding all blockers — even during playback or while on this page, and regardless of the auto-reload setting. Use after pushing an update everyone needs right away. Clients refresh within ~60s (the convergence poll).</div>
                             </div>
                         </div>
                     </fieldset>
@@ -4115,7 +4117,31 @@
                 document.querySelector('#devMode').checked = config.DevMode;
                 document.querySelector('#liveUpdateEnabled').checked = config.LiveUpdateEnabled !== false; // default ON
                 document.querySelector('#liveUpdateAutoReload').checked = config.LiveUpdateAutoReload === true;
-                document.querySelector('#liveUpdateForceReload').checked = config.LiveUpdateForceReload === true;
+                // "Force refresh all clients" button -> POST force-reload (admin-only). onclick is
+                // idempotent across config reloads. Confirm first since it reloads everyone.
+                const jeForceBtn = document.querySelector('#liveUpdateForceRefreshAll');
+                if (jeForceBtn) {
+                    jeForceBtn.onclick = () => {
+                        const doForce = () => {
+                            ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl('/JellyfinEnhanced/force-reload') })
+                                .then(() => {
+                                    if (typeof Dashboard !== 'undefined' && Dashboard.alert) {
+                                        Dashboard.alert({ title: 'Force refresh', message: 'All open Jellyfin Enhanced sessions will hard-reload shortly (within ~60s).' });
+                                    }
+                                })
+                                .catch(() => {
+                                    if (typeof Dashboard !== 'undefined' && Dashboard.alert) {
+                                        Dashboard.alert({ title: 'Force refresh failed', message: 'Could not trigger a force refresh. Check the server logs.' });
+                                    }
+                                });
+                        };
+                        if (typeof Dashboard !== 'undefined' && Dashboard.confirm) {
+                            Dashboard.confirm('Force every open Jellyfin Enhanced session (all devices) to hard-reload now? This overrides playback and editing.', 'Force refresh all clients', (ok) => { if (ok) doForce(); });
+                        } else {
+                            doForce();
+                        }
+                    };
+                }
                 document.querySelector('#maintenanceModeEnabled').checked = config.MaintenanceModeEnabled || false;
                 document.querySelector('#maintenanceModeMessage').value = config.MaintenanceModeMessage || '';
                 document.querySelector('#maintenanceModeNotificationMessage').value = config.MaintenanceModeNotificationMessage || '';
@@ -4430,7 +4456,6 @@
             config.DevMode = document.querySelector('#devMode').checked;
             config.LiveUpdateEnabled = document.querySelector('#liveUpdateEnabled').checked;
             config.LiveUpdateAutoReload = document.querySelector('#liveUpdateAutoReload').checked;
-            config.LiveUpdateForceReload = document.querySelector('#liveUpdateForceReload').checked;
             config.MaintenanceModeEnabled = document.querySelector('#maintenanceModeEnabled').checked;
             config.MaintenanceModeMessage = document.querySelector('#maintenanceModeMessage').value;
             config.MaintenanceModeNotificationMessage = document.querySelector('#maintenanceModeNotificationMessage').value;
