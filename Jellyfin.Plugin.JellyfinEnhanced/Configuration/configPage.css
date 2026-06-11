@@ -2002,3 +2002,29 @@ div#radarrMappingsValidationResult,
 div#bazarrMappingsValidationResult {
     padding: 10px;
 }
+
+/* ---------------------------------------------------------------------------
+   Maintenance Mode (Admin tab) — user checklist panel
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedPage .je-mm-textarea {
+    resize: vertical;
+}
+#JellyfinEnhancedPage .je-mm-user-list {
+    margin-top: 0.75em;
+    padding: 0.75em;
+    background: var(--je-surface-1);
+    border: 1px solid var(--je-border);
+    border-radius: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    max-width: 480px;
+}
+#JellyfinEnhancedPage .je-mm-user-list-actions {
+    display: flex;
+    gap: 0.75em;
+    margin-bottom: 0.6em;
+}
+#JellyfinEnhancedPage .je-mm-users-loading {
+    opacity: 0.55;
+    font-size: 0.875em;
+}
