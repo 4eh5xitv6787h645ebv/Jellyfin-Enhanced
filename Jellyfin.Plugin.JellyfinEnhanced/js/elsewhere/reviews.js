@@ -920,7 +920,9 @@
                 /* Sit the buttons on the summary row, clear of the expand icon */
                 [dir="ltr"] .tmdb-reviews-section .emby-scrollbuttons { right: 2.6em; }
                 [dir="rtl"] .tmdb-reviews-section .emby-scrollbuttons { left: 2.6em; }
-                .tmdb-reviews-section .emby-scrollbuttons { padding-top: 0; }
+                /* paper-icon buttons are ~42px tall vs the ~28px summary row;
+                   lift them so the chevrons centre on the summary text */
+                .tmdb-reviews-section .emby-scrollbuttons { padding-top: 0; top: -0.5em; }
                 /* Plain-CSS fallback: the scroller stamps data-scroll-mode-x on
                    itself when it initialises; if the component never upgrades,
                    keep the row reachable with a regular overflow scroll. */
