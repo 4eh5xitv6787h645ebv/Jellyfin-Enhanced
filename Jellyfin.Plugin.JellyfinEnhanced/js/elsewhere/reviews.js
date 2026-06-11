@@ -598,13 +598,13 @@
                     actionBar.appendChild(writeBtn);
                 }
 
-                // Action bar, form and scroller share one wrapper: on desktop the
-                // scroller injects ‹ › buttons as its previous sibling and makes
-                // their parent the positioned container (emby-scroller-container),
-                // so they anchor to this wrapper's top right — aligned with the
-                // action bar, like core sections align them with their title row.
-                // Wrapping the whole <details> instead would put the buttons on
-                // top of the summary's expand icon.
+                // Action bar, form and scroller share one wrapper. It clips the
+                // row (overflow:hidden in CSS) so transform-mode scrolling can't
+                // slide cards under the poster, and it is kept position:static so
+                // the ‹ › buttons the scroller injects as its previous sibling
+                // anchor to the position:relative <details> instead — landing on
+                // the summary row, clear of the expand icon, and escaping this
+                // wrapper's clipping.
                 const scrollerSection = document.createElement('div');
                 scrollerSection.className = 'je-review-scroller-container';
                 reviewsSection.appendChild(scrollerSection);
