@@ -1998,78 +1998,62 @@
                         <div class="configSection">
 
                             <!-- Enable toggle -->
-                            <div class="checkboxContainer">
-                                <label>
-                                    <input id="maintenanceModeEnabled" is="emby-checkbox" type="checkbox"/>
-                                    <span>Enable Maintenance Mode</span>
-                                </label>
-                            </div>
-                            <div class="fieldDescription" style="margin-bottom:1.25em;">
-                                When enabled, the selected action is applied to affected users immediately on save.
-                                A banner is shown on the Jellyfin login page. Admins are <strong>never</strong> affected.
-                                Disabling restores all users automatically.
+                            <div class="checkboxContainer"><label><input id="maintenanceModeEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Maintenance Mode</span></label></div>
+                            <div class="je-setting-description" data-desc-for="maintenanceModeEnabled">
+                                <div class="fieldDescription">When enabled, the selected action is applied to affected users immediately on save. A banner is shown on the Jellyfin login page. Admins are <strong>never</strong> affected. Disabling restores all users automatically. <br>Default: OFF.</div>
                             </div>
 
                             <!-- Banner message -->
-                            <div class="inputContainer" style="margin-bottom:1.5em;">
+                            <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="maintenanceModeMessage">Login Page Banner Message</label>
-                                <textarea id="maintenanceModeMessage" is="emby-textarea" class="emby-textarea" rows="2"
-                                    placeholder="This server is currently undergoing maintenance. Please try again later."
-                                    style="width:100%;max-width:640px;box-sizing:border-box;resize:vertical;"></textarea>
+                                <textarea id="maintenanceModeMessage" is="emby-textarea" class="emby-textarea je-mm-textarea" rows="2"
+                                    placeholder="This server is currently undergoing maintenance. Please try again later."></textarea>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="maintenanceModeMessage">
                                 <div class="fieldDescription">Shown as a red banner at the top of every page (login + home). Plain text only.</div>
                             </div>
 
                             <!-- Notification message (broadcast) -->
-                            <div class="inputContainer" style="margin-bottom:1.5em;">
+                            <div class="inputContainer">
                                 <label class="inputLabel inputLabelUnfocused" for="maintenanceModeNotificationMessage">Active Session Notification</label>
-                                <textarea id="maintenanceModeNotificationMessage" is="emby-textarea" class="emby-textarea" rows="2"
-                                    placeholder="Server maintenance is starting. Please finish up and try again later."
-                                    style="width:100%;max-width:640px;box-sizing:border-box;resize:vertical;"></textarea>
+                                <textarea id="maintenanceModeNotificationMessage" is="emby-textarea" class="emby-textarea je-mm-textarea" rows="2"
+                                    placeholder="Server maintenance is starting. Please finish up and try again later."></textarea>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="maintenanceModeNotificationMessage">
                                 <div class="fieldDescription">Sent as a native Jellyfin popup to anyone currently watching — reaches all clients (web, mobile, TV apps).</div>
                             </div>
 
-                            <!-- Action selection -->
-                            <div style="margin-bottom:1.5em;">
-                                <div style="font-weight:600;margin-bottom:0.6em;">Action</div>
-                                <label style="display:flex;align-items:flex-start;gap:0.6em;margin-bottom:0.6em;cursor:pointer;">
-                                    <input type="checkbox" id="mmAction_accounts" style="margin-top:3px;flex-shrink:0;" checked/>
-                                    <span>
-                                        <strong>Disable user accounts</strong>
-                                        <span class="fieldDescription" style="display:block;margin:0;">Users cannot log in at all until maintenance ends.</span>
-                                    </span>
-                                </label>
-                                <label style="display:flex;align-items:flex-start;gap:0.6em;cursor:pointer;">
-                                    <input type="checkbox" id="mmAction_remote" style="margin-top:3px;flex-shrink:0;"/>
-                                    <span>
-                                        <strong>Disable remote connections</strong>
-                                        <span class="fieldDescription" style="display:block;margin:0;">Blocks connections from outside the local network; LAN access still works.</span>
-                                    </span>
-                                </label>
+                            <!-- Actions applied while maintenance is on -->
+                            <div class="checkboxContainer"><label><input id="mmAction_accounts" is="emby-checkbox" type="checkbox" checked/><span>Disable user accounts</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mmAction_accounts">
+                                <div class="fieldDescription">Users cannot log in at all until maintenance ends.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="mmAction_remote" is="emby-checkbox" type="checkbox"/><span>Disable remote connections</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mmAction_remote">
+                                <div class="fieldDescription">Blocks connections from outside the local network; LAN access still works.</div>
                             </div>
 
                             <!-- Affected users -->
-                            <div>
-                                <div style="font-weight:600;margin-bottom:0.6em;">Affected Users</div>
-                                <label style="display:flex;align-items:center;gap:0.6em;margin-bottom:0.5em;cursor:pointer;">
-                                    <input type="radio" name="maintenanceModeUsers" id="mmUsers_all" value="all" checked/>
-                                    <span>All non-admin users</span>
-                                </label>
-                                <label style="display:flex;align-items:center;gap:0.6em;cursor:pointer;">
-                                    <input type="radio" name="maintenanceModeUsers" id="mmUsers_select" value="select"/>
-                                    <span>Select specific users</span>
-                                </label>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="maintenanceModeUsers">Affected Users</label>
+                                <select is="emby-select" id="maintenanceModeUsers" name="maintenanceModeUsers" class="emby-select">
+                                    <option value="all">All non-admin users</option>
+                                    <option value="select">Select specific users</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="maintenanceModeUsers">
+                                <div class="fieldDescription">Apply maintenance to every non-admin user, or only to specific users picked below.</div>
+                            </div>
 
-                                <!-- User checklist — shown when "select" is chosen -->
-                                <div id="je-mm-user-list" style="display:none;margin-top:0.75em;padding:0.75em;
-                                    background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);
-                                    border-radius:6px;max-height:260px;overflow-y:auto;max-width:480px;">
-                                    <div style="display:flex;gap:0.75em;margin-bottom:0.6em;">
-                                        <button type="button" id="je-mm-select-all" style="padding:0.25em 0.8em;font-size:0.8em;border:1px solid rgba(255,255,255,0.3);border-radius:4px;background:rgba(255,255,255,0.08);color:inherit;cursor:pointer;">Select All</button>
-                                        <button type="button" id="je-mm-deselect-all" style="padding:0.25em 0.8em;font-size:0.8em;border:1px solid rgba(255,255,255,0.3);border-radius:4px;background:rgba(255,255,255,0.08);color:inherit;cursor:pointer;">Deselect All</button>
-                                    </div>
-                                    <div id="je-mm-users-inner">
-                                        <div id="je-mm-users-loading" style="opacity:0.55;font-size:0.875em;">Loading users…</div>
-                                    </div>
+                            <!-- User checklist — shown when "Select specific users" is chosen -->
+                            <div id="je-mm-user-list" class="je-mm-user-list" style="display:none;">
+                                <div class="je-mm-user-list-actions">
+                                    <button type="button" id="je-mm-select-all" class="raised raised-mini emby-button">Select All</button>
+                                    <button type="button" id="je-mm-deselect-all" class="raised raised-mini emby-button">Deselect All</button>
+                                </div>
+                                <div id="je-mm-users-inner">
+                                    <div id="je-mm-users-loading" class="je-mm-users-loading">Loading users…</div>
                                 </div>
                             </div>
 
@@ -4149,13 +4133,13 @@
                 const savedAction = config.MaintenanceModeAction || 'disable_accounts';
                 document.getElementById('mmAction_accounts').checked = savedAction === 'disable_accounts' || savedAction === 'both';
                 document.getElementById('mmAction_remote').checked   = savedAction === 'disable_remote'   || savedAction === 'both';
-                // Restore user selection radio + checkboxes
+                // Restore affected-users select + checklist visibility
                 const savedUsers = config.MaintenanceModeAffectedUsers || 'all';
                 if (savedUsers === 'all') {
-                    document.querySelector('#mmUsers_all').checked = true;
+                    document.querySelector('#maintenanceModeUsers').value = 'all';
                     document.getElementById('je-mm-user-list').style.display = 'none';
                 } else {
-                    document.querySelector('#mmUsers_select').checked = true;
+                    document.querySelector('#maintenanceModeUsers').value = 'select';
                     document.getElementById('je-mm-user-list').style.display = '';
                     // Preselected IDs will be applied after the user list loads
                     document.getElementById('je-mm-user-list').dataset.preselect = savedUsers;
@@ -4464,7 +4448,7 @@
             config.MaintenanceModeAction = (mmAccounts && mmRemote) ? 'both'
                                          : mmRemote                 ? 'disable_remote'
                                          :                            'disable_accounts';
-            const mmUsersMode = (document.querySelector('input[name="maintenanceModeUsers"]:checked') || {}).value || 'all';
+            const mmUsersMode = (document.querySelector('#maintenanceModeUsers') || {}).value || 'all';
             if (mmUsersMode === 'all') {
                 config.MaintenanceModeAffectedUsers = 'all';
             } else {
@@ -5061,17 +5045,15 @@
         }
 
         function setupMaintenanceModeControls() {
-            // Show/hide user checklist based on radio selection
-            document.querySelectorAll('input[name="maintenanceModeUsers"]').forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    const listEl = document.getElementById('je-mm-user-list');
-                    if (this.value === 'select') {
-                        listEl.style.display = '';
-                        loadMaintenanceUsers();
-                    } else {
-                        listEl.style.display = 'none';
-                    }
-                });
+            // Show/hide user checklist based on the Affected Users select
+            document.getElementById('maintenanceModeUsers').addEventListener('change', function() {
+                const listEl = document.getElementById('je-mm-user-list');
+                if (this.value === 'select') {
+                    listEl.style.display = '';
+                    loadMaintenanceUsers();
+                } else {
+                    listEl.style.display = 'none';
+                }
             });
 
             // Select All / Deselect All buttons
