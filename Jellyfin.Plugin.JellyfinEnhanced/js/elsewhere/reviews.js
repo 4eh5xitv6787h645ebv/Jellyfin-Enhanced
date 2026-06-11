@@ -894,7 +894,9 @@
                     font-feature-settings: 'liga';
                     -webkit-font-smoothing: antialiased;
                 }
-                .tmdb-reviews-section { margin: 2em 0 1em 0; display: flex !important; flex-direction: column;}
+                /* position:relative anchors the scroller's ‹ › buttons to the
+                   whole section so they sit in the summary row */
+                .tmdb-reviews-section { margin: 2em 0 1em 0; display: flex !important; flex-direction: column; position: relative;}
                 .tmdb-reviews-section summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-tap-highlight-color: transparent;}
                 .tmdb-reviews-section summary .expand-icon { color: rgba(255, 255, 255,.8);transition: transform 0.2s ease-in-out;}
                 .tmdb-reviews-section[open] summary .expand-icon { transform: rotate(180deg);}
@@ -902,6 +904,23 @@
                     display: flex;
                     padding: 1em 0.5em;
                 }
+                .tmdb-reviews-section .je-review-scroller-container {
+                    /* Desktop transform-mode scrolling doesn't clip at the frame,
+                       so without this, cards slide out of the row and under the
+                       poster. Native touch mode scrolls inside the frame and is
+                       unaffected. */
+                    overflow: hidden;
+                    /* The injected ‹ › buttons mark this wrapper
+                       emby-scroller-container (position:relative) on attach; keep
+                       it static so the buttons anchor to the <details> instead and
+                       land in the summary row — which also lets them escape this
+                       wrapper's overflow clipping. */
+                    position: static;
+                }
+                /* Sit the buttons on the summary row, clear of the expand icon */
+                [dir="ltr"] .tmdb-reviews-section .emby-scrollbuttons { right: 2.6em; }
+                [dir="rtl"] .tmdb-reviews-section .emby-scrollbuttons { left: 2.6em; }
+                .tmdb-reviews-section .emby-scrollbuttons { padding-top: 0; }
                 /* Plain-CSS fallback: the scroller stamps data-scroll-mode-x on
                    itself when it initialises; if the component never upgrades,
                    keep the row reachable with a regular overflow scroll. */
