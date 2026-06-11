@@ -597,15 +597,53 @@
                     writeBtn.textContent = JE.t('reviews_add');
                     actionBar.appendChild(writeBtn);
                 }
-                reviewsSection.appendChild(actionBar);
+
+                // Action bar, form and scroller share one wrapper: on desktop the
+                // scroller injects ‹ › buttons as its previous sibling and makes
+                // their parent the positioned container (emby-scroller-container),
+                // so they anchor to this wrapper's top right — aligned with the
+                // action bar, like core sections align them with their title row.
+                // Wrapping the whole <details> instead would put the buttons on
+                // top of the summary's expand icon.
+                const scrollerSection = document.createElement('div');
+                scrollerSection.className = 'je-review-scroller-container';
+                reviewsSection.appendChild(scrollerSection);
+                scrollerSection.appendChild(actionBar);
 
                 // ── Inline form placeholder (hidden until button clicked) ──────────
                 const formPlaceholder = document.createElement('div');
                 formPlaceholder.className = 'je-review-form-placeholder';
-                reviewsSection.appendChild(formPlaceholder);
+                scrollerSection.appendChild(formPlaceholder);
+
+                // Native horizontal scroller — the same emby-scroller component the
+                // core item-details rows (Cast & Crew, More Like This) use: mouse
+                // drag, hidden scrollbar and ‹ › buttons on desktop, free native
+                // touch scrolling on mobile, centered focus scrolling on TV.
+                // jellyfin-web's custom-element polyfill upgrades it when attached
+                // (same pattern as the Jellyseerr sections). Attributes mirror the
+                // itemDetails templates; the .scrollSlider child must exist before
+                // the section is inserted because attachedCallback queries it.
+                const scroller = document.createElement('div');
+                scroller.setAttribute('is', 'emby-scroller');
+                scroller.className = 'emby-scroller padded-top-focusscale padded-bottom-focusscale no-padding';
+                scroller.setAttribute('data-horizontal', 'true');
+                scroller.setAttribute('data-centerfocus', 'true');
 
                 const swipeContainer = document.createElement('div');
-                swipeContainer.className = 'tmdb-review-swipe-container';
+                swipeContainer.className = 'tmdb-review-swipe-container scrollSlider focuscontainer-x';
+                scroller.appendChild(swipeContainer);
+
+                // Card spacing lives inside each slot (padding, not flex gap) so a
+                // child's offsetWidth includes it: the native scroll buttons page
+                // by items[0].offsetWidth and would drift further off a card edge
+                // with every click if spacing sat between the children. Same trick
+                // as core's .card > .cardBox inner margin.
+                const appendCardToSlider = (card) => {
+                    const slot = document.createElement('div');
+                    slot.className = 'je-review-slot';
+                    slot.appendChild(card);
+                    swipeContainer.appendChild(slot);
+                };
 
                 // Render user reviews first (distinct border colour)
                 userReviews.forEach(userReview => {
@@ -659,17 +697,17 @@
                             }
                         }
                     );
-                    swipeContainer.appendChild(card);
+                    appendCardToSlider(card);
                 });
 
                 // Render TMDB reviews after
                 if (reviews && reviews.length > 0) {
                     reviews.slice(0, 10).forEach(review => {
-                        swipeContainer.appendChild(createReviewElement(review));
+                        appendCardToSlider(createReviewElement(review));
                     });
                 }
 
-                reviewsSection.appendChild(swipeContainer);
+                scrollerSection.appendChild(scroller);
 
                 // ── Form open/close helpers ──────────────────────────────────────
                 function openForm(existingReview) {
@@ -862,20 +900,36 @@
                 .tmdb-reviews-section[open] summary .expand-icon { transform: rotate(180deg);}
                 .tmdb-review-swipe-container {
                     display: flex;
-                    overflow-x: auto;
-                    gap: 1.2em;
                     padding: 1em 0.5em;
-                    scroll-snap-type: x mandatory;
+                }
+                /* Plain-CSS fallback: the scroller stamps data-scroll-mode-x on
+                   itself when it initialises; if the component never upgrades,
+                   keep the row reachable with a regular overflow scroll. */
+                .tmdb-reviews-section .emby-scroller:not([data-scroll-mode-x]) {
+                    overflow-x: auto;
+                }
+                .je-review-slot {
+                    flex: 0 0 85%;
+                    max-width: 550px;
+                    box-sizing: border-box;
+                    padding-right: 1.2em;
+                    display: flex;
+                }
+                [dir="rtl"] .je-review-slot {
+                    padding-right: 0;
+                    padding-left: 1.2em;
                 }
                 .tmdb-review-card {
-                    flex: 0 0 85%;
-                    max-width: 500px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    /* emby-scroller sets white-space:nowrap inline on the slider;
+                       review text must keep wrapping */
+                    white-space: normal;
                     background: rgba(0, 0, 0, 0.3);
                     border-radius: 8px;
                     border-left: 4px solid rgb(1, 180, 228);
                     padding: 1.5em;
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                    scroll-snap-align: start;
                     display: flex;
                     flex-direction: column;
                 }
@@ -883,7 +937,7 @@
                     border-left-color: rgb(94, 213, 95);
                     background: rgba(10, 26, 10, 0.52);
                 }
-                @media (min-width: 768px) { .tmdb-review-card { flex-basis: 400px; } }
+                @media (min-width: 768px) { .je-review-slot { flex-basis: 450px; } }
                 .tmdb-review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1em; }
                 .je-user-review-header { align-items: center; gap: 0.75em; }
                 .tmdb-review-author-info { display: flex; flex-direction: column; gap: 0.3em; flex: 1; }
