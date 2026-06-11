@@ -4137,7 +4137,11 @@
                 const savedUsers = config.MaintenanceModeAffectedUsers || 'all';
                 if (savedUsers === 'all') {
                     document.querySelector('#maintenanceModeUsers').value = 'all';
-                    document.getElementById('je-mm-user-list').style.display = 'none';
+                    const mmListEl = document.getElementById('je-mm-user-list');
+                    mmListEl.style.display = 'none';
+                    // Drop any stale preselection from an earlier select-mode load
+                    // so flipping back to "Select specific users" starts fresh.
+                    delete mmListEl.dataset.preselect;
                 } else {
                     document.querySelector('#maintenanceModeUsers').value = 'select';
                     document.getElementById('je-mm-user-list').style.display = '';
@@ -4454,6 +4458,27 @@
             } else {
                 const checked = Array.from(document.querySelectorAll('.je-mm-user-cb:checked')).map(cb => cb.value);
                 config.MaintenanceModeAffectedUsers = JSON.stringify(checked);
+            }
+            // Guard rails (see MaintenanceModeService.EnableAsync): an empty user
+            // list means "all non-admin users" to the backend, and with no action
+            // ticked the save silently falls back to disabling accounts. Refuse
+            // the save in either state while maintenance is enabled, so
+            // "Deselect All" can never lock out every user by accident.
+            if (config.MaintenanceModeEnabled) {
+                if (config.MaintenanceModeAffectedUsers === '[]') {
+                    Dashboard.alert({
+                        title: 'Maintenance Mode not saved',
+                        message: 'No users are selected. Pick at least one user, or choose "All non-admin users". Nothing was saved.'
+                    });
+                    return null;
+                }
+                if (!mmAccounts && !mmRemote) {
+                    Dashboard.alert({
+                        title: 'Maintenance Mode not saved',
+                        message: 'No action is selected. Tick "Disable user accounts" and/or "Disable remote connections". Nothing was saved.'
+                    });
+                    return null;
+                }
             }
             config.EnableCustomSplashScreen = document.querySelector('#enableCustomSplashScreen').checked;
             config.SplashScreenImageUrl = document.querySelector('#splashScreenImageUrl').value;
@@ -4842,9 +4867,18 @@
             var saveBtns = document.querySelectorAll('.je-save-dock-btn');
             saveBtns.forEach(function(b) { b.disabled = true; });
 
+            // Reported to programmatic callers (e.g. Jellyseerr user import) so
+            // they can stop when validation refuses the save or the save fails.
+            let saved = false;
             try {
                 const config = await buildConfigFromForm();
+                if (!config) {
+                    // Validation refused the save; the admin was already alerted.
+                    Dashboard.hideLoadingMsg();
+                    return false;
+                }
                 const result = await ApiClient.updatePluginConfiguration(pluginId, config);
+                saved = true;
                 // After JE config is persisted, sync any managed Custom Tabs entries.
                 // We surface non-OK results to the admin via Dashboard.alert so a
                 // partial failure doesn't hide behind the green "saved" toast.
@@ -4919,7 +4953,9 @@
                 _jeSaveInFlight = false;
                 saveBtns.forEach(function(b) { b.disabled = false; });
             }
-            return false;
+            // The submit listener ignores this (preventDefault already ran);
+            // programmatic callers use it as a success flag.
+            return saved;
         }
 
         // Saves current config and applies it to all users
@@ -4929,6 +4965,11 @@
                 try {
                     // First, save the current configuration
                     const config = await buildConfigFromForm();
+                    if (!config) {
+                        // Validation refused the save; the admin was already alerted.
+                        Dashboard.hideLoadingMsg();
+                        return;
+                    }
                     await ApiClient.updatePluginConfiguration(pluginId, config);
 
                     // Sync managed Custom Tabs entries — same flow as a normal save,
@@ -7552,8 +7593,18 @@
             resultDiv.style.display = 'none';
 
             try {
-                // Save config first so the server uses the current blocklist
-                await saveConfig(new Event('submit'));
+                // Save config first so the server uses the current blocklist.
+                // saveConfig resolves false when validation refuses the save
+                // (e.g. Maintenance Mode guard rails) or the save fails.
+                const saved = await saveConfig(new Event('submit'));
+                if (!saved) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.textContent = 'Config was not saved. Import was not attempted.';
+                    resultDiv.style.color = '#f44336';
+                    btn.disabled = false;
+                    btn.textContent = 'Import Users Now';
+                    return;
+                }
             } catch (e) {
                 resultDiv.style.display = 'block';
                 resultDiv.textContent = 'Could not save config. Import was not attempted.';
