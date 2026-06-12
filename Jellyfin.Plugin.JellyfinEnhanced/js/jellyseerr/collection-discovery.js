@@ -3,6 +3,10 @@
 (function(JE) {
     'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    JE.onBootReady(function() {
+
     const logPrefix = '🪼 Jellyfin Enhanced: Collection Discovery:';
 
     const processedPages = new Set();
@@ -322,4 +326,5 @@
         initialize();
     }
 
+    });
 })(window.JellyfinEnhanced);

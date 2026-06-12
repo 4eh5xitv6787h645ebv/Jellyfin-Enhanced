@@ -3,6 +3,10 @@
 (function(JE) {
   'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    JE.onBootReady(function() {
+
   if (!JE.pluginConfig?.BookmarksEnabled) {
     console.log('🪼 Jellyfin Enhanced: Bookmarks feature is disabled');
     return;
@@ -1164,4 +1168,5 @@
     };
   })();
 
+    });
 })(window.JellyfinEnhanced = window.JellyfinEnhanced || {});

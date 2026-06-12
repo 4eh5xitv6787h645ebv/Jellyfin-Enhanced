@@ -107,6 +107,30 @@
 
     const JE = window.JellyfinEnhanced; // Alias for internal use
 
+    // Deferred-boot latch. In bundled mode every module executes before any
+    // config has been fetched, so modules whose top-level body reads
+    // JE.pluginConfig/JE.userConfig register it here instead. The queue is
+    // flushed (in registration = bundle order) right after Stage 2, which is
+    // exactly when module bodies executed in the legacy per-file loading flow.
+    // After the flush, late registrations (unbundled fallback path) run
+    // immediately.
+    const bootReadyQueue = [];
+    let bootReadyFlushed = false;
+    JE.onBootReady = function(fn) {
+        if (bootReadyFlushed) {
+            try { fn(); } catch (e) { console.error('🪼 Jellyfin Enhanced: onBootReady callback failed:', e); }
+        } else {
+            bootReadyQueue.push(fn);
+        }
+    };
+    function flushBootReady() {
+        bootReadyFlushed = true;
+        while (bootReadyQueue.length) {
+            const fn = bootReadyQueue.shift();
+            try { fn(); } catch (e) { console.error('🪼 Jellyfin Enhanced: onBootReady callback failed:', e); }
+        }
+    }
+
     /**
      * Converts PascalCase object keys to camelCase recursively.
      * @param {object} obj - The object to convert.
@@ -338,9 +362,34 @@
         });
     }
 
+    function removeMaintenanceBanner() {
+        document.getElementById('je-maintenance-banner')?.remove();
+        document.getElementById('je-maintenance-banner-style')?.remove();
+    }
+
+    let loginImageScriptLoaded = false;
+    function applyEarlyPublicConfig(config) {
+        if (config?.MaintenanceModeEnabled === true) {
+            injectMaintenanceBanner(config.MaintenanceModeMessage);
+        } else {
+            removeMaintenanceBanner();
+        }
+
+        // Only load login image if enabled (default to false)
+        if (config?.EnableLoginImage === true && !loginImageScriptLoaded) {
+            loginImageScriptLoaded = true;
+            const loginImageScript = document.createElement('script');
+            loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + getScriptVersion());
+            loginImageScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load login image script.');
+            document.head.appendChild(loginImageScript);
+        }
+    }
+
     /**
-     * Loads the login image script early (checks config first).
-     * Also injects a maintenance banner when maintenance mode is active.
+     * Loads the login image script early and injects the maintenance banner.
+     * Applies instantly from a small cached copy of the public config (works
+     * pre-login where the boot snapshot is unavailable), then reconciles
+     * against a fresh fetch in the background.
      */
     function loadLoginImageEarly() {
         if (typeof ApiClient === 'undefined') {
@@ -348,24 +397,25 @@
             return;
         }
 
-        // Fetch the public config to check if login image / maintenance banner is needed
+        const serverId = (typeof ApiClient.serverId === 'function' ? ApiClient.serverId() : ApiClient._serverInfo?.Id) || 'srv';
+        const cacheKey = `JE_pubcfg:${serverId}`;
+        let cached = null;
+        try { cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch (e) { /* corrupted cache */ }
+        if (cached) applyEarlyPublicConfig(cached);
+
         ApiClient.ajax({
             type: 'GET',
             url: ApiClient.getUrl('/JellyfinEnhanced/public-config'),
             dataType: 'json'
         }).then((config) => {
-            // Show maintenance banner for all users (admins can dismiss it mentally)
-            if (config?.MaintenanceModeEnabled === true) {
-                injectMaintenanceBanner(config.MaintenanceModeMessage);
-            }
-
-            // Only load login image if enabled (default to false)
-            if (config?.EnableLoginImage === true) {
-                const loginImageScript = document.createElement('script');
-                loginImageScript.src = ApiClient.getUrl('/JellyfinEnhanced/js/extras/login-image.js?v=' + getScriptVersion());
-                loginImageScript.onerror = () => console.error('🪼 Jellyfin Enhanced: Failed to load login image script.');
-                document.head.appendChild(loginImageScript);
-            }
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    MaintenanceModeEnabled: config?.MaintenanceModeEnabled === true,
+                    MaintenanceModeMessage: config?.MaintenanceModeMessage || '',
+                    EnableLoginImage: config?.EnableLoginImage === true
+                }));
+            } catch (e) { /* quota */ }
+            applyEarlyPublicConfig(config);
         }).catch(() => {
             console.warn('🪼 Jellyfin Enhanced: Could not fetch config for login image, skipping.');
         });
@@ -397,6 +447,251 @@
         }
     }
 
+    // =========================================================================
+    // Boot snapshot (stale-while-revalidate)
+    //
+    // The processed boot state (pluginConfig incl. private merge and plugin-
+    // presence fixups, camelCased userConfig, translations) is persisted per
+    // server+user, keyed to the script cacheKey. On the next boot it hydrates
+    // synchronously — zero round trips before features initialize — while a
+    // background revalidation fetches /JellyfinEnhanced/boot-payload, diffs,
+    // re-persists, and emits 'je:config-updated' on change. A new plugin build
+    // changes the cacheKey, and DevMode uses a per-load cacheKey, so both
+    // automatically fall back to revalidate-first boots.
+    // =========================================================================
+    const BOOT_SNAPSHOT_VERSION = 1;
+
+    function getSnapshotKey() {
+        try {
+            const serverId = (typeof ApiClient.serverId === 'function' ? ApiClient.serverId() : ApiClient._serverInfo?.Id) || 'srv';
+            const userId = ApiClient.getCurrentUserId();
+            if (!userId) return null;
+            return `JE_boot:${BOOT_SNAPSHOT_VERSION}:${serverId}:${userId}`;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function readBootSnapshot(cacheKey) {
+        try {
+            const key = getSnapshotKey();
+            if (!key) return null;
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            const snap = JSON.parse(raw);
+            if (!snap || snap.cacheKey !== cacheKey || !snap.pluginConfig || !snap.userConfig) return null;
+            return snap;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function persistBootSnapshot(cacheKey) {
+        try {
+            const key = getSnapshotKey();
+            if (!key) return;
+            localStorage.setItem(key, JSON.stringify({
+                savedAt: Date.now(),
+                cacheKey,
+                pluginVersion: JE.pluginVersion,
+                pluginConfig: JE.pluginConfig,
+                userConfig: JE.userConfig,
+                translations: JE.translations
+            }));
+        } catch (e) { /* quota exceeded / privacy mode — snapshot boots just stay disabled */ }
+    }
+
+    function fetchBootPayload() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('/JellyfinEnhanced/boot-payload'),
+            dataType: 'json'
+        });
+    }
+
+    /** Merges public+private config and applies plugin-presence fixups. */
+    function applyPluginConfigFromPayload(payload) {
+        const cfg = (payload.PublicConfig && typeof payload.PublicConfig === 'object') ? payload.PublicConfig : {};
+        Object.assign(cfg, payload.PrivateConfig && typeof payload.PrivateConfig === 'object' ? payload.PrivateConfig : {});
+        if (!payload.HasCustomTabs) {
+            cfg.BookmarksUseCustomTabs = false;
+            cfg.CalendarUseCustomTabs = false;
+            cfg.HiddenContentUseCustomTabs = false;
+            cfg.DownloadsUseCustomTabs = false;
+        }
+        if (!payload.HasPluginPages) {
+            cfg.BookmarksUsePluginPages = false;
+            cfg.HiddenContentUsePluginPages = false;
+            cfg.DownloadsUsePluginPages = false;
+            cfg.CalendarUsePluginPages = false;
+        }
+        JE.pluginConfig = cfg;
+        JE.pluginVersion = payload.Version || 'unknown';
+    }
+
+    /** Builds the processed userConfig from a boot payload (same conversions as the per-file path). */
+    function buildUserConfigFromPayload(payload) {
+        const us = payload.UserSettings || {};
+        return {
+            settings: us.Settings && typeof us.Settings === 'object' ? toCamelCase(us.Settings) : {},
+            shortcuts: us.Shortcuts && typeof us.Shortcuts === 'object' ? us.Shortcuts : { Shortcuts: [] },
+            bookmark: us.Bookmark && typeof us.Bookmark === 'object' ? toCamelCase(us.Bookmark) : { bookmarks: {} },
+            elsewhere: us.Elsewhere && typeof us.Elsewhere === 'object' ? us.Elsewhere : {},
+            hiddenContent: us.HiddenContent && typeof us.HiddenContent === 'object' ? toCamelCase(us.HiddenContent) : { items: {}, settings: {} }
+        };
+    }
+
+    /** Server-triggered translation cache invalidation (rare admin action). */
+    async function handleTranslationCacheClear() {
+        const serverTranslationClearTs = JE.pluginConfig.ClearTranslationCacheTimestamp || 0;
+        const localTranslationClearTs = parseInt(localStorage.getItem('JE_translation_clear_ts') || '0', 10);
+        if (serverTranslationClearTs > localTranslationClearTs) {
+            console.log(`🪼 Jellyfin Enhanced: Server-triggered translation cache clear (${new Date(serverTranslationClearTs).toISOString()})`);
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && (key.startsWith('JE_translation_') || key.startsWith('JE_translation_ts_'))) {
+                    localStorage.removeItem(key);
+                }
+            }
+            localStorage.setItem('JE_translation_clear_ts', serverTranslationClearTs.toString());
+            JE.translations = await loadTranslations() || {};
+            JE.t = window.JellyfinEnhanced.t;
+        }
+    }
+
+    /** Background revalidation for snapshot boots. */
+    async function revalidateBootData(cacheKey) {
+        try {
+            const userConfigAtBoot = JSON.stringify(JE.userConfig);
+            const pluginConfigAtBoot = JSON.stringify(JE.pluginConfig);
+            await loadTranslationsModule();
+            const payload = await fetchBootPayload();
+            if (!payload || typeof payload !== 'object' || !payload.PublicConfig) return;
+
+            applyPluginConfigFromPayload(payload);
+            const serverUserConfig = buildUserConfigFromPayload(payload);
+            // Don't clobber user edits made since boot; otherwise adopt server state.
+            if (JSON.stringify(JE.userConfig) === userConfigAtBoot) {
+                JE.userConfig = serverUserConfig;
+            }
+            JE.translations = (await loadTranslations()) || JE.translations;
+            JE.t = window.JellyfinEnhanced.t;
+            await handleTranslationCacheClear();
+            try { injectMetadataIcons(!!JE.pluginConfig?.MetadataIconsEnabled); } catch (e) { /* non-fatal */ }
+            persistBootSnapshot(cacheKey);
+
+            if (JSON.stringify(JE.pluginConfig) !== pluginConfigAtBoot
+                || JSON.stringify(JE.userConfig) !== userConfigAtBoot) {
+                document.dispatchEvent(new CustomEvent('je:config-updated'));
+                console.debug('🪼 Jellyfin Enhanced: Boot config changed on revalidation; features converge on next navigation.');
+            }
+        } catch (e) {
+            console.debug('🪼 Jellyfin Enhanced: Boot revalidation failed (will retry next load):', e);
+        }
+    }
+
+    /**
+     * Legacy boot fetch fan-out (pre boot-payload servers): public-config +
+     * version + private-config + /Plugins + five user-settings files.
+     */
+    async function legacyBootLoad() {
+        await loadTranslationsModule();
+        const [[config, version], translations] = await Promise.all([
+            loadPluginData(),
+            loadTranslations() // Load translations first
+        ]);
+
+        JE.pluginConfig = config && typeof config === 'object' ? config : {};
+        JE.pluginVersion = version || 'unknown';
+        JE.translations = translations || {};
+        JE.t = window.JellyfinEnhanced.t; // Ensure the real function is assigned
+        await loadPrivateConfig();
+
+        // Clear stale UseCustomTabs / UsePluginPages config flags when those
+        // plugins are not installed.  Settings persist after uninstall, which
+        // causes sidebar injection to be skipped even though the delivery
+        // plugin is no longer present.
+        try {
+            const installedPlugins = await ApiClient.ajax({
+                type: 'GET', url: ApiClient.getUrl('/Plugins'), dataType: 'json'
+            });
+            if (!Array.isArray(installedPlugins)) throw new Error('Unexpected /Plugins response');
+            const hasCustomTabs = installedPlugins.some(p => p.Name === 'Custom Tabs');
+            const hasPluginPages = installedPlugins.some(p => p.Name === 'Plugin Pages');
+            if (!hasCustomTabs) {
+                JE.pluginConfig.BookmarksUseCustomTabs = false;
+                JE.pluginConfig.CalendarUseCustomTabs = false;
+                JE.pluginConfig.HiddenContentUseCustomTabs = false;
+                JE.pluginConfig.DownloadsUseCustomTabs = false;
+            }
+            if (!hasPluginPages) {
+                JE.pluginConfig.BookmarksUsePluginPages = false;
+                JE.pluginConfig.HiddenContentUsePluginPages = false;
+                JE.pluginConfig.DownloadsUsePluginPages = false;
+                JE.pluginConfig.CalendarUsePluginPages = false;
+            }
+        } catch (e) {
+            console.warn('🪼 Jellyfin Enhanced: Could not verify installed plugins:', e);
+        }
+
+        await handleTranslationCacheClear();
+
+        const userId = ApiClient.getCurrentUserId();
+        const fetchPromises = [
+            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/settings.json?_=${Date.now()}`), dataType: 'json' })
+                     .then(data => ({ name: 'settings', status: 'fulfilled', value: data }))
+                     .catch(e => ({ name: 'settings', status: 'rejected', reason: e })),
+            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/shortcuts.json?_=${Date.now()}`), dataType: 'json' })
+                     .then(data => ({ name: 'shortcuts', status: 'fulfilled', value: data }))
+                     .catch(e => ({ name: 'shortcuts', status: 'rejected', reason: e })),
+            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/bookmark.json?_=${Date.now()}`), dataType: 'json' })
+                     .then(data => ({ name: 'bookmark', status: 'fulfilled', value: data }))
+                     .catch(e => ({ name: 'bookmark', status: 'rejected', reason: e })),
+            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/elsewhere.json?_=${Date.now()}`), dataType: 'json' })
+                     .then(data => ({ name: 'elsewhere', status: 'fulfilled', value: data }))
+                     .catch(e => ({ name: 'elsewhere', status: 'rejected', reason: e })),
+            ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/hidden-content.json?_=${Date.now()}`), dataType: 'json' })
+                     .then(data => ({ name: 'hiddenContent', status: 'fulfilled', value: data }))
+                     .catch(e => ({ name: 'hiddenContent', status: 'rejected', reason: e }))
+        ];
+        // Use allSettled to get results even if some fetches fail
+        const results = await Promise.allSettled(fetchPromises);
+
+        JE.userConfig = { settings: {}, shortcuts: { Shortcuts: [] }, bookmark: { bookmarks: {} }, elsewhere: {}, hiddenContent: { items: {}, settings: {} } };
+        results.forEach(result => {
+            if (result.status === 'fulfilled' && result.value) {
+                const data = result.value;
+                if (data.status === 'fulfilled' && data.value && typeof data.value === 'object') {
+                    // *** CONVERT PASCALCASE TO CAMELCASE ***
+                    if (data.name === 'settings' || data.name === 'bookmark' || data.name === 'hiddenContent') {
+                        JE.userConfig[data.name] = toCamelCase(data.value);
+                    } else {
+                        JE.userConfig[data.name] = data.value;
+                    }
+                } else if (data.status === 'rejected') {
+                    if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
+                    else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
+                    else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
+                    else if (data.name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
+                    else JE.userConfig[data.name] = {};
+                } else {
+                    if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
+                    else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
+                    else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
+                    else if (data.name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
+                    else JE.userConfig[data.name] = {};
+                }
+            } else {
+                const name = result.value?.name || result.reason?.name || '';
+                if (name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
+                else if (name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
+                else if (name === 'elsewhere') JE.userConfig.elsewhere = {};
+                else if (name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
+                else if (name) JE.userConfig[name] = {};
+            }
+        });
+    }
+
     let mismatchRetryCount = 0;
     const MAX_MISMATCH_RETRIES = 100; // ~30s at 300ms intervals
 
@@ -416,9 +711,10 @@
             return;
         }
 
-        // Normal retry logic (no mismatch)
+        // Normal retry logic (no mismatch). 50ms keeps boot latency low — with
+        // the deferred bundle, ApiClient is usually ready on the first check.
         if (typeof ApiClient === 'undefined' || !ApiClient.getCurrentUserId?.()) {
-            setTimeout(initialize, 300);
+            setTimeout(initialize, 50);
             return;
         }
 
@@ -426,61 +722,46 @@
         mismatchRetryCount = 0;
 
         try {
-            // Stage 1: Load base configs and translations
-            await loadTranslationsModule();
-            const [[config, version], translations] = await Promise.all([
-                loadPluginData(),
-                loadTranslations() // Load translations first
-            ]);
+            // Stage 1+2: boot data. Snapshot boot hydrates synchronously (zero
+            // RTTs before features initialize) and revalidates in the
+            // background; otherwise one aggregated boot-payload request
+            // replaces the old fan-out (public-config + version + private-config
+            // + /Plugins + five user-settings files), with that fan-out kept as
+            // a fallback for older servers.
+            const bootCacheKey = String(getScriptVersion());
+            const bootSnapshot = readBootSnapshot(bootCacheKey);
 
-            JE.pluginConfig = config && typeof config === 'object' ? config : {};
-            JE.pluginVersion = version || 'unknown';
-            JE.translations = translations || {};
-            JE.t = window.JellyfinEnhanced.t; // Ensure the real function is assigned
-            await loadPrivateConfig();
+            // Prefetch full user object once (needed for admin check in arr-links etc.)
+            // Fire-and-forget alongside boot; result available as JE.currentUser
+            ApiClient.getCurrentUser().then(u => { JE.currentUser = u; }).catch(() => {});
 
-            // Clear stale UseCustomTabs / UsePluginPages config flags when those
-            // plugins are not installed.  Settings persist after uninstall, which
-            // causes sidebar injection to be skipped even though the delivery
-            // plugin is no longer present.
-            try {
-                const installedPlugins = await ApiClient.ajax({
-                    type: 'GET', url: ApiClient.getUrl('/Plugins'), dataType: 'json'
-                });
-                if (!Array.isArray(installedPlugins)) throw new Error('Unexpected /Plugins response');
-                const hasCustomTabs = installedPlugins.some(p => p.Name === 'Custom Tabs');
-                const hasPluginPages = installedPlugins.some(p => p.Name === 'Plugin Pages');
-                if (!hasCustomTabs) {
-                    JE.pluginConfig.BookmarksUseCustomTabs = false;
-                    JE.pluginConfig.CalendarUseCustomTabs = false;
-                    JE.pluginConfig.HiddenContentUseCustomTabs = false;
-                    JE.pluginConfig.DownloadsUseCustomTabs = false;
-                }
-                if (!hasPluginPages) {
-                    JE.pluginConfig.BookmarksUsePluginPages = false;
-                    JE.pluginConfig.HiddenContentUsePluginPages = false;
-                    JE.pluginConfig.DownloadsUsePluginPages = false;
-                    JE.pluginConfig.CalendarUsePluginPages = false;
-                }
-            } catch (e) {
-                console.warn('🪼 Jellyfin Enhanced: Could not verify installed plugins:', e);
-            }
-
-            // Check if server has triggered a translation cache clear
-            const serverTranslationClearTs = JE.pluginConfig.ClearTranslationCacheTimestamp || 0;
-            const localTranslationClearTs = parseInt(localStorage.getItem('JE_translation_clear_ts') || '0', 10);
-            if (serverTranslationClearTs > localTranslationClearTs) {
-                console.log(`🪼 Jellyfin Enhanced: Server-triggered translation cache clear (${new Date(serverTranslationClearTs).toISOString()})`);
-                for (let i = localStorage.length - 1; i >= 0; i--) {
-                    const key = localStorage.key(i);
-                    if (key && (key.startsWith('JE_translation_') || key.startsWith('JE_translation_ts_'))) {
-                        localStorage.removeItem(key);
-                    }
-                }
-                localStorage.setItem('JE_translation_clear_ts', serverTranslationClearTs.toString());
-                // Reload translations with fresh data
-                JE.translations = await loadTranslations() || {};
+            if (bootSnapshot) {
+                JE.bootMode = 'snapshot';
+                JE.pluginConfig = bootSnapshot.pluginConfig;
+                JE.userConfig = bootSnapshot.userConfig;
+                JE.translations = bootSnapshot.translations || {};
+                JE.pluginVersion = bootSnapshot.pluginVersion || 'unknown';
                 JE.t = window.JellyfinEnhanced.t;
+                revalidateBootData(bootCacheKey); // fire-and-forget
+            } else {
+                JE.bootMode = 'network';
+                await loadTranslationsModule();
+                let bootPayload = null;
+                try {
+                    bootPayload = await fetchBootPayload();
+                } catch (e) {
+                    console.warn('🪼 Jellyfin Enhanced: boot-payload unavailable, falling back to legacy boot fetches:', e);
+                }
+                if (bootPayload && typeof bootPayload === 'object' && bootPayload.PublicConfig) {
+                    applyPluginConfigFromPayload(bootPayload);
+                    JE.userConfig = buildUserConfigFromPayload(bootPayload);
+                    JE.translations = (await loadTranslations()) || {};
+                    JE.t = window.JellyfinEnhanced.t;
+                    await handleTranslationCacheClear();
+                } else {
+                    await legacyBootLoad();
+                }
+                persistBootSnapshot(bootCacheKey);
             }
 
             // Inject metadata icons CSS if enabled
@@ -490,79 +771,29 @@
                 console.warn('🪼 Jellyfin Enhanced: Failed to inject Metadata icons CSS', e);
             }
 
-            // Stage 2: Fetch user-specific settings
-            const userId = ApiClient.getCurrentUserId();
 
-            // Prefetch full user object once (needed for admin check in arr-links etc.)
-            // Fire-and-forget alongside stage-2 network calls; result available as JE.currentUser
-            ApiClient.getCurrentUser().then(u => { JE.currentUser = u; }).catch(() => {});
-
-            const fetchPromises = [
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/settings.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'settings', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'settings', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/shortcuts.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'shortcuts', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'shortcuts', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/bookmark.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'bookmark', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'bookmark', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/elsewhere.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'elsewhere', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'elsewhere', status: 'rejected', reason: e })),
-                ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/hidden-content.json?_=${Date.now()}`), dataType: 'json' })
-                         .then(data => ({ name: 'hiddenContent', status: 'fulfilled', value: data }))
-                         .catch(e => ({ name: 'hiddenContent', status: 'rejected', reason: e }))
-            ];
-            // Use allSettled to get results even if some fetches fail
-            const results = await Promise.allSettled(fetchPromises);
-
-            JE.userConfig = { settings: {}, shortcuts: { Shortcuts: [] }, bookmark: { bookmarks: {} }, elsewhere: {}, hiddenContent: { items: {}, settings: {} } };
-            results.forEach(result => {
-                if (result.status === 'fulfilled' && result.value) {
-                    const data = result.value;
-                    if (data.status === 'fulfilled' && data.value && typeof data.value === 'object') {
-                        // *** CONVERT PASCALCASE TO CAMELCASE ***
-                        if (data.name === 'settings' || data.name === 'bookmark' || data.name === 'hiddenContent') {
-                            JE.userConfig[data.name] = toCamelCase(data.value);
-                        } else {
-                            JE.userConfig[data.name] = data.value;
-                        }
-                    } else if (data.status === 'rejected') {
-                        if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                        else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
-                        else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
-                        else if (data.name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
-                        else JE.userConfig[data.name] = {};
-                    } else {
-                        if (data.name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                        else if (data.name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
-                        else if (data.name === 'elsewhere') JE.userConfig.elsewhere = {};
-                        else if (data.name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
-                        else JE.userConfig[data.name] = {};
-                    }
-                } else {
-                    const name = result.value?.name || result.reason?.name || '';
-                    if (name === 'shortcuts') JE.userConfig.shortcuts = { Shortcuts: [] };
-                    else if (name === 'bookmark') JE.userConfig.bookmark = { bookmarks: {} };
-                    else if (name === 'elsewhere') JE.userConfig.elsewhere = {};
-                    else if (name === 'hiddenContent') JE.userConfig.hiddenContent = { items: {}, settings: {} };
-                    else if (name) JE.userConfig[name] = {};
-                }
-            });
-
+            // Configs and user settings are loaded: run deferred module bodies
+            // (bundled mode). Must happen before Stage 4 so their exports exist
+            // for loadSettings/initializers below.
+            flushBootReady();
 
             // Initialize splash screen
             if (typeof JE.initializeSplashScreen === 'function') {
                 JE.initializeSplashScreen();
             }
 
-            // Stage 3: Load ALL component scripts
+            // Stage 3: Load ALL component scripts.
+            // When served as the server-side bundle (window.__JE_BUNDLED), every
+            // module already executed in load-order.json order before initialize()
+            // resumed, so no network loading is needed. This array is the fallback
+            // load order when the bundle is unavailable — keep it in sync with
+            // js/load-order.json.
             const basePath = '/JellyfinEnhanced/js';
             const allComponentScripts = [
                 // enhanced
                 'enhanced/config.js',
                 'enhanced/helpers.js',
+                'enhanced/view-router.js',
                 'enhanced/tag-pipeline.js',
                 'enhanced/icons.js',
                 'enhanced/features.js',
@@ -627,8 +858,10 @@
                 // others
                 'others/letterboxd-links.js',
             ];
-            await loadScripts(allComponentScripts, basePath);
-            console.log('🪼 Jellyfin Enhanced: All component scripts loaded.');
+            if (!window.__JE_BUNDLED) {
+                await loadScripts(allComponentScripts, basePath);
+                console.log('🪼 Jellyfin Enhanced: All component scripts loaded.');
+            }
 
             // Stage 4: Initialize core settings/shortcuts using potentially defined functions
             if (typeof JE.loadSettings === 'function' && typeof JE.initializeShortcuts === 'function') {
@@ -640,6 +873,7 @@
                  return;
             }
 
+            const userId = ApiClient.getCurrentUserId();
             if (userId) {
                 const languageKey = `${userId}-language`;
                 // Only seed the admin's default language if the user has no language set yet.
@@ -718,6 +952,10 @@
                 JE.initializeHiddenContentPage();
             }
 
+            // Fire lifecycle hooks for the page the user is already on
+            // (deep links / the boot landing page).
+            try { JE.viewRouter?.kickstart(); } catch (e) { console.warn('🪼 Jellyfin Enhanced: viewRouter kickstart failed:', e); }
+
             console.log('🪼 Jellyfin Enhanced: All components initialized successfully.');
 
             // Final Stage: Hide splash screen
@@ -733,13 +971,26 @@
         }
     }
 
-    // Load splash screen immediately (before main initialization)
-    loadSplashScreenEarly();
+    if (window.__JE_BUNDLED) {
+        // Bundled mode: every module in this file executes within the current
+        // task, so defer boot one microtask until all of them have defined
+        // their JE.* exports. translations.js and splashscreen.js are part of
+        // the bundle; login-image.js stays dynamically loaded (conditional,
+        // pre-login path).
+        queueMicrotask(() => {
+            if (typeof JE.initializeSplashScreen === 'function') JE.initializeSplashScreen();
+            loadLoginImageEarly();
+            initialize();
+        });
+    } else {
+        // Load splash screen immediately (before main initialization)
+        loadSplashScreenEarly();
 
-    // Load login image immediately (before main initialization)
-    loadLoginImageEarly();
+        // Load login image immediately (before main initialization)
+        loadLoginImageEarly();
 
-    // Then start main initialization
-    initialize();
+        // Then start main initialization
+        initialize();
+    }
 
 })();

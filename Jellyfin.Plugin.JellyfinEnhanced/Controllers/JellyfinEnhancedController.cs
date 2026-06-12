@@ -55,6 +55,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly Services.TagCacheService _tagCacheService;
         private readonly MediaBrowser.Controller.Session.ISessionManager _sessionManager;
         private readonly Services.MaintenanceModeService _maintenanceModeService;
+        private readonly MediaBrowser.Common.Plugins.IPluginManager _pluginManager;
 
         // Server-side cache for proxied avatar images to avoid re-fetching from
         // upstream Seerr on every request. Entries expire after 1 hour.
@@ -165,7 +166,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             IDbContextFactory<JellyfinDbContext> dbContextFactory,
             Services.TagCacheService tagCacheService,
             MediaBrowser.Controller.Session.ISessionManager sessionManager,
-            Services.MaintenanceModeService maintenanceModeService)
+            Services.MaintenanceModeService maintenanceModeService,
+            MediaBrowser.Common.Plugins.IPluginManager pluginManager)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -179,6 +181,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _tagCacheService = tagCacheService;
             _sessionManager = sessionManager;
             _maintenanceModeService = maintenanceModeService;
+            _pluginManager = pluginManager;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId, bool bypassCache = false, bool allowAutoImport = true)
@@ -2534,7 +2537,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         [HttpGet("script")]
-        public ActionResult GetMainScript() => GetScriptResource("js/plugin.js");
+        public ActionResult GetMainScript()
+        {
+            try
+            {
+                var bundle = Helpers.ScriptBundler.GetBundle(_logger);
+                var devMode = JellyfinEnhanced.Instance?.Configuration?.DevMode == true;
+                Response.Headers["Cache-Control"] = devMode ? "no-store" : "public, max-age=31536000, immutable";
+                return Content(bundle, "application/javascript");
+            }
+            catch (Exception ex)
+            {
+                // Kill switch: serving the raw entrypoint restores the legacy
+                // per-file loading path (plugin.js loads modules itself when
+                // window.__JE_BUNDLED is not set).
+                _logger.Error($"Script bundling failed, serving unbundled plugin.js: {ex.Message}");
+                return GetScriptResource("js/plugin.js");
+            }
+        }
         [HttpGet("js/{**path}")]
         public ActionResult GetScript(string path) => GetScriptResource($"js/{path}");
         // Config-page stylesheet lives in Configuration/ next to configPage.html.
@@ -2568,7 +2588,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // still see a server-side error entry on private-config load.
             WarnIfArrInstancesCorrupt(config);
 
-            return new JsonResult(new
+            return new JsonResult(BuildPrivateConfigPayload(config));
+        }
+
+        /// <summary>
+        /// Builds the admin-only private-config payload object. Shared by
+        /// /private-config and /boot-payload.
+        /// </summary>
+        private object BuildPrivateConfigPayload(PluginConfiguration config)
+        {
+            return new
             {
                 // For Arr Links (legacy single-instance fields, kept for backward compat)
                 config.SonarrUrl,
@@ -2588,8 +2617,66 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // action endpoint to round-trip a corruption error envelope.
                 SonarrInstancesCorrupt = config.IsSonarrInstancesCorrupt(),
                 RadarrInstancesCorrupt = config.IsRadarrInstancesCorrupt(),
+            };
+        }
+        /// <summary>
+        /// One-request boot aggregate. Replaces the boot-time fan-out of
+        /// public-config + private-config + version + /Plugins + five
+        /// user-settings/*.json fetches with a single authenticated round trip.
+        /// Sub-payload shapes are byte-identical to the individual endpoints so
+        /// the client processes them with the same code paths.
+        /// </summary>
+        [HttpGet("boot-payload")]
+        [Authorize]
+        public ActionResult GetBootPayload()
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null)
+            {
+                return StatusCode(503);
+            }
+
+            var callerUserId = UserHelper.GetCurrentUserId(User);
+            if (!callerUserId.HasValue)
+            {
+                return Forbid();
+            }
+
+            // UserConfigurationManager expects folder names in N format (without dashes).
+            var authorizedUserId = callerUserId.Value.ToString("N");
+
+            bool hasCustomTabs = false, hasPluginPages = false;
+            try
+            {
+                foreach (var p in _pluginManager.Plugins)
+                {
+                    if (p.Name == "Custom Tabs") hasCustomTabs = true;
+                    else if (p.Name == "Plugin Pages") hasPluginPages = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"boot-payload: plugin presence check failed: {ex.Message}");
+            }
+
+            return new JsonResult(new
+            {
+                Version = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown",
+                PublicConfig = BuildPublicConfigPayload(config),
+                PrivateConfig = IsAdminUser() ? BuildPrivateConfigPayload(config) : new { },
+                HasCustomTabs = hasCustomTabs,
+                HasPluginPages = hasPluginPages,
+                UserSettings = new
+                {
+                    Settings = GetOrSeedUserSettings(authorizedUserId),
+                    Shortcuts = _userConfigurationManager.GetUserConfiguration<UserShortcuts>(authorizedUserId, "shortcuts.json"),
+                    Bookmark = _userConfigurationManager.GetUserConfiguration<UserBookmark>(authorizedUserId, "bookmark.json"),
+                    Elsewhere = _userConfigurationManager.GetUserConfiguration<ElsewhereSettings>(authorizedUserId, "elsewhere.json"),
+                    HiddenContent = GetOrSeedUserHiddenContent(authorizedUserId)
+                }
             });
         }
+
         // [AllowAnonymous]: public-config is loaded by `loadLoginImageEarly` before
         // the user logs in, so we cannot gate the whole endpoint on [Authorize].
         // Instead, sensitive Seerr fields (BaseUrl, UrlMappings) are REDACTED for
@@ -2605,6 +2692,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(503);
             }
 
+            return new JsonResult(BuildPublicConfigPayload(config));
+        }
+
+        /// <summary>
+        /// Builds the public-config payload object. Shared by /public-config and
+        /// /boot-payload so the two stay identical in shape.
+        /// </summary>
+        private object BuildPublicConfigPayload(PluginConfiguration config)
+        {
             // Expose whether TMDB is configured as a boolean so all users
             // (including non-admin) can use TMDB-dependent features like
             // Reviews and Elsewhere without leaking the actual API key.
@@ -2633,7 +2729,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 jellyseerrUrlMappings = config.JellyseerrUrlMappings ?? string.Empty;
             }
 
-            return new JsonResult(new
+            return new
             {
                 // Jellyfin Enhanced Settings
                 TmdbEnabled = tmdbEnabled,
@@ -2809,7 +2905,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.MaintenanceModeAction,
                 config.MaintenanceModeAffectedUsers,
 
-            });
+            };
         }
 
         [HttpGet("tmdb/{**apiPath}")]
@@ -3078,6 +3174,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return authorizationResult;
             }
 
+            return Ok(GetOrSeedUserSettings(authorizedUserId));
+        }
+
+        /// <summary>
+        /// Reads the user's settings.json, seeding it from the plugin-configuration
+        /// defaults on first access. Shared by the settings.json endpoint and /boot-payload.
+        /// </summary>
+        private UserSettings GetOrSeedUserSettings(string authorizedUserId)
+        {
             // Populate defaults from plugin configuration if missing
             if (!_userConfigurationManager.UserConfigurationExists(authorizedUserId, "settings.json"))
             {
@@ -3142,8 +3247,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
-            var userConfig = _userConfigurationManager.GetUserConfiguration<UserSettings>(authorizedUserId, "settings.json");
-            return Ok(userConfig);
+            return _userConfigurationManager.GetUserConfiguration<UserSettings>(authorizedUserId, "settings.json");
         }
 
         [HttpGet("user-settings/{userId}/shortcuts.json")]
@@ -3321,6 +3425,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return authorizationResult;
             }
 
+            return Ok(GetOrSeedUserHiddenContent(authorizedUserId));
+        }
+
+        /// <summary>
+        /// Reads the user's hidden-content.json, seeding Settings from the plugin-configuration
+        /// defaults on first access. Shared by the hidden-content.json endpoint and /boot-payload.
+        /// </summary>
+        private UserHiddenContent GetOrSeedUserHiddenContent(string authorizedUserId)
+        {
             // First-time init: seed Settings from admin defaults under RMW so a parallel CW hide can't clobber it.
             var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
             if (defaultConfig != null
@@ -3344,8 +3457,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
-            var userConfig = _userConfigurationManager.GetUserConfiguration<UserHiddenContent>(authorizedUserId, "hidden-content.json");
-            return Ok(userConfig);
+            return _userConfigurationManager.GetUserConfiguration<UserHiddenContent>(authorizedUserId, "hidden-content.json");
         }
 
         private static HiddenContentSettings BuildHcDefaultSettings(PluginConfiguration src)

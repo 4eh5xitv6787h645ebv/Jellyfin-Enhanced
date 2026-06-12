@@ -3,6 +3,10 @@
 (function(JE) {
     'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    JE.onBootReady(function() {
+
     const logPrefix = '🪼 Jellyfin Enhanced: Rating Tags:';
     const containerClass = 'rating-overlay-container';
     const tagClass = 'rating-tag';
@@ -467,4 +471,5 @@
         }
     };
 
+    });
 })(window.JellyfinEnhanced = window.JellyfinEnhanced || {});

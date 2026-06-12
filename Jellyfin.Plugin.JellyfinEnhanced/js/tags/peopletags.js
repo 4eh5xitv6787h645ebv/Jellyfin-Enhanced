@@ -3,6 +3,10 @@
 (function(JE) {
     'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    JE.onBootReady(function() {
+
     JE.initializePeopleTags = function() {
         if (!JE.currentSettings.peopleTagsEnabled) {
             console.log('🪼 Jellyfin Enhanced: People Tags: Feature is disabled in settings.');
@@ -582,4 +586,5 @@
         initialize();
     };
 
+    });
 })(window.JellyfinEnhanced || (window.JellyfinEnhanced = {}));

@@ -5,6 +5,10 @@
 (function (JE) {
     'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    JE.onBootReady(function() {
+
     /**
      * Initializes the Quality Tags feature.
      */
@@ -1062,4 +1066,5 @@
         JE.tagPipeline?.scheduleScan();
     };
 
+    });
 })(window.JellyfinEnhanced);
