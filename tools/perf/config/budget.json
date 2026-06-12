@@ -1,0 +1,29 @@
+{
+    "//": "Budgets are evaluated on medians across runs. *OverFloor metrics subtract the matching --no-je floor median so other plugins' noise cannot pollute JE gates.",
+    "perScenario": {
+        "longTasksOverFloor": { "max": 2 },
+        "longestTaskMs": { "max": 120 },
+        "tbtOverFloorMs": { "max": 200 },
+        "interactionP98Ms": { "max": 200 },
+        "cls": { "max": 0.05 }
+    },
+    "scroll": {
+        "fps": { "min": 55 },
+        "droppedPct": { "max": 5 }
+    },
+    "parity": {
+        "warmMs": { "max": 80 },
+        "coldMs": { "max": 250 }
+    },
+    "requests": {
+        "jePerDetailNavWarm": { "max": 2 },
+        "jePerDetailNavCold": { "max": 6 },
+        "jeBootScripts": { "max": 1 }
+    },
+    "acceptance": {
+        "improveRelMin": 0.05,
+        "improveAbsMinMs": 10,
+        "regressRelMax": 0.03,
+        "consecutiveRejectsToConverge": 3
+    }
+}
