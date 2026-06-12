@@ -35,7 +35,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
     /// </summary>
     public static class SeerrParentalRatingFilter
     {
-        private sealed record RatingEntry(int? Score, int? SubScore, bool HasRating, DateTime At);
+        private sealed record RatingEntry(int? Score, int? SubScore, bool HasRating, string[] Tags, DateTime At);
 
         private static readonly ConcurrentDictionary<string, RatingEntry> _ratingCache = new();
         private static readonly ConcurrentDictionary<string, Lazy<Task<RatingEntry?>>> _inflight = new();
@@ -91,12 +91,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             try
             {
                 var maxScore = user.MaxParentalRatingScore;
-                if (!maxScore.HasValue)
+                var maxSubScore = user.MaxParentalRatingSubScore;
+                // Tag-based parental controls apply even without a rating
+                // limit (mirrors BaseItem.IsVisibleViaTags).
+                var blockedTags = user.GetPreference(PreferenceKind.BlockedTags) ?? Array.Empty<string>();
+                var allowedTags = user.GetPreference(PreferenceKind.AllowedTags) ?? Array.Empty<string>();
+                if (!maxScore.HasValue && blockedTags.Length == 0 && allowedTags.Length == 0)
                 {
                     return json;
                 }
-
-                var maxSubScore = user.MaxParentalRatingSubScore;
                 // Unrated handling: the user's own BlockUnratedItems policy, or
                 // everything-unrated-hidden when the admin strict mode is on.
                 var blockedUnrated = user.GetPreferenceValues<UnratedItem>(PreferenceKind.BlockUnratedItems);
@@ -125,9 +128,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
                     foreach (var node in arr)
                     {
                         var (mediaType, tmdbId, isAdult) = ReadIdentity(node);
-                        if (mediaType == null || tmdbId == null || isAdult)
+                        if (mediaType == null || tmdbId == null)
                         {
-                            continue; // non-media entries pass; adult items need no lookup
+                            continue; // non-media entries always pass
+                        }
+                        if (isAdult && maxScore.HasValue)
+                        {
+                            continue; // dropped outright below, no lookup needed
                         }
                         var key = mediaType + ":" + tmdbId;
                         if (!TryGetFresh(key, out _))
@@ -155,16 +162,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
                             continue; // people / unknown entries always pass
                         }
 
+                        RatingEntry? entry = null;
+                        if (tmdbId != null)
+                        {
+                            TryGetFresh(mediaType + ":" + tmdbId, out entry);
+                        }
+
                         bool allowed;
-                        if (isAdult)
+                        if (isAdult && maxScore.HasValue)
                         {
                             allowed = false;
                         }
-                        else if (tmdbId == null)
+                        else if (!maxScore.HasValue)
                         {
-                            allowed = mediaType == "movie" ? !blockUnratedMovie : !blockUnratedSeries;
+                            allowed = true; // tag gates below are the only active controls
                         }
-                        else if (TryGetFresh(mediaType + ":" + tmdbId, out var entry) && entry!.HasRating)
+                        else if (entry != null && entry.HasRating)
                         {
                             // Mirror BaseItem.IsParentalAllowed score comparison.
                             allowed = entry.Score != maxScore.Value
@@ -176,6 +189,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
                             // No certification found / unmappable / lookup failed:
                             // unrated semantics per media type.
                             allowed = mediaType == "movie" ? !blockUnratedMovie : !blockUnratedSeries;
+                        }
+
+                        // Tag gates (mirror BaseItem.IsVisibleViaTags): TMDB
+                        // keywords are what Jellyfin's TMDb provider stores as
+                        // item Tags. Unknown keywords (failed lookup) behave as
+                        // an empty tag list: BlockedTags pass, a non-empty
+                        // AllowedTags allowlist blocks.
+                        if (allowed && (blockedTags.Length > 0 || allowedTags.Length > 0))
+                        {
+                            var tags = entry?.Tags ?? Array.Empty<string>();
+                            if (blockedTags.Any(b => tags.Contains(b, StringComparer.OrdinalIgnoreCase)))
+                            {
+                                allowed = false;
+                            }
+                            else if (allowedTags.Length > 0 && !allowedTags.Any(a => tags.Contains(a, StringComparer.OrdinalIgnoreCase)))
+                            {
+                                allowed = false;
+                            }
                         }
 
                         if (!allowed)
@@ -283,10 +314,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
                     }
 
                     var cert = ExtractCertification(detailJson, mediaType, countryCode);
+                    var tags = ExtractKeywords(detailJson);
                     RatingEntry entry;
                     if (string.IsNullOrWhiteSpace(cert))
                     {
-                        entry = new RatingEntry(null, null, false, DateTime.UtcNow);
+                        entry = new RatingEntry(null, null, false, tags, DateTime.UtcNow);
                     }
                     else
                     {
@@ -295,8 +327,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
                         // server's configured rating country and fallbacks.
                         var score = localization.GetRatingScore(cert!);
                         entry = score == null
-                            ? new RatingEntry(null, null, false, DateTime.UtcNow)
-                            : new RatingEntry(score.Score, score.SubScore, true, DateTime.UtcNow);
+                            ? new RatingEntry(null, null, false, tags, DateTime.UtcNow)
+                            : new RatingEntry(score.Score, score.SubScore, true, tags, DateTime.UtcNow);
                     }
 
                     if (_ratingCache.Count >= CacheLimit)
@@ -331,6 +363,35 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             // Drop the in-flight slot once settled so future misses re-resolve.
             task.ContinueWith(_ => _inflight.TryRemove(key, out var _), TaskScheduler.Default);
             return task;
+        }
+
+        /// <summary>
+        /// Pulls the TMDB keyword names from a Seerr detail payload — these are
+        /// what Jellyfin's TMDb metadata provider stores as item Tags, so they
+        /// are the faithful input for tag-based parental controls.
+        /// </summary>
+        internal static string[] ExtractKeywords(string detailJson)
+        {
+            try
+            {
+                if (JsonNode.Parse(detailJson) is not JsonObject root || root["keywords"] is not JsonArray keywords)
+                {
+                    return Array.Empty<string>();
+                }
+                var names = new List<string>(keywords.Count);
+                foreach (var k in keywords)
+                {
+                    if ((k?["name"] as JsonValue)?.TryGetValue<string>(out var name) == true && !string.IsNullOrWhiteSpace(name))
+                    {
+                        names.Add(name);
+                    }
+                }
+                return names.ToArray();
+            }
+            catch (Exception)
+            {
+                return Array.Empty<string>();
+            }
         }
 
         /// <summary>

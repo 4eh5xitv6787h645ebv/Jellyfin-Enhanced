@@ -748,7 +748,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 && Guid.TryParse(jellyfinUserId, out var parentalUserGuid))
             {
                 var entityUser = _userManager.GetUserById(parentalUserGuid);
-                if (entityUser?.MaxParentalRatingScore != null)
+                // Engage for a rating limit OR tag-based controls — Jellyfin
+                // applies BlockedTags/AllowedTags independently of the rating.
+                if (entityUser != null
+                    && (entityUser.MaxParentalRatingScore != null
+                        || (entityUser.GetPreference(Jellyfin.Database.Implementations.Enums.PreferenceKind.BlockedTags)?.Length ?? 0) > 0
+                        || (entityUser.GetPreference(Jellyfin.Database.Implementations.Enums.PreferenceKind.AllowedTags)?.Length ?? 0) > 0))
                 {
                     parentalFilterUser = entityUser;
                 }
