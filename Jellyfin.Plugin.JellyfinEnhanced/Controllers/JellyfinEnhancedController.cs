@@ -4770,7 +4770,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return NotFound(new { error = "Sonarr is not configured" });
             }
 
-            var outcome = await FetchSeriesInfoFromInstance(instances[0], tvdbId, HttpContext.RequestAborted);
+            var outcome = await FetchArrInfoCached("s", instances[0], tvdbId, HttpContext.RequestAborted, FetchSeriesInfoFromInstance);
             if (outcome.Error != null)
                 return StatusCode(502, new { error = $"Sonarr fetch failed: {outcome.Error}" });
             if (outcome.Match == null)
@@ -4813,7 +4813,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             var ct = HttpContext.RequestAborted;
-            var outcomes = await Task.WhenAll(instances.Select(i => FetchSeriesInfoFromInstance(i, tvdbId, ct)));
+            var outcomes = await Task.WhenAll(instances.Select(i => FetchArrInfoCached("s", i, tvdbId, ct, FetchSeriesInfoFromInstance)));
 
             var matches = new List<object>();
             var errors = new List<object>();
@@ -4913,6 +4913,52 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return data;
         }
 
+        // Per-(instance, item) cache for arr link lookups. Some instances answer
+        // slug lookups in milliseconds, others (observed: a Sonarr v5 dev build)
+        // take seconds — and the links UI waits for the slowest instance. Slug/
+        // status data changes rarely, so successful lookups are cached for
+        // 10 minutes: only the first visit per item pays the slow instance's
+        // latency. Failures are never cached.
+        private static readonly ConcurrentDictionary<string, (object? Match, DateTime At)> _arrLookupCache = new();
+        private static readonly TimeSpan _arrLookupCacheTtl = TimeSpan.FromMinutes(10);
+        private const int ArrLookupCacheLimit = 1000;
+
+        private async Task<ArrFetchOutcome> FetchArrInfoCached(
+            string kind,
+            ArrInstance instance,
+            int id,
+            CancellationToken ct,
+            Func<ArrInstance, int, CancellationToken, Task<ArrFetchOutcome>> fetch)
+        {
+            var key = $"{kind}:{instance.Url}:{id}";
+            if (_arrLookupCache.TryGetValue(key, out var hit) && DateTime.UtcNow - hit.At < _arrLookupCacheTtl)
+            {
+                return new ArrFetchOutcome { Match = hit.Match, Error = null };
+            }
+
+            var outcome = await fetch(instance, id, ct);
+            if (outcome.Error == null)
+            {
+                if (_arrLookupCache.Count >= ArrLookupCacheLimit)
+                {
+                    // Cheap pressure valve: drop expired entries, then oldest.
+                    foreach (var kv in _arrLookupCache)
+                    {
+                        if (DateTime.UtcNow - kv.Value.At >= _arrLookupCacheTtl)
+                        {
+                            _arrLookupCache.TryRemove(kv.Key, out _);
+                        }
+                    }
+                    if (_arrLookupCache.Count >= ArrLookupCacheLimit)
+                    {
+                        _arrLookupCache.Clear();
+                    }
+                }
+                _arrLookupCache[key] = (outcome.Match, DateTime.UtcNow);
+            }
+            return outcome;
+        }
+
         private async Task<ArrFetchOutcome> FetchSeriesInfoFromInstance(ArrInstance instance, int tvdbId, CancellationToken ct)
         {
             var (match, error) = await FetchAndMapAsync<object?>(
@@ -4974,7 +5020,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             var ct = HttpContext.RequestAborted;
-            var outcomes = await Task.WhenAll(instances.Select(i => FetchMovieInfoFromInstance(i, tmdbId, ct)));
+            var outcomes = await Task.WhenAll(instances.Select(i => FetchArrInfoCached("m", i, tmdbId, ct, FetchMovieInfoFromInstance)));
 
             var matches = new List<object>();
             var errors = new List<object>();

@@ -129,7 +129,14 @@
         if (current.fallbackTimer) { clearTimeout(current.fallbackTimer); current.fallbackTimer = null; }
         const ctx = makeCtx();
         for (let i = 0; i < detailRenderHooks.length; i++) {
-            try { detailRenderHooks[i].fn(ctx); } catch (e) { console.error(`${logPrefix} onNativeDetailRender hook failed:`, e); }
+            const h = detailRenderHooks[i];
+            const t0 = performance.now();
+            try { h.fn(ctx); } catch (e) { console.error(`${logPrefix} onNativeDetailRender hook failed:`, e); }
+            const dur = performance.now() - t0;
+            // Per-hook attribution: every hook in this dispatch runs inside the
+            // native render frame, so any slow one directly delays paint.
+            try { performance.measure(`je:detailHook:${h.label || i}`, { start: t0, duration: dur }); } catch (e) { /* old browser */ }
+            if (dur > 30) console.warn(`${logPrefix} onNativeDetailRender hook '${h.label || i}' took ${dur.toFixed(0)}ms (sync, in the native render frame)`);
         }
         maybeFireChildren(); // children may already be populated in restored views
     }
@@ -158,6 +165,18 @@
 
     function armDetailObservers() {
         const root = current.view || document.body;
+        // CLS guard: the native poster has fixed width but no reserved height,
+        // so its image load pushes the whole secondary container down (the
+        // dominant native shift on desktop detail pages). When the identity
+        // cache knows this is a poster-shaped item (Movie/Series), reserve the
+        // 2:3 box before the image arrives. Cold first-ever visits (identity
+        // unknown) keep native behavior.
+        try {
+            if (root.classList) {
+                const idType = current.itemId ? (getIdentity(current.itemId) || {}).type : null;
+                root.classList.toggle('je-poster-reserve', idType === 'Movie' || idType === 'Series');
+            }
+        } catch (e) { /* cosmetic */ }
         const hasVisibleButton = root.querySelector && root.querySelector('.mainDetailButtons .detailButton:not(.hide)');
         if (hasVisibleButton) {
             // Restored/cached view: native content is already rendered.
@@ -303,9 +322,13 @@
             viewShowHooks.push(h);
             return () => { const i = viewShowHooks.indexOf(h); if (i !== -1) viewShowHooks.splice(i, 1); };
         },
-        /** Fired once per detail navigation at the native render moment. */
-        onNativeDetailRender(fn) {
-            const h = { fn };
+        /**
+         * Fired once per detail navigation at the native render moment.
+         * @param {Function} fn
+         * @param {string} [label] - attribution label for je:detailHook:* measures
+         */
+        onNativeDetailRender(fn, label) {
+            const h = { fn, label: label || (fn.name || null) };
             detailRenderHooks.push(h);
             return () => { const i = detailRenderHooks.indexOf(h); if (i !== -1) detailRenderHooks.splice(i, 1); };
         },
