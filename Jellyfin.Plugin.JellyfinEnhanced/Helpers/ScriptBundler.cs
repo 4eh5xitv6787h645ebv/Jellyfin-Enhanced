@@ -41,6 +41,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             }
         }
 
+        /// <summary>
+        /// Modules whose top-level code must execute at script-parse time. Every
+        /// other module's body is wrapped in JE.onBootReady(...) by the bundler:
+        /// executing ~55 module IIFEs at parse produced a single ~400ms long
+        /// task competing with jellyfin-web's own startup. Deferred bodies run
+        /// from the cooperative (time-sliced) flush in plugin.js once ApiClient
+        /// and config are ready — and viewRouter.kickstart() re-fires hooks for
+        /// the page the user is already on, so nothing misses the first view.
+        /// </summary>
+        private static readonly HashSet<string> KernelModules = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "js/plugin.js",
+            "js/enhanced/translations.js",
+            "js/others/splashscreen.js"
+        };
+
         private static string Build(Logger logger)
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -60,8 +76,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
                 }
 
                 using var reader = new StreamReader(stream);
-                sb.Append("\n;/* ── ").Append(path).Append(" ── */\n");
-                sb.Append(reader.ReadToEnd());
+                if (KernelModules.Contains(path))
+                {
+                    sb.Append("\n;/* ── ").Append(path).Append(" ── */\n");
+                    sb.Append(reader.ReadToEnd());
+                }
+                else
+                {
+                    sb.Append("\n;/* ── ").Append(path).Append(" (exec deferred to boot-ready) ── */\n");
+                    sb.Append("window.JellyfinEnhanced.onBootReady(function () {\n");
+                    sb.Append(reader.ReadToEnd());
+                    sb.Append("\n});\n");
+                }
             }
 
             if (missing.Count > 0)

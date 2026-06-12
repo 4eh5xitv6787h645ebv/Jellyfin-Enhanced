@@ -793,9 +793,23 @@
          * the intermediate container static re-anchors the buttons to the
          * section root, i.e. the header row, instead of overlapping cards.
          */
-        function buildSectionShell() {
+        /** True when a loadReviewData result contains at least one review. */
+        function reviewDataHasContent(data) {
+            if (!data) return false;
+            const tmdbCount = data.tmdbReviews ? data.tmdbReviews.length : 0;
+            const userCount = data.userReviews ? data.userReviews.length : 0;
+            return (tmdbCount + userCount) > 0;
+        }
+
+        function buildSectionShell(expectReviews) {
             const reviewsSection = document.createElement('details');
             reviewsSection.className = 'detailSection tmdb-reviews-section';
+            // Height reservation (CLS guard) only when reviews are predicted:
+            // an empty section keeps its natural small height so the
+            // "Write a Review" entry point never sits above dead space.
+            if (expectReviews) {
+                reviewsSection.classList.add('je-reviews-reserved');
+            }
             if (JE.currentSettings?.reviewsExpandedByDefault) {
                 reviewsSection.setAttribute('open', '');
             }
@@ -860,7 +874,7 @@
          * @param {HTMLElement} contextPage
          * @returns {object|null} shell refs from buildSectionShell, or null
          */
-        function injectSectionShell(contextPage) {
+        function injectSectionShell(contextPage, expectReviews) {
             contextPage.querySelectorAll('.tmdb-reviews-section').forEach(el => el.remove());
 
             const insertionAnchor =
@@ -873,7 +887,7 @@
                 return null;
             }
 
-            const shell = buildSectionShell();
+            const shell = buildSectionShell(expectReviews);
             insertionAnchor.parentNode.insertBefore(shell.section, insertionAnchor.nextSibling);
             return shell;
         }
@@ -902,8 +916,14 @@
             const viewerIsAdmin = currentUser?.Policy?.IsAdministrator === true;
             const ownReview = userReviews.find(r => r.userId.replace(/-/g, '') === currentUserId.replace(/-/g, ''));
 
-            // The section renders even with zero reviews so users can add their own.
             const totalCount = (reviews ? reviews.length : 0) + userReviews.length;
+
+            // Keep the section even with zero reviews — it carries the
+            // "Write a Review" entry point. Just make sure no height
+            // reservation lingers (and add it when reviews exist, so the
+            // reserved and filled heights match on future renders).
+            reviewsSection.classList.toggle('je-reviews-reserved', totalCount > 0);
+
             summary.innerHTML = `${JE.t('reviews_title', { count: totalCount })} <i class="material-icons expand-icon">expand_more</i>`;
 
             // ── "Write a Review" / "Edit Review" button bar ──────────────
@@ -942,82 +962,114 @@
                 });
             }
 
-            // ── Cards: one DocumentFragment, one insertion ────────────────────
+            // ── Cards: sync head batch + chunked off-screen remainder ────────
             // Each card sits in a .je-review-slot wrapper that owns the
             // inter-card spacing — the native paging math measures
             // slider.children[0].offsetWidth for both index and target
             // position, so spacing must live INSIDE each child box.
-            const fragment = document.createDocumentFragment();
-            const addCard = (card) => {
+            const addCard = (fragment, card) => {
                 const slot = document.createElement('div');
                 slot.className = 'je-review-slot';
                 slot.appendChild(card);
                 fragment.appendChild(slot);
             };
 
-            // Render user reviews first (distinct border colour)
-            userReviews.forEach(userReview => {
-                const card = createUserReviewElement(
-                    userReview,
-                    currentUserId,
-                    viewerIsAdmin,
-                    // Edit callback (own reviews only)
-                    (r) => openForm(r),
-                    // Delete callback — routes to self-delete for own reviews,
-                    // admin moderation delete for others (admin viewers only).
-                    async (r) => {
-                        const isOwn = r.userId.replace(/-/g, '') === currentUserId.replace(/-/g, '');
-                        const userName = r.userName || 'user';
-                        const title = isOwn
-                            ? tWithFallback('reviews_delete_title', 'Delete review')
-                            : tWithFallback('reviews_admin_delete_title', 'Delete review (admin)');
-                        const body = isOwn
-                            ? tWithFallback('reviews_delete_confirm',
-                                'Delete your review for this item?')
-                            : tWithFallback('reviews_admin_delete_confirm',
-                                'Delete this review by {user}? This cannot be undone.',
-                                { user: userName });
-                        if (!(await jeConfirm(body, title))) return;
-                        try {
-                            if (isOwn) {
-                                await deleteUserReview(tmdbId, tmdbMediaType);
-                            } else {
-                                await adminDeleteUserReview(r.userId, tmdbId, tmdbMediaType);
-                            }
-                            refreshReviews(contextPage);
-                        } catch (e) {
-                            // Surface the failure to the admin instead of
-                            // silently failing: without this, a 403/404/500
-                            // on the delete call would leave the review on
-                            // screen with no feedback, making the admin
-                            // believe the content was moderated when it
-                            // wasn't.
-                            console.error(`${logPrefix} Delete failed`, e);
-                            const errTitle = tWithFallback('reviews_delete_error_title',
-                                'Delete failed');
-                            const errBody = tWithFallback('reviews_delete_error_body',
-                                'Could not delete the review: {err}',
-                                { err: (e && e.message) ? e.message : 'Unknown error' });
-                            jeAlert(errBody, errTitle);
-                            // Re-fetch so the admin sees the real current state
-                            // (in case the review was actually removed but the
-                            // response was 500 on the way back, or a concurrent
-                            // admin deleted it first).
-                            refreshReviews(contextPage);
+            const buildUserReviewCard = (userReview) => createUserReviewElement(
+                userReview,
+                currentUserId,
+                viewerIsAdmin,
+                // Edit callback (own reviews only)
+                (r) => openForm(r),
+                // Delete callback — routes to self-delete for own reviews,
+                // admin moderation delete for others (admin viewers only).
+                async (r) => {
+                    const isOwn = r.userId.replace(/-/g, '') === currentUserId.replace(/-/g, '');
+                    const userName = r.userName || 'user';
+                    const title = isOwn
+                        ? tWithFallback('reviews_delete_title', 'Delete review')
+                        : tWithFallback('reviews_admin_delete_title', 'Delete review (admin)');
+                    const body = isOwn
+                        ? tWithFallback('reviews_delete_confirm',
+                            'Delete your review for this item?')
+                        : tWithFallback('reviews_admin_delete_confirm',
+                            'Delete this review by {user}? This cannot be undone.',
+                            { user: userName });
+                    if (!(await jeConfirm(body, title))) return;
+                    try {
+                        if (isOwn) {
+                            await deleteUserReview(tmdbId, tmdbMediaType);
+                        } else {
+                            await adminDeleteUserReview(r.userId, tmdbId, tmdbMediaType);
                         }
+                        refreshReviews(contextPage);
+                    } catch (e) {
+                        // Surface the failure to the admin instead of
+                        // silently failing: without this, a 403/404/500
+                        // on the delete call would leave the review on
+                        // screen with no feedback, making the admin
+                        // believe the content was moderated when it
+                        // wasn't.
+                        console.error(`${logPrefix} Delete failed`, e);
+                        const errTitle = tWithFallback('reviews_delete_error_title',
+                            'Delete failed');
+                        const errBody = tWithFallback('reviews_delete_error_body',
+                            'Could not delete the review: {err}',
+                            { err: (e && e.message) ? e.message : 'Unknown error' });
+                        jeAlert(errBody, errTitle);
+                        // Re-fetch so the admin sees the real current state
+                        // (in case the review was actually removed but the
+                        // response was 500 on the way back, or a concurrent
+                        // admin deleted it first).
+                        refreshReviews(contextPage);
                     }
-                );
-                addCard(card);
-            });
+                }
+            );
 
-            // Render TMDB reviews after
+            // Card builders in display order: user reviews first (distinct
+            // border colour), TMDB reviews after. Building is deferred into
+            // thunks so the off-screen tail can run in cooperative chunks.
+            const cardBuilders = userReviews.map(userReview => () => buildUserReviewCard(userReview));
             if (reviews && reviews.length > 0) {
                 reviews.slice(0, 10).forEach(review => {
-                    addCard(createReviewElement(review));
+                    cardBuilders.push(() => createReviewElement(review));
                 });
             }
 
-            slider.appendChild(fragment);
+            // Head batch (one visible row width) builds synchronously into a
+            // single DocumentFragment inserted in one operation, so the row
+            // paints complete in the same frame as the fill.
+            const SYNC_CARD_COUNT = 4;
+            const headFragment = document.createDocumentFragment();
+            cardBuilders.slice(0, SYNC_CARD_COUNT).forEach(build => addCard(headFragment, build()));
+            slider.appendChild(headFragment);
+
+            // Off-screen remainder builds cooperatively (≤ ~8ms slices) so a
+            // long review list can't produce one long task at fill time.
+            // Cards accumulate in a detached fragment that attaches once at
+            // the end — building into the detached fragment is always safe,
+            // and the isConnected + stale-nav guards keep a navigation
+            // mid-build from ever touching a dead DOM at the final append.
+            const restBuilders = cardBuilders.slice(SYNC_CARD_COUNT);
+            if (restBuilders.length > 0 && typeof JE.helpers?.scheduleChunked === 'function') {
+                const buildNav = navState; // navigation current at fill time (null on the legacy path)
+                const restFragment = document.createDocumentFragment();
+                JE.helpers.scheduleChunked(
+                    restBuilders,
+                    build => addCard(restFragment, build()),
+                    { budgetMs: 8 }
+                ).then(() => {
+                    if (!reviewsSection.isConnected) return;
+                    if (buildNav && isStaleNav(buildNav)) return;
+                    slider.appendChild(restFragment);
+                }).catch(err => {
+                    console.error(`${logPrefix} Failed to build deferred review cards:`, err);
+                });
+            } else if (restBuilders.length > 0) {
+                // scheduleChunked unavailable: keep the old single-pass build.
+                const restFragment = document.createDocumentFragment();
+                restBuilders.forEach(build => addCard(restFragment, build()));
+                slider.appendChild(restFragment);
+            }
 
             // ── Read-more toggle for TMDB reviews ─────────────────────────────
             slider.addEventListener('click', function (e) {
@@ -1065,7 +1117,7 @@
                 if (!data) return;
 
                 const page = document.querySelector('#itemDetailPage:not(.hide)') || contextPage;
-                const shell = injectSectionShell(page);
+                const shell = injectSectionShell(page, reviewDataHasContent(data));
                 if (shell) fillSection(shell, data, page);
 
                 // Bust the poster tag cache for this item so the overlay updates
@@ -1128,6 +1180,25 @@
                    scroller: the lib stamps data-scroll-mode-x="custom" on init
                    (and removes it on destroy), so its absence means inert. */
                 .tmdb-reviews-section .emby-scroller:not([data-scroll-mode-x]) { overflow-x: auto; }
+                /* CLS guard: reserve exactly one card row on the scroller
+                   frame from the moment the (open) shell is injected, so
+                   cards that fill in later can't grow the section and shift
+                   the page below. 20em = 18em .je-review-slot height + 2×1em
+                   .scrollSlider vertical padding, i.e. the reservation equals
+                   the filled height, so no shift in either direction.
+                   box-sizing is pinned to content-box so the reserved value
+                   always measures the slider's box even under themes that
+                   force border-box, and regardless of the TV layout's
+                   focus-scale frame padding (which is net-zero: padding
+                   cancelled by negative margins). Inside a closed <details>
+                   the reservation is inert (collapsed default unaffected).
+                   Gated by .je-reviews-reserved: applied only when reviews
+                   are predicted/known to exist, so an empty section (kept as
+                   the Write-a-Review entry point) reserves nothing. */
+                .tmdb-reviews-section.je-reviews-reserved .emby-scroller {
+                    box-sizing: content-box;
+                    min-height: 20em;
+                }
                 /* Flex (no gap!) reproduces the old equal-height card row; the
                    lib's inline white-space:nowrap on the slider is moot under
                    flex layout. */
@@ -1142,10 +1213,20 @@
                    (flex gap would make paging drift cumulatively).
                    Widths = old card outer width (basis + 2×1.5em padding +
                    4px border) + the old 1.2em gap, so cards keep their exact
-                   previous size. */
+                   previous size.
+                   Height is explicit so the row height is deterministic and
+                   the scroller frame's min-height reservation above exactly
+                   matches the filled row (cards used to be content-sized,
+                   which let late-filled cards grow the section → CLS).
+                   18em ≈ what a full 350-char-preview card rendered at:
+                   2×1.5em card padding + ~3.7em header block + ~7 preview
+                   lines × (0.95em × 1.7 line-height). The card stretches to
+                   fill the slot, and taller content scrolls inside it via the
+                   existing overflow-y:auto on .tmdb-review-content-wrapper. */
                 .tmdb-reviews-section .je-review-slot {
                     flex: 0 0 auto;
                     display: flex;
+                    height: 18em;
                     width: calc(85% + 3em + 4px + 1.2em);
                     max-width: calc(500px + 3em + 4px + 1.2em);
                     padding-right: 1.2em;
@@ -1332,7 +1413,7 @@
                 if (!data) return;
 
                 const page = document.querySelector('#itemDetailPage:not(.hide)') || visiblePage;
-                const shell = injectSectionShell(page);
+                const shell = injectSectionShell(page, reviewDataHasContent(data));
                 if (shell) fillSection(shell, data, page);
             } catch (error) {
                 console.error(`${logPrefix} Error processing page:`, error);
@@ -1456,8 +1537,19 @@
             if (!target) return; // not review-eligible (no TMDB id / unsupported type)
 
             // Inject the shell (header + collapsed/empty body) in the native
-            // render frame; previous sections are removed here.
-            const shell = injectSectionShell(page);
+            // render frame; previous sections are removed here. Reserve the
+            // card-row height only when reviews are known (resolved data) or
+            // predicted (TTL cache) — cold first visits grow on fill instead,
+            // which the below-fold position largely hides.
+            let expectReviews = false;
+            if (state.dataResolved !== undefined) {
+                expectReviews = reviewDataHasContent(state.dataResolved);
+            } else {
+                const cached = getCachedReviews(reviewsCacheKey(target));
+                expectReviews = !!cached
+                    && (((cached.tmdbReviews ? cached.tmdbReviews.length : 0) + (cached.userReviews ? cached.userReviews.length : 0)) > 0);
+            }
+            const shell = injectSectionShell(page, expectReviews);
             if (!shell) return;
 
             // Warm cache / already-settled fetch: build everything in one go.

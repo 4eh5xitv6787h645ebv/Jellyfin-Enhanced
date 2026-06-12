@@ -123,12 +123,20 @@
             bootReadyQueue.push(fn);
         }
     };
-    function flushBootReady() {
+    async function flushBootReady() {
         bootReadyFlushed = true;
         const t0 = performance.now();
+        let sliceStart = t0;
         while (bootReadyQueue.length) {
             const fn = bootReadyQueue.shift();
             try { fn(); } catch (e) { console.error('🪼 Jellyfin Enhanced: onBootReady callback failed:', e); }
+            // Cooperative flush: in bundled mode nearly every module body runs
+            // from this queue (the bundler wraps them), so yield between time
+            // slices to keep each task well under the 50ms long-task threshold.
+            if (bootReadyQueue.length && (performance.now() - sliceStart) > 24) {
+                await (window.scheduler?.yield ? scheduler.yield() : new Promise(r => setTimeout(r, 0)));
+                sliceStart = performance.now();
+            }
         }
         try { performance.measure('je:flushBootReady', { start: t0, duration: performance.now() - t0 }); } catch (e) { /* old browser */ }
     }
@@ -792,8 +800,8 @@
 
             // Configs and user settings are loaded: run deferred module bodies
             // (bundled mode). Must happen before Stage 4 so their exports exist
-            // for loadSettings/initializers below.
-            flushBootReady();
+            // for loadSettings/initializers below. The flush is time-sliced.
+            await flushBootReady();
 
             // Initialize splash screen
             if (typeof JE.initializeSplashScreen === 'function') {
@@ -916,6 +924,20 @@
                 JE.themer.init();
                 console.log('🪼 Jellyfin Enhanced: Theme system initialized.');
             }
+
+            // Native CLS reservation: jellyfin-web hides the detail-page button
+            // row with display:none and un-hides it after the item fetch, so the
+            // row snaps 0 -> ~3.4em and shifts the whole page below it (the
+            // single largest native layout-shift contributor on detail pages).
+            // Reserving its height is pure CSS and benefits native UI too.
+            try {
+                if (!document.getElementById('je-cls-reserve')) {
+                    const clsStyle = document.createElement('style');
+                    clsStyle.id = 'je-cls-reserve';
+                    clsStyle.textContent = '#itemDetailPage .mainDetailButtons, .itemDetailPage .mainDetailButtons { min-height: 3.4em; }';
+                    document.head.appendChild(clsStyle);
+                }
+            } catch (e) { /* cosmetic only */ }
 
             // Register unified cache save on page unload
             window.addEventListener('beforeunload', () => {

@@ -135,7 +135,11 @@
     }
 
     function childrenPopulated(root) {
-        const c = root.querySelector ? root.querySelector('#childrenCollapsible, .childrenItemsContainer, #listChildrenCollapsible') : null;
+        // 10.11.10 uses #listChildrenCollapsible for Series/Season/MusicAlbum/
+        // Playlist and #childrenCollapsible for other folders; items land in
+        // the .itemsContainer inside either (no .childrenItemsContainer class
+        // exists in this version).
+        const c = root.querySelector ? root.querySelector('#childrenCollapsible .itemsContainer, #listChildrenCollapsible .itemsContainer') : null;
         if (!c) return false;
         return !!c.querySelector('.card, .listItem');
     }
