@@ -1167,6 +1167,10 @@
                                     <div class="je-setting-description" data-desc-for="jellyseerrExcludeBlocklistedItems">
                                         <div class="fieldDescription je-field-desc-xl">When enabled, items marked as blocklisted in Seerr will not appear in similar/recommended suggestions.</div>
                                     </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrFilterByParentalRating" is="emby-checkbox" type="checkbox"/><span>Filter results by user's parental rating</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrFilterByParentalRating">
+                                        <div class="fieldDescription je-field-desc-xl">Hide Seerr search and discovery results that exceed the requesting user's Jellyfin parental rating (e.g. R-rated movies for a PG-restricted profile). Only applies to users whose Jellyfin policy sets a maximum parental rating — unrestricted users always see everything. Ratings are matched using the server's own parental rating system; titles without a recognizable certification follow the user's "Block items with no rating information" setting.</div>
+                                    </div>
                                 </div>
                             </details>
 
@@ -4224,6 +4228,7 @@
                 document.querySelector('#jellyseerrShowReportButton').checked = !!config.JellyseerrShowReportButton;
                 document.querySelector('#jellyseerrShowIssueIndicator').checked = !!config.JellyseerrShowIssueIndicator;
                 document.querySelector('#jellyseerrExcludeBlocklistedItems').checked = !!config.JellyseerrExcludeBlocklistedItems;
+                document.querySelector('#jellyseerrFilterByParentalRating').checked = config.JellyseerrFilterByParentalRating !== false;
                 document.querySelector('#jellyseerrDisableCache').checked = !!config.JellyseerrDisableCache;
                 document.querySelector('#jellyseerrResponseCacheTtlMinutes').value = config.JellyseerrResponseCacheTtlMinutes || 10;
                 document.querySelector('#jellyseerrUserIdCacheTtlMinutes').value = config.JellyseerrUserIdCacheTtlMinutes || 30;
@@ -4505,6 +4510,7 @@
             config.JellyseerrShowRequestMoreOnSeries = document.querySelector('#jellyseerrShowRequestMoreOnSeries').checked;
             config.JellyseerrExcludeLibraryItems = document.querySelector('#jellyseerrExcludeLibraryItems').checked;
             config.JellyseerrExcludeBlocklistedItems = document.querySelector('#jellyseerrExcludeBlocklistedItems').checked;
+            config.JellyseerrFilterByParentalRating = document.querySelector('#jellyseerrFilterByParentalRating').checked;
             config.JellyseerrDisableCache = document.querySelector('#jellyseerrDisableCache').checked;
             config.JellyseerrResponseCacheTtlMinutes = parseInt(document.querySelector('#jellyseerrResponseCacheTtlMinutes').value, 10) || 10;
             config.JellyseerrUserIdCacheTtlMinutes = parseInt(document.querySelector('#jellyseerrUserIdCacheTtlMinutes').value, 10) || 30;

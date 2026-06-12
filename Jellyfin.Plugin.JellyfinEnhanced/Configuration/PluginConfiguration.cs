@@ -396,6 +396,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool JellyseerrShowCollectionDiscovery { get; set; }
         public bool JellyseerrExcludeLibraryItems { get; set; } = true;
         public bool JellyseerrExcludeBlocklistedItems { get; set; } = false;
+        /// <summary>
+        /// Server-side filter of Seerr search/discovery results by the
+        /// requesting user's Jellyfin parental rating (issue #581). Only
+        /// affects users whose policy sets a maximum parental rating;
+        /// unlimited users always receive unfiltered results.
+        /// </summary>
+        public bool JellyseerrFilterByParentalRating { get; set; } = true;
         public bool ShowElsewhereOnJellyseerr { get; set; }
         public bool JellyseerrUseMoreInfoModal { get; set; } = false;
         public string JellyseerrUrls { get; set; }

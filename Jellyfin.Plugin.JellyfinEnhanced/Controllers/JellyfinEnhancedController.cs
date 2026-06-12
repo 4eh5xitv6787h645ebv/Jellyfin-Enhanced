@@ -55,6 +55,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly Services.TagCacheService _tagCacheService;
         private readonly MediaBrowser.Controller.Session.ISessionManager _sessionManager;
         private readonly Services.MaintenanceModeService _maintenanceModeService;
+        private readonly MediaBrowser.Model.Globalization.ILocalizationManager _localizationManager;
+        private readonly MediaBrowser.Controller.Configuration.IServerConfigurationManager _serverConfigurationManager;
 
         // Server-side cache for proxied avatar images to avoid re-fetching from
         // upstream Seerr on every request. Entries expire after 1 hour.
@@ -165,7 +167,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             IDbContextFactory<JellyfinDbContext> dbContextFactory,
             Services.TagCacheService tagCacheService,
             MediaBrowser.Controller.Session.ISessionManager sessionManager,
-            Services.MaintenanceModeService maintenanceModeService)
+            Services.MaintenanceModeService maintenanceModeService,
+            MediaBrowser.Model.Globalization.ILocalizationManager localizationManager,
+            MediaBrowser.Controller.Configuration.IServerConfigurationManager serverConfigurationManager)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -179,6 +183,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _tagCacheService = tagCacheService;
             _sessionManager = sessionManager;
             _maintenanceModeService = maintenanceModeService;
+            _localizationManager = localizationManager;
+            _serverConfigurationManager = serverConfigurationManager;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId, bool bypassCache = false, bool allowAutoImport = true)
@@ -729,15 +735,55 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var cacheKey = isPublicScope
                 ? $"public:{apiPath}"
                 : $"{jellyfinUserId}:{apiPath}";
+            // Parental-rating filter context (issue #581): applies to GET list
+            // endpoints when the flag is on AND the requesting user actually
+            // has a parental limit — unlimited users (and admins) see raw
+            // results with zero overhead. The cache always stores RAW bodies
+            // (public-scope entries are shared across users), so filtering is
+            // applied on the way out, for cache hits and fresh fetches alike.
+            Jellyfin.Database.Implementations.Entities.User? parentalFilterUser = null;
+            if (config.JellyseerrFilterByParentalRating
+                && method == HttpMethod.Get
+                && Helpers.SeerrParentalRatingFilter.IsFilterablePath(apiPath)
+                && Guid.TryParse(jellyfinUserId, out var parentalUserGuid))
+            {
+                var entityUser = _userManager.GetUserById(parentalUserGuid);
+                if (entityUser?.MaxParentalRatingScore != null)
+                {
+                    parentalFilterUser = entityUser;
+                }
+            }
+
+            async Task<string> ApplyParentalFilterAsync(string body)
+            {
+                if (parentalFilterUser == null)
+                {
+                    return body;
+                }
+                return await Helpers.SeerrParentalRatingFilter.FilterAsync(
+                    body,
+                    parentalFilterUser,
+                    _localizationManager,
+                    _serverConfigurationManager.Configuration.MetadataCountryCode,
+                    (path, token) => FetchSeerrJsonWithApiKeyAsync(path, token),
+                    _logger,
+                    HttpContext.RequestAborted);
+            }
+
             if (isCacheable)
             {
+                string? cachedRaw = null;
                 lock (_responseCacheLock)
                 {
                     if (_responseCache.TryGetValue(cacheKey, out var cached) &&
                         DateTime.UtcNow - cached.CachedAt < GetResponseCacheTtl())
                     {
-                        return Content(cached.Content, "application/json");
+                        cachedRaw = cached.Content;
                     }
+                }
+                if (cachedRaw != null)
+                {
+                    return Content(await ApplyParentalFilterAsync(cachedRaw), "application/json");
                 }
             }
 
@@ -818,7 +864,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         {
                             EvictMovieTvCacheForRequest(content);
                         }
-                        return Content(json, "application/json");
+                        return Content(await ApplyParentalFilterAsync(json), "application/json");
                     }
 
                     _logger.Warning($"Seerr request failed for user {ResolveUserDisplay(jellyfinUserId)} at {trimmedUrl}: code={error!.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
@@ -854,6 +900,47 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             return StatusCode(lastStatusCode, lastErrorBody);
+        }
+
+        /// <summary>
+        /// Plain admin-API-key Seerr GET (no per-user impersonation) used by the
+        /// parental-rating filter to resolve title certifications. Tries each
+        /// configured URL like the main proxy; returns null on any failure.
+        /// </summary>
+        private async Task<string?> FetchSeerrJsonWithApiKeyAsync(string apiPath, System.Threading.CancellationToken ct)
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
+            {
+                return null;
+            }
+
+            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            httpClient.Timeout = TimeSpan.FromSeconds(8);
+
+            foreach (var url in config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var requestUri = $"{url.Trim().TrimEnd('/')}{apiPath}";
+                try
+                {
+                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(HttpMethod.Get, requestUri, config.JellyseerrApiKey);
+                    using var response = await httpClient.SendAsync(request, ct);
+                    var (json, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    if (error == null && json != null)
+                    {
+                        return json;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Debug($"Certification lookup fetch failed at {requestUri}: {ex.Message}");
+                }
+            }
+            return null;
         }
 
         [HttpGet("jellyseerr/status")]
@@ -2736,6 +2823,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.JellyseerrShowPersonDiscovery,
                 config.JellyseerrExcludeLibraryItems,
                 config.JellyseerrExcludeBlocklistedItems,
+                config.JellyseerrFilterByParentalRating,
                 config.JellyseerrDisableCache,
                 JellyseerrBaseUrl = jellyseerrBaseUrl,
                 JellyseerrUrlMappings = jellyseerrUrlMappings,
