@@ -1,0 +1,2074 @@
+{
+  "label": "candidate2",
+  "date": "2026-06-12T05:40:25.305Z",
+  "noJe": false,
+  "runs": 7,
+  "cpuThrottle": 4,
+  "devMode": false,
+  "items": {
+    "movie": "Back to the Future",
+    "series": "Bluey (2018)"
+  },
+  "scenarios": {
+    "00-boot:diag": {
+      "clsSources": [
+        "div.headerTabs.sectionTabs = 0.003",
+        "? | ? | ? = 0.001",
+        "div.headerRight = 0.000"
+      ],
+      "jeMeasures": [
+        "je:flushBootReady = 243ms @3469",
+        "je:init:activeStreams = 75ms @3868"
+      ],
+      "longTasks": [
+        "991ms @193",
+        "160ms @1199",
+        "100ms @1609",
+        "155ms @1810",
+        "192ms @2195",
+        "288ms @3663",
+        "100ms @4465",
+        "110ms @4567",
+        "177ms @5080",
+        "620ms @5802"
+      ]
+    },
+    "00-boot": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 21,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            20,
+            24,
+            21,
+            22,
+            21,
+            21,
+            23
+          ]
+        },
+        "longestTaskMs": {
+          "median": 991,
+          "mad": 42,
+          "n": 7,
+          "values": [
+            1281,
+            949,
+            1129,
+            1073,
+            989,
+            983,
+            991
+          ]
+        },
+        "tbtMs": {
+          "median": 2713,
+          "mad": 39,
+          "n": 7,
+          "values": [
+            2679,
+            2713,
+            2997,
+            2392,
+            2752,
+            2435,
+            2732
+          ]
+        },
+        "cls": {
+          "median": 0.0034972799520924256,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.003543255256527245,
+            0.0034972799520924256,
+            0.0034972799520924256,
+            0.0034972799520924256,
+            0.0034972799520924256,
+            0.003376600230181659,
+            0.0034972799520924256
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "jeBootRequests": {
+          "median": 19,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            19,
+            20,
+            19,
+            19,
+            20,
+            19,
+            19
+          ]
+        },
+        "jeReadyMs": {
+          "median": 6929.700000017881,
+          "mad": 563.7999999821186,
+          "n": 7,
+          "values": [
+            5866.700000017881,
+            7750.199999988079,
+            7493.5,
+            6350.5999999940395,
+            6929.700000017881,
+            6741.5999999940395,
+            7313.5999999940395
+          ]
+        },
+        "jeLastResourceEndMs": {
+          "median": 5628.5,
+          "mad": 228.59999999403954,
+          "n": 7,
+          "values": [
+            5628.5,
+            6201,
+            5399.9000000059605,
+            4753.5,
+            5707.5,
+            5224.5,
+            5712.600000023842
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    },
+    "10-home:diag": {
+      "clsSources": [
+        "div.headerTabs.sectionTabs = 0.003",
+        "? | ? | ? = 0.001",
+        "div.headerRight = 0.000"
+      ],
+      "jeMeasures": [
+        "je:flushBootReady = 336ms @3460",
+        "je:init:activeStreams = 97ms @3997",
+        "je:init:arrLinks = 23ms @3925"
+      ],
+      "longTasks": [
+        "1049ms @184",
+        "119ms @1649",
+        "101ms @1863",
+        "220ms @2201",
+        "370ms @3728",
+        "167ms @4806",
+        "149ms @5229",
+        "270ms @5403",
+        "493ms @6073",
+        "141ms @6865"
+      ]
+    },
+    "10-home": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 24,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            23,
+            27,
+            25,
+            23,
+            24,
+            27,
+            21
+          ]
+        },
+        "longestTaskMs": {
+          "median": 1194,
+          "mad": 82,
+          "n": 7,
+          "values": [
+            1194,
+            1257,
+            1097,
+            1276,
+            1227,
+            1077,
+            1049
+          ]
+        },
+        "tbtMs": {
+          "median": 2885,
+          "mad": 57,
+          "n": 7,
+          "values": [
+            2851,
+            2907,
+            2326,
+            3146,
+            2942,
+            2885,
+            2769
+          ]
+        },
+        "cls": {
+          "median": 0.0035277684882835105,
+          "mad": 0.000030488536191084978,
+          "n": 7,
+          "values": [
+            0.0035327373669471274,
+            0.0034972799520924256,
+            0.11182759920363564,
+            0.11182759920363564,
+            0.0034972799520924256,
+            0.0035277684882835105,
+            0.0034972799520924256
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    },
+    "20-library-scroll:diag": {
+      "clsSources": [
+        "div.headerTabs.sectionTabs | h3.pageTitle.pageTitleWithLogo.pageTitleWithDefaultLogo | button.headerButton.mainDrawerButton.barsMenuButton = 0.001",
+        "div.btnFilter-wrapper | button.btnSelectView.autoSize.paper-icon-button-light | button.btnSort.autoSize.paper-icon-button-light = 0.000"
+      ],
+      "jeMeasures": [],
+      "longTasks": []
+    },
+    "20-library-scroll": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 6,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            5,
+            3,
+            8,
+            6,
+            5,
+            6,
+            6
+          ]
+        },
+        "longestTaskMs": {
+          "median": 95,
+          "mad": 14,
+          "n": 7,
+          "values": [
+            78,
+            112,
+            109,
+            106,
+            90,
+            80,
+            95
+          ]
+        },
+        "tbtMs": {
+          "median": 123,
+          "mad": 28,
+          "n": 7,
+          "values": [
+            88,
+            154,
+            169,
+            123,
+            99,
+            95,
+            133
+          ]
+        },
+        "cls": {
+          "median": 0.0014688455087167244,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "fps": {
+          "median": 60.14813341985238,
+          "mad": 0.11068313579482236,
+          "n": 7,
+          "values": [
+            60.2588165556472,
+            60.14813341985238,
+            60.46440729656033,
+            60.01388751151445,
+            60.095561794279696,
+            60.052353333308076,
+            60.41058721101717
+          ]
+        },
+        "droppedPct": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "worstFrameMs": {
+          "median": 19.900000005960464,
+          "mad": 1.2999999821186066,
+          "n": 7,
+          "values": [
+            19.5,
+            21.599999994039536,
+            18.5,
+            21.700000017881393,
+            19.899999976158142,
+            21.19999998807907,
+            19.900000005960464
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    },
+    "30-movie-detail-cold:diag": {
+      "clsSources": [
+        "div.detailPageSecondaryContainer.padded-bottom-page | div.infoWrapper = 0.150",
+        "details.detailSection.tmdb-reviews-section.je-reviews-reserved | div.emby-scroller.padded-top-focusscale.padded-bottom-focusscale | div.detailPageSecondaryContainer.padded-bottom-page = 0.038",
+        "div.infoWrapper = 0.013",
+        "div.verticalSection.detailVerticalSection.verticalSection-extrabottompadding | ? | ? = 0.004"
+      ],
+      "jeMeasures": [],
+      "longTasks": [
+        "120ms @422",
+        "101ms @703",
+        "406ms @919",
+        "102ms @1410",
+        "152ms @1775",
+        "1151ms @2414",
+        "104ms @3727",
+        "142ms @3899",
+        "149ms @4541",
+        "145ms @4865"
+      ]
+    },
+    "30-movie-detail-cold": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 22,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            24,
+            21,
+            21,
+            22,
+            23,
+            22,
+            23
+          ]
+        },
+        "longestTaskMs": {
+          "median": 1092,
+          "mad": 44,
+          "n": 7,
+          "values": [
+            1136,
+            998,
+            1092,
+            1120,
+            1049,
+            977,
+            1151
+          ]
+        },
+        "tbtMs": {
+          "median": 2397,
+          "mad": 104,
+          "n": 7,
+          "values": [
+            2451,
+            2501,
+            2511,
+            2286,
+            2297,
+            2119,
+            2397
+          ]
+        },
+        "cls": {
+          "median": 0.2095333662504031,
+          "mad": 0.016286455699936364,
+          "n": 7,
+          "values": [
+            0.22581982195033948,
+            0.22579970373538294,
+            0.19169680483939716,
+            0.22581982195033948,
+            0.2095333662504031,
+            0.19170167073300837,
+            0.20664252513524436
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 1063.9000000059605,
+          "mad": 88.90000000596046,
+          "n": 7,
+          "values": [
+            948.4000000059605,
+            1153.699999988079,
+            1116.199999988079,
+            1063.9000000059605,
+            975,
+            904.8000000119209,
+            1118.300000011921
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 12,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": 42.5,
+          "mad": 5.199999988079071,
+          "n": 7,
+          "values": [
+            36.5,
+            56.70000001788139,
+            46.20000001788139,
+            47.69999998807907,
+            38.69999998807907,
+            36.89999997615814,
+            42.5
+          ]
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": 1111.5999999940395,
+          "mad": 97.90000000596046,
+          "n": 7,
+          "values": [
+            984.9000000059605,
+            1210.4000000059605,
+            1162.4000000059605,
+            1111.5999999940395,
+            1013.6999999880791,
+            941.6999999880791,
+            1160.800000011921
+          ]
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": 160.5,
+          "mad": 17.100000023841858,
+          "n": 7,
+          "values": [
+            178.30000001192093,
+            180.90000000596046,
+            145.10000002384186,
+            162.5,
+            127,
+            143.39999997615814,
+            160.5
+          ]
+        },
+        "at:.tmdb-reviews-section": {
+          "median": 1226.4000000059605,
+          "mad": 99.69999998807907,
+          "n": 7,
+          "values": [
+            1126.7000000178814,
+            1334.5999999940395,
+            1261.300000011921,
+            1226.4000000059605,
+            1102,
+            1048.199999988079,
+            1278.800000011921
+          ]
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": 42.5,
+          "mad": 5.199999988079071,
+          "n": 7,
+          "values": [
+            36.5,
+            56.70000001788139,
+            46.20000001788139,
+            47.69999998807907,
+            38.69999998807907,
+            36.89999997615814,
+            42.5
+          ]
+        },
+        "at:.jellyseerr-details-section": {
+          "median": 1111.5999999940395,
+          "mad": 97.90000000596046,
+          "n": 7,
+          "values": [
+            984.9000000059605,
+            1210.4000000059605,
+            1162.4000000059605,
+            1111.5999999940395,
+            1013.6999999880791,
+            941.6999999880791,
+            1160.800000011921
+          ]
+        },
+        "parity:.streaming-lookup-container": {
+          "median": 42.5,
+          "mad": 5.199999988079071,
+          "n": 7,
+          "values": [
+            36.5,
+            56.70000001788139,
+            46.20000001788139,
+            47.69999998807907,
+            38.69999998807907,
+            36.89999997615814,
+            42.5
+          ]
+        },
+        "at:.streaming-lookup-container": {
+          "median": 1111.5999999940395,
+          "mad": 97.90000000596046,
+          "n": 7,
+          "values": [
+            984.9000000059605,
+            1210.4000000059605,
+            1162.4000000059605,
+            1111.5999999940395,
+            1013.6999999880791,
+            941.6999999880791,
+            1160.800000011921
+          ]
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": 160.5,
+          "mad": 17.100000023841858,
+          "n": 7,
+          "values": [
+            178.30000001192093,
+            180.90000000596046,
+            145.10000002384186,
+            162.5,
+            127,
+            143.39999997615814,
+            160.5
+          ]
+        },
+        "at:.letterboxd-link": {
+          "median": 1226.4000000059605,
+          "mad": 99.69999998807907,
+          "n": 7,
+          "values": [
+            1126.7000000178814,
+            1334.5999999940395,
+            1261.300000011921,
+            1226.4000000059605,
+            1102,
+            1048.199999988079,
+            1278.800000011921
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 1,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 2,
+        ".tmdb-reviews-section": 1,
+        ".streaming-lookup-container": 1,
+        ".arr-link": 0,
+        ".letterboxd-link": 1,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 7
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for movie 105: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168383299095118:21572:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-6391683832"
+      ]
+    },
+    "31-movie-detail-warm:diag": {
+      "clsSources": [
+        "button.headerButton.mainDrawerButton.barsMenuButton = 0.000"
+      ],
+      "jeMeasures": [
+        "je:detailHook:handleNativeDetailRender = 48ms @16368"
+      ],
+      "longTasks": [
+        "589ms @82",
+        "354ms @673",
+        "113ms @1091",
+        "133ms @1922"
+      ]
+    },
+    "31-movie-detail-warm": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 8,
+          "mad": 2,
+          "n": 7,
+          "values": [
+            10,
+            5,
+            7,
+            9,
+            6,
+            8,
+            12
+          ]
+        },
+        "longestTaskMs": {
+          "median": 589,
+          "mad": 54,
+          "n": 7,
+          "values": [
+            535,
+            421,
+            448,
+            604,
+            693,
+            626,
+            589
+          ]
+        },
+        "tbtMs": {
+          "median": 1009,
+          "mad": 102,
+          "n": 7,
+          "values": [
+            958,
+            625,
+            888,
+            1009,
+            1050,
+            1111,
+            1124
+          ]
+        },
+        "cls": {
+          "median": 0.00008574144339855807,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 114.09999999403954,
+          "mad": 15.400000005960464,
+          "n": 7,
+          "values": [
+            114.09999999403954,
+            95.60000002384186,
+            111.30000001192093,
+            127,
+            98.69999998807907,
+            155.2000000178814,
+            144.60000002384186
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 3,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": 114.09999999403954,
+          "mad": 15.400000005960464,
+          "n": 7,
+          "values": [
+            114.09999999403954,
+            95.60000002384186,
+            111.30000001192093,
+            127,
+            98.69999998807907,
+            155.2000000178814,
+            144.60000002384186
+          ]
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.tmdb-reviews-section": {
+          "median": 114.09999999403954,
+          "mad": 15.400000005960464,
+          "n": 7,
+          "values": [
+            114.09999999403954,
+            95.60000002384186,
+            111.30000001192093,
+            127,
+            98.69999998807907,
+            155.2000000178814,
+            144.60000002384186
+          ]
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.jellyseerr-details-section": {
+          "median": 114.09999999403954,
+          "mad": 15.400000005960464,
+          "n": 7,
+          "values": [
+            114.09999999403954,
+            95.60000002384186,
+            111.30000001192093,
+            127,
+            98.69999998807907,
+            155.2000000178814,
+            144.60000002384186
+          ]
+        },
+        "parity:.streaming-lookup-container": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.streaming-lookup-container": {
+          "median": 114.09999999403954,
+          "mad": 15.400000005960464,
+          "n": 7,
+          "values": [
+            114.09999999403954,
+            95.60000002384186,
+            111.30000001192093,
+            127,
+            98.69999998807907,
+            155.2000000178814,
+            144.60000002384186
+          ]
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.letterboxd-link": {
+          "median": 114.09999999403954,
+          "mad": 15.400000005960464,
+          "n": 7,
+          "values": [
+            114.09999999403954,
+            95.60000002384186,
+            111.30000001192093,
+            127,
+            98.69999998807907,
+            155.2000000178814,
+            144.60000002384186
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 1,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 2,
+        ".tmdb-reviews-section": 1,
+        ".streaming-lookup-container": 1,
+        ".arr-link": 0,
+        ".letterboxd-link": 1,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 7
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for movie 105: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168383299095118:21572:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-6391683832",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "32-movie-detail-fresh-dom-warm-caches:diag": {
+      "clsSources": [
+        "div.detailPageSecondaryContainer.padded-bottom-page | div.infoWrapper = 0.087",
+        "div.detailPageSecondaryContainer.padded-bottom-page | details.detailSection.tmdb-reviews-section = 0.018",
+        "div.detailPageSecondaryContainer.padded-bottom-page | div.emby-scroller.padded-top-focusscale.padded-bottom-focusscale = 0.003",
+        "h3.pageTitle.pageTitleWithLogo.pageTitleWithDefaultLogo | button.headerButton.mainDrawerButton.barsMenuButton = 0.000"
+      ],
+      "jeMeasures": [],
+      "longTasks": [
+        "193ms @163",
+        "162ms @357",
+        "158ms @921",
+        "159ms @1247"
+      ]
+    },
+    "32-movie-detail-fresh-dom-warm-caches": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 7,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            6,
+            6,
+            7,
+            9,
+            8,
+            9,
+            4
+          ]
+        },
+        "longestTaskMs": {
+          "median": 280,
+          "mad": 142,
+          "n": 7,
+          "values": [
+            280,
+            250,
+            138,
+            436,
+            530,
+            532,
+            193
+          ]
+        },
+        "tbtMs": {
+          "median": 628,
+          "mad": 156,
+          "n": 7,
+          "values": [
+            628,
+            492,
+            277,
+            636,
+            825,
+            1134,
+            472
+          ]
+        },
+        "cls": {
+          "median": 0.11635271757620352,
+          "mad": 0.008684628388518675,
+          "n": 7,
+          "values": [
+            0.108983413052657,
+            0.12556251076121389,
+            0.1256075196050322,
+            0.11635271757620352,
+            0.12546554034825705,
+            0.10766808918768485,
+            0.10775965836607378
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 1155.2000000178814,
+          "mad": 163.2000000178814,
+          "n": 7,
+          "values": [
+            1189.699999988079,
+            1106,
+            720.7999999821186,
+            1155.2000000178814,
+            1390.5,
+            1538.5,
+            992
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 12,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": 26.700000017881393,
+          "mad": 4.100000023841858,
+          "n": 7,
+          "values": [
+            27.400000005960464,
+            24.400000005960464,
+            26.700000017881393,
+            21.69999998807907,
+            22.599999994039536,
+            48.69999998807907,
+            35.20000001788139
+          ]
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": 1176.9000000059605,
+          "mad": 149.69999998807907,
+          "n": 7,
+          "values": [
+            1217.0999999940395,
+            1130.4000000059605,
+            747.5,
+            1176.9000000059605,
+            1413.0999999940395,
+            1587.199999988079,
+            1027.2000000178814
+          ]
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": 58.400000005960464,
+          "mad": 4,
+          "n": 7,
+          "values": [
+            59.10000002384186,
+            52.30000001192093,
+            58.400000005960464,
+            54.599999994039536,
+            54.400000005960464,
+            107.7999999821186,
+            66.90000000596046
+          ]
+        },
+        "at:.tmdb-reviews-section": {
+          "median": 1209.800000011921,
+          "mad": 150.90000000596046,
+          "n": 7,
+          "values": [
+            1248.800000011921,
+            1158.300000011921,
+            779.1999999880791,
+            1209.800000011921,
+            1444.9000000059605,
+            1646.2999999821186,
+            1058.9000000059605
+          ]
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": 26.700000017881393,
+          "mad": 4.100000023841858,
+          "n": 7,
+          "values": [
+            27.400000005960464,
+            24.400000005960464,
+            26.700000017881393,
+            21.69999998807907,
+            22.599999994039536,
+            48.69999998807907,
+            35.20000001788139
+          ]
+        },
+        "at:.jellyseerr-details-section": {
+          "median": 1176.9000000059605,
+          "mad": 149.69999998807907,
+          "n": 7,
+          "values": [
+            1217.0999999940395,
+            1130.4000000059605,
+            747.5,
+            1176.9000000059605,
+            1413.0999999940395,
+            1587.199999988079,
+            1027.2000000178814
+          ]
+        },
+        "parity:.streaming-lookup-container": {
+          "median": 26.700000017881393,
+          "mad": 4.100000023841858,
+          "n": 7,
+          "values": [
+            27.400000005960464,
+            24.400000005960464,
+            26.700000017881393,
+            21.69999998807907,
+            22.599999994039536,
+            48.69999998807907,
+            35.20000001788139
+          ]
+        },
+        "at:.streaming-lookup-container": {
+          "median": 1176.9000000059605,
+          "mad": 149.69999998807907,
+          "n": 7,
+          "values": [
+            1217.0999999940395,
+            1130.4000000059605,
+            747.5,
+            1176.9000000059605,
+            1413.0999999940395,
+            1587.199999988079,
+            1027.2000000178814
+          ]
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": 58.400000005960464,
+          "mad": 4,
+          "n": 7,
+          "values": [
+            59.10000002384186,
+            52.30000001192093,
+            58.400000005960464,
+            54.599999994039536,
+            54.400000005960464,
+            107.7999999821186,
+            66.90000000596046
+          ]
+        },
+        "at:.letterboxd-link": {
+          "median": 1209.800000011921,
+          "mad": 150.90000000596046,
+          "n": 7,
+          "values": [
+            1248.800000011921,
+            1158.300000011921,
+            779.1999999880791,
+            1209.800000011921,
+            1444.9000000059605,
+            1646.2999999821186,
+            1058.9000000059605
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 2,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 3,
+        ".tmdb-reviews-section": 2,
+        ".streaming-lookup-container": 2,
+        ".arr-link": 0,
+        ".letterboxd-link": 1,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 13
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for movie 105: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168383299095118:21572:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-6391683832",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for movie 641389: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168383299095118:21572:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-6391683"
+      ]
+    },
+    "40-series-detail-cold:diag": {
+      "clsSources": [
+        "div.detailPageSecondaryContainer.padded-bottom-page | div.infoWrapper = 0.143",
+        "div.detailPageSecondaryContainer.padded-bottom-page = 0.022",
+        "details.detailSection.tmdb-reviews-section | div.itemDetailsGroup = 0.009",
+        "div.verticalSection.detailVerticalSection.verticalSection-extrabottompadding | ? | a.button-link.emby-button = 0.006"
+      ],
+      "jeMeasures": [],
+      "longTasks": [
+        "142ms @7",
+        "131ms @160",
+        "311ms @700",
+        "462ms @1369",
+        "248ms @2157",
+        "144ms @2690",
+        "106ms @2886",
+        "109ms @3005",
+        "218ms @3229",
+        "131ms @3784"
+      ]
+    },
+    "40-series-detail-cold": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 19,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            19,
+            20,
+            18,
+            18,
+            21,
+            19,
+            26
+          ]
+        },
+        "longestTaskMs": {
+          "median": 371,
+          "mad": 20,
+          "n": 7,
+          "values": [
+            381,
+            342,
+            357,
+            371,
+            391,
+            348,
+            462
+          ]
+        },
+        "tbtMs": {
+          "median": 1191,
+          "mad": 104,
+          "n": 7,
+          "values": [
+            1191,
+            1056,
+            1096,
+            1239,
+            1518,
+            1087,
+            1935
+          ]
+        },
+        "cls": {
+          "median": 0.18300693278057586,
+          "mad": 0.00006776728061000381,
+          "n": 7,
+          "values": [
+            0.18300693278057586,
+            0.19607078277525097,
+            0.18297195414162468,
+            0.18273482736344202,
+            0.18301273488802186,
+            0.19986105133182228,
+            0.18293916549996586
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 1064.7000000178814,
+          "mad": 231.19999998807907,
+          "n": 7,
+          "values": [
+            940.5,
+            790.5999999940395,
+            759.2000000178814,
+            1064.7000000178814,
+            1295.9000000059605,
+            1153.199999988079,
+            1632.3999999761581
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 14,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            14,
+            14,
+            14,
+            14,
+            14,
+            14,
+            14
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": 44.60000002384186,
+          "mad": 2.4000000059604645,
+          "n": 7,
+          "values": [
+            45.099999994039536,
+            42.20000001788139,
+            49.099999994039536,
+            35,
+            70.19999998807907,
+            43.900000005960464,
+            44.60000002384186
+          ]
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": 1099.7000000178814,
+          "mad": 266.39999997615814,
+          "n": 7,
+          "values": [
+            985.5999999940395,
+            832.8000000119209,
+            808.3000000119209,
+            1099.7000000178814,
+            1366.0999999940395,
+            1197.0999999940395,
+            1677
+          ]
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": 141.90000000596046,
+          "mad": 5.9000000059604645,
+          "n": 7,
+          "values": [
+            168.5,
+            141.5,
+            141.90000000596046,
+            133.59999999403954,
+            185.09999999403954,
+            136.90000000596046,
+            147.80000001192093
+          ]
+        },
+        "at:.tmdb-reviews-section": {
+          "median": 1198.300000011921,
+          "mad": 266.2000000178814,
+          "n": 7,
+          "values": [
+            1109,
+            932.0999999940395,
+            901.1000000238419,
+            1198.300000011921,
+            1481,
+            1290.0999999940395,
+            1780.199999988079
+          ]
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": 44.60000002384186,
+          "mad": 2.4000000059604645,
+          "n": 7,
+          "values": [
+            45.099999994039536,
+            42.20000001788139,
+            49.099999994039536,
+            35,
+            70.19999998807907,
+            43.900000005960464,
+            44.60000002384186
+          ]
+        },
+        "at:.jellyseerr-details-section": {
+          "median": 1099.7000000178814,
+          "mad": 266.39999997615814,
+          "n": 7,
+          "values": [
+            985.5999999940395,
+            832.8000000119209,
+            808.3000000119209,
+            1099.7000000178814,
+            1366.0999999940395,
+            1197.0999999940395,
+            1677
+          ]
+        },
+        "parity:.streaming-lookup-container": {
+          "median": 44.60000002384186,
+          "mad": 2.4000000059604645,
+          "n": 7,
+          "values": [
+            45.099999994039536,
+            42.20000001788139,
+            49.099999994039536,
+            35,
+            70.19999998807907,
+            43.900000005960464,
+            44.60000002384186
+          ]
+        },
+        "at:.streaming-lookup-container": {
+          "median": 1099.7000000178814,
+          "mad": 266.39999997615814,
+          "n": 7,
+          "values": [
+            985.5999999940395,
+            832.8000000119209,
+            808.3000000119209,
+            1099.7000000178814,
+            1366.0999999940395,
+            1197.0999999940395,
+            1677
+          ]
+        },
+        "parity:.arr-link": {
+          "median": 845.9000000059605,
+          "mad": 72,
+          "n": 7,
+          "values": [
+            3721.9000000059605,
+            773.9000000059605,
+            670.1999999880791,
+            845.9000000059605,
+            879.5,
+            819.1000000238419,
+            1234.9000000059605
+          ]
+        },
+        "at:.arr-link": {
+          "median": 1972.300000011921,
+          "mad": 407.80000001192093,
+          "n": 7,
+          "values": [
+            4662.4000000059605,
+            1564.5,
+            1429.4000000059605,
+            1910.6000000238419,
+            2175.4000000059605,
+            1972.300000011921,
+            2867.2999999821186
+          ]
+        },
+        "parity:.letterboxd-link": {
+          "median": 141.90000000596046,
+          "mad": 5.9000000059604645,
+          "n": 7,
+          "values": [
+            168.5,
+            141.5,
+            141.90000000596046,
+            133.59999999403954,
+            185.09999999403954,
+            136.90000000596046,
+            147.80000001192093
+          ]
+        },
+        "at:.letterboxd-link": {
+          "median": 1198.300000011921,
+          "mad": 266.2000000178814,
+          "n": 7,
+          "values": [
+            1109,
+            932.0999999940395,
+            901.1000000238419,
+            1198.300000011921,
+            1481,
+            1290.0999999940395,
+            1780.199999988079
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 1,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 2,
+        ".tmdb-reviews-section": 1,
+        ".streaming-lookup-container": 1,
+        ".arr-link": 1,
+        ".letterboxd-link": 1,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 8
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for tv 82728: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168383299095118:21572:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-63916838329"
+      ]
+    },
+    "41-series-detail-warm:diag": {
+      "clsSources": [
+        "button.headerButton.mainDrawerButton.barsMenuButton = 0.000"
+      ],
+      "jeMeasures": [
+        "je:detailHook:handleNativeDetailRender = 47ms @16610"
+      ],
+      "longTasks": [
+        "397ms @87",
+        "208ms @485",
+        "505ms @765",
+        "141ms @1272",
+        "110ms @1905"
+      ]
+    },
+    "41-series-detail-warm": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 10,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            6,
+            12,
+            11,
+            10,
+            9,
+            9,
+            12
+          ]
+        },
+        "longestTaskMs": {
+          "median": 593,
+          "mad": 67,
+          "n": 7,
+          "values": [
+            475,
+            583,
+            593,
+            677,
+            656,
+            660,
+            505
+          ]
+        },
+        "tbtMs": {
+          "median": 1376,
+          "mad": 170,
+          "n": 7,
+          "values": [
+            796,
+            1515,
+            1293,
+            1607,
+            1651,
+            1376,
+            1206
+          ]
+        },
+        "cls": {
+          "median": 0.00008574144339855807,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 133.19999998807907,
+          "mad": 26.400000005960464,
+          "n": 7,
+          "values": [
+            137.5,
+            133.19999998807907,
+            200.90000000596046,
+            106.7999999821186,
+            820,
+            76.7999999821186,
+            126.5
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 4,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": 133.19999998807907,
+          "mad": 26.400000005960464,
+          "n": 7,
+          "values": [
+            137.5,
+            133.19999998807907,
+            200.90000000596046,
+            106.7999999821186,
+            820,
+            76.7999999821186,
+            126.5
+          ]
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.tmdb-reviews-section": {
+          "median": 133.19999998807907,
+          "mad": 26.400000005960464,
+          "n": 7,
+          "values": [
+            137.5,
+            133.19999998807907,
+            200.90000000596046,
+            106.7999999821186,
+            820,
+            76.7999999821186,
+            126.5
+          ]
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.jellyseerr-details-section": {
+          "median": 133.19999998807907,
+          "mad": 26.400000005960464,
+          "n": 7,
+          "values": [
+            137.5,
+            133.19999998807907,
+            200.90000000596046,
+            106.7999999821186,
+            820,
+            76.7999999821186,
+            126.5
+          ]
+        },
+        "parity:.streaming-lookup-container": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.streaming-lookup-container": {
+          "median": 133.19999998807907,
+          "mad": 26.400000005960464,
+          "n": 7,
+          "values": [
+            137.5,
+            133.19999998807907,
+            200.90000000596046,
+            106.7999999821186,
+            820,
+            76.7999999821186,
+            126.5
+          ]
+        },
+        "parity:.arr-link": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.arr-link": {
+          "median": 133.19999998807907,
+          "mad": 26.400000005960464,
+          "n": 7,
+          "values": [
+            137.5,
+            133.19999998807907,
+            200.90000000596046,
+            106.7999999821186,
+            820,
+            76.7999999821186,
+            126.5
+          ]
+        },
+        "parity:.letterboxd-link": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "at:.letterboxd-link": {
+          "median": 133.19999998807907,
+          "mad": 26.400000005960464,
+          "n": 7,
+          "values": [
+            137.5,
+            133.19999998807907,
+            200.90000000596046,
+            106.7999999821186,
+            820,
+            76.7999999821186,
+            126.5
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 1,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 2,
+        ".tmdb-reviews-section": 1,
+        ".streaming-lookup-container": 1,
+        ".arr-link": 1,
+        ".letterboxd-link": 1,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 8
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for tv 82728: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168383299095118:21572:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-63916838329",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "50-search-type:diag": {
+      "clsSources": [
+        "div.verticalSection.emby-scroller-container.jellyseerr-section | a.jellyseerr-more-info-link.emby-button | a.jellyseerr-more-info-link.emby-button = 0.205",
+        "h3.pageTitle | button.headerButton.mainDrawerButton.barsMenuButton = 0.000",
+        "a.jellyseerr-more-info-link.emby-button | a.jellyseerr-more-info-link.emby-button | a.jellyseerr-more-info-link.emby-button = 0.000"
+      ],
+      "jeMeasures": [],
+      "longTasks": [
+        "135ms @539",
+        "190ms @2203",
+        "116ms @3098"
+      ]
+    },
+    "50-search-type": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 17,
+          "mad": 2,
+          "n": 7,
+          "values": [
+            20,
+            15,
+            14,
+            17,
+            19,
+            18,
+            11
+          ]
+        },
+        "longestTaskMs": {
+          "median": 200,
+          "mad": 16,
+          "n": 7,
+          "values": [
+            292,
+            216,
+            160,
+            148,
+            205,
+            200,
+            190
+          ]
+        },
+        "tbtMs": {
+          "median": 619,
+          "mad": 102,
+          "n": 7,
+          "values": [
+            744,
+            622,
+            448,
+            517,
+            619,
+            628,
+            445
+          ]
+        },
+        "cls": {
+          "median": 0.20568766294879676,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.18632934777530624,
+            0.20568766294879676,
+            0.20568766294879676,
+            0.20568766294879676,
+            0.20568766294879676,
+            0.20568766294879676,
+            0.20568766294879676
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 72,
+          "mad": 16,
+          "n": 7,
+          "values": [
+            72,
+            32,
+            72,
+            48,
+            136,
+            72,
+            56
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-section": {
+          "median": 2307,
+          "mad": 148.90000000596046,
+          "n": 7,
+          "values": [
+            3453.7999999821186,
+            2019.300000011921,
+            2307,
+            2236.4000000059605,
+            2540.4000000059605,
+            2455.9000000059605,
+            2285.2999999821186
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 1,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    }
+  }
+}

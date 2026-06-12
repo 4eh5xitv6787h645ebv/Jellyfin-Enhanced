@@ -1,0 +1,700 @@
+{
+  "label": "smoke-postphase",
+  "date": "2026-06-12T04:21:16.389Z",
+  "noJe": false,
+  "runs": 1,
+  "cpuThrottle": 4,
+  "devMode": false,
+  "items": {
+    "movie": "Back to the Future",
+    "series": "Bluey (2018)"
+  },
+  "scenarios": {
+    "00-boot": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 22,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            22
+          ]
+        },
+        "longestTaskMs": {
+          "median": 1125,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1125
+          ]
+        },
+        "tbtMs": {
+          "median": 3068,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            3068
+          ]
+        },
+        "cls": {
+          "median": 0.0034972799520924256,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0.0034972799520924256
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "jeBootRequests": {
+          "median": 19,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            19
+          ]
+        },
+        "jeReadyMs": {
+          "median": 6764.300000011921,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            6764.300000011921
+          ]
+        },
+        "jeLastResourceEndMs": {
+          "median": 5873.199999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            5873.199999988079
+          ]
+        }
+      },
+      "runsCompleted": 1,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    },
+    "10-home": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 24,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            24
+          ]
+        },
+        "longestTaskMs": {
+          "median": 1276,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1276
+          ]
+        },
+        "tbtMs": {
+          "median": 3462,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            3462
+          ]
+        },
+        "cls": {
+          "median": 0.11182759920363564,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0.11182759920363564
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 1,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    },
+    "20-library-scroll": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 2,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            2
+          ]
+        },
+        "longestTaskMs": {
+          "median": 86,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            86
+          ]
+        },
+        "tbtMs": {
+          "median": 54,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            54
+          ]
+        },
+        "cls": {
+          "median": 0.0014688455087167244,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0.0014688455087167244
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "fps": {
+          "median": 60.115262320788645,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            60.115262320788645
+          ]
+        },
+        "droppedPct": {
+          "median": 0,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0
+          ]
+        },
+        "worstFrameMs": {
+          "median": 24.30000001192093,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            24.30000001192093
+          ]
+        }
+      },
+      "runsCompleted": 1,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    },
+    "30-movie-detail-cold": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 21,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            21
+          ]
+        },
+        "longestTaskMs": {
+          "median": 1183,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1183
+          ]
+        },
+        "tbtMs": {
+          "median": 2628,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            2628
+          ]
+        },
+        "cls": {
+          "median": 0.209011837661021,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0.209011837661021
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 1711.699999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1711.699999988079
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 12,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            12
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": 58,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            58
+          ]
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": 1769.699999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1769.699999988079
+          ]
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": 58,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            58
+          ]
+        },
+        "at:.tmdb-reviews-section": {
+          "median": 1769.699999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1769.699999988079
+          ]
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": 58,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            58
+          ]
+        },
+        "at:.jellyseerr-details-section": {
+          "median": 1769.699999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1769.699999988079
+          ]
+        },
+        "parity:.streaming-lookup-container": {
+          "median": 58,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            58
+          ]
+        },
+        "at:.streaming-lookup-container": {
+          "median": 1769.699999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1769.699999988079
+          ]
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": 176,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            176
+          ]
+        },
+        "at:.letterboxd-link": {
+          "median": 1887.699999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1887.699999988079
+          ]
+        }
+      },
+      "runsCompleted": 1,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 1,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 2,
+        ".tmdb-reviews-section": 1,
+        ".streaming-lookup-container": 1,
+        ".arr-link": 0,
+        ".letterboxd-link": 1,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 7
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for movie 105: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168348226078668:21364:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-6391683482"
+      ]
+    },
+    "40-series-detail-cold": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 21,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            21
+          ]
+        },
+        "longestTaskMs": {
+          "median": 335,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            335
+          ]
+        },
+        "tbtMs": {
+          "median": 1208,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1208
+          ]
+        },
+        "cls": {
+          "median": 0.18721573746449663,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0.18721573746449663
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 1798.699999988079,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1798.699999988079
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 14,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            14
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": 39.80000001192093,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            39.80000001192093
+          ]
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": 1838.5,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1838.5
+          ]
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": 39.80000001192093,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            39.80000001192093
+          ]
+        },
+        "at:.tmdb-reviews-section": {
+          "median": 1838.5,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1838.5
+          ]
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": 39.80000001192093,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            39.80000001192093
+          ]
+        },
+        "at:.jellyseerr-details-section": {
+          "median": 1838.5,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1838.5
+          ]
+        },
+        "parity:.streaming-lookup-container": {
+          "median": 39.80000001192093,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            39.80000001192093
+          ]
+        },
+        "at:.streaming-lookup-container": {
+          "median": 1838.5,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1838.5
+          ]
+        },
+        "parity:.arr-link": {
+          "median": 5226.100000023842,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            5226.100000023842
+          ]
+        },
+        "at:.arr-link": {
+          "median": 7024.800000011921,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            7024.800000011921
+          ]
+        },
+        "parity:.letterboxd-link": {
+          "median": 154.90000000596046,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            154.90000000596046
+          ]
+        },
+        "at:.letterboxd-link": {
+          "median": 1953.5999999940395,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            1953.5999999940395
+          ]
+        }
+      },
+      "runsCompleted": 1,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 1,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 2,
+        ".tmdb-reviews-section": 1,
+        ".streaming-lookup-container": 1,
+        ".arr-link": 1,
+        ".letterboxd-link": 1,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 8
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response",
+        "🪼 Jellyfin Enhanced: Seerr API: Failed to fetch issues for tv 82728: Error: HTTP 403\n    at Object.fetchWithRetry (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-639168348226078668:21364:29)\n    at async fetchFn (http://192.168.0.84:8097/JellyfinEnhanced/script?v=11.12.0.0-63916834822"
+      ]
+    },
+    "50-search-type": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 19,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            19
+          ]
+        },
+        "longestTaskMs": {
+          "median": 244,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            244
+          ]
+        },
+        "tbtMs": {
+          "median": 639,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            639
+          ]
+        },
+        "cls": {
+          "median": 0.18632934777530624,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            0.18632934777530624
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 72,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            72
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-section": {
+          "median": 3201.800000011921,
+          "mad": 0,
+          "n": 1,
+          "values": [
+            3201.800000011921
+          ]
+        }
+      },
+      "runsCompleted": 1,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 1,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "🪼 Jellyfin Enhanced: Requests Page: Failed to fetch issues: Response"
+      ]
+    }
+  }
+}
