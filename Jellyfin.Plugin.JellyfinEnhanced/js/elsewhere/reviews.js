@@ -1,4 +1,13 @@
 // /js/elsewhere/reviews.js
+//
+// Native-parity timing: review fetches start synchronously at viewshow
+// (JE.viewRouter.onViewShow) using the persistent identity LRU, the section
+// shell is injected at the exact native detail render moment
+// (JE.viewRouter.onNativeDetailRender), and the cards fill in when the data
+// promise resolves (synchronously on warm caches). The horizontal review row
+// rides jellyfin-web's own emby-scroller component (transform paging + ‹ ›
+// buttons on desktop, native overflow on mobile) instead of a custom
+// overflow-x container.
 (function (JE) {
     'use strict';
 
@@ -12,17 +21,19 @@
 
         const logPrefix = '🪼 Jellyfin Enhanced: Reviews:';
 
-        function fetchReviews(tmdbId, mediaType) {
+        function fetchReviews(tmdbId, mediaType, signal) {
             const apiMediaType = mediaType === 'Series' ? 'tv' : 'movie';
             const url = `${ApiClient.getUrl(`/JellyfinEnhanced/tmdb/${apiMediaType}/${tmdbId}/reviews`)}?language=en-US&page=1`;
             return fetch(url, {
                 headers: {
                     "X-Emby-Token": ApiClient.accessToken()
-                }
+                },
+                signal
             })
                 .then(response => response.ok ? response.json() : Promise.reject(`API Error: ${response.status}`))
                 .then(data => data.results || [])
                 .catch(error => {
+                    if (error?.name === 'AbortError') return null;
                     console.error(`${logPrefix} Failed to fetch reviews.`, error);
                     return null;
                 });
@@ -30,17 +41,22 @@
 
         /**
          * Fetches all user-written reviews for a TMDB item (aggregated across all users).
+         * (Server-side filtering — HideReviewsFromHiddenUsers / HideReviewsFromDisabledUsers
+         * — is applied by this endpoint.)
          */
-        function fetchUserReviews(tmdbId, mediaType) {
+        function fetchUserReviews(tmdbId, mediaType, signal) {
             // mediaType is already in API format ('movie' or 'tv') — no conversion needed
             const url = ApiClient.getUrl(`/JellyfinEnhanced/reviews/${mediaType}/${tmdbId}`);
             return fetch(url, {
-                headers: { "X-Emby-Token": ApiClient.accessToken() }
+                headers: { "X-Emby-Token": ApiClient.accessToken() },
+                signal
             })
                 .then(r => r.ok ? r.json() : Promise.reject(`API Error: ${r.status}`))
                 .then(data => data.reviews || [])
                 .catch(err => {
-                    console.error(`${logPrefix} Failed to fetch user reviews.`, err);
+                    if (err?.name !== 'AbortError') {
+                        console.error(`${logPrefix} Failed to fetch user reviews.`, err);
+                    }
                     return [];
                 });
         }
@@ -517,46 +533,171 @@
             return form;
         }
 
-        function addReviewsToPage(reviews, userReviews, contextPage, tmdbId, tmdbMediaType, currentUser) {
-            const existingSection = contextPage.querySelector('.tmdb-reviews-section');
-            if (existingSection) {
-                existingSection.remove();
+        // ────────────────────────────────────────────────────────────────────
+        // TMDB target resolution
+        // ────────────────────────────────────────────────────────────────────
+
+        /**
+         * Item DTO via the single-flight item cache (warmed by the native
+         * detail controller's own viewshow fetch).
+         */
+        function getItem(itemId, userId) {
+            return JE.helpers && typeof JE.helpers.getItemCached === 'function'
+                ? JE.helpers.getItemCached(itemId, { userId })
+                : ApiClient.getItem(userId, itemId);
+        }
+
+        /**
+         * Synchronous target resolution from the router's persistent identity
+         * LRU. Only top-level movies/series can resolve here: Episode/Season
+         * reviews key off the SERIES tmdb id plus season/episode numbers, and
+         * the identity LRU does not store index numbers — those go through
+         * the item DTO path.
+         * @param {string} itemId
+         * @returns {{mediaType: string, tmdbKey: string, apiMediaType: string}|null}
+         */
+        function resolveTargetFromIdentity(itemId) {
+            const identity = JE.viewRouter && typeof JE.viewRouter.getIdentity === 'function'
+                ? JE.viewRouter.getIdentity(itemId)
+                : null;
+            if (!identity || !identity.tmdbId) return null;
+            if (identity.type === 'Movie') {
+                return { mediaType: 'Movie', tmdbKey: String(identity.tmdbId), apiMediaType: 'movie' };
+            }
+            if (identity.type === 'Series') {
+                return { mediaType: 'Series', tmdbKey: String(identity.tmdbId), apiMediaType: 'tv' };
+            }
+            return null;
+        }
+
+        /**
+         * Resolves the SERIES tmdb id for a Season/Episode item:
+         * 1. the DTO's own SeriesProviderIds,
+         * 2. the persistent identity LRU for the series (no network),
+         * 3. a series DTO fetch (existing fallback).
+         * @param {object} item - Season/Episode DTO
+         * @param {string} userId
+         * @param {AbortSignal|null} signal
+         * @returns {Promise<string|null>}
+         */
+        async function resolveSeriesTmdbId(item, userId, signal) {
+            const direct = item?.SeriesProviderIds?.Tmdb;
+            if (direct) return direct;
+            if (!item?.SeriesId) return null;
+
+            const seriesIdentity = JE.viewRouter && typeof JE.viewRouter.getIdentity === 'function'
+                ? JE.viewRouter.getIdentity(item.SeriesId)
+                : null;
+            if (seriesIdentity?.tmdbId) return seriesIdentity.tmdbId;
+
+            try {
+                const series = await getItem(item.SeriesId, userId);
+                if (signal && signal.aborted) return null;
+                return series?.ProviderIds?.Tmdb || null;
+            } catch (_) {
+                return null;
+            }
+        }
+
+        /**
+         * Full target resolution from the item DTO (cold identity cache, or
+         * Season/Episode items that need index numbers). Returns null when
+         * the item is not review-eligible.
+         * @param {string} itemId
+         * @param {AbortSignal|null} signal
+         * @returns {Promise<{mediaType: string, tmdbKey: string, apiMediaType: string}|null>}
+         */
+        async function resolveTargetFromDto(itemId, signal) {
+            const userId = ApiClient.getCurrentUserId();
+            if (!itemId || !userId) return null;
+
+            const item = await getItem(itemId, userId);
+            if ((signal && signal.aborted) || !item) return null;
+
+            const mediaType = item.Type;
+
+            if (mediaType === 'Movie' || mediaType === 'Series') {
+                const tmdbId = item?.ProviderIds?.Tmdb;
+                if (!tmdbId) return null;
+                return {
+                    mediaType,
+                    tmdbKey: String(tmdbId),
+                    apiMediaType: mediaType === 'Series' ? 'tv' : 'movie'
+                };
             }
 
-            // Inject average user rating chip next to the TMDB/RT rating chips
-            if (userReviewsEnabled && userReviews.length > 0) {
-                const ratingsWithValue = userReviews.filter(r => r.rating);
-                if (ratingsWithValue.length > 0) {
-                    const avg = ratingsWithValue.reduce((sum, r) => sum + r.rating, 0) / ratingsWithValue.length;
-                    const raw = avg * 2; // convert 1-5 → raw out of 10
-                    const avgDisplay = Number.isInteger(raw) ? `${raw}` : `${raw.toFixed(1)}`;
+            if (mediaType === 'Season') {
+                const seriesTmdbId = await resolveSeriesTmdbId(item, userId, signal);
+                if ((signal && signal.aborted) || !seriesTmdbId || item?.IndexNumber == null) return null;
+                return { mediaType, tmdbKey: `${seriesTmdbId}:s${item.IndexNumber}`, apiMediaType: 'tv' };
+            }
 
-                    // Remove any existing chip first
-                    contextPage.querySelector('.je-avg-user-rating-chip')?.remove();
+            if (mediaType === 'Episode') {
+                const seriesTmdbId = await resolveSeriesTmdbId(item, userId, signal);
+                if ((signal && signal.aborted) || !seriesTmdbId
+                    || item?.ParentIndexNumber == null || item?.IndexNumber == null) return null;
+                return {
+                    mediaType,
+                    tmdbKey: `${seriesTmdbId}:s${item.ParentIndexNumber}:e${item.IndexNumber}`,
+                    apiMediaType: 'tv'
+                };
+            }
 
-                    const chip = document.createElement('div');
-                    chip.className = 'mediaInfoCriticRating mediaInfoItem je-avg-user-rating-chip';
-                    chip.title = tWithFallback('reviews_avg_rating_tooltip',
-                        'Average rating from {count} user(s)', { count: ratingsWithValue.length });
-                    chip.innerHTML = `<span class="material-symbols-rounded starIcon" aria-hidden="true" style="color:#e91e8c;">person_heart</span>${avgDisplay}`;
+            return null;
+        }
 
-                    // Insert after starRatingContainer, or after mediaInfoCriticRating if present,
-                    // falling back to appending to the mediaInfoItems container
-                    const criticRating = contextPage.querySelector('.mediaInfoCriticRating');
-                    const starRating = contextPage.querySelector('.starRatingContainer');
-                    const anchor = criticRating || starRating;
-                    if (anchor && anchor.parentNode) {
-                        anchor.parentNode.insertBefore(chip, anchor.nextSibling);
-                    } else {
-                        const container = contextPage.querySelector('.mediaInfoItems');
-                        if (container) container.appendChild(chip);
-                    }
+        // ────────────────────────────────────────────────────────────────────
+        // Per-item reviews TTL cache (revisits render synchronously)
+        // ────────────────────────────────────────────────────────────────────
+
+        const REVIEWS_CACHE_TTL_MS = 60 * 1000;
+        const REVIEWS_CACHE_LIMIT = 40;
+        const reviewsCache = new Map(); // key -> { tmdbReviews, userReviews, ts }
+
+        function reviewsCacheKey(target) {
+            // apiMediaType prefix: a movie and a tv show can share a raw TMDB id.
+            return `${target.apiMediaType}:${target.tmdbKey}`;
+        }
+
+        function getCachedReviews(key) {
+            const entry = reviewsCache.get(key);
+            if (!entry) return null;
+            if ((Date.now() - entry.ts) >= REVIEWS_CACHE_TTL_MS) {
+                reviewsCache.delete(key);
+                return null;
+            }
+            return entry;
+        }
+
+        function putCachedReviews(key, tmdbReviews, userReviews) {
+            if (reviewsCache.size >= REVIEWS_CACHE_LIMIT) {
+                let oldestKey = null;
+                let oldestTs = Infinity;
+                for (const [k, v] of reviewsCache) {
+                    if (v.ts < oldestTs) { oldestTs = v.ts; oldestKey = k; }
                 }
+                if (oldestKey !== null) reviewsCache.delete(oldestKey);
             }
+            reviewsCache.set(key, { tmdbReviews, userReviews, ts: Date.now() });
+        }
 
-            // `currentUser` is resolved fresh by the caller (processPage /
-            // refreshReviews) instead of read from the cached `JE.currentUser`
-            // set once at plugin init. This matters for:
+        /**
+         * Loads everything fillSection needs: both review sets (TMDB + user,
+         * fetched in parallel, TTL-cached per item) plus the live current
+         * user. Returns null only when aborted.
+         * @param {{mediaType: string, tmdbKey: string, apiMediaType: string}} target
+         * @param {AbortSignal|null} signal
+         */
+        async function loadReviewData(target, signal) {
+            const cacheKey = reviewsCacheKey(target);
+            const cached = getCachedReviews(cacheKey);
+            // TMDB reviews only available for top-level movie/tv, not seasons/episodes
+            const tmdbAttempted = !cached && tmdbReviewsEnabled
+                && (target.mediaType === 'Movie' || target.mediaType === 'Series');
+
+            // `currentUser` is resolved fresh on every load instead of read
+            // from the cached `JE.currentUser` set once at plugin init. This
+            // matters for:
             //   1. Admin viewers on first render (race: JE.currentUser promise
             //      may not have resolved yet, so admin would briefly see no
             //      moderation buttons).
@@ -566,261 +707,370 @@
             //      would see phantom admin controls, while the backend still
             //      blocks the actual delete with 403).
             // Using the live ApiClient session fixes both.
-            const currentUserId = (currentUser?.Id) || ApiClient.getCurrentUserId() || '';
-            const viewerIsAdmin = currentUser?.Policy?.IsAdministrator === true;
-            const ownReview = userReviews.find(r => r.userId.replace(/-/g, '') === currentUserId.replace(/-/g, ''));
-            const hasReviews = (reviews && reviews.length > 0) || userReviews.length > 0;
+            const [tmdbReviews, userReviews, currentUser] = await Promise.all([
+                cached
+                    ? Promise.resolve(cached.tmdbReviews)
+                    : (tmdbAttempted
+                        ? fetchReviews(target.tmdbKey.split(':')[0], target.mediaType, signal)
+                        : Promise.resolve(null)),
+                cached
+                    ? Promise.resolve(cached.userReviews)
+                    : (userReviewsEnabled
+                        ? fetchUserReviews(target.tmdbKey, target.apiMediaType, signal)
+                        : Promise.resolve([])),
+                ApiClient.getCurrentUser().catch(() => null)
+            ]);
+            if (signal && signal.aborted) return null;
 
-            let reviewsSection;
-
-            if (hasReviews || true /* always show so users can add their own */) {
-                reviewsSection = document.createElement('details');
-                reviewsSection.className = 'detailSection tmdb-reviews-section';
-                if (JE.currentSettings?.reviewsExpandedByDefault) {
-                    reviewsSection.setAttribute('open', '');
-                }
-
-                const totalCount = (reviews ? reviews.length : 0) + userReviews.length;
-                const summary = document.createElement('summary');
-                summary.className = 'sectionTitle';
-                summary.innerHTML = `${JE.t('reviews_title', { count: totalCount })} <i class="material-icons expand-icon">expand_more</i>`;
-                reviewsSection.appendChild(summary);
-
-                // ── "Write a Review" / "Edit Review" button bar ──────────────
-                const actionBar = document.createElement('div');
-                actionBar.className = 'je-review-action-bar';
-                let writeBtn = null;
-
-                if (userReviewsEnabled && !ownReview) {
-                    writeBtn = document.createElement('button');
-                    writeBtn.className = 'je-review-btn je-review-write-btn';
-                    writeBtn.textContent = JE.t('reviews_add');
-                    actionBar.appendChild(writeBtn);
-                }
-                reviewsSection.appendChild(actionBar);
-
-                // ── Inline form placeholder (hidden until button clicked) ──────────
-                const formPlaceholder = document.createElement('div');
-                formPlaceholder.className = 'je-review-form-placeholder';
-                reviewsSection.appendChild(formPlaceholder);
-
-                const swipeContainer = document.createElement('div');
-                swipeContainer.className = 'tmdb-review-swipe-container';
-
-                // Render user reviews first (distinct border colour)
-                userReviews.forEach(userReview => {
-                    const card = createUserReviewElement(
-                        userReview,
-                        currentUserId,
-                        viewerIsAdmin,
-                        // Edit callback (own reviews only)
-                        (r) => openForm(r),
-                        // Delete callback — routes to self-delete for own reviews,
-                        // admin moderation delete for others (admin viewers only).
-                        async (r) => {
-                            const isOwn = r.userId.replace(/-/g, '') === currentUserId.replace(/-/g, '');
-                            const userName = r.userName || 'user';
-                            const title = isOwn
-                                ? tWithFallback('reviews_delete_title', 'Delete review')
-                                : tWithFallback('reviews_admin_delete_title', 'Delete review (admin)');
-                            const body = isOwn
-                                ? tWithFallback('reviews_delete_confirm',
-                                    'Delete your review for this item?')
-                                : tWithFallback('reviews_admin_delete_confirm',
-                                    'Delete this review by {user}? This cannot be undone.',
-                                    { user: userName });
-                            if (!(await jeConfirm(body, title))) return;
-                            try {
-                                if (isOwn) {
-                                    await deleteUserReview(tmdbId, tmdbMediaType);
-                                } else {
-                                    await adminDeleteUserReview(r.userId, tmdbId, tmdbMediaType);
-                                }
-                                refreshReviews(contextPage);
-                            } catch (e) {
-                                // Surface the failure to the admin instead of
-                                // silently failing: without this, a 403/404/500
-                                // on the delete call would leave the review on
-                                // screen with no feedback, making the admin
-                                // believe the content was moderated when it
-                                // wasn't.
-                                console.error(`${logPrefix} Delete failed`, e);
-                                const errTitle = tWithFallback('reviews_delete_error_title',
-                                    'Delete failed');
-                                const errBody = tWithFallback('reviews_delete_error_body',
-                                    'Could not delete the review: {err}',
-                                    { err: (e && e.message) ? e.message : 'Unknown error' });
-                                jeAlert(errBody, errTitle);
-                                // Re-fetch so the admin sees the real current state
-                                // (in case the review was actually removed but the
-                                // response was 500 on the way back, or a concurrent
-                                // admin deleted it first).
-                                refreshReviews(contextPage);
-                            }
-                        }
-                    );
-                    swipeContainer.appendChild(card);
-                });
-
-                // Render TMDB reviews after
-                if (reviews && reviews.length > 0) {
-                    reviews.slice(0, 10).forEach(review => {
-                        swipeContainer.appendChild(createReviewElement(review));
-                    });
-                }
-
-                reviewsSection.appendChild(swipeContainer);
-
-                // ── Form open/close helpers ──────────────────────────────────────
-                function openForm(existingReview) {
-                    formPlaceholder.innerHTML = '';
-                    const form = createReviewForm(
-                        existingReview || null,
-                        async (content, rating) => {
-                            await saveUserReview(tmdbId, tmdbMediaType, content, rating);
-                            refreshReviews(contextPage);
-                        },
-                        () => { formPlaceholder.innerHTML = ''; }
-                    );
-                    formPlaceholder.appendChild(form);
-                    // Automatically open the details section so the form is visible
-                    reviewsSection.setAttribute('open', '');
-                    form.querySelector('.je-review-textarea').focus();
-                }
-
-                if (writeBtn) {
-                    writeBtn.addEventListener('click', () => {
-                        if (formPlaceholder.querySelector('.je-review-form')) {
-                            formPlaceholder.innerHTML = '';
-                        } else {
-                            openForm(ownReview || null);
-                        }
-                    });
-                }
-
-                // ── Read-more toggle for TMDB reviews ─────────────────────────────
-                swipeContainer.addEventListener('click', function (e) {
-                    if (e.target.classList.contains('tmdb-review-toggle')) {
-                        const textElement = e.target.parentElement;
-                        const card = textElement.closest('.tmdb-review-card');
-                        // Skip user review cards (they use dataset.fullContent)
-                        if (card.classList.contains('je-user-review-card')) {
-                            const full = card.dataset.fullContent || '';
-                            if (textElement.classList.toggle('expanded')) {
-                                textElement.innerHTML = parseMarkdown(full) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_less')}</span>`;
-                            } else {
-                                textElement.innerHTML = parseMarkdown(full.substring(0, 350)) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_more')}</span>`;
-                            }
-                            return;
-                        }
-                        const review = reviews.find(r => escapeHtml(r.author) === card.querySelector('.tmdb-review-author').textContent);
-                        if (!review) return;
-                        if (textElement.classList.toggle('expanded')) {
-                            textElement.innerHTML = parseMarkdown(review.content) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_less')}</span>`;
-                        } else {
-                            const previewContent = review.content.substring(0, 350);
-                            textElement.innerHTML = parseMarkdown(previewContent) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_more')}</span>`;
-                        }
-                    }
-                });
-
-                // Persist user's expand/collapse choice for future pages
-                reviewsSection.addEventListener('toggle', function () {
-                    try {
-                        if (!window.JellyfinEnhanced) return;
-                        const JE = window.JellyfinEnhanced;
-                        JE.currentSettings = JE.currentSettings || JE.loadSettings?.() || {};
-                        JE.currentSettings.reviewsExpandedByDefault = reviewsSection.open;
-                        if (typeof JE.saveUserSettings === 'function') {
-                            JE.saveUserSettings('settings.json', JE.currentSettings);
-                        }
-                    } catch (err) {
-                        console.error(`${logPrefix} Failed to persist reviews expanded state`, err);
-                    }
-                });
+            // Don't cache a transient TMDB fetch failure (null result when a
+            // fetch was actually attempted) — retry on the next visit instead.
+            if (!cached && !(tmdbAttempted && tmdbReviews === null)) {
+                putCachedReviews(cacheKey, tmdbReviews, userReviews);
             }
+            return { target, tmdbReviews, userReviews, currentUser };
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        // Rendering: section shell (native emby-scroller) + async fill
+        // ────────────────────────────────────────────────────────────────────
+
+        /**
+         * Injects the average user rating chip next to the TMDB/RT rating
+         * chips. Must run at/after the native detail render — the
+         * .mediaInfoCriticRating / .starRatingContainer anchors only exist
+         * once jellyfin-web's own detail content is rendered.
+         */
+        function injectAvgRatingChip(contextPage, userReviews) {
+            if (!userReviewsEnabled || !userReviews || userReviews.length === 0) return;
+
+            const ratingsWithValue = userReviews.filter(r => r.rating);
+            if (ratingsWithValue.length === 0) return;
+
+            const avg = ratingsWithValue.reduce((sum, r) => sum + r.rating, 0) / ratingsWithValue.length;
+            const raw = avg * 2; // convert 1-5 → raw out of 10
+            const avgDisplay = Number.isInteger(raw) ? `${raw}` : `${raw.toFixed(1)}`;
+
+            // Remove any existing chip first
+            contextPage.querySelector('.je-avg-user-rating-chip')?.remove();
+
+            const chip = document.createElement('div');
+            chip.className = 'mediaInfoCriticRating mediaInfoItem je-avg-user-rating-chip';
+            chip.title = tWithFallback('reviews_avg_rating_tooltip',
+                'Average rating from {count} user(s)', { count: ratingsWithValue.length });
+            chip.innerHTML = `<span class="material-symbols-rounded starIcon" aria-hidden="true" style="color:#e91e8c;">person_heart</span>${avgDisplay}`;
+
+            // Insert after starRatingContainer, or after mediaInfoCriticRating if present,
+            // falling back to appending to the mediaInfoItems container
+            const criticRating = contextPage.querySelector('.mediaInfoCriticRating');
+            const starRating = contextPage.querySelector('.starRatingContainer');
+            const anchor = criticRating || starRating;
+            if (anchor && anchor.parentNode) {
+                anchor.parentNode.insertBefore(chip, anchor.nextSibling);
+            } else {
+                const container = contextPage.querySelector('.mediaInfoItems');
+                if (container) container.appendChild(chip);
+            }
+        }
+
+        /**
+         * Builds the empty reviews section: header + action bar + form
+         * placeholder + a NATIVE jellyfin-web emby-scroller (empty slider).
+         * Everything that needs review data is added later by fillSection.
+         *
+         * Structure (and why):
+         *   <details .tmdb-reviews-section>            position:relative + overflow:hidden
+         *     <summary .sectionTitle>                  header row (scroll buttons anchor here)
+         *     <div .je-review-scroller-container>      forced position:static in CSS
+         *       <div .je-review-action-bar>
+         *       <div .je-review-form-placeholder>
+         *       [emby-scrollbuttons inserted here by the scroller lib]
+         *       <div is="emby-scroller">
+         *         <div .scrollSlider>                  cards (in .je-review-slot wrappers)
+         *
+         * The scroller lib stamps .emby-scroller-container (position:relative)
+         * onto the scroller's PARENT and anchors its ‹ › buttons absolutely
+         * (top:0, right:0) against the nearest positioned ancestor. Forcing
+         * the intermediate container static re-anchors the buttons to the
+         * section root, i.e. the header row, instead of overlapping cards.
+         */
+        function buildSectionShell() {
+            const reviewsSection = document.createElement('details');
+            reviewsSection.className = 'detailSection tmdb-reviews-section';
+            if (JE.currentSettings?.reviewsExpandedByDefault) {
+                reviewsSection.setAttribute('open', '');
+            }
+
+            const summary = document.createElement('summary');
+            summary.className = 'sectionTitle';
+            summary.innerHTML = `${JE.t('reviews_title', { count: '…' })} <i class="material-icons expand-icon">expand_more</i>`;
+            reviewsSection.appendChild(summary);
+
+            const scrollerContainer = document.createElement('div');
+            scrollerContainer.className = 'je-review-scroller-container';
+
+            const actionBar = document.createElement('div');
+            actionBar.className = 'je-review-action-bar';
+            scrollerContainer.appendChild(actionBar);
+
+            const formPlaceholder = document.createElement('div');
+            formPlaceholder.className = 'je-review-form-placeholder';
+            scrollerContainer.appendChild(formPlaceholder);
+
+            // Native horizontal scroller. The .scrollSlider child MUST exist
+            // before the scroller is attached to the DOM: the v0
+            // registerElement polyfill upgrades on attach, and emby-scroller's
+            // attachedCallback requires .scrollSlider at that moment.
+            const scroller = document.createElement('div');
+            scroller.setAttribute('is', 'emby-scroller');
+            scroller.setAttribute('data-horizontal', 'true');
+            scroller.setAttribute('data-centerfocus', 'true');
+            scroller.className = 'emby-scroller padded-top-focusscale padded-bottom-focusscale no-padding';
+
+            const slider = document.createElement('div');
+            slider.className = 'scrollSlider';
+            scroller.appendChild(slider);
+            scrollerContainer.appendChild(scroller);
+
+            reviewsSection.appendChild(scrollerContainer);
+
+            // Persist user's expand/collapse choice for future pages. (The
+            // scroller self-heals when the collapsed section expands — it
+            // attaches a ResizeObserver to its frame — so no reload needed.)
+            reviewsSection.addEventListener('toggle', function () {
+                try {
+                    if (!window.JellyfinEnhanced) return;
+                    const JE = window.JellyfinEnhanced;
+                    JE.currentSettings = JE.currentSettings || JE.loadSettings?.() || {};
+                    JE.currentSettings.reviewsExpandedByDefault = reviewsSection.open;
+                    if (typeof JE.saveUserSettings === 'function') {
+                        JE.saveUserSettings('settings.json', JE.currentSettings);
+                    }
+                } catch (err) {
+                    console.error(`${logPrefix} Failed to persist reviews expanded state`, err);
+                }
+            });
+
+            return { section: reviewsSection, summary, actionBar, formPlaceholder, slider };
+        }
+
+        /**
+         * Removes any previous reviews section and inserts a fresh shell at
+         * the existing insertion point. The emby-scroller upgrades (and, on
+         * desktop, inserts its ‹ › buttons) at this attach.
+         * @param {HTMLElement} contextPage
+         * @returns {object|null} shell refs from buildSectionShell, or null
+         */
+        function injectSectionShell(contextPage) {
+            contextPage.querySelectorAll('.tmdb-reviews-section').forEach(el => el.remove());
 
             const insertionAnchor =
                 contextPage.querySelector('.streaming-lookup-container') ||
                 contextPage.querySelector('.itemExternalLinks') ||
                 contextPage.querySelector('.tagline');
 
-            if (insertionAnchor && insertionAnchor.parentNode) {
-                insertionAnchor.parentNode.insertBefore(reviewsSection, insertionAnchor.nextSibling);
-            } else {
+            if (!insertionAnchor || !insertionAnchor.parentNode) {
                 console.error(`${logPrefix} Could not find a suitable anchor to insert reviews.`);
+                return null;
             }
+
+            const shell = buildSectionShell();
+            insertionAnchor.parentNode.insertBefore(shell.section, insertionAnchor.nextSibling);
+            return shell;
         }
 
         /**
-         * Re-fetches and re-renders the review section for the current page.
+         * Fills a shell with everything that needs data: title count, write
+         * button, rating chip, and the review cards (built into a
+         * DocumentFragment, inserted into the native scroller's slider in a
+         * single operation).
+         * @param {object} shell - From buildSectionShell/injectSectionShell
+         * @param {{target: object, tmdbReviews: Array|null, userReviews: Array, currentUser: object|null}} data
+         * @param {HTMLElement} contextPage
+         */
+        function fillSection(shell, data, contextPage) {
+            const { section: reviewsSection, summary, actionBar, formPlaceholder, slider } = shell;
+            const reviews = data.tmdbReviews;
+            const userReviews = data.userReviews || [];
+            const currentUser = data.currentUser;
+            const tmdbId = data.target.tmdbKey;
+            const tmdbMediaType = data.target.apiMediaType;
+
+            // Inject average user rating chip next to the TMDB/RT rating chips
+            injectAvgRatingChip(contextPage, userReviews);
+
+            const currentUserId = (currentUser?.Id) || ApiClient.getCurrentUserId() || '';
+            const viewerIsAdmin = currentUser?.Policy?.IsAdministrator === true;
+            const ownReview = userReviews.find(r => r.userId.replace(/-/g, '') === currentUserId.replace(/-/g, ''));
+
+            // The section renders even with zero reviews so users can add their own.
+            const totalCount = (reviews ? reviews.length : 0) + userReviews.length;
+            summary.innerHTML = `${JE.t('reviews_title', { count: totalCount })} <i class="material-icons expand-icon">expand_more</i>`;
+
+            // ── "Write a Review" / "Edit Review" button bar ──────────────
+            let writeBtn = null;
+            if (userReviewsEnabled && !ownReview) {
+                writeBtn = document.createElement('button');
+                writeBtn.className = 'je-review-btn je-review-write-btn';
+                writeBtn.textContent = JE.t('reviews_add');
+                actionBar.appendChild(writeBtn);
+            }
+
+            // ── Form open/close helpers ──────────────────────────────────────
+            function openForm(existingReview) {
+                formPlaceholder.innerHTML = '';
+                const form = createReviewForm(
+                    existingReview || null,
+                    async (content, rating) => {
+                        await saveUserReview(tmdbId, tmdbMediaType, content, rating);
+                        refreshReviews(contextPage);
+                    },
+                    () => { formPlaceholder.innerHTML = ''; }
+                );
+                formPlaceholder.appendChild(form);
+                // Automatically open the details section so the form is visible
+                reviewsSection.setAttribute('open', '');
+                form.querySelector('.je-review-textarea').focus();
+            }
+
+            if (writeBtn) {
+                writeBtn.addEventListener('click', () => {
+                    if (formPlaceholder.querySelector('.je-review-form')) {
+                        formPlaceholder.innerHTML = '';
+                    } else {
+                        openForm(ownReview || null);
+                    }
+                });
+            }
+
+            // ── Cards: one DocumentFragment, one insertion ────────────────────
+            // Each card sits in a .je-review-slot wrapper that owns the
+            // inter-card spacing — the native paging math measures
+            // slider.children[0].offsetWidth for both index and target
+            // position, so spacing must live INSIDE each child box.
+            const fragment = document.createDocumentFragment();
+            const addCard = (card) => {
+                const slot = document.createElement('div');
+                slot.className = 'je-review-slot';
+                slot.appendChild(card);
+                fragment.appendChild(slot);
+            };
+
+            // Render user reviews first (distinct border colour)
+            userReviews.forEach(userReview => {
+                const card = createUserReviewElement(
+                    userReview,
+                    currentUserId,
+                    viewerIsAdmin,
+                    // Edit callback (own reviews only)
+                    (r) => openForm(r),
+                    // Delete callback — routes to self-delete for own reviews,
+                    // admin moderation delete for others (admin viewers only).
+                    async (r) => {
+                        const isOwn = r.userId.replace(/-/g, '') === currentUserId.replace(/-/g, '');
+                        const userName = r.userName || 'user';
+                        const title = isOwn
+                            ? tWithFallback('reviews_delete_title', 'Delete review')
+                            : tWithFallback('reviews_admin_delete_title', 'Delete review (admin)');
+                        const body = isOwn
+                            ? tWithFallback('reviews_delete_confirm',
+                                'Delete your review for this item?')
+                            : tWithFallback('reviews_admin_delete_confirm',
+                                'Delete this review by {user}? This cannot be undone.',
+                                { user: userName });
+                        if (!(await jeConfirm(body, title))) return;
+                        try {
+                            if (isOwn) {
+                                await deleteUserReview(tmdbId, tmdbMediaType);
+                            } else {
+                                await adminDeleteUserReview(r.userId, tmdbId, tmdbMediaType);
+                            }
+                            refreshReviews(contextPage);
+                        } catch (e) {
+                            // Surface the failure to the admin instead of
+                            // silently failing: without this, a 403/404/500
+                            // on the delete call would leave the review on
+                            // screen with no feedback, making the admin
+                            // believe the content was moderated when it
+                            // wasn't.
+                            console.error(`${logPrefix} Delete failed`, e);
+                            const errTitle = tWithFallback('reviews_delete_error_title',
+                                'Delete failed');
+                            const errBody = tWithFallback('reviews_delete_error_body',
+                                'Could not delete the review: {err}',
+                                { err: (e && e.message) ? e.message : 'Unknown error' });
+                            jeAlert(errBody, errTitle);
+                            // Re-fetch so the admin sees the real current state
+                            // (in case the review was actually removed but the
+                            // response was 500 on the way back, or a concurrent
+                            // admin deleted it first).
+                            refreshReviews(contextPage);
+                        }
+                    }
+                );
+                addCard(card);
+            });
+
+            // Render TMDB reviews after
+            if (reviews && reviews.length > 0) {
+                reviews.slice(0, 10).forEach(review => {
+                    addCard(createReviewElement(review));
+                });
+            }
+
+            slider.appendChild(fragment);
+
+            // ── Read-more toggle for TMDB reviews ─────────────────────────────
+            slider.addEventListener('click', function (e) {
+                if (e.target.classList.contains('tmdb-review-toggle')) {
+                    const textElement = e.target.parentElement;
+                    const card = textElement.closest('.tmdb-review-card');
+                    // Skip user review cards (they use dataset.fullContent)
+                    if (card.classList.contains('je-user-review-card')) {
+                        const full = card.dataset.fullContent || '';
+                        if (textElement.classList.toggle('expanded')) {
+                            textElement.innerHTML = parseMarkdown(full) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_less')}</span>`;
+                        } else {
+                            textElement.innerHTML = parseMarkdown(full.substring(0, 350)) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_more')}</span>`;
+                        }
+                        return;
+                    }
+                    const review = reviews.find(r => escapeHtml(r.author) === card.querySelector('.tmdb-review-author').textContent);
+                    if (!review) return;
+                    if (textElement.classList.toggle('expanded')) {
+                        textElement.innerHTML = parseMarkdown(review.content) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_less')}</span>`;
+                    } else {
+                        const previewContent = review.content.substring(0, 350);
+                        textElement.innerHTML = parseMarkdown(previewContent) + `<span class="tmdb-review-toggle">${JE.t('reviews_read_more')}</span>`;
+                    }
+                }
+            });
+        }
+
+        /**
+         * Re-fetches and re-renders the review section for the current page
+         * (after a save/delete mutation).
          */
         async function refreshReviews(contextPage) {
             try {
                 const itemId = new URLSearchParams(window.location.hash.split('?')[1]).get('id');
-                const userId = ApiClient.getCurrentUserId();
-                if (!itemId || !userId) return;
+                if (!itemId) return;
 
-                const item = JE.helpers?.getItemCached
-                    ? await JE.helpers.getItemCached(itemId, { userId })
-                    : await ApiClient.getItem(userId, itemId);
-                const mediaType = item?.Type;
+                const target = resolveTargetFromIdentity(itemId) || await resolveTargetFromDto(itemId, null);
+                if (!target) return;
 
-                let tmdbKey = null;
-                let apiMediaType;
+                // Drop the TTL cache entry so the rebuild reflects the mutation.
+                reviewsCache.delete(reviewsCacheKey(target));
 
-                if (mediaType === 'Movie') {
-                    const tmdbId = item?.ProviderIds?.Tmdb;
-                    if (!tmdbId) return;
-                    tmdbKey = String(tmdbId);
-                    apiMediaType = 'movie';
-                } else if (mediaType === 'Series') {
-                    const tmdbId = item?.ProviderIds?.Tmdb;
-                    if (!tmdbId) return;
-                    tmdbKey = String(tmdbId);
-                    apiMediaType = 'tv';
-                } else if (mediaType === 'Season') {
-                        let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
-                        if (!seriesTmdbId && item?.SeriesId) {
-                            try {
-                                const series = await ApiClient.getItem(userId, item.SeriesId);
-                                seriesTmdbId = series?.ProviderIds?.Tmdb;
-                            } catch (_) {}
-                        }
-                        if (!seriesTmdbId || item?.IndexNumber == null) return;
-                        tmdbKey = `${seriesTmdbId}:s${item.IndexNumber}`;
-                        apiMediaType = 'tv';
-                    } else if (mediaType === 'Episode') {
-                        let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
-                        if (!seriesTmdbId && item?.SeriesId) {
-                            try {
-                                const series = await ApiClient.getItem(userId, item.SeriesId);
-                                seriesTmdbId = series?.ProviderIds?.Tmdb;
-                            } catch (_) {}
-                        }
-                        if (!seriesTmdbId || item?.ParentIndexNumber == null || item?.IndexNumber == null) return;
-                        tmdbKey = `${seriesTmdbId}:s${item.ParentIndexNumber}:e${item.IndexNumber}`;
-                    apiMediaType = 'tv';
-                } else {
-                    return;
-                }
-
-                if (!tmdbKey) return;
-
-                const [tmdbReviews, userReviews, currentUser] = await Promise.all([
-                    (tmdbReviewsEnabled && (mediaType === 'Movie' || mediaType === 'Series'))
-                        ? fetchReviews(tmdbKey.split(':')[0], mediaType)
-                        : Promise.resolve(null),
-                    userReviewsEnabled ? fetchUserReviews(tmdbKey, apiMediaType) : Promise.resolve([]),
-                    ApiClient.getCurrentUser().catch(() => null),
-                ]);
+                const data = await loadReviewData(target, null);
+                if (!data) return;
 
                 const page = document.querySelector('#itemDetailPage:not(.hide)') || contextPage;
-                addReviewsToPage(tmdbReviews, userReviews, page, tmdbKey, apiMediaType, currentUser);
+                const shell = injectSectionShell(page);
+                if (shell) fillSection(shell, data, page);
 
                 // Bust the poster tag cache for this item so the overlay updates
                 if (typeof JE.invalidateUserReviewTagCache === 'function') {
-                    JE.invalidateUserReviewTagCache(tmdbKey);
+                    JE.invalidateUserReviewTagCache(target.tmdbKey);
                 }
             } catch (err) {
                 console.error(`${logPrefix} Failed to refresh reviews:`, err);
@@ -856,26 +1106,62 @@
                     font-feature-settings: 'liga';
                     -webkit-font-smoothing: antialiased;
                 }
-                .tmdb-reviews-section { margin: 2em 0 1em 0; display: flex !important; flex-direction: column;}
+                /* Section root: positioned ancestor for the scroller's ‹ › buttons
+                   AND the clip box for desktop transform-mode scrolling (translated
+                   cards visibly escape the row without overflow:hidden here). */
+                .tmdb-reviews-section { margin: 2em 0 1em 0; display: flex !important; flex-direction: column; position: relative; overflow: hidden; }
                 .tmdb-reviews-section summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -webkit-tap-highlight-color: transparent;}
                 .tmdb-reviews-section summary .expand-icon { color: rgba(255, 255, 255,.8);transition: transform 0.2s ease-in-out;}
                 .tmdb-reviews-section[open] summary .expand-icon { transform: rotate(180deg);}
-                .tmdb-review-swipe-container {
+
+                /* ── Native emby-scroller integration ────────────────────────
+                   The scroller lib stamps .emby-scroller-container
+                   (position:relative) onto the scroller's PARENT and anchors
+                   its buttons absolutely against the nearest positioned
+                   ancestor. Forcing this intermediate container static
+                   re-anchors the buttons to the section root header row. */
+                .tmdb-reviews-section .je-review-scroller-container { position: static !important; }
+                /* Keep the ‹ › buttons clear of the summary's expand icon. */
+                [dir="ltr"] .tmdb-reviews-section .emby-scrollbuttons { right: 2.5em; }
+                [dir="rtl"] .tmdb-reviews-section .emby-scrollbuttons { left: 2.5em; }
+                /* Fallback if the registerElement polyfill never upgrades the
+                   scroller: the lib stamps data-scroll-mode-x="custom" on init
+                   (and removes it on destroy), so its absence means inert. */
+                .tmdb-reviews-section .emby-scroller:not([data-scroll-mode-x]) { overflow-x: auto; }
+                /* Flex (no gap!) reproduces the old equal-height card row; the
+                   lib's inline white-space:nowrap on the slider is moot under
+                   flex layout. */
+                .tmdb-reviews-section .scrollSlider {
                     display: flex;
-                    overflow-x: auto;
-                    gap: 1.2em;
-                    padding: 1em 0.5em;
-                    scroll-snap-type: x mandatory;
+                    align-items: stretch;
+                    padding: 1em 0;
                 }
+                /* Slot wrappers own the inter-card spacing: the native paging
+                   math uses slider.children[0].offsetWidth for both index and
+                   target position, so spacing must live INSIDE each child box
+                   (flex gap would make paging drift cumulatively).
+                   Widths = old card outer width (basis + 2×1.5em padding +
+                   4px border) + the old 1.2em gap, so cards keep their exact
+                   previous size. */
+                .tmdb-reviews-section .je-review-slot {
+                    flex: 0 0 auto;
+                    display: flex;
+                    width: calc(85% + 3em + 4px + 1.2em);
+                    max-width: calc(500px + 3em + 4px + 1.2em);
+                    padding-right: 1.2em;
+                    box-sizing: border-box;
+                }
+                [dir="rtl"] .tmdb-reviews-section .je-review-slot { padding-right: 0; padding-left: 1.2em; }
+                @media (min-width: 768px) { .tmdb-reviews-section .je-review-slot { width: calc(400px + 3em + 4px + 1.2em); } }
                 .tmdb-review-card {
-                    flex: 0 0 85%;
-                    max-width: 500px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    white-space: normal; /* scroller lib sets inline white-space:nowrap on .scrollSlider */
                     background: rgba(0, 0, 0, 0.3);
                     border-radius: 8px;
                     border-left: 4px solid rgb(1, 180, 228);
                     padding: 1.5em;
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                    scroll-snap-align: start;
                     display: flex;
                     flex-direction: column;
                 }
@@ -883,7 +1169,6 @@
                     border-left-color: rgb(94, 213, 95);
                     background: rgba(10, 26, 10, 0.52);
                 }
-                @media (min-width: 768px) { .tmdb-review-card { flex-basis: 400px; } }
                 .tmdb-review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1em; }
                 .je-user-review-header { align-items: center; gap: 0.75em; }
                 .tmdb-review-author-info { display: flex; flex-direction: column; gap: 0.3em; flex: 1; }
@@ -1027,6 +1312,10 @@
             document.head.appendChild(style);
         }
 
+        /**
+         * Legacy driver — only used by the onViewPage fallback path when
+         * JE.viewRouter is unavailable. Renders shell + cards in one go.
+         */
         async function processPage(visiblePage) {
             if (!visiblePage || visiblePage.querySelector('.tmdb-reviews-section')) {
                 return;
@@ -1034,66 +1323,17 @@
 
             try {
                 const itemId = new URLSearchParams(window.location.hash.split('?')[1]).get('id');
-                const userId = ApiClient.getCurrentUserId();
+                if (!itemId) return;
 
-                if (itemId && userId) {
-                    const item = JE.helpers?.getItemCached
-                        ? await JE.helpers.getItemCached(itemId, { userId })
-                        : await ApiClient.getItem(userId, itemId);
-                    const mediaType = item?.Type;
+                const target = resolveTargetFromIdentity(itemId) || await resolveTargetFromDto(itemId, null);
+                if (!target) return;
 
-                    // Resolve tmdbKey and apiMediaType based on item type
-                    let tmdbKey = null;
-                    let apiMediaType;
+                const data = await loadReviewData(target, null);
+                if (!data) return;
 
-                    if (mediaType === 'Movie') {
-                        const tmdbId = item?.ProviderIds?.Tmdb;
-                        if (!tmdbId) return;
-                        tmdbKey = String(tmdbId);
-                        apiMediaType = 'movie';
-                    } else if (mediaType === 'Series') {
-                        const tmdbId = item?.ProviderIds?.Tmdb;
-                        if (!tmdbId) return;
-                        tmdbKey = String(tmdbId);
-                        apiMediaType = 'tv';
-                    } else if (mediaType === 'Season') {
-                        let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
-                        if (!seriesTmdbId && item?.SeriesId) {
-                            try {
-                                const series = await ApiClient.getItem(userId, item.SeriesId);
-                                seriesTmdbId = series?.ProviderIds?.Tmdb;
-                            } catch (_) {}
-                        }
-                        if (!seriesTmdbId || item?.IndexNumber == null) return;
-                        tmdbKey = `${seriesTmdbId}:s${item.IndexNumber}`;
-                        apiMediaType = 'tv';
-                    } else if (mediaType === 'Episode') {
-                        let seriesTmdbId = item?.SeriesProviderIds?.Tmdb;
-                        if (!seriesTmdbId && item?.SeriesId) {
-                            try {
-                                const series = await ApiClient.getItem(userId, item.SeriesId);
-                                seriesTmdbId = series?.ProviderIds?.Tmdb;
-                            } catch (_) {}
-                        }
-                        if (!seriesTmdbId || item?.ParentIndexNumber == null || item?.IndexNumber == null) return;
-                        tmdbKey = `${seriesTmdbId}:s${item.ParentIndexNumber}:e${item.IndexNumber}`;
-                        apiMediaType = 'tv';
-                    } else {
-                        return;
-                    }
-
-                    if (tmdbKey) {
-                        const [tmdbReviews, userReviews, currentUser] = await Promise.all([
-                            // TMDB reviews only available for top-level movie/tv, not seasons/episodes
-                            (tmdbReviewsEnabled && (mediaType === 'Movie' || mediaType === 'Series'))
-                                ? fetchReviews(tmdbKey.split(':')[0], mediaType)
-                                : Promise.resolve(null),
-                            userReviewsEnabled ? fetchUserReviews(tmdbKey, apiMediaType) : Promise.resolve([]),
-                            ApiClient.getCurrentUser().catch(() => null),
-                        ]);
-                        addReviewsToPage(tmdbReviews, userReviews, visiblePage, tmdbKey, apiMediaType, currentUser);
-                    }
-                }
+                const page = document.querySelector('#itemDetailPage:not(.hide)') || visiblePage;
+                const shell = injectSectionShell(page);
+                if (shell) fillSection(shell, data, page);
             } catch (error) {
                 console.error(`${logPrefix} Error processing page:`, error);
             }
@@ -1101,38 +1341,183 @@
 
         injectCss();
 
-        // Use Emby.Page.onViewShow hook for reliable page navigation detection
-        const unregister = JE.helpers.onViewPage(async (view, element, hash, itemPromise) => {
+        // ────────────────────────────────────────────────────────────────────
+        // Router-driven timing (primary path)
+        //
+        //   onViewShow         → resolve TMDB target (synchronously from the
+        //                        identity LRU on warm navs) and start both
+        //                        review fetches in parallel, abort-aware
+        //   onNativeDetailRender → inject the section shell in the same frame
+        //                        the native detail buttons become visible;
+        //                        fill the cards when the data promise resolves
+        //                        (synchronously on warm caches)
+        // ────────────────────────────────────────────────────────────────────
+
+        let navState = null;
+
+        /** True when the navigation that produced `state` is no longer current. */
+        function isStaleNav(state) {
+            return state.signal.aborted || navState !== state;
+        }
+
+        function handleViewShow(ctx) {
             // Check if feature is still enabled
             if (!JE?.pluginConfig?.ShowReviews && !JE?.pluginConfig?.ShowUserReviews) {
-                unregister();
+                unregisterRouterHooks();
+                navState = null;
+                return;
+            }
+            if (!ctx.itemId) {
+                navState = null;
                 return;
             }
 
-            // Check if this might be an item detail page by looking at current URL or element
-            const currentHash = window.location.hash;
-            const hasItemId = currentHash.includes('id=') || (hash && hash.includes('id='));
-            const isItemDetailElement = element && (
-                element.id === 'itemDetailPage' ||
-                element.classList?.contains('itemDetailPage')
-            );
+            const state = {
+                token: ctx.token,
+                itemId: ctx.itemId,
+                signal: ctx.signal,
+                target: undefined,      // undefined = resolving, null = not review-eligible
+                targetPromise: null,
+                dataPromise: null,
+                dataResolved: undefined // undefined = pending, object = ready for sync fill
+            };
+            navState = state;
+            ctx.signal.addEventListener('abort', () => {
+                if (navState === state) navState = null;
+            }, { once: true });
 
-            if (!hasItemId && !isItemDetailElement) {
+            // Resolve the TMDB target synchronously from the persistent
+            // identity LRU when possible (warm navigations, no item DTO
+            // needed) so both review fetches are dispatched inside this
+            // synchronous viewshow call.
+            const syncTarget = resolveTargetFromIdentity(ctx.itemId);
+            if (syncTarget) {
+                state.target = syncTarget;
+                state.targetPromise = Promise.resolve(syncTarget);
+                state.dataPromise = loadReviewData(syncTarget, ctx.signal)
+                    .then(data => {
+                        if (data) state.dataResolved = data;
+                        return data;
+                    })
+                    .catch(err => {
+                        if (err?.name !== 'AbortError') console.error(`${logPrefix} Failed to load reviews:`, err);
+                        return null;
+                    });
                 return;
             }
 
-            // Wait for the page to be visible
-            await new Promise(resolve => setTimeout(resolve, 150));
+            // Cold identity cache (or Season/Episode): the item DTO resolves
+            // via the single-flight cache warmed by the native controller's
+            // own viewshow fetch, then the review fetches start.
+            state.targetPromise = resolveTargetFromDto(ctx.itemId, ctx.signal)
+                .catch(err => {
+                    if (err?.name !== 'AbortError') console.error(`${logPrefix} Failed to resolve TMDB id:`, err);
+                    return null;
+                })
+                .then(target => {
+                    state.target = target || null;
+                    return state.target;
+                });
+            state.dataPromise = state.targetPromise
+                .then(target => (target && !ctx.signal.aborted) ? loadReviewData(target, ctx.signal) : null)
+                .then(data => {
+                    if (data) state.dataResolved = data;
+                    return data;
+                })
+                .catch(err => {
+                    if (err?.name !== 'AbortError') console.error(`${logPrefix} Failed to load reviews:`, err);
+                    return null;
+                });
+        }
 
-            const visiblePage = document.querySelector('#itemDetailPage:not(.hide)');
-            if (visiblePage) {
-                processPage(visiblePage);
+        async function handleNativeDetailRender(ctx) {
+            // Stale-nav guard: only act for the navigation we prepared.
+            const state = navState;
+            if (!state || state.token !== ctx.token || !state.dataPromise) return;
+
+            // The visible detail page for this navigation (view cycling keeps
+            // hidden cached pages in the DOM).
+            const view = ctx.view;
+            const page = (view && (view.id === 'itemDetailPage' || (view.classList && view.classList.contains('itemDetailPage'))))
+                ? view
+                : ((view && view.querySelector && view.querySelector('#itemDetailPage'))
+                    || document.querySelector('#itemDetailPage:not(.hide)'));
+            if (!page) return;
+
+            // Wait for target resolution when the identity cache was cold; by
+            // the native render moment the item DTO is already in the
+            // single-flight cache (the native controller just fetched it), so
+            // this settles within the same frame.
+            let target = state.target;
+            if (target === undefined) {
+                target = await state.targetPromise;
+                if (isStaleNav(state)) return;
             }
-        }, {
-            pages: null, // Trigger on all pages, we'll filter by hash
-            fetchItem: false,
-            immediate: true // Process current page immediately on load
-        });
+            if (!target) return; // not review-eligible (no TMDB id / unsupported type)
+
+            // Inject the shell (header + collapsed/empty body) in the native
+            // render frame; previous sections are removed here.
+            const shell = injectSectionShell(page);
+            if (!shell) return;
+
+            // Warm cache / already-settled fetch: build everything in one go.
+            if (state.dataResolved !== undefined) {
+                fillSection(shell, state.dataResolved, page);
+                return;
+            }
+
+            const data = await state.dataPromise;
+            if (!data || isStaleNav(state)) {
+                shell.section.remove();
+                return;
+            }
+            fillSection(shell, data, page);
+        }
+
+        let unregisterViewShow = null;
+        let unregisterDetailRender = null;
+        function unregisterRouterHooks() {
+            if (unregisterViewShow) { unregisterViewShow(); unregisterViewShow = null; }
+            if (unregisterDetailRender) { unregisterDetailRender(); unregisterDetailRender = null; }
+        }
+
+        if (JE.viewRouter && typeof JE.viewRouter.onViewShow === 'function') {
+            unregisterViewShow = JE.viewRouter.onViewShow(handleViewShow, { viewTypes: ['detail'] });
+            unregisterDetailRender = JE.viewRouter.onNativeDetailRender(handleNativeDetailRender);
+        } else {
+            // Legacy fallback when the view router is unavailable: Emby.Page
+            // onViewShow hook + settle delay (old behavior).
+            const unregister = JE.helpers.onViewPage(async (view, element, hash, itemPromise) => {
+                // Check if feature is still enabled
+                if (!JE?.pluginConfig?.ShowReviews && !JE?.pluginConfig?.ShowUserReviews) {
+                    unregister();
+                    return;
+                }
+
+                // Check if this might be an item detail page by looking at current URL or element
+                const currentHash = window.location.hash;
+                const hasItemId = currentHash.includes('id=') || (hash && hash.includes('id='));
+                const isItemDetailElement = element && (
+                    element.id === 'itemDetailPage' ||
+                    element.classList?.contains('itemDetailPage')
+                );
+
+                if (!hasItemId && !isItemDetailElement) {
+                    return;
+                }
+
+                // Wait for the page to be visible
+                await new Promise(resolve => setTimeout(resolve, 150));
+
+                const visiblePage = document.querySelector('#itemDetailPage:not(.hide)');
+                if (visiblePage) {
+                    processPage(visiblePage);
+                }
+            }, {
+                pages: null, // Trigger on all pages, we'll filter by hash
+                fetchItem: false,
+                immediate: true // Process current page immediately on load
+            });
+        }
     };
 })(window.JellyfinEnhanced);
-
