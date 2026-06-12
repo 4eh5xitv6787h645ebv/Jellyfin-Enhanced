@@ -9,6 +9,45 @@
     // Cache for user permission to report
     let cachedUserCanReport = null;
 
+    // Shared single-flight Jellyseerr status (server already caches /status for
+    // 30s; this stops issue-reporter and item-details from each paying the RTT
+    // per navigation). JE-wide so other jellyseerr modules reuse it.
+    if (!JE.jellyseerrStatus) {
+        const STATUS_TTL_MS = 60000;
+        let statusEntry = null; // { active, ts } | { promise }
+        JE.jellyseerrStatus = {
+            /** @returns {Promise<boolean>} whether Jellyseerr is reachable+active */
+            get() {
+                const now = Date.now();
+                if (statusEntry) {
+                    if (statusEntry.promise) return statusEntry.promise;
+                    if ((now - statusEntry.ts) < STATUS_TTL_MS) return Promise.resolve(statusEntry.active);
+                }
+                const promise = ApiClient.ajax({
+                    type: 'GET',
+                    url: ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/status'),
+                    dataType: 'json'
+                }).then(res => {
+                    const active = !!(res && res.active === true);
+                    statusEntry = { active, ts: Date.now() };
+                    return active;
+                }).catch(() => {
+                    statusEntry = { active: false, ts: Date.now() };
+                    return false;
+                });
+                statusEntry = { promise };
+                return promise;
+            },
+            /** Synchronous best-effort read; null when unknown/stale. */
+            peek() {
+                if (statusEntry && !statusEntry.promise && (Date.now() - statusEntry.ts) < STATUS_TTL_MS) {
+                    return statusEntry.active;
+                }
+                return null;
+            }
+        };
+    }
+
     /**
      * Issue type definitions matching Jellyseerr's 4 core issue types
      * Jellyseerr uses: VIDEO (1), AUDIO (2), SUBTITLES (3), OTHER (4)
@@ -28,10 +67,8 @@
      */
     issueReporter.checkReportingAvailability = async function (item) {
         try {
-            // Check Jellyseerr status first
-            const statusUrl = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/status');
-            const statusRes = await ApiClient.ajax({ type: 'GET', url: statusUrl, dataType: 'json' });
-            const jellyseerrActive = statusRes && statusRes.active === true;
+            // Check Jellyseerr status first (shared single-flight cache)
+            const jellyseerrActive = await JE.jellyseerrStatus.get();
 
             // Resolve TMDB ID: direct, parent (for Season/Episode), or fallback search
             let tmdbId = item && (item.ProviderIds?.Tmdb || item.ProviderIds?.['Tmdb']);
@@ -794,96 +831,35 @@
     };
 
     /**
-     * Attempts to add the report issue button to the current detail page
+     * Resolves everything needed to decide which button (if any) belongs on
+     * the detail page for an item. Pure data — no DOM access. Decision logic
+     * mirrors the original tryAddButton flow.
+     * @param {string} itemId - Jellyfin item id
+     * @param {AbortSignal|null} signal - aborts resolution when navigating away
+     * @returns {Promise<{kind: 'skip'}
+     *   | {kind: 'unavailable', reason: string, item: object, mediaType: string}
+     *   | {kind: 'report', tmdbId: string, mediaType: string, item: object, backdropUrl: string|null}>}
      */
-    issueReporter.tryAddButton = async function () {
-        const itemDetailPage = document.querySelector('#itemDetailPage:not(.hide)');
-        if (!itemDetailPage) {
-            return false;
-        }
-        // Don't add if plugin or report-button feature is disabled
-        if (!JE.pluginConfig?.JellyseerrEnabled || !JE.pluginConfig?.JellyseerrShowReportButton) {
-            console.debug(`${logPrefix} Jellyseerr integration or report button disabled, skipping`);
-            return false;
-        }
-
-        // Check if we already added the button (either active or unavailable)
-        if (itemDetailPage.querySelector('.jellyseerr-report-issue-icon, .jellyseerr-report-unavailable-icon')) {
-            console.debug(`${logPrefix} Report button already exists`);
-            return true;
-        }
-
+    issueReporter.resolveReportContext = async function (itemId, signal) {
         try {
-            // Get item ID from URL hash (same way as reviews.js)
-            const itemId = new URLSearchParams(window.location.hash.split('?')[1]).get('id');
             if (!itemId) {
-                console.debug(`${logPrefix} No item ID in URL`);
-                return false;
+                console.debug(`${logPrefix} No item ID provided`);
+                return { kind: 'skip' };
             }
 
-            // Fetch item data from Jellyfin API (same way as reviews.js)
             const userId = ApiClient.getCurrentUserId();
             if (!userId) {
                 console.debug(`${logPrefix} No user ID found`);
-                return false;
+                return { kind: 'skip' };
             }
 
             const item = JE.helpers?.getItemCached
                 ? await JE.helpers.getItemCached(itemId, { userId })
                 : await ApiClient.getItem(userId, itemId);
+            if (signal?.aborted) return { kind: 'skip' };
             if (!item) {
                 console.debug(`${logPrefix} Could not fetch item data`);
-                return false;
-            }
-
-            // Check if reporting is available (item has TMDB ID and Jellyseerr configured)
-            const availability = await issueReporter.checkReportingAvailability(item);
-
-            // If services not available, show unavailable button
-            if (availability !== 'available') {
-                console.debug(`${logPrefix} Reporting not available: ${availability}`);
-
-                // Try to add an unavailable button
-                let buttonContainerUnavail = null;
-                const selectorsUnavail = [
-                    '.detailButtons',
-                    '.itemActionsBottom',
-                    '[class*="ActionButtons"]',
-                    '.mainDetailButtons',
-                    '.detailButtonsContainer',
-                    '[class*="primaryActions"]',
-                    '.topBarSecondaryMenus + *'
-                ];
-
-                for (const sel of selectorsUnavail) {
-                    const found = itemDetailPage.querySelector(sel);
-                    if (found) {
-                        buttonContainerUnavail = found;
-                        break;
-                    }
-                }
-
-                if (!buttonContainerUnavail) {
-                    const allButtons = itemDetailPage.querySelectorAll('button');
-                    if (allButtons.length > 0) {
-                        buttonContainerUnavail = allButtons[allButtons.length - 1].parentElement;
-                    }
-                }
-
-                if (buttonContainerUnavail) {
-                    const unavailButton = issueReporter.createUnavailableButton(buttonContainerUnavail, '', '', availability);
-                    if (unavailButton) {
-                        const moreButton = buttonContainerUnavail.querySelector('.btnMoreCommands');
-                        if (moreButton) {
-                            buttonContainerUnavail.insertBefore(unavailButton, moreButton);
-                        } else {
-                            buttonContainerUnavail.appendChild(unavailButton);
-                        }
-                        console.log(`${logPrefix} Added unavailable report button (${availability})`);
-                        return true;
-                    }
-                }
-                return false;
+                return { kind: 'skip' };
             }
 
             // Determine media type. Treat Series, Season, Episode as 'tv'
@@ -894,20 +870,20 @@
             // Do not display report button for non-media collection pages (collections/boxsets/etc.)
             if (!isTvLike && !isMovie) {
                 console.debug(`${logPrefix} Skipping ${item.Name}: unsupported item type (${item.Type}) — likely a collection/boxset`);
-                return false;
+                return { kind: 'skip' };
             }
 
             const mediaType = isTvLike ? 'tv' : 'movie';
 
             console.debug(`${logPrefix} Checking item: ${item.Name} (type=${item.Type}, mediaType=${mediaType}, TMDB: ${tmdbId})`);
 
-            // Remove report button for special seasons (season 0) and special episodes (season 0)
+            // No report button for special seasons (season 0) and special episodes (season 0)
             try {
                 if (item.Type === 'Season') {
                     const seasonNumber = parseInt(item.IndexNumber || item.SeasonNumber || item.Index || 0) || 0;
                     if (seasonNumber === 0) {
                         console.debug(`${logPrefix} Skipping ${item.Name}: special season (season 0)`);
-                        return false;
+                        return { kind: 'skip' };
                     }
                 }
 
@@ -916,7 +892,7 @@
                     const parentSeason = parseInt(item.ParentIndexNumber || item.SeasonIndex || item.ParentIndex || item.SeasonNumber || 0) || 0;
                     if (parentSeason === 0) {
                         console.debug(`${logPrefix} Skipping ${item.Name}: special episode (season 0)`);
-                        return false;
+                        return { kind: 'skip' };
                     }
                 }
             } catch (e) {
@@ -924,18 +900,26 @@
                 console.debug(`${logPrefix} Could not determine season index for special detection:`, e);
             }
 
+            // Check if reporting is available (item has TMDB ID and Jellyseerr configured)
+            const availability = await issueReporter.checkReportingAvailability(item);
+            if (signal?.aborted) return { kind: 'skip' };
+            if (availability !== 'available') {
+                console.debug(`${logPrefix} Reporting not available: ${availability}`);
+                return { kind: 'unavailable', reason: availability, item, mediaType };
+            }
+
             // If no TMDB ID, and this is a Season/Episode, try to fetch parent/series TMDB ID first
             if (!tmdbId && (item.Type === 'Season' || item.Type === 'Episode')) {
                 try {
                     // Common fields that may point to the series/parent item
-                    const parentId = item.SeriesId || item.ParentId || item.ParentId || (item.Parent && item.Parent.Id) || (item.Series && item.Series.Id) || null;
+                    const parentId = item.SeriesId || item.ParentId || (item.Parent && item.Parent.Id) || (item.Series && item.Series.Id) || null;
                     if (parentId) {
                         console.debug(`${logPrefix} Found parentId ${parentId} for ${item.Name}, fetching parent item`);
-                        const userId2 = ApiClient.getCurrentUserId();
-                        if (userId2) {
+                        const parentUserId = ApiClient.getCurrentUserId();
+                        if (parentUserId) {
                             const parentItem = JE.helpers?.getItemCached
-                                ? await JE.helpers.getItemCached(parentId, { userId: userId2 })
-                                : await ApiClient.getItem(userId2, parentId);
+                                ? await JE.helpers.getItemCached(parentId, { userId: parentUserId })
+                                : await ApiClient.getItem(parentUserId, parentId);
                             if (parentItem) {
                                 const parentTmdb = parentItem.ProviderIds?.Tmdb;
                                 if (parentTmdb) {
@@ -948,103 +932,20 @@
                 } catch (err) {
                     console.debug(`${logPrefix} Error fetching parent item for TMDB lookup:`, err);
                 }
+                if (signal?.aborted) return { kind: 'skip' };
             }
 
             // If still no TMDB ID, try the general fallback lookup (may inspect names/urls)
             if (!tmdbId) {
                 console.debug(`${logPrefix} No direct TMDB ID found for ${item.Name}, trying fallback...`);
                 tmdbId = await issueReporter.getTmdbIdFallback(item.Name, mediaType, item);
+                if (signal?.aborted) return { kind: 'skip' };
 
                 if (!tmdbId) {
                     console.debug(`${logPrefix} No TMDB ID could be resolved for ${item.Name} (fallback also failed)`);
-
-                    // Try to add a disabled 'unavailable' button in-place to inform the user
-                    let buttonContainerFallback = null;
-                    const selectorsFallback = [
-                        '.detailButtons',
-                        '.itemActionsBottom',
-                        '[class*="ActionButtons"]',
-                        '.mainDetailButtons',
-                        '.detailButtonsContainer',
-                        '[class*="primaryActions"]',
-                        '.topBarSecondaryMenus + *'
-                    ];
-
-                    for (const sel of selectorsFallback) {
-                        const found = itemDetailPage.querySelector(sel);
-                        if (found) {
-                            buttonContainerFallback = found;
-                            break;
-                        }
-                    }
-
-                    if (!buttonContainerFallback) {
-                        const allButtons = itemDetailPage.querySelectorAll('button');
-                        if (allButtons.length > 0) {
-                            buttonContainerFallback = allButtons[allButtons.length - 1].parentElement;
-                        }
-                    }
-
-                    if (buttonContainerFallback) {
-                        const unavailableButton = issueReporter.createUnavailableButton(buttonContainerFallback, item.Name, mediaType, 'no-tmdb');
-                        if (unavailableButton) {
-                            const moreButton = buttonContainerFallback.querySelector('.btnMoreCommands');
-                            if (moreButton) {
-                                buttonContainerFallback.insertBefore(unavailableButton, moreButton);
-                            } else {
-                                buttonContainerFallback.appendChild(unavailableButton);
-                            }
-                            console.log(`${logPrefix} Added unavailable report button for ${item.Name}`);
-                            return true;
-                        }
-                    }
-
-                    return false;
-                } else {
-                    console.log(`${logPrefix} Found TMDB ID via fallback: ${tmdbId}`);
+                    return { kind: 'unavailable', reason: 'no-tmdb', item, mediaType };
                 }
-            }
-
-            if (mediaType !== 'tv' && mediaType !== 'movie') {
-                console.debug(`${logPrefix} Skipping ${item.Name}: invalid type (${mediaType})`);
-                return false;
-            }
-
-            // Find the appropriate container for the button - check multiple locations
-            let buttonContainer = null;
-
-            // Try specific button container selectors
-            const selectors = [
-                '.detailButtons',
-                '.itemActionsBottom',
-                '[class*="ActionButtons"]',
-                '.mainDetailButtons',
-                '.detailButtonsContainer',
-                '[class*="primaryActions"]',
-                '.topBarSecondaryMenus + *'  // Element after topBarSecondaryMenus
-            ];
-
-            for (const selector of selectors) {
-                const found = itemDetailPage.querySelector(selector);
-                if (found) {
-                    buttonContainer = found;
-                    console.debug(`${logPrefix} Found button container with selector: ${selector}`);
-                    break;
-                }
-            }
-
-            // If still not found, look for any container with buttons
-            if (!buttonContainer) {
-                const allButtons = itemDetailPage.querySelectorAll('button');
-                if (allButtons.length > 0) {
-                    buttonContainer = allButtons[allButtons.length - 1].parentElement;
-                    console.debug(`${logPrefix} Using parent of last button as container`);
-                }
-            }
-
-            if (!buttonContainer) {
-                console.debug(`${logPrefix} Could not find button container for ${item.Name}`);
-                return false;
+                console.log(`${logPrefix} Found TMDB ID via fallback: ${tmdbId}`);
             }
 
             // Extract backdrop URL from Jellyfin item
@@ -1059,28 +960,262 @@
                     backdropUrl = ApiClient.getUrl(`Items/${parentId}/Images/Backdrop`, { tag: tag, quality: 40 });
                 }
             }
-            const button = issueReporter.createReportButton(
-                buttonContainer,
-                tmdbId,
-                item.Name,
-                mediaType,
-                backdropUrl,
-                item
-            );
 
-            if (button) {
-                // Try to insert before btnMoreCommands, otherwise append
-                const moreButton = buttonContainer.querySelector('.btnMoreCommands');
-                if (moreButton) {
-                    buttonContainer.insertBefore(button, moreButton);
-                } else {
-                    buttonContainer.appendChild(button);
-                }
-                console.log(`${logPrefix} ✓ Report issue button added to ${item.Name} (${mediaType}, TMDB: ${tmdbId})`);
-                // Fire-and-forget: colour button orange + count badge when open issues exist
-                issueReporter.applyIssueIndicator(button, tmdbId, mediaType);
-                return true;
+            return { kind: 'report', tmdbId, mediaType, item, backdropUrl };
+        } catch (error) {
+            if (signal?.aborted) return { kind: 'skip' };
+            console.warn(`${logPrefix} Error resolving report context:`, error);
+            return { kind: 'skip' };
+        }
+    };
+
+    /**
+     * Finds the native detail-button strip for a detail view.
+     * `.mainDetailButtons` is guaranteed by the jellyfin-web 10.11 template.
+     * @param {HTMLElement|null} view
+     * @returns {HTMLElement|null}
+     */
+    function findButtonContainer(view) {
+        const root = view || document.querySelector('#itemDetailPage:not(.hide)') || document;
+        return root.querySelector('.mainDetailButtons') || root.querySelector('.detailButtons');
+    }
+
+    /**
+     * Builds the final button element for a resolved (non-skip) report context.
+     * @param {object} resolution - result of resolveReportContext
+     * @param {HTMLElement} container
+     * @returns {HTMLElement|null}
+     */
+    function buildButtonFor(resolution, container) {
+        if (resolution.kind === 'report') {
+            return issueReporter.createReportButton(
+                container,
+                resolution.tmdbId,
+                resolution.item.Name,
+                resolution.mediaType,
+                resolution.backdropUrl,
+                resolution.item
+            );
+        }
+        if (resolution.kind === 'unavailable') {
+            return issueReporter.createUnavailableButton(container, resolution.item?.Name || '', resolution.mediaType || '', resolution.reason);
+        }
+        return null;
+    }
+
+    /**
+     * Inserts the button into the strip, before btnMoreCommands when present.
+     * @param {HTMLElement} container
+     * @param {HTMLElement} button
+     */
+    function insertButton(container, button) {
+        const moreButton = container.querySelector('.btnMoreCommands');
+        if (moreButton) {
+            container.insertBefore(button, moreButton);
+        } else {
+            container.appendChild(button);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Router-driven flow: data resolution starts synchronously at viewshow,
+    // the button lands in the SAME mutation batch as jellyfin-web's native
+    // detail buttons (optimistically when data is still in flight), and the
+    // final variant is swapped in once resolveReportContext settles.
+    // ------------------------------------------------------------------
+
+    const BUTTON_PRESENT_SELECTOR = '.jellyseerr-report-issue-icon, .jellyseerr-report-unavailable-icon';
+    const SUPPORTED_TYPES = ['Movie', 'Series', 'Season', 'Episode'];
+
+    /** Per-navigation state; replaced on every detail navigation. */
+    let navState = null;
+
+    /**
+     * Applies a resolved context to the DOM. Never inserts before the native
+     * buttons are visible: when resolution wins the race, the result is held
+     * in navState.finalizedRes and onNativeRender places it in-frame.
+     */
+    function finalize(ctx, res) {
+        if (!navState || navState.token !== ctx.token) return;
+        navState.finalizedRes = res;
+
+        if (!navState.nativeFired) return;
+
+        if (res.kind === 'skip') {
+            if (navState.placed) {
+                navState.placed.remove();
+                navState.placed = null;
             }
+            return;
+        }
+
+        const container = findButtonContainer(ctx.view);
+        if (!container) return;
+
+        const finalButton = buildButtonFor(res, container);
+        if (!finalButton) return;
+
+        if (navState.placed && navState.placed.isConnected) {
+            navState.placed.replaceWith(finalButton);
+        } else if (!container.querySelector(BUTTON_PRESENT_SELECTOR)) {
+            insertButton(container, finalButton);
+        } else {
+            // Already final from a restored view
+            return;
+        }
+        navState.placed = finalButton;
+
+        if (res.kind === 'report') {
+            console.log(`${logPrefix} ✓ Report issue button added to ${res.item.Name} (${res.mediaType}, TMDB: ${res.tmdbId})`);
+            // Fire-and-forget: colour button orange + count badge when open issues exist
+            issueReporter.applyIssueIndicator(finalButton, res.tmdbId, res.mediaType);
+        } else {
+            console.log(`${logPrefix} Added unavailable report button (${res.reason})`);
+        }
+    }
+
+    /**
+     * viewshow hook (detail views only): kicks off data resolution immediately
+     * so it races the native render instead of starting after it.
+     */
+    issueReporter.onNav = function (ctx) {
+        if (!JE.pluginConfig?.JellyseerrEnabled || !JE.pluginConfig?.JellyseerrShowReportButton) return;
+        if (!ctx.itemId) return;
+
+        navState = {
+            token: ctx.token,
+            resolutionPromise: issueReporter.resolveReportContext(ctx.itemId, ctx.signal),
+            placed: null,
+            nativeFired: false,
+            finalizedRes: null
+        };
+
+        navState.resolutionPromise.then(res => {
+            if (navState && navState.token === ctx.token && !ctx.signal?.aborted) {
+                finalize(ctx, res);
+            }
+        }).catch(() => {});
+    };
+
+    /**
+     * Fires in the same mutation batch where the native detail buttons become
+     * visible. Places the final button when resolution already settled,
+     * otherwise an optimistic stand-in that finalize() reveals or replaces.
+     */
+    issueReporter.onNativeRender = function (ctx) {
+        if (!navState || navState.token !== ctx.token || ctx.signal?.aborted) return;
+        navState.nativeFired = true;
+
+        const container = findButtonContainer(ctx.view);
+        if (!container) return;
+        if (container.querySelector(BUTTON_PRESENT_SELECTOR)) {
+            // Restored views keep their button
+            return;
+        }
+
+        if (navState.finalizedRes) {
+            finalize(ctx, navState.finalizedRes);
+            return;
+        }
+
+        // Optimistic placement: identity LRU rules out unsupported types on
+        // warm visits (never show on boxsets/collections).
+        const identity = JE.viewRouter?.getIdentity?.(ctx.itemId);
+        if (identity && !SUPPORTED_TYPES.includes(identity.type)) {
+            return;
+        }
+
+        // Same markup/classes as createReportButton so there is no visual
+        // difference when finalize() swaps in the real button.
+        const button = document.createElement('button');
+        button.setAttribute('is', 'emby-button');
+        button.className = 'button-flat detailButton emby-button jellyseerr-report-issue-icon';
+        button.type = 'button';
+        button.setAttribute('aria-label', JE.t('jellyseerr_report_issue_button'));
+        button.title = JE.t('jellyseerr_report_issue_button');
+        button.innerHTML = `
+            <div class="detailButton-content">
+                <span class="material-icons detailButton-icon warning" aria-hidden="true"></span>
+            </div>
+        `;
+
+        // True cold first visit (no identity yet) or Jellyseerr known-down:
+        // keep the stand-in hidden so nothing wrong flashes; finalize()
+        // reveals/replaces it.
+        if (!identity || JE.jellyseerrStatus.peek() === false) {
+            button.classList.add('hide');
+        }
+
+        const resolutionPromise = navState.resolutionPromise;
+        button.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const res = await resolutionPromise.catch(() => null);
+            if (res?.kind === 'report') {
+                issueReporter.showReportModal(res.tmdbId, res.item.Name, res.mediaType, res.backdropUrl, res.item);
+            } else {
+                JE.toast(JE.t('jellyseerr_report_unavailable_toast'), 4000);
+            }
+        });
+
+        insertButton(container, button);
+        navState.placed = button;
+    };
+
+    /**
+     * Legacy fallback: adds the report issue button to the current detail
+     * page. Used only when JE.viewRouter is unavailable.
+     */
+    issueReporter.tryAddButton = async function () {
+        const itemDetailPage = document.querySelector('#itemDetailPage:not(.hide)');
+        if (!itemDetailPage) {
+            return false;
+        }
+        // Don't add if plugin or report-button feature is disabled
+        if (!JE.pluginConfig?.JellyseerrEnabled || !JE.pluginConfig?.JellyseerrShowReportButton) {
+            console.debug(`${logPrefix} Jellyseerr integration or report button disabled, skipping`);
+            return false;
+        }
+
+        // Check if we already added the button (either active or unavailable)
+        if (itemDetailPage.querySelector(BUTTON_PRESENT_SELECTOR)) {
+            console.debug(`${logPrefix} Report button already exists`);
+            return true;
+        }
+
+        try {
+            // Get item ID from URL hash (same way as reviews.js)
+            const itemId = new URLSearchParams(window.location.hash.split('?')[1]).get('id');
+            if (!itemId) {
+                console.debug(`${logPrefix} No item ID in URL`);
+                return false;
+            }
+
+            const res = await issueReporter.resolveReportContext(itemId, null);
+            if (res.kind === 'skip') {
+                return false;
+            }
+
+            const container = findButtonContainer(itemDetailPage);
+            if (!container) {
+                console.debug(`${logPrefix} Could not find button container`);
+                return false;
+            }
+
+            const button = buildButtonFor(res, container);
+            if (!button) {
+                return false;
+            }
+
+            insertButton(container, button);
+            if (res.kind === 'report') {
+                console.log(`${logPrefix} ✓ Report issue button added to ${res.item.Name} (${res.mediaType}, TMDB: ${res.tmdbId})`);
+                // Fire-and-forget: colour button orange + count badge when open issues exist
+                issueReporter.applyIssueIndicator(button, res.tmdbId, res.mediaType);
+            } else {
+                console.log(`${logPrefix} Added unavailable report button (${res.reason})`);
+            }
+            return true;
         } catch (error) {
             console.warn(`${logPrefix} Error adding button:`, error);
         }
@@ -1089,9 +1224,11 @@
     };
 
     /**
-     * Initializes issue reporter on item detail pages
+     * Initializes issue reporter on item detail pages. Synchronous and
+     * non-blocking: hooks register immediately so the first detail navigation
+     * is never missed while a status request is in flight.
      */
-    issueReporter.initialize = async function () {
+    issueReporter.initialize = function () {
         if (!JE.pluginConfig?.JellyseerrEnabled || !JE.pluginConfig?.JellyseerrShowReportButton) {
             console.debug(`${logPrefix} Jellyseerr integration or report-button feature disabled, skipping initialization`);
             return;
@@ -1099,30 +1236,25 @@
 
         JE.jellyseerrUI?.addMainStyles?.();
 
-        console.log(`${logPrefix} Initializing... (verifying Jellyseerr status)`);
+        // Fire-and-forget warm-up of the shared status cache. Deliberately not
+        // awaited and no early return when inactive — the unavailable-variant
+        // button is informative.
+        JE.jellyseerrStatus.get();
 
-        // Verify Jellyseerr is reachable and active via the server-side status endpoint
-        try {
-            const statusUrl = ApiClient.getUrl('/JellyfinEnhanced/jellyseerr/status');
-            const statusRes = await ApiClient.ajax({ type: 'GET', url: statusUrl, dataType: 'json' });
-            if (!statusRes || !statusRes.active) {
-                console.debug(`${logPrefix} Jellyseerr status check returned inactive, skipping reporter init`);
-                return;
-            }
-        } catch (e) {
-            console.warn(`${logPrefix} Failed to verify Jellyseerr status, skipping reporter init:`, e);
+        if (JE.viewRouter) {
+            JE.viewRouter.onViewShow(ctx => issueReporter.onNav(ctx), { viewTypes: ['detail'] });
+            JE.viewRouter.onNativeDetailRender(ctx => issueReporter.onNativeRender(ctx));
+            console.log(`${logPrefix} ✓ Initialized issue reporter (router-driven)`);
             return;
         }
 
-        const handleViewShow = async () => {
-            try {
-                // Small delay to ensure DOM is ready
-                setTimeout(async () => {
-                    await issueReporter.tryAddButton();
-                }, 100);
-            } catch (error) {
-                console.warn(`${logPrefix} Error in viewShow handler:`, error);
-            }
+        // Legacy fallback when the view router is unavailable
+        const handleViewShow = () => {
+            setTimeout(() => {
+                issueReporter.tryAddButton().catch(error => {
+                    console.warn(`${logPrefix} Error in viewShow handler:`, error);
+                });
+            }, 100);
         };
 
         // Listen for Jellyfin's page navigation events
@@ -1131,7 +1263,7 @@
         // Also try on initial load
         setTimeout(handleViewShow, 500);
 
-        console.log(`${logPrefix} ✓ Initialized issue reporter with viewshow listener`);
+        console.log(`${logPrefix} ✓ Initialized issue reporter with viewshow listener (legacy)`);
     };
 
     // Expose the module on the global JE object

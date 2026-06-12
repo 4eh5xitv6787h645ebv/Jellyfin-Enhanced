@@ -2,24 +2,75 @@
 // Adds Similar and Recommended sections to item details pages using Jellyseerr API.
 // Also adds a "Request More" button next to the Seasons section heading on
 // Series detail pages when the show has unrequested seasons in Seerr.
+//
+// Timing model (router-driven, primary path): network fetches start at
+// viewshow via JE.viewRouter.onViewShow; the row sections are inserted at the
+// native detail render moment (onNativeDetailRender) and the Request More
+// button when the seasons/children section renders (onChildrenRender).
+// No polling loops. A legacy hashchange/viewshow path remains as a fallback
+// for the (unexpected) case that the view router is unavailable.
 (function(JE) {
     'use strict';
+
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    JE.onBootReady(function() {
 
     const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr Recommendations:';
     const requestMoreLogPrefix = '🪼 Jellyfin Enhanced: Series Request More:';
 
-    // Track processed items to avoid duplicate renders
+    // Track processed items to avoid duplicate renders within one navigation
+    // (consulted by the legacy fallback path; cleared on every navigation).
     const processedItems = new Set();
     const processedRequestMoreItems = new Set();
 
     // CSS class used to mark and dedupe the injected Request More button
     const REQUEST_MORE_BTN_CLASS = 'je-series-request-more-btn';
 
-    // Current abort controllers for cancellation. Separate controllers prevent
-    // the slower similar/recommended fetch from cancelling the Request More
-    // check (and vice versa) when the user navigates between detail pages.
+    // Session cache of fetched rows so warm revisits render synchronously at
+    // the native render moment. itemId -> { similar, recommended, ts }
+    const ROW_CACHE_TTL_MS = 10 * 60 * 1000;
+    const rowCache = new Map();
+
+    // Per-navigation state for the router-driven path, keyed by ctx.token.
+    // All promises inside are abort-bound to ctx.signal.
+    let navState = null;
+
+    // Abort controllers for the legacy fallback path only. Separate
+    // controllers prevent the slower similar/recommended fetch from
+    // cancelling the Request More check (and vice versa) when the user
+    // navigates between detail pages.
     let currentAbortController = null;
     let requestMoreAbortController = null;
+
+    /**
+     * Returns fresh cached rows for an item, or null. Expired entries are
+     * pruned lazily on read.
+     * @param {string} itemId
+     * @returns {{similar: Array, recommended: Array}|null}
+     */
+    function getCachedRows(itemId) {
+        const entry = rowCache.get(itemId);
+        if (!entry) return null;
+        if (Date.now() - entry.ts > ROW_CACHE_TTL_MS) {
+            rowCache.delete(itemId);
+            return null;
+        }
+        return { similar: entry.similar, recommended: entry.recommended };
+    }
+
+    /**
+     * Resolves whether Jellyseerr is active. Prefers the shared single-flight
+     * status cache (60s TTL) from issue-reporter.js — that module loads after
+     * this one in the bundle, so it is read lazily at call time — falling
+     * back to this module's original direct status check.
+     * @returns {Promise<boolean>}
+     */
+    function checkJellyseerrActive() {
+        const shared = JE.jellyseerrStatus?.get?.();
+        if (shared) return Promise.resolve(shared).then((active) => !!active);
+        return JE.jellyseerrAPI.checkUserStatus().then((status) => !!(status && status.active));
+    }
 
     /**
      * Gets the TMDB ID from a Jellyfin item
@@ -49,6 +100,10 @@
                 return { tmdbId: null, type: null };
             }
 
+            // Feed the router's persistent identity cache so future
+            // navigations resolve TMDB ids without an item DTO round-trip.
+            JE.viewRouter?.recordIdentity?.(item);
+
             // Check if item is Movie or Series
             const itemType = item.Type;
             if (itemType !== 'Movie' && itemType !== 'Series') {
@@ -72,43 +127,80 @@
     }
 
     /**
-     * Wait for the detail page content to be ready
+     * Normalizes media type spellings (router identity cache stores raw
+     * Jellyfin item types) to Jellyseerr's 'movie' | 'tv'.
+     * @param {string|null} type
+     * @returns {string|null}
+     */
+    function normalizeMediaType(type) {
+        if (type === 'movie' || type === 'Movie') return 'movie';
+        if (type === 'tv' || type === 'Series' || type === 'series') return 'tv';
+        return null;
+    }
+
+    /**
+     * Resolves { tmdbId, type } for an item: the router's persistent identity
+     * cache first (synchronous hit, no network), then the item DTO via the
+     * single-flight item cache (warmed by the native detail controller's own
+     * viewshow fetch).
+     * @param {string} itemId
+     * @param {AbortSignal} [signal]
+     * @returns {Promise<{tmdbId: number|null, type: string|null}>}
+     */
+    function resolveIdentity(itemId, signal) {
+        const cached = JE.viewRouter?.getIdentity?.(itemId);
+        if (cached) {
+            const type = normalizeMediaType(cached.type);
+            const tmdbId = parseInt(cached.tmdbId, 10);
+            if (type && !Number.isNaN(tmdbId)) {
+                return Promise.resolve({ tmdbId, type });
+            }
+        }
+        return getTmdbIdFromItem(itemId, signal);
+    }
+
+    /**
+     * Finds the rows insertion anchor on the (active) detail page.
+     * @param {HTMLElement} [viewEl] - Known view element (router ctx.view)
+     * @returns {{detailPageContent: HTMLElement, moreLikeThisSection: HTMLElement}|null}
+     */
+    function findRowsAnchor(viewEl) {
+        const root = viewEl && viewEl.querySelector
+            ? viewEl
+            : document.querySelector('.libraryPage:not(.hide)');
+        if (!root) return null;
+        const detailPageContent = root.querySelector('.detailPageContent');
+        const moreLikeThisSection = detailPageContent?.querySelector('#similarCollapsible');
+        if (!detailPageContent || !moreLikeThisSection) return null;
+        return { detailPageContent, moreLikeThisSection };
+    }
+
+    /**
+     * Wait for the detail page content to be ready. Legacy fallback path only
+     * — the router path gets this moment from onNativeDetailRender. Purely
+     * event-driven (shared body MutationObserver + one 3s timeout fallback),
+     * not an interval poll.
      * @param {AbortSignal} [signal] - Optional abort signal
-     * @returns {Promise<HTMLElement|null>}
+     * @returns {Promise<object|null>}
      */
     function waitForDetailPageReady(signal) {
         return new Promise((resolve) => {
-            // Check for abort
             if (signal?.aborted) {
                 resolve(null);
                 return;
             }
 
-            const checkPage = () => {
-                const activePage = document.querySelector('.libraryPage:not(.hide)');
-                if (!activePage) return null;
-
-                const detailPageContent = activePage.querySelector('.detailPageContent');
-                const moreLikeThisSection = detailPageContent?.querySelector('#similarCollapsible');
-
-                if (detailPageContent && moreLikeThisSection) {
-                    return { detailPageContent, moreLikeThisSection };
-                }
-                return null;
-            };
-
             // Try immediately
-            const immediate = checkPage();
+            const immediate = findRowsAnchor();
             if (immediate) {
                 resolve(immediate);
                 return;
             }
 
-            // Set up observer
             let observerHandle = null;
             let timeoutId = null;
 
-            const cleanup = () => {
+            const cleanupWait = () => {
                 if (observerHandle) {
                     observerHandle.unsubscribe();
                     observerHandle = null;
@@ -119,57 +211,70 @@
                 }
             };
 
-            // Handle abort
             if (signal) {
                 signal.addEventListener('abort', () => {
-                    cleanup();
+                    cleanupWait();
                     resolve(null);
                 }, { once: true });
             }
 
             observerHandle = JE.helpers.onBodyMutation('jellyseerr-item-details-page-detect', () => {
-                const result = checkPage();
+                const result = findRowsAnchor();
                 if (result) {
-                    cleanup();
+                    cleanupWait();
                     resolve(result);
                 }
             });
 
             // Timeout fallback (3 seconds)
             timeoutId = setTimeout(() => {
-                cleanup();
-                const result = checkPage();
-                resolve(result);
+                cleanupWait();
+                resolve(findRowsAnchor());
             }, 3000);
         });
     }
 
     /**
-     * Creates a Jellyseerr section similar to search results
-     * @param {Array} results - Array of Jellyseerr items
-     * @param {string} title - Section title (already translated)
-     * @returns {HTMLElement} - Section element
+     * Outer result filter applied before slicing: drops in-library items and
+     * blocklisted items per plugin config.
+     * @param {Array} results
+     * @returns {Array}
      */
-    function createJellyseerrSection(results, title) {
-        if (!results || results.length === 0) {
-            return null;
-        }
+    function preFilterRowResults(results) {
+        const excludeLibraryItems = JE.pluginConfig?.JellyseerrExcludeLibraryItems === true;
+        const excludeBlocklistedItems = JE.pluginConfig?.JellyseerrExcludeBlocklistedItems === true;
+        return results.filter(item => {
+            if (excludeLibraryItems && item.mediaInfo?.jellyfinMediaId) return false;
+            if (excludeBlocklistedItems && item.mediaInfo?.status === 6) return false; // Status 6 = Blocklisted
+            return true;
+        });
+    }
 
-        // Filter out library items if configured
+    /**
+     * Inner section filter: library-item exclusion plus hidden-content hooks.
+     * @param {Array} results
+     * @returns {Array}
+     */
+    function applyRowFilters(results) {
         const excludeLibraryItems = JE.pluginConfig?.JellyseerrExcludeLibraryItems === true;
         let filteredResults = results;
-
         if (excludeLibraryItems) {
-            filteredResults = results.filter(item => !item.mediaInfo?.jellyfinMediaId);
+            filteredResults = filteredResults.filter(item => !item.mediaInfo?.jellyfinMediaId);
         }
         if (JE.hiddenContent) {
             filteredResults = JE.hiddenContent.filterJellyseerrResults(filteredResults, 'recommendations');
         }
+        return filteredResults;
+    }
 
-        if (filteredResults.length === 0) {
-            return null;
-        }
-
+    /**
+     * Creates the empty section container markup (title + scroller + items
+     * container, no cards). Markup/classes/styles identical to the final
+     * rendered section; cards are appended by fillSectionCards.
+     * @param {string} title - Section title (already translated)
+     * @returns {HTMLElement}
+     */
+    function createSectionShell(title) {
         const section = document.createElement('div');
         section.className = 'verticalSection emby-scroller-container jellyseerr-details-section';
         section.setAttribute('data-jellyseerr-section', 'true');
@@ -198,10 +303,28 @@
         itemsContainer.className = 'focuscontainer-x itemsContainer scrollSlider animatedScrollX';
         itemsContainer.style.whiteSpace = 'nowrap';
 
-        // Use DocumentFragment for batch DOM insertion
-        const fragment = document.createDocumentFragment();
+        scrollerContainer.appendChild(itemsContainer);
+        section.appendChild(scrollerContainer);
+        return section;
+    }
 
-        // Add items to container
+    /**
+     * Builds cards for the given (already filtered) results and appends them
+     * to the shell's items container in one batch.
+     * @param {HTMLElement} section - Shell from createSectionShell
+     * @param {Array} filteredResults
+     * @returns {number} Count of cards appended
+     */
+    function fillSectionCards(section, filteredResults) {
+        const itemsContainer = section.querySelector('.itemsContainer');
+        if (!itemsContainer) return 0;
+
+        // Use DocumentFragment for batch DOM insertion
+        // TODO(scheduleChunked): move this card loop onto the shared
+        // scheduleChunked helper when it lands.
+        const fragment = document.createDocumentFragment();
+        let added = 0;
+
         for (const item of filteredResults) {
             const card = JE.jellyseerrUI && JE.jellyseerrUI.createJellyseerrCard
                 ? JE.jellyseerrUI.createJellyseerrCard(item, true, true)
@@ -226,17 +349,39 @@
                     }
                 }
                 fragment.appendChild(card);
+                added++;
             }
         }
 
         itemsContainer.appendChild(fragment);
-        scrollerContainer.appendChild(itemsContainer);
-        section.appendChild(scrollerContainer);
+        return added;
+    }
+
+    /**
+     * Creates a fully built Jellyseerr section (shell + cards), or null when
+     * nothing remains after filtering. Used by the legacy fallback path; the
+     * router path inserts shells first and fills them as data resolves.
+     * @param {Array} results - Array of Jellyseerr items
+     * @param {string} title - Section title (already translated)
+     * @returns {HTMLElement|null}
+     */
+    function createJellyseerrSection(results, title) {
+        if (!results || results.length === 0) {
+            return null;
+        }
+        const filteredResults = applyRowFilters(results);
+        if (filteredResults.length === 0) {
+            return null;
+        }
+        const section = createSectionShell(title);
+        fillSectionCards(section, filteredResults);
         return section;
     }
 
     /**
-     * Renders Similar and Recommended sections for an item
+     * Renders Similar and Recommended sections for an item.
+     * Legacy fallback path (no view router): fetches and page-readiness are
+     * awaited together, then sections are built and inserted in one go.
      * @param {string} itemId - Jellyfin item ID
      */
     async function renderSimilarAndRecommended(itemId) {
@@ -267,57 +412,72 @@
                 return;
             }
 
-            // Check if Jellyseerr is active
-            const status = await JE.jellyseerrAPI.checkUserStatus();
-            if (signal.aborted) return;
+            let similarData, recommendedData, pageReady;
 
-            if (!status || !status.active) {
-                console.debug(`${logPrefix} Jellyseerr is not active, skipping`);
-                return;
-            }
-
-            // Get TMDB ID and type
-            const { tmdbId, type } = await getTmdbIdFromItem(itemId, signal);
-            if (signal.aborted) return;
-
-            if (!tmdbId || !type) {
-                console.debug(`${logPrefix} No valid TMDB ID found for item, skipping`);
-                return;
-            }
-
-            console.debug(`${logPrefix} Fetching similar and recommended content for TMDB ID ${tmdbId} (${type})`);
-
-            // Fetch only the data that's enabled, passing signal for cancellation
-            const fetchOptions = { signal };
-            const promises = [];
-
-            if (showSimilar) {
-                promises.push(
-                    type === 'movie'
-                        ? JE.jellyseerrAPI.fetchSimilarMovies(tmdbId, fetchOptions)
-                        : JE.jellyseerrAPI.fetchSimilarTvShows(tmdbId, fetchOptions)
-                );
+            const cached = getCachedRows(itemId);
+            if (cached) {
+                similarData = { results: cached.similar };
+                recommendedData = { results: cached.recommended };
+                pageReady = await waitForDetailPageReady(signal);
             } else {
-                promises.push(Promise.resolve({ results: [] }));
+                // Check if Jellyseerr is active
+                const active = await checkJellyseerrActive();
+                if (signal.aborted) return;
+
+                if (!active) {
+                    console.debug(`${logPrefix} Jellyseerr is not active, skipping`);
+                    return;
+                }
+
+                // Get TMDB ID and type
+                const { tmdbId, type } = await resolveIdentity(itemId, signal);
+                if (signal.aborted) return;
+
+                if (!tmdbId || !type) {
+                    console.debug(`${logPrefix} No valid TMDB ID found for item, skipping`);
+                    return;
+                }
+
+                console.debug(`${logPrefix} Fetching similar and recommended content for TMDB ID ${tmdbId} (${type})`);
+
+                // Fetch only the data that's enabled, passing signal for cancellation
+                const fetchOptions = { signal };
+                const promises = [];
+
+                if (showSimilar) {
+                    promises.push(
+                        type === 'movie'
+                            ? JE.jellyseerrAPI.fetchSimilarMovies(tmdbId, fetchOptions)
+                            : JE.jellyseerrAPI.fetchSimilarTvShows(tmdbId, fetchOptions)
+                    );
+                } else {
+                    promises.push(Promise.resolve({ results: [] }));
+                }
+
+                if (showRecommended) {
+                    promises.push(
+                        type === 'movie'
+                            ? JE.jellyseerrAPI.fetchRecommendedMovies(tmdbId, fetchOptions)
+                            : JE.jellyseerrAPI.fetchRecommendedTvShows(tmdbId, fetchOptions)
+                    );
+                } else {
+                    promises.push(Promise.resolve({ results: [] }));
+                }
+
+                // Wait for page to be ready in parallel with data fetch
+                [similarData, recommendedData, pageReady] = await Promise.all([
+                    ...promises,
+                    waitForDetailPageReady(signal)
+                ]);
+
+                if (signal.aborted) return;
+
+                rowCache.set(itemId, {
+                    similar: similarData?.results || [],
+                    recommended: recommendedData?.results || [],
+                    ts: Date.now()
+                });
             }
-
-            if (showRecommended) {
-                promises.push(
-                    type === 'movie'
-                        ? JE.jellyseerrAPI.fetchRecommendedMovies(tmdbId, fetchOptions)
-                        : JE.jellyseerrAPI.fetchRecommendedTvShows(tmdbId, fetchOptions)
-                );
-            } else {
-                promises.push(Promise.resolve({ results: [] }));
-            }
-
-            // Wait for page to be ready in parallel with data fetch
-            const [similarData, recommendedData, pageReady] = await Promise.all([
-                ...promises,
-                waitForDetailPageReady(signal)
-            ]);
-
-            if (signal.aborted) return;
 
             const similarResults = similarData?.results || [];
             const recommendedResults = recommendedData?.results || [];
@@ -336,20 +496,8 @@
             const { detailPageContent, moreLikeThisSection } = pageReady;
 
             // Filter items if configured to exclude library items or blocklisted items (status 6)
-            const excludeLibraryItems = JE.pluginConfig?.JellyseerrExcludeLibraryItems === true;
-            const excludeBlocklistedItems = JE.pluginConfig?.JellyseerrExcludeBlocklistedItems === true;
-
-            const filteredSimilarResults = similarResults.filter(item => {
-                if (excludeLibraryItems && item.mediaInfo?.jellyfinMediaId) return false;
-                if (excludeBlocklistedItems && item.mediaInfo?.status === 6) return false; // Status 6 = Blocklisted
-                return true;
-            });
-
-            const filteredRecommendedResults = recommendedResults.filter(item => {
-                if (excludeLibraryItems && item.mediaInfo?.jellyfinMediaId) return false;
-                if (excludeBlocklistedItems && item.mediaInfo?.status === 6) return false; // Status 6 = Blocklisted
-                return true;
-            });
+            const filteredSimilarResults = preFilterRowResults(similarResults);
+            const filteredRecommendedResults = preFilterRowResults(recommendedResults);
 
             if (filteredSimilarResults.length === 0 && filteredRecommendedResults.length === 0) {
                 console.debug(`${logPrefix} No content to display after filtering library items`);
@@ -411,106 +559,6 @@
     }
 
     /**
-     * Polls a predicate until it returns a truthy value, the abort signal
-     * fires, or the timeout is reached. Returns the truthy value, or null
-     * on abort/timeout. Used instead of MutationObserver subscriptions for
-     * conditions that depend on attribute/characterData changes — the
-     * project's shared body observer only dispatches on childList mutations
-     * (helpers.js fast-paths attribute/text mutations at line 38), so an
-     * observer-based wait would miss a `classList.remove('hide')` or a
-     * `span.textContent = 'Series'` mutation entirely unless some unrelated
-     * childList mutation happened to fire around the same time.
-     * @param {() => any} predicate - Called repeatedly; truthy return resolves.
-     * @param {object} [opts]
-     * @param {number} [opts.intervalMs=100]
-     * @param {number} [opts.timeoutMs=5000]
-     * @param {AbortSignal} [opts.signal]
-     * @returns {Promise<any|null>}
-     */
-    function pollUntil(predicate, opts = {}) {
-        const { intervalMs = 100, timeoutMs = 5000, signal } = opts;
-        return new Promise((resolve) => {
-            if (signal?.aborted) {
-                resolve(null);
-                return;
-            }
-            const immediate = predicate();
-            if (immediate) {
-                resolve(immediate);
-                return;
-            }
-            const deadline = Date.now() + timeoutMs;
-            let timerId = null;
-            const finish = (value) => {
-                if (timerId) clearTimeout(timerId);
-                if (signal) signal.removeEventListener('abort', onAbort);
-                resolve(value);
-            };
-            const onAbort = () => finish(null);
-            if (signal) signal.addEventListener('abort', onAbort, { once: true });
-            const tick = () => {
-                if (signal?.aborted) return finish(null);
-                const result = predicate();
-                if (result) return finish(result);
-                if (Date.now() >= deadline) return finish(null);
-                timerId = setTimeout(tick, intervalMs);
-            };
-            timerId = setTimeout(tick, intervalMs);
-        });
-    }
-
-    /**
-     * Waits for the Seasons section heading on a Series detail page to become
-     * visible. On a Series page Jellyfin renders the seasons list inside
-     * #listChildrenCollapsible (NOT #childrenCollapsible — that variant is
-     * used for non-Series item types and stays hidden). The heading inside
-     * is an h2.sectionTitle.sectionTitle-cards with a child <span> whose
-     * text reads "Series" once Jellyfin has populated it.
-     *
-     * Uses polling instead of a MutationObserver because the readiness
-     * conditions are attribute (`hide` class removal) and characterData
-     * (span text set) mutations, which the project's shared body observer
-     * does not dispatch on.
-     *
-     * @param {AbortSignal} [signal]
-     * @returns {Promise<HTMLElement|null>}
-     */
-    function waitForSeasonsHeading(signal) {
-        return pollUntil(() => {
-            const activePage = document.querySelector('.libraryPage:not(.hide)');
-            if (!activePage) return null;
-            const collapsible = activePage.querySelector('#listChildrenCollapsible');
-            if (!collapsible || collapsible.classList.contains('hide')) return null;
-            const heading = collapsible.querySelector('h2.sectionTitle.sectionTitle-cards');
-            if (!heading || heading.classList.contains('hide')) return null;
-            // Wait until Jellyfin has populated the title span (initially empty)
-            const span = heading.querySelector('span');
-            if (!span || !span.textContent.trim()) return null;
-            return heading;
-        }, { intervalMs: 100, timeoutMs: 5000, signal });
-    }
-
-    /**
-     * Waits for `JE.jellyseerrMoreInfo.checkForUnrequestedSeasons` to become
-     * available. The Jellyseerr modules are loaded in parallel by plugin.js
-     * via dynamically-inserted <script> tags, so on a cold page load
-     * item-details.js may execute before more-info-modal.js has finished
-     * parsing and attached its API. The checker is required for deciding
-     * whether to render the Request More button.
-     * @param {AbortSignal} [signal]
-     * @returns {Promise<Function|null>}
-     */
-    function waitForChecker(signal) {
-        return pollUntil(
-            () => {
-                const fn = JE.jellyseerrMoreInfo && JE.jellyseerrMoreInfo.checkForUnrequestedSeasons;
-                return typeof fn === 'function' ? fn : null;
-            },
-            { intervalMs: 50, timeoutMs: 3000, signal }
-        );
-    }
-
-    /**
      * Builds the Request More button DOM. Reuses the .jellyseerr-request-button
      * styling already injected by ui.js so visuals match the rest of Seerr UI.
      * Uses textContent / DOM construction (no innerHTML) for safety.
@@ -565,10 +613,71 @@
     }
 
     /**
+     * Finds the visible Seasons section heading on a Series detail page.
+     * Series pages render the seasons list inside #listChildrenCollapsible;
+     * #childrenCollapsible is used for other layouts, so take whichever is
+     * present and visible. Synchronous: callers invoke this at a moment the
+     * section is known to be rendered (router onChildrenRender), so no
+     * waiting/polling is needed.
+     * @param {HTMLElement} [viewEl] - Known view element (router ctx.view)
+     * @returns {HTMLElement|null}
+     */
+    function findSeasonsHeading(viewEl) {
+        const root = viewEl && viewEl.querySelector
+            ? viewEl
+            : document.querySelector('.libraryPage:not(.hide)');
+        if (!root) return null;
+        const collapsible = ['#listChildrenCollapsible', '#childrenCollapsible']
+            .map((sel) => root.querySelector(sel))
+            .find((el) => el && !el.classList.contains('hide'));
+        if (!collapsible) return null;
+        const heading = collapsible.querySelector('h2.sectionTitle.sectionTitle-cards');
+        if (!heading || heading.classList.contains('hide')) return null;
+        // Jellyfin populates the title span in the same render pass as the
+        // children items; an empty span means the heading is not ready.
+        const span = heading.querySelector('span');
+        if (!span || !span.textContent.trim()) return null;
+        return heading;
+    }
+
+    /**
+     * Injects the Request More button next to the Seasons heading. Dedupes
+     * via REQUEST_MORE_BTN_CLASS, so it is safe to call repeatedly.
+     * @param {string} itemId
+     * @param {object} tvDetails - TV show details from Seerr
+     * @param {HTMLElement} [viewEl] - Known view element (router ctx.view)
+     */
+    function injectRequestMoreButton(itemId, tvDetails, viewEl) {
+        const heading = findSeasonsHeading(viewEl);
+        if (!heading) {
+            console.debug(`${requestMoreLogPrefix} Seasons heading not found, skipping`);
+            return;
+        }
+
+        // Dedup: bail if we already injected a button into this heading.
+        if (heading.querySelector(`.${REQUEST_MORE_BTN_CLASS}`)) {
+            processedRequestMoreItems.add(itemId);
+            return;
+        }
+
+        // Lay the button out inline next to the heading text via a class
+        // (instead of mutating heading.style directly) so the override is
+        // discoverable in CSS, easy to remove, and doesn't permanently
+        // overwrite Jellyfin's inline display value on the heading.
+        heading.classList.add('je-series-request-more-heading');
+        heading.appendChild(buildSeriesRequestMoreButton(tvDetails));
+
+        processedRequestMoreItems.add(itemId);
+        console.debug(`${requestMoreLogPrefix} Added Request More button for "${tvDetails.name || tvDetails.title}"`);
+    }
+
+    /**
      * Renders a "Request More" button next to the Seasons section heading on
      * a Series detail page when the show has unrequested seasons in Seerr.
-     * Reuses checkForUnrequestedSeasons from more-info-modal.js so the
-     * detection logic stays in one place.
+     * Legacy fallback path (no view router). Reuses checkForUnrequestedSeasons
+     * from more-info-modal.js so the detection logic stays in one place; the
+     * bundle's deterministic load order guarantees it is defined before any
+     * navigation happens.
      * @param {string} itemId - Jellyfin item ID
      */
     async function renderSeriesRequestMoreButton(itemId) {
@@ -585,11 +694,11 @@
             if (!JE.pluginConfig?.JellyseerrEnabled) return;
             if (JE.pluginConfig?.JellyseerrShowRequestMoreOnSeries === false) return;
 
-            const status = await JE.jellyseerrAPI.checkUserStatus();
+            const active = await checkJellyseerrActive();
             if (signal.aborted) return;
-            if (!status?.active) return;
+            if (!active) return;
 
-            const { tmdbId, type } = await getTmdbIdFromItem(itemId, signal);
+            const { tmdbId, type } = await resolveIdentity(itemId, signal);
             if (signal.aborted) return;
             if (!tmdbId || type !== 'tv') return;
 
@@ -597,16 +706,9 @@
             if (signal.aborted) return;
             if (!tvDetails) return;
 
-            // Wait for the checker to become available — the Jellyseerr
-            // modules load in parallel via dynamically-inserted <script>
-            // tags, so more-info-modal.js may still be parsing when we get
-            // here on a cold load. Polling up to 3s avoids a one-shot race
-            // where the button would otherwise never appear until the user
-            // navigates away and back.
-            const checker = await waitForChecker(signal);
-            if (signal.aborted) return;
-            if (!checker) {
-                console.warn(`${requestMoreLogPrefix} checkForUnrequestedSeasons unavailable after 3s, skipping`);
+            const checker = JE.jellyseerrMoreInfo?.checkForUnrequestedSeasons;
+            if (typeof checker !== 'function') {
+                console.warn(`${requestMoreLogPrefix} checkForUnrequestedSeasons unavailable, skipping`);
                 return;
             }
             const hasUnrequested = await checker(tvDetails);
@@ -621,30 +723,10 @@
                 return;
             }
 
-            const heading = await waitForSeasonsHeading(signal);
-            if (signal.aborted) return;
-            if (!heading) {
-                console.debug(`${requestMoreLogPrefix} Seasons heading not found, skipping`);
-                return;
-            }
-
-            // Dedup: bail if we already injected a button into this heading.
-            if (heading.querySelector(`.${REQUEST_MORE_BTN_CLASS}`)) {
-                processedRequestMoreItems.add(itemId);
-                return;
-            }
-
-            // Lay the button out inline next to the heading text via a class
-            // (instead of mutating heading.style directly) so the override is
-            // discoverable in CSS, easy to remove, and doesn't permanently
-            // overwrite Jellyfin's inline display value on the heading.
-            heading.classList.add('je-series-request-more-heading');
-
-            const button = buildSeriesRequestMoreButton(tvDetails);
-            heading.appendChild(button);
-
-            processedRequestMoreItems.add(itemId);
-            console.debug(`${requestMoreLogPrefix} Added Request More button for "${tvDetails.name || tvDetails.title}"`);
+            // By the time the eligibility checks above have completed, the
+            // seasons section is rendered on any realistic connection; if the
+            // heading is still missing, skip quietly (fallback path only).
+            injectRequestMoreButton(itemId, tvDetails);
         } catch (error) {
             if (error.name === 'AbortError') {
                 console.debug(`${requestMoreLogPrefix} Aborted for item ${itemId}`);
@@ -654,8 +736,330 @@
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Router-driven pipeline (primary path)
+    // ------------------------------------------------------------------------
+
     /**
-     * Handles item details page navigation
+     * True when the navigation that produced `state` is no longer current.
+     * @param {object} state
+     * @returns {boolean}
+     */
+    function isStaleNav(state) {
+        return state.signal.aborted || navState !== state;
+    }
+
+    /**
+     * onViewShow: reset per-navigation state, then start all network work
+     * immediately so data is in flight while the native page renders.
+     * @param {object} ctx - Router context {token, view, viewType, itemId, params, signal}
+     */
+    function handleViewShow(ctx) {
+        cleanup();
+        if (!ctx.itemId) {
+            navState = null;
+            return;
+        }
+
+        const state = {
+            token: ctx.token,
+            itemId: ctx.itemId,
+            signal: ctx.signal,
+            statusPromise: null,
+            identityPromise: null,
+            showSimilar: false,
+            showRecommended: false,
+            rowsEnabled: false,
+            rowsPromise: null,
+            rowsResolved: undefined,
+            requestMorePromise: null,
+            metricsStarted: false
+        };
+        navState = state;
+        ctx.signal.addEventListener('abort', () => {
+            if (navState === state) navState = null;
+        }, { once: true });
+
+        // Shared upstream promises (status + identity) feed both pipelines so
+        // each navigation pays for them at most once.
+        state.statusPromise = checkJellyseerrActive().catch((error) => {
+            console.debug(`${logPrefix} Status check failed:`, error);
+            return false;
+        });
+        state.identityPromise = resolveIdentity(ctx.itemId, ctx.signal).catch((error) => {
+            if (error?.name !== 'AbortError') {
+                console.error(`${logPrefix} Identity resolution failed:`, error);
+            }
+            return { tmdbId: null, type: null };
+        });
+
+        startRowsPipeline(state);
+        startRequestMorePipeline(state);
+    }
+
+    /**
+     * Starts the Similar/Recommended data pipeline for the current navigation.
+     * Resolves to { similar, recommended } raw result arrays, or null when
+     * there is nothing to render (disabled, inactive, no TMDB id, error).
+     * @param {object} state - Per-navigation state
+     */
+    function startRowsPipeline(state) {
+        state.showSimilar = JE.pluginConfig?.JellyseerrShowSimilar === true;
+        state.showRecommended = JE.pluginConfig?.JellyseerrShowRecommended === true;
+        state.rowsEnabled = state.showSimilar || state.showRecommended;
+        if (!state.rowsEnabled) {
+            console.debug(`${logPrefix} Both similar and recommended sections are disabled in settings`);
+            return;
+        }
+
+        // Warm revisit: rows already in the session cache resolve
+        // synchronously so onNativeDetailRender can build in-frame.
+        const cached = getCachedRows(state.itemId);
+        if (cached) {
+            state.rowsResolved = cached;
+            state.rowsPromise = Promise.resolve(cached);
+            return;
+        }
+
+        if (JE.requestManager?.metrics?.enabled) {
+            JE.requestManager.startMeasurement('similar-recommended');
+            state.metricsStarted = true;
+        }
+
+        state.rowsPromise = (async () => {
+            const active = await state.statusPromise;
+            if (state.signal.aborted) return null;
+            if (!active) {
+                console.debug(`${logPrefix} Jellyseerr is not active, skipping`);
+                return null;
+            }
+
+            const { tmdbId, type } = await state.identityPromise;
+            if (state.signal.aborted) return null;
+            if (!tmdbId || !type) {
+                console.debug(`${logPrefix} No valid TMDB ID found for item, skipping`);
+                return null;
+            }
+
+            console.debug(`${logPrefix} Fetching similar and recommended content for TMDB ID ${tmdbId} (${type})`);
+
+            const fetchOptions = { signal: state.signal };
+            const [similarData, recommendedData] = await Promise.all([
+                state.showSimilar
+                    ? (type === 'movie'
+                        ? JE.jellyseerrAPI.fetchSimilarMovies(tmdbId, fetchOptions)
+                        : JE.jellyseerrAPI.fetchSimilarTvShows(tmdbId, fetchOptions))
+                    : Promise.resolve({ results: [] }),
+                state.showRecommended
+                    ? (type === 'movie'
+                        ? JE.jellyseerrAPI.fetchRecommendedMovies(tmdbId, fetchOptions)
+                        : JE.jellyseerrAPI.fetchRecommendedTvShows(tmdbId, fetchOptions))
+                    : Promise.resolve({ results: [] })
+            ]);
+            if (state.signal.aborted) return null;
+
+            const rows = {
+                similar: similarData?.results || [],
+                recommended: recommendedData?.results || []
+            };
+            rowCache.set(state.itemId, {
+                similar: rows.similar,
+                recommended: rows.recommended,
+                ts: Date.now()
+            });
+            state.rowsResolved = rows;
+            return rows;
+        })().catch((error) => {
+            if (error?.name === 'AbortError') {
+                console.debug(`${logPrefix} Request aborted for item ${state.itemId}`);
+            } else {
+                console.error(`${logPrefix} Error fetching similar and recommended content:`, error);
+            }
+            return null;
+        });
+    }
+
+    /**
+     * Starts the series Request More eligibility pipeline for the current
+     * navigation. Resolves to { tvDetails } when the button should render,
+     * or null otherwise. The DOM moment is handled by onChildrenRender.
+     * @param {object} state - Per-navigation state
+     */
+    function startRequestMorePipeline(state) {
+        if (!JE.pluginConfig?.JellyseerrEnabled) return;
+        if (JE.pluginConfig?.JellyseerrShowRequestMoreOnSeries === false) return;
+
+        state.requestMorePromise = (async () => {
+            const active = await state.statusPromise;
+            if (state.signal.aborted || !active) return null;
+
+            const { tmdbId, type } = await state.identityPromise;
+            if (state.signal.aborted) return null;
+            if (!tmdbId || type !== 'tv') return null;
+
+            const tvDetails = await JE.jellyseerrAPI.fetchTvShowDetails(tmdbId);
+            if (state.signal.aborted) return null;
+            if (!tvDetails) return null;
+
+            // Deterministic bundle order guarantees more-info-modal.js has
+            // defined the checker before any navigation happens.
+            const checker = JE.jellyseerrMoreInfo?.checkForUnrequestedSeasons;
+            if (typeof checker !== 'function') {
+                console.warn(`${requestMoreLogPrefix} checkForUnrequestedSeasons unavailable, skipping`);
+                return null;
+            }
+            const hasUnrequested = await checker(tvDetails);
+            if (state.signal.aborted) return null;
+            if (!hasUnrequested) {
+                processedRequestMoreItems.add(state.itemId);
+                console.debug(`${requestMoreLogPrefix} No unrequested seasons for "${tvDetails.name || tvDetails.title}"`);
+                return null;
+            }
+            return { tvDetails };
+        })().catch((error) => {
+            if (error?.name === 'AbortError') {
+                console.debug(`${requestMoreLogPrefix} Aborted for item ${state.itemId}`);
+            } else {
+                console.error(`${requestMoreLogPrefix} Error preparing button:`, error);
+            }
+            return null;
+        });
+    }
+
+    /**
+     * Inserts hidden section shells at the insertion point in final order
+     * (#similarCollapsible -> Recommended -> Similar), one per enabled
+     * section. Hidden until filled so an empty shell never flashes.
+     * @param {object} state - Per-navigation state
+     * @param {object} anchor - From findRowsAnchor
+     * @returns {{recommended: HTMLElement|undefined, similar: HTMLElement|undefined}}
+     */
+    function insertRowShells(state, anchor) {
+        const shells = {};
+        let insertAfter = anchor.moreLikeThisSection;
+        if (state.showRecommended) {
+            const recommendedTitle = JE.t ? (JE.t('jellyseerr_recommended_title') || 'Recommended') : 'Recommended';
+            shells.recommended = createSectionShell(recommendedTitle);
+            shells.recommended.classList.add('hide');
+            insertAfter.after(shells.recommended);
+            insertAfter = shells.recommended;
+        }
+        if (state.showSimilar) {
+            const similarTitle = JE.t ? (JE.t('jellyseerr_similar_title') || 'Similar') : 'Similar';
+            shells.similar = createSectionShell(similarTitle);
+            shells.similar.classList.add('hide');
+            insertAfter.after(shells.similar);
+        }
+        return shells;
+    }
+
+    /**
+     * Removes inserted shells (aborted navigation or empty results).
+     */
+    function removeRowShells(shells) {
+        if (shells.recommended) shells.recommended.remove();
+        if (shells.similar) shells.similar.remove();
+    }
+
+    /**
+     * Fills inserted shells with cards (or removes the ones that end up
+     * empty after filtering). Synchronous, so a warm cache hit renders in
+     * the same frame as the native detail render.
+     * @param {object} state - Per-navigation state
+     * @param {object} shells - From insertRowShells
+     * @param {{similar: Array, recommended: Array}|null} rows
+     */
+    function fillRowShells(state, shells, rows) {
+        if (!rows) {
+            removeRowShells(shells);
+            return;
+        }
+
+        if (shells.recommended) {
+            const filtered = applyRowFilters(preFilterRowResults(rows.recommended || []).slice(0, 20));
+            const added = filtered.length > 0 ? fillSectionCards(shells.recommended, filtered) : 0;
+            if (added > 0) {
+                shells.recommended.classList.remove('hide');
+                console.debug(`${logPrefix} Added Recommended section with ${added} items`);
+            } else {
+                shells.recommended.remove();
+            }
+        }
+
+        if (shells.similar) {
+            const filtered = applyRowFilters(preFilterRowResults(rows.similar || []).slice(0, 20));
+            const added = filtered.length > 0 ? fillSectionCards(shells.similar, filtered) : 0;
+            if (added > 0) {
+                shells.similar.classList.remove('hide');
+                console.debug(`${logPrefix} Added Similar section with ${added} items`);
+            } else {
+                shells.similar.remove();
+            }
+        }
+
+        if (state.metricsStarted && JE.requestManager?.metrics?.enabled) {
+            JE.requestManager.endMeasurement('similar-recommended');
+            state.metricsStarted = false;
+        }
+    }
+
+    /**
+     * onNativeDetailRender: insert the section shells at the native render
+     * moment, then fill them as the data promises resolve. Warm data (session
+     * cache or already-settled fetch) builds fully in this frame.
+     * @param {object} ctx - Router context
+     */
+    async function handleNativeDetailRender(ctx) {
+        const state = navState;
+        if (!state || state.token !== ctx.token || !state.rowsEnabled || !state.rowsPromise) return;
+
+        const anchor = findRowsAnchor(ctx.view);
+        if (!anchor) {
+            console.debug(`${logPrefix} Detail anchor (#similarCollapsible) not found, skipping rows`);
+            return;
+        }
+
+        // Remove any existing Jellyseerr sections to avoid duplicates
+        // (restored views keep the DOM from the previous visit).
+        anchor.detailPageContent.querySelectorAll('.jellyseerr-details-section').forEach(el => el.remove());
+
+        const shells = insertRowShells(state, anchor);
+
+        if (state.rowsResolved !== undefined) {
+            // Warm: build and insert fully in this frame.
+            fillRowShells(state, shells, state.rowsResolved);
+            return;
+        }
+
+        const rows = await state.rowsPromise;
+        if (isStaleNav(state)) {
+            removeRowShells(shells);
+            return;
+        }
+        fillRowShells(state, shells, rows);
+    }
+
+    /**
+     * onChildrenRender: the seasons section just rendered — inject the
+     * Request More button as soon as the eligibility pipeline allows it.
+     * @param {object} ctx - Router context
+     */
+    async function handleChildrenRender(ctx) {
+        const state = navState;
+        if (!state || state.token !== ctx.token || !state.requestMorePromise) return;
+
+        const prepared = await state.requestMorePromise;
+        if (!prepared || isStaleNav(state)) return;
+
+        injectRequestMoreButton(state.itemId, prepared.tvDetails, ctx.view);
+    }
+
+    // ------------------------------------------------------------------------
+    // Legacy fallback wiring + shared bootstrap
+    // ------------------------------------------------------------------------
+
+    /**
+     * Handles item details page navigation (legacy fallback path).
      */
     function handleItemDetailsPage() {
         // Get item ID from URL
@@ -680,7 +1084,9 @@
     }
 
     /**
-     * Cleanup function for navigation
+     * Cleanup function for navigation. Router path: per-nav fetches are
+     * cancelled by the router aborting ctx.signal; this clears the legacy
+     * controllers and the per-navigation dedupe sets.
      */
     function cleanup() {
         // Abort any in-flight requests
@@ -722,6 +1128,18 @@
         console.debug(`${logPrefix} Initializing Recommendations and Similar sections`);
         injectRequestMoreStyles();
 
+        if (JE.viewRouter?.onViewShow) {
+            // Router-driven timing: fetches start at viewshow; rows insert at
+            // the native detail render moment; the Request More button lands
+            // when the seasons/children section renders. The router fires a
+            // kickstart for the page the user is already on at boot.
+            JE.viewRouter.onViewShow(handleViewShow, { viewTypes: ['detail'] });
+            JE.viewRouter.onNativeDetailRender(handleNativeDetailRender);
+            JE.viewRouter.onChildrenRender(handleChildrenRender);
+            return;
+        }
+
+        // Legacy fallback when the view router is unavailable.
         // Listen for hash changes (navigation)
         window.addEventListener('hashchange', () => {
             cleanup();
@@ -744,4 +1162,5 @@
         initialize();
     }
 
+    });
 })(window.JellyfinEnhanced);
