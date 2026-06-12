@@ -1052,9 +1052,10 @@
         const state = navState;
         if (!state || state.token !== ctx.token || !state.rowsEnabled || !state.rowsPromise) return;
 
-        // These rows live below the fold: yield one frame so the native render
-        // batch (and the above-the-fold JE buttons) paint without us in it.
-        await new Promise(requestAnimationFrame);
+        // These rows live below the fold: yield past the native frame's PAINT
+        // (rAF alone runs pre-layout; inserting there forces attach-time
+        // measurements onto the dirty native tree). Post-paint, layout is clean.
+        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
         if (isStaleNav(state) || state.token !== (navState && navState.token)) return;
 
         const anchor = findRowsAnchor(ctx.view);

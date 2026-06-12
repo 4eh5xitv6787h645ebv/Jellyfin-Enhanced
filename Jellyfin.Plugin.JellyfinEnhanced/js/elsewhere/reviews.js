@@ -1559,9 +1559,12 @@
                 return;
             }
 
-            // Below-fold section: yield one frame so the native render batch
-            // (and above-the-fold JE elements) paint without us in it.
-            await new Promise(requestAnimationFrame);
+            // Below-fold section: yield past the native frame's PAINT (rAF alone
+            // runs before layout, so inserting there still forces our scroller's
+            // attach-time measurements onto the maximally dirty native tree —
+            // measured as a ~1s Layout pass). After paint, the tree is clean and
+            // the scroller's forced layout is a cheap incremental one.
+            await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
             if (isStaleNav(state)) return;
 
             // Inject the shell (header + collapsed/empty body) in the native

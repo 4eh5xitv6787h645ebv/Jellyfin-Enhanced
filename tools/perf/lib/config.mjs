@@ -6,6 +6,16 @@ import { jf } from './api.mjs';
 
 const WRITABLE_KEYS = new Set([
     'DevMode',
+    'ShowReviews',
+    'ShowUserReviews',
+    'QualityTagsEnabled',
+    'GenreTagsEnabled',
+    'RatingTagsEnabled',
+    'LanguageTagsEnabled',
+    'PeopleTagsEnabled',
+    'ShowUserRatingOnPosters',
+    'MetadataIconsEnabled',
+    'ActiveStreamsEnabled',
     'EnableCustomSplashScreen',
     'EnableLoginImage',
     'AutoPipEnabled',
