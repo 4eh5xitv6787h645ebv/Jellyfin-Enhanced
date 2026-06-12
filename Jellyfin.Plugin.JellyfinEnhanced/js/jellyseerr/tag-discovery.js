@@ -211,7 +211,11 @@
         }
 
         const itemsContainer = document.createElement('div');
-        itemsContainer.setAttribute('is', 'emby-itemscontainer');
+        // Plain container on purpose: the native emby-itemscontainer upgrade
+        // pulls in MultiSelect, Sortable, context-menu handlers and seven
+        // server-event subscriptions per row — none of which these custom
+        // cards use (they ship their own click handlers). The classes alone
+        // provide the layout/scroll styling.
         itemsContainer.className = 'vertical-wrap itemsContainer centered';
         section.appendChild(itemsContainer);
 

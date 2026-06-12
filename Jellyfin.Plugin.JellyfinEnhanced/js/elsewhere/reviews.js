@@ -909,6 +909,11 @@
             const tmdbId = data.target.tmdbKey;
             const tmdbMediaType = data.target.apiMediaType;
 
+            // Stamp identity + completion so a restored view of the same item
+            // can skip the rebuild entirely (see handleNativeDetailRender).
+            reviewsSection.setAttribute('data-je-target', tmdbId);
+            reviewsSection.setAttribute('data-je-filled', '1');
+
             // Inject average user rating chip next to the TMDB/RT rating chips
             injectAvgRatingChip(contextPage, userReviews);
 
@@ -1535,6 +1540,16 @@
                 if (isStaleNav(state)) return;
             }
             if (!target) return; // not review-eligible (no TMDB id / unsupported type)
+
+            // Restored views keep the previous visit's DOM: if the existing
+            // section already belongs to this exact target and finished
+            // filling, rebuilding it is pure waste — keep it.
+            const existingSection = page.querySelector('.tmdb-reviews-section');
+            if (existingSection
+                && existingSection.getAttribute('data-je-target') === target.tmdbKey
+                && existingSection.getAttribute('data-je-filled') === '1') {
+                return;
+            }
 
             // Inject the shell (header + collapsed/empty body) in the native
             // render frame; previous sections are removed here. Reserve the

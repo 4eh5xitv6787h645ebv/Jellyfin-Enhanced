@@ -299,7 +299,11 @@
         scrollerContainer.style.webkitOverflowScrolling = 'touch';
 
         const itemsContainer = document.createElement('div');
-        itemsContainer.setAttribute('is', 'emby-itemscontainer');
+        // Plain container on purpose: the native emby-itemscontainer upgrade
+        // pulls in MultiSelect, Sortable, context-menu handlers and seven
+        // server-event subscriptions per row — none of which these custom
+        // cards use (they ship their own click handlers). The classes alone
+        // provide the layout/scroll styling.
         itemsContainer.className = 'focuscontainer-x itemsContainer scrollSlider animatedScrollX';
         itemsContainer.style.whiteSpace = 'nowrap';
 
@@ -1042,11 +1046,29 @@
             return;
         }
 
-        // Remove any existing Jellyseerr sections to avoid duplicates
-        // (restored views keep the DOM from the previous visit).
-        anchor.detailPageContent.querySelectorAll('.jellyseerr-details-section').forEach(el => el.remove());
+        // Restored views keep the DOM from the previous visit: when the
+        // existing sections already belong to THIS item and have content,
+        // rebuilding them is pure waste (measured ~1s of card building on
+        // warm restores). Keep them as-is.
+        const existing = anchor.detailPageContent.querySelectorAll('.jellyseerr-details-section');
+        if (existing.length > 0) {
+            let sameItemWithContent = true;
+            for (const el of existing) {
+                if (el.getAttribute('data-je-item-id') !== String(state.itemId) || !el.querySelector('.card')) {
+                    sameItemWithContent = false;
+                    break;
+                }
+            }
+            if (sameItemWithContent) {
+                console.debug(`${logPrefix} Restored view already has current sections, skipping rebuild`);
+                return;
+            }
+            existing.forEach(el => el.remove());
+        }
 
         const shells = insertRowShells(state, anchor);
+        if (shells.recommended) shells.recommended.setAttribute('data-je-item-id', String(state.itemId));
+        if (shells.similar) shells.similar.setAttribute('data-je-item-id', String(state.itemId));
 
         if (state.rowsResolved !== undefined) {
             // Warm: build and insert fully in this frame.
