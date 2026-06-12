@@ -122,45 +122,87 @@
     const ITEM_CACHE_TTL_MS = 30000; // 30s -- long enough for batch prefetch to warm cache before tag systems scan
 
     /**
-     * Deduplicated item fetch with short TTL cache.
-     * Prevents multiple modules from requesting the same item concurrently on detail page navigation.
+     * Idempotent wrap of ApiClient.getItem: concurrent identical calls share one
+     * request and results are cached for a short TTL — so the NATIVE detail
+     * controller's own fetch at viewshow warms the cache for every JE feature
+     * (zero extra round trips on detail navigations).
+     *
+     * Every caller receives a structuredClone of the cached master, which is
+     * exactly the unpatched contract (each call used to get its own parsed
+     * response object), so neither native code nor JE modules can contaminate
+     * each other through shared DTO mutation.
+     */
+    function patchApiClientGetItem() {
+        try {
+            if (typeof window.ApiClient === 'undefined' || ApiClient.__jeGetItemPatched) return;
+            const orig = ApiClient.getItem;
+            if (typeof orig !== 'function') return;
+            ApiClient.__jeGetItemPatched = true;
+
+            ApiClient.getItem = function(userId, itemId) {
+                // Only the canonical 2-arg form is interceptable; anything else
+                // falls through untouched.
+                if (arguments.length !== 2 || !userId || !itemId || typeof itemId !== 'string') {
+                    return orig.apply(this, arguments);
+                }
+                try {
+                    const key = `${userId}:${itemId}`;
+                    const now = Date.now();
+                    const entry = itemCache.get(key);
+                    if (entry) {
+                        if (entry.promise) return entry.promise.then(it => structuredClone(it));
+                        if (entry.item && (now - entry.ts) < ITEM_CACHE_TTL_MS) {
+                            return Promise.resolve(structuredClone(entry.item));
+                        }
+                    }
+                    const promise = orig.call(this, userId, itemId)
+                        .then((item) => {
+                            itemCache.set(key, { item, ts: Date.now(), promise: null });
+                            try { JE.viewRouter?.recordIdentity(item); } catch (e) { /* best-effort */ }
+                            return item;
+                        })
+                        .catch((err) => {
+                            itemCache.delete(key);
+                            throw err;
+                        });
+                    itemCache.set(key, { item: null, ts: now, promise });
+                    return promise.then(it => structuredClone(it));
+                } catch (e) {
+                    // Fail-open: any unexpected error disables the fast path for
+                    // this call only.
+                    return orig.apply(this, arguments);
+                }
+            };
+            console.log('🪼 Jellyfin Enhanced: ApiClient.getItem single-flight cache active');
+        } catch (e) {
+            console.warn('🪼 Jellyfin Enhanced: Could not patch ApiClient.getItem:', e);
+        }
+    }
+
+    /**
+     * Deduplicated item fetch with short TTL cache (thin wrapper over the
+     * patched ApiClient.getItem so all callers share one cache).
      * @param {string} itemId
      * @param {Object} [options]
      * @param {string} [options.userId]
-     * @param {number} [options.ttlMs]
+     * @param {number} [options.ttlMs] - treat cached entries older than this as stale
      * @param {boolean} [options.forceRefresh]
      * @returns {Promise<object|null>}
      */
     async function getItemCached(itemId, options = {}) {
         if (!itemId) return null;
-
-        const ttlMs = Number.isFinite(options.ttlMs) ? options.ttlMs : ITEM_CACHE_TTL_MS;
         const userId = options.userId || ApiClient.getCurrentUserId();
         const key = `${userId}:${itemId}`;
-        const now = Date.now();
         const entry = itemCache.get(key);
-
-        if (!options.forceRefresh && entry) {
-            if (entry.promise) {
-                return entry.promise;
-            }
-            if (entry.item && (now - entry.ts) < ttlMs) {
-                return entry.item;
-            }
-        }
-
-        const promise = ApiClient.getItem(userId, itemId)
-            .then((item) => {
-                itemCache.set(key, { item, ts: Date.now(), promise: null });
-                return item;
-            })
-            .catch((err) => {
+        if (entry && entry.item) {
+            const maxAge = Number.isFinite(options.ttlMs) ? options.ttlMs : ITEM_CACHE_TTL_MS;
+            if (options.forceRefresh || (Date.now() - entry.ts) >= maxAge) {
                 itemCache.delete(key);
-                throw err;
-            });
-
-        itemCache.set(key, { item: null, ts: now, promise });
-        return promise;
+            }
+        } else if (options.forceRefresh && entry) {
+            itemCache.delete(key);
+        }
+        return ApiClient.getItem(userId, itemId);
     }
 
 
@@ -215,6 +257,9 @@
 
         // Patch navigation history methods so pushState fires je:navigate
         patchNavigationEvents();
+
+        // Single-flight item cache shared with the native controllers
+        patchApiClientGetItem();
 
         // Store original onViewShow if it exists
         originalOnViewShow = window.Emby.Page.onViewShow;
@@ -508,6 +553,45 @@
     }
 
     /**
+     * Processes items cooperatively so no single main-thread task exceeds ~budgetMs.
+     * Uses scheduler.yield()/postTask when available, falling back to setTimeout(0)
+     * frame breaks. Returns a promise; stops early (resolving false) if signal aborts.
+     * @param {Array|Iterable} items
+     * @param {Function} fn - called with (item, index)
+     * @param {Object} [opts] - { budgetMs = 8, signal = null }
+     * @param {number} [opts.budgetMs=8] - Max synchronous slice length in ms
+     * @param {AbortSignal} [opts.signal=null] - Checked at each yield point
+     * @returns {Promise<boolean>} True when all items were processed, false if aborted
+     */
+    async function scheduleChunked(items, fn, opts = {}) {
+        if (!items) return true;
+        const budgetMs = (typeof opts.budgetMs === 'number' && opts.budgetMs > 0) ? opts.budgetMs : 8;
+        const signal = opts.signal || null;
+        if (signal?.aborted) return false;
+
+        // Prefer the native Scheduler API (yield keeps continuation priority,
+        // postTask is the older spelling); setTimeout(0) is the universal
+        // fallback that breaks the work into separate macrotasks.
+        const yieldToMain = () => {
+            if (window.scheduler?.yield) return window.scheduler.yield();
+            if (window.scheduler?.postTask) return window.scheduler.postTask(() => {}, { priority: 'user-visible' });
+            return new Promise(resolve => setTimeout(resolve, 0));
+        };
+
+        let deadline = performance.now() + budgetMs;
+        let index = 0;
+        for (const item of items) {
+            if (performance.now() >= deadline) {
+                await yieldToMain();
+                if (signal?.aborted) return false;
+                deadline = performance.now() + budgetMs;
+            }
+            fn(item, index++);
+        }
+        return true;
+    }
+
+    /**
      * Retry a function with exponential backoff
      * @param {Function} fn - The async function to retry
      * @param {number} maxAttempts - Maximum retry attempts (default: 5)
@@ -689,6 +773,7 @@
         waitForCondition,
         debounce,
         throttle,
+        scheduleChunked,
         retry,
         isElementVisible,
         addCSS,
