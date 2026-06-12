@@ -205,13 +205,40 @@
     osdObserver.observe(observeTarget, { childList: true, subtree: true });
   }
 
+  function disconnectOsd() {
+    if (osdObserver) {
+      osdObserver.disconnect();
+      osdObserver = null;
+    }
+    if (scheduledUpdate) {
+      clearTimeout(scheduledUpdate);
+      scheduledUpdate = null;
+    }
+  }
+
   JE.initializeOsdRating = function() {
     if (!isEnabled()) {
       console.log(`${logPrefix} Feature is disabled in settings.`);
       return;
     }
     try {
-      observeOsd();
+      if (JE.viewRouter?.onViewShow) {
+        // Route-gated: only observe the DOM while the video player view is active
+        JE.viewRouter.onViewShow((ctx) => {
+          if (ctx.viewType === 'player') {
+            observeOsd();
+            scheduleUpdate();
+          } else {
+            disconnectOsd();
+          }
+        });
+        if (JE.viewRouter.getCurrent()?.viewType === 'player') {
+          observeOsd();
+          scheduleUpdate();
+        }
+      } else {
+        observeOsd();
+      }
       console.log(`${logPrefix} Initialized successfully.`);
     } catch (e) { console.warn(`${logPrefix} Init failed`, e); }
   };

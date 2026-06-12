@@ -199,17 +199,62 @@
             }
         };
 
-        // Create managed observer for general DOM changes
-        JE.helpers.createObserver(
-            'dom-observer',
-            JE.helpers.throttle(() => {
-                runPageSpecificFunctions();
-                JE.addRandomButton();
+        if (!JE.viewRouter?.onViewShow) {
+            // Fallback: original always-on observer when the view router is unavailable
+            JE.helpers.createObserver(
+                'dom-observer',
+                JE.helpers.throttle(() => {
+                    runPageSpecificFunctions();
+                    JE.addRandomButton();
+                    JE.addUserPreferencesLink();
+                }, 100),
+                document.body,
+                { childList: true, subtree: true }
+            );
+            return;
+        }
+
+        // Route-gated: header/menu injections run once per navigation, and the
+        // body subscription only stays alive while the video player is active.
+        const throttledPlayerFunctions = JE.helpers.throttle(runPageSpecificFunctions, 100);
+        let playerObserverActive = false;
+
+        const handleViewShow = (ctx) => {
+            JE.addRandomButton();
+            // The preferences link only ever injects into the user preferences
+            // menu page, so only attempt it there.
+            if (typeof ctx?.viewType === 'string' && ctx.viewType.indexOf('mypreferences') === 0) {
                 JE.addUserPreferencesLink();
-            }, 100),
-            document.body,
-            { childList: true, subtree: true }
-        );
+            }
+            runPageSpecificFunctions();
+
+            if (ctx?.viewType === 'player') {
+                if (!playerObserverActive) {
+                    JE.helpers.onBodyMutation('dom-observer', throttledPlayerFunctions);
+                    playerObserverActive = true;
+                }
+            } else if (playerObserverActive) {
+                JE.helpers.removeBodySubscriber('dom-observer');
+                playerObserverActive = false;
+            }
+        };
+
+        JE.viewRouter.onViewShow(handleViewShow);
+        const currentView = JE.viewRouter.getCurrent();
+        if (currentView) handleViewShow(currentView);
+
+        // The header is normally only rebuilt around navigations, but keep a
+        // cheap observer scoped to .skinHeader so the Random button survives a
+        // rebuild that happens outside one.
+        const skinHeader = document.querySelector('.skinHeader');
+        if (skinHeader) {
+            JE.helpers.createObserver(
+                'skin-header-buttons',
+                JE.helpers.throttle(() => JE.addRandomButton(), 100),
+                skinHeader,
+                { childList: true, subtree: true }
+            );
+        }
     }
 
     /**

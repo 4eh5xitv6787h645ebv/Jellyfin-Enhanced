@@ -433,18 +433,47 @@
             observer.unsubscribe();
             observer = null;
         }
+        clearTimeout(debounceTimer);
+    }
+
+    // The activity entries this module rewrites (links to #/dashboard/activity)
+    // only render on dashboard pages and on configuration pages.
+    function isRelevantView(ctx) {
+        const viewType = ctx?.viewType;
+        if (typeof viewType !== 'string') return false;
+        return viewType.indexOf('dashboard') === 0 || viewType.indexOf('configurationpage') === 0;
+    }
+
+    function handleViewChange(ctx) {
+        if (isRelevantView(ctx)) {
+            startMonitoring();
+            updateActivityIcons();
+            // Use a longer timeout to ensure page is rendered
+            setTimeout(updateActivityIcons, 300);
+        } else {
+            stopMonitoring();
+        }
     }
 
     function initialize() {
         // Inject CSS for Material Icons
         injectCSS();
-        updateActivityIcons();
-        startMonitoring();
+
+        const JE = window.JellyfinEnhanced;
+        if (JE?.viewRouter?.onViewShow) {
+            // Route-gated: only watch the body while a dashboard/configuration page is shown
+            JE.viewRouter.onViewShow(handleViewChange);
+            handleViewChange(JE.viewRouter.getCurrent());
+        } else {
+            updateActivityIcons();
+            startMonitoring();
+        }
 
         // Re-process icons when navigating to activity page or configuration page
         window.addEventListener('hashchange', (event) => {
             const hash = window.location.hash;
             if (hash.includes('#/dashboard/activity') || hash.includes('#/configurationpage')) {
+                startMonitoring();
                 // Use a longer timeout to ensure page is rendered
                 setTimeout(updateActivityIcons, 300);
             }

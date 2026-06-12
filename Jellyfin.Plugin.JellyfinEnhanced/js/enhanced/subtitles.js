@@ -161,7 +161,17 @@
      * Watches for subtitle elements and applies styles to them as they appear.
      */
     function startSubtitleObserver() {
-        if (subtitleObserver) subtitleObserver.unsubscribe();
+        if (subtitleObserver) {
+            subtitleObserver.unsubscribe();
+            subtitleObserver = null;
+        }
+        // Route-gate: don't subscribe to the body observer outside the player
+        // view unless a video element already exists. Falls through (old
+        // always-subscribe behaviour) when the view router is unavailable.
+        const ctx = JE.viewRouter?.getCurrent?.();
+        if (ctx && ctx.viewType !== 'player' && !document.querySelector('video')) {
+            return;
+        }
         subtitleObserver = JE.helpers.onBodyMutation('subtitles', (mutations) => {
             for (const mutation of mutations) {
                 for (const node of mutation.addedNodes) {
@@ -263,5 +273,14 @@
             );
         }
     };
+
+    // Route-gate: the subtitle body subscription is only useful while the
+    // player is active — drop it whenever navigation leaves the player view.
+    JE.viewRouter?.onViewShow((ctx) => {
+        if (ctx.viewType !== 'player' && subtitleObserver) {
+            subtitleObserver.unsubscribe();
+            subtitleObserver = null;
+        }
+    });
 
 })(window.JellyfinEnhanced);

@@ -235,9 +235,37 @@
         processedElements = new WeakSet();
     }
 
+    /**
+     * Route-gated setup. The characterData/body observer only does useful work
+     * on item detail pages (.mediaInfoOfficialRating elements); on player views
+     * the pause screen drives the fallback polling instead via
+     * pauseRatingsPolling/resumeRatingsPolling, so no body observer is needed.
+     */
+    function applyForView(ctx) {
+        cleanup();
+        if (!isFeatureEnabled()) {
+            return;
+        }
+        const viewType = ctx?.viewType;
+        if (viewType === 'detail') {
+            injectCSS();
+            processRatingElements();
+            setupMutationObserver();
+            setupFallbackPolling();
+        } else if (viewType === 'player') {
+            injectCSS();
+            setupFallbackPolling();
+        }
+    }
+
     function initialize() {
         if (!isFeatureEnabled()) {
             cleanup();
+            return;
+        }
+        const router = window.JellyfinEnhanced?.viewRouter;
+        if (router?.onViewShow) {
+            applyForView(router.getCurrent());
             return;
         }
         cleanup();
@@ -258,7 +286,14 @@
     let lastUrl = location.href;
 
     const JE = window.JellyfinEnhanced;
-    if (JE?.helpers?.onBodyMutation) {
+    if (JE?.viewRouter?.onViewShow) {
+        // Route-gated: re-evaluate per navigation instead of sniffing URL
+        // changes from body mutations.
+        JE.viewRouter.onViewShow((ctx) => {
+            lastUrl = location.href;
+            applyForView(ctx);
+        });
+    } else if (JE?.helpers?.onBodyMutation) {
         urlObserverHandle = JE.helpers.onBodyMutation('colored-ratings-url-watcher', () => {
             const url = location.href;
             if (url !== lastUrl) {

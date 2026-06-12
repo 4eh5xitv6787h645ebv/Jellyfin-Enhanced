@@ -50,6 +50,8 @@
     const CARD_SEL = '.card[data-id], .card[data-itemid], .listItem[data-id]';
     /** Selector for not-yet-scanned cards only. */
     const CARD_SEL_NEW = '.card[data-id]:not([data-je-hidden-checked]), .card[data-itemid]:not([data-je-hidden-checked]), .listItem[data-id]:not([data-je-hidden-checked])';
+    /** Selector for cardBox elements eligible for hide buttons. */
+    const CARD_BOX_SEL = '.card[data-id] .cardBox, .card[data-itemid] .cardBox';
 
     /** LocalStorage key for "don't ask again" suppression timestamp. */
     const SUPPRESS_STORAGE_KEY = 'je_hide_confirm_suppressed_until';
@@ -1283,6 +1285,29 @@
     }
 
     /**
+     * Runs a per-card loop through `JE.helpers.scheduleChunked` so no single
+     * main-thread task exceeds the frame budget, even on huge library pages.
+     * Falls back to a synchronous loop if the chunking helper is unavailable.
+     * @param {Array<HTMLElement>|NodeList} cards Cards to visit.
+     * @param {Function} evaluateCard Called once per card.
+     * @param {Function} [onDone] Called after every card has been visited.
+     */
+    function runCardLoop(cards, evaluateCard, onDone) {
+        if (!cards || cards.length === 0) {
+            if (onDone) onDone();
+            return;
+        }
+        if (JE.helpers?.scheduleChunked) {
+            JE.helpers.scheduleChunked(cards, evaluateCard, { budgetMs: 8 })
+                .then(() => { if (onDone) onDone(); })
+                .catch((e) => console.warn('🪼 Jellyfin Enhanced: chunked card loop failed', e));
+        } else {
+            for (let i = 0; i < cards.length; i++) evaluateCard(cards[i]);
+            if (onDone) onDone();
+        }
+    }
+
+    /**
      * Asynchronously checks whether a card's parent series is hidden and,
      * if so, hides the card.  Used for episode/season cards in library views.
      * @param {HTMLElement} card The card element.
@@ -1406,11 +1431,12 @@
     /**
      * Restores visibility for cards matching a set of item IDs.
      * Used when un-hiding items to immediately show them again.
+     * Explicit full-page sweep; the loop is chunked via {@link runCardLoop}.
      * @param {Set<string>} idsToRestore Set of item IDs to restore.
      */
     function restoreNativeCardsForIds(idsToRestore) {
         if (!idsToRestore || idsToRestore.size === 0) return;
-        document.querySelectorAll(CARD_SEL).forEach((card) => {
+        runCardLoop(document.querySelectorAll(CARD_SEL), (card) => {
             card.removeAttribute(PROCESSED_ATTR);
             const cardId = getCardItemId(card);
             const hiddenBySeriesId = card.getAttribute(HIDDEN_PARENT_ATTR);
@@ -1443,10 +1469,15 @@
     }
 
     /**
-     * Filters only newly-added (not yet scanned) native cards.
-     * Called by the debounced MutationObserver callback.
+     * Evaluates a specific batch of not-yet-scanned cards against the hidden
+     * sets.  Shared by the subtree-scoped mutation path (added nodes only) and
+     * the explicit full-page sweep in {@link filterNativeCards}.  The card loop
+     * runs through `JE.helpers.scheduleChunked` so huge batches never block the
+     * main thread; visibility writes stay batched in a single rAF per run.
+     * @param {Array<HTMLElement>|NodeList} cards Card elements to evaluate.
      */
-    function filterNativeCards() {
+    function filterCardBatch(cards) {
+        if (!cards || cards.length === 0) return;
         const nativeSurface = getCurrentNativeSurface();
         if (!shouldFilterSurface(nativeSurface)) return;
         const settings = getSettings();
@@ -1457,24 +1488,24 @@
         const toHide = [];
         const toShow = [];
         const pendingParentChecks = [];
-        const cards = document.querySelectorAll(CARD_SEL_NEW);
-        for (let i = 0; i < cards.length; i++) {
-            const card = cards[i];
+
+        const evaluateCard = (card) => {
+            // Skip cards that left the DOM or were already scanned (duplicates
+            // across mutation batches, or swept by a full-page pass meanwhile)
+            if (!card.isConnected || card.hasAttribute(PROCESSED_ATTR)) return;
             // Skip image editor cards (they have data-imagetype attribute)
-            if (card.hasAttribute('data-imagetype')) continue;
+            if (card.hasAttribute('data-imagetype')) return;
             const itemId = getCardItemId(card);
             card.setAttribute(PROCESSED_ATTR, '1');
             card.removeAttribute(HIDDEN_PARENT_ATTR);
-            if (!itemId) continue;
+            if (!itemId) return;
 
             // Check scope-aware hiding for cards in Next Up / Continue Watching sections
             const cardSurface = getCardSurface(card);
-            if (cardSurface) {
-                if (shouldFilterSurface(cardSurface) && isHiddenOnSurface(itemId, cardSurface)) {
-                    toHide.push(card);
-                    card.setAttribute(HIDDEN_DIRECT_ATTR, '1');
-                    continue;
-                }
+            if (cardSurface && shouldFilterSurface(cardSurface) && isHiddenOnSurface(itemId, cardSurface)) {
+                toHide.push(card);
+                card.setAttribute(HIDDEN_DIRECT_ATTR, '1');
+                return;
             }
 
             if (hiddenIdSet.has(itemId)) {
@@ -1492,25 +1523,41 @@
                     }
                 }
             }
-        }
+        };
 
-        // Batch apply visibility changes
-        if (toHide.length > 0 || toShow.length > 0) {
-            requestAnimationFrame(() => {
-                for (let i = 0; i < toHide.length; i++) toHide[i].classList.add('je-hidden');
-                for (let i = 0; i < toShow.length; i++) toShow[i].classList.remove('je-hidden');
-            });
-        }
+        runCardLoop(cards, evaluateCard, () => {
+            // Batch apply visibility changes
+            if (toHide.length > 0 || toShow.length > 0) {
+                requestAnimationFrame(() => {
+                    for (let i = 0; i < toHide.length; i++) toHide[i].classList.add('je-hidden');
+                    for (let i = 0; i < toShow.length; i++) toShow[i].classList.remove('je-hidden');
+                });
+            }
+            // Batch parent series checks
+            if (pendingParentChecks.length > 0) {
+                batchCheckParentSeries(pendingParentChecks);
+            }
+        });
+    }
 
-        // Batch parent series checks
-        if (pendingParentChecks.length > 0) {
-            batchCheckParentSeries(pendingParentChecks);
-        }
+    /**
+     * Filters only newly-added (not yet scanned) native cards, page-wide.
+     * Explicit full-page sweep — used at initialization and via the public
+     * API.  Per-mutation filtering goes through the subtree-scoped collection
+     * in the body-mutation handler instead (no page-wide queries per mutation).
+     */
+    function filterNativeCards() {
+        if (getHiddenCount() === 0) return;
+        if (!getSettings().enabled) return;
+        if (!shouldFilterSurface(getCurrentNativeSurface())) return;
+        filterCardBatch(document.querySelectorAll(CARD_SEL_NEW));
     }
 
     /**
      * Filters ALL native cards on the page (including previously scanned ones).
      * Used after settings changes or when the hidden-items set has been modified.
+     * Explicit full-page sweep; the card loop runs through
+     * `JE.helpers.scheduleChunked` so huge libraries never block the main thread.
      */
     function filterAllNativeCards() {
         const nativeSurface = getCurrentNativeSurface();
@@ -1522,13 +1569,13 @@
         const toHide = [];
         const toShow = [];
         const pendingParentChecks = [];
-        const cards = document.querySelectorAll(CARD_SEL);
-        for (let i = 0; i < cards.length; i++) {
-            const card = cards[i];
+
+        const evaluateCard = (card) => {
+            if (!card.isConnected) return;
             const itemId = getCardItemId(card);
             card.setAttribute(PROCESSED_ATTR, '1');
             card.removeAttribute(HIDDEN_PARENT_ATTR);
-            if (!itemId) continue;
+            if (!itemId) return;
 
             const cardSurface = getCardSurface(card);
             let hiddenByScope = false;
@@ -1555,20 +1602,21 @@
                     }
                 }
             }
-        }
+        };
 
-        // Batch apply visibility changes
-        if (toHide.length > 0 || toShow.length > 0) {
-            requestAnimationFrame(() => {
-                for (let i = 0; i < toHide.length; i++) toHide[i].classList.add('je-hidden');
-                for (let i = 0; i < toShow.length; i++) toShow[i].classList.remove('je-hidden');
-            });
-        }
-
-        // Batch parent series checks
-        if (pendingParentChecks.length > 0) {
-            batchCheckParentSeries(pendingParentChecks);
-        }
+        runCardLoop(document.querySelectorAll(CARD_SEL), evaluateCard, () => {
+            // Batch apply visibility changes
+            if (toHide.length > 0 || toShow.length > 0) {
+                requestAnimationFrame(() => {
+                    for (let i = 0; i < toHide.length; i++) toHide[i].classList.add('je-hidden');
+                    for (let i = 0; i < toShow.length; i++) toShow[i].classList.remove('je-hidden');
+                });
+            }
+            // Batch parent series checks
+            if (pendingParentChecks.length > 0) {
+                batchCheckParentSeries(pendingParentChecks);
+            }
+        });
     }
 
     // ============================================================
@@ -1727,11 +1775,15 @@
     }
 
     /**
-     * Adds hide/unhide toggle buttons to native Jellyfin library cards.
-     * Only runs when the `showButtonLibrary` setting is enabled.
-     * Skips cards that already have a `.je-hide-btn` to avoid duplicates.
+     * Adds hide/unhide toggle buttons to a specific set of `.cardBox` elements.
+     * Shared worker for the subtree-scoped mutation path and the full-page
+     * sweep in {@link addLibraryHideButtons}.  The loop runs through
+     * `JE.helpers.scheduleChunked` so large batches never block the main thread.
+     * Skips cardBoxes that already have a `.je-hide-btn` to avoid duplicates.
+     * @param {Array<HTMLElement>|NodeList} cardBoxes CardBox elements to process.
      */
-    function addLibraryHideButtons() {
+    function addHideButtonsToCardBoxes(cardBoxes) {
+        if (!cardBoxes || cardBoxes.length === 0) return;
         const s = getSettings();
         if (!s.enabled || !s.showHideButtons) return;
         // At least one of library or cast buttons must be enabled
@@ -1739,42 +1791,55 @@
 
         const skipCollections = !s.experimentalHideCollections;
 
-        const cards = document.querySelectorAll('.card[data-id] .cardBox, .card[data-itemid] .cardBox');
-        for (let i = 0; i < cards.length; i++) {
-            const cardBox = cards[i];
-            if (cardBox.querySelector('.je-hide-btn')) continue;
+        runCardLoop(cardBoxes, (cardBox) => {
+            if (!cardBox.isConnected || cardBox.querySelector('.je-hide-btn')) return;
 
             const card = cardBox.closest('.card');
-            if (!card) continue;
+            if (!card) return;
 
             // Skip image editor cards and cards inside dialogs/admin pages
-            if (card.hasAttribute('data-imagetype') || card.closest('.formDialog, .editPageInnerContent')) continue;
+            if (card.hasAttribute('data-imagetype') || card.closest('.formDialog, .editPageInnerContent')) return;
 
             // Skip chapter/scene cards on detail pages
-            if (card.closest('#itemDetailPage') && card.querySelector('.chapterCardImageContainer')) continue;
+            if (card.closest('#itemDetailPage') && card.querySelector('.chapterCardImageContainer')) return;
 
             const itemId = getCardItemId(card);
-            if (!itemId) continue;
+            if (!itemId) return;
 
             const cardType = (card.dataset.type || '').toLowerCase();
             const isPerson = cardType === 'person' || card.classList.contains('personCard');
 
             // Skip Person cards unless showButtonCast is enabled
-            if (isPerson && !s.showButtonCast) continue;
+            if (isPerson && !s.showButtonCast) return;
             // Skip non-Person cards unless showButtonLibrary is enabled
-            if (!isPerson && !s.showButtonLibrary) continue;
+            if (!isPerson && !s.showButtonLibrary) return;
 
             if (skipCollections && !isPerson) {
-                if (cardType === 'collectionfolder' || cardType === 'userview' || cardType === 'boxset' || cardType === 'playlist' || cardType === 'channel') continue;
+                if (cardType === 'collectionfolder' || cardType === 'userview' || cardType === 'boxset' || cardType === 'playlist' || cardType === 'channel') return;
                 const section = card.closest('.section, .verticalSection, .homeSection');
                 if (section) {
                     const sTitle = (section.querySelector('.sectionTitle, h2, .headerText, .sectionTitle-sectionTitle')?.textContent || '').toLowerCase();
-                    if (sTitle.includes('my media') || sTitle.includes('collections')) continue;
+                    if (sTitle.includes('my media') || sTitle.includes('collections')) return;
                 }
             }
 
             createLibraryHideButton(cardBox, card, itemId, isPerson);
-        }
+        });
+    }
+
+    /**
+     * Adds hide/unhide toggle buttons to native Jellyfin library cards.
+     * Explicit full-page sweep — used at initialization, settings changes, and
+     * detail-page rescans.  The mutation path scopes itself to added subtrees
+     * via {@link addHideButtonsToCardBoxes} instead.
+     * Only runs when the `showButtonLibrary` setting is enabled.
+     */
+    function addLibraryHideButtons() {
+        const s = getSettings();
+        if (!s.enabled || !s.showHideButtons) return;
+        // At least one of library or cast buttons must be enabled
+        if (!s.showButtonLibrary && !s.showButtonCast) return;
+        addHideButtonsToCardBoxes(document.querySelectorAll(CARD_BOX_SEL));
     }
 
     /**
@@ -1792,9 +1857,23 @@
     // Native observer setup
     // ============================================================
 
+    /** Cards collected from mutation addedNodes, awaiting the debounced filter flush. */
+    let pendingMutationCards = [];
+
+    /**
+     * Flushes the accumulated mutation-added cards through the batch filter.
+     * Cards from successive mutation batches are accumulated so the debounce
+     * never drops any; duplicates are skipped via the processed attribute.
+     */
+    function flushPendingMutationCards() {
+        const cards = pendingMutationCards;
+        pendingMutationCards = [];
+        if (cards.length > 0) filterCardBatch(cards);
+    }
+
     const debouncedFilterNative = JE.helpers?.debounce
-        ? JE.helpers.debounce(() => { requestAnimationFrame(filterNativeCards); }, NATIVE_FILTER_DEBOUNCE_MS)
-        : filterNativeCards;
+        ? JE.helpers.debounce(flushPendingMutationCards, NATIVE_FILTER_DEBOUNCE_MS)
+        : flushPendingMutationCards;
 
     /**
      * Sets up page-navigation and MutationObserver hooks to trigger card

@@ -260,8 +260,8 @@
     }
 
     let scanScheduled = false;
-    const CARDS_PER_CHUNK = 5; // ~2.5ms per card with cache render, 5 cards = ~12ms (under 16ms frame budget)
-    let scanGeneration = 0; // Incremented on each new scan to cancel stale chunk chains
+    let scanGeneration = 0; // Incremented on navigation/clearProcessed to cancel stale chunked card work
+    let scanAbort = new AbortController(); // Aborted alongside scanGeneration bumps — stops chunked loops at their next yield
 
     /**
      * Schedule scan. Coalesces multiple mutations into a single scan start.
@@ -282,11 +282,247 @@
         });
     }
 
+    // ── Viewport Gating ────────────────────────────────────────────────
+    // Cards discovered by a scan but outside the expanded viewport are NOT
+    // processed eagerly. They are handed to a single IntersectionObserver
+    // (rootMargin pre-loads the next screenful) and enter the pipeline only
+    // when they first approach the viewport. On huge library pages this cuts
+    // the eager tag work from "every card on the page" to "what the user can
+    // actually see", and the chunked queue below keeps even that work under
+    // the frame budget.
+
+    const VIEWPORT_ROOT_MARGIN = '50% 0px'; // Pre-process one extra half-screen above and below
+    let cardObserver = null;            // Module-level IntersectionObserver for offscreen cards
+    let observedCards = new WeakSet();  // Cards currently registered with cardObserver (never double-observe)
+    let pendingCards = [];              // Discovered cards awaiting chunked processing
+    let drainActive = false;            // Single-drain guard for drainPendingCards
+
     /**
-     * Scan all unprocessed cards. Uses chunked processing to avoid jank.
-     * Each chunk processes CARDS_PER_CHUNK cards then yields via rAF.
-     * A generation counter ensures stale chunk chains from previous scans
-     * are cancelled when a new scan starts (e.g., rapid page changes).
+     * Lazily create the shared IntersectionObserver for offscreen cards.
+     * Fired cards are unobserved and enqueued into the normal pipeline.
+     * @returns {IntersectionObserver}
+     */
+    function ensureCardObserver() {
+        if (cardObserver) return cardObserver;
+        cardObserver = new IntersectionObserver((entries, obs) => {
+            const revealed = [];
+            for (let i = 0; i < entries.length; i++) {
+                const entry = entries[i];
+                if (!entry.isIntersecting) continue;
+                obs.unobserve(entry.target);
+                observedCards.delete(entry.target); // Allow re-observe if this batch gets cancelled
+                if (!processedCards.has(entry.target)) revealed.push(entry.target);
+            }
+            if (revealed.length > 0) enqueueCards(revealed);
+        }, { root: null, rootMargin: VIEWPORT_ROOT_MARGIN, threshold: 0 });
+        return cardObserver;
+    }
+
+    /**
+     * Disconnect and drop the card IntersectionObserver (recreated lazily on
+     * the next scan) so stale cards from a previous page are not retained.
+     */
+    function resetCardObserver() {
+        if (cardObserver) {
+            cardObserver.disconnect();
+            cardObserver = null;
+        }
+        observedCards = new WeakSet();
+    }
+
+    /**
+     * Cancel all pending/in-flight card work: bumps the scan generation,
+     * aborts chunked loops at their next yield, clears the pending queue,
+     * and recreates the viewport observer.
+     */
+    function cancelCardWork() {
+        scanGeneration++;
+        scanAbort.abort();
+        scanAbort = new AbortController();
+        pendingCards = [];
+        resetCardObserver();
+    }
+
+    /**
+     * Cheap synchronous mirror of the observer's expanded viewport (viewport
+     * plus half a screen above/below, matching VIEWPORT_ROOT_MARGIN).
+     * Zero-size elements (cards on hidden/cached pages) report not-near so
+     * they defer to the observer until actually shown.
+     * @param {HTMLElement} el - Card element to test.
+     * @returns {boolean} True if the card should be processed eagerly.
+     */
+    function isNearViewport(el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return false;
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        const margin = vh * 0.5; // Matches VIEWPORT_ROOT_MARGIN
+        return rect.bottom >= -margin && rect.top <= vh + margin &&
+               rect.right >= 0 && rect.left <= vw;
+    }
+
+    /**
+     * Run a card loop through JE.helpers.scheduleChunked so no main-thread
+     * task exceeds the frame budget, wired to the current scan abort signal.
+     * Falls back to a synchronous pass if helpers are not loaded yet
+     * (should not happen in practice — initialize() waits for them).
+     * @param {Array} items - Items to iterate.
+     * @param {Function} fn - Called with (item, index).
+     * @returns {Promise<boolean>} True if completed, false if aborted.
+     */
+    function runChunked(items, fn) {
+        if (JE.helpers?.scheduleChunked) {
+            return JE.helpers.scheduleChunked(items, fn, { budgetMs: 8, signal: scanAbort.signal });
+        }
+        for (let i = 0; i < items.length; i++) fn(items[i], i);
+        return Promise.resolve(true);
+    }
+
+    /**
+     * Add discovered cards to the pending queue and ensure a drain is running.
+     * @param {HTMLElement[]} cards - Card elements ready for processing.
+     */
+    function enqueueCards(cards) {
+        for (let i = 0; i < cards.length; i++) pendingCards.push(cards[i]);
+        scheduleDrain();
+    }
+
+    /**
+     * Start a single idle-scheduled drain of the pending card queue.
+     * Re-arms itself if cards arrived while the previous drain was winding down.
+     */
+    function scheduleDrain() {
+        if (drainActive) return;
+        drainActive = true;
+        scheduleIdle(() => {
+            drainPendingCards()
+                .catch((err) => console.warn(`${logPrefix} Card drain failed:`, err))
+                .finally(() => {
+                    drainActive = false;
+                    if (pendingCards.length > 0) scheduleDrain();
+                });
+        });
+    }
+
+    /**
+     * Drain the pending card queue in budget-bounded chunks, then arm the
+     * debounced batch fetch for any cache misses queued by processCard.
+     * Stale drains (navigation happened) stop at the next yield point; the
+     * post-navigation scan re-collects any survivors.
+     * @returns {Promise<void>}
+     */
+    async function drainPendingCards() {
+        const myGeneration = scanGeneration;
+        while (pendingCards.length > 0) {
+            if (myGeneration !== scanGeneration) return;
+            const batch = pendingCards;
+            pendingCards = [];
+            const completed = await runChunked(batch, processCard);
+            if (!completed) return; // Aborted — cancelCardWork already cleared the queue
+        }
+        if (myGeneration !== scanGeneration) return;
+
+        // All discovered cards processed — schedule batch fetch for cache misses.
+        // The debounce coalesces rapid successive drains (scroll bursts) into one POST.
+        if (requestQueue.length > 0 && !isProcessing) {
+            if (fetchTimer) clearTimeout(fetchTimer);
+            fetchTimer = setTimeout(() => {
+                fetchTimer = null;
+                processQueue();
+            }, FETCH_DEBOUNCE_MS);
+        }
+    }
+
+    /**
+     * Process a single card through the pipeline: skip checks, server cache,
+     * localStorage/hot cache, then queue a batch fetch for misses. Mirrors the
+     * previous inline scan loop body — one card per call so it can run under
+     * scheduleChunked without ever blocking the main thread.
+     * @param {HTMLElement} el - The cardImageContainer/listItemImage element.
+     * @returns {void}
+     */
+    function processCard(el) {
+        if (processedCards.has(el)) return;
+        // Skip elements no longer in the DOM (page changed)
+        if (!document.contains(el)) return;
+
+        const card = el.closest('.card');
+        if (card && card.classList.contains('je-hidden')) return;
+        const listItem = el.closest('.listItem');
+        if (listItem && listItem.classList.contains('je-hidden')) return;
+
+        // Skip contexts that should never have tags
+        if (shouldSkipElement(el)) {
+            processedCards.add(el);
+            return;
+        }
+
+        const itemId = getItemId(el);
+        if (!itemId) return;
+
+        const itemType = getItemType(el);
+        if (itemType && !MEDIA_TYPES.has(itemType)) {
+            processedCards.add(el);
+            return;
+        }
+
+        processedCards.add(el);
+        // Render into cardScalable but INSERT BEFORE the overlay container
+        // so Jellyfin's hover overlay naturally covers tags (DOM order).
+        // Don't render into cardImageContainer — it triggers Jellyfin's
+        // lazy-load to reset opacity:0, breaking image display.
+        const scalable = el.closest('.cardScalable');
+        let renderTarget = scalable || el;
+        if (scalable) {
+            const overlay = scalable.querySelector('.cardOverlayContainer');
+            if (overlay) {
+                // Create a tag container BEFORE the overlay
+                let tagHost = scalable.querySelector('.je-tag-host');
+                if (!tagHost) {
+                    tagHost = document.createElement('div');
+                    tagHost.className = 'je-tag-host';
+                    scalable.insertBefore(tagHost, overlay);
+                }
+                renderTarget = tagHost;
+            }
+        }
+
+        // Try server cache first (all tag data pre-computed in one object)
+        const serverEntry = serverCache?.get(itemId);
+        if (serverEntry) {
+            for (const [, renderer] of renderers) {
+                if (!renderer.isEnabled()) continue;
+                if (renderer.renderFromServerCache) {
+                    try { renderer.renderFromServerCache(renderTarget, serverEntry, itemId); } catch {}
+                }
+            }
+            return; // Fully rendered from server cache, skip queue
+        }
+
+        // Fall back to localStorage/hot cache, then batch fetch for misses
+        let allCacheHits = true;
+        for (const [, renderer] of renderers) {
+            if (!renderer.isEnabled()) continue;
+            if (renderer.renderFromCache) {
+                if (!renderer.renderFromCache(renderTarget, itemId)) allCacheHits = false;
+            } else {
+                allCacheHits = false;
+            }
+        }
+
+        if (!allCacheHits) {
+            requestQueue.push({ el, renderTarget, itemId, itemType });
+        }
+    }
+
+    /**
+     * Scan all unprocessed cards and partition by viewport proximity.
+     * Near-viewport cards (current screen plus one extra half-screen each way,
+     * mirroring the observer's rootMargin) are queued for immediate
+     * budget-bounded processing; offscreen cards are handed to the
+     * IntersectionObserver and enter the pipeline on first intersection.
+     * The partition itself runs through scheduleChunked so even discovery
+     * never blocks the main thread on huge pages.
      */
     function runScan() {
         if (!hasAnyEnabledRenderer()) return;
@@ -299,107 +535,21 @@
         }
         if (unprocessed.length === 0) return;
 
-        // Cancel any in-progress chunk chain from a previous scan
-        const myGeneration = ++scanGeneration;
-        let index = 0;
-
-        function processChunk() {
-            // Abort if a newer scan has started
-            if (myGeneration !== scanGeneration) return;
-
-            const end = Math.min(index + CARDS_PER_CHUNK, unprocessed.length);
-
-            for (; index < end; index++) {
-                const el = unprocessed[index];
-                if (processedCards.has(el)) continue;
-                // Skip elements no longer in the DOM (page changed)
-                if (!document.contains(el)) continue;
-
-                const card = el.closest('.card');
-                if (card && card.classList.contains('je-hidden')) continue;
-                const listItem = el.closest('.listItem');
-                if (listItem && listItem.classList.contains('je-hidden')) continue;
-
-                // Skip contexts that should never have tags
-                if (shouldSkipElement(el)) {
-                    processedCards.add(el);
-                    continue;
-                }
-
-                const itemId = getItemId(el);
-                if (!itemId) continue;
-
-                const itemType = getItemType(el);
-                if (itemType && !MEDIA_TYPES.has(itemType)) {
-                    processedCards.add(el);
-                    continue;
-                }
-
-                processedCards.add(el);
-                // Render into cardScalable but INSERT BEFORE the overlay container
-                // so Jellyfin's hover overlay naturally covers tags (DOM order).
-                // Don't render into cardImageContainer — it triggers Jellyfin's
-                // lazy-load to reset opacity:0, breaking image display.
-                const scalable = el.closest('.cardScalable');
-                let renderTarget = scalable || el;
-                if (scalable) {
-                    const overlay = scalable.querySelector('.cardOverlayContainer');
-                    if (overlay) {
-                        // Create a tag container BEFORE the overlay
-                        let tagHost = scalable.querySelector('.je-tag-host');
-                        if (!tagHost) {
-                            tagHost = document.createElement('div');
-                            tagHost.className = 'je-tag-host';
-                            scalable.insertBefore(tagHost, overlay);
-                        }
-                        renderTarget = tagHost;
-                    }
-                }
-
-                // Try server cache first (all tag data pre-computed in one object)
-                const serverEntry = serverCache?.get(itemId);
-                if (serverEntry) {
-                    for (const [, renderer] of renderers) {
-                        if (!renderer.isEnabled()) continue;
-                        if (renderer.renderFromServerCache) {
-                            try { renderer.renderFromServerCache(renderTarget, serverEntry, itemId); } catch {}
-                        }
-                    }
-                    continue; // Fully rendered from server cache, skip queue
-                }
-
-                // Fall back to localStorage/hot cache, then batch fetch for misses
-                let allCacheHits = true;
-                for (const [, renderer] of renderers) {
-                    if (!renderer.isEnabled()) continue;
-                    if (renderer.renderFromCache) {
-                        if (!renderer.renderFromCache(renderTarget, itemId)) allCacheHits = false;
-                    } else {
-                        allCacheHits = false;
-                    }
-                }
-
-                if (!allCacheHits) {
-                    requestQueue.push({ el, renderTarget, itemId, itemType });
-                }
+        const observer = ensureCardObserver();
+        const eager = [];
+        runChunked(unprocessed, (el) => {
+            if (processedCards.has(el)) return; // Drained by a concurrent batch meanwhile
+            if (isNearViewport(el)) {
+                eager.push(el);
+            } else if (!observedCards.has(el)) {
+                observedCards.add(el);
+                observer.observe(el);
             }
-
-            if (index < unprocessed.length) {
-                // More cards to process — yield and continue when browser is idle
-                scheduleIdle(processChunk);
-            } else {
-                // All cards processed — schedule batch fetch for cache misses
-                if (requestQueue.length > 0 && !isProcessing) {
-                    if (fetchTimer) clearTimeout(fetchTimer);
-                    fetchTimer = setTimeout(() => {
-                        fetchTimer = null;
-                        processQueue();
-                    }, FETCH_DEBOUNCE_MS);
-                }
-            }
-        }
-
-        processChunk();
+        }).then((completed) => {
+            if (completed && eager.length > 0) enqueueCards(eager);
+        }).catch((err) => {
+            console.warn(`${logPrefix} Card partition failed:`, err);
+        });
     }
 
     /**
@@ -661,6 +811,9 @@
                 firstEpisodeCache.clear();
                 parentSeriesCache.clear();
                 requestQueue = [];
+                // Abort chunked card loops and recreate the viewport observer
+                // so cards from the previous page are never retained/processed
+                cancelCardWork();
                 // Pick up any new items added since last load
                 refreshServerCache();
                 scheduleScan();
@@ -737,6 +890,7 @@
             batchGeneration++;
             firstEpisodeCache.clear();
             parentSeriesCache.clear();
+            cancelCardWork(); // Abort chunked loops, drop pending queue, recreate viewport observer
         },
         scheduleScan,
     };

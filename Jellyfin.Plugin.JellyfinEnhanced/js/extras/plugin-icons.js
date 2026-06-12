@@ -323,12 +323,33 @@
         }
     }
 
+    // The plugins sidebar section this module rewrites only renders on
+    // dashboard, settings and configuration pages.
+    function isRelevantView(ctx) {
+        const viewType = ctx?.viewType;
+        if (typeof viewType !== 'string') return false;
+        return viewType.indexOf('dashboard') === 0 ||
+            viewType.indexOf('settings') === 0 ||
+            viewType.indexOf('configurationpage') === 0;
+    }
+
+    function handleViewChange(ctx) {
+        if (isRelevantView(ctx)) {
+            startMonitoring();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(processPluginIcons, 300);
+        } else {
+            stopMonitoring();
+        }
+    }
+
     // Handle page navigation
     function setupHashChangeListener() {
         window.addEventListener('hashchange', () => {
             const hash = window.location.hash;
             // Process plugin icons when navigating to dashboard, settings, or configuration pages
             if (hash.includes('#/dashboard') || hash.includes('#/settings') || hash.includes('#/configurationpage')) {
+                startMonitoring();
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(processPluginIcons, 300);
             }
@@ -340,22 +361,32 @@
         injectCSS();
         setupHashChangeListener();
 
+        const startProcessing = async () => {
+            const JE = window.JellyfinEnhanced;
+            if (JE?.viewRouter?.onViewShow) {
+                // Route-gated: only watch the body while a dashboard/settings/configuration page is shown
+                JE.viewRouter.onViewShow(handleViewChange);
+                handleViewChange(JE.viewRouter.getCurrent());
+            } else {
+                await processPluginIcons();
+                startMonitoring();
+            }
+        };
+
         // Wait for ApiClient to be available
         let retries = 0;
         const maxRetries = 10;
 
         const tryInitialize = async () => {
             if (typeof ApiClient !== 'undefined') {
-                await processPluginIcons();
-                startMonitoring();
+                await startProcessing();
             } else if (retries < maxRetries) {
                 retries++;
                 setTimeout(tryInitialize, 500);
             } else {
                 console.warn('ApiClient not available after retries, custom plugin links will not work');
                 // Still set up the basic icon replacement and monitoring
-                await processPluginIcons();
-                startMonitoring();
+                await startProcessing();
             }
         };
 

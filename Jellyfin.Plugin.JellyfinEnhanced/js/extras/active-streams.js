@@ -13,6 +13,8 @@
     let _hashListener = null;
     let _outsideClickListener = null;
     let _lastUpdated = null;
+    let _viewHookUnregister = null;
+    let _waitingForHeader = false;
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     const ticksToTime = (ticks) => {
@@ -1140,9 +1142,25 @@
 
         const headerRight = document.querySelector('.headerRight');
         if (!headerRight) {
-            setTimeout(() => tryInjectHeader(attempts + 1), 500);
+            if (JE?.helpers?.waitForElement) {
+                // Observer-based one-shot wait instead of a 500ms retry loop
+                if (_waitingForHeader) return;
+                _waitingForHeader = true;
+                JE.helpers.waitForElement('.headerRight', 10000).then((el) => {
+                    _waitingForHeader = false;
+                    if (el) injectHeaderButton(el);
+                });
+            } else {
+                setTimeout(() => tryInjectHeader(attempts + 1), 500);
+            }
             return;
         }
+
+        injectHeaderButton(headerRight);
+    };
+
+    const injectHeaderButton = (headerRight) => {
+        if (document.getElementById('je-active-streams')) return;
 
         const btn = document.createElement('button');
         btn.id = 'je-active-streams';
@@ -1201,7 +1219,15 @@
             }
             console.log(`${LOG} Active Streams: initializing.`);
             injectStyles();
-            startObserver();
+            if (JE?.viewRouter?.onViewShow) {
+                // Route-gated: re-check the header once per navigation instead
+                // of keeping a permanent body subscription alive.
+                if (!_viewHookUnregister) {
+                    _viewHookUnregister = JE.viewRouter.onViewShow(() => tryInjectHeader(0));
+                }
+            } else {
+                startObserver();
+            }
             tryInjectHeader(0);
             _hashListener = () => applyThemeVars();
             window.addEventListener('hashchange', _hashListener);
@@ -1211,6 +1237,7 @@
             console.log(`${LOG} Active Streams: destroying.`);
             stopPolling();
             stopObserver();
+            if (_viewHookUnregister) { _viewHookUnregister(); _viewHookUnregister = null; }
             if (_hashListener) { window.removeEventListener('hashchange', _hashListener); _hashListener = null; }
             if (_outsideClickListener) { document.removeEventListener('click', _outsideClickListener); _outsideClickListener = null; }
             if (_broadcastCollapseTimer) { clearTimeout(_broadcastCollapseTimer); _broadcastCollapseTimer = null; }

@@ -26,6 +26,7 @@
           this.itemCache = new Map();
           this.fetchAbort = null;
           this.observer = null;
+          this._unregisterViewHook = null;
           this.prevFocused = null;
 
           // Pause screen delay state
@@ -470,8 +471,32 @@
         }
 
         setupVideoObserver() {
-          this.observer = JE.helpers.onBodyMutation('pausescreen', () => this.checkForVideoChanges());
-          this.checkForVideoChanges();
+          const startObserver = () => {
+            if (!this.observer) {
+              this.observer = JE.helpers.onBodyMutation('pausescreen', () => this.checkForVideoChanges());
+            }
+            this.checkForVideoChanges();
+          };
+          const stopObserver = () => {
+            if (this.observer) { this.observer.unsubscribe(); this.observer = null; }
+            if (this.currentVideo) this.clearState();
+          };
+
+          if (JE.viewRouter?.onViewShow) {
+            // Route-gated: only watch the body while the video player view is active
+            this._unregisterViewHook = JE.viewRouter.onViewShow((ctx) => {
+              if (ctx.viewType === 'player') {
+                startObserver();
+              } else {
+                stopObserver();
+              }
+            });
+            if (JE.viewRouter.getCurrent()?.viewType === 'player') {
+              startObserver();
+            }
+          } else {
+            startObserver();
+          }
         }
 
         resetPauseScreenTimer() {
@@ -893,6 +918,7 @@
         destroy() {
           this.clearState();
           if (this.observer) { this.observer.unsubscribe(); this.observer = null; }
+          if (this._unregisterViewHook) { this._unregisterViewHook(); this._unregisterViewHook = null; }
 
           // Clean up interaction listeners
           if (this.interactionListeners) {
