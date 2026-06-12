@@ -83,8 +83,22 @@
 #je-active-streams.je-as-active .je-as-sup { color: var(--je-as-accent, #00a4dc); }
 #je-active-streams.je-as-err .je-as-icon   { color: #b91c1c; }
 #je-active-streams.je-as-err .je-as-sup    { color: #991b1b; }
+`;
+        document.head.appendChild(style);
+    };
 
-/* Panel */
+    // The panel/card/broadcast rules (~85% of this module's CSS) inject
+    // lazily on first panel open: carrying the full 10KB sheet from boot
+    // measurably degraded the native detail-page layout pass (reproducible
+    // A/B: ~1050ms vs ~310ms longest task at 4x throttle with the sheet
+    // present vs absent — a style-engine volume effect, not any single
+    // rule; predates this branch). The header button only needs the core
+    // rules above.
+    const injectPanelStyles = () => {
+        if (document.getElementById('je-active-streams-panel-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'je-active-streams-panel-styles';
+        style.textContent = `/* Panel */
 #je-active-streams-panel {
   position: fixed;
   right: 12px;
@@ -1053,6 +1067,7 @@
 
     // ── Panel ────────────────────────────────────────────────────────────────
     const togglePanel = () => {
+        injectPanelStyles();
         const panel = document.getElementById('je-active-streams-panel');
         if (!panel) return;
         _panelOpen = !_panelOpen;
@@ -1244,6 +1259,7 @@
             document.getElementById('je-active-streams')?.remove();
             document.getElementById('je-active-streams-panel')?.remove();
             document.getElementById('je-active-streams-styles')?.remove();
+            document.getElementById('je-active-streams-panel-styles')?.remove();
             _panelOpen = false;
             _broadcastFormOpen = false;
         }
