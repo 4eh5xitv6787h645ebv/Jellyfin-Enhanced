@@ -344,24 +344,6 @@
     }
 
     /**
-     * Cheap synchronous mirror of the observer's expanded viewport (viewport
-     * plus half a screen above/below, matching VIEWPORT_ROOT_MARGIN).
-     * Zero-size elements (cards on hidden/cached pages) report not-near so
-     * they defer to the observer until actually shown.
-     * @param {HTMLElement} el - Card element to test.
-     * @returns {boolean} True if the card should be processed eagerly.
-     */
-    function isNearViewport(el) {
-        const rect = el.getBoundingClientRect();
-        if (rect.width === 0 && rect.height === 0) return false;
-        const vh = window.innerHeight || document.documentElement.clientHeight;
-        const vw = window.innerWidth || document.documentElement.clientWidth;
-        const margin = vh * 0.5; // Matches VIEWPORT_ROOT_MARGIN
-        return rect.bottom >= -margin && rect.top <= vh + margin &&
-               rect.right >= 0 && rect.left <= vw;
-    }
-
-    /**
      * Run a card loop through JE.helpers.scheduleChunked so no main-thread
      * task exceeds the frame budget, wired to the current scan abort signal.
      * Falls back to a synchronous pass if helpers are not loaded yet
@@ -535,21 +517,20 @@
         }
         if (unprocessed.length === 0) return;
 
+        // Hand EVERY unprocessed card to the IntersectionObserver instead of
+        // partitioning synchronously: isNearViewport()'s getBoundingClientRect
+        // right after DOM writes forces layout per card (a multi-hundred-ms
+        // reflow storm on card-heavy pages). IO delivers rects asynchronously
+        // without forcing layout; near-viewport cards fire on the next frame,
+        // which is imperceptible for cosmetic overlays.
         const observer = ensureCardObserver();
-        const eager = [];
-        runChunked(unprocessed, (el) => {
-            if (processedCards.has(el)) return; // Drained by a concurrent batch meanwhile
-            if (isNearViewport(el)) {
-                eager.push(el);
-            } else if (!observedCards.has(el)) {
+        for (let i = 0; i < unprocessed.length; i++) {
+            const el = unprocessed[i];
+            if (!observedCards.has(el)) {
                 observedCards.add(el);
                 observer.observe(el);
             }
-        }).then((completed) => {
-            if (completed && eager.length > 0) enqueueCards(eager);
-        }).catch((err) => {
-            console.warn(`${logPrefix} Card partition failed:`, err);
-        });
+        }
     }
 
     /**

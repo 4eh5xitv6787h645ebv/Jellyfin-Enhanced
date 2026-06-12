@@ -125,9 +125,27 @@
     };
     function flushBootReady() {
         bootReadyFlushed = true;
+        const t0 = performance.now();
         while (bootReadyQueue.length) {
             const fn = bootReadyQueue.shift();
             try { fn(); } catch (e) { console.error('🪼 Jellyfin Enhanced: onBootReady callback failed:', e); }
+        }
+        try { performance.measure('je:flushBootReady', { start: t0, duration: performance.now() - t0 }); } catch (e) { /* old browser */ }
+    }
+
+    /**
+     * Times a synchronous init step and records it as a je:init:* performance
+     * measure so the perf harness (and devtools) can attribute boot-time main
+     * thread work per feature.
+     */
+    function timeInit(label, fn) {
+        const t0 = performance.now();
+        try {
+            fn();
+        } finally {
+            const dur = performance.now() - t0;
+            try { performance.measure(`je:init:${label}`, { start: t0, duration: dur }); } catch (e) { /* old browser */ }
+            if (dur > 50) console.warn(`🪼 Jellyfin Enhanced: init '${label}' blocked the main thread for ${dur.toFixed(0)}ms`);
         }
     }
 
@@ -904,52 +922,52 @@
                 JE._cacheManager.forceSave();
             });
 
-            // Stage 6: Initialize feature modules
-            if (typeof JE.initializeEnhancedScript === 'function') JE.initializeEnhancedScript();
-            if (typeof JE.initializeElsewhereScript === 'function' && JE.pluginConfig?.ElsewhereEnabled) JE.initializeElsewhereScript();
-            if (typeof JE.initializeJellyseerrScript === 'function' && JE.pluginConfig?.JellyseerrEnabled && JE.pluginConfig?.JellyseerrShowSearchResults !== false) JE.initializeJellyseerrScript();
-            if (typeof JE.jellyseerrIssueReporter?.initialize === 'function' && JE.pluginConfig?.JellyseerrEnabled && JE.pluginConfig?.JellyseerrShowReportButton) JE.jellyseerrIssueReporter.initialize();
-            if (typeof JE.initializePauseScreen === 'function') JE.initializePauseScreen();
-            if (typeof JE.initializeBookmarks === 'function') JE.initializeBookmarks();
-            if (typeof JE.initializeQualityTags === 'function' && JE.currentSettings?.qualityTagsEnabled) JE.initializeQualityTags();
-            if (typeof JE.initializeGenreTags === 'function' && JE.currentSettings?.genreTagsEnabled) JE.initializeGenreTags();
-            if (typeof JE.initializeRatingTags === 'function' && JE.currentSettings?.ratingTagsEnabled) JE.initializeRatingTags();
-            if (typeof JE.initializeUserReviewTags === 'function' && JE.pluginConfig?.ShowUserReviews && JE.pluginConfig?.ShowUserRatingOnPosters && JE.currentSettings?.ratingTagsEnabled) JE.initializeUserReviewTags();
-            if (typeof JE.initializeArrLinksScript === 'function' && JE.pluginConfig?.ArrLinksEnabled) JE.initializeArrLinksScript();
-            if (typeof JE.initializeArrTagLinksScript === 'function' && JE.pluginConfig?.ArrTagsShowAsLinks) JE.initializeArrTagLinksScript();
-            if (typeof JE.initializeLetterboxdLinksScript === 'function' && JE.pluginConfig?.LetterboxdEnabled) JE.initializeLetterboxdLinksScript();
-            if (typeof JE.initializeReviewsScript === 'function' && (JE.pluginConfig?.ShowReviews || JE.pluginConfig?.ShowUserReviews)) JE.initializeReviewsScript();
-            if (typeof JE.initializeLanguageTags === 'function' && JE.currentSettings?.languageTagsEnabled) JE.initializeLanguageTags();
-            if (typeof JE.initializePeopleTags === 'function' && JE.currentSettings?.peopleTagsEnabled) JE.initializePeopleTags();
+            // Stage 6: Initialize feature modules (each timed as je:init:* for attribution)
+            if (typeof JE.initializeEnhancedScript === 'function') timeInit('enhanced', () => JE.initializeEnhancedScript());
+            if (typeof JE.initializeElsewhereScript === 'function' && JE.pluginConfig?.ElsewhereEnabled) timeInit('elsewhere', () => JE.initializeElsewhereScript());
+            if (typeof JE.initializeJellyseerrScript === 'function' && JE.pluginConfig?.JellyseerrEnabled && JE.pluginConfig?.JellyseerrShowSearchResults !== false) timeInit('jellyseerr', () => JE.initializeJellyseerrScript());
+            if (typeof JE.jellyseerrIssueReporter?.initialize === 'function' && JE.pluginConfig?.JellyseerrEnabled && JE.pluginConfig?.JellyseerrShowReportButton) timeInit('issueReporter', () => JE.jellyseerrIssueReporter.initialize());
+            if (typeof JE.initializePauseScreen === 'function') timeInit('pauseScreen', () => JE.initializePauseScreen());
+            if (typeof JE.initializeBookmarks === 'function') timeInit('bookmarks', () => JE.initializeBookmarks());
+            if (typeof JE.initializeQualityTags === 'function' && JE.currentSettings?.qualityTagsEnabled) timeInit('qualityTags', () => JE.initializeQualityTags());
+            if (typeof JE.initializeGenreTags === 'function' && JE.currentSettings?.genreTagsEnabled) timeInit('genreTags', () => JE.initializeGenreTags());
+            if (typeof JE.initializeRatingTags === 'function' && JE.currentSettings?.ratingTagsEnabled) timeInit('ratingTags', () => JE.initializeRatingTags());
+            if (typeof JE.initializeUserReviewTags === 'function' && JE.pluginConfig?.ShowUserReviews && JE.pluginConfig?.ShowUserRatingOnPosters && JE.currentSettings?.ratingTagsEnabled) timeInit('userReviewTags', () => JE.initializeUserReviewTags());
+            if (typeof JE.initializeArrLinksScript === 'function' && JE.pluginConfig?.ArrLinksEnabled) timeInit('arrLinks', () => JE.initializeArrLinksScript());
+            if (typeof JE.initializeArrTagLinksScript === 'function' && JE.pluginConfig?.ArrTagsShowAsLinks) timeInit('arrTagLinks', () => JE.initializeArrTagLinksScript());
+            if (typeof JE.initializeLetterboxdLinksScript === 'function' && JE.pluginConfig?.LetterboxdEnabled) timeInit('letterboxd', () => JE.initializeLetterboxdLinksScript());
+            if (typeof JE.initializeReviewsScript === 'function' && (JE.pluginConfig?.ShowReviews || JE.pluginConfig?.ShowUserReviews)) timeInit('reviews', () => JE.initializeReviewsScript());
+            if (typeof JE.initializeLanguageTags === 'function' && JE.currentSettings?.languageTagsEnabled) timeInit('languageTags', () => JE.initializeLanguageTags());
+            if (typeof JE.initializePeopleTags === 'function' && JE.currentSettings?.peopleTagsEnabled) timeInit('peopleTags', () => JE.initializePeopleTags());
             // Initialize the unified tag pipeline AFTER all tag renderers have registered
-            if (typeof JE.tagPipeline?.initialize === 'function') JE.tagPipeline.initialize();
-            if (typeof JE.initializeOsdRating === 'function') JE.initializeOsdRating();
+            if (typeof JE.tagPipeline?.initialize === 'function') timeInit('tagPipeline', () => JE.tagPipeline.initialize());
+            if (typeof JE.initializeOsdRating === 'function') timeInit('osdRating', () => JE.initializeOsdRating());
             // Skip hidden content initialization when feature is disabled server-wide — JE.hiddenContent stays undefined, safely disabling all downstream consumers
-            if (typeof JE.initializeHiddenContent === 'function' && JE.pluginConfig?.HiddenContentEnabled) JE.initializeHiddenContent();
+            if (typeof JE.initializeHiddenContent === 'function' && JE.pluginConfig?.HiddenContentEnabled) timeInit('hiddenContent', () => JE.initializeHiddenContent());
 
             if (JE.pluginConfig?.ColoredRatingsEnabled && typeof JE.initializeColoredRatings === 'function') {
-                JE.initializeColoredRatings();
+                timeInit('coloredRatings', () => JE.initializeColoredRatings());
             }
             if (JE.pluginConfig?.ThemeSelectorEnabled && typeof JE.initializeThemeSelector === 'function') {
-                JE.initializeThemeSelector();
+                timeInit('themeSelector', () => JE.initializeThemeSelector());
             }
             if (JE.pluginConfig?.ColoredActivityIconsEnabled && typeof JE.initializeActivityIcons === 'function') {
-                JE.initializeActivityIcons();
+                timeInit('activityIcons', () => JE.initializeActivityIcons());
             }
             if (JE.pluginConfig?.PluginIconsEnabled && typeof JE.initializePluginIcons === 'function') {
-                JE.initializePluginIcons();
+                timeInit('pluginIcons', () => JE.initializePluginIcons());
             }
             if (JE.pluginConfig?.ActiveStreamsEnabled && typeof JE.activeStreams?.initialize === 'function') {
-                JE.activeStreams.initialize();
+                timeInit('activeStreams', () => JE.activeStreams.initialize());
             }
             if (JE.pluginConfig?.DownloadsPageEnabled && typeof JE.initializeDownloadsPage === 'function') {
-                JE.initializeDownloadsPage();
+                timeInit('downloadsPage', () => JE.initializeDownloadsPage());
             }
             if (JE.pluginConfig?.CalendarPageEnabled && typeof JE.initializeCalendarPage === 'function') {
-                JE.initializeCalendarPage();
+                timeInit('calendarPage', () => JE.initializeCalendarPage());
             }
             if (JE.pluginConfig?.HiddenContentEnabled && typeof JE.initializeHiddenContentPage === 'function') {
-                JE.initializeHiddenContentPage();
+                timeInit('hiddenContentPage', () => JE.initializeHiddenContentPage());
             }
 
             // Fire lifecycle hooks for the page the user is already on

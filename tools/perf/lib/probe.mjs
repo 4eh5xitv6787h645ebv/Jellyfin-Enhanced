@@ -50,10 +50,26 @@ function probeMain(MARKERS) {
         }).observe({ type: 'longtask', buffered: true });
     } catch (e) { /* unsupported */ }
 
+    function describeNode(node) {
+        try {
+            if (!node || !node.tagName) return '?';
+            const cls = node.className && typeof node.className === 'string'
+                ? '.' + node.className.trim().split(/\s+/).slice(0, 3).join('.')
+                : '';
+            return node.tagName.toLowerCase() + cls;
+        } catch (e) { return '?'; }
+    }
+
     try {
         new PerformanceObserver(l => {
             for (const e of l.getEntries()) {
-                if (!e.hadRecentInput) G.shifts.push({ t: e.startTime, v: e.value });
+                if (!e.hadRecentInput) {
+                    let src = '';
+                    try {
+                        src = (e.sources || []).slice(0, 3).map(s => describeNode(s.node)).join(' | ');
+                    } catch (err) { /* ignore */ }
+                    G.shifts.push({ t: e.startTime, v: e.value, src });
+                }
             }
         }).observe({ type: 'layout-shift', buffered: true });
     } catch (e) { /* unsupported */ }
@@ -232,13 +248,39 @@ function probeMain(MARKERS) {
         if (nativeAt !== null) {
             for (const sel in e.markers) parity[sel] = markers[sel] - nativeAt;
         }
+        // Aggregate shift value per source description so the worst offenders
+        // are visible in results.
+        const shiftsIn = G.shifts.filter(x => inWindow(x.t, e));
+        const bySrc = {};
+        for (const s of shiftsIn) {
+            const k = s.src || '(no source)';
+            bySrc[k] = (bySrc[k] || 0) + s.v;
+        }
+        const clsSources = Object.entries(bySrc)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 4)
+            .map(([k, v]) => `${k} = ${v.toFixed(3)}`);
+
+        // JE boot-stage timing marks (performance.measure entries named je:*)
+        let jeMeasures = [];
+        try {
+            jeMeasures = performance.getEntriesByType('measure')
+                .filter(m => m.name.indexOf('je:') === 0 && inWindow(m.startTime, e) && m.duration >= 20)
+                .sort((a, b) => b.duration - a.duration)
+                .slice(0, 10)
+                .map(m => `${m.name} = ${m.duration.toFixed(0)}ms @${m.startTime.toFixed(0)}`);
+        } catch (err) { /* unsupported */ }
+
         return {
             label: e.label,
             durationMs: (e.tEnd === null ? now() : e.tEnd) - e.t0,
             longTaskCount: lt.length,
             longestTaskMs: lt.length ? Math.max.apply(null, lt.map(x => x.dur)) : 0,
+            longTasks: lt.filter(x => x.dur >= 100).map(x => `${x.dur.toFixed(0)}ms @${(x.t - e.t0).toFixed(0)}`).slice(0, 10),
             tbtMs: lt.reduce((a, x) => a + Math.max(0, x.dur - 50), 0),
-            cls: G.shifts.filter(x => inWindow(x.t, e)).reduce((a, x) => a + x.v, 0),
+            clsSources,
+            jeMeasures,
+            cls: shiftsIn.reduce((a, x) => a + x.v, 0),
             interactionCount: inter.length,
             interactionP98Ms: p98(inter),
             jeRequestCount: res.length,

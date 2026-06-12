@@ -118,6 +118,12 @@ function extractEpoch(e, { parityFor = [], requestField = null } = {}) {
         out.droppedPct = e.fps.droppedPct;
         out.worstFrameMs = e.fps.worstFrameMs;
     }
+    // Non-numeric diagnostics (ignored by aggregation; last run's copy is kept)
+    out._diag = {
+        clsSources: e.clsSources || [],
+        jeMeasures: e.jeMeasures || [],
+        longTasks: e.longTasks || []
+    };
     return out;
 }
 

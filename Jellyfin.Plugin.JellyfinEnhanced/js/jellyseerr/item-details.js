@@ -309,52 +309,74 @@
     }
 
     /**
-     * Builds cards for the given (already filtered) results and appends them
-     * to the shell's items container in one batch.
+     * Builds cards for the given (already filtered) results. The first few
+     * cards (one visible row width) build synchronously so warm renders paint
+     * with the native frame; the off-screen remainder builds cooperatively via
+     * scheduleChunked so a 20-card row can never produce a long task.
      * @param {HTMLElement} section - Shell from createSectionShell
      * @param {Array} filteredResults
-     * @returns {number} Count of cards appended
+     * @param {number} [syncFirst=6] - Cards built synchronously up front
+     * @returns {{initial: number, done: Promise<number>}} initial = cards
+     *   appended in this frame; done resolves with the final total.
      */
-    function fillSectionCards(section, filteredResults) {
+    function fillSectionCards(section, filteredResults, syncFirst = 6) {
         const itemsContainer = section.querySelector('.itemsContainer');
-        if (!itemsContainer) return 0;
+        if (!itemsContainer || !filteredResults.length) {
+            return { initial: 0, done: Promise.resolve(0) };
+        }
 
-        // Use DocumentFragment for batch DOM insertion
-        // TODO(scheduleChunked): move this card loop onto the shared
-        // scheduleChunked helper when it lands.
-        const fragment = document.createDocumentFragment();
         let added = 0;
-
-        for (const item of filteredResults) {
+        const buildInto = (item, fragment) => {
             const card = JE.jellyseerrUI && JE.jellyseerrUI.createJellyseerrCard
                 ? JE.jellyseerrUI.createJellyseerrCard(item, true, true)
                 : null;
-            if (card) {
-                const titleLink = card.querySelector('.cardText-first a');
+            if (!card) return;
+            const titleLink = card.querySelector('.cardText-first a');
 
-                // If item exists in library, link to library item
-                const jellyfinMediaId = item.mediaInfo?.jellyfinMediaId;
-                if (jellyfinMediaId) {
-                    card.setAttribute('data-library-item', 'true');
-                    card.setAttribute('data-jellyfin-media-id', jellyfinMediaId);
-                    card.classList.add('jellyseerr-card-in-library');
-                    // Update title link to point to library item
-                    if (titleLink) {
-                        const itemName = item.title || item.name;
-                        titleLink.textContent = itemName;
-                        titleLink.title = itemName;
-                        titleLink.href = `#!/details?id=${jellyfinMediaId}`;
-                        titleLink.removeAttribute('target');
-                        titleLink.removeAttribute('rel');
-                    }
+            // If item exists in library, link to library item
+            const jellyfinMediaId = item.mediaInfo?.jellyfinMediaId;
+            if (jellyfinMediaId) {
+                card.setAttribute('data-library-item', 'true');
+                card.setAttribute('data-jellyfin-media-id', jellyfinMediaId);
+                card.classList.add('jellyseerr-card-in-library');
+                // Update title link to point to library item
+                if (titleLink) {
+                    const itemName = item.title || item.name;
+                    titleLink.textContent = itemName;
+                    titleLink.title = itemName;
+                    titleLink.href = `#!/details?id=${jellyfinMediaId}`;
+                    titleLink.removeAttribute('target');
+                    titleLink.removeAttribute('rel');
                 }
-                fragment.appendChild(card);
-                added++;
             }
-        }
+            fragment.appendChild(card);
+            added++;
+        };
 
+        const firstBatch = filteredResults.slice(0, syncFirst);
+        const rest = filteredResults.slice(syncFirst);
+
+        const fragment = document.createDocumentFragment();
+        for (const item of firstBatch) buildInto(item, fragment);
         itemsContainer.appendChild(fragment);
-        return added;
+        const initial = added;
+
+        let done;
+        if (rest.length > 0 && typeof JE.helpers?.scheduleChunked === 'function') {
+            const restFragment = document.createDocumentFragment();
+            done = JE.helpers.scheduleChunked(rest, (item) => buildInto(item, restFragment), { budgetMs: 8 })
+                .then(() => {
+                    if (section.isConnected) itemsContainer.appendChild(restFragment);
+                    return added;
+                });
+        } else if (rest.length > 0) {
+            for (const item of rest) buildInto(item, fragment);
+            itemsContainer.appendChild(fragment);
+            done = Promise.resolve(added);
+        } else {
+            done = Promise.resolve(added);
+        }
+        return { initial, done };
     }
 
     /**
@@ -374,7 +396,8 @@
             return null;
         }
         const section = createSectionShell(title);
-        fillSectionCards(section, filteredResults);
+        // Cards stream in (first row synchronously, remainder chunked).
+        void fillSectionCards(section, filteredResults).done;
         return section;
     }
 
@@ -975,27 +998,27 @@
             return;
         }
 
-        if (shells.recommended) {
-            const filtered = applyRowFilters(preFilterRowResults(rows.recommended || []).slice(0, 20));
-            const added = filtered.length > 0 ? fillSectionCards(shells.recommended, filtered) : 0;
-            if (added > 0) {
-                shells.recommended.classList.remove('hide');
-                console.debug(`${logPrefix} Added Recommended section with ${added} items`);
-            } else {
-                shells.recommended.remove();
+        const fillShell = (shell, results, label) => {
+            const filtered = applyRowFilters(preFilterRowResults(results || []).slice(0, 20));
+            if (filtered.length === 0) {
+                shell.remove();
+                return;
             }
-        }
+            const fill = fillSectionCards(shell, filtered);
+            if (fill.initial > 0) {
+                shell.classList.remove('hide');
+                console.debug(`${logPrefix} Added ${label} section with ${filtered.length} items (${fill.initial} in-frame)`);
+            }
+            // If the entire build produced nothing (abnormal), drop the shell;
+            // also covers the initial-batch-empty case once the tail finishes.
+            fill.done.then(total => {
+                if (total === 0) shell.remove();
+                else shell.classList.remove('hide');
+            });
+        };
 
-        if (shells.similar) {
-            const filtered = applyRowFilters(preFilterRowResults(rows.similar || []).slice(0, 20));
-            const added = filtered.length > 0 ? fillSectionCards(shells.similar, filtered) : 0;
-            if (added > 0) {
-                shells.similar.classList.remove('hide');
-                console.debug(`${logPrefix} Added Similar section with ${added} items`);
-            } else {
-                shells.similar.remove();
-            }
-        }
+        if (shells.recommended) fillShell(shells.recommended, rows.recommended, 'Recommended');
+        if (shells.similar) fillShell(shells.similar, rows.similar, 'Similar');
 
         if (state.metricsStarted && JE.requestManager?.metrics?.enabled) {
             JE.requestManager.endMeasurement('similar-recommended');

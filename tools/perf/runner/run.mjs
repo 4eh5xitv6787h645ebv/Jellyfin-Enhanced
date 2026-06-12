@@ -111,6 +111,10 @@ async function main() {
                 runResults.push(r.metrics);
                 signature = r.signature; // last run's DOM signature
                 allErrors.push(...r.consoleErrors);
+                if (r.metrics && r.metrics._diag) {
+                    out.scenarios[scenario.name + ':diag'] = r.metrics._diag;
+                    delete r.metrics._diag;
+                }
             } catch (e) {
                 process.stdout.write('x');
                 allErrors.push('RUNNER: ' + e.message.slice(0, 300));
