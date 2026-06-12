@@ -33,6 +33,108 @@
             }
         }
 
+        /**
+         * Builds and appends the tag links for an already-fetched item DTO.
+         * Shared by the router-driven and legacy paths — every config gate
+         * (prefix, allow/hide filters) and the link markup are unchanged.
+         */
+        function buildTagLinks(item, itemId, externalLinksContainer) {
+            if (!item?.Tags || item.Tags.length === 0) {
+                // Nothing to add for this item
+                return;
+            }
+
+            const tagPrefix = JE.pluginConfig.ArrTagsPrefix || 'JE Arr Tag: ';
+            const tagsFilter = JE.pluginConfig.ArrTagsLinksFilter || '';
+            const tagsHideFilter = JE.pluginConfig.ArrTagsLinksHideFilter || '';
+
+            const allowedTags = tagsFilter
+                .split('\n')
+                .map(t => t.trim())
+                .filter(t => t.length > 0)
+                .map(t => `${tagPrefix}${t}`);
+
+            const hiddenTags = tagsHideFilter
+                .split('\n')
+                .map(t => t.trim())
+                .filter(t => t.length > 0)
+                .map(t => `${tagPrefix}${t}`);
+
+            let relevantTags = item.Tags.filter(tag =>
+                tag.startsWith(tagPrefix)
+            );
+
+            if (hiddenTags.length > 0) {
+                relevantTags = relevantTags.filter(tag =>
+                    !hiddenTags.some(hidden =>
+                        tag.toLowerCase() === hidden.toLowerCase()
+                    )
+                );
+            }
+
+            if (allowedTags.length > 0) {
+                relevantTags = relevantTags.filter(tag =>
+                    allowedTags.some(allowed =>
+                        tag.toLowerCase() === allowed.toLowerCase()
+                    )
+                );
+            }
+
+            if (relevantTags.length === 0) {
+                return;
+            }
+
+            const serverId = ApiClient.serverId();
+
+            relevantTags.forEach(tag => {
+                externalLinksContainer.appendChild(document.createTextNode(' '));
+
+                const tagName = tag.slice(tagPrefix.length).trim();
+                const slug = slugifyTagName(tagName);
+
+                const link = document.createElement('a');
+                link.setAttribute('is', 'emby-linkbutton');
+                link.className = 'button-link emby-button arr-tag-link';
+                link.href = `#!/list.html?type=tag&tag=${encodeURIComponent(tag)}&serverId=${serverId}`;
+                link.title = `View all items with tag: ${tag}`;
+
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = `list.html?type=tag&tag=${encodeURIComponent(tag)}&serverId=${serverId}`;
+                    if (window.Dashboard && typeof window.Dashboard.navigate === 'function') {
+                        window.Dashboard.navigate(url);
+                    } else {
+                        window.location.hash = `!/${url}`;
+                    }
+                });
+
+                link.dataset.itemId = itemId;
+                link.dataset.id = slug;
+                link.dataset.tag = tag;
+                link.dataset.tagName = tagName;
+                link.dataset.tagPrefix = tagPrefix;
+
+                const icon = document.createElement('span');
+                icon.className = 'arr-tag-link-icon';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.innerHTML = JE.icon(JE.IconName.TAG);
+                icon.style.marginRight = '5px';
+
+                const text = document.createElement('span');
+                text.className = 'arr-tag-link-text';
+                text.dataset.id = slug;
+                text.dataset.tag = tag;
+                text.dataset.tagName = tagName;
+                text.dataset.tagPrefix = tagPrefix;
+                text.textContent = tag;
+
+                link.appendChild(icon);
+                link.appendChild(text);
+
+                externalLinksContainer.appendChild(link);
+            });
+        }
+
         async function addTagLinks(itemId, externalLinksContainer) {
             if (isAddingLinks) {
                 return;
@@ -64,105 +166,9 @@
                     ? await JE.helpers.getItemCached(itemId)
                     : await ApiClient.getItem(ApiClient.getCurrentUserId(), itemId);
 
-                if (!item?.Tags || item.Tags.length === 0) {
-                    // Mark as processed even if no tags - don't keep checking
-                    processedItems.add(itemId);
-                    return;
-                }
+                buildTagLinks(item, itemId, externalLinksContainer);
 
-                const tagPrefix = JE.pluginConfig.ArrTagsPrefix || 'JE Arr Tag: ';
-                const tagsFilter = JE.pluginConfig.ArrTagsLinksFilter || '';
-                const tagsHideFilter = JE.pluginConfig.ArrTagsLinksHideFilter || '';
-
-                const allowedTags = tagsFilter
-                    .split('\n')
-                    .map(t => t.trim())
-                    .filter(t => t.length > 0)
-                    .map(t => `${tagPrefix}${t}`);
-
-                const hiddenTags = tagsHideFilter
-                    .split('\n')
-                    .map(t => t.trim())
-                    .filter(t => t.length > 0)
-                    .map(t => `${tagPrefix}${t}`);
-
-                let relevantTags = item.Tags.filter(tag =>
-                    tag.startsWith(tagPrefix)
-                );
-
-                if (hiddenTags.length > 0) {
-                    relevantTags = relevantTags.filter(tag =>
-                        !hiddenTags.some(hidden =>
-                            tag.toLowerCase() === hidden.toLowerCase()
-                        )
-                    );
-                }
-
-                if (allowedTags.length > 0) {
-                    relevantTags = relevantTags.filter(tag =>
-                        allowedTags.some(allowed =>
-                            tag.toLowerCase() === allowed.toLowerCase()
-                        )
-                    );
-                }
-
-                if (relevantTags.length === 0) {
-                    // Mark as processed even if no relevant tags - don't keep checking
-                    processedItems.add(itemId);
-                    return;
-                }
-
-                const serverId = ApiClient.serverId();
-
-                relevantTags.forEach(tag => {
-                    externalLinksContainer.appendChild(document.createTextNode(' '));
-
-                    const tagName = tag.slice(tagPrefix.length).trim();
-                    const slug = slugifyTagName(tagName);
-
-                    const link = document.createElement('a');
-                    link.setAttribute('is', 'emby-linkbutton');
-                    link.className = 'button-link emby-button arr-tag-link';
-                    link.href = `#!/list.html?type=tag&tag=${encodeURIComponent(tag)}&serverId=${serverId}`;
-                    link.title = `View all items with tag: ${tag}`;
-
-                    link.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const url = `list.html?type=tag&tag=${encodeURIComponent(tag)}&serverId=${serverId}`;
-                        if (window.Dashboard && typeof window.Dashboard.navigate === 'function') {
-                            window.Dashboard.navigate(url);
-                        } else {
-                            window.location.hash = `!/${url}`;
-                        }
-                    });
-
-                    link.dataset.itemId = itemId;
-                    link.dataset.id = slug;
-                    link.dataset.tag = tag;
-                    link.dataset.tagName = tagName;
-                    link.dataset.tagPrefix = tagPrefix;
-
-                    const icon = document.createElement('span');
-                    icon.className = 'arr-tag-link-icon';
-                    icon.setAttribute('aria-hidden', 'true');
-                    icon.innerHTML = JE.icon(JE.IconName.TAG);
-                    icon.style.marginRight = '5px';
-
-                    const text = document.createElement('span');
-                    text.className = 'arr-tag-link-text';
-                    text.dataset.id = slug;
-                    text.dataset.tag = tag;
-                    text.dataset.tagName = tagName;
-                    text.dataset.tagPrefix = tagPrefix;
-                    text.textContent = tag;
-
-                    link.appendChild(icon);
-                    link.appendChild(text);
-
-                    externalLinksContainer.appendChild(link);
-                });
-
-                // Mark item as processed after successfully adding links
+                // Mark item as processed (with or without tags) - don't keep checking
                 processedItems.add(itemId);
 
             } catch (err) {
@@ -189,33 +195,108 @@
             }
         }
 
-        JE.helpers.createObserver('arr-tag-links', (mutations) => {
-            if (!JE?.pluginConfig?.ArrTagsShowAsLinks) {
+        // ---------------------------------------------------------------- wiring
+        // Router-driven primary path: the item fetch STARTS at viewshow (detail
+        // navigations only) and the tag links are INSERTED at the native detail
+        // render moment. navState/token guards keep stale async results from
+        // ever touching the DOM of a newer navigation.
+        let navState = null;
+
+        function onNav(ctx) {
+            if (!JE?.pluginConfig?.ArrTagsShowAsLinks || !ctx.itemId) {
+                navState = null;
+                return;
+            }
+            const state = { token: ctx.token, itemId: ctx.itemId, itemPromise: null };
+            navState = state;
+
+            // Item DTO via the single-flight cache — the native detail controller
+            // warms it at viewshow, so this is effectively free.
+            state.itemPromise = (JE.helpers?.getItemCached
+                ? JE.helpers.getItemCached(ctx.itemId)
+                : ApiClient.getItem(ApiClient.getCurrentUserId(), ctx.itemId)
+            ).catch(err => {
+                console.error(`${logPrefix} Error fetching item:`, err);
+                return null;
+            });
+        }
+
+        async function onDetailRender(ctx) {
+            if (!JE?.pluginConfig?.ArrTagsShowAsLinks) return;
+            const state = navState;
+            if (!state || state.token !== ctx.token || ctx.signal.aborted) return;
+
+            const visiblePage = (ctx.view && ctx.view.querySelector)
+                ? ctx.view
+                : document.querySelector('#itemDetailPage:not(.hide)');
+            if (!visiblePage) return;
+            const externalLinksContainer = visiblePage.querySelector('.itemExternalLinks');
+            if (!externalLinksContainer) return;
+
+            // Idempotency: restored views keep their previous DOM, links included.
+            const existing = externalLinksContainer.querySelector('.arr-tag-link');
+            if (existing && existing.dataset.itemId === state.itemId) {
                 return;
             }
 
-            // Debounce to avoid excessive processing on rapid DOM changes
-            if (debounceTimer) {
-                clearTimeout(debounceTimer);
+            // Remove old links if the container is being reused for another item
+            externalLinksContainer.querySelectorAll('.arr-tag-link').forEach(link => {
+                if (link.previousSibling && link.previousSibling.nodeType === Node.TEXT_NODE) {
+                    link.previousSibling.remove();
+                }
+                link.remove();
+            });
+
+            try {
+                // Warm navigations resolve instantly here; cold ones await the
+                // viewshow-started fetch (links insert as soon as the DTO lands).
+                const item = await state.itemPromise;
+                if (!item || navState !== state || ctx.signal.aborted) return;
+                if (!document.contains(externalLinksContainer)) return;
+                if (externalLinksContainer.querySelector('.arr-tag-link')) return;
+
+                buildTagLinks(item, state.itemId, externalLinksContainer);
+            } catch (err) {
+                console.error(`${logPrefix} Error adding tag links:`, err);
             }
+        }
 
-            debounceTimer = setTimeout(checkAndAddLinks, 100);
-        }, document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['class']
-        });
+        if (JE.viewRouter) {
+            JE.viewRouter.onViewShow(onNav, { viewTypes: ['detail'] });
+            JE.viewRouter.onNativeDetailRender(ctx => { onDetailRender(ctx); });
 
-        // Also check immediately on hash change (navigation)
-        window.addEventListener('hashchange', () => {
-            if (debounceTimer) clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(checkAndAddLinks, 200);
-        });
+            console.log(`${logPrefix} Initialized successfully (router-driven)`);
+        } else {
+            // Legacy fallback (view router unavailable): body observer + debounce
+            // + hashchange + initial check drive addTagLinks, exactly as before.
+            JE.helpers.createObserver('arr-tag-links', (mutations) => {
+                if (!JE?.pluginConfig?.ArrTagsShowAsLinks) {
+                    return;
+                }
 
-        // Run once immediately in case were already on an item detail page
-        setTimeout(checkAndAddLinks, 500);
+                // Debounce to avoid excessive processing on rapid DOM changes
+                if (debounceTimer) {
+                    clearTimeout(debounceTimer);
+                }
 
-        console.log(`${logPrefix} Initialized successfully`);
+                debounceTimer = setTimeout(checkAndAddLinks, 100);
+            }, document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['class']
+            });
+
+            // Also check immediately on hash change (navigation)
+            window.addEventListener('hashchange', () => {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(checkAndAddLinks, 200);
+            });
+
+            // Run once immediately in case were already on an item detail page
+            setTimeout(checkAndAddLinks, 500);
+
+            console.log(`${logPrefix} Initialized successfully (legacy observer)`);
+        }
     };
 })(window.JellyfinEnhanced);

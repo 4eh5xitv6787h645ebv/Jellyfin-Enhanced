@@ -10,64 +10,69 @@
             return;
         }
 
-        // Check admin status on every script initialization
-        let isAdmin = false;
+        // Admin status resolution. The old init-time retry loop (500ms × 5 waiting
+        // for the current user) is gone: plugin.js prefetches the user into
+        // JE.currentUser at boot, so use that when set and fall back to a single
+        // ApiClient.getCurrentUser() call. Single-flight — every navigation flow
+        // awaits the same promise and re-checks its abort signal afterwards.
+        let isAdmin = null; // null until resolved, then true/false
+        let adminPromise = null;
 
-        try {
-            // Use the user object pre-fetched during plugin.js init (Stage 2) when available.
-            // Falls back to a short direct fetch so the module isn't blocked for up to 10 s.
-            let user = JE.currentUser || null;
-            if (!user) {
-                for (let i = 0; i < 5; i++) {  // shortened retry window (~2.5s)
-                    try {
-                        user = await ApiClient.getCurrentUser();
-                        if (user) break;
-                    } catch (e) {
-                        // swallow error, retry
+        function resolveAdmin() {
+            if (adminPromise) return adminPromise;
+            adminPromise = (async () => {
+                try {
+                    const user = JE.currentUser || await ApiClient.getCurrentUser();
+                    if (!user) {
+                        console.error(`${logPrefix} Could not get current user.`);
+                        isAdmin = false;
+                        return false;
                     }
-                    await new Promise(r => setTimeout(r, 500));
+
+                    isAdmin = user?.Policy?.IsAdministrator === true;
+
+                    // Update settings.json if the value changed
+                    if (JE?.currentSettings && JE.currentSettings.isAdmin !== isAdmin && typeof JE.saveUserSettings === 'function') {
+                        JE.currentSettings.isAdmin = isAdmin;
+                        await JE.saveUserSettings('settings.json', JE.currentSettings);
+                        console.log(`${logPrefix} Updated admin status in settings.json: ${isAdmin}`);
+                    } else if (JE?.currentSettings) {
+                        JE.currentSettings.isAdmin = isAdmin;
+                        console.log(`${logPrefix} Admin status: ${isAdmin}`);
+                    }
+
+                    if (!isAdmin) {
+                        console.log(`${logPrefix} User is not an administrator. Links will not be shown.`);
+                        return false;
+                    }
+
+                    // Surface stored-config corruption to the admin on first resolution rather
+                    // than waiting for an action endpoint. The backend ships boolean flags in
+                    // /private-config so the frontend can toast without round-tripping an action call.
+                    if (JE?.pluginConfig?.SonarrInstancesCorrupt && typeof JE.toast === 'function') {
+                        JE.toast('⚠ Sonarr instance configuration is corrupt. Open the Jellyfin Enhanced config page to reset it.');
+                        console.error(`${logPrefix} SonarrInstances stored JSON is corrupt.`);
+                    }
+                    if (JE?.pluginConfig?.RadarrInstancesCorrupt && typeof JE.toast === 'function') {
+                        JE.toast('⚠ Radarr instance configuration is corrupt. Open the Jellyfin Enhanced config page to reset it.');
+                        console.error(`${logPrefix} RadarrInstances stored JSON is corrupt.`);
+                    }
+
+                    return true;
+                } catch (err) {
+                    console.error(`${logPrefix} Error checking admin status:`, err);
+                    isAdmin = false;
+                    return false;
                 }
-            }
-
-            if (!user) {
-                console.error(`${logPrefix} Could not get current user after retries.`);
-                return;
-            }
-
-            isAdmin = user?.Policy?.IsAdministrator === true;
-
-            // Update settings.json if the value changed
-            if (JE?.currentSettings && JE.currentSettings.isAdmin !== isAdmin && typeof JE.saveUserSettings === 'function') {
-                JE.currentSettings.isAdmin = isAdmin;
-                await JE.saveUserSettings('settings.json', JE.currentSettings);
-                console.log(`${logPrefix} Updated admin status in settings.json: ${isAdmin}`);
-            } else if (JE?.currentSettings) {
-                JE.currentSettings.isAdmin = isAdmin;
-                console.log(`${logPrefix} Admin status: ${isAdmin}`);
-            }
-        } catch (err) {
-            console.error(`${logPrefix} Error checking admin status:`, err);
-            return;
+            })();
+            return adminPromise;
         }
 
-        if (!isAdmin) {
-            console.log(`${logPrefix} User is not an administrator. Links will not be shown.`);
-            return;
-        }
+        // Kick off resolution now (not awaited) so the settings.json sync still
+        // happens at init time and the first navigation's await is already settled.
+        resolveAdmin();
 
         console.log(`${logPrefix} Initializing...`);
-
-        // Surface stored-config corruption to the admin on first init rather than waiting for
-        // an action endpoint. The backend ships boolean flags in /private-config so the frontend
-        // can toast without round-tripping an action call.
-        if (JE?.pluginConfig?.SonarrInstancesCorrupt && typeof JE.toast === 'function') {
-            JE.toast('⚠ Sonarr instance configuration is corrupt. Open the Jellyfin Enhanced config page to reset it.');
-            console.error(`${logPrefix} SonarrInstances stored JSON is corrupt.`);
-        }
-        if (JE?.pluginConfig?.RadarrInstancesCorrupt && typeof JE.toast === 'function') {
-            JE.toast('⚠ Radarr instance configuration is corrupt. Open the Jellyfin Enhanced config page to reset it.');
-            console.error(`${logPrefix} RadarrInstances stored JSON is corrupt.`);
-        }
 
         let isAddingLinks = false; // Lock to prevent concurrent runs
         let debounceTimer = null;
@@ -186,6 +191,19 @@
 
             const bazarrMappings = parseUrlMappings(JE.pluginConfig.BazarrUrlMappings || '');
             const bazarrUrl = getMappedUrl(bazarrMappings, JE.pluginConfig.BazarrUrl);
+
+            // EMPTY-INSTANCES FAST PATH: with no Sonarr/Radarr instances (multi-instance
+            // arrays AND the legacy single-URL fields, both folded into the lists above)
+            // and no Bazarr URL there is nothing this module could ever render. Decide
+            // that once here and return before any hook/observer registration, so every
+            // navigation on unconfigured servers costs zero network calls and zero DOM
+            // insertions. Corrupt-config flags bypass the fast path so the module stays
+            // alive long enough for the admin corruption toasts above to surface.
+            if (sonarrInstances.length === 0 && radarrInstances.length === 0 && !bazarrUrl
+                && !JE?.pluginConfig?.SonarrInstancesCorrupt && !JE?.pluginConfig?.RadarrInstancesCorrupt) {
+                console.log(`${logPrefix} No Sonarr/Radarr/Bazarr instances configured — skipping link injection entirely.`);
+                return;
+            }
 
             const styleId = 'arr-links-styles';
             if (!document.getElementById(styleId)) {
@@ -468,6 +486,91 @@
                 }
             }
 
+            // When only one instance matches, collapsing the episode count + status
+            // border to a plain link keeps the detail page tidy. Multi-instance dropdowns
+            // always show status because distinguishing between instances is their whole
+            // purpose. Admin can opt in to always-show via ArrLinksShowStatusSingle.
+            // These appenders are shared by the router-driven and legacy paths so the
+            // markup/classes stay identical in both.
+            function appendSonarrLinks(anchorElement, validMatches) {
+                const showStatusOnSingle = JE?.pluginConfig?.ArrLinksShowStatusSingle === true;
+                if (validMatches.length === 1) {
+                    const m = validMatches[0];
+                    const url = `${m.instanceUrl.replace(/\/$/, '')}/series/${m.titleSlug}`;
+                    const haveStats = m.episodeFileCount >= 0;
+                    const status = showStatusOnSingle && haveStats ? getStatus(m.episodeFileCount, m.episodeCount) : null;
+                    const badge = showStatusOnSingle && haveStats ? `${m.episodeFileCount}/${m.episodeCount}` : '';
+                    const size = formatBytes(m.sizeOnDisk);
+                    // Tooltip still surfaces the detail — hiding the badge doesn't mean
+                    // hiding information, just decluttering the pill itself.
+                    const tipParts = [m.instanceName];
+                    if (haveStats) tipParts.push(`${m.episodeFileCount}/${m.episodeCount} episodes`);
+                    if (size) tipParts.push(size);
+                    if (m.rootFolderPath) tipParts.push(m.rootFolderPath);
+                    const tip = tipParts.join('\n');
+                    anchorElement.appendChild(document.createTextNode(' '));
+                    anchorElement.appendChild(createLinkButton('Sonarr', url, 'arr-link-sonarr', status, badge, tip));
+                } else if (validMatches.length > 1) {
+                    const items = validMatches.map(m => {
+                        const status = m.episodeFileCount < 0 ? null : getStatus(m.episodeFileCount, m.episodeCount);
+                        const badge = m.episodeFileCount < 0 ? '' : `${m.episodeFileCount}/${m.episodeCount}`;
+                        const size = formatBytes(m.sizeOnDisk);
+                        const tip = [badge ? `${badge} episodes` : null, size, m.rootFolderPath].filter(Boolean).join(' \u2022 ');
+                        return {
+                            name: m.instanceName,
+                            url: `${m.instanceUrl.replace(/\/$/, '')}/series/${m.titleSlug}`,
+                            status, badge, size, tip
+                        };
+                    });
+                    anchorElement.appendChild(document.createTextNode(' '));
+                    anchorElement.appendChild(createDropdown('Sonarr', 'arr-link-sonarr', items));
+                }
+            }
+
+            function appendRadarrLinks(anchorElement, validMatches, tmdbId) {
+                const showStatusOnSingle = JE?.pluginConfig?.ArrLinksShowStatusSingle === true;
+                if (validMatches.length === 1) {
+                    const m = validMatches[0];
+                    const url = `${m.url.replace(/\/$/, '')}/movie/${tmdbId}`;
+                    const statusValue = m.hasFile ? 'complete' : 'missing';
+                    const badgeValue = m.hasFile ? 'Downloaded' : 'Missing';
+                    const status = showStatusOnSingle ? statusValue : null;
+                    const badge = showStatusOnSingle ? badgeValue : '';
+                    const size = formatBytes(m.sizeOnDisk);
+                    // Tooltip keeps the "Downloaded/Missing" detail regardless, so info
+                    // isn't lost when the visible badge is suppressed.
+                    const tip = [m.name, badgeValue, size, m.rootFolderPath].filter(Boolean).join('\n');
+                    anchorElement.appendChild(document.createTextNode(' '));
+                    anchorElement.appendChild(createLinkButton('Radarr', url, 'arr-link-radarr', status, badge, tip));
+                } else if (validMatches.length > 1) {
+                    const items = validMatches.map(m => {
+                        const status = m.hasFile ? 'complete' : 'missing';
+                        const badge = m.hasFile ? 'Downloaded' : 'Missing';
+                        const size = formatBytes(m.sizeOnDisk);
+                        const tip = [badge, size, m.rootFolderPath].filter(Boolean).join(' \u2022 ');
+                        return {
+                            name: m.name,
+                            url: `${m.url.replace(/\/$/, '')}/movie/${tmdbId}`,
+                            status, badge, size, tip
+                        };
+                    });
+                    anchorElement.appendChild(document.createTextNode(' '));
+                    anchorElement.appendChild(createDropdown('Radarr', 'arr-link-radarr', items));
+                }
+            }
+
+            function appendBazarrLink(anchorElement, itemType) {
+                if (itemType === 'Series' && bazarrUrl) {
+                    const url = `${bazarrUrl}/series/`;
+                    anchorElement.appendChild(document.createTextNode(' '));
+                    anchorElement.appendChild(createLinkButton("Bazarr", url, "arr-link-bazarr"));
+                } else if (itemType === 'Movie' && bazarrUrl) {
+                    const url = `${bazarrUrl}/movies/`;
+                    anchorElement.appendChild(document.createTextNode(' '));
+                    anchorElement.appendChild(createLinkButton("Bazarr", url, "arr-link-bazarr"));
+                }
+            }
+
             async function addArrLinks() {
                 if (isAddingLinks) {
                     return;
@@ -505,6 +608,11 @@
 
                 isAddingLinks = true;
                 try {
+                    // Admin gate — single-flight promise, settled after the first
+                    // resolution (replaces the old init-time user retry loop).
+                    if (!(await resolveAdmin())) return;
+                    if (!isStillValidTarget()) return;
+
                     const itemId = new URLSearchParams(window.location.hash.split('?')[1]).get('id');
                     if (!itemId) return;
 
@@ -524,92 +632,19 @@
                         return;
                     }
 
-                    // When only one instance matches, collapsing the episode count + status
-                    // border to a plain link keeps the detail page tidy. Multi-instance dropdowns
-                    // always show status because distinguishing between instances is their whole
-                    // purpose. Admin can opt in to always-show via ArrLinksShowStatusSingle.
-                    const showStatusOnSingle = JE?.pluginConfig?.ArrLinksShowStatusSingle === true;
-
                     if (item.Type === 'Series' && item.Name && sonarrInstances.length > 0) {
                         const slugMatches = await getSonarrSlugs(item);
                         if (!isStillValidTarget()) return;
-                        const validMatches = slugMatches.filter(m => m.instanceUrl);
-                        if (validMatches.length === 1) {
-                            const m = validMatches[0];
-                            const url = `${m.instanceUrl.replace(/\/$/, '')}/series/${m.titleSlug}`;
-                            const haveStats = m.episodeFileCount >= 0;
-                            const status = showStatusOnSingle && haveStats ? getStatus(m.episodeFileCount, m.episodeCount) : null;
-                            const badge = showStatusOnSingle && haveStats ? `${m.episodeFileCount}/${m.episodeCount}` : '';
-                            const size = formatBytes(m.sizeOnDisk);
-                            // Tooltip still surfaces the detail — hiding the badge doesn't mean
-                            // hiding information, just decluttering the pill itself.
-                            const tipParts = [m.instanceName];
-                            if (haveStats) tipParts.push(`${m.episodeFileCount}/${m.episodeCount} episodes`);
-                            if (size) tipParts.push(size);
-                            if (m.rootFolderPath) tipParts.push(m.rootFolderPath);
-                            const tip = tipParts.join('\n');
-                            anchorElement.appendChild(document.createTextNode(' '));
-                            anchorElement.appendChild(createLinkButton('Sonarr', url, 'arr-link-sonarr', status, badge, tip));
-                        } else if (validMatches.length > 1) {
-                            const items = validMatches.map(m => {
-                                const status = m.episodeFileCount < 0 ? null : getStatus(m.episodeFileCount, m.episodeCount);
-                                const badge = m.episodeFileCount < 0 ? '' : `${m.episodeFileCount}/${m.episodeCount}`;
-                                const size = formatBytes(m.sizeOnDisk);
-                                const tip = [badge ? `${badge} episodes` : null, size, m.rootFolderPath].filter(Boolean).join(' \u2022 ');
-                                return {
-                                    name: m.instanceName,
-                                    url: `${m.instanceUrl.replace(/\/$/, '')}/series/${m.titleSlug}`,
-                                    status, badge, size, tip
-                                };
-                            });
-                            anchorElement.appendChild(document.createTextNode(' '));
-                            anchorElement.appendChild(createDropdown('Sonarr', 'arr-link-sonarr', items));
-                        }
+                        appendSonarrLinks(anchorElement, slugMatches.filter(m => m.instanceUrl));
                     }
 
                     if (item.Type === 'Movie' && ids.tmdb && radarrInstances.length > 0) {
                         const matchingRadarrs = await getRadarrInstances(ids.tmdb);
                         if (!isStillValidTarget()) return;
-                        const validMatches = matchingRadarrs.filter(m => m.url);
-                        if (validMatches.length === 1) {
-                            const m = validMatches[0];
-                            const url = `${m.url.replace(/\/$/, '')}/movie/${ids.tmdb}`;
-                            const statusValue = m.hasFile ? 'complete' : 'missing';
-                            const badgeValue = m.hasFile ? 'Downloaded' : 'Missing';
-                            const status = showStatusOnSingle ? statusValue : null;
-                            const badge = showStatusOnSingle ? badgeValue : '';
-                            const size = formatBytes(m.sizeOnDisk);
-                            // Tooltip keeps the "Downloaded/Missing" detail regardless, so info
-                            // isn't lost when the visible badge is suppressed.
-                            const tip = [m.name, badgeValue, size, m.rootFolderPath].filter(Boolean).join('\n');
-                            anchorElement.appendChild(document.createTextNode(' '));
-                            anchorElement.appendChild(createLinkButton('Radarr', url, 'arr-link-radarr', status, badge, tip));
-                        } else if (validMatches.length > 1) {
-                            const items = validMatches.map(m => {
-                                const status = m.hasFile ? 'complete' : 'missing';
-                                const badge = m.hasFile ? 'Downloaded' : 'Missing';
-                                const size = formatBytes(m.sizeOnDisk);
-                                const tip = [badge, size, m.rootFolderPath].filter(Boolean).join(' \u2022 ');
-                                return {
-                                    name: m.name,
-                                    url: `${m.url.replace(/\/$/, '')}/movie/${ids.tmdb}`,
-                                    status, badge, size, tip
-                                };
-                            });
-                            anchorElement.appendChild(document.createTextNode(' '));
-                            anchorElement.appendChild(createDropdown('Radarr', 'arr-link-radarr', items));
-                        }
+                        appendRadarrLinks(anchorElement, matchingRadarrs.filter(m => m.url), ids.tmdb);
                     }
 
-                    if (item.Type === 'Series' && bazarrUrl) {
-                        const url = `${bazarrUrl}/series/`;
-                        anchorElement.appendChild(document.createTextNode(' '));
-                        anchorElement.appendChild(createLinkButton("Bazarr", url, "arr-link-bazarr"));
-                    } else if (item.Type === 'Movie' && bazarrUrl) {
-                        const url = `${bazarrUrl}/movies/`;
-                        anchorElement.appendChild(document.createTextNode(' '));
-                        anchorElement.appendChild(createLinkButton("Bazarr", url, "arr-link-bazarr"));
-                    }
+                    appendBazarrLink(anchorElement, item.Type);
                 } finally {
                     isAddingLinks = false;
                 }
@@ -750,36 +785,164 @@
                 }
             });
 
-            observer = JE.helpers.createObserver('arr-links', () => {
-                if (!JE?.pluginConfig?.ArrLinksEnabled) {
-                    if (observer) {
-                        observer.disconnect();
-                        console.log(`${logPrefix} Observer disconnected — feature disabled`);
+            // ------------------------------------------------------------ wiring
+            // Router-driven primary path: backend lookups START at viewshow
+            // (detail navigations only) and links are INSERTED at the native
+            // detail render moment, so nothing we add can be wiped by the
+            // native render. navState/token guards keep stale async results
+            // from ever touching the DOM of a newer navigation.
+            let navState = null;
+
+            function onNav(ctx) {
+                if (!JE?.pluginConfig?.ArrLinksEnabled || !ctx.itemId) {
+                    navState = null;
+                    return;
+                }
+                const state = {
+                    token: ctx.token,
+                    itemId: ctx.itemId,
+                    itemPromise: null,
+                    sonarrPromise: null,
+                    radarrPromise: null,
+                    radarrTmdbId: null
+                };
+                navState = state;
+
+                state.itemPromise = (async () => {
+                    // Admin gate — awaited inside the navigation flow (abort-aware below).
+                    if (!(await resolveAdmin())) return null;
+                    if (ctx.signal.aborted || navState !== state) return null;
+
+                    // Warm start: the identity LRU can give a movie's TMDB id without
+                    // waiting for the item DTO, so the Radarr lookup goes out at viewshow.
+                    const identity = JE.viewRouter.getIdentity(ctx.itemId);
+                    if (identity && identity.type === 'Movie' && identity.tmdbId && radarrInstances.length > 0) {
+                        state.radarrTmdbId = String(identity.tmdbId);
+                        state.radarrPromise = getRadarrInstances(state.radarrTmdbId);
                     }
+
+                    // Item DTO via the single-flight cache — the native detail
+                    // controller warms it at viewshow, so this is effectively free.
+                    const item = JE.helpers?.getItemCached
+                        ? await JE.helpers.getItemCached(ctx.itemId)
+                        : await ApiClient.getItem(ApiClient.getCurrentUserId(), ctx.itemId);
+                    if (ctx.signal.aborted || navState !== state) return null;
+
+                    if (item?.Type === 'Series' && item.Name && sonarrInstances.length > 0) {
+                        state.sonarrPromise = getSonarrSlugs(item);
+                    } else if (item?.Type === 'Movie' && radarrInstances.length > 0 && !state.radarrPromise) {
+                        const tmdb = item.ProviderIds?.Tmdb || item.ProviderIds?.tmdb || null;
+                        if (tmdb) {
+                            state.radarrTmdbId = String(tmdb);
+                            state.radarrPromise = getRadarrInstances(state.radarrTmdbId);
+                        }
+                    }
+                    return item;
+                })().catch(err => {
+                    console.error(`${logPrefix} Error preparing arr links:`, err);
+                    return null;
+                });
+            }
+
+            async function onDetailRender(ctx) {
+                if (!JE?.pluginConfig?.ArrLinksEnabled) return;
+                const state = navState;
+                if (!state || state.token !== ctx.token || ctx.signal.aborted) return;
+
+                const visiblePage = (ctx.view && ctx.view.querySelector)
+                    ? ctx.view
+                    : document.querySelector('#itemDetailPage:not(.hide)');
+                if (!visiblePage) return;
+                const anchorElement = visiblePage.querySelector('.itemExternalLinks');
+
+                // Cleanup stale links from any non-visible pages to prevent future conflicts
+                document.querySelectorAll('#itemDetailPage.hide .arr-link').forEach(staleLink => {
+                    if (staleLink.previousSibling && staleLink.previousSibling.nodeType === Node.TEXT_NODE) {
+                       staleLink.previousSibling.remove();
+                    }
+                    staleLink.remove();
+                });
+
+                // Idempotency: restored views keep their previous DOM, links included.
+                if (!anchorElement || anchorElement.querySelector('.arr-link')) {
                     return;
                 }
 
-                // Debounce to avoid excessive processing on rapid DOM changes
-                if (debounceTimer) {
-                    clearTimeout(debounceTimer);
+                try {
+                    // Warm navigations resolve instantly here; cold ones await the
+                    // viewshow-started fetches (links insert as soon as data lands).
+                    const item = await state.itemPromise;
+                    if (!item || navState !== state || ctx.signal.aborted) return;
+                    if (!document.contains(anchorElement) || anchorElement.querySelector('.arr-link')) return;
+
+                    // Only process movies and TV shows
+                    if (item.Type !== 'Movie' && item.Type !== 'Series') return;
+
+                    const ids = getExternalIds(visiblePage);
+
+                    // Only add ARR links if we find a themoviedb link
+                    if (!ids.hasTmdbLink) {
+                        return;
+                    }
+
+                    if (item.Type === 'Series' && item.Name && sonarrInstances.length > 0) {
+                        const slugMatches = await (state.sonarrPromise || getSonarrSlugs(item));
+                        if (navState !== state || ctx.signal.aborted || !document.contains(anchorElement)) return;
+                        appendSonarrLinks(anchorElement, slugMatches.filter(m => m.instanceUrl));
+                    }
+
+                    if (item.Type === 'Movie' && ids.tmdb && radarrInstances.length > 0) {
+                        const tmdbId = state.radarrTmdbId || ids.tmdb;
+                        const matchingRadarrs = await (state.radarrPromise || getRadarrInstances(tmdbId));
+                        if (navState !== state || ctx.signal.aborted || !document.contains(anchorElement)) return;
+                        appendRadarrLinks(anchorElement, matchingRadarrs.filter(m => m.url), tmdbId);
+                    }
+
+                    appendBazarrLink(anchorElement, item.Type);
+                } catch (err) {
+                    console.error(`${logPrefix} Error adding arr links:`, err);
                 }
+            }
 
-                debounceTimer = setTimeout(() => {
-                    addArrLinks();
-                }, 100); // Wait 100ms after last mutation before processing
-            }, document.body, {
-                // childList + subtree is enough — Jellyfin re-renders the detail page children
-                // on SPA navigation. The shared body observer's fast-path drops attribute-only
-                // batches (see CLAUDE.md "Observer Multiplexer" notes), so attributeFilter
-                // would be inert here.
-                childList: true,
-                subtree: true,
-            });
+            if (JE.viewRouter) {
+                JE.viewRouter.onViewShow(onNav, { viewTypes: ['detail'] });
+                JE.viewRouter.onNativeDetailRender(ctx => { onDetailRender(ctx); });
 
-            // Store observer reference for potential cleanup
-            JE._arrLinksObserver = observer;
+                console.log(`${logPrefix} Initialized successfully (router-driven)`);
+            } else {
+                // Legacy fallback (view router unavailable): shared body observer
+                // + debounce drives addArrLinks, exactly as before.
+                observer = JE.helpers.createObserver('arr-links', () => {
+                    if (!JE?.pluginConfig?.ArrLinksEnabled) {
+                        if (observer) {
+                            observer.disconnect();
+                            console.log(`${logPrefix} Observer disconnected — feature disabled`);
+                        }
+                        return;
+                    }
 
-            console.log(`${logPrefix} Initialized successfully`);
+                    // Debounce to avoid excessive processing on rapid DOM changes
+                    if (debounceTimer) {
+                        clearTimeout(debounceTimer);
+                    }
+
+                    debounceTimer = setTimeout(() => {
+                        addArrLinks();
+                    }, 100); // Wait 100ms after last mutation before processing
+                }, document.body, {
+                    // childList + subtree is enough — Jellyfin re-renders the detail page children
+                    // on SPA navigation. The shared body observer's fast-path drops attribute-only
+                    // batches (see CLAUDE.md "Observer Multiplexer" notes), so attributeFilter
+                    // would be inert here.
+                    childList: true,
+                    subtree: true,
+                });
+
+                // Store observer reference for potential cleanup
+                JE._arrLinksObserver = observer;
+
+                console.log(`${logPrefix} Initialized successfully (legacy observer)`);
+            }
         } catch (err) {
             console.error(`${logPrefix} Failed to initialize`, err);
         }

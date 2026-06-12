@@ -554,6 +554,29 @@
                 });
         }
 
+        // Per-item provider lookup cache (~10 min TTL, single-flight). Lookups
+        // started at viewshow, the auto-load fill and the manual search button
+        // all share one entry, so each item costs at most one providers request
+        // per TTL window. Failures are never cached so the next caller retries.
+        const PROVIDER_CACHE_TTL_MS = 10 * 60 * 1000;
+        const providerCache = new Map(); // `${mediaType}:${tmdbId}` -> { promise, ts }
+
+        function fetchStreamingDataCached(tmdbId, mediaType, callback) {
+            const key = `${mediaType}:${tmdbId}`;
+            const entry = providerCache.get(key);
+            let promise = (entry && (Date.now() - entry.ts) < PROVIDER_CACHE_TTL_MS) ? entry.promise : null;
+            if (!promise) {
+                promise = new Promise(resolve => {
+                    fetchStreamingData(tmdbId, mediaType, (error, data) => resolve({ error: error || null, data }));
+                });
+                providerCache.set(key, { promise, ts: Date.now() });
+                promise.then(res => {
+                    if (res.error) providerCache.delete(key);
+                });
+            }
+            promise.then(res => callback(res.error, res.data));
+        }
+
         // Process streaming data for default region (auto-load)
         function processDefaultRegionData(data, tmdbId, mediaType) {
             const regionData = data.results[DEFAULT_REGION];
@@ -814,7 +837,7 @@
                     document.head.appendChild(style);
                 }
 
-                fetchStreamingData(tmdbId, mediaType, (error, data) => {
+                fetchStreamingDataCached(tmdbId, mediaType, (error, data) => {
                     searchButton.disabled = false;
                     searchButton.innerHTML = '';
                     const searchIcon = createMaterialIcon('search', '16px');
@@ -1069,9 +1092,17 @@
             return container;
         }
 
-        // Auto-load streaming data on page load (default region only)
-        function autoLoadStreamingData(tmdbId, mediaType, container) {
-            fetchStreamingData(tmdbId, mediaType, (error, data) => {
+        // Auto-load streaming data on page load (default region only).
+        // The optional signal is the router navigation's AbortSignal: when the
+        // user has already navigated away by the time data arrives, the shell is
+        // removed instead of being filled, so stale results never touch the DOM
+        // (a later restore of that view re-inserts and fills from the warm cache).
+        function autoLoadStreamingData(tmdbId, mediaType, container, signal) {
+            fetchStreamingDataCached(tmdbId, mediaType, (error, data) => {
+                if (signal?.aborted) {
+                    container.remove();
+                    return;
+                }
                 if (error) {
                     const errorDiv = document.createElement('div');
                     errorDiv.style.cssText = 'font-size: 13px; margin-top: 8px; color: #ff6b6b;';
@@ -1124,6 +1155,100 @@
                 }
             });
         }
+
+        // ------------------------------------------------------------- router path
+        // The provider lookup STARTS at viewshow (identity LRU first, item DTO
+        // fallback) so the response is usually already cached when the native
+        // detail render happens; the container shell is INSERTED at that render
+        // moment and filled when the data arrives. navState/token guards keep
+        // stale navigations from touching the DOM.
+        let navState = null;
+
+        function onNav(ctx) {
+            if (!ctx.itemId) {
+                navState = null;
+                return;
+            }
+            navState = { token: ctx.token, itemId: ctx.itemId };
+            warmProviderLookup(ctx);
+        }
+
+        // Warm the provider cache at viewshow. The identity LRU usually gives
+        // tmdbId/type synchronously (warm navigations); cold navigations fall
+        // back to the item DTO via the single-flight cache that the native
+        // detail controller itself warms at viewshow.
+        function warmProviderLookup(ctx) {
+            const identity = JE.viewRouter.getIdentity(ctx.itemId);
+            const identityMediaType = identity
+                ? (identity.type === 'Movie' ? 'movie' : identity.type === 'Series' ? 'tv' : null)
+                : null;
+            if (identity && identity.tmdbId && identityMediaType) {
+                fetchStreamingDataCached(String(identity.tmdbId), identityMediaType, () => { /* cache warm-up only */ });
+                return;
+            }
+            const itemPromise = JE.helpers?.getItemCached
+                ? JE.helpers.getItemCached(ctx.itemId)
+                : ApiClient.getItem(ApiClient.getCurrentUserId(), ctx.itemId);
+            itemPromise.then(item => {
+                if (ctx.signal.aborted) return;
+                const tmdbId = item?.ProviderIds?.Tmdb || item?.ProviderIds?.tmdb;
+                const mediaType = item?.Type === 'Movie' ? 'movie' : item?.Type === 'Series' ? 'tv' : null;
+                if (tmdbId && mediaType) {
+                    fetchStreamingDataCached(String(tmdbId), mediaType, () => { /* cache warm-up only */ });
+                }
+            }).catch(() => { /* warm-up is best-effort; render path retries */ });
+        }
+
+        function onDetailRender(ctx) {
+            const state = navState;
+            if (!state || state.token !== ctx.token || ctx.signal.aborted) return;
+
+            const root = (ctx.view && ctx.view.querySelector)
+                ? ctx.view
+                : document.querySelector('#itemDetailPage:not(.hide)');
+            if (!root) return;
+            const section = root.querySelector('.detailSectionContent');
+            if (!section) return;
+
+            // Idempotency: restored views keep their previous container.
+            if (section.querySelector('.streaming-lookup-container')) return;
+
+            // Same gate as the legacy path: only items with a TMDB external link.
+            const tmdbLinks = section.querySelectorAll('a[href*="themoviedb.org"]');
+            if (tmdbLinks.length === 0) return;
+
+            const tmdbLink = tmdbLinks[0];
+            const match = tmdbLink.href.match(/themoviedb\.org\/(movie|tv)\/(\d+)/);
+            if (!match) return;
+
+            const mediaType = match[1];
+            const tmdbId = match[2];
+
+            // Insert the shell now; the (viewshow-started, cached) lookup fills it.
+            const container = document.createElement('div');
+            container.className = 'streaming-lookup-container';
+            container.style.cssText = 'margin: 16px 0;';
+
+            // If the user navigates away before the lookup lands, drop the
+            // never-filled shell immediately so a quick return to this item
+            // re-inserts and fills from the warm cache (a lingering empty shell
+            // would trip the idempotency check above and stay empty forever).
+            // Filled containers are kept — restored views reuse them as-is.
+            ctx.signal.addEventListener('abort', () => {
+                if (container.childElementCount === 0) container.remove();
+            }, { once: true });
+
+            autoLoadStreamingData(tmdbId, mediaType, container, ctx.signal);
+
+            // Insert after external links or at the end
+            const externalLinks = section.querySelector('.itemExternalLinks');
+            if (externalLinks) {
+                externalLinks.parentNode.insertBefore(container, externalLinks.nextSibling);
+            } else {
+                section.appendChild(container);
+            }
+        }
+
         // --- Initialization ---
         loadRegionsAndProviders();
         loadSettings();
@@ -1135,37 +1260,46 @@
             setTimeout(createSettingsModal, 2000);
         }
 
-        // Replace polling with MutationObserver for better performance
-        let processingElsewhere = false;
-        JE.helpers.createObserver('elsewhere', () => {
-            if (!processingElsewhere) {
-                processingElsewhere = true;
-                if (typeof requestIdleCallback !== 'undefined') {
-                    requestIdleCallback(() => {
-                        addStreamingLookup();
-                        processingElsewhere = false;
-                    }, { timeout: 500 });
-                } else {
-                    setTimeout(() => {
-                        addStreamingLookup();
-                        processingElsewhere = false;
-                    }, 100);
-                }
-            }
-        }, document.body, {
-            childList: true,
-            subtree: true,
-            attributeFilter: ['class']
-        });
+        if (JE.viewRouter) {
+            JE.viewRouter.onViewShow(onNav, { viewTypes: ['detail'] });
+            JE.viewRouter.onNativeDetailRender(ctx => { onDetailRender(ctx); });
 
-        // Initial check
-        if (typeof requestIdleCallback !== 'undefined') {
-            requestIdleCallback(() => addStreamingLookup(), { timeout: 1000 });
+            console.log('🪼 Jellyfin Enhanced: 🎬 Jellyfin Elsewhere loaded! (router-driven)');
         } else {
-            setTimeout(addStreamingLookup, 1000);
-        }
+            // Legacy fallback (view router unavailable): body observer + idle
+            // callback + delayed initial check drive addStreamingLookup, exactly
+            // as before.
+            let processingElsewhere = false;
+            JE.helpers.createObserver('elsewhere', () => {
+                if (!processingElsewhere) {
+                    processingElsewhere = true;
+                    if (typeof requestIdleCallback !== 'undefined') {
+                        requestIdleCallback(() => {
+                            addStreamingLookup();
+                            processingElsewhere = false;
+                        }, { timeout: 500 });
+                    } else {
+                        setTimeout(() => {
+                            addStreamingLookup();
+                            processingElsewhere = false;
+                        }, 100);
+                    }
+                }
+            }, document.body, {
+                childList: true,
+                subtree: true,
+                attributeFilter: ['class']
+            });
 
-        console.log('🪼 Jellyfin Enhanced: 🎬 Jellyfin Elsewhere loaded!');
+            // Initial check
+            if (typeof requestIdleCallback !== 'undefined') {
+                requestIdleCallback(() => addStreamingLookup(), { timeout: 1000 });
+            } else {
+                setTimeout(addStreamingLookup, 1000);
+            }
+
+            console.log('🪼 Jellyfin Enhanced: 🎬 Jellyfin Elsewhere loaded! (legacy observer)');
+        }
     };
 
 })(window.JellyfinEnhanced);
