@@ -1,0 +1,1447 @@
+{
+  "label": "floor",
+  "date": "2026-06-12T02:41:20.310Z",
+  "noJe": true,
+  "runs": 7,
+  "cpuThrottle": 4,
+  "devMode": false,
+  "items": {
+    "movie": "Back to the Future",
+    "series": "Bluey (2018)"
+  },
+  "scenarios": {
+    "00-boot": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 14,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            18,
+            17,
+            15,
+            10,
+            14,
+            13,
+            14
+          ]
+        },
+        "longestTaskMs": {
+          "median": 986,
+          "mad": 88,
+          "n": 7,
+          "values": [
+            1127,
+            881,
+            898,
+            1154,
+            986,
+            1009,
+            984
+          ]
+        },
+        "tbtMs": {
+          "median": 1496,
+          "mad": 72,
+          "n": 7,
+          "values": [
+            1675,
+            1488,
+            1569,
+            1496,
+            1568,
+            1435,
+            1394
+          ]
+        },
+        "cls": {
+          "median": 0.0028149662724247684,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.11114528552396798,
+            0.0028149662724247684
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "jeBootRequests": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "jeReadyMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "jeLastResourceEndMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    "10-home": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 15,
+          "mad": 2,
+          "n": 7,
+          "values": [
+            13,
+            17,
+            18,
+            15,
+            21,
+            14,
+            13
+          ]
+        },
+        "longestTaskMs": {
+          "median": 1129,
+          "mad": 69,
+          "n": 7,
+          "values": [
+            1370,
+            1083,
+            1242,
+            1124,
+            965,
+            1198,
+            1129
+          ]
+        },
+        "tbtMs": {
+          "median": 1784,
+          "mad": 48,
+          "n": 7,
+          "values": [
+            1880,
+            1832,
+            1877,
+            1784,
+            1720,
+            1747,
+            1758
+          ]
+        },
+        "cls": {
+          "median": 0.0028149662724247684,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.11114528552396798,
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.0028149662724247684,
+            0.0028149662724247684
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    "20-library-scroll": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 3,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            0,
+            2,
+            4,
+            3,
+            3,
+            3,
+            4
+          ]
+        },
+        "longestTaskMs": {
+          "median": 61,
+          "mad": 4,
+          "n": 7,
+          "values": [
+            0,
+            61,
+            60,
+            57,
+            74,
+            67,
+            62
+          ]
+        },
+        "tbtMs": {
+          "median": 21,
+          "mad": 6,
+          "n": 7,
+          "values": [
+            0,
+            21,
+            21,
+            16,
+            27,
+            36,
+            30
+          ]
+        },
+        "cls": {
+          "median": 0.0014688455087167244,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244,
+            0.0014688455087167244
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "fps": {
+          "median": 60.352137264421614,
+          "mad": 0.057248656696714306,
+          "n": 7,
+          "values": [
+            60.345279950002286,
+            60.352137264421614,
+            60.40938592111833,
+            60.07534874194368,
+            60.422960724891105,
+            59.637287969366774,
+            60.360131879279734
+          ]
+        },
+        "droppedPct": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.819672131147541,
+            0
+          ]
+        },
+        "worstFrameMs": {
+          "median": 19.30000001192093,
+          "mad": 0.29999998211860657,
+          "n": 7,
+          "values": [
+            19.19999998807907,
+            19.599999994039536,
+            18.599999994039536,
+            22.399999976158142,
+            19.30000001192093,
+            53.19999998807907,
+            19.19999998807907
+          ]
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    "30-movie-detail-cold": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 9,
+          "mad": 2,
+          "n": 7,
+          "values": [
+            11,
+            13,
+            5,
+            10,
+            9,
+            7,
+            9
+          ]
+        },
+        "longestTaskMs": {
+          "median": 175,
+          "mad": 21,
+          "n": 7,
+          "values": [
+            270,
+            175,
+            158,
+            192,
+            239,
+            154,
+            150
+          ]
+        },
+        "tbtMs": {
+          "median": 309,
+          "mad": 111,
+          "n": 7,
+          "values": [
+            637,
+            309,
+            172,
+            420,
+            450,
+            212,
+            202
+          ]
+        },
+        "cls": {
+          "median": 0.14729300955784172,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.14729300955784172,
+            0.14729300955784172,
+            0.14729300955784172,
+            0.14729300955784172,
+            0.14729300955784172,
+            0.14729300955784172,
+            0.14729300955784172
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 711.2000000178814,
+          "mad": 86,
+          "n": 7,
+          "values": [
+            800,
+            711.2000000178814,
+            610.0999999940395,
+            919.4000000059605,
+            751.7999999821186,
+            659.2999999821186,
+            625.2000000178814
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 5
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    "31-movie-detail-warm": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 3,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            2,
+            2,
+            3,
+            1,
+            4,
+            3,
+            3
+          ]
+        },
+        "longestTaskMs": {
+          "median": 192,
+          "mad": 17,
+          "n": 7,
+          "values": [
+            219,
+            188,
+            199,
+            132,
+            192,
+            237,
+            175
+          ]
+        },
+        "tbtMs": {
+          "median": 169,
+          "mad": 28,
+          "n": 7,
+          "values": [
+            183,
+            141,
+            177,
+            82,
+            169,
+            223,
+            134
+          ]
+        },
+        "cls": {
+          "median": 0.00008574144339855807,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 72.60000002384186,
+          "mad": 11.099999964237213,
+          "n": 7,
+          "values": [
+            45,
+            57.70000001788139,
+            76.5,
+            37.5,
+            72.60000002384186,
+            83.69999998807907,
+            79
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 5
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    "32-movie-detail-fresh-dom-warm-caches": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 2,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            2,
+            2,
+            2,
+            1,
+            2,
+            1,
+            2
+          ]
+        },
+        "longestTaskMs": {
+          "median": 90,
+          "mad": 19,
+          "n": 7,
+          "values": [
+            90,
+            105,
+            67,
+            89,
+            66,
+            132,
+            109
+          ]
+        },
+        "tbtMs": {
+          "median": 60,
+          "mad": 22,
+          "n": 7,
+          "values": [
+            72,
+            83,
+            23,
+            39,
+            19,
+            82,
+            60
+          ]
+        },
+        "cls": {
+          "median": 0.0710212714112835,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.0710212714112835,
+            0.0710212714112835,
+            0.0710212714112835,
+            0.0710212714112835,
+            0.0710212714112835,
+            0.0710212714112835,
+            0.0710212714112835
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 307.59999999403954,
+          "mad": 27.500000029802322,
+          "n": 7,
+          "values": [
+            335.10000002384186,
+            307.59999999403954,
+            226.40000000596046,
+            307.59999999403954,
+            216.09999999403954,
+            382.59999999403954,
+            299.90000000596046
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 9
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "40-series-detail-cold": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 7,
+          "mad": 3,
+          "n": 7,
+          "values": [
+            3,
+            10,
+            5,
+            7,
+            3,
+            8,
+            11
+          ]
+        },
+        "longestTaskMs": {
+          "median": 142,
+          "mad": 12,
+          "n": 7,
+          "values": [
+            164,
+            140,
+            130,
+            156,
+            119,
+            142,
+            153
+          ]
+        },
+        "tbtMs": {
+          "median": 205,
+          "mad": 30,
+          "n": 7,
+          "values": [
+            187,
+            270,
+            146,
+            235,
+            94,
+            205,
+            231
+          ]
+        },
+        "cls": {
+          "median": 0.15825290654029375,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.15825290654029375,
+            0.15825290654029375,
+            0.15825290654029375,
+            0.15825290654029375,
+            0.15825290654029375,
+            0.15825290654029375,
+            0.15826931821564097
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 623.2000000178814,
+          "mad": 34.400000005960464,
+          "n": 7,
+          "values": [
+            623.2000000178814,
+            766,
+            686.2000000178814,
+            602.0999999940395,
+            618.5,
+            588.8000000119209,
+            717
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 6
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    "41-series-detail-warm": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 2,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            3,
+            2,
+            1,
+            1,
+            2,
+            1,
+            2
+          ]
+        },
+        "longestTaskMs": {
+          "median": 144,
+          "mad": 14,
+          "n": 7,
+          "values": [
+            136,
+            127,
+            159,
+            131,
+            215,
+            158,
+            144
+          ]
+        },
+        "tbtMs": {
+          "median": 105,
+          "mad": 11,
+          "n": 7,
+          "values": [
+            105,
+            84,
+            109,
+            81,
+            167,
+            108,
+            94
+          ]
+        },
+        "cls": {
+          "median": 0.00008574144339855807,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807,
+            0.00008574144339855807
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": 30.80000001192093,
+          "mad": 2.5000000298023224,
+          "n": 7,
+          "values": [
+            30.400000005960464,
+            29.900000005960464,
+            51,
+            30.80000001192093,
+            58.599999994039536,
+            38.29999998211861,
+            28.299999982118607
+          ]
+        },
+        "jeDetailRequests": {
+          "median": 0,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "parity:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-report-issue-icon": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.tmdb-reviews-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-details-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.streaming-lookup-container": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.arr-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.letterboxd-link": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 6
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    "50-search-type": {
+      "aggregated": {
+        "longTaskCount": {
+          "median": 4,
+          "mad": 1,
+          "n": 7,
+          "values": [
+            6,
+            4,
+            5,
+            4,
+            3,
+            4,
+            2
+          ]
+        },
+        "longestTaskMs": {
+          "median": 90,
+          "mad": 11,
+          "n": 7,
+          "values": [
+            75,
+            93,
+            103,
+            79,
+            90,
+            93,
+            65
+          ]
+        },
+        "tbtMs": {
+          "median": 91,
+          "mad": 11,
+          "n": 7,
+          "values": [
+            80,
+            101,
+            139,
+            68,
+            91,
+            94,
+            26
+          ]
+        },
+        "cls": {
+          "median": 0.0002238398422429591,
+          "mad": 0,
+          "n": 7,
+          "values": [
+            0.0002238398422429591,
+            0.0002238398422429591,
+            0.0002238398422429591,
+            0.0002238398422429591,
+            0.0002238398422429591,
+            0.0002238398422429591,
+            0.0002238398422429591
+          ]
+        },
+        "interactionP98Ms": {
+          "median": 48,
+          "mad": 8,
+          "n": 7,
+          "values": [
+            64,
+            88,
+            40,
+            40,
+            40,
+            48,
+            56
+          ]
+        },
+        "nativeButtonsAtMs": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "parity:.jellyseerr-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        },
+        "at:.jellyseerr-section": {
+          "median": null,
+          "mad": null,
+          "n": 0,
+          "values": []
+        }
+      },
+      "runsCompleted": 7,
+      "signature": {
+        ".jellyseerr-report-issue-icon": 0,
+        ".jellyseerr-report-unavailable-icon": 0,
+        ".jellyseerr-details-section": 0,
+        ".tmdb-reviews-section": 0,
+        ".streaming-lookup-container": 0,
+        ".arr-link": 0,
+        ".letterboxd-link": 0,
+        ".quality-overlay-container": 0,
+        ".je-genre-tag": 0,
+        ".je-language-tag": 0,
+        ".jellyseerr-section": 0,
+        ".mainDetailButtons .detailButton:not(.hide)": 0
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    }
+  }
+}
