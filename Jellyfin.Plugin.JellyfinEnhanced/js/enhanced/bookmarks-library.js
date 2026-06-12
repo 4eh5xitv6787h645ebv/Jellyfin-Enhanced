@@ -6,6 +6,10 @@
 (function (JE) {
   'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    JE.onBootReady(function() {
+
   if (!JE?.pluginConfig?.BookmarksEnabled) {
     console.log('🪼 Jellyfin Enhanced: Bookmarks library feature is disabled');
     return;
@@ -889,14 +893,11 @@
   let lastMountedContainer = null;
 
   // Sidebar navigation state
-  /** Polling interval for detecting pushState navigations. */
-  const LOCATION_WATCH_INTERVAL_MS = 150;
-
   const pageState = {
     pageVisible: false,
     previousPage: null,
     locationSignature: null,
-    locationTimer: null,
+    locationUnsubscribe: null,
   };
 
   /** Re-evaluated each call so it stays correct even when the sidebar renders late. */
@@ -1035,28 +1036,43 @@
   }
 
   /**
-   * Starts polling for pushState-based navigation changes.
-   * Jellyfin's router uses pushState which doesn't fire popstate/hashchange.
+   * Starts watching for pushState-based navigation changes.
+   * Jellyfin's router uses pushState which doesn't fire popstate/hashchange;
+   * JE.helpers.onNavigate patches pushState/replaceState to emit je:navigate,
+   * so navigations are detected by events instead of polling.
    */
   function startLocationWatcher() {
-    if (pageState.locationTimer) return;
+    if (pageState.locationUnsubscribe) return;
     pageState.locationSignature = `${window.location.pathname}${window.location.hash}`;
-    pageState.locationTimer = setInterval(() => {
+    const check = () => {
       const signature = `${window.location.pathname}${window.location.hash}`;
       if (signature !== pageState.locationSignature) {
         pageState.locationSignature = signature;
         handleNavigation();
       }
-    }, LOCATION_WATCH_INTERVAL_MS);
+    };
+    pageState.locationUnsubscribe = JE.helpers?.onNavigate
+      ? JE.helpers.onNavigate(check)
+      : (() => {
+          // Fallback if helpers is unavailable: listen to history events
+          // directly instead of polling (hashchange/popstate handlers
+          // registered in init() already cover the bookmarks route).
+          window.addEventListener('hashchange', check);
+          window.addEventListener('popstate', check);
+          return () => {
+            window.removeEventListener('hashchange', check);
+            window.removeEventListener('popstate', check);
+          };
+        })();
   }
 
   /**
-   * Stops the location polling interval.
+   * Stops the location watcher.
    */
   function stopLocationWatcher() {
-    if (pageState.locationTimer) {
-      clearInterval(pageState.locationTimer);
-      pageState.locationTimer = null;
+    if (pageState.locationUnsubscribe) {
+      pageState.locationUnsubscribe();
+      pageState.locationUnsubscribe = null;
     }
   }
 
@@ -1205,64 +1221,90 @@
   }
 
   /**
-   * Initialize
+   * Whether a mutation batch could affect the bookmarks section. Scoped to
+   * added/removed subtrees (cheap matches) so the shared body observer does
+   * not trigger a full-document lookup on every unrelated mutation.
+   */
+  function mutationsTouchBookmarksSection(mutations) {
+    for (let i = 0; i < mutations.length; i++) {
+      const m = mutations[i];
+      // Changes inside the mounted container (e.g. CustomTabs clearing it)
+      const t = m.target;
+      if (t && t.nodeType === 1 && t.closest && t.closest('.sections.bookmarks')) return true;
+      for (let j = 0; j < m.addedNodes.length; j++) {
+        const n = m.addedNodes[j];
+        if (n.nodeType !== 1) continue;
+        if ((n.matches && n.matches('.sections.bookmarks'))
+          || (n.querySelector && n.querySelector('.sections.bookmarks'))) return true;
+      }
+      for (let j = 0; j < m.removedNodes.length; j++) {
+        const n = m.removedNodes[j];
+        if (n.nodeType !== 1) continue;
+        if ((n.matches && n.matches('.sections.bookmarks'))
+          || (n.querySelector && n.querySelector('.sections.bookmarks'))) return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Initialize.
+   * JE.bookmarks is exported by enhanced/bookmarks.js, whose deferred body
+   * runs before this one (bundle/load order), and JE.userConfig is loaded
+   * before the boot-ready flush — so a single synchronous readiness check
+   * replaces the old polling loop. Absent means the bookmarks module did not
+   * load (this body is already gated on BookmarksEnabled above).
    */
   function init() {
     console.log(`${logPrefix} Initializing (build id: ${Date.now()})...`);
 
-    let attempts = 0;
-    const checkReady = setInterval(() => {
-      attempts += 1;
-      const je = getJE();
-      const ready = !!(je && je.userConfig && je.bookmarks);
+    const je = getJE();
+    if (!je || !je.userConfig || !je.bookmarks) {
+      console.debug(`${logPrefix} Not ready (JE=${!!je}, userConfig=${!!(je && je.userConfig)}, bookmarks=${!!(je && je.bookmarks)}); skipping.`);
+      return;
+    }
 
-      if (attempts % 10 === 0 || attempts <= 5) {
-        console.log(`${logPrefix} ready check #${attempts} (JE=${!!je}, userConfig=${!!(je && je.userConfig)}, bookmarks=${!!(je && je.bookmarks)})`);
+    // If JE is available only on parent/top, make it accessible locally for this script
+    if (!window.JE && je) {
+      window.JE = je;
+    }
+    hookViewEvents();
+    document.addEventListener('je-bookmarks-updated', renderIfSectionExists);
+
+    // Sidebar navigation (when neither Plugin Pages nor Custom Tabs is handling it)
+    if (!isPluginPagesActive() && !JE.pluginConfig?.BookmarksUseCustomTabs) {
+      injectNavigation();
+      setupNavigationWatcher();
+      window.addEventListener('hashchange', interceptNavigation, true);
+      window.addEventListener('popstate', interceptNavigation, true);
+      document.addEventListener('viewshow', handleViewShow);
+      document.addEventListener('click', handleNavClick);
+      window.addEventListener('hashchange', handleNavigation);
+      window.addEventListener('popstate', handleNavigation);
+      handleNavigation();
+    }
+
+    // Watch for section being injected by CustomTabs. Observe document.body
+    // (not .mainAnimatedPages) because Jellyfin replaces .mainAnimatedPages
+    // when navigating to the admin dashboard — an observer bound to the old
+    // element would become orphaned after returning to home (issue 536).
+    // Routes to the shared multiplexed body observer; mutation batches that
+    // cannot involve the bookmarks section are filtered out cheaply first.
+    let mountPending = false;
+    JE.helpers.createObserver('bookmarks-library-custom-tab', (mutations) => {
+      if (mutations && !mutationsTouchBookmarksSection(mutations)) return;
+      if (!mountPending) {
+        mountPending = true;
+        requestAnimationFrame(() => {
+          mountPending = false;
+          renderIfSectionExists();
+        });
       }
+    }, document.body, { childList: true, subtree: true });
 
-      if (ready) {
-        clearInterval(checkReady);
-        // If JE is available only on parent/top, make it accessible locally for this script
-        if (!window.JE && je) {
-          window.JE = je;
-        }
-        hookViewEvents();
-        document.addEventListener('je-bookmarks-updated', renderIfSectionExists);
-
-        // Sidebar navigation (when neither Plugin Pages nor Custom Tabs is handling it)
-        if (!isPluginPagesActive() && !JE.pluginConfig?.BookmarksUseCustomTabs) {
-          injectNavigation();
-          setupNavigationWatcher();
-          window.addEventListener('hashchange', interceptNavigation, true);
-          window.addEventListener('popstate', interceptNavigation, true);
-          document.addEventListener('viewshow', handleViewShow);
-          document.addEventListener('click', handleNavClick);
-          window.addEventListener('hashchange', handleNavigation);
-          window.addEventListener('popstate', handleNavigation);
-          handleNavigation();
-        }
-
-        // Watch for section being injected by CustomTabs. Observe document.body
-        // (not .mainAnimatedPages) because Jellyfin replaces .mainAnimatedPages
-        // when navigating to the admin dashboard — an observer bound to the old
-        // element would become orphaned after returning to home (issue 536).
-        // Routes to the shared multiplexed body observer.
-        let mountPending = false;
-        JE.helpers.createObserver('bookmarks-library-custom-tab', () => {
-          if (!mountPending) {
-            mountPending = true;
-            requestAnimationFrame(() => {
-              mountPending = false;
-              renderIfSectionExists();
-            });
-          }
-        }, document.body, { childList: true, subtree: true });
-
-        // Try immediate render in case tab is already visible
-        renderIfSectionExists();
-        console.log(`${logPrefix} ✓ Ready`);
-      }
-    }, 100);
+    // Try immediate render in case tab is already visible
+    renderIfSectionExists();
+    console.log(`${logPrefix} ✓ Ready`);
   }
 
   /**
@@ -2645,4 +2687,5 @@
     init();
   }
 
+    });
 })(window.JellyfinEnhanced);

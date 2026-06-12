@@ -27,7 +27,6 @@
     const RANDOM_THEME_DEFAULT = false;
     const CSS_STYLE_ID = 'jellyfin-theme-selector-css';
     const SELECTOR_ID = 'jellyfin-theme-selector';
-    const INIT_DELAY = 250;
     const NOTIFICATION_DELAY = 1000;
     const DEBOUNCE_DELAY = 100;
     const TRANSITION_DURATION = 300;
@@ -378,6 +377,10 @@
             const userId = extractUserId();
             if (!userId) return false;
 
+            // Lazy style injection: the selector's CSS is only added the first
+            // time the UI is actually built (idempotent via CSS_STYLE_ID).
+            injectCustomCss();
+
             console.log('🪼🎨Jellyfish Theme Selector :  Creating theme selector element...');
             const themeSelector = createThemeSelector(userId);
             parentSection.appendChild(themeSelector);
@@ -402,15 +405,15 @@
     let debounceTimer = null;
 
     const initialize = () => {
+        // plugin.js only calls initializeThemeSelector after ApiClient is
+        // available with a logged-in user, so no retry loop is needed here.
         if (typeof ApiClient === 'undefined' || typeof ApiClient.getCurrentUserId !== 'function') {
-            console.log('🪼🎨Jellyfish Theme Selector :  Waiting for ApiClient...');
-            setTimeout(initialize, INIT_DELAY);
+            console.warn('🪼🎨Jellyfish Theme Selector :  ApiClient unavailable at init; skipping.');
             return;
         }
 
         console.log('🪼🎨Jellyfish Theme Selector :  ApiClient is available. Starting persistent element monitoring.');
         applyRandomThemeIfNeeded();
-        injectCustomCss();
         checkPostRefreshNotification();
 
         // Cleanup existing observer if present

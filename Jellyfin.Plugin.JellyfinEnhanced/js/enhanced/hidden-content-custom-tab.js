@@ -10,6 +10,10 @@
 (function () {
   'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    window.JellyfinEnhanced.onBootReady(function() {
+
   if (!window.JellyfinEnhanced?.pluginConfig?.HiddenContentEnabled) {
     return;
   }
@@ -37,19 +41,6 @@
     var hash = window.location.hash;
     return hash === '' || hash === '#/home' || hash === '#/home.html'
       || hash.indexOf('#/home?') !== -1 || hash.indexOf('#/home.html?') !== -1;
-  }
-
-  /** Wait for JE.hiddenContentPage and JE.hiddenContent to be ready before initializing (30s timeout). */
-  function waitForHiddenContent(callback) {
-    var attempts = 0;
-    var check = setInterval(function () {
-      if (++attempts > 300) { clearInterval(check); return; }
-      var JE = window.JE || window.JellyfinEnhanced;
-      if (JE?.hiddenContentPage && JE?.hiddenContent) {
-        clearInterval(check);
-        callback(JE);
-      }
-    }, 100);
   }
 
   /**
@@ -105,6 +96,12 @@
     function tryMount() {
       if (!isOnHomePage()) return;
 
+      // JE.hiddenContent is created by initializeHiddenContent() in plugin.js
+      // Stage 6, which runs after this deferred body. Skip mounting until it
+      // exists — the body observer re-runs tryMount on later DOM changes, and
+      // the microtask retry below covers the boot landing page.
+      if (!JE.hiddenContent) return;
+
       var container = findActiveContainer();
       if (!container) {
         lastMountedContainer = null;
@@ -122,6 +119,11 @@
 
     tryMount();
 
+    // Re-check once the current task completes: in bundled mode Stage 6
+    // (which defines JE.hiddenContent) runs synchronously after this body,
+    // so a microtask retry catches a container already on screen at boot.
+    queueMicrotask(tryMount);
+
     // Observe document.body (not .mainAnimatedPages) because Jellyfin replaces
     // .mainAnimatedPages when navigating to the admin dashboard — an observer
     // bound to the old element would become orphaned after returning to home
@@ -138,8 +140,16 @@
     }, document.body, { childList: true, subtree: true });
   }
 
-  waitForHiddenContent(function (JE) {
-    watchForContainer(JE);
-  });
+  // JE.hiddenContentPage is exported at module scope by hidden-content-page.js,
+  // which always executes before this deferred body (bundle/load order), so a
+  // single synchronous check suffices for it. JE.hiddenContent is assigned
+  // later (plugin.js Stage 6) and is therefore guarded lazily inside tryMount.
+  var JEglobal = window.JE || window.JellyfinEnhanced;
+  if (!JEglobal?.hiddenContentPage) {
+    console.debug('🪼 Jellyfin Enhanced: Hidden Content Custom Tab: JE.hiddenContentPage unavailable; skipping.');
+    return;
+  }
+  watchForContainer(JEglobal);
 
+    });
 })();

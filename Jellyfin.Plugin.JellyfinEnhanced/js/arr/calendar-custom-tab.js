@@ -10,6 +10,10 @@
 (function () {
   'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    window.JellyfinEnhanced.onBootReady(function() {
+
   if (!window.JellyfinEnhanced?.pluginConfig?.CalendarPageEnabled) {
     return;
   }
@@ -38,19 +42,6 @@
     var hash = window.location.hash;
     return hash === '' || hash === '#/home' || hash === '#/home.html'
       || hash.indexOf('#/home?') !== -1 || hash.indexOf('#/home.html?') !== -1;
-  }
-
-  /** Wait for JE.calendarPage to be ready before initializing (30s timeout). */
-  function waitForCalendar(callback) {
-    var attempts = 0;
-    var check = setInterval(function () {
-      if (++attempts > 300) { clearInterval(check); return; }
-      var JE = window.JE || window.JellyfinEnhanced;
-      if (JE?.calendarPage) {
-        clearInterval(check);
-        callback(JE);
-      }
-    }, 100);
   }
 
   /**
@@ -150,8 +141,16 @@
     }, document.body, { childList: true, subtree: true });
   }
 
-  waitForCalendar(function (JE) {
-    watchForContainer(JE);
-  });
+  // JE.calendarPage is exported at module scope by arr/calendar-page.js,
+  // which always executes before this deferred body (bundle/load order), so a
+  // single synchronous check replaces the old readiness poll. Absent means
+  // the calendar-page module failed to load — bail quietly.
+  var JEglobal = window.JE || window.JellyfinEnhanced;
+  if (!JEglobal?.calendarPage) {
+    console.debug('🪼 Jellyfin Enhanced: Calendar Custom Tab: JE.calendarPage unavailable; skipping.');
+    return;
+  }
+  watchForContainer(JEglobal);
 
+    });
 })();

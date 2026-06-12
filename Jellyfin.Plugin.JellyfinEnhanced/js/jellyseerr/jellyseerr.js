@@ -386,60 +386,72 @@
                 manualRefreshJellyseerrData(query);
             });
 
-            JE.helpers.onBodyMutation('jellyseerr-search-listener', tryAttachSearchListener);
+            if (JE.viewRouter?.onViewShow) {
+                // Per-navigation hook: when the search view shows, wait for the
+                // search input to render (one-shot observer, no polling) and
+                // attach. tryAttachSearchListener is idempotent, so repeated
+                // navigations to /search are safe.
+                const attachWhenInputReady = () => {
+                    JE.helpers.waitForElement('#searchPage #searchTextInput', 10000)
+                        .then((input) => { if (input) tryAttachSearchListener(); });
+                };
+                JE.viewRouter.onViewShow(attachWhenInputReady, { viewTypes: ['search'] });
 
-            // Immediately check if the search page is already rendered (handles the
-            // case where the observer was set up after the search page loaded, e.g.
-            // when the user navigates directly to /search before plugin init completes).
-            tryAttachSearchListener();
-
-            // Listen for SPA navigation events as a backup — MutationObserver may
-            // miss the search page if no further DOM mutations occur after render.
-            // Uses the shared je:navigate event (from helpers.js) which already
-            // patches pushState/replaceState, plus popstate and hashchange.
-            if (JE.helpers?.onNavigate) {
-                JE.helpers.onNavigate(() => setTimeout(tryAttachSearchListener, 200));
+                // Cover the page the user is already on: kickstart() fires the
+                // hook for the boot landing page only if no navigation was
+                // captured yet, so also check the current view directly.
+                if (JE.viewRouter.getCurrent()?.viewType === 'search') {
+                    attachWhenInputReady();
+                } else {
+                    tryAttachSearchListener();
+                }
             } else {
-                // Fallback if helpers.js hasn't loaded yet — may double-fire with
-                // onNavigate if helpers loads later, but tryAttachSearchListener is
-                // idempotent (guarded by dataset.jellyseerrListener) so this is safe.
-                const onNav = () => setTimeout(tryAttachSearchListener, 200);
-                window.addEventListener('popstate', onNav);
-                window.addEventListener('hashchange', onNav);
+                // Fallback wiring when the view router is unavailable: shared
+                // body observer + navigation events (previous behaviour).
+                JE.helpers.onBodyMutation('jellyseerr-search-listener', tryAttachSearchListener);
+
+                // Immediately check if the search page is already rendered (handles the
+                // case where the observer was set up after the search page loaded, e.g.
+                // when the user navigates directly to /search before plugin init completes).
+                tryAttachSearchListener();
+
+                // Listen for SPA navigation events as a backup — MutationObserver may
+                // miss the search page if no further DOM mutations occur after render.
+                // Uses the shared je:navigate event (from helpers.js) which already
+                // patches pushState/replaceState, plus popstate and hashchange.
+                if (JE.helpers?.onNavigate) {
+                    JE.helpers.onNavigate(() => setTimeout(tryAttachSearchListener, 200));
+                } else {
+                    // Fallback if helpers.js hasn't loaded yet — may double-fire with
+                    // onNavigate if helpers loads later, but tryAttachSearchListener is
+                    // idempotent (guarded by dataset.jellyseerrListener) so this is safe.
+                    const onNav = () => setTimeout(tryAttachSearchListener, 200);
+                    window.addEventListener('popstate', onNav);
+                    window.addEventListener('hashchange', onNav);
+                }
             }
         }
 
         /**
-         * Waits for the user session to be available before initializing the main logic.
+         * Initializes the main logic. plugin.js only calls
+         * initializeJellyseerrScript after ApiClient reports a logged-in user,
+         * so no user-session polling is needed here.
          */
-        function waitForUserAndInitialize() {
-            const startTime = Date.now();
-            const timeout = 20000;
+        async function initializeWithUser() {
+            console.log(`${logPrefix} User session found. Initializing...`);
+            const status = await checkUserStatus();
+            isJellyseerrActive = status.active;
+            jellyseerrUserFound = status.userFound;
+            console.debug(`${logPrefix} Status: active=${isJellyseerrActive}, userFound=${jellyseerrUserFound}`);
+            initializePageObserver();
 
-            const checkForUser = async () => {
-                if (ApiClient.getCurrentUserId() && ApiClient.accessToken()) {
-                    console.log(`${logPrefix} User session found. Initializing...`);
-                    const status = await checkUserStatus();
-                    isJellyseerrActive = status.active;
-                    jellyseerrUserFound = status.userFound;
-                    console.debug(`${logPrefix} Status: active=${isJellyseerrActive}, userFound=${jellyseerrUserFound}`);
-                    initializePageObserver();
-
-                    // Prefetch TMDB genres in the background for instant discovery
-                    if (isJellyseerrActive && JE.pluginConfig?.JellyseerrShowGenreDiscovery !== false) {
-                        Promise.all([
-                            JE.discoveryFilter?.fetchWithManagedRequest?.('/JellyfinEnhanced/tmdb/genres/tv', 'genre', {})?.catch(() => {}),
-                            JE.discoveryFilter?.fetchWithManagedRequest?.('/JellyfinEnhanced/tmdb/genres/movie', 'genre', {})?.catch(() => {})
-                        ]).catch(() => {});
-                    }
-                } else if (Date.now() - startTime > timeout) {
-                    console.warn(`${logPrefix} Timed out waiting for user session. Features may be limited.`);
-                    initializePageObserver();
-                } else {
-                    setTimeout(checkForUser, 300);
-                }
-            };
-            checkForUser();
+            // Prefetch TMDB genres in the background for instant discovery
+            if (isJellyseerrActive && JE.pluginConfig?.JellyseerrShowGenreDiscovery !== false) {
+                Promise.all([
+                    JE.discoveryFilter?.fetchWithManagedRequest?.('/JellyfinEnhanced/tmdb/genres/tv', 'genre', {})?.catch(() => {}),
+                    JE.discoveryFilter?.fetchWithManagedRequest?.('/JellyfinEnhanced/tmdb/genres/movie', 'genre', {})?.catch(() => {})
+                ]).catch(() => {});
+            }
         }
 
         // ================================
@@ -448,7 +460,11 @@
 
         addMainStyles();
         addSeasonModalStyles();
-        waitForUserAndInitialize();
+        if (!ApiClient?.getCurrentUserId?.()) {
+            console.warn(`${logPrefix} No user session at init; skipping Seerr search integration.`);
+            return;
+        }
+        initializeWithUser();
 
         // Hide popover when touching outside request buttons or scrolling
         document.addEventListener('touchstart', (e) => {

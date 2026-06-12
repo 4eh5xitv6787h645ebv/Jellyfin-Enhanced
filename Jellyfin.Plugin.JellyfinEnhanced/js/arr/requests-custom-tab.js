@@ -10,6 +10,10 @@
 (function () {
   'use strict';
 
+    // Body deferred via onBootReady: top-level code here reads plugin/user
+    // config, which is not loaded yet when the server-side bundle executes.
+    window.JellyfinEnhanced.onBootReady(function() {
+
   if (!window.JellyfinEnhanced?.pluginConfig?.DownloadsPageEnabled) {
     return;
   }
@@ -37,19 +41,6 @@
     var hash = window.location.hash;
     return hash === '' || hash === '#/home' || hash === '#/home.html'
       || hash.indexOf('#/home?') !== -1 || hash.indexOf('#/home.html?') !== -1;
-  }
-
-  /** Wait for JE.downloadsPage to be ready before initializing (30s timeout). */
-  function waitForDownloads(callback) {
-    var attempts = 0;
-    var check = setInterval(function () {
-      if (++attempts > 300) { clearInterval(check); return; }
-      var JE = window.JE || window.JellyfinEnhanced;
-      if (JE?.downloadsPage) {
-        clearInterval(check);
-        callback(JE);
-      }
-    }, 100);
   }
 
   /**
@@ -170,8 +161,16 @@
     }, document.body, { childList: true, subtree: true });
   }
 
-  waitForDownloads(function (JE) {
-    watchForContainer(JE);
-  });
+  // JE.downloadsPage is exported at module scope by arr/requests-page.js,
+  // which always executes before this deferred body (bundle/load order), so a
+  // single synchronous check replaces the old readiness poll. Absent means
+  // the requests-page module failed to load — bail quietly.
+  var JEglobal = window.JE || window.JellyfinEnhanced;
+  if (!JEglobal?.downloadsPage) {
+    console.debug('🪼 Jellyfin Enhanced: Requests Custom Tab: JE.downloadsPage unavailable; skipping.');
+    return;
+  }
+  watchForContainer(JEglobal);
 
+    });
 })();

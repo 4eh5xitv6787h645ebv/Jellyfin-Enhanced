@@ -1224,8 +1224,15 @@
     state.locationUnsubscribe = JE.helpers?.onNavigate
       ? JE.helpers.onNavigate(check)
       : (() => {
-          const t = setInterval(check, 150);
-          return () => clearInterval(t);
+          // Fallback if helpers is unavailable: listen to history events
+          // directly instead of polling (pushState-only transitions are
+          // already covered by the hashchange/popstate handlers above).
+          window.addEventListener("hashchange", check);
+          window.addEventListener("popstate", check);
+          return () => {
+            window.removeEventListener("hashchange", check);
+            window.removeEventListener("popstate", check);
+          };
         })();
   }
 

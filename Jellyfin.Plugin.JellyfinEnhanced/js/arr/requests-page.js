@@ -2201,6 +2201,24 @@
   }
 
   /**
+   * Whether the downloads UI is actually rendered and visible in the DOM:
+   * the custom-tab container is still connected and displayed, or the
+   * dedicated page is not hidden. Prevents refresh ticks for a page that is
+   * present but not on screen (e.g. an inactive custom tab).
+   */
+  function isPageElementVisible() {
+    if (state._customTabContainer) {
+      return document.contains(state._customTabContainer)
+        && state._customTabContainer.offsetParent !== null;
+    }
+    const page = document.getElementById("je-downloads-page");
+    if (page) return !page.classList.contains("hide");
+    // Plugin Pages mode renders into a host-provided container
+    const container = document.getElementById("je-downloads-container");
+    return !!container && container.offsetParent !== null;
+  }
+
+  /**
    * Start polling for updates
    */
   function startPolling() {
@@ -2233,8 +2251,17 @@
         stopPolling();
         return;
       }
+      // Stop if the rendered custom-tab container left the DOM entirely
+      // (page torn down without hidePage() ever firing).
+      if (state._customTabContainer && !document.contains(state._customTabContainer)) {
+        stopPolling();
+        return;
+      }
       // Also skip if the browser tab is hidden (user switched tabs / minimised)
-      if (document.visibilityState === 'hidden') return;
+      if (document.visibilityState !== 'visible') return;
+      // Skip while the page element is hidden (e.g. another custom tab is
+      // active). Skipped ticks don't stack: loadAllData is guarded below.
+      if (!isPageElementVisible()) return;
       if (!state.isLoading) {
         loadAllData();
       }
@@ -2536,9 +2563,15 @@
     state.locationUnsubscribe = JE.helpers?.onNavigate
       ? JE.helpers.onNavigate(check)
       : (() => {
-          // Fallback: narrow poller if helpers not yet available
-          const t = setInterval(check, 150);
-          return () => clearInterval(t);
+          // Fallback if helpers is unavailable: listen to history events
+          // directly instead of polling (pushState-only transitions are
+          // already covered by the hashchange/popstate handlers above).
+          window.addEventListener("hashchange", check);
+          window.addEventListener("popstate", check);
+          return () => {
+            window.removeEventListener("hashchange", check);
+            window.removeEventListener("popstate", check);
+          };
         })();
   }
 
