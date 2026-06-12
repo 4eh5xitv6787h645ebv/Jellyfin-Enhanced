@@ -165,18 +165,9 @@
 
     function armDetailObservers() {
         const root = current.view || document.body;
-        // CLS guard: the native poster has fixed width but no reserved height,
-        // so its image load pushes the whole secondary container down (the
-        // dominant native shift on desktop detail pages). When the identity
-        // cache knows this is a poster-shaped item (Movie/Series), reserve the
-        // 2:3 box before the image arrives. Cold first-ever visits (identity
-        // unknown) keep native behavior.
-        try {
-            if (root.classList) {
-                const idType = current.itemId ? (getIdentity(current.itemId) || {}).type : null;
-                root.classList.toggle('je-poster-reserve', idType === 'Movie' || idType === 'Series');
-            }
-        } catch (e) { /* cosmetic */ }
+        // (A poster-box height reservation lived here briefly; it visibly
+        // misplaced the floating desktop poster and was reverted. The native
+        // poster-load shift on cold first visits is accepted.)
         const hasVisibleButton = root.querySelector && root.querySelector('.mainDetailButtons .detailButton:not(.hide)');
         if (hasVisibleButton) {
             // Restored/cached view: native content is already rendered.

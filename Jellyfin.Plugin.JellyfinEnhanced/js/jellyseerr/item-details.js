@@ -367,8 +367,20 @@
 
         let done;
         if (rest.length > 0 && typeof JE.helpers?.scheduleChunked === 'function') {
+            // Flush to the live container every few cards instead of one big
+            // append at the end: the custom-element upgrades and style/layout
+            // of ~14 rich cards in a single batch was itself a long task.
+            // content-visibility on the section keeps each flush cheap while
+            // the row is below the fold.
             const restFragment = document.createDocumentFragment();
-            done = JE.helpers.scheduleChunked(rest, (item) => buildInto(item, restFragment), { budgetMs: 8 })
+            let sinceFlush = 0;
+            done = JE.helpers.scheduleChunked(rest, (item) => {
+                buildInto(item, restFragment);
+                if (++sinceFlush >= 5 && section.isConnected) {
+                    itemsContainer.appendChild(restFragment);
+                    sinceFlush = 0;
+                }
+            }, { budgetMs: 8 })
                 .then(() => {
                     if (section.isConnected) itemsContainer.appendChild(restFragment);
                     return added;
@@ -1040,6 +1052,11 @@
         const state = navState;
         if (!state || state.token !== ctx.token || !state.rowsEnabled || !state.rowsPromise) return;
 
+        // These rows live below the fold: yield one frame so the native render
+        // batch (and the above-the-fold JE buttons) paint without us in it.
+        await new Promise(requestAnimationFrame);
+        if (isStaleNav(state) || state.token !== (navState && navState.token)) return;
+
         const anchor = findRowsAnchor(ctx.view);
         if (!anchor) {
             console.debug(`${logPrefix} Detail anchor (#similarCollapsible) not found, skipping rows`);
@@ -1161,6 +1178,15 @@
                 display: flex;
                 align-items: center;
                 flex-wrap: wrap;
+            }
+            /* These rows sit below the fold on detail pages. content-visibility
+               lets the browser skip their layout/paint (and the upgrade-render
+               cost of dozens of freshly appended cards) until scrolled near;
+               the intrinsic-size placeholder matches one card row so nothing
+               shifts when they materialize. */
+            .jellyseerr-details-section {
+                content-visibility: auto;
+                contain-intrinsic-size: auto 21em;
             }
         `;
         document.head.appendChild(style);

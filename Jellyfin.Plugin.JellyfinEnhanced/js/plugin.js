@@ -934,14 +934,11 @@
                 if (!document.getElementById('je-cls-reserve')) {
                     const clsStyle = document.createElement('style');
                     clsStyle.id = 'je-cls-reserve';
-                    clsStyle.textContent = [
-                        '#itemDetailPage .mainDetailButtons, .itemDetailPage .mainDetailButtons { min-height: 3.4em; }',
-                        // Poster box reservation for poster-shaped items (class set
-                        // per-navigation by the view router from the identity cache).
-                        // Desktop only: the poster is 25vw wide there (2:3 => 37.5vw
-                        // tall); mobile keeps it absolutely positioned out of flow.
-                        '@media (min-width: 75em) { .je-poster-reserve .detailImageContainer { min-height: 37.5vw; } }'
-                    ].join('\n');
+                    // NOTE: an earlier attempt also reserved the poster box
+                    // (min-height on .detailImageContainer) but the desktop
+                    // poster is a float with negative margins and the
+                    // reservation visibly misplaced it — reverted.
+                    clsStyle.textContent = '#itemDetailPage .mainDetailButtons, .itemDetailPage .mainDetailButtons { min-height: 3.4em; }';
                     document.head.appendChild(clsStyle);
                 }
             } catch (e) { /* cosmetic only */ }

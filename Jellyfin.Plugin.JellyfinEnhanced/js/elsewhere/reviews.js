@@ -1204,6 +1204,14 @@
                     box-sizing: content-box;
                     min-height: 20em;
                 }
+                /* Below the fold on detail pages: let the browser skip the
+                   cards' layout/paint until scrolled near. The intrinsic-size
+                   placeholder mirrors the reserved row height so revealing it
+                   shifts nothing. */
+                .tmdb-reviews-section .je-review-scroller-container {
+                    content-visibility: auto;
+                    contain-intrinsic-size: auto 22em;
+                }
                 /* Flex (no gap!) reproduces the old equal-height card row; the
                    lib's inline white-space:nowrap on the slider is moot under
                    flex layout. */
@@ -1550,6 +1558,11 @@
                 && existingSection.getAttribute('data-je-filled') === '1') {
                 return;
             }
+
+            // Below-fold section: yield one frame so the native render batch
+            // (and above-the-fold JE elements) paint without us in it.
+            await new Promise(requestAnimationFrame);
+            if (isStaleNav(state)) return;
 
             // Inject the shell (header + collapsed/empty body) in the native
             // render frame; previous sections are removed here. Reserve the
