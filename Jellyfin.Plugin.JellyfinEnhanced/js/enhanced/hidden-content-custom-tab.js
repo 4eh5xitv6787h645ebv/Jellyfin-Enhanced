@@ -27,7 +27,7 @@
     '.jellyfinenhanced.hidden-content {',
     '  padding: 12px 3vw;',
     '}',
-    '.backgroundContainer.withBackdrop:has(~ .mainAnimatedPages #indexPage .tabContent.is-active .jellyfinenhanced.hidden-content) {',
+    '.backgroundContainer.withBackdrop.je-tab-backdrop-dim {',
     '  background: rgba(0, 0, 0, 0.7) !important;',
     '}'
   ].join('\n');
@@ -35,6 +35,21 @@
 
   /** The last DOM node we mounted into. */
   var lastMountedContainer = null;
+
+  /** Whether this module currently has the backdrop dim class asserted. */
+  var backdropDimmed = false;
+
+  /** Mirrors the old :has() rule: dim the backdrop while this tab's content
+   *  is the active home tab. Class-toggled because the :has(~ ...) form cost
+   *  ~250-500ms of selector matching per navigation (SelectorStats).
+   *  Queries .backgroundContainer without .withBackdrop so the off-toggle
+   *  still reaches the node after Jellyfin drops .withBackdrop mid-nav; the
+   *  injected dim rule itself still requires .withBackdrop, like the old one. */
+  function syncBackdropDim(active) {
+    document.querySelectorAll('.backgroundContainer').forEach(function (bg) {
+      bg.classList.toggle('je-tab-backdrop-dim', !!active);
+    });
+  }
 
   /** @returns {boolean} Whether the current URL hash is the home page. */
   function isOnHomePage() {
@@ -94,19 +109,48 @@
    */
   function watchForContainer(JE) {
     function tryMount() {
-      if (!isOnHomePage()) return;
+      // Navigated away from home — drop the dim before suspending.
+      if (!isOnHomePage()) {
+        if (backdropDimmed) {
+          backdropDimmed = false;
+          syncBackdropDim(false);
+        }
+        return;
+      }
+
+      var container = findActiveContainer();
+      if (!container) {
+        lastMountedContainer = null;
+        // Container unmounted / removed from DOM — never leak the dim.
+        if (backdropDimmed) {
+          backdropDimmed = false;
+          syncBackdropDim(false);
+        }
+        return;
+      }
+
+      // Backdrop dim, scoped exactly like the old :has() rule: only while
+      // this tab is the active Custom Tabs pane (.tabContent.is-active).
+      // Runs before the JE.hiddenContent readiness guard because the old CSS
+      // dimmed whenever the marker sat in the active tab, mounted or not.
+      // Re-asserted on every check (idempotent) so a rebuilt background
+      // node picks the class back up; turned off only on this module's
+      // active -> inactive transition, so a sibling custom tab that just
+      // turned the shared class on is left alone.
+      var dimTab = container.closest('.tabContent');
+      if (dimTab && dimTab.classList.contains('is-active')) {
+        syncBackdropDim(true);
+        backdropDimmed = true;
+      } else if (backdropDimmed) {
+        backdropDimmed = false;
+        syncBackdropDim(false);
+      }
 
       // JE.hiddenContent is created by initializeHiddenContent() in plugin.js
       // Stage 6, which runs after this deferred body. Skip mounting until it
       // exists — the body observer re-runs tryMount on later DOM changes, and
       // the microtask retry below covers the boot landing page.
       if (!JE.hiddenContent) return;
-
-      var container = findActiveContainer();
-      if (!container) {
-        lastMountedContainer = null;
-        return;
-      }
 
       var shouldMount = container !== lastMountedContainer
         || !container.hasChildNodes()
