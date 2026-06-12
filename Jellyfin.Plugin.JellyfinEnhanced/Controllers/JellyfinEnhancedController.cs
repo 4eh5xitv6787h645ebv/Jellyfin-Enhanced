@@ -765,6 +765,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     parentalFilterUser,
                     _localizationManager,
                     _serverConfigurationManager.Configuration.MetadataCountryCode,
+                    config.JellyseerrParentalFilterHideUnrated,
                     (path, token) => FetchSeerrJsonWithApiKeyAsync(path, token),
                     _logger,
                     HttpContext.RequestAborted);
@@ -2824,6 +2825,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.JellyseerrExcludeLibraryItems,
                 config.JellyseerrExcludeBlocklistedItems,
                 config.JellyseerrFilterByParentalRating,
+                config.JellyseerrParentalFilterHideUnrated,
                 config.JellyseerrDisableCache,
                 JellyseerrBaseUrl = jellyseerrBaseUrl,
                 JellyseerrUrlMappings = jellyseerrUrlMappings,

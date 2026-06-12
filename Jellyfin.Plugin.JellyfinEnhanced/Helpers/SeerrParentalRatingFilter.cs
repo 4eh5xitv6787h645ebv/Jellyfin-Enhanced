@@ -73,6 +73,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
         /// <param name="user">The requesting Jellyfin user (entity).</param>
         /// <param name="localization">Jellyfin's localization manager (rating → score).</param>
         /// <param name="countryCode">Server metadata country (certification country preference).</param>
+        /// <param name="hideUnrated">Admin strict mode: drop titles with no recognizable
+        /// certification for limited users, overriding the per-user unrated policy.</param>
         /// <param name="fetchSeerrJson">Admin-key Seerr GET: apiPath → body or null.</param>
         /// <param name="logger">Plugin logger.</param>
         /// <param name="ct">Request cancellation.</param>
@@ -81,6 +83,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
             Jellyfin.Database.Implementations.Entities.User user,
             ILocalizationManager localization,
             string? countryCode,
+            bool hideUnrated,
             Func<string, CancellationToken, Task<string?>> fetchSeerrJson,
             Logger logger,
             CancellationToken ct)
@@ -94,9 +97,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
                 }
 
                 var maxSubScore = user.MaxParentalRatingSubScore;
+                // Unrated handling: the user's own BlockUnratedItems policy, or
+                // everything-unrated-hidden when the admin strict mode is on.
                 var blockedUnrated = user.GetPreferenceValues<UnratedItem>(PreferenceKind.BlockUnratedItems);
-                bool blockUnratedMovie = blockedUnrated.Contains(UnratedItem.Movie);
-                bool blockUnratedSeries = blockedUnrated.Contains(UnratedItem.Series);
+                bool blockUnratedMovie = hideUnrated || blockedUnrated.Contains(UnratedItem.Movie);
+                bool blockUnratedSeries = hideUnrated || blockedUnrated.Contains(UnratedItem.Series);
 
                 if (JsonNode.Parse(json) is not JsonObject root)
                 {

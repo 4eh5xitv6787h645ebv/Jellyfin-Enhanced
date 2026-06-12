@@ -403,6 +403,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         /// unlimited users always receive unfiltered results.
         /// </summary>
         public bool JellyseerrFilterByParentalRating { get; set; } = true;
+
+        /// <summary>
+        /// Strict companion to <see cref="JellyseerrFilterByParentalRating"/>:
+        /// when enabled, titles WITHOUT a recognizable certification are also
+        /// hidden from rating-limited users, regardless of the user's own
+        /// "Block items with no rating information" policy. Unlimited users
+        /// remain unaffected.
+        /// </summary>
+        public bool JellyseerrParentalFilterHideUnrated { get; set; } = false;
         public bool ShowElsewhereOnJellyseerr { get; set; }
         public bool JellyseerrUseMoreInfoModal { get; set; } = false;
         public string JellyseerrUrls { get; set; }
