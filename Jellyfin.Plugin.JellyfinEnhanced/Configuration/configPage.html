@@ -353,6 +353,13 @@
                                 </button>
                                 <div class="fieldDescription">Forces clients to clear caches on next load. May cause initial slowness.</div>
                             </div>
+
+                            <div id="serverTagCacheControls" style="margin-top:10px; display:none;">
+                                <button id="rebuildTagCacheBtn" class="raised button-submit emby-button" is="emby-button" type="button" style="width: 100%;">
+                                    <span>Rebuild Tag Cache (Rescan Library)</span>
+                                </button>
+                                <div class="fieldDescription">Re-reads media info for every library item and rebuilds the server-side tag cache (quality, genres, ratings, languages). Run this after swapping media files so stale tags — like an old 720p label after upgrading to 1080p — refresh. Clients pick up the rebuilt cache automatically. Tip: run a Jellyfin library scan first so the new files are probed.</div>
+                            </div>
                         </div>
                     </fieldset>
 
@@ -6718,6 +6725,14 @@
             }
 
             controls.style.display = serverModeCheckbox.checked ? 'none' : '';
+
+            // The "Rebuild Tag Cache" control is the inverse: only meaningful when
+            // the server-side cache is the active source clients consume.
+            var serverControls = document.getElementById('serverTagCacheControls');
+            if (serverControls) {
+                serverControls.style.display = serverModeCheckbox.checked ? '' : 'none';
+            }
+
             updateClearTagCachesQuickBtnVisibility();
         }
 
@@ -7150,6 +7165,46 @@
                     [{ id: 'jellyseerrUrlMappings', service: 'Seerr' }],
                     'validateSeerrMappingsBtn', 'seerrMappingsValidationResult'
                 );
+            });
+        }
+
+        var rebuildTagCacheBtn = document.getElementById('rebuildTagCacheBtn');
+        if (rebuildTagCacheBtn) {
+            rebuildTagCacheBtn.addEventListener('click', async () => {
+                if (!confirm("Rebuild the server-side tag cache now?\n\nThis re-reads media info for every library item and may take a while on large libraries. Clients refresh automatically once it completes.\n\nTip: run a Jellyfin library scan first so swapped files are re-probed.")) {
+                    return;
+                }
+                Dashboard.showLoadingMsg();
+                try {
+                    // Trigger the existing "Build Tag Cache" scheduled task via the
+                    // standard ScheduledTasks REST API (admin-only, server-enforced).
+                    // Located by its stable Key so it survives task-id reassignment.
+                    const tasks = await ApiClient.ajax({
+                        type: 'GET',
+                        url: ApiClient.getUrl('ScheduledTasks'),
+                        dataType: 'json'
+                    });
+                    const task = (tasks || []).find(t => t.Key === 'JellyfinEnhancedBuildTagCache');
+                    if (!task) {
+                        throw new Error('Build Tag Cache task not found');
+                    }
+                    await ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('ScheduledTasks/Running/' + task.Id)
+                    });
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert({
+                        title: 'Tag Cache Rebuild Started',
+                        message: 'The tag cache is rebuilding in the background. Watch progress under Dashboard → Scheduled Tasks → "Build Tag Cache". Clients pick up the refreshed tags automatically.'
+                    });
+                } catch (e) {
+                    Dashboard.hideLoadingMsg();
+                    console.error('Failed to start tag cache rebuild:', e);
+                    Dashboard.alert({
+                        title: 'Error',
+                        message: 'Failed to start the tag cache rebuild. You can run it manually from Dashboard → Scheduled Tasks → "Build Tag Cache". Check server logs for details.'
+                    });
+                }
             });
         }
 

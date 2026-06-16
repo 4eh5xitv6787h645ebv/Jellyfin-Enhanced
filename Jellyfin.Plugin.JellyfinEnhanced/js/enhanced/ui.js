@@ -987,6 +987,10 @@
                                         <span class="material-icons je-cat-chevron" aria-hidden="true">chevron_right</span>
                                         <span>${JE.t('panel_settings_ui_quality_tags_categories_label')}</span>
                                     </button>
+                                    <button type="button" id="qualityTagsRefreshBtn" class="je-quality-cat-expander">
+                                        <span class="material-icons" aria-hidden="true" style="font-size:18px;">refresh</span>
+                                        <span>${JE.t('panel_settings_ui_quality_tags_refresh')}</span>
+                                    </button>
                                 </div>
                                 <div id="qualityTagsSubToggles" class="je-quality-cat-list" style="display: none;">
                                     ${(() => {
@@ -1557,6 +1561,28 @@
                 const expanded = qualitySubExpander.getAttribute('aria-expanded') === 'true';
                 qualitySubExpander.setAttribute('aria-expanded', expanded ? 'false' : 'true');
                 qualitySubGroup.style.display = expanded ? 'none' : 'block';
+            });
+        }
+        // "Refresh Quality Tags" — clears this client's quality caches and
+        // re-renders from the latest server data with no page reload. Lets users
+        // clear stale resolution tags after media files are swapped (issue #660).
+        const qualityRefreshBtn = document.getElementById('qualityTagsRefreshBtn');
+        if (qualityRefreshBtn) {
+            // Set the tooltip via the DOM property (not an HTML attribute) so a
+            // translated description containing quotes can never break markup.
+            qualityRefreshBtn.title = JE.t('panel_settings_ui_quality_tags_refresh_desc');
+            qualityRefreshBtn.addEventListener('click', async () => {
+                if (typeof JE.refreshQualityTags !== 'function') return;
+                qualityRefreshBtn.disabled = true;
+                try {
+                    await JE.refreshQualityTags();
+                    JE.toast(JE.t('panel_settings_ui_quality_tags_refresh_toast'));
+                } catch (err) {
+                    console.warn('🪼 Jellyfin Enhanced: Quality tag refresh failed:', err);
+                } finally {
+                    qualityRefreshBtn.disabled = false;
+                }
+                resetAutoCloseTimer();
             });
         }
         // Wire the per-category sub-toggle controls via event delegation

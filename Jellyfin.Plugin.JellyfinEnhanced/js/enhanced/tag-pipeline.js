@@ -738,6 +738,36 @@
             firstEpisodeCache.clear();
             parentSeriesCache.clear();
         },
+        /**
+         * Force a complete refresh of every tag (used by the "Refresh Quality Tags"
+         * settings action and after media files are swapped — see issue #660).
+         * In server-cache mode this re-pulls the full server cache (bypassing the
+         * `since` delta), drops every renderer's derived cache, clears processed
+         * markers, and rescans. In batch/localStorage mode it just clears markers
+         * and rescans (cache misses re-fetch fresh data via the batch endpoint).
+         * @returns {Promise<void>}
+         */
+        async reload() {
+            if (JE.pluginConfig?.TagCacheServerMode) {
+                // Reset server-cache state so loadServerCache() does a full fetch.
+                serverCache = null;
+                serverCacheVersion = 0;
+                serverCacheTimestamp = 0;
+                await loadServerCache();
+            }
+            // Invalidate each renderer's derived cache (null = clear everything).
+            for (const [, renderer] of renderers) {
+                if (renderer.onServerCacheRefresh) {
+                    try { renderer.onServerCacheRefresh(null); } catch {}
+                }
+            }
+            processedCards = new WeakSet();
+            requestQueue = [];
+            batchGeneration++;
+            firstEpisodeCache.clear();
+            parentSeriesCache.clear();
+            runScan();
+        },
         scheduleScan,
     };
 

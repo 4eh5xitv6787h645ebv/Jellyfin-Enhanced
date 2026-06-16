@@ -1033,6 +1033,40 @@
         } else {
             console.warn(`${logPrefix} Tag pipeline not available, quality tags will not render.`);
         }
+
+        /**
+         * Clears every client-side quality-tag cache (in-memory, hot, localStorage,
+         * and server-derived computed labels) and forces a fresh re-render from the
+         * latest server data — no page reload required. Wired to the "Refresh
+         * Quality Tags" button in the in-app settings panel so users can clear
+         * stale tags after media files are swapped (e.g. 720p → 1080p). See issue #660.
+         * @returns {Promise<void>}
+         */
+        JE.refreshQualityTags = async function() {
+            console.log(`${logPrefix} Refreshing — clearing client caches and re-rendering.`);
+            // Drop in-memory + hot + server-derived computed labels.
+            qualityOverlayCache = {};
+            if (Hot?.quality) Hot.quality.clear();
+            serverQualityCache.clear();
+            // Drop the persisted localStorage cache (fallback mode) and stamp the
+            // clear time so cleanupOldCaches() treats it as already handled.
+            try {
+                localStorage.removeItem(CACHE_KEY);
+                localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+            } catch (e) {
+                console.warn(`${logPrefix} Failed to clear localStorage cache`, e);
+            }
+            // Remove rendered overlays + tagged markers so cards rebuild cleanly.
+            document.querySelectorAll(`.${containerClass}`).forEach(el => el.remove());
+            document.querySelectorAll('[data-je-quality-tagged]').forEach(el => { delete el.dataset.jeQualityTagged; });
+            // Re-pull fresh server data (full reload) and rescan via the pipeline.
+            if (JE.tagPipeline?.reload) {
+                await JE.tagPipeline.reload();
+            } else if (JE.tagPipeline) {
+                JE.tagPipeline.clearProcessed();
+                JE.tagPipeline.scheduleScan();
+            }
+        };
     };
 
     /**
