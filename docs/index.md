@@ -33,6 +33,11 @@ The essential enhancement suite for Jellyfin, bundling advanced features and cus
 - **🏷️ Visual Tags** - Quality, genre, language, rating, and people tags
 - **🎲 Random Button** - Discover content in your library
 
+### 🙈 Hidden Content
+- **Per-user Content Hiding** - Hide items, with server-side storage
+- **Granular Filtering** - Control visibility across library, discovery, search, and more
+- **Management Panel** - Search, unhide, and bulk operations
+
 ### 🔍 Elsewhere
 - **Streaming Provider Lookup** - See where media is available
 - **Multi-region Support** - Check availability across regions

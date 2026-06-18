@@ -44,15 +44,15 @@ The userscript has been discontinued as the plugin functionality has grown signi
 
 ### Plugin not appearing after installation?
 
-**See [this page in Installation Troubleshooting](../installation/troubleshooting.md/#plugin-not-appearing-after-installation)**
+**See [this page in Installation Troubleshooting](../installation/troubleshooting.md#plugin-not-appearing-after-installation)**
 
 ### Scripts not loading after installation
 
-**See [this page in Installation Troubleshooting](../installation/troubleshooting.md/#scripts-not-loading)**
+**See [this page in Installation Troubleshooting](../installation/troubleshooting.md#scripts-not-loading)**
 
 ### Update not working properly?
 
-**See this page in [Installation Troubleshooting](../installation/troubleshooting.md/#update-not-working)**
+**See this page in [Installation Troubleshooting](../installation/troubleshooting.md#update-not-working)**
 
 
 ### I see "permission denied" errors in logs!!
@@ -234,6 +234,10 @@ Option B (manual in Seerr):
 
 - Check browser console for errors
 
+### Is there a way to export/import bookmarks?
+
+There is no manual export/import feature, and none is needed. Bookmarks are stored server-side, per user, in your Jellyfin user data folder. As long as you sign in with the same Jellyfin user account, your bookmarks are available automatically on every device and client — they are portable by default.
+
 ### Pause screen not appearing?
 
 
@@ -354,9 +358,9 @@ See [CSS Customization Guide](../advanced/css-customization.md) for complete CSS
 
 1. Go to **Dashboard** → **Plugins** → **Jellyfin Enhanced**
 
-2. Navigate to **Other Settings** tab
+2. Navigate to the **Extras** tab
 
-3. Find **Custom Branding** section
+3. Find the **Custom Image Assets** (Custom Branding) section
 
 4. Upload your images:
 

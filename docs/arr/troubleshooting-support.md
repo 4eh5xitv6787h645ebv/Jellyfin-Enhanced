@@ -4,30 +4,52 @@
 
 **Check Configuration:**
 
-1. Verify *arr URLs are correct
-2. Ensure "Enable *arr Links" is checked
-3. Confirm you're logged in as administrator
-4. Check item has *arr metadata
+1. Ensure **"Enable *arr Links on Detail Pages"** is checked
+2. Confirm you're logged in as an **administrator** — *arr links are admin-only
+3. Verify each instance's **URL** and **API Key** are correct, and the instance is **Enabled**
+4. Check the item actually has a **TMDB link** (movies) or **TVDB ID** (series) — the plugin only renders a link when it finds the matching external id and the item exists in at least one enabled instance
 
 **Test URLs:**
 
-- Open *arr URLs in browser
-- Verify they're accessible from Jellyfin server
+- Open the *arr URL in a browser
+- Verify it is accessible **from the Jellyfin server** (not just from your desktop)
 - Check for HTTPS/HTTP mismatches
+
+!!! warning "Per-instance error toasts"
+    When a lookup against a specific instance fails, the plugin shows a toast like:
+
+    > ⚠ Sonarr instance "Anime" failed: HTTP 401
+
+    Common reasons:
+
+    | Symptom | Likely cause |
+    |---|---|
+    | `HTTP 401` | Wrong or missing **API Key** for that instance |
+    | `HTTP 404` | Wrong **URL** / base path, or the item isn't in that instance |
+    | `Network error` / `Timeout` | Instance unreachable from the Jellyfin server (firewall, wrong host, down) |
+    | `⚠ Sonarr lookup failed; links unavailable` | The whole Sonarr/Radarr lookup endpoint failed — see the browser console |
+    | `⚠ Sonarr instance configuration is corrupt` | The stored instances JSON is invalid — open the *arr config page and re-save to reset it |
+
+    Each distinct error toasts once per session; fix the instance, then hard-reload the web client (the per-session match cache only clears on reload).
 
 ### Tags Not Syncing
 
-**Check API Keys:**
+**The sync is not automatic:**
 
-1. Verify API keys are correct
-2. Test API access manually
-3. Check *arr logs for errors
+Tag sync has **no default schedule**. You must run it from **Dashboard → Scheduled Tasks → "Sync Tags from *arr to Jellyfin"**, and add a trigger to run it periodically.
+
+**Check Configuration:**
+
+1. Ensure **"Enable Tags Sync"** is checked
+2. Verify each instance's URL and API key are correct (the same instances used for links)
+3. Check the *arr instance isn't **disabled** — disabled instances are skipped by the sync
+4. Check the server log for per-instance messages such as `Failed to sync tags from Sonarr instance <name>: <reason>`
 
 **Check Tag Settings:**
 
-- Verify tag prefix matches *arr tags
-- Check sync filter isn't too restrictive
-- Ensure tags exist in *arr
+- The **Sync to Jellyfin Filter** restricts which tags are synced — make sure it isn't excluding the tags you expect (one tag per line, without the prefix)
+- Tags only sync to items with the matching external id: **movies by TMDB ID**, **series by IMDb ID**. Items missing that id are skipped
+- Ensure the tags actually exist on the items in *arr
 
 ### Calendar Not Loading
 
@@ -53,6 +75,16 @@ Alternatively, disable it for specific pages using a Page Rule or Configuration 
 
 See [GitHub issue #570](https://github.com/n00bcodr/Jellyfin-Enhanced/issues/570) for more context.
 
+**Some users see no events (or fewer than admins):**
+
+This is expected. With **"Filter by Library Access"** enabled (the default), the calendar only shows each user the items from libraries they can access; upcoming items not yet in Jellyfin are filtered by their Sonarr/Radarr root folder. An admin sees everything, a restricted user sees only their libraries. Disable "Filter by Library Access" only if you want every user to see all events.
+
+**Calendar shows nothing for everyone:**
+
+- Check that at least one Sonarr/Radarr instance is configured **and enabled**
+- If **"Force Only Requested Items"** (or **"Show Requested Only"**) is on, the calendar filters to Jellyseerr-requested items — confirm Jellyseerr is enabled and that there are requested items in the window
+- Toggle the in-page **Unmonitored** control if you only have unmonitored upcoming items
+
 **Check Logs:**
 
 - Browser console for client errors
@@ -63,17 +95,23 @@ See [GitHub issue #570](https://github.com/n00bcodr/Jellyfin-Enhanced/issues/570
 
 **Downloads Not Showing:**
 
-1. Verify polling is enabled
-2. Check poll interval setting
-3. Ensure downloads exist in *arr
-4. Check API connectivity
+1. Ensure **"Show Downloads in Requests Page"** is checked (it is separate from enabling the page)
+2. Confirm Sonarr/Radarr instances are configured, enabled, and have valid API keys
+3. Ensure there are active downloads in *arr
+4. As a non-admin, remember **"Filter Downloads by User Requests"** hides downloads you didn't request — disable it to see the whole queue
+5. Watch for per-instance toasts like `⚠ Sonarr queue "Anime" failed: HTTP 401` (bad API key) or `HTTP 404` (wrong URL)
 
 **Status Not Updating:**
 
-1. Verify polling is enabled
-2. Check poll interval
-3. Refresh page manually
-4. Check browser console for errors
+1. Ensure **"Enable Auto-Refresh"** is on; otherwise the page only refreshes on manual reload
+2. Check the **Poll Interval (seconds)** value (30–300)
+3. Auto-refresh **pauses while the page or tab is hidden** — switch back to it (or reload) to resume
+4. Check the browser console for errors
+
+**Requests / Issues Sections Missing:**
+
+- The Jellyseerr **Requests** and **Issues** sections only appear when Jellyseerr is enabled in the **Seerr** tab (and "Show Seerr Issues Section" is checked for issues)
+- A `No permission to view issues` toast (HTTP 403) means your Jellyseerr user lacks the permission to view issues
 
 
 ## Support

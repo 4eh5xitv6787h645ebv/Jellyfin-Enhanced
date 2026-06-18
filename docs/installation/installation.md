@@ -57,6 +57,19 @@
 
 If you do not have file-transformation installed, you might encounter permission issues. Refer [troubleshooting steps](troubleshooting.md)
 
+### Optional Companion Plugins
+
+Jellyfin Enhanced works on its own, but a few optional plugins unlock extra functionality. Install only the ones you need:
+
+| Plugin | Needed for |
+|--------|------------|
+| [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) | Sidebar pages (Calendar, Requests, Bookmarks, Hidden Content) |
+| [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) | Embedding Jellyfin Enhanced pages as custom navigation tabs |
+| [Intro Skipper](https://github.com/intro-skipper/intro-skipper) | Auto-skip intro/outro (required only for that feature) |
+| [Kefin Tweaks](https://github.com/ranaldsgift/KefinTweaks) | Watchlist UI (only if you use the watchlist integration) |
+
+All of the above are available from the **Catalog** tab once their repositories are added. None are required for core Jellyfin Enhanced features.
+
 ### Step 4: Restart Server
 
 1. **Restart** your Jellyfin server to complete the installation *(This is required for the plugin to take effect)*
@@ -70,3 +83,7 @@ After restart:
     - In the sidebar: **Jellyfin Enhanced**
     - Press `?`
 3. If you see the panel, installation was successful!
+
+You can also confirm everything is wired up from **Dashboard → Plugins → Jellyfin Enhanced**. The **Overview** tab shows service-connection health and which optional companion plugins were detected:
+
+![The Jellyfin Enhanced configuration page — Overview tab](../images/je-config-overview.png)

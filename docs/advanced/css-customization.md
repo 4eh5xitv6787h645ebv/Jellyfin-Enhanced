@@ -158,6 +158,32 @@ Customize quality tag appearance.
 ```
 
 
+## Hidden Content
+
+When the Hidden Content feature is enabled, the plugin adds a hover "hide" button to library/discovery cards and renders a management panel for reviewing hidden items.
+
+**Always show the hide button (not just on card hover):**
+```css
+.je-hide-btn {
+    opacity: 1 !important;
+}
+```
+
+**Hide the hide button entirely:**
+```css
+.je-hide-btn {
+    display: none !important;
+}
+```
+
+**Style cards in the Hidden Content management panel:**
+```css
+.je-hidden-item-card {
+    border-radius: 12px !important;
+}
+```
+
+
 ### *arr Tag Links
 
 When "Show *arr Tags as Links" is enabled in plugin config settings, the plugin injects tags into the item page under the external links section.
