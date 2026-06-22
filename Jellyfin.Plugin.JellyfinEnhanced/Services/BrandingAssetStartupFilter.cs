@@ -1,6 +1,8 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -32,7 +34,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     public class BrandingAssetStartupFilter : IStartupFilter
     {
         private readonly Logger _logger;
-        private bool _loggedOnce;
+        private int _loggedOnce;
 
         private static readonly RegexOptions Opts = RegexOptions.IgnoreCase | RegexOptions.Compiled;
         private static readonly TimeSpan MatchTimeout = TimeSpan.FromSeconds(2);
@@ -94,29 +96,55 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     if (string.Equals(Path.GetDirectoryName(filePath), fullDir, StringComparison.OrdinalIgnoreCase)
                         && File.Exists(filePath))
                     {
-                        var bytes = await File.ReadAllBytesAsync(filePath).ConfigureAwait(false);
-                        if (bytes.Length > 0)
+                        var fileInfo = new FileInfo(filePath);
+                        if (fileInfo.Length > 0)
                         {
+                            // Validator from size + mtime so unchanged assets revalidate
+                            // cheaply (304, no body). Cache-Control stays no-cache because
+                            // the URL hash reflects the stock asset, not the custom file —
+                            // so a re-uploaded image (new mtime -> new ETag) is picked up
+                            // immediately on the next revalidation.
+                            var etag = "\"" + (fileInfo.LastWriteTimeUtc.Ticks ^ fileInfo.Length)
+                                .ToString("x", CultureInfo.InvariantCulture) + "\"";
+
+                            if (context.Request.Headers.TryGetValue("If-None-Match", out var inm)
+                                && string.Equals(inm.ToString(), etag, StringComparison.Ordinal))
+                            {
+                                context.Response.StatusCode = 304;
+                                context.Response.Headers["Cache-Control"] = "no-cache";
+                                context.Response.Headers["ETag"] = etag;
+                                return;
+                            }
+
                             var provider = new FileExtensionContentTypeProvider();
                             if (!provider.TryGetContentType(filePath, out var contentType))
                             {
                                 contentType = "application/octet-stream";
                             }
 
+                            var isHead = HttpMethods.IsHead(context.Request.Method);
+                            byte[]? bytes = isHead ? null : await File.ReadAllBytesAsync(filePath).ConfigureAwait(false);
+                            var length = isHead ? fileInfo.Length : bytes!.Length;
+
                             context.Response.StatusCode = 200;
                             context.Response.ContentType = contentType;
-                            context.Response.ContentLength = bytes.Length;
+                            context.Response.ContentLength = length;
                             context.Response.Headers["Cache-Control"] = "no-cache";
-                            context.Response.Headers.Remove("ETag");
-                            context.Response.Headers.Remove("Last-Modified");
+                            context.Response.Headers["ETag"] = etag;
+                            context.Response.Headers["Last-Modified"] =
+                                fileInfo.LastWriteTimeUtc.ToString("R", CultureInfo.InvariantCulture);
 
-                            if (!_loggedOnce)
+                            if (Interlocked.Exchange(ref _loggedOnce, 1) == 0)
                             {
                                 _logger.Info("Serving custom branding via request-time middleware (IStartupFilter). File Transformation is not required.");
-                                _loggedOnce = true;
                             }
 
-                            await context.Response.Body.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+                            // HEAD: headers only, no body.
+                            if (!isHead)
+                            {
+                                await context.Response.Body.WriteAsync(bytes!, 0, bytes!.Length).ConfigureAwait(false);
+                            }
+
                             return; // short-circuit: do not fall through to the static-file handler
                         }
                     }

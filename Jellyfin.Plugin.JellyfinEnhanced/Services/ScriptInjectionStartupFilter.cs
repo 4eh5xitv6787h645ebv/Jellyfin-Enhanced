@@ -34,7 +34,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     public class ScriptInjectionStartupFilter : IStartupFilter
     {
         private readonly Logger _logger;
-        private bool _loggedOnce;
+        private int _loggedOnce;
 
         public ScriptInjectionStartupFilter(Logger logger)
         {
@@ -61,6 +61,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return;
             }
 
+            // Only GET produces a body we can rewrite. HEAD/OPTIONS/etc. must pass
+            // straight through so the host emits correct headers (buffering them would
+            // compute a bogus Content-Length against an empty downstream body).
+            if (!HttpMethods.IsGet(context.Request.Method))
+            {
+                await nextMw().ConfigureAwait(false);
+                return;
+            }
+
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || config.DisableScriptInjectionMiddleware)
             {
@@ -68,8 +77,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return;
             }
 
-            // Force an uncompressed response so the HTML can be read/rewritten as text.
+            // Normalize the request so the static handler returns a complete, plain-text
+            // 200 we can rewrite: drop Accept-Encoding (no compression) and Range/If-Range
+            // (a 206 partial response would otherwise pass through un-injected with a wrong
+            // total length).
             context.Request.Headers.Remove("Accept-Encoding");
+            context.Request.Headers.Remove("Range");
+            context.Request.Headers.Remove("If-Range");
 
             var originalBody = context.Response.Body;
             using var buffer = new MemoryStream();
@@ -80,11 +94,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch
             {
-                // A downstream failure is not ours to swallow: restore the body,
-                // flush whatever was produced, and rethrow so the host handles it.
+                // A downstream failure is not ours to swallow. Discard the partially
+                // buffered body (it was never written to the real stream) and rethrow:
+                // the real response hasn't started, so the host's exception handler can
+                // still render a clean error page. Flushing the partial buffer here would
+                // commit a truncated, 200-looking response.
                 context.Response.Body = originalBody;
-                buffer.Seek(0, SeekOrigin.Begin);
-                await buffer.CopyToAsync(originalBody).ConfigureAwait(false);
                 throw;
             }
 
@@ -120,10 +135,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     var tag = plugin.BuildScriptTag();
                     html = html.Substring(0, bodyClose) + tag + "\n" + html.Substring(bodyClose);
 
-                    if (!_loggedOnce)
+                    if (System.Threading.Interlocked.Exchange(ref _loggedOnce, 1) == 0)
                     {
                         _logger.Info("Injected Jellyfin Enhanced script via request-time middleware (IStartupFilter). File Transformation is not required.");
-                        _loggedOnce = true;
                     }
                 }
             }
@@ -137,9 +151,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             context.Response.ContentType = "text/html;charset=utf-8";
             context.Response.ContentLength = bytes.Length;
             // The body changed, so any validators set by the static-file handler are
-            // no longer valid.
+            // no longer valid; and we don't support range requests on the rewritten
+            // document (Range requests are already stripped on the way in).
             context.Response.Headers.Remove("ETag");
             context.Response.Headers.Remove("Last-Modified");
+            context.Response.Headers.Remove("Accept-Ranges");
             await originalBody.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
         }
 

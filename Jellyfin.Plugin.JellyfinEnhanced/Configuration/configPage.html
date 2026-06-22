@@ -3175,7 +3175,6 @@
                 document.body.classList.toggle('je-has-introskipper',      hasIntroSkipper       === true);
                 document.body.classList.toggle('je-has-inplayerepisodepreview', hasInPlayerEpisodePreview === true);
                 document.body.classList.toggle('je-has-kefintweaks',       hasKefinTweaks        === true);
-                document.body.classList.toggle('je-has-filetransformation', hasFileTransformation === true);
 
                 // If Custom Tabs is present, probe its config to decide whether the
                 // schema matches what we know how to write. Only on success do we
@@ -3188,12 +3187,14 @@
                     customTabsCompatState = null;
                 }
 
-                // File Transformation is no longer required: Jellyfin Enhanced injects
-                // its client script and serves custom branding itself (request-time
-                // middleware). Keep this banner permanently hidden.
-                var warning = document.getElementById('fileTransformationWarning');
-                if (warning) {
-                    warning.style.display = 'none';
+                // File Transformation is no longer required (JE injects its own script
+                // and serves custom branding itself). Only surface the banner when FT is
+                // still installed, to let the admin know they can safely remove it.
+                if (!ftWarningDismissedSession && localStorage.getItem('je_ft_warning_dismissed') !== 'true') {
+                    var warning = document.getElementById('fileTransformationWarning');
+                    if (warning) {
+                        warning.style.display = hasFileTransformation === true ? 'block' : 'none';
+                    }
                 }
 
                 // Re-run dependencies now that plugin info is available
@@ -3215,7 +3216,7 @@
                 hasFileTransformation = null;
                 hasKefinTweaks = null;
                 customTabsCompatState = null;
-                document.body.classList.remove('je-has-customtabs', 'je-has-pluginpages', 'je-has-introskipper', 'je-has-inplayerepisodepreview', 'je-has-customtabs-compat', 'je-has-kefintweaks', 'je-has-filetransformation');
+                document.body.classList.remove('je-has-customtabs', 'je-has-pluginpages', 'je-has-introskipper', 'je-has-inplayerepisodepreview', 'je-has-customtabs-compat', 'je-has-kefintweaks');
                 setProbeWarning('plugins', "Couldn't reach the Jellyfin /Plugins endpoint to verify which integrations are installed (auth expiry, network, or server issue). Dependency hints and \"plugin detected\" badges are now hidden until you retry.");
                 try { updateAllDependencies(); } catch (e) {
                     console.warn('[JE] updateAllDependencies threw during plugin-detect fallback:', e);
@@ -6042,7 +6043,6 @@
          * rendered as "Checking…" rather than asserting missing.
          */
         var OPTIONAL_PLUGINS = [
-            { key: 'fileTransformation', name: 'File Transformation', icon: 'transform',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-file-transformation', purpose: 'No longer required — Jellyfin Enhanced injects its script and serves custom branding itself. Unsupported on Jellyfin 12.', getFlag: function(){ return hasFileTransformation; } },
             { key: 'pluginPages',        name: 'Plugin Pages',        icon: 'view_list',       url: 'https://github.com/IAmParadox27/jellyfin-plugin-pages',               purpose: 'Sidebar pages for Bookmarks, Hidden Content, Requests, Calendar.',                   getFlag: function(){ return hasPluginPages; } },
             { key: 'customTabs',         name: 'Custom Tabs',         icon: 'tab',             url: 'https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs',         purpose: 'Home-page tab entries for Bookmarks, Hidden Content, Requests, Calendar.',          getFlag: function(){ return hasCustomTabs; } },
             { key: 'introSkipper',       name: 'Intro Skipper',       icon: 'skip_next',       url: 'https://github.com/intro-skipper/intro-skipper',                      purpose: 'Source of timestamps for Auto-skip Intro / Auto-skip Outro.',                        getFlag: function(){ return hasIntroSkipper; } },
