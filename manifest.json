@@ -9,11 +9,11 @@
     "imageUrl": "https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/master/docs/images/icon.png",
     "versions": [
       {
-        "changelog": "- feat: Jellyfin 12 (.NET 10) compatibility\n - feat: inject the client script and serve custom branding via the plugin's own request-time middleware — the File Transformation plugin is no longer required (and is unsupported on Jellyfin 12)\n - feat: add DisableScriptInjectionMiddleware / DisableBrandingMiddleware kill-switches\n - NOTE: built against the JF12 / .NET 10 runtime; install on Jellyfin 12+ only. Regenerate the checksum from scripts/build-jf12.sh against the released zip.",
+        "changelog": "- feat: Jellyfin 12 (.NET 10) compatibility\n - feat: inject the client script and serve custom branding via the plugin's own request-time middleware — the File Transformation plugin is no longer required (and is unsupported on Jellyfin 12)\n - feat: add DisableScriptInjectionMiddleware / DisableBrandingMiddleware kill-switches\n - NOTE: this entry is the JF12 / .NET 10 build (targetAbi 12.0.0.0). The same source also builds for Jellyfin 10.11 / .NET 9 via 'scripts/build.sh jf10' (targetAbi 10.11.0.0) — distribute that artifact via a 10.11 manifest. Regenerate the checksum from scripts/build.sh against the released zip.",
         "targetAbi": "12.0.0.0",
         "version": "11.13.0.0",
         "sourceUrl": "https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced/releases/download/11.13.0.0/Jellyfin.Plugin.JellyfinEnhanced_12.0.0-rc1.zip",
-        "checksum": "BC2AAC0E95312C7C3234D0194B1FB49B",
+        "checksum": "49FB3386EC8A1B7BF9764474EBA03516",
         "timestamp": "2026-06-22T18:00:00"
       },
       {
