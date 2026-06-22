@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Primitives;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -106,13 +107,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                             // immediately on the next revalidation.
                             var etag = "\"" + (fileInfo.LastWriteTimeUtc.Ticks ^ fileInfo.Length)
                                 .ToString("x", CultureInfo.InvariantCulture) + "\"";
+                            var lastModified = fileInfo.LastWriteTimeUtc.ToString("R", CultureInfo.InvariantCulture);
 
                             if (context.Request.Headers.TryGetValue("If-None-Match", out var inm)
-                                && string.Equals(inm.ToString(), etag, StringComparison.Ordinal))
+                                && IfNoneMatchSatisfied(inm, etag))
                             {
                                 context.Response.StatusCode = 304;
                                 context.Response.Headers["Cache-Control"] = "no-cache";
                                 context.Response.Headers["ETag"] = etag;
+                                context.Response.Headers["Last-Modified"] = lastModified;
                                 return;
                             }
 
@@ -131,8 +134,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                             context.Response.ContentLength = length;
                             context.Response.Headers["Cache-Control"] = "no-cache";
                             context.Response.Headers["ETag"] = etag;
-                            context.Response.Headers["Last-Modified"] =
-                                fileInfo.LastWriteTimeUtc.ToString("R", CultureInfo.InvariantCulture);
+                            context.Response.Headers["Last-Modified"] = lastModified;
 
                             if (Interlocked.Exchange(ref _loggedOnce, 1) == 0)
                             {
@@ -159,6 +161,41 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // No custom image (or an error): let jellyfin-web serve the stock asset.
             await nextMw().ConfigureAwait(false);
         }
+
+        // RFC 9110 If-None-Match: a comma-separated list of entity-tags (or "*"),
+        // each optionally weak ("W/..."). Compare weakly (the weakness prefix is
+        // ignored) — correct for cache validation of a GET — and accept multi-value
+        // and multi-line headers so proxies/browsers actually get their 304.
+        private static bool IfNoneMatchSatisfied(StringValues header, string etag)
+        {
+            var bare = Unweaken(etag);
+            foreach (var value in header)
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    continue;
+                }
+
+                foreach (var token in value.Split(','))
+                {
+                    var t = token.Trim();
+                    if (t.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    if (t == "*" || string.Equals(Unweaken(t), bare, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static string Unweaken(string etag) =>
+            etag.StartsWith("W/", StringComparison.Ordinal) ? etag.Substring(2) : etag;
 
         private static string? MatchBrandingAsset(string? path)
         {
