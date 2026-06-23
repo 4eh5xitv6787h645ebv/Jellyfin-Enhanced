@@ -106,10 +106,56 @@
         });
     }
 
+    // Mobile / below-md: the nav moves into the swipeable drawer (MainDrawerContent) as ListItemLinks.
+    function drawerFav() {
+        var links = document.querySelectorAll('a[href="#/home?tab=1"].MuiListItemButton-root, a[href="/home?tab=1"].MuiListItemButton-root');
+        for (var i = 0; i < links.length; i++) { if (links[i].closest('.MuiList-root')) { return links[i]; } }
+        return null;
+    }
+    function ensureDrawerLinks(pages) {
+        var fav = drawerFav(); if (!fav) { return; }
+        var li = fav.closest('li') || fav;
+        var ul = li.parentElement; if (!ul) { return; }
+        pages.forEach(function (p) {
+            var existing = ul.querySelector('[data-je-dnav="' + p.key + '"]');
+            if (existing) {
+                var ea = existing.matches('a') ? existing : existing.querySelector('a[href]');
+                if (ea) { ea.setAttribute('href', '#/home?tab=' + p._index); }
+                return;
+            }
+            var cl = li.cloneNode(true);
+            cl.setAttribute('data-je-dnav', p.key);
+            var a = cl.matches('a') ? cl : cl.querySelector('a[href]');
+            if (a) {
+                a.setAttribute('href', '#/home?tab=' + p._index);
+                a.removeAttribute('aria-label');
+                a.classList.remove('Mui-selected');
+                // The drawer auto-closes on tap: ResponsiveDrawer wraps content in
+                // <Box role="presentation" onClick={onClose}>, so our click bubbles to it like the
+                // native items — no manual close needed (and adding one would re-toggle it open).
+            }
+            var ic = cl.querySelector('[class*="ListItemIcon"]');
+            if (ic) {
+                ic.textContent = '';
+                var sp = document.createElement('span');
+                sp.className = 'material-icons';
+                sp.setAttribute('aria-hidden', 'true');
+                sp.textContent = p.icon; // JE-controlled glyph name; textContent keeps it XSS-safe
+                ic.appendChild(sp);
+            }
+            var txt = cl.querySelector('[class*="ListItemText"]');
+            if (txt) { var primary = txt.querySelector('.MuiListItemText-primary') || txt.querySelector('span') || txt; primary.textContent = p.label; }
+            ul.appendChild(cl);
+        });
+    }
+
     function setNavActive(activeKey) {
-        var fav = favNav(); if (!fav || !fav.parentElement) { return; }
-        fav.parentElement.querySelectorAll('a[data-je-nav]').forEach(function (a) {
+        document.querySelectorAll('a[data-je-nav]').forEach(function (a) {
             a.style.color = (a.getAttribute('data-je-nav') === activeKey) ? 'var(--jf-palette-primary-main, #00a4dc)' : '';
+        });
+        document.querySelectorAll('[data-je-dnav]').forEach(function (li) {
+            var a = li.matches('a') ? li : li.querySelector('a');
+            if (a) { a.classList.toggle('Mui-selected', li.getAttribute('data-je-dnav') === activeKey); }
         });
     }
 
@@ -146,11 +192,12 @@
 
     function ensure() {
         if (!isExperimental() || !isHome()) { activeRendered = null; return; }
-        if (!indexPage() || !favNav()) { return; }
+        if (!indexPage()) { return; }
         var pages = computePages();
         if (!pages.length) { return; }
         ensurePanels(pages);
-        ensureNavLinks(pages);
+        ensureNavLinks(pages);     // AppBar nav (md+); no-op on mobile (anchor absent)
+        ensureDrawerLinks(pages);  // swipeable drawer nav (below-md); no-op on desktop
         reconcileActive();
     }
 
