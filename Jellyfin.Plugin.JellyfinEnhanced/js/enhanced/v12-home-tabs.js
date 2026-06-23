@@ -68,7 +68,10 @@
                 tc.id = 'je-home-tab-content-' + p.key;
                 tc.setAttribute('data-je-key', p.key);
                 var host = document.createElement('div');
-                host.className = p.host;
+                // Native page inset: `.padded-left`/`.padded-right` give max(3.3%, safe-area-inset)
+                // horizontal padding — the same spacing native pages use, so content isn't flush to the
+                // edge. (`.pageTabContent` itself only adds the bottom inset for the music controls.)
+                host.className = p.host + ' padded-left padded-right';
                 tc.appendChild(host);
                 ip.appendChild(tc);
             }
