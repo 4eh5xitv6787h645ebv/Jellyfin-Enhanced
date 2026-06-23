@@ -1095,9 +1095,14 @@
         panel.appendChild(body);
         document.body.appendChild(panel);
 
-        const skinHeader = document.querySelector('.skinHeader');
-        if (skinHeader) {
-            panel.style.top = (skinHeader.getBoundingClientRect().height + 2) + 'px';
+        // Position below the header. On v12 experimental the legacy .skinHeader is hidden (height 0);
+        // JE.chrome.getHeaderHeight() returns the MUI AppBar height there and .skinHeader on legacy.
+        const _JE = window.JellyfinEnhanced;
+        const headerH = (_JE && _JE.chrome && _JE.chrome.getHeaderHeight)
+            ? _JE.chrome.getHeaderHeight()
+            : (document.querySelector('.skinHeader')?.getBoundingClientRect().height || 0);
+        if (headerH) {
+            panel.style.top = (headerH + 2) + 'px';
         }
 
         // Refresh button — available to all users who can see the panel

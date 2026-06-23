@@ -627,6 +627,9 @@
 
                 // others
                 'others/letterboxd-links.js',
+
+                // v12 experimental-layout chrome re-home (loaded last; re-homes elements created above)
+                'enhanced/v12-chrome-shim.js',
             ];
             await loadScripts(allComponentScripts, basePath);
             console.log('🪼 Jellyfin Enhanced: All component scripts loaded.');

@@ -466,7 +466,8 @@
 
             const checkContainer = () => {
                 if (type === 'detail') {
-                    const detailContent = document.querySelector('.itemDetailPage:not(.hide) .detailPageContent') ||
+                    const detailContent = document.querySelector('.itemDetailPage:not(.hide) .detailPagePrimaryContent') ||
+                                          document.querySelector('.itemDetailPage:not(.hide) .detailPageContent') ||
                                           document.querySelector('.itemDetailPage:not(.hide)');
                     return detailContent;
                 }

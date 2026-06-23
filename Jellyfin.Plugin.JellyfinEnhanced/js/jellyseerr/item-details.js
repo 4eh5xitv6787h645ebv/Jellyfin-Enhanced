@@ -88,8 +88,11 @@
                 const activePage = document.querySelector('.libraryPage:not(.hide)');
                 if (!activePage) return null;
 
-                const detailPageContent = activePage.querySelector('.detailPageContent');
-                const moreLikeThisSection = detailPageContent?.querySelector('#similarCollapsible');
+                // v12 relocated the detail content: #similarCollapsible moved into
+                // .detailPageSecondaryContainer and there is no .detailPageContent wrapper. Anchor on the
+                // section itself and take its nearest content wrapper so this resolves on 10.11 and v12.
+                const moreLikeThisSection = activePage.querySelector('#similarCollapsible');
+                const detailPageContent = moreLikeThisSection?.closest('.detailPageContent, .detailPageSecondaryContainer, .detailPageWrapperContainer') || null;
 
                 if (detailPageContent && moreLikeThisSection) {
                     return { detailPageContent, moreLikeThisSection };
