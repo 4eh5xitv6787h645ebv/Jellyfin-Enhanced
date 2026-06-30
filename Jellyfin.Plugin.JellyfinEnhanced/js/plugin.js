@@ -628,6 +628,15 @@
 
                 // others
                 'others/letterboxd-links.js',
+
+                // Jellyfin 12 experimental-layout (React/MUI) chrome re-home. Loaded after the
+                // modules above so the elements they create in the hidden legacy chrome already
+                // exist when the shim re-parents them onto the MUI toolbar. No-op on the legacy
+                // 10.11 / v12-stable layout (the shim detects the MUI AppBar and otherwise bails).
+                'enhanced/v12-chrome-shim.js',
+                // Surfaces JE's home-page tabs as native MUI AppBar / drawer nav on the v12
+                // experimental layout. Depends on JE.chrome (from the shim above). No-op elsewhere.
+                'enhanced/v12-home-tabs.js',
             ];
             await loadScripts(allComponentScripts, basePath);
             console.log('🪼 Jellyfin Enhanced: All component scripts loaded.');
