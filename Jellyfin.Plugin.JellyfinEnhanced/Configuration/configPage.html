@@ -562,6 +562,24 @@
                                 <div class="fieldDescription je-field-desc-xl">Adds Bookmarks as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
                             </div>
 
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="bookmarksTabPlacement">Bookmarks tab placement (Jellyfin&nbsp;12)</label>
+                                <select is="emby-select" id="bookmarksTabPlacement" name="bookmarksTabPlacement" class="emby-select je-tab-placement">
+                                    <option value="afterHome">After Home</option>
+                                    <option value="afterFavourites">After Favourites</option>
+                                    <option value="afterLibraries">After libraries (default)</option>
+                                    <option value="custom">Custom position…</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="bookmarksTabPlacement">
+                                <div class="fieldDescription je-field-desc-sm">Where the Bookmarks tab sits in the Jellyfin&nbsp;12 experimental nav (AppBar on desktop / drawer on mobile). No effect on the legacy layout or Jellyfin&nbsp;10.11.</div>
+                            </div>
+                            <div class="inputContainer je-tab-position-row" id="bookmarksTabPositionRow" style="display:none;">
+                                <label class="inputLabel inputLabelUnfocused" for="bookmarksTabPosition">Insert after nav item #</label>
+                                <input id="bookmarksTabPosition" is="emby-input" type="number" min="1" max="50" value="3"/>
+                                <div class="fieldDescription je-field-desc-sm">1 = after Home, 2 = after Favourites, 3 = after the first library, and so on.</div>
+                            </div>
+
                             <div class="checkboxContainer"><label><input id="bookmarksUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Bookmarks Library</span></label></div>
                             <div class="je-setting-description" data-desc-for="bookmarksUsePluginPages">
                                 <div class="fieldDescription je-field-desc-xl">
@@ -636,6 +654,24 @@
                             <div class="checkboxContainer"><label><input id="hiddenContentUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Hidden Content as a native Home tab</span></label></div>
                             <div class="je-setting-description" data-desc-for="hiddenContentUseNativeTab">
                                 <div class="fieldDescription je-field-desc-xl">Adds Hidden Content as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="hiddenContentTabPlacement">Hidden Content tab placement (Jellyfin&nbsp;12)</label>
+                                <select is="emby-select" id="hiddenContentTabPlacement" name="hiddenContentTabPlacement" class="emby-select je-tab-placement">
+                                    <option value="afterHome">After Home</option>
+                                    <option value="afterFavourites">After Favourites</option>
+                                    <option value="afterLibraries">After libraries (default)</option>
+                                    <option value="custom">Custom position…</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="hiddenContentTabPlacement">
+                                <div class="fieldDescription je-field-desc-sm">Where the Hidden Content tab sits in the Jellyfin&nbsp;12 experimental nav (AppBar on desktop / drawer on mobile). No effect on the legacy layout or Jellyfin&nbsp;10.11.</div>
+                            </div>
+                            <div class="inputContainer je-tab-position-row" id="hiddenContentTabPositionRow" style="display:none;">
+                                <label class="inputLabel inputLabelUnfocused" for="hiddenContentTabPosition">Insert after nav item #</label>
+                                <input id="hiddenContentTabPosition" is="emby-input" type="number" min="1" max="50" value="3"/>
+                                <div class="fieldDescription je-field-desc-sm">1 = after Home, 2 = after Favourites, 3 = after the first library, and so on.</div>
                             </div>
 
                             <div class="checkboxContainer"><label><input id="hiddenContentUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Hidden Content</span></label></div>
@@ -837,6 +873,24 @@
                             <div class="je-setting-description" data-desc-for="downloadsUseNativeTab">
                                 <div class="fieldDescription je-field-desc-xl">Adds Requests as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
                             </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="downloadsTabPlacement">Requests tab placement (Jellyfin&nbsp;12)</label>
+                                <select is="emby-select" id="downloadsTabPlacement" name="downloadsTabPlacement" class="emby-select je-tab-placement">
+                                    <option value="afterHome">After Home</option>
+                                    <option value="afterFavourites">After Favourites</option>
+                                    <option value="afterLibraries">After libraries (default)</option>
+                                    <option value="custom">Custom position…</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="downloadsTabPlacement">
+                                <div class="fieldDescription je-field-desc-sm">Where the Requests tab sits in the Jellyfin&nbsp;12 experimental nav (AppBar on desktop / drawer on mobile). No effect on the legacy layout or Jellyfin&nbsp;10.11.</div>
+                            </div>
+                            <div class="inputContainer je-tab-position-row" id="downloadsTabPositionRow" style="display:none;">
+                                <label class="inputLabel inputLabelUnfocused" for="downloadsTabPosition">Insert after nav item #</label>
+                                <input id="downloadsTabPosition" is="emby-input" type="number" min="1" max="50" value="3"/>
+                                <div class="fieldDescription je-field-desc-sm">1 = after Home, 2 = after Favourites, 3 = after the first library, and so on.</div>
+                            </div>
                             <div class="checkboxContainer"><label><input id="downloadsUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Requests</span></label></div>
                             <div class="je-setting-description" data-desc-for="downloadsUsePluginPages">
                                 <div class="fieldDescription je-field-desc-xl">Replaces the default Requests page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.<span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span></div>
@@ -921,6 +975,24 @@
                             <div class="checkboxContainer"><label><input id="calendarUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Calendar as a native Home tab</span></label></div>
                             <div class="je-setting-description" data-desc-for="calendarUseNativeTab">
                                 <div class="fieldDescription je-field-desc-xl">Adds Calendar as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="calendarTabPlacement">Calendar tab placement (Jellyfin&nbsp;12)</label>
+                                <select is="emby-select" id="calendarTabPlacement" name="calendarTabPlacement" class="emby-select je-tab-placement">
+                                    <option value="afterHome">After Home</option>
+                                    <option value="afterFavourites">After Favourites</option>
+                                    <option value="afterLibraries">After libraries (default)</option>
+                                    <option value="custom">Custom position…</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="calendarTabPlacement">
+                                <div class="fieldDescription je-field-desc-sm">Where the Calendar tab sits in the Jellyfin&nbsp;12 experimental nav (AppBar on desktop / drawer on mobile). No effect on the legacy layout or Jellyfin&nbsp;10.11.</div>
+                            </div>
+                            <div class="inputContainer je-tab-position-row" id="calendarTabPositionRow" style="display:none;">
+                                <label class="inputLabel inputLabelUnfocused" for="calendarTabPosition">Insert after nav item #</label>
+                                <input id="calendarTabPosition" is="emby-input" type="number" min="1" max="50" value="3"/>
+                                <div class="fieldDescription je-field-desc-sm">1 = after Home, 2 = after Favourites, 3 = after the first library, and so on.</div>
                             </div>
 
                             <div class="checkboxContainer"><label><input id="calendarUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages</span></label></div>
@@ -4261,6 +4333,20 @@
                 document.querySelector('#bookmarksUseCustomTabs').checked = config.BookmarksUseCustomTabs === true;
                 var __bAuto = document.querySelector('#bookmarksAutoCreateCustomTab');
                 if (__bAuto) __bAuto.checked = config.BookmarksAutoCreateCustomTab === true;
+
+                // Jellyfin 12 per-page home-tab placement (dropdown + custom position number).
+                [['bookmarks','Bookmarks'],['hiddenContent','HiddenContent'],['downloads','Downloads'],['calendar','Calendar']].forEach(function (e) {
+                    var sel = document.querySelector('#' + e[0] + 'TabPlacement');
+                    var pos = document.querySelector('#' + e[0] + 'TabPosition');
+                    var row = document.querySelector('#' + e[0] + 'TabPositionRow');
+                    if (sel) { sel.value = config[e[1] + 'TabPlacement'] || 'afterLibraries'; }
+                    if (pos) { pos.value = config[e[1] + 'TabPosition'] || 3; }
+                    if (sel && row) {
+                        var upd = function () { row.style.display = (sel.value === 'custom') ? '' : 'none'; };
+                        upd();
+                        if (!sel.dataset.jeTabWired) { sel.addEventListener('change', upd); sel.dataset.jeTabWired = '1'; }
+                    }
+                });
                 document.querySelector('#useIcons').checked = config.UseIcons !== false;
                 document.querySelector('#iconStyle').value = config.IconStyle || 'emoji';
                 document.querySelector('#arrLinksEnabled').checked = config.ArrLinksEnabled;
@@ -4600,6 +4686,15 @@
             config.BookmarksUseCustomTabs = document.querySelector('#bookmarksUseCustomTabs').checked;
             var __bAutoSave = document.querySelector('#bookmarksAutoCreateCustomTab');
             config.BookmarksAutoCreateCustomTab = !!(__bAutoSave && __bAutoSave.checked);
+
+            // Jellyfin 12 per-page home-tab placement (dropdown + custom position number).
+            [['bookmarks','Bookmarks'],['hiddenContent','HiddenContent'],['downloads','Downloads'],['calendar','Calendar']].forEach(function (e) {
+                var sel = document.querySelector('#' + e[0] + 'TabPlacement');
+                var pos = document.querySelector('#' + e[0] + 'TabPosition');
+                if (sel) { config[e[1] + 'TabPlacement'] = sel.value || 'afterLibraries'; }
+                if (pos) { var n = parseInt(pos.value, 10); config[e[1] + 'TabPosition'] = (isNaN(n) || n < 1) ? 3 : n; }
+            });
+
             config.UseIcons = document.querySelector('#useIcons').checked;
             config.IconStyle = document.querySelector('#iconStyle').value;
 

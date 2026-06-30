@@ -2809,6 +2809,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.HiddenContentUseNativeTab,
                 config.HiddenContentAdmin,
 
+                // Jellyfin 12 experimental-layout home-tab placement (per page)
+                config.BookmarksTabPlacement,
+                config.BookmarksTabPosition,
+                config.DownloadsTabPlacement,
+                config.DownloadsTabPosition,
+                config.CalendarTabPlacement,
+                config.CalendarTabPosition,
+                config.HiddenContentTabPlacement,
+                config.HiddenContentTabPosition,
+
                 // Maintenance Mode
                 config.MaintenanceModeEnabled,
                 config.MaintenanceModeMessage,

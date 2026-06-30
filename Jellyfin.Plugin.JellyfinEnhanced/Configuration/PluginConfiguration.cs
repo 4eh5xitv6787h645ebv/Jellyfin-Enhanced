@@ -273,6 +273,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             // Admin cross-user view + management; on by default, admins can disable below.
             HiddenContentAdmin = true;
 
+            // Jellyfin 12 experimental-layout home-tab placement (per page). Where each JE page's
+            // native AppBar/drawer nav entry sits relative to the native nav (Home, Favourites,
+            // libraries). Default "afterLibraries" so the libraries stay next to Favourites.
+            BookmarksTabPlacement = "afterLibraries";
+            BookmarksTabPosition = 3;
+            DownloadsTabPlacement = "afterLibraries";
+            DownloadsTabPosition = 3;
+            CalendarTabPlacement = "afterLibraries";
+            CalendarTabPosition = 3;
+            HiddenContentTabPlacement = "afterLibraries";
+            HiddenContentTabPosition = 3;
+
             // Hidden Content per-user defaults — applied when a user's
             // hidden-content.json is created and via "Apply defaults to all users".
             HiddenContentDefaultEnabled = true;
@@ -602,6 +614,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
         // Admin cross-user hidden-content view + management
         public bool HiddenContentAdmin { get; set; }
+
+        // Jellyfin 12 experimental-layout home-tab placement (per page).
+        // <Placement> is one of "afterHome" | "afterFavourites" | "afterLibraries" | "custom".
+        // <Position> is the 1-based index used only when Placement == "custom": the page's JE nav
+        // entry is inserted after the Nth top-level nav item (Home = 1, Favourites = 2, libraries
+        // follow). Consumed client-side by js/enhanced/v12-home-tabs.js; no effect on 10.11.
+        public string BookmarksTabPlacement { get; set; }
+        public int BookmarksTabPosition { get; set; }
+        public string DownloadsTabPlacement { get; set; }
+        public int DownloadsTabPosition { get; set; }
+        public string CalendarTabPlacement { get; set; }
+        public int CalendarTabPosition { get; set; }
+        public string HiddenContentTabPlacement { get; set; }
+        public int HiddenContentTabPosition { get; set; }
 
         // Hidden Content per-user defaults
         public bool HiddenContentDefaultEnabled { get; set; }

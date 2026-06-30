@@ -114,7 +114,7 @@
         var out = [];
         REGISTRY.forEach(function (p) {
             if (!usesSidebarMode(p)) { return; }
-            out.push({ key: p.key, host: p.host, render: p.render, label: labelFor(p), icon: p.icon, _index: BASE + out.length });
+            out.push({ key: p.key, prefix: p.prefix, host: p.host, render: p.render, label: labelFor(p), icon: p.icon, _index: BASE + out.length });
         });
         JE.homeTabs._pages = out;
         return out;
@@ -178,28 +178,70 @@
         a.appendChild(document.createTextNode(label));
     }
 
-    // (2) Visible MUI nav buttons in the AppBar — cloned from the native Favourites button (so MUI
-    // styling/theme tracking matches exactly), inserted right after Favourites (the native position
-    // for non-library "app" links), each linking to `#/home?tab=N`.
+    // ---- Per-page placement (config-driven) ----------------------------------------------------
+    // Where each JE page's nav entry sits relative to the native nav. Read live from config so an
+    // admin change applies on the next pass. mode = afterHome | afterFavourites | afterLibraries
+    // (default) | custom; position is the 1-based index (Home=1, Favourites=2, libraries follow)
+    // used only for custom.
+    function tabPlacement(prefix) {
+        var c = JE.pluginConfig || {};
+        var pos = parseInt(c[prefix + 'TabPosition'], 10);
+        return { mode: c[prefix + 'TabPlacement'] || 'afterLibraries', position: isNaN(pos) ? 0 : pos };
+    }
+    // Given the ordered native nav nodes (homeIdx/favIdx locate Home & Favourites within them),
+    // return the node this page should be inserted AFTER.
+    function anchorNode(prefix, items, homeIdx, favIdx) {
+        if (!items.length) { return null; }
+        var pl = tabPlacement(prefix), k;
+        if (pl.mode === 'afterHome') { k = homeIdx; }
+        else if (pl.mode === 'afterFavourites') { k = favIdx; }
+        else if (pl.mode === 'custom') { k = homeIdx + (Math.max(1, pl.position) - 1); }
+        else { k = items.length - 1; } // afterLibraries (default)
+        if (k < 0) { k = 0; }
+        if (k > items.length - 1) { k = items.length - 1; }
+        return items[k];
+    }
+    // Place each JE node after its placement anchor; pages sharing an anchor stack in tab order.
+    // nodeFor(p) returns (creating if needed) the element to position; items = native nav nodes.
+    function placeByConfig(pages, items, homeIdx, favIdx, nodeFor) {
+        var lastAt = new Map();
+        pages.forEach(function (p) {
+            var node = nodeFor(p); if (!node) { return; }
+            var anchor = anchorNode(p.prefix, items, homeIdx, favIdx); if (!anchor) { return; }
+            var after = lastAt.get(anchor) || anchor;
+            var parent = after.parentElement;
+            if (parent && after.nextSibling !== node) { parent.insertBefore(node, after.nextSibling); }
+            lastAt.set(anchor, node);
+        });
+    }
+
+    // (2) Native MUI nav buttons in the AppBar — cloned from the native Favourites button so MUI
+    // styling/theme tracking matches exactly; each links to `#/home?tab=N` and is positioned per its
+    // page's placement config (default: after the libraries, so libraries stay next to Favourites).
+    function nativeAppbarItems(host) {
+        // Native nav <a> in the Stack (Home/logo, Favourites, libraries); exclude our own buttons.
+        // The overflow "More" control is a <button>, so it's excluded by the tag check.
+        return Array.prototype.filter.call(host.children, function (c) {
+            return c.tagName === 'A' && !c.hasAttribute('data-je-nav');
+        });
+    }
     function ensureNavLinks(pages) {
         var fav = favNav(); if (!fav) { return; }
         var host = fav.parentElement; if (!host) { return; }
-        var anchor = fav; // keep JE buttons grouped immediately after Favourites, in tab order
-        pages.forEach(function (p) {
+        var items = nativeAppbarItems(host); if (!items.length) { return; }
+        var favIdx = items.indexOf(fav); if (favIdx < 0) { favIdx = Math.min(1, items.length - 1); }
+        var homeIdx = 0;
+        for (var i = 0; i < items.length; i++) { if (items[i].getAttribute('href') === '#/') { homeIdx = i; break; } }
+        placeByConfig(pages, items, homeIdx, favIdx, function (p) {
             var a = host.querySelector('a[data-je-nav="' + p.key + '"]');
-            if (a) {
-                a.setAttribute('href', '#/home?tab=' + p._index);
-            } else {
-                a = fav.cloneNode(true);
-                a.setAttribute('href', '#/home?tab=' + p._index);
-                a.setAttribute('data-je-nav', p.key);
-                a.removeAttribute('aria-label');
-                setIcon(a.querySelector('.MuiButton-startIcon'), p.icon);
-                setButtonLabel(a, p.label);
-                // colour (active/inactive) is applied authoritatively by setNavActive
-            }
-            if (anchor.nextSibling !== a) { host.insertBefore(a, anchor.nextSibling); }
-            anchor = a;
+            if (a) { a.setAttribute('href', '#/home?tab=' + p._index); return a; }
+            a = fav.cloneNode(true);
+            a.setAttribute('href', '#/home?tab=' + p._index);
+            a.setAttribute('data-je-nav', p.key);
+            a.removeAttribute('aria-label');
+            setIcon(a.querySelector('.MuiButton-startIcon'), p.icon);
+            setButtonLabel(a, p.label);
+            return a; // colour applied authoritatively by setNavActive
         });
     }
 
@@ -209,34 +251,41 @@
         for (var i = 0; i < links.length; i++) { if (links[i].closest('.MuiList-root')) { return links[i]; } }
         return null;
     }
+    // Native drawer nav <li>s (across the Home/Favourites + Libraries lists), excluding our own.
+    function nativeDrawerItems(root) {
+        var out = [];
+        root.querySelectorAll('.MuiListItem-root').forEach(function (li) {
+            if (li.hasAttribute('data-je-dnav')) { return; }
+            if (li.querySelector('a.MuiListItemButton-root[href]')) { out.push(li); }
+        });
+        return out;
+    }
     function ensureDrawerLinks(pages) {
         var fav = drawerFav(); if (!fav) { return; }
         var favLi = fav.closest('li') || fav;
-        var ul = favLi.parentElement; if (!ul) { return; }
-        var anchorLi = favLi; // insert JE items right after the Favourites item, in tab order
-        pages.forEach(function (p) {
-            var cl = ul.querySelector('[data-je-dnav="' + p.key + '"]');
-            if (cl) {
-                var ea = cl.matches('a') ? cl : cl.querySelector('a[href]');
-                if (ea) { ea.setAttribute('href', '#/home?tab=' + p._index); }
-            } else {
-                cl = favLi.cloneNode(true);
-                cl.setAttribute('data-je-dnav', p.key);
-                var a = cl.matches('a') ? cl : cl.querySelector('a[href]');
-                if (a) {
-                    a.setAttribute('href', '#/home?tab=' + p._index);
-                    a.removeAttribute('aria-label');
-                    a.classList.remove('Mui-selected');
-                    // The drawer auto-closes on tap: ResponsiveDrawer wraps content in
-                    // <Box role="presentation" onClick={onClose}>, so our click bubbles to it like
-                    // the native items — no manual close needed (adding one would re-toggle it open).
-                }
-                setIcon(cl.querySelector('.MuiListItemIcon-root'), p.icon);
-                var txt = cl.querySelector('.MuiListItemText-primary') || cl.querySelector('[class*="ListItemText"] span') || cl.querySelector('[class*="ListItemText"]');
-                if (txt) { txt.textContent = p.label; }
+        var root = favLi.closest('.MuiDrawer-root') || document;
+        var items = nativeDrawerItems(root); if (!items.length) { return; }
+        var favIdx = items.indexOf(favLi); if (favIdx < 0) { favIdx = Math.min(1, items.length - 1); }
+        var homeIdx = 0;
+        for (var i = 0; i < items.length; i++) { var ha = items[i].querySelector('a[href]'); var hh = ha && ha.getAttribute('href'); if (hh === '#/home' || hh === '/home') { homeIdx = i; break; } }
+        placeByConfig(pages, items, homeIdx, favIdx, function (p) {
+            var cl = root.querySelector('[data-je-dnav="' + p.key + '"]');
+            if (cl) { var ea = cl.matches('a') ? cl : cl.querySelector('a[href]'); if (ea) { ea.setAttribute('href', '#/home?tab=' + p._index); } return cl; }
+            cl = favLi.cloneNode(true);
+            cl.setAttribute('data-je-dnav', p.key);
+            var a = cl.matches('a') ? cl : cl.querySelector('a[href]');
+            if (a) {
+                a.setAttribute('href', '#/home?tab=' + p._index);
+                a.removeAttribute('aria-label');
+                a.classList.remove('Mui-selected');
+                // The drawer auto-closes on tap: ResponsiveDrawer wraps content in
+                // <Box role="presentation" onClick={onClose}>, so our click bubbles to it like the
+                // native items — no manual close needed (adding one would re-toggle it open).
             }
-            if (anchorLi.nextSibling !== cl) { ul.insertBefore(cl, anchorLi.nextSibling); }
-            anchorLi = cl;
+            setIcon(cl.querySelector('.MuiListItemIcon-root'), p.icon);
+            var txt = cl.querySelector('.MuiListItemText-primary') || cl.querySelector('[class*="ListItemText"] span') || cl.querySelector('[class*="ListItemText"]');
+            if (txt) { txt.textContent = p.label; }
+            return cl;
         });
     }
 
