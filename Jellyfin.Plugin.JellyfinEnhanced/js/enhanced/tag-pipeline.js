@@ -710,11 +710,16 @@
                 ${buildIndicatorOffsetCSS()}
             `);
 
-            // "Hide Tags on Hover" setting: fully hides the tag layer on hover.
-            // Without this, Jellyfin's overlay already covers tags (they're behind it).
-            // This setting makes them completely invisible for users who want zero clutter.
+            // "Hide Tags on Hover" setting: fully hides the tag layer while the
+            // card's action overlay is showing. Jellyfin reveals that overlay on
+            // BOTH :hover and :focus-within (card.scss `.card-hoverable:hover,
+            // .card-hoverable:focus-within`) — the latter is what fires on touch
+            // devices, where :hover never triggers (hover: none). Mirroring both
+            // selectors makes the fade work on desktop AND mobile, exactly when the
+            // buttons appear.
             JE.helpers.addCSS('je-tag-hover-fade', `
-                body.je-tags-hide-on-hover .card:hover .je-tag-host {
+                body.je-tags-hide-on-hover .card:hover .je-tag-host,
+                body.je-tags-hide-on-hover .card:focus-within .je-tag-host {
                     opacity: 0 !important;
                     transition: opacity 0.15s ease;
                 }
