@@ -476,7 +476,7 @@ Quality, Genre, Language, and Rating tags each have a **Choose where to show** c
 - **Movies / Shows / Episodes** — the content types the tag is shown on. Applies everywhere the tag renders (home, libraries, detail pages, search).
 - **Continue Watching / Next Up** — whether the tag also appears in those two home rows.
 
-Each choice is per-user, saved to your profile, and takes effect immediately with no page refresh.
+Each choice is per-user, saved to your profile, and takes effect immediately with no page refresh. Admins can set **server-wide defaults** for all of these (and the rating sources above) in the plugin config page — a user's own choice always overrides the admin default. See [Admin configuration](enhanced-settings.md#tags-quality-genre-language-rating-people).
 
 
 ### People Tags

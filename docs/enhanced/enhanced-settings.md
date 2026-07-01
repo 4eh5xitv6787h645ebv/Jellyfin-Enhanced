@@ -61,6 +61,16 @@ Most features can be enabled/disabled individually:
 2. Enable and configure tags you want *(Eg: `Quality Tags`)*
 3. Adjust position (top-left, top-right, etc.)
 
+### Server-wide defaults
+
+In **Dashboard** → **Plugins** → **Jellyfin Enhanced** (the tag settings section), each poster-tag type exposes admin defaults that apply to users who haven't customised them. Users can still override any of these in their personal Enhanced panel — resolution order is **user's own choice → admin default → on**.
+
+- **Default visibility** *(Quality / Genre / Language / Rating)* — which surfaces the tag appears on by default: **Movies**, **Shows**, **Episodes**, **Continue Watching**, **Next Up**. For example, uncheck *Episodes* to stop rating tags appearing on individual episodes server-wide.
+- **Default sources** *(Rating)* — which rating sources appear by default: **TMDB rating**, **Rotten Tomatoes**, **User rating**.
+- **Hide Tags on Hover** — fade tag overlays while a card's action buttons are showing. Works on both hover (desktop) and tap/focus (touch devices).
+
+All default to **on**, so existing behaviour is unchanged until an admin opts out of something.
+
 !!! tip
 
     [Custom CSS available](../advanced/css-customization.md#tags)
