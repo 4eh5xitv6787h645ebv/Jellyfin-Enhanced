@@ -53,6 +53,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string GenreTagsPosition { get; set; } = "top-right";
         public string LanguageTagsPosition { get; set; } = "bottom-left";
         public string RatingTagsPosition { get; set; } = "bottom-right";
+
+        // Per-tag "show on" scope — lets each user restrict where a given poster
+        // tag type appears (by content type and by the Continue Watching / Next Up
+        // home rows). All dimensions default to true so existing users see no
+        // change; unchecking a dimension suppresses that tag there. See #561.
+        public TagScopeSettings QualityTagsScope { get; set; } = new TagScopeSettings();
+        public TagScopeSettings GenreTagsScope { get; set; } = new TagScopeSettings();
+        public TagScopeSettings LanguageTagsScope { get; set; } = new TagScopeSettings();
+        public TagScopeSettings RatingTagsScope { get; set; } = new TagScopeSettings();
+
         public bool ShowRatingInPlayer { get; set; } = true;
         public bool RemoveContinueWatchingEnabled { get; set; }
         public string LastOpenedTab { get; set; } = string.Empty;
@@ -60,6 +70,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string DisplayLanguage { get; set; } = string.Empty;
         public string CalendarDisplayMode { get; set; } = "list";
         public string CalendarDefaultViewMode { get; set; } = "agenda";
+    }
+
+    /// <summary>
+    /// Controls which surfaces a poster-tag type is shown on. Each flag is an
+    /// independent "show here" switch; all default to true (tag shows everywhere),
+    /// so the setting is purely opt-in and never hides tags for existing users.
+    /// Content-type flags (Movies/Shows/Episodes) apply anywhere the tag renders;
+    /// the ContinueWatching / NextUp flags additionally gate the two home rows.
+    /// </summary>
+    public class TagScopeSettings
+    {
+        public bool Movies { get; set; } = true;
+        public bool Shows { get; set; } = true;
+        public bool Episodes { get; set; } = true;
+        public bool ContinueWatching { get; set; } = true;
+        public bool NextUp { get; set; } = true;
     }
 
     public class UserShortcuts

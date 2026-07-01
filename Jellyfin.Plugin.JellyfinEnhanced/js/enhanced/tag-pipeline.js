@@ -356,11 +356,17 @@
                     }
                 }
 
+                // Per-card visibility context (#561) — computed once and reused by
+                // every render path below so the per-tag "show on" filter is applied
+                // consistently no matter which cache path serves the card.
+                const visCtx = JE.tagVisibility ? JE.tagVisibility.contextFor(el, itemType) : null;
+
                 // Try server cache first (all tag data pre-computed in one object)
                 const serverEntry = serverCache?.get(itemId);
                 if (serverEntry) {
-                    for (const [, renderer] of renderers) {
+                    for (const [name, renderer] of renderers) {
                         if (!renderer.isEnabled()) continue;
+                        if (JE.tagVisibility && !JE.tagVisibility.allows(name, visCtx)) continue;
                         if (renderer.renderFromServerCache) {
                             try { renderer.renderFromServerCache(renderTarget, serverEntry, itemId); } catch {}
                         }
@@ -370,8 +376,11 @@
 
                 // Fall back to localStorage/hot cache, then batch fetch for misses
                 let allCacheHits = true;
-                for (const [, renderer] of renderers) {
+                for (const [name, renderer] of renderers) {
                     if (!renderer.isEnabled()) continue;
+                    // A tag hidden here by the visibility filter needs no data, so it
+                    // must not force a batch fetch (leave allCacheHits untouched).
+                    if (JE.tagVisibility && !JE.tagVisibility.allows(name, visCtx)) continue;
                     if (renderer.renderFromCache) {
                         if (!renderer.renderFromCache(renderTarget, itemId)) allCacheHits = false;
                     } else {
@@ -541,10 +550,14 @@
 
                 // Render to ALL cards with this ID (same item can appear in multiple rows)
                 for (const entry of batchEntries) {
-                    const { renderTarget } = entry;
+                    const { renderTarget, el } = entry;
                     const extras = { firstEpisode, parentSeries, ratingParentSeries, renderTarget };
+                    // #561: gate per card element — the same item can appear in a
+                    // home row and a library grid with different visibility.
+                    const visCtx = JE.tagVisibility ? JE.tagVisibility.contextFor(el, item.Type) : null;
                     for (const [name, renderer] of renderers) {
                         if (!renderer.isEnabled()) continue;
+                        if (JE.tagVisibility && !JE.tagVisibility.allows(name, visCtx)) continue;
                         try {
                             renderer.render(renderTarget, item, extras);
                         } catch (err) {
@@ -583,7 +596,7 @@
         } catch (err) {
             console.warn(`${logPrefix} Batch fetch failed, falling back to individual fetches:`, err);
             // Fallback: process items individually
-            for (const { renderTarget, itemId } of batch) {
+            for (const { renderTarget, itemId, el } of batch) {
                 try {
                     const item = JE.helpers?.getItemCached
                         ? await JE.helpers.getItemCached(itemId, { userId })
@@ -593,9 +606,11 @@
                     const firstEpisode = (item.Type === 'Series' || item.Type === 'Season')
                         ? await getFirstEpisode(userId, item.Id) : null;
                     const extras = { firstEpisode, parentSeries: null, ratingParentSeries: null, renderTarget };
+                    const visCtx = JE.tagVisibility ? JE.tagVisibility.contextFor(el, item.Type) : null;
 
-                    for (const [, renderer] of renderers) {
+                    for (const [name, renderer] of renderers) {
                         if (!renderer.isEnabled()) continue;
+                        if (JE.tagVisibility && !JE.tagVisibility.allows(name, visCtx)) continue;
                         try { renderer.render(renderTarget, item, extras); } catch {}
                     }
                 } catch {}

@@ -564,6 +564,7 @@
                 'enhanced/config.js',
                 'enhanced/helpers.js',
                 'enhanced/native-tabs.js',
+                'enhanced/tag-visibility.js',
                 'enhanced/tag-pipeline.js',
                 'enhanced/icons.js',
                 'enhanced/features.js',

@@ -190,6 +190,14 @@
         const { tmdbKey, mediaType } = resolved;
         const rating = await fetchUserRating(tmdbKey, mediaType);
 
+        // Re-check after the async gap (#561): the user may have disabled rating
+        // tags, or narrowed this tag's "show on" scope, while the fetch was in
+        // flight. The pipeline gates the initial render, but this async
+        // continuation runs later — without re-checking, it could recreate the
+        // user-rating chip on a card a reinitialize just cleared.
+        if (!JE.currentSettings?.ratingTagsEnabled) return;
+        if (JE.tagVisibility && !JE.tagVisibility.allows('rating', JE.tagVisibility.contextFor(containerOrEl, item?.Type))) return;
+
         if (rating === null && JE.pluginConfig?.ShowUserRatingDash === false) return;
 
         // Accept either the overlay container itself or the cardImageContainer

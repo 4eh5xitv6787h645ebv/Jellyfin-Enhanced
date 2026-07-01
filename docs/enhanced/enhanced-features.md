@@ -463,6 +463,20 @@ Show TMDB and Rotten Tomatoes ratings on posters and in player.
 - Color-coded by rating value
 
 
+### Choosing Where Tags Appear
+
+![Choose where to show — per-tag scope controls](../images/tag-scope.png)
+
+Quality, Genre, Language, and Rating tags each have a **Choose where to show** control in the Enhanced panel (**Settings** tab), tucked under that tag's toggle. It lets you limit a tag type to certain content and hide it where you don't want it — for example, keep rating tags on movies but not on individual episodes, or hide them on the **Continue Watching** and **Next Up** home rows.
+
+**Options (all enabled by default, so nothing changes until you opt in):**
+
+- **Movies / Shows / Episodes** — the content types the tag is shown on. Applies everywhere the tag renders (home, libraries, detail pages, search).
+- **Continue Watching / Next Up** — whether the tag also appears in those two home rows.
+
+Each choice is per-user, saved to your profile, and takes effect immediately with no page refresh.
+
+
 ### People Tags
 
 ![People tags on cast cards](../images/people-tags.png)
