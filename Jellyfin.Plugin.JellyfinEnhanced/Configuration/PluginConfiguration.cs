@@ -395,6 +395,37 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string GenreTagsPosition { get; set; } = "top-right";
         public string LanguageTagsPosition { get; set; } = "bottom-left";
         public string RatingTagsPosition { get; set; } = "bottom-right";
+
+        // Admin DEFAULTS for the per-tag "show on" scope (#561). Flat, all default
+        // true. A user's own scope choice overrides these; where a user hasn't set
+        // a value the client falls back to these, then to true. Naming mirrors the
+        // HiddenContentDefault* pattern: PascalCase prop == camelCase config-page id.
+        public bool QualityTagsScopeMovies { get; set; } = true;
+        public bool QualityTagsScopeShows { get; set; } = true;
+        public bool QualityTagsScopeEpisodes { get; set; } = true;
+        public bool QualityTagsScopeContinueWatching { get; set; } = true;
+        public bool QualityTagsScopeNextUp { get; set; } = true;
+        public bool GenreTagsScopeMovies { get; set; } = true;
+        public bool GenreTagsScopeShows { get; set; } = true;
+        public bool GenreTagsScopeEpisodes { get; set; } = true;
+        public bool GenreTagsScopeContinueWatching { get; set; } = true;
+        public bool GenreTagsScopeNextUp { get; set; } = true;
+        public bool LanguageTagsScopeMovies { get; set; } = true;
+        public bool LanguageTagsScopeShows { get; set; } = true;
+        public bool LanguageTagsScopeEpisodes { get; set; } = true;
+        public bool LanguageTagsScopeContinueWatching { get; set; } = true;
+        public bool LanguageTagsScopeNextUp { get; set; } = true;
+        public bool RatingTagsScopeMovies { get; set; } = true;
+        public bool RatingTagsScopeShows { get; set; } = true;
+        public bool RatingTagsScopeEpisodes { get; set; } = true;
+        public bool RatingTagsScopeContinueWatching { get; set; } = true;
+        public bool RatingTagsScopeNextUp { get; set; } = true;
+
+        // Admin DEFAULTS for which rating sources appear (#561).
+        public bool RatingTagsSourceTmdb { get; set; } = true;
+        public bool RatingTagsSourceRottenTomatoes { get; set; } = true;
+        public bool RatingTagsSourceUserRating { get; set; } = true;
+
         public bool ShowRatingInPlayer { get; set; } = true;
         public bool GenreTagsEnabled { get; set; }
         public string DefaultLanguage { get; set; }

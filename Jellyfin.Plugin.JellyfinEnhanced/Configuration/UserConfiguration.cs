@@ -85,23 +85,27 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
     /// </summary>
     public class TagScopeSettings
     {
-        public bool Movies { get; set; } = true;
-        public bool Shows { get; set; } = true;
-        public bool Episodes { get; set; } = true;
-        public bool ContinueWatching { get; set; } = true;
-        public bool NextUp { get; set; } = true;
+        // Nullable: null = "user hasn't chosen", so the client resolves the admin
+        // default (PluginConfiguration.{Tag}TagsScope{Dim}) then true. A non-null
+        // value is an explicit user override. Keeping these non-nullable would
+        // force every key to true on the typed round-trip and mask admin defaults.
+        public bool? Movies { get; set; }
+        public bool? Shows { get; set; }
+        public bool? Episodes { get; set; }
+        public bool? ContinueWatching { get; set; }
+        public bool? NextUp { get; set; }
     }
 
     /// <summary>
-    /// Which rating sources appear on poster rating tags (#561). Each defaults to
-    /// true; turning one off hides that source. If all are off the rating tag is
-    /// simply not rendered.
+    /// Which rating sources appear on poster rating tags (#561). Null = unset (use
+    /// the admin default then true); a non-null value is an explicit user override.
+    /// If all resolve to off the rating tag is simply not rendered.
     /// </summary>
     public class RatingSourceSettings
     {
-        public bool Tmdb { get; set; } = true;
-        public bool RottenTomatoes { get; set; } = true;
-        public bool UserRating { get; set; } = true;
+        public bool? Tmdb { get; set; }
+        public bool? RottenTomatoes { get; set; }
+        public bool? UserRating { get; set; }
     }
 
     public class UserShortcuts

@@ -160,10 +160,13 @@
     function applyRatingTag(el, rating) {
         if (!rating || (!rating.tmdb && rating.critic === null)) return;
 
-        // #561: per-user "what to show" — omit rating sources the user has turned
-        // off. A missing setting (or key) means show all. If every applicable
-        // source is off the container ends up empty and the guard below skips it.
-        const sources = JE.currentSettings?.ratingTagsSources || {};
+        // #561: "what to show" — omit rating sources that are turned off. Honours
+        // the user's choice first, then the admin default (via tagVisibility), then
+        // shows. If every applicable source is off the container ends up empty and
+        // the guard below skips it.
+        const srcOn = (k) => JE.tagVisibility
+            ? JE.tagVisibility.sourceEnabled('rating', k)
+            : (JE.currentSettings?.ratingTagsSources?.[k] !== false);
 
         const existingContainer = el.querySelector(`.${containerClass}`);
         if (existingContainer) existingContainer.remove();
@@ -171,7 +174,7 @@
         const container = document.createElement('div');
         container.className = containerClass;
 
-        if (rating.critic !== null && sources.rottenTomatoes !== false) {
+        if (rating.critic !== null && srcOn('rottenTomatoes')) {
             const criticTag = document.createElement('div');
             criticTag.className = `${tagClass} rating-tag-critic`;
 
@@ -186,7 +189,7 @@
             container.appendChild(criticTag);
         }
 
-        if (rating.tmdb && sources.tmdb !== false) {
+        if (rating.tmdb && srcOn('tmdb')) {
             // Show a dash instead of "0.0" — a zero rating means no data, not a genuine score
             const displayRating = parseFloat(rating.tmdb) === 0 ? '—' : rating.tmdb;
 

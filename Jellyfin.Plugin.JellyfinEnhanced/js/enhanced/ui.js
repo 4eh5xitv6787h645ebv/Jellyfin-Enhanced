@@ -665,10 +665,16 @@
         const buildTagChoicePanel = (tagKey, group, labelKey, rows) => {
             const enabled = !!JE.currentSettings[`${tagKey}TagsEnabled`];
             const obj = JE.currentSettings[`${tagKey}Tags${group}`] || {};
+            // Reflect the EFFECTIVE value (user override → admin default → true) so
+            // an admin-defaulted-off option shows unchecked even before the user
+            // has touched it.
+            const isChecked = (key) => JE.tagVisibility
+                ? JE.tagVisibility.effective(tagKey, group, key)
+                : (obj[key] !== false);
             const rowsHtml = rows.map(r => `
                                     <div class="je-quality-cat-row">
                                         <label class="je-quality-cat-label-wrap">
-                                            <input type="checkbox" data-choice-tag="${tagKey}" data-choice-group="${group}" data-choice-key="${r.key}" ${obj[r.key] !== false ? 'checked' : ''} style="accent-color:${toggleAccentColor};">
+                                            <input type="checkbox" data-choice-tag="${tagKey}" data-choice-group="${group}" data-choice-key="${r.key}" ${isChecked(r.key) ? 'checked' : ''} style="accent-color:${toggleAccentColor};">
                                             <span class="je-quality-cat-label">${JE.t(r.labelKey)}</span>
                                         </label>
                                     </div>`).join('');
@@ -1762,10 +1768,9 @@
                     if (!key) return;
                     const settingsKey = `${tag}Tags${group}`;
                     const prev = JE.currentSettings[settingsKey] || {};
-                    const next = {};
-                    rows.forEach(r => { next[r.key] = prev[r.key] !== false; });
-                    next[key] = cb.checked;
-                    JE.currentSettings[settingsKey] = next;
+                    // Store only the toggled key (immutable). Untouched keys stay
+                    // unset so they keep resolving to the admin default via effective().
+                    JE.currentSettings[settingsKey] = { ...prev, [key]: cb.checked };
                     JE.saveUserSettings('settings.json', JE.currentSettings);
                     const reinit = JE[`reinitialize${tag.charAt(0).toUpperCase() + tag.slice(1)}Tags`];
                     if (typeof reinit === 'function') reinit();

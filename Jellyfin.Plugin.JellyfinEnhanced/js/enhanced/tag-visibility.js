@@ -105,14 +105,48 @@
      * @param {{contentType: (string|null), section: (string|null)}} ctx - From contextFor().
      * @returns {boolean} True if the tag should be shown.
      */
+    function cap(s) {
+        return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+    }
+
+    /**
+     * Resolve the effective on/off for one per-tag choice, honouring the admin
+     * default. Precedence: the user's own value → the admin default from plugin
+     * config (a flat PascalCase key like `RatingTagsScopeEpisodes` /
+     * `RatingTagsSourceTmdb`) → true. This mirrors the quality-category
+     * effEnable resolution and the HiddenContentDefault* admin pattern.
+     * @param {string} tagName - 'quality' | 'genre' | 'language' | 'rating'.
+     * @param {('Scope'|'Sources')} group
+     * @param {string} key - e.g. 'episodes', 'continueWatching', 'tmdb'.
+     * @returns {boolean}
+     */
+    function effective(tagName, group, key) {
+        const userObj = JE.currentSettings && JE.currentSettings[`${tagName}Tags${group}`];
+        if (userObj && typeof userObj[key] === 'boolean') return userObj[key];
+        const adminKey = cap(tagName) + (group === 'Sources' ? 'TagsSource' : 'TagsScope') + cap(key);
+        const a = JE.pluginConfig && JE.pluginConfig[adminKey];
+        if (typeof a === 'boolean') return a;
+        return true;
+    }
+
+    /**
+     * Whether a given rating source (tmdb | rottenTomatoes | userRating) should
+     * render, honouring user choice then the admin default. Used by ratingtags.js
+     * and userreviewtags.js.
+     * @param {string} tagName
+     * @param {string} key
+     * @returns {boolean}
+     */
+    function sourceEnabled(tagName, key) {
+        return effective(tagName, 'Sources', key);
+    }
+
     function allows(tagName, ctx) {
         if (!ctx) return true;
-        const scope = JE.currentSettings && JE.currentSettings[tagName + 'TagsScope'];
-        if (!scope) return true; // no per-user scope set → show everywhere (default)
         // Content-type filter applies wherever the tag renders.
-        if (ctx.contentType && scope[ctx.contentType] === false) return false;
+        if (ctx.contentType && !effective(tagName, 'Scope', ctx.contentType)) return false;
         // Section filter only suppresses inside the two detectable home rows.
-        if (ctx.section && scope[ctx.section] === false) return false;
+        if (ctx.section && !effective(tagName, 'Scope', ctx.section)) return false;
         return true;
     }
 
@@ -123,6 +157,8 @@
         contentTypeOf,
         sectionOf,
         contextFor,
+        effective,
+        sourceEnabled,
         allows
     };
 })(window.JellyfinEnhanced);
