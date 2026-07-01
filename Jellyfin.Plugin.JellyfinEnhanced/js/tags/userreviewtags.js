@@ -183,6 +183,8 @@
         if (!JE.pluginConfig?.ShowUserReviews) return;
         if (!JE.pluginConfig?.ShowUserRatingOnPosters) return;
         if (!JE.currentSettings?.ratingTagsEnabled) return;
+        // #561: user rating is one of the rating "sources" the user can turn off.
+        if (JE.currentSettings?.ratingTagsSources?.userRating === false) return;
 
         const resolved = resolveTmdbKey(item, extras);
         if (!resolved) return;
@@ -196,6 +198,7 @@
         // continuation runs later — without re-checking, it could recreate the
         // user-rating chip on a card a reinitialize just cleared.
         if (!JE.currentSettings?.ratingTagsEnabled) return;
+        if (JE.currentSettings?.ratingTagsSources?.userRating === false) return;
         if (JE.tagVisibility && !JE.tagVisibility.allows('rating', JE.tagVisibility.contextFor(containerOrEl, item?.Type))) return;
 
         if (rating === null && JE.pluginConfig?.ShowUserRatingDash === false) return;

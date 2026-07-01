@@ -462,6 +462,8 @@ Show TMDB and Rotten Tomatoes ratings on posters and in player.
 - Optional OSD display during playback
 - Color-coded by rating value
 
+**Choose what to show:** Rating tags have a **Choose what to show** control (Enhanced panel → **Settings**) to pick which sources appear — **TMDB rating**, **Rotten Tomatoes**, and **User rating** — each independently. All are on by default; turning them all off simply hides the rating tag.
+
 
 ### Choosing Where Tags Appear
 

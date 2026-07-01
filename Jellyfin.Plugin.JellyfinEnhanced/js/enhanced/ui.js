@@ -636,42 +636,50 @@
         const releaseNotesTextColor = themeVars.textColor;
         const logoUrl = themeVars.logo;
 
-        // #561: rows for the collapsible per-tag "Show on…" scope panel. Keys match
-        // the C# TagScopeSettings properties (camelCase ↔ PascalCase) and the
-        // `data-scope-key` the listener reads. Content types first, then home rows.
-        const tagScopeRows = [
+        // #561: rows for the collapsible per-tag choice panels. Keys match the C#
+        // property names (camelCase ↔ PascalCase) and the `data-choice-key` the
+        // listener reads.
+        const TAG_SCOPE_ROWS = [
             { key: 'movies',           labelKey: 'panel_settings_ui_tag_scope_movies' },
             { key: 'shows',            labelKey: 'panel_settings_ui_tag_scope_shows' },
             { key: 'episodes',         labelKey: 'panel_settings_ui_tag_scope_episodes' },
             { key: 'continueWatching', labelKey: 'panel_settings_ui_tag_scope_continue_watching' },
             { key: 'nextUp',           labelKey: 'panel_settings_ui_tag_scope_next_up' }
         ];
+        const RATING_SOURCE_ROWS = [
+            { key: 'tmdb',           labelKey: 'panel_settings_ui_rating_source_tmdb' },
+            { key: 'rottenTomatoes', labelKey: 'panel_settings_ui_rating_source_rt' },
+            { key: 'userRating',     labelKey: 'panel_settings_ui_rating_source_user' }
+        ];
         /**
-         * Build the collapsible "Show on…" scope panel for a poster-tag type.
-         * Reuses the quality-category expander markup/CSS (je-quality-cat-*) so it
-         * looks identical to the existing panel. Each checkbox defaults to checked
-         * (scope flag !== false), matching the all-on default.
+         * Build a collapsible choice panel (reuses the quality-category expander
+         * markup/CSS `je-quality-cat-*`). `group` is both the settings-key suffix
+         * and the element-id segment: 'Scope' → JE.currentSettings[`${tag}TagsScope`],
+         * 'Sources' → …TagsSources. Each checkbox defaults to checked (flag !== false).
          * @param {('quality'|'genre'|'language'|'rating')} tagKey
-         * @returns {string} HTML for the scope wrap + list.
+         * @param {('Scope'|'Sources')} group
+         * @param {string} labelKey  i18n key for the expander label
+         * @param {Array<{key:string,labelKey:string}>} rows
+         * @returns {string} HTML for the wrap + list.
          */
-        const buildTagScopePanel = (tagKey) => {
+        const buildTagChoicePanel = (tagKey, group, labelKey, rows) => {
             const enabled = !!JE.currentSettings[`${tagKey}TagsEnabled`];
-            const scope = JE.currentSettings[`${tagKey}TagsScope`] || {};
-            const rows = tagScopeRows.map(r => `
+            const obj = JE.currentSettings[`${tagKey}Tags${group}`] || {};
+            const rowsHtml = rows.map(r => `
                                     <div class="je-quality-cat-row">
                                         <label class="je-quality-cat-label-wrap">
-                                            <input type="checkbox" data-scope-tag="${tagKey}" data-scope-key="${r.key}" ${scope[r.key] !== false ? 'checked' : ''} style="accent-color:${toggleAccentColor};">
+                                            <input type="checkbox" data-choice-tag="${tagKey}" data-choice-group="${group}" data-choice-key="${r.key}" ${obj[r.key] !== false ? 'checked' : ''} style="accent-color:${toggleAccentColor};">
                                             <span class="je-quality-cat-label">${JE.t(r.labelKey)}</span>
                                         </label>
                                     </div>`).join('');
             return `
-                                <div id="${tagKey}TagsScopeWrap" class="je-quality-cat-wrap" style="display: ${enabled ? 'block' : 'none'};">
-                                    <button type="button" id="${tagKey}TagsScopeExpander" class="je-quality-cat-expander" aria-expanded="false">
+                                <div id="${tagKey}Tags${group}Wrap" class="je-quality-cat-wrap" style="display: ${enabled ? 'block' : 'none'};">
+                                    <button type="button" id="${tagKey}Tags${group}Expander" class="je-quality-cat-expander" aria-expanded="false">
                                         <span class="material-icons je-cat-chevron" aria-hidden="true">chevron_right</span>
-                                        <span>${JE.t('panel_settings_ui_tag_scope_label')}</span>
+                                        <span>${JE.t(labelKey)}</span>
                                     </button>
                                 </div>
-                                <div id="${tagKey}TagsScopeList" class="je-quality-cat-list" style="display: none;">${rows}
+                                <div id="${tagKey}Tags${group}List" class="je-quality-cat-list" style="display: none;">${rowsHtml}
                                 </div>`;
         };
 
@@ -1080,7 +1088,7 @@
                                         }).join('');
                                     })()}
                                 </div>
-                                ${buildTagScopePanel('quality')}
+                                ${buildTagChoicePanel('quality', 'Scope', 'panel_settings_ui_tag_scope_label', TAG_SCOPE_ROWS)}
                             </div>
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
@@ -1095,7 +1103,7 @@
                                         <div data-pos="bottom-right" style="border-radius:2px; transition:background 0.2s;"></div>
                                     </div>
                                 </label>
-                                ${buildTagScopePanel('genre')}
+                                ${buildTagChoicePanel('genre', 'Scope', 'panel_settings_ui_tag_scope_label', TAG_SCOPE_ROWS)}
                             </div>
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
@@ -1110,7 +1118,7 @@
                                         <div data-pos="bottom-right" style="border-radius:2px; transition:background 0.2s;"></div>
                                     </div>
                                 </label>
-                                ${buildTagScopePanel('language')}
+                                ${buildTagChoicePanel('language', 'Scope', 'panel_settings_ui_tag_scope_label', TAG_SCOPE_ROWS)}
                             </div>
                                 <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                     <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
@@ -1125,7 +1133,7 @@
                                             <div data-pos="bottom-right" style="border-radius:2px; transition:background 0.2s;"></div>
                                         </div>
                                     </label>
-                                    ${buildTagScopePanel('rating')}
+                                    ${buildTagChoicePanel('rating', 'Sources', 'panel_settings_ui_rating_sources_label', RATING_SOURCE_ROWS)}${buildTagChoicePanel('rating', 'Scope', 'panel_settings_ui_tag_scope_label', TAG_SCOPE_ROWS)}
                                 </div>
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
@@ -1705,51 +1713,59 @@
                 document.body.classList.toggle('je-tags-hide-on-hover', hideOnHoverCheckbox.checked);
             });
         }
-        // #561: wire the per-tag "Show on…" scope panels (quality/genre/language/
-        // rating). The master toggle shows/hides the panel; the chevron expands the
-        // checkbox list; toggling a checkbox persists an immutable nested scope
-        // update and re-runs that tag's pipeline so tags add/remove instantly.
-        ['quality', 'genre', 'language', 'rating'].forEach((tag) => {
+        // #561: wire the collapsible choice panels — each tag's "where to show"
+        // scope, plus rating's "what to show" sources. The master toggle shows/hides
+        // the panel; the chevron expands the checkbox list; toggling a checkbox
+        // persists a complete, immutable nested object and re-runs that tag's
+        // pipeline so tags add/remove instantly.
+        const CHOICE_PANELS = [
+            ['quality', 'Scope', TAG_SCOPE_ROWS],
+            ['genre', 'Scope', TAG_SCOPE_ROWS],
+            ['language', 'Scope', TAG_SCOPE_ROWS],
+            ['rating', 'Sources', RATING_SOURCE_ROWS],
+            ['rating', 'Scope', TAG_SCOPE_ROWS]
+        ];
+        CHOICE_PANELS.forEach(([tag, group, rows]) => {
             const master = document.getElementById(`${tag}TagsToggle`);
-            const scopeWrap = document.getElementById(`${tag}TagsScopeWrap`);
-            const scopeList = document.getElementById(`${tag}TagsScopeList`);
-            const scopeExpander = document.getElementById(`${tag}TagsScopeExpander`);
+            const wrap = document.getElementById(`${tag}Tags${group}Wrap`);
+            const list = document.getElementById(`${tag}Tags${group}List`);
+            const expander = document.getElementById(`${tag}Tags${group}Expander`);
+            if (!wrap) return;
 
-            // Reveal/hide the scope panel with the master toggle; collapse it when off
-            // so it reopens collapsed next time the feature is enabled.
-            if (master && scopeWrap) {
+            // Reveal/hide the panel with the master toggle; collapse it when off so it
+            // reopens collapsed next time the feature is enabled.
+            if (master) {
                 master.addEventListener('change', () => {
-                    scopeWrap.style.display = master.checked ? 'block' : 'none';
-                    if (!master.checked && scopeList && scopeExpander) {
-                        scopeList.style.display = 'none';
-                        scopeExpander.setAttribute('aria-expanded', 'false');
+                    wrap.style.display = master.checked ? 'block' : 'none';
+                    if (!master.checked && list && expander) {
+                        list.style.display = 'none';
+                        expander.setAttribute('aria-expanded', 'false');
                     }
                 });
             }
             // Expand/collapse the checkbox list (chevron rotation is CSS-driven).
-            if (scopeExpander && scopeList) {
-                scopeExpander.addEventListener('click', () => {
-                    const expanded = scopeExpander.getAttribute('aria-expanded') === 'true';
-                    scopeExpander.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-                    scopeList.style.display = expanded ? 'none' : 'block';
+            if (expander && list) {
+                expander.addEventListener('click', () => {
+                    const expanded = expander.getAttribute('aria-expanded') === 'true';
+                    expander.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                    list.style.display = expanded ? 'none' : 'block';
                 });
             }
-            // Persist a checkbox change. Rebuild the full 5-key object (so the stored
-            // scope is always complete) with an immutable nested update, then trigger
-            // this tag's reinitialize to re-apply the pipeline visibility filter.
-            if (scopeList) {
-                scopeList.addEventListener('change', (e) => {
+            // Persist a checkbox change: rebuild the full object from `rows` (so the
+            // stored value is always complete) via an immutable nested update, then
+            // reinitialize this tag to re-apply the filter.
+            if (list) {
+                list.addEventListener('change', (e) => {
                     const cb = e.target;
                     if (!(cb instanceof HTMLInputElement) || cb.type !== 'checkbox') return;
-                    const key = cb.dataset.scopeKey;
+                    const key = cb.dataset.choiceKey;
                     if (!key) return;
-                    const scopeKey = `${tag}TagsScope`;
-                    const prev = JE.currentSettings[scopeKey] || {};
-                    const keys = JE.tagVisibility?.SCOPE_KEYS || ['movies', 'shows', 'episodes', 'continueWatching', 'nextUp'];
-                    const nextScope = {};
-                    keys.forEach(k => { nextScope[k] = prev[k] !== false; });
-                    nextScope[key] = cb.checked;
-                    JE.currentSettings[scopeKey] = nextScope;
+                    const settingsKey = `${tag}Tags${group}`;
+                    const prev = JE.currentSettings[settingsKey] || {};
+                    const next = {};
+                    rows.forEach(r => { next[r.key] = prev[r.key] !== false; });
+                    next[key] = cb.checked;
+                    JE.currentSettings[settingsKey] = next;
                     JE.saveUserSettings('settings.json', JE.currentSettings);
                     const reinit = JE[`reinitialize${tag.charAt(0).toUpperCase() + tag.slice(1)}Tags`];
                     if (typeof reinit === 'function') reinit();

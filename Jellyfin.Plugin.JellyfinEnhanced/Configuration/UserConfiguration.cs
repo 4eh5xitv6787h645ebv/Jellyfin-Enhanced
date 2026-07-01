@@ -63,6 +63,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public TagScopeSettings LanguageTagsScope { get; set; } = new TagScopeSettings();
         public TagScopeSettings RatingTagsScope { get; set; } = new TagScopeSettings();
 
+        // Per-user "what to show" for rating tags — which of the rating sources
+        // appear. All default to true. See #561.
+        public RatingSourceSettings RatingTagsSources { get; set; } = new RatingSourceSettings();
+
         public bool ShowRatingInPlayer { get; set; } = true;
         public bool RemoveContinueWatchingEnabled { get; set; }
         public string LastOpenedTab { get; set; } = string.Empty;
@@ -86,6 +90,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool Episodes { get; set; } = true;
         public bool ContinueWatching { get; set; } = true;
         public bool NextUp { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Which rating sources appear on poster rating tags (#561). Each defaults to
+    /// true; turning one off hides that source. If all are off the rating tag is
+    /// simply not rendered.
+    /// </summary>
+    public class RatingSourceSettings
+    {
+        public bool Tmdb { get; set; } = true;
+        public bool RottenTomatoes { get; set; } = true;
+        public bool UserRating { get; set; } = true;
     }
 
     public class UserShortcuts

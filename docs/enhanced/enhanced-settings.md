@@ -21,7 +21,7 @@ Access user-configured settings via the Enhanced panel:
 - Quality Tags *(with a **Choose where to show** control — limit the tag to Movies/Shows/Episodes and the Continue Watching / Next Up rows)*
 - Genre Tags *(with **Choose where to show**)*
 - Language Tags *(with **Choose where to show**)*
-- Rating Tags *(with **Choose where to show**)*
+- Rating Tags *(with **Choose what to show** — TMDB / Rotten Tomatoes / User rating — and **Choose where to show**)*
 - People Tags
 - Pause Screen
 - Auto-skip Intros
