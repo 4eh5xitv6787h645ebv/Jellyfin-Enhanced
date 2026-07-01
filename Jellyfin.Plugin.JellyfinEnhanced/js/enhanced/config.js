@@ -28,6 +28,33 @@
     };
 
     /**
+     * Ordered list of per-user settings group keys, mirroring the server-side
+     * Configuration/UserSettingsGroups.cs. Used to hide admin-locked groups from the
+     * settings panel. Keep in sync with the C# GroupKeys.
+     * @type {string[]}
+     */
+    JE.SETTING_GROUP_KEYS = [
+        'playback', 'autoskip', 'subtitles', 'random', 'watchprogress', 'filesizes',
+        'audiolanguages', 'qualitytags', 'genretags', 'languagetags', 'ratingtags',
+        'peopletags', 'removecontinuewatching', 'language'
+    ];
+
+    /**
+     * Whether a per-user settings group is available for the current user to configure.
+     * A group is available unless the admin has locked it via LockedUserSettingGroups
+     * (exposed through public-config, PascalCase). Locked groups are hidden from the
+     * settings panel; the server independently enforces the admin default for them, so
+     * this is purely a UI gate. Unknown/empty config → available (legacy behaviour).
+     * @param {string} groupKey
+     * @returns {boolean}
+     */
+    JE.isSettingGroupAvailable = (groupKey) => {
+        const cfg = JE.pluginConfig || {};
+        const locked = Array.isArray(cfg.LockedUserSettingGroups) ? cfg.LockedUserSettingGroups : [];
+        return locked.indexOf(groupKey) === -1;
+    };
+
+    /**
      * Saves user settings to the server.
      * For files other than settings.json, skips the POST if the data is identical
      * to the last saved value (prevents redundant writes for bookmarks, shortcuts etc.).

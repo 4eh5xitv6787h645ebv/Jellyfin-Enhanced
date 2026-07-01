@@ -1997,3 +1997,312 @@ div#radarrMappingsValidationResult,
 div#bazarrMappingsValidationResult {
     padding: 10px;
 }
+
+/* ─── User Settings Management tab ─────────────────────────────────────── */
+.je-usm-hidden { display: none !important; }
+
+.je-usm-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+.je-usm-actions { margin-top: 12px; }
+.je-usm-inline-label { display: flex; align-items: center; gap: 8px; }
+.je-usm-user-select { min-width: 200px; }
+.je-usm-profile-name { min-width: 180px; }
+
+.je-usm-include-row {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+}
+.je-usm-include-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.je-usm-sublabel {
+    font-weight: 600;
+    margin: 12px 0 6px;
+    opacity: 0.85;
+}
+.je-usm-apply-header {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Availability grid — one checkbox per settings group */
+.je-usm-availability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px 16px;
+    margin-top: 10px;
+}
+.je-usm-avail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 2px;
+    cursor: pointer;
+}
+
+/* Multi-select user checklist */
+.je-usm-user-checklist {
+    margin-top: 6px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+.je-usm-checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2px 12px;
+}
+.je-usm-check-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 2px;
+    cursor: pointer;
+    min-width: 0;
+}
+.je-usm-check-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.je-usm-loading { opacity: 0.55; font-size: 0.875em; }
+
+.je-usm-mini-btn {
+    padding: 0.3em 0.9em;
+    font-size: 0.82em;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    cursor: pointer;
+}
+.je-usm-mini-btn:hover { background: rgba(255, 255, 255, 0.15); }
+.je-usm-danger-btn { border-color: rgba(255, 107, 107, 0.5); color: #ff6b6b; }
+
+/* Act-as-user editor */
+.je-usm-actas-editor {
+    margin-top: 12px;
+}
+
+/* Profiles */
+.je-usm-profile-list { margin: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.je-usm-profile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+}
+.je-usm-profile-name-text { font-weight: 600; }
+
+.je-usm-status { font-size: 0.85em; margin-top: 8px; min-height: 1em; }
+.je-usm-status-ok { color: #4CAF50; }
+.je-usm-status-error { color: #ff6b6b; }
+
+/* ─── Act-as-user: JE settings-panel look-alike (default-theme colours) ── */
+.je-usm-panel {
+    --je-accent: #00A4DC;
+    background: rgb(24, 24, 24);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 12px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    /* Flow the sections into responsive columns (masonry-style) so they sit side-by-side
+       whenever there's room, using the available width instead of a single narrow column.
+       Every section is always expanded, so there's no expand/collapse reflow to worry about. */
+    column-width: 340px;
+    column-gap: 20px;
+}
+.je-usm-panel .je-usm-p-section {
+    margin: 0 0 16px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    /* Keep a whole section within one column. */
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+}
+.je-usm-panel .je-usm-p-section > summary {
+    padding: 16px;
+    font-weight: 600;
+    color: var(--je-accent);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+}
+.je-usm-panel .je-usm-p-section > summary::-webkit-details-marker { display: none; }
+.je-usm-panel .je-usm-p-section > summary .material-icons { font-size: 20px; }
+.je-usm-panel .je-usm-p-badge {
+    margin-left: auto;
+    font-size: 0.62em;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.85);
+}
+.je-usm-panel .je-usm-p-section.je-usm-locked { opacity: 0.55; }
+.je-usm-panel .je-usm-p-body { padding: 0 16px 16px 16px; }
+.je-usm-panel .je-usm-p-note {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 10px 18px;
+}
+.je-usm-panel .je-usm-p-card {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid var(--je-accent);
+}
+.je-usm-panel .je-usm-p-card:last-child { margin-bottom: 0; }
+.je-usm-panel .je-usm-p-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+.je-usm-panel .je-usm-p-toggle.je-usm-p-between { justify-content: space-between; }
+.je-usm-panel .je-usm-p-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--je-accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.je-usm-panel .je-usm-p-title { font-weight: 500; }
+.je-usm-panel .je-usm-p-desc { font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 2px; }
+.je-usm-panel .je-usm-p-heading { font-weight: 600; margin-bottom: 8px; }
+.je-usm-panel select.je-usm-p-select,
+.je-usm-panel input.je-usm-p-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+.je-usm-panel input.je-usm-p-num {
+    width: 64px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 4px 6px;
+}
+.je-usm-panel .je-usm-p-inline { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-left: 30px; }
+.je-usm-panel .je-usm-p-selrow { display: flex; gap: 12px; margin-top: 10px; }
+.je-usm-panel .je-usm-p-selrow > div { flex: 1; }
+
+/* preset swatch grids */
+.je-usm-panel .je-usm-p-presetgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 8px;
+}
+.je-usm-panel .je-usm-preset-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.1);
+    min-height: 30px;
+}
+.je-usm-panel .je-usm-preset-box:hover { background: rgba(255, 255, 255, 0.3); }
+.je-usm-panel .je-usm-preset-box.je-usm-preset-active { border-color: var(--je-accent); }
+
+/* colour pickers */
+.je-usm-panel .je-usm-color-wrap { display: flex; gap: 12px; }
+.je-usm-panel .je-usm-color-cols { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.je-usm-panel .je-usm-color-lbl { font-size: 13px; margin-bottom: 6px; color: rgba(255, 255, 255, 0.8); }
+.je-usm-panel .je-usm-color-row { display: flex; gap: 8px; align-items: center; }
+.je-usm-panel input[type="color"].je-usm-color {
+    width: 50px; height: 36px; border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px; cursor: pointer; background: transparent;
+}
+.je-usm-panel input[type="range"].je-usm-alpha { flex: 1; accent-color: var(--je-accent); }
+.je-usm-panel .je-usm-color-preview {
+    display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600;
+    border-radius: 6px; background: rgba(0, 0, 0, 0.3); padding: 12px 20px; flex: 0.5; align-self: center;
+}
+
+/* position grid */
+.je-usm-panel .je-usm-posgrid {
+    position: relative; width: min(60%, 280px); height: min(34%, 158px); min-height: 130px;
+    background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px; cursor: crosshair; user-select: none; overflow: hidden; margin: 0 auto;
+}
+.je-usm-panel .je-usm-posgrid-preview {
+    position: absolute; transform: translate(-50%, -50%); pointer-events: none; white-space: nowrap;
+    font-size: 13px; font-weight: 600; padding: 2px 6px; border-radius: 3px; text-shadow: 0 0 4px #000;
+}
+.je-usm-panel .je-usm-reset-btn {
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7); padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    display: inline-flex; align-items: center;
+}
+.je-usm-panel .je-usm-reset-btn .material-icons { font-size: 16px; }
+
+/* 2x2 position selector */
+.je-usm-panel .je-usm-possel {
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px;
+    width: 32px; height: 32px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 4px;
+    padding: 3px; cursor: pointer; flex-shrink: 0;
+}
+.je-usm-panel .je-usm-possel > div { border-radius: 2px; transition: background 0.2s; }
+
+/* quality-tag reorder */
+.je-usm-panel .je-usm-cat-wrap { margin: 8px 0 0 30px; }
+.je-usm-panel .je-usm-cat-expander {
+    background: transparent; border: none; color: rgba(255, 255, 255, 0.7); cursor: pointer;
+    padding: 4px 0; font: inherit; font-size: 12px; display: flex; align-items: center; gap: 4px;
+}
+.je-usm-panel .je-usm-cat-expander:hover { color: #fff; }
+.je-usm-panel .je-usm-cat-chevron { font-size: 18px; transition: transform 0.2s ease; }
+.je-usm-panel .je-usm-cat-expander[aria-expanded="true"] .je-usm-cat-chevron { transform: rotate(90deg); color: var(--je-accent); }
+.je-usm-panel .je-usm-cat-list {
+    margin: 6px 0 0 30px; padding: 8px 10px; background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px;
+}
+.je-usm-panel .je-usm-cat-row { display: flex; align-items: center; gap: 8px; padding: 4px 2px; }
+.je-usm-panel .je-usm-cat-row + .je-usm-cat-row { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.je-usm-panel .je-usm-cat-lbl { flex: 1; display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 0; font-size: 13px; }
+.je-usm-panel .je-usm-cat-lbl input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--je-accent); flex-shrink: 0; }
+.je-usm-panel .je-usm-cat-btn {
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.85); border-radius: 4px; padding: 3px 6px; cursor: pointer; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.je-usm-panel .je-usm-cat-btn .material-icons { font-size: 16px; }
+.je-usm-panel .je-usm-cat-btn:not([disabled]):hover { background: rgba(255, 255, 255, 0.1); border-color: var(--je-accent); color: #fff; }
+.je-usm-panel .je-usm-cat-btn[disabled] { opacity: 0.35; cursor: not-allowed; }
+.je-usm-panel .je-usm-subhead { font-weight: 600; font-size: 13px; color: rgba(255,255,255,0.7); margin: 4px 0 8px 2px; }
+.je-usm-panel .je-usm-subhead.je-usm-exp { color: #f0a020; }

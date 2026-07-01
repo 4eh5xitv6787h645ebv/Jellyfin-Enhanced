@@ -2707,6 +2707,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.RatingTagsPosition,
                 config.ShowRatingInPlayer,
 
+                // Default User Settings — parity gaps (previously seeded server-side only, now
+                // also exposed so the client can resolve user → admin default → hardcoded).
+                config.PauseScreenDelaySeconds,
+                config.WatchProgressDefaultMode,
+                config.WatchProgressTimeFormat,
+
+                // User Settings Management — the client needs LockedUserSettingGroups to hide
+                // locked groups from the per-user settings panel; UserSettingsManagementEnabled
+                // lets the client know whether the admin management surface is active.
+                config.UserSettingsManagementEnabled,
+                config.LockedUserSettingGroups,
+
                 config.TagsCacheTtlDays,
                 config.DisableTagsOnSearchPage,
                 config.TagsHideOnHover,
@@ -3090,58 +3102,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
                 if (defaultConfig != null)
                 {
-                    var defaultUserSettings = new UserSettings
-                    {
-                        AutoPauseEnabled = defaultConfig.AutoPauseEnabled,
-                        AutoResumeEnabled = defaultConfig.AutoResumeEnabled,
-                        AutoPipEnabled = defaultConfig.AutoPipEnabled,
-                        LongPress2xEnabled = defaultConfig.LongPress2xEnabled,
-                        PauseScreenEnabled = defaultConfig.PauseScreenEnabled,
-                        PauseScreenDelaySeconds = defaultConfig.PauseScreenDelaySeconds,
-                        AutoSkipIntro = defaultConfig.AutoSkipIntro,
-                        AutoSkipOutro = defaultConfig.AutoSkipOutro,
-                        DisableCustomSubtitleStyles = defaultConfig.DisableCustomSubtitleStyles,
-                        SelectedStylePresetIndex = defaultConfig.DefaultSubtitleStyle,
-                        SelectedFontSizePresetIndex = defaultConfig.DefaultSubtitleSize,
-                        SelectedFontFamilyPresetIndex = defaultConfig.DefaultSubtitleFont,
-                        RandomButtonEnabled = defaultConfig.RandomButtonEnabled,
-                        RandomUnwatchedOnly = defaultConfig.RandomUnwatchedOnly,
-                        RandomIncludeMovies = defaultConfig.RandomIncludeMovies,
-                        RandomIncludeShows = defaultConfig.RandomIncludeShows,
-                        ShowWatchProgress = defaultConfig.ShowWatchProgress,
-                        WatchProgressMode = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressDefaultMode) ? "percentage" : defaultConfig.WatchProgressDefaultMode,
-                        WatchProgressTimeFormat = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressTimeFormat) ? "hours" : defaultConfig.WatchProgressTimeFormat,
-                        ShowFileSizes = defaultConfig.ShowFileSizes,
-                        ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
-                        QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
-                        ShowResolutionTag = defaultConfig.ShowResolutionTag,
-                        ShowSourceTag = defaultConfig.ShowSourceTag,
-                        ShowDynamicRangeTag = defaultConfig.ShowDynamicRangeTag,
-                        ShowSpecialFormatTag = defaultConfig.ShowSpecialFormatTag,
-                        ShowVideoCodecTag = defaultConfig.ShowVideoCodecTag,
-                        ShowAudioInfoTag = defaultConfig.ShowAudioInfoTag,
-                        ResolutionTagOrder = defaultConfig.ResolutionTagOrder,
-                        SourceTagOrder = defaultConfig.SourceTagOrder,
-                        DynamicRangeTagOrder = defaultConfig.DynamicRangeTagOrder,
-                        SpecialFormatTagOrder = defaultConfig.SpecialFormatTagOrder,
-                        VideoCodecTagOrder = defaultConfig.VideoCodecTagOrder,
-                        AudioInfoTagOrder = defaultConfig.AudioInfoTagOrder,
-                        GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
-                        LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
-                        RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
-                        PeopleTagsEnabled = defaultConfig.PeopleTagsEnabled,
-                        QualityTagsPosition = defaultConfig.QualityTagsPosition,
-                        GenreTagsPosition = defaultConfig.GenreTagsPosition,
-                        LanguageTagsPosition = defaultConfig.LanguageTagsPosition,
-                        RatingTagsPosition = defaultConfig.RatingTagsPosition,
-                        ShowRatingInPlayer = defaultConfig.ShowRatingInPlayer,
-                        RemoveContinueWatchingEnabled = defaultConfig.RemoveContinueWatchingEnabled,
-                        ReviewsExpandedByDefault = defaultConfig.ReviewsExpandedByDefault,
-                        DisplayLanguage = defaultConfig.DefaultLanguage,
-                        CalendarDisplayMode = "list",
-                        CalendarDefaultViewMode = "agenda",
-                        LastOpenedTab = "shortcuts"
-                    };
+                    var defaultUserSettings = UserSettingsDefaults.Build(defaultConfig);
 
                     _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "settings.json", defaultUserSettings);
                     _logger.Info($"Saved default settings.json for new user {ResolveUserDisplay(authorizedUserId)} from plugin configuration.");
@@ -3149,6 +3110,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             var userConfig = _userConfigurationManager.GetUserConfiguration<UserSettings>(authorizedUserId, "settings.json");
+
+            // Reflect admin-locked groups in the returned values: if a group was locked AFTER the
+            // user last saved, their stored file may still hold a stale override. Enforcing here
+            // (in-memory, not persisted) guarantees the client — and anything reading these values
+            // for feature behaviour — always sees the admin default for a locked setting. Storage
+            // converges on the next save (which also enforces).
+            var lockCfg = JellyfinEnhanced.Instance?.Configuration;
+            if (lockCfg?.LockedUserSettingGroups is { Count: > 0 } lockedForGet)
+            {
+                var adminDefaults = UserSettingsDefaults.Build(lockCfg);
+                // Read path: the loaded config is both target and the "existing" stored value, so
+                // preserve-only fields (subtitle colours/position) stay as stored while
+                // admin-default-backed fields are forced to the admin default.
+                UserSettingsGroups.EnforceLockedGroups(userConfig, adminDefaults, userConfig, lockedForGet);
+            }
+
             return Ok(userConfig);
         }
 
@@ -3191,10 +3168,29 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return authorizationResult;
             }
 
+            if (userConfiguration == null)
+                return BadRequest(new { success = false, message = "Missing settings body." });
+
+            // Load the currently-stored settings up front — used both for the change-diff log and,
+            // when groups are locked, to freeze the preserve-only fields (subtitle colours/position)
+            // at their stored value.
+            var existing = _userConfigurationManager.GetUserConfiguration<UserSettings>(authorizedUserId, "settings.json");
+
+            // Enforce admin-locked groups: any field belonging to a locked group is forced back to
+            // the admin default (or frozen at its stored value for fields with no admin default)
+            // before persisting, so a locked setting cannot be changed by the user (or an admin
+            // acting as them) — even via a direct API call that bypasses the hidden UI. No-op when
+            // nothing is locked (the common case), so legacy behaviour is unchanged.
+            var lockConfig = JellyfinEnhanced.Instance?.Configuration;
+            if (lockConfig?.LockedUserSettingGroups is { Count: > 0 } lockedGroups)
+            {
+                var adminDefaults = UserSettingsDefaults.Build(lockConfig);
+                UserSettingsGroups.EnforceLockedGroups(userConfiguration, adminDefaults, existing, lockedGroups);
+            }
+
             try
             {
                 // Diff against the existing config so the log shows what actually changed
-                var existing = _userConfigurationManager.GetUserConfiguration<UserSettings>(authorizedUserId, "settings.json");
                 var changes = new System.Collections.Generic.List<string>();
                 if (existing != null)
                 {
@@ -4321,6 +4317,524 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
+        // ─── User Settings Management (admin: act-as-user, profiles, copy, bulk-apply) ───
+        //
+        // Act-as-user read/write reuses the existing user-settings/{userId}/settings.json (and
+        // shortcuts.json) endpoints — UserHelper.GetUserId already authorises an admin to operate
+        // on any user, so the config page simply targets another user's id. The endpoints below
+        // add the multi-user tooling: listing users, copying A→B, and reusable profiles.
+
+        private const int MaxProfiles = 50;
+        private const int MaxBulkTargets = 500;
+        private const int MaxProfileShortcuts = 200;
+
+        private static readonly System.Text.RegularExpressions.Regex _profileNameRegex =
+            new System.Text.RegularExpressions.Regex(@"^[\p{L}\p{N} _\-]{1,64}$", System.Text.RegularExpressions.RegexOptions.Compiled);
+        private static readonly System.Text.RegularExpressions.Regex _argbColorRegex =
+            new System.Text.RegularExpressions.Regex(@"^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>
+        /// Gate shared by every user-settings-management endpoint: the caller must be an admin AND
+        /// the feature must be enabled in the plugin config. Returns null when allowed, else 403.
+        /// </summary>
+        private IActionResult? RequireUserSettingsManagement()
+        {
+            if (!IsAdminUser())
+                return Forbid();
+            if (JellyfinEnhanced.Instance?.Configuration?.UserSettingsManagementEnabled != true)
+                return Forbid();
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a user's EFFECTIVE settings: the stored settings.json if it exists, otherwise the
+        /// admin defaults (mirroring what GetUserSettingsSettings would seed on first read). Used by
+        /// act-as/copy/profile so a source user who has never opened JE settings contributes the
+        /// admin defaults, not bare POCO (all-false) defaults.
+        /// </summary>
+        private UserSettings GetEffectiveUserSettings(string userIdN)
+        {
+            if (_userConfigurationManager.UserConfigurationExists(userIdN, "settings.json"))
+                return _userConfigurationManager.GetUserConfiguration<UserSettings>(userIdN, "settings.json");
+            var cfg = JellyfinEnhanced.Instance?.Configuration;
+            return cfg != null ? UserSettingsDefaults.Build(cfg) : new UserSettings();
+        }
+
+        /// <summary>
+        /// Returns a user's EFFECTIVE Hidden Content display settings: the stored value if present,
+        /// otherwise the admin HC defaults (mirroring the hidden-content.json first-read seeding).
+        /// </summary>
+        private HiddenContentSettings GetEffectiveHcSettings(string userIdN)
+        {
+            if (_userConfigurationManager.UserConfigurationExists(userIdN, "hidden-content.json"))
+                return _userConfigurationManager.GetUserConfiguration<UserHiddenContent>(userIdN, "hidden-content.json").Settings ?? new HiddenContentSettings();
+            var cfg = JellyfinEnhanced.Instance?.Configuration;
+            return cfg != null ? BuildHcDefaultSettings(cfg) : new HiddenContentSettings();
+        }
+
+        /// <summary>JSON deep-clone so a shared source object (a profile / copy source) can be
+        /// sanitised and lock-enforced independently per target without the mutation leaking
+        /// across iterations.</summary>
+        private static T DeepClone<T>(T obj) =>
+            Newtonsoft.Json.JsonConvert.DeserializeObject<T>(Newtonsoft.Json.JsonConvert.SerializeObject(obj))!;
+
+        private static int? ClampTagOrder(int? v) => v.HasValue ? Math.Clamp(v.Value, 1, 6) : (int?)null;
+        private static string ClampLen(string? s, int max)
+            => string.IsNullOrEmpty(s) ? string.Empty : (s.Length <= max ? s : s.Substring(0, max));
+        private static string SanitizeColor(string? s, string fallback)
+            => (!string.IsNullOrEmpty(s) && _argbColorRegex.IsMatch(s)) ? s : fallback;
+
+        /// <summary>
+        /// Bounds every free-form field before a cross-user write (copy / profile apply), so an
+        /// admin-supplied bundle can never persist an out-of-range, malformed, or oversized value
+        /// into another user's settings file. Mirrors the ranges the client UI enforces.
+        /// </summary>
+        private static void SanitizeUserSettings(UserSettings s)
+        {
+            if (s == null) return;
+            s.PauseScreenDelaySeconds = Math.Clamp(s.PauseScreenDelaySeconds, 1, 60);
+            s.SubtitleVerticalPosition = Math.Clamp(s.SubtitleVerticalPosition, 0, 100);
+            s.SubtitleHorizontalPosition = Math.Clamp(s.SubtitleHorizontalPosition, 0, 100);
+            s.SelectedStylePresetIndex = Math.Clamp(s.SelectedStylePresetIndex, 0, 999);
+            s.SelectedFontSizePresetIndex = Math.Clamp(s.SelectedFontSizePresetIndex, 0, 999);
+            s.SelectedFontFamilyPresetIndex = Math.Clamp(s.SelectedFontFamilyPresetIndex, 0, 999);
+            s.ResolutionTagOrder = ClampTagOrder(s.ResolutionTagOrder);
+            s.SourceTagOrder = ClampTagOrder(s.SourceTagOrder);
+            s.DynamicRangeTagOrder = ClampTagOrder(s.DynamicRangeTagOrder);
+            s.SpecialFormatTagOrder = ClampTagOrder(s.SpecialFormatTagOrder);
+            s.VideoCodecTagOrder = ClampTagOrder(s.VideoCodecTagOrder);
+            s.AudioInfoTagOrder = ClampTagOrder(s.AudioInfoTagOrder);
+            s.CustomSubtitleTextColor = SanitizeColor(s.CustomSubtitleTextColor, "#FFFFFFFF");
+            s.CustomSubtitleBgColor = SanitizeColor(s.CustomSubtitleBgColor, "#00000000");
+            s.WatchProgressMode = ClampLen(s.WatchProgressMode, 32);
+            s.WatchProgressTimeFormat = ClampLen(s.WatchProgressTimeFormat, 32);
+            s.QualityTagsPosition = ClampLen(s.QualityTagsPosition, 32);
+            s.GenreTagsPosition = ClampLen(s.GenreTagsPosition, 32);
+            s.LanguageTagsPosition = ClampLen(s.LanguageTagsPosition, 32);
+            s.RatingTagsPosition = ClampLen(s.RatingTagsPosition, 32);
+            s.DisplayLanguage = ClampLen(s.DisplayLanguage, 16);
+            s.CalendarDisplayMode = ClampLen(s.CalendarDisplayMode, 32);
+            s.CalendarDefaultViewMode = ClampLen(s.CalendarDefaultViewMode, 32);
+            s.LastOpenedTab = ClampLen(s.LastOpenedTab, 64);
+        }
+
+        /// <summary>
+        /// Writes a settings bundle (any subset of settings / shortcuts / hidden-content display
+        /// settings) onto each target user. Each target id is validated and resolved; unknown or
+        /// invalid ids and per-user write failures are collected into the skipped list rather than
+        /// aborting the whole batch. Every UserSettings write is deep-cloned, sanitised, and has
+        /// admin-locked groups re-enforced. Hidden-content writes go through the locked RMW and
+        /// invalidate the per-user response cache.
+        /// </summary>
+        private (int Applied, List<string> Skipped) ApplySettingsBundleToUsers(
+            UserSettings? settings, List<Shortcut>? shortcuts, HiddenContentSettings? hcSettings,
+            IEnumerable<string> targetUserIds)
+        {
+            var applied = 0;
+            var skipped = new List<string>();
+            var pluginConfig = JellyfinEnhanced.Instance?.Configuration;
+            var lockedGroups = pluginConfig?.LockedUserSettingGroups;
+            var adminDefaults = pluginConfig != null ? UserSettingsDefaults.Build(pluginConfig) : null;
+
+            foreach (var rawId in targetUserIds ?? Enumerable.Empty<string>())
+            {
+                var normalized = (rawId ?? string.Empty).Replace("-", string.Empty);
+                if (string.IsNullOrWhiteSpace(normalized) || !Guid.TryParseExact(normalized, "N", out var g) || g == Guid.Empty)
+                {
+                    skipped.Add(rawId ?? string.Empty);
+                    continue;
+                }
+                var idN = g.ToString("N");
+                if (_userManager.GetUserById(g) == null)
+                {
+                    skipped.Add(idN);
+                    continue;
+                }
+
+                try
+                {
+                    if (settings != null)
+                    {
+                        var clone = DeepClone(settings);
+                        SanitizeUserSettings(clone);
+                        if (adminDefaults != null && lockedGroups is { Count: > 0 })
+                        {
+                            // Freeze the target's own preserve-only fields (subtitle colours/position)
+                            // rather than pushing the source's, and force admin-default-backed fields.
+                            var targetExisting = _userConfigurationManager.GetUserConfiguration<UserSettings>(idN, "settings.json");
+                            UserSettingsGroups.EnforceLockedGroups(clone, adminDefaults, targetExisting, lockedGroups);
+                        }
+                        _userConfigurationManager.SaveUserConfiguration(idN, "settings.json", clone);
+                    }
+                    if (shortcuts != null)
+                    {
+                        _userConfigurationManager.SaveUserConfiguration(idN, "shortcuts.json",
+                            new UserShortcuts { Shortcuts = DeepClone(shortcuts) });
+                    }
+                    if (hcSettings != null)
+                    {
+                        var hcClone = DeepClone(hcSettings);
+                        _userConfigurationManager.RmwUserConfiguration<UserHiddenContent>(idN, "hidden-content.json", hc =>
+                        {
+                            hc.Settings = hcClone;
+                            return 1;
+                        });
+                        Services.HiddenContentResponseFilter.InvalidateUser(idN);
+                    }
+                    applied++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Skipping settings apply for {ResolveUserDisplay(idN)}: {ex.Message}");
+                    skipped.Add(idN);
+                }
+            }
+            return (applied, skipped);
+        }
+
+        /// <summary>Admin-only: lists every Jellyfin user (for the management pickers).</summary>
+        [HttpGet("admin/users")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult GetManageableUsers()
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+
+            var currentUserIdN = UserHelper.GetCurrentUserId(User)?.ToString("N");
+            try
+            {
+                var users = _userManager.GetAllUsers()
+                    .GroupBy(u => u.Id).Select(grp => grp.First())
+                    .Select(u =>
+                    {
+                        var idN = u.Id.ToString("N");
+                        bool hasSettings = false;
+                        try { hasSettings = _userConfigurationManager.UserConfigurationExists(idN, "settings.json"); }
+                        catch { /* treat unreadable as "no settings yet" */ }
+                        return new
+                        {
+                            userId = idN,
+                            userName = u.Username,
+                            isAdmin = u.HasPermission(PermissionKind.IsAdministrator),
+                            isSelf = string.Equals(idN, currentUserIdN, StringComparison.OrdinalIgnoreCase),
+                            hasSettings
+                        };
+                    })
+                    .OrderBy(u => u.userName, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                return Ok(new { users });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to list users for settings management: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to list users." });
+            }
+        }
+
+        /// <summary>
+        /// Admin-only "act as user" READ: a target user's effective settings + Hidden Content display
+        /// settings (locked groups already enforced). Distinct from the per-user settings.json route
+        /// so the whole surface is gated by UserSettingsManagementEnabled.
+        /// </summary>
+        [HttpGet("admin/user-settings/{userId}")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult GetUserSettingsForAdmin(string userId)
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+            if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParseExact(userId.Replace("-", string.Empty), "N", out var g) || g == Guid.Empty)
+                return BadRequest(new { success = false, message = "Invalid userId (expected 32-char hex)." });
+            var user = _userManager.GetUserById(g);
+            if (user == null)
+                return NotFound(new { success = false, message = "User not found." });
+            var idN = g.ToString("N");
+            try
+            {
+                var settings = GetEffectiveUserSettings(idN);
+                var cfg = JellyfinEnhanced.Instance?.Configuration;
+                if (cfg?.LockedUserSettingGroups is { Count: > 0 } locked)
+                {
+                    var adminDefaults = UserSettingsDefaults.Build(cfg);
+                    UserSettingsGroups.EnforceLockedGroups(settings, adminDefaults, settings, locked);
+                }
+                var hcSettings = GetEffectiveHcSettings(idN);
+                return Ok(new { userId = idN, userName = user.Username, settings, hiddenContentSettings = hcSettings });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Admin act-as read failed for {ResolveUserDisplay(idN)}: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to load user settings." });
+            }
+        }
+
+        /// <summary>
+        /// Admin-only "act as user" SAVE: persists the target's settings.json (sanitised + locks
+        /// enforced) and updates ONLY the Settings sub-object of hidden-content.json via a locked
+        /// read-modify-write, so the user's hidden ITEMS are always preserved.
+        /// </summary>
+        [HttpPost("admin/user-settings/{userId}")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult SaveUserSettingsForAdmin(string userId, [FromBody] AdminActAsSaveRequest request)
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+            if (request == null)
+                return BadRequest(new { success = false, message = "Missing request body." });
+            if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParseExact(userId.Replace("-", string.Empty), "N", out var g) || g == Guid.Empty)
+                return BadRequest(new { success = false, message = "Invalid userId (expected 32-char hex)." });
+            var user = _userManager.GetUserById(g);
+            if (user == null)
+                return NotFound(new { success = false, message = "User not found." });
+            var idN = g.ToString("N");
+            try
+            {
+                if (request.Settings != null)
+                {
+                    var s = request.Settings;
+                    SanitizeUserSettings(s);
+                    var cfg = JellyfinEnhanced.Instance?.Configuration;
+                    if (cfg?.LockedUserSettingGroups is { Count: > 0 } locked)
+                    {
+                        var adminDefaults = UserSettingsDefaults.Build(cfg);
+                        var existing = _userConfigurationManager.GetUserConfiguration<UserSettings>(idN, "settings.json");
+                        UserSettingsGroups.EnforceLockedGroups(s, adminDefaults, existing, locked);
+                    }
+                    _userConfigurationManager.SaveUserConfiguration(idN, "settings.json", s);
+                }
+                if (request.HiddenContentSettings != null)
+                {
+                    var hc = request.HiddenContentSettings;
+                    // RMW only the Settings sub-object; the user's hidden Items dictionary is untouched.
+                    _userConfigurationManager.RmwUserConfiguration<UserHiddenContent>(idN, "hidden-content.json", uhc =>
+                    {
+                        uhc.Settings = hc;
+                        return 1;
+                    });
+                    Services.HiddenContentResponseFilter.InvalidateUser(idN);
+                }
+                _logger.Info($"Admin saved settings for {ResolveUserDisplay(idN)} (act-as).");
+                return Ok(new { success = true });
+            }
+            catch (Exception ex) when (ex is InvalidDataException || ex is Newtonsoft.Json.JsonException)
+            {
+                _logger.Error($"Admin act-as save (corrupt store) for {ResolveUserDisplay(idN)}: {ex.Message}");
+                return StatusCode(503, new { success = false, message = "User settings store unavailable; please retry." });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Admin act-as save failed for {ResolveUserDisplay(idN)}: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to save user settings." });
+            }
+        }
+
+        /// <summary>Admin-only: copy one user's JE preferences onto one or more target users.</summary>
+        [HttpPost("admin/copy-user-settings")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult CopyUserSettings([FromBody] CopyUserSettingsRequest request)
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+            if (request == null)
+                return BadRequest(new { success = false, message = "Missing request body." });
+
+            var fromNormalized = (request.FromUserId ?? string.Empty).Replace("-", string.Empty);
+            if (string.IsNullOrWhiteSpace(fromNormalized) || !Guid.TryParseExact(fromNormalized, "N", out var fromGuid) || fromGuid == Guid.Empty)
+                return BadRequest(new { success = false, message = "Invalid source userId (expected 32-char hex)." });
+            var fromIdN = fromGuid.ToString("N");
+            if (_userManager.GetUserById(fromGuid) == null)
+                return NotFound(new { success = false, message = "Source user not found." });
+
+            if (request.ToUserIds == null || request.ToUserIds.Count == 0)
+                return BadRequest(new { success = false, message = "No target users provided." });
+            if (request.ToUserIds.Count > MaxBulkTargets)
+                return BadRequest(new { success = false, message = $"Too many target users (max {MaxBulkTargets})." });
+
+            // Effective reads → a source user who never opened JE settings contributes the admin
+            // defaults (not bare POCO all-false defaults).
+            UserSettings? settings = request.IncludeSettings ? GetEffectiveUserSettings(fromIdN) : null;
+            List<Shortcut>? shortcuts = request.IncludeShortcuts
+                ? _userConfigurationManager.GetUserConfiguration<UserShortcuts>(fromIdN, "shortcuts.json").Shortcuts : null;
+            HiddenContentSettings? hcSettings = request.IncludeHiddenContentSettings ? GetEffectiveHcSettings(fromIdN) : null;
+
+            if (settings == null && shortcuts == null && hcSettings == null)
+                return BadRequest(new { success = false, message = "Nothing selected to copy." });
+
+            // Never copy a user onto themselves — drop the source from its own target list.
+            var targets = request.ToUserIds.Where(t =>
+                !string.Equals((t ?? string.Empty).Replace("-", string.Empty), fromIdN, StringComparison.OrdinalIgnoreCase));
+
+            var (applied, skipped) = ApplySettingsBundleToUsers(settings, shortcuts, hcSettings, targets);
+            _logger.Info($"Copied settings from {ResolveUserDisplay(fromIdN)} to {applied} user(s); skipped {skipped.Count}.");
+            return Ok(new { success = true, applied, skipped });
+        }
+
+        /// <summary>Admin-only: list saved user-setting profiles (names + timestamps).</summary>
+        [HttpGet("admin/setting-profiles")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult GetSettingProfiles()
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+            try
+            {
+                var store = _userConfigurationManager.GetAllProfiles();
+                var profiles = store.Profiles.Values
+                    .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(p => new { name = p.Name, createdAt = p.CreatedAt, updatedAt = p.UpdatedAt })
+                    .ToList();
+                return Ok(new { profiles });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to list setting profiles: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to load profiles." });
+            }
+        }
+
+        /// <summary>Admin-only: create or update a reusable profile, either snapshotted from a
+        /// source user or supplied directly.</summary>
+        [HttpPost("admin/setting-profiles")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult SaveSettingProfile([FromBody] SaveProfileRequest request)
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+            if (request == null)
+                return BadRequest(new { success = false, message = "Missing request body." });
+
+            var name = (request.Name ?? string.Empty).Trim();
+            if (!_profileNameRegex.IsMatch(name))
+                return BadRequest(new { success = false, message = "Invalid profile name (1–64 letters, digits, spaces, - or _)." });
+
+            UserSettings settings;
+            List<Shortcut> shortcuts;
+            HiddenContentSettings hcSettings;
+
+            if (!string.IsNullOrWhiteSpace(request.FromUserId))
+            {
+                var fromNormalized = request.FromUserId.Replace("-", string.Empty);
+                if (!Guid.TryParseExact(fromNormalized, "N", out var fromGuid) || fromGuid == Guid.Empty)
+                    return BadRequest(new { success = false, message = "Invalid source userId (expected 32-char hex)." });
+                var fromIdN = fromGuid.ToString("N");
+                if (_userManager.GetUserById(fromGuid) == null)
+                    return NotFound(new { success = false, message = "Source user not found." });
+                settings = GetEffectiveUserSettings(fromIdN);
+                shortcuts = _userConfigurationManager.GetUserConfiguration<UserShortcuts>(fromIdN, "shortcuts.json").Shortcuts ?? new List<Shortcut>();
+                hcSettings = GetEffectiveHcSettings(fromIdN);
+            }
+            else
+            {
+                var cfg = JellyfinEnhanced.Instance?.Configuration;
+                settings = request.Settings ?? (cfg != null ? UserSettingsDefaults.Build(cfg) : new UserSettings());
+                shortcuts = request.Shortcuts ?? new List<Shortcut>();
+                hcSettings = request.HiddenContentSettings ?? new HiddenContentSettings();
+            }
+
+            SanitizeUserSettings(settings);
+            if (shortcuts.Count > MaxProfileShortcuts)
+                shortcuts = shortcuts.Take(MaxProfileShortcuts).ToList();
+
+            var nowIso = DateTime.UtcNow.ToString("o");
+            var profile = new UserSettingsProfile
+            {
+                Name = name,
+                Settings = settings,
+                Shortcuts = shortcuts,
+                HiddenContentSettings = hcSettings,
+                CreatedAt = nowIso,   // preserved for an existing profile inside UpsertProfile
+                UpdatedAt = nowIso
+            };
+
+            try
+            {
+                // The profile-count cap is enforced inside the store lock (UpsertProfile) so two
+                // concurrent creates can't both slip past it.
+                _userConfigurationManager.UpsertProfile(profile, MaxProfiles);
+                _logger.Info($"Saved user-setting profile '{name}'.");
+                return Ok(new { success = true, name });
+            }
+            catch (ProfileLimitReachedException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex) when (ex is InvalidDataException || ex is Newtonsoft.Json.JsonException || ex is IOException)
+            {
+                _logger.Error($"Failed to save profile '{name}': {ex.Message}");
+                return StatusCode(503, new { success = false, message = "Profile store unavailable; please retry." });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to save profile '{name}': {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to save profile." });
+            }
+        }
+
+        /// <summary>Admin-only: delete a saved profile by name.</summary>
+        [HttpDelete("admin/setting-profiles/{name}")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult DeleteSettingProfile(string name)
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+            var trimmed = (name ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(trimmed))
+                return BadRequest(new { success = false, message = "Profile name required." });
+            try
+            {
+                var removed = _userConfigurationManager.DeleteProfile(trimmed);
+                if (!removed)
+                    return NotFound(new { success = false, message = "Profile not found." });
+                _logger.Info($"Deleted user-setting profile '{trimmed}'.");
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to delete profile '{trimmed}': {ex.Message}");
+                return StatusCode(500, new { success = false, message = "Failed to delete profile." });
+            }
+        }
+
+        /// <summary>Admin-only: apply a saved profile to one or more users.</summary>
+        [HttpPost("admin/apply-profile")]
+        [Authorize]
+        [Produces("application/json")]
+        public IActionResult ApplyProfile([FromBody] ApplyProfileRequest request)
+        {
+            var gate = RequireUserSettingsManagement();
+            if (gate != null) return gate;
+            if (request == null)
+                return BadRequest(new { success = false, message = "Missing request body." });
+
+            var name = (request.Name ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(name))
+                return BadRequest(new { success = false, message = "Profile name required." });
+            if (request.UserIds == null || request.UserIds.Count == 0)
+                return BadRequest(new { success = false, message = "No target users provided." });
+            if (request.UserIds.Count > MaxBulkTargets)
+                return BadRequest(new { success = false, message = $"Too many target users (max {MaxBulkTargets})." });
+
+            var profile = _userConfigurationManager.GetProfile(name);
+            if (profile == null)
+                return NotFound(new { success = false, message = "Profile not found." });
+
+            UserSettings? settings = request.IncludeSettings ? (profile.Settings ?? new UserSettings()) : null;
+            List<Shortcut>? shortcuts = request.IncludeShortcuts ? (profile.Shortcuts ?? new List<Shortcut>()) : null;
+            HiddenContentSettings? hcSettings = request.IncludeHiddenContentSettings ? (profile.HiddenContentSettings ?? new HiddenContentSettings()) : null;
+            if (settings == null && shortcuts == null && hcSettings == null)
+                return BadRequest(new { success = false, message = "Nothing selected to apply." });
+
+            var (applied, skipped) = ApplySettingsBundleToUsers(settings, shortcuts, hcSettings, request.UserIds);
+            _logger.Info($"Applied profile '{name}' to {applied} user(s); skipped {skipped.Count}.");
+            return Ok(new { success = true, applied, skipped });
+        }
+
         [HttpPost("reset-all-users-settings")]
         [Authorize]
         public IActionResult ResetAllUsersSettings()
@@ -4337,56 +4851,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(500, new { success = false, message = "Default plugin configuration not found." });
             }
 
-            var defaultUserSettings = new UserSettings
-            {
-                AutoPauseEnabled = defaultConfig.AutoPauseEnabled,
-                AutoResumeEnabled = defaultConfig.AutoResumeEnabled,
-                AutoPipEnabled = defaultConfig.AutoPipEnabled,
-                LongPress2xEnabled = defaultConfig.LongPress2xEnabled,
-                PauseScreenEnabled = defaultConfig.PauseScreenEnabled,
-                PauseScreenDelaySeconds = defaultConfig.PauseScreenDelaySeconds,
-                AutoSkipIntro = defaultConfig.AutoSkipIntro,
-                AutoSkipOutro = defaultConfig.AutoSkipOutro,
-                DisableCustomSubtitleStyles = defaultConfig.DisableCustomSubtitleStyles,
-                SelectedStylePresetIndex = defaultConfig.DefaultSubtitleStyle,
-                SelectedFontSizePresetIndex = defaultConfig.DefaultSubtitleSize,
-                SelectedFontFamilyPresetIndex = defaultConfig.DefaultSubtitleFont,
-                RandomButtonEnabled = defaultConfig.RandomButtonEnabled,
-                RandomUnwatchedOnly = defaultConfig.RandomUnwatchedOnly,
-                RandomIncludeMovies = defaultConfig.RandomIncludeMovies,
-                RandomIncludeShows = defaultConfig.RandomIncludeShows,
-                ShowWatchProgress = defaultConfig.ShowWatchProgress,
-                ShowFileSizes = defaultConfig.ShowFileSizes,
-                ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
-                QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
-                ShowResolutionTag = defaultConfig.ShowResolutionTag,
-                ShowSourceTag = defaultConfig.ShowSourceTag,
-                ShowDynamicRangeTag = defaultConfig.ShowDynamicRangeTag,
-                ShowSpecialFormatTag = defaultConfig.ShowSpecialFormatTag,
-                ShowVideoCodecTag = defaultConfig.ShowVideoCodecTag,
-                ShowAudioInfoTag = defaultConfig.ShowAudioInfoTag,
-                ResolutionTagOrder = defaultConfig.ResolutionTagOrder,
-                SourceTagOrder = defaultConfig.SourceTagOrder,
-                DynamicRangeTagOrder = defaultConfig.DynamicRangeTagOrder,
-                SpecialFormatTagOrder = defaultConfig.SpecialFormatTagOrder,
-                VideoCodecTagOrder = defaultConfig.VideoCodecTagOrder,
-                AudioInfoTagOrder = defaultConfig.AudioInfoTagOrder,
-                GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
-                LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
-                RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
-                PeopleTagsEnabled = defaultConfig.PeopleTagsEnabled,
-                QualityTagsPosition = defaultConfig.QualityTagsPosition,
-                GenreTagsPosition = defaultConfig.GenreTagsPosition,
-                LanguageTagsPosition = defaultConfig.LanguageTagsPosition,
-                RatingTagsPosition = defaultConfig.RatingTagsPosition,
-                ShowRatingInPlayer = defaultConfig.ShowRatingInPlayer,
-                RemoveContinueWatchingEnabled = defaultConfig.RemoveContinueWatchingEnabled,
-                ReviewsExpandedByDefault = defaultConfig.ReviewsExpandedByDefault,
-                DisplayLanguage = defaultConfig.DefaultLanguage,
-                CalendarDisplayMode = "list",
-                CalendarDefaultViewMode = "agenda",
-                LastOpenedTab = "shortcuts"
-            };
+            var defaultUserSettings = UserSettingsDefaults.Build(defaultConfig);
 
             var userCount = 0;
             var skippedSettings = new System.Collections.Generic.List<string>();

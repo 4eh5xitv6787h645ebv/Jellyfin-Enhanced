@@ -292,6 +292,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             HiddenContentDefaultFilterNextUp = true;
             HiddenContentDefaultFilterContinueWatching = true;
             HiddenContentDefaultExperimentalHideCollections = false;
+
+            // User Settings Management (admin "act as user", profiles, copy, bulk-apply).
+            // On by default so the admin tooling is available out of the box; admins can
+            // disable the whole surface below.
+            UserSettingsManagementEnabled = true;
+            // Per-group availability: keys of the user-settings groups an admin has LOCKED.
+            // Empty = every group is user-configurable (current/legacy behaviour). A locked
+            // group is hidden from the per-user settings panel and its values are forced to
+            // the admin defaults server-side. See UserSettingsGroups.GroupKeys for the keys.
+            LockedUserSettingGroups = new List<string>();
         }
 
         // Maintenance Mode
@@ -621,6 +631,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool HiddenContentDefaultFilterNextUp { get; set; }
         public bool HiddenContentDefaultFilterContinueWatching { get; set; }
         public bool HiddenContentDefaultExperimentalHideCollections { get; set; }
+
+        // User Settings Management
+        /// <summary>
+        /// Master gate for the admin "Users" tab (act-as-user, reusable profiles, copy A→B,
+        /// bulk-apply). When false, the admin-only management endpoints return 403 and the tab
+        /// is hidden. Does NOT affect the per-group availability locks below.
+        /// </summary>
+        public bool UserSettingsManagementEnabled { get; set; }
+        /// <summary>
+        /// Keys of the per-user settings groups an admin has locked (see
+        /// <see cref="UserSettingsGroups"/>). A locked group is hidden from the per-user
+        /// settings panel and its stored values are forced back to the admin defaults on save.
+        /// Empty list = fully user-configurable (legacy behaviour, backward compatible).
+        /// </summary>
+        public List<string> LockedUserSettingGroups { get; set; } = new List<string>();
 
         /// <summary>
         /// Returns configured Sonarr instances, falling back to legacy single-instance fields for migration.

@@ -8,6 +8,17 @@ using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 {
+    /// <summary>
+    /// Thrown by <see cref="UserConfigurationManager.UpsertProfile"/> when creating a new profile
+    /// would exceed the configured maximum. Checked and thrown inside the store lock so the cap
+    /// holds under concurrent creates.
+    /// </summary>
+    public class ProfileLimitReachedException : Exception
+    {
+        public ProfileLimitReachedException(int max)
+            : base($"Profile limit reached (max {max}).") { }
+    }
+
     /// Manages per-user configuration files stored on the server.
     public class UserConfigurationManager
     {
@@ -676,6 +687,193 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             catch (Exception ex)
             {
                 _logger.Error($"Error cleaning up processed watchlist items for user {userId}: {ex.Message}");
+            }
+        }
+
+        // ─── Shared user-setting profiles file ───────────────────────────────────
+
+        private static readonly object _profilesFileLock = new object();
+
+        private string ProfilesFilePath => Path.Combine(_configBaseDir, "profiles.json");
+
+        /// <summary>
+        /// Reads the profiles store. Caller MUST hold _profilesFileLock. Same corruption
+        /// discipline as <see cref="ReadStoreUnlocked"/>: on the write path a parse/I-O failure
+        /// or an empty/literal-null EXISTING file throws (and is backed up) rather than returning
+        /// an empty store, so a transient glitch can never wipe every saved profile.
+        /// </summary>
+        private AllProfilesStore ReadProfilesUnlocked(bool throwOnCorruption = false)
+        {
+            var filePath = ProfilesFilePath;
+            if (!File.Exists(filePath)) return new AllProfilesStore();
+
+            string json;
+            try
+            {
+                json = File.ReadAllText(filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to read shared profiles.json: {ex.Message}");
+                if (throwOnCorruption)
+                {
+                    BackupCorruptProfilesFileUnlocked(filePath);
+                    throw;
+                }
+                return new AllProfilesStore();
+            }
+
+            if (throwOnCorruption)
+            {
+                if (string.IsNullOrWhiteSpace(json) ||
+                    string.Equals(json.Trim(), "null", StringComparison.Ordinal))
+                {
+                    _logger.Error($"profiles.json exists but is empty or literal-null; refusing to write over it. Length={json?.Length ?? 0}");
+                    BackupCorruptProfilesFileUnlocked(filePath);
+                    throw new InvalidDataException("profiles.json is empty or literal null; refusing to overwrite.");
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(json)) return new AllProfilesStore();
+            }
+
+            try
+            {
+                var parsed = JsonConvert.DeserializeObject<AllProfilesStore>(json);
+                if (parsed == null)
+                {
+                    if (throwOnCorruption)
+                    {
+                        _logger.Error("profiles.json deserialized to null; refusing to write over it.");
+                        BackupCorruptProfilesFileUnlocked(filePath);
+                        throw new InvalidDataException("profiles.json deserialized to null.");
+                    }
+                    return new AllProfilesStore();
+                }
+                // Defend against a stored file whose top-level object is present but Profiles is null.
+                if (parsed.Profiles == null) parsed.Profiles = new System.Collections.Generic.Dictionary<string, UserSettingsProfile>();
+                return parsed;
+            }
+            catch (InvalidDataException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to parse shared profiles.json: {ex.Message}");
+                if (throwOnCorruption)
+                {
+                    BackupCorruptProfilesFileUnlocked(filePath);
+                    throw;
+                }
+                return new AllProfilesStore();
+            }
+        }
+
+        /// <summary>
+        /// Preserves a corrupt profiles.json for forensic recovery. Caller MUST hold
+        /// _profilesFileLock. Never throws.
+        /// </summary>
+        private void BackupCorruptProfilesFileUnlocked(string filePath)
+        {
+            try
+            {
+                var backupPath = filePath + ".corrupt-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                if (!File.Exists(backupPath))
+                    File.Copy(filePath, backupPath);
+                _logger.Warning($"Corrupt profiles.json backed up to {backupPath}");
+            }
+            catch (Exception backupEx)
+            {
+                _logger.Error($"Failed to back up corrupt profiles.json: {backupEx.Message}");
+            }
+        }
+
+        /// <summary>Writes the profiles store. Caller MUST hold _profilesFileLock.</summary>
+        private void WriteProfilesUnlocked(AllProfilesStore store)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(store, Formatting.Indented);
+                File.WriteAllText(ProfilesFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to save shared profiles.json: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>Reads the server-wide profiles store from the shared profiles.json file.</summary>
+        public AllProfilesStore GetAllProfiles()
+        {
+            lock (_profilesFileLock)
+            {
+                return ReadProfilesUnlocked();
+            }
+        }
+
+        /// <summary>
+        /// Returns a single profile by name (case-insensitive), or null if none exists.
+        /// </summary>
+        public UserSettingsProfile? GetProfile(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            var key = name.Trim().ToLowerInvariant();
+            lock (_profilesFileLock)
+            {
+                var store = ReadProfilesUnlocked();
+                return store.Profiles.TryGetValue(key, out var profile) ? profile : null;
+            }
+        }
+
+        /// <summary>
+        /// Atomically creates or updates a profile, keyed by lower-cased name. When updating an
+        /// existing profile the original <see cref="UserSettingsProfile.CreatedAt"/> is preserved.
+        /// The optional <paramref name="maxProfiles"/> cap is enforced <em>inside</em> the store
+        /// lock (so two concurrent creates can't both slip past a caller-side count check):
+        /// creating a NEW profile once the store already holds <paramref name="maxProfiles"/>
+        /// entries throws <see cref="ProfileLimitReachedException"/>. Updating an existing profile
+        /// is always allowed. A value &lt;= 0 disables the cap. Returns the profile count after write.
+        /// </summary>
+        public int UpsertProfile(UserSettingsProfile profile, int maxProfiles = 0)
+        {
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+            var key = (profile.Name ?? string.Empty).Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(key)) throw new ArgumentException("Profile name is required.", nameof(profile));
+
+            lock (_profilesFileLock)
+            {
+                var store = ReadProfilesUnlocked(throwOnCorruption: true);
+                var isNew = !store.Profiles.ContainsKey(key);
+                if (isNew && maxProfiles > 0 && store.Profiles.Count >= maxProfiles)
+                {
+                    throw new ProfileLimitReachedException(maxProfiles);
+                }
+                if (store.Profiles.TryGetValue(key, out var existing) && !string.IsNullOrEmpty(existing.CreatedAt))
+                {
+                    profile.CreatedAt = existing.CreatedAt; // preserve original creation time on update
+                }
+                store.Profiles[key] = profile;
+                WriteProfilesUnlocked(store);
+                return store.Profiles.Count;
+            }
+        }
+
+        /// <summary>
+        /// Atomically deletes a profile by name (case-insensitive). Returns true if one was removed.
+        /// </summary>
+        public bool DeleteProfile(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            var key = name.Trim().ToLowerInvariant();
+            lock (_profilesFileLock)
+            {
+                var store = ReadProfilesUnlocked(throwOnCorruption: true);
+                if (!store.Profiles.Remove(key)) return false;
+                WriteProfilesUnlocked(store);
+                return true;
             }
         }
     }

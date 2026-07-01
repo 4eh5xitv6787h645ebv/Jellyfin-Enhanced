@@ -113,6 +113,9 @@ nav:
     # Enhanced Settings
     - Enhanced Settings: enhanced/enhanced-settings.md
 
+    # User Settings Management (admin)
+    - User Settings Management: enhanced/user-settings-management.md
+
 
   # ——————————————
   # Elsewhere

@@ -640,9 +640,14 @@
         help.id = panelId;
         Object.assign(help.style, {
             position: 'fixed',
-            top: '50%',
+            // Anchor the panel by its TOP (horizontally centred) rather than centring it
+            // vertically. With a translate(-50%,-50%) centre, expanding/collapsing a <details>
+            // section changed the panel's height and re-centred it, making the whole panel
+            // visibly jump. Anchoring the top keeps it still: sections now grow downward, and
+            // once the content exceeds max-height the inner .panel-main-content scrolls instead.
+            top: '8vh',
             left: '50%',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translateX(-50%)',
             background: 'rgb(24, 24, 24)',
             color: '#fff',
             padding: '0',
@@ -652,7 +657,7 @@
             backdropFilter: `blur(${panelBlurValue})`,
             minWidth: '350px',
             maxWidth: '90vw',
-            maxHeight: '90vh',
+            maxHeight: '84vh',
             boxShadow: '0 10px 30px rgba(0,0,0,0.7)',
             border: '1px solid rgba(255,255,255,0.1)',
             overflow: 'hidden',
@@ -814,7 +819,7 @@
                     </div>
                 </div>` : ''}
                 <div id="settings-content" class="tab-content" style="padding-top: 20px; padding-bottom: 20px; width: 50vw;">
-                    <details style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
+                    <details data-setting-group="playback" style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
                         <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.icon(JE.IconName.PLAYBACK)} ${JE.t('panel_settings_playback')}</summary>
                         <div style="padding: 0 16px 16px 16px;">
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
@@ -853,7 +858,7 @@
                             </div>
                         </div>
                     </details>
-                    <details style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
+                    <details data-setting-group="autoskip" style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
                         <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.icon(JE.IconName.SKIP)} ${JE.t('panel_settings_auto_skip')}</summary>
                         <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-left: 18px; margin-bottom: 10px;">${JE.t('panel_settings_auto_skip_depends')}</div>
                         <div style="padding: 0 16px 16px 16px;">
@@ -871,7 +876,7 @@
                             </div>
                         </div>
                     </details>
-                    <details style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
+                    <details data-setting-group="subtitles" style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
                         <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.icon(JE.IconName.SUBTITLES)} ${JE.t('panel_settings_subtitles')}</summary>
                         <div style="padding: 0 16px 16px 16px;">
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
@@ -923,7 +928,7 @@
                             </div>
                         </div>
                     </details>
-                    <details style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
+                    <details data-setting-group="random" style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
                         <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.icon(JE.IconName.RANDOM)} ${JE.t('panel_settings_random_button')}</summary>
                         <div style="padding: 0 16px 16px 16px;">
                             <div style="margin-bottom:16px; padding:12px; background:${presetBoxBackground}; border-radius:6px; border-left:3px solid ${toggleAccentColor};">
@@ -938,10 +943,10 @@
                             </div>
                         </div>
                     </details>
-                    <details style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
+                    <details data-setting-section="ui" style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
                         <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.icon(JE.IconName.UI)} ${JE.t('panel_settings_ui')}</summary>
                         <div style="padding: 0 16px 16px 16px;">
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="watchprogress" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
                                     <input type="checkbox" id="showWatchProgressToggle" ${JE.currentSettings.showWatchProgress ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('panel_settings_ui_watch_progress')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_ui_watch_progress_desc')}</div></div>
@@ -962,19 +967,19 @@
                                     </div>
                                 </div>
                             </div>
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="filesizes" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
                                     <input type="checkbox" id="showFileSizesToggle" ${JE.currentSettings.showFileSizes ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('panel_settings_ui_file_sizes')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_ui_file_sizes_desc')}</div></div>
                                 </label>
                             </div>
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="audiolanguages" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
                                     <input type="checkbox" id="showAudioLanguagesToggle" ${JE.currentSettings.showAudioLanguages ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('panel_settings_ui_audio_languages')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_ui_audio_languages_desc')}</div></div>
                                 </label>
                             </div>
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="qualitytags" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
                                         <input type="checkbox" id="qualityTagsToggle" ${JE.currentSettings.qualityTagsEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
@@ -1042,7 +1047,7 @@
                                     })()}
                                 </div>
                             </div>
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="genretags" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
                                         <input type="checkbox" id="genreTagsToggle" ${JE.currentSettings.genreTagsEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
@@ -1056,7 +1061,7 @@
                                     </div>
                                 </label>
                             </div>
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="languagetags" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
                                         <input type="checkbox" id="languageTagsToggle" ${JE.currentSettings.languageTagsEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
@@ -1070,7 +1075,7 @@
                                     </div>
                                 </label>
                             </div>
-                                <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                                <div data-setting-group="ratingtags" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                     <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                                         <div style="display: flex; align-items: center; gap: 12px;">
                                             <input type="checkbox" id="ratingTagsToggle" ${JE.currentSettings.ratingTagsEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
@@ -1084,19 +1089,19 @@
                                         </div>
                                     </label>
                                 </div>
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="peopletags" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
                                     <input type="checkbox" id="peopleTagsToggle" ${JE.currentSettings.peopleTagsEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('panel_settings_ui_people_tags')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_ui_people_tags_desc')}</div></div>
                                 </label>
                             </div>
-                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="qualitytags" style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
                                     <input type="checkbox" id="tagsHideOnHoverToggle" ${JE.currentSettings.tagsHideOnHover ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('panel_settings_ui_hide_tags_on_hover')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_ui_hide_tags_on_hover_desc')}</div></div>
                                 </label>
                             </div>
-                            <div style="padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                            <div data-setting-group="removecontinuewatching" style="padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
                                     <input type="checkbox" id="removeContinueWatchingToggle" ${JE.currentSettings.removeContinueWatchingEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('panel_settings_ui_remove_continue_watching')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_ui_remove_continue_watching_desc')}</div></div>
@@ -1226,7 +1231,7 @@
                             </div>
                         </div>
                     </details>` : ''}
-                    <details style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
+                    <details data-setting-group="language" style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
                         <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.icon(JE.IconName.LANGUAGE)} ${JE.t('panel_settings_language')}</summary>
                         <div style="padding: 0 16px 16px 16px;">
                             <div style="margin-bottom: 16px;">
@@ -1257,6 +1262,34 @@
             </div>
             <button id="closeSettingsPanel" style="position:absolute; top:24px; right:24px; background:rgba(255,255,255,0.1); border:none; color:#fff; font-size:16px; cursor:pointer; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">×</button>
         `;
+
+        // Hide settings groups the admin has locked (admin-controlled availability). This runs on
+        // the DETACHED node before it is appended, so a locked group never paints — no flicker.
+        // Elements are hidden AND their inputs disabled as a belt-and-suspenders measure (the
+        // server independently enforces the admin default for locked groups); a section whose
+        // groups are all locked is removed entirely so no empty <details> is left behind.
+        (function applySettingAvailability(root) {
+            try {
+                if (typeof JE.isSettingGroupAvailable !== 'function') return;
+                root.querySelectorAll('[data-setting-group]').forEach(el => {
+                    const key = el.getAttribute('data-setting-group');
+                    if (JE.isSettingGroupAvailable(key)) return;
+                    el.style.display = 'none';
+                    el.setAttribute('data-locked', 'true');
+                    el.querySelectorAll('input, select, textarea, button').forEach(ctrl => { ctrl.disabled = true; });
+                });
+                // The UI section bundles several independent groups; drop it only when they are all locked.
+                const uiSection = root.querySelector('[data-setting-section="ui"]');
+                if (uiSection) {
+                    const groups = Array.from(uiSection.querySelectorAll('[data-setting-group]'));
+                    if (groups.length > 0 && groups.every(g => g.style.display === 'none')) {
+                        uiSection.style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.warn('🪼 Jellyfin Enhanced: applySettingAvailability failed:', e);
+            }
+        })(help);
 
         document.body.appendChild(help);
 

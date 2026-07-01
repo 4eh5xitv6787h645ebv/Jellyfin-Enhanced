@@ -191,4 +191,31 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
     {
         public Dictionary<string, UserReview> Reviews { get; set; } = new Dictionary<string, UserReview>();
     }
+
+    /// <summary>
+    /// A reusable, admin-defined bundle of per-user JE preferences that can be applied to one or
+    /// more users at once. Captures the same surface as an admin "copy A→B": the main
+    /// <see cref="UserSettings"/>, keyboard <see cref="Shortcut"/>s, and the Hidden Content
+    /// <em>display</em> settings (never a user's actual hidden items, bookmarks, or watchlist).
+    /// </summary>
+    public class UserSettingsProfile
+    {
+        /// <summary>Display name; also the store key (lower-cased, see <see cref="AllProfilesStore"/>).</summary>
+        public string Name { get; set; } = string.Empty;
+        public UserSettings Settings { get; set; } = new UserSettings();
+        public List<Shortcut> Shortcuts { get; set; } = new List<Shortcut>();
+        public HiddenContentSettings HiddenContentSettings { get; set; } = new HiddenContentSettings();
+        public string CreatedAt { get; set; } = string.Empty;
+        public string UpdatedAt { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Server-wide store of all reusable user-setting profiles, keyed by the lower-cased profile
+    /// name. Stored in a single shared file (profiles.json) at the plugin config root, mirroring
+    /// the reviews.json shared-store pattern.
+    /// </summary>
+    public class AllProfilesStore
+    {
+        public Dictionary<string, UserSettingsProfile> Profiles { get; set; } = new Dictionary<string, UserSettingsProfile>();
+    }
 }

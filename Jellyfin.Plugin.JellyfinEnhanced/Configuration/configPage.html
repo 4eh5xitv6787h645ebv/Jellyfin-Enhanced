@@ -71,6 +71,7 @@
                 <button class="jellyfin-tab-button" data-tab="extras"><h3><i class="material-icons je-tab-icon" aria-hidden="true">auto_awesome</i>Extras</h3></button>
                     <button class="jellyfin-tab-button" data-tab="keyboard"><h3><i class="material-icons je-tab-icon" aria-hidden="true">keyboard</i>Keyboard</h3></button>
                     <button class="jellyfin-tab-button" data-tab="admin"><h3><i class="material-icons je-tab-icon" aria-hidden="true">admin_panel_settings</i>Admin</h3></button>
+                    <button class="jellyfin-tab-button" data-tab="usermgmt"><h3><i class="material-icons je-tab-icon" aria-hidden="true">manage_accounts</i>Users</h3></button>
                     <button class="jellyfin-tab-button" data-tab="docs"><h3><i class="material-icons je-tab-icon" aria-hidden="true">menu_book</i>Docs</h3></button>
                 </div>
             </div>
@@ -2152,6 +2153,95 @@
 
                             <h4 style="margin-top:20px;">Current Overrides</h4>
                             <div id="shortcut-list-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div id="usermgmt" class="jellyfin-tab-content">
+                    <fieldset>
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">manage_accounts</i>User Settings Management</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="userSettingsManagementEnabled" is="emby-checkbox" type="checkbox"/><span>Enable user settings management</span></label></div>
+                            <div class="je-setting-description" data-desc-for="userSettingsManagementEnabled">
+                                <div class="fieldDescription">Enables the admin tools on this tab &mdash; acting as a user, reusable profiles, copying settings, and bulk-applying to many users. When off, those admin endpoints are disabled. This does not affect the per-group availability locks below.</div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="je-fieldset-wide">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">tune</i>Setting availability</legend>
+                        <div class="configSection">
+                            <div class="fieldDescription">Choose which settings groups users may configure. A <strong>locked</strong> group is hidden from every user's Enhanced settings panel and its values are forced to the admin defaults (from the Playback / Display tabs). Unlocking a group restores normal per-user control. Newly-locked groups take effect the next time a user's settings load.</div>
+                            <div id="je-usm-availability" class="je-usm-availability-grid"></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="je-fieldset-wide">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">badge</i>Act as user</legend>
+                        <div class="configSection">
+                            <div class="fieldDescription">Select a user to view and edit their Jellyfin Enhanced settings on their behalf. Locked settings appear disabled, exactly as that user would see them.</div>
+                            <div class="je-usm-row">
+                                <select is="emby-select" class="emby-select je-usm-user-select" id="je-usm-actas-user"></select>
+                                <button is="emby-button" type="button" id="je-usm-actas-load" class="emby-button raised raised-mini">Load</button>
+                                <button is="emby-button" type="button" id="je-usm-actas-save" class="emby-button raised raised-mini je-usm-hidden">Save for this user</button>
+                            </div>
+                            <div id="je-usm-actas-editor" class="je-usm-actas-editor je-usm-hidden"></div>
+                            <div id="je-usm-actas-status" class="je-usm-status" role="status"></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="je-fieldset-wide">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">content_copy</i>Copy settings between users</legend>
+                        <div class="configSection">
+                            <div class="fieldDescription">Copy one user's settings, keyboard shortcuts and hidden-content display preferences onto one or more other users. (Personal data &mdash; bookmarks, hidden items, watchlist &mdash; is never copied.)</div>
+                            <div class="je-usm-row">
+                                <label class="je-usm-inline-label">From <select is="emby-select" class="emby-select je-usm-user-select" id="je-usm-copy-from"></select></label>
+                            </div>
+                            <div class="je-usm-include-row">
+                                <label><input type="checkbox" id="je-usm-copy-inc-settings" checked/> Settings</label>
+                                <label><input type="checkbox" id="je-usm-copy-inc-shortcuts" checked/> Shortcuts</label>
+                                <label><input type="checkbox" id="je-usm-copy-inc-hc" checked/> Hidden-content prefs</label>
+                            </div>
+                            <div class="je-usm-sublabel">Apply to</div>
+                            <div id="je-usm-copy-to-list" class="je-usm-user-checklist"><div class="je-usm-loading">Loading users&hellip;</div></div>
+                            <div class="je-usm-row je-usm-actions">
+                                <button type="button" id="je-usm-copy-selectall" class="je-usm-mini-btn">Select all</button>
+                                <button type="button" id="je-usm-copy-deselectall" class="je-usm-mini-btn">Deselect all</button>
+                                <button is="emby-button" type="button" id="je-usm-copy-apply" class="emby-button raised raised-mini">Copy settings</button>
+                            </div>
+                            <div id="je-usm-copy-status" class="je-usm-status" role="status"></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="je-fieldset-wide">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">badge</i>Profiles</legend>
+                        <div class="configSection">
+                            <div class="fieldDescription">Snapshot a user's settings as a reusable profile, then apply it to any number of users at once.</div>
+                            <div class="je-usm-row">
+                                <input is="emby-input" class="emby-input je-usm-profile-name" id="je-usm-profile-name" type="text" placeholder="Profile name"/>
+                                <label class="je-usm-inline-label">from <select is="emby-select" class="emby-select je-usm-user-select" id="je-usm-profile-from"></select></label>
+                                <button is="emby-button" type="button" id="je-usm-profile-create" class="emby-button raised raised-mini">Save profile</button>
+                            </div>
+                            <div id="je-usm-profile-list" class="je-usm-profile-list"></div>
+                            <div id="je-usm-profile-create-status" class="je-usm-status" role="status"></div>
+
+                            <div class="je-usm-sublabel je-usm-apply-header">Apply a profile</div>
+                            <div class="je-usm-row">
+                                <label class="je-usm-inline-label">Profile <select is="emby-select" class="emby-select je-usm-user-select" id="je-usm-apply-profile"></select></label>
+                            </div>
+                            <div class="je-usm-include-row">
+                                <label><input type="checkbox" id="je-usm-apply-inc-settings" checked/> Settings</label>
+                                <label><input type="checkbox" id="je-usm-apply-inc-shortcuts" checked/> Shortcuts</label>
+                                <label><input type="checkbox" id="je-usm-apply-inc-hc" checked/> Hidden-content prefs</label>
+                            </div>
+                            <div class="je-usm-sublabel">Apply to</div>
+                            <div id="je-usm-apply-to-list" class="je-usm-user-checklist"><div class="je-usm-loading">Loading users&hellip;</div></div>
+                            <div class="je-usm-row je-usm-actions">
+                                <button type="button" id="je-usm-apply-selectall" class="je-usm-mini-btn">Select all</button>
+                                <button type="button" id="je-usm-apply-deselectall" class="je-usm-mini-btn">Deselect all</button>
+                                <button is="emby-button" type="button" id="je-usm-apply-run" class="emby-button raised raised-mini">Apply profile</button>
+                            </div>
+                            <div id="je-usm-apply-status" class="je-usm-status" role="status"></div>
                         </div>
                     </fieldset>
                 </div>
@@ -4398,6 +4488,10 @@
                 // rendered instance cards and loaded Seerr fields.
                 updateRequestsRequirementsBanner();
 
+                // User Settings Management tab — load the enable toggle + per-group
+                // availability locks from config, then (lazily) hydrate the user pickers.
+                if (typeof loadUserManagementConfig === 'function') loadUserManagementConfig(config);
+
                 Dashboard.hideLoadingMsg();
             });
         }
@@ -4718,6 +4812,13 @@
             CUSTOM_TAB_MANAGED_ENTRIES.forEach(function(entry) {
                 config[entry.ownedKey] = _jeCustomTabOwnedCache[entry.ownedKey] === true;
             });
+
+            // User Settings Management: the enable toggle + per-group availability locks.
+            var __usmEnable = document.querySelector('#userSettingsManagementEnabled');
+            if (__usmEnable) config.UserSettingsManagementEnabled = __usmEnable.checked;
+            if (typeof collectLockedSettingGroups === 'function') {
+                config.LockedUserSettingGroups = collectLockedSettingGroups();
+            }
 
             return config;
         }
@@ -5339,6 +5440,7 @@
         form.addEventListener('submit', saveConfig);
         resetAllUserSettingsBtn.addEventListener('click', resetAllUserSettings);
         initAutoMovieQualityMode();
+        setupUserManagement();
 
         // Live-update the Requests Page requirements banner AND the dependency
         // gates as the admin types into Seerr fields or adds/edits/removes/
@@ -8211,6 +8313,832 @@
                 alert('Failed to copy to clipboard');
             }
             document.body.removeChild(textarea);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        //  User Settings Management tab (act-as-user, availability locks,
+        //  copy A→B, reusable profiles, bulk-apply). All admin-gated server-side.
+        // ─────────────────────────────────────────────────────────────────────
+        // The 14 lockable settings groups (key + label) — drives the availability checkboxes.
+        // Mirrors Configuration/UserSettingsGroups.cs GroupKeys. The act-as editor field markup
+        // (incl. the non-lockable reviews/calendar/hidden-content) lives in usmRenderActAsEditor.
+        var USM_GROUPS = [
+            { key: 'playback', label: 'Playback' },
+            { key: 'autoskip', label: 'Auto Skip' },
+            { key: 'subtitles', label: 'Subtitles' },
+            { key: 'random', label: 'Random Button' },
+            { key: 'watchprogress', label: 'Watch Progress' },
+            { key: 'filesizes', label: 'File Sizes' },
+            { key: 'audiolanguages', label: 'Audio Languages' },
+            { key: 'qualitytags', label: 'Quality Tags' },
+            { key: 'genretags', label: 'Genre Tags' },
+            { key: 'languagetags', label: 'Language Tags' },
+            { key: 'ratingtags', label: 'Rating Tags' },
+            { key: 'peopletags', label: 'People Tags' },
+            { key: 'removecontinuewatching', label: 'Continue Watching' },
+            { key: 'language', label: 'Language' }
+        ];
+
+        var usmUsers = [];            // [{ userId, userName, isAdmin, isSelf, hasSettings }]
+        var usmLockedGroups = [];     // group keys locked in the SAVED config
+        var usmActAsSettings = null;  // the currently-loaded target user's full UserSettings (PascalCase)
+        var usmActAsHc = null;        // the target user's full UserHiddenContent ({ Items, Settings }); Items preserved on save
+        var usmActAsUserId = null;
+        var usmSetupDone = false;
+
+        function usmSetStatus(id, message, kind) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message || '';
+            el.className = 'je-usm-status' + (kind ? ' je-usm-status-' + kind : '');
+        }
+
+        // Populate a <select> with the known users. blankLabel adds a leading empty option.
+        function usmFillUserSelect(selectEl, blankLabel) {
+            if (!selectEl) return;
+            var prev = selectEl.value;
+            selectEl.innerHTML = '';
+            if (blankLabel) {
+                var blank = document.createElement('option');
+                blank.value = '';
+                blank.textContent = blankLabel;
+                selectEl.appendChild(blank);
+            }
+            usmUsers.forEach(function(u) {
+                var opt = document.createElement('option');
+                opt.value = u.userId;
+                opt.textContent = u.userName + (u.isAdmin ? ' (admin)' : '');
+                selectEl.appendChild(opt);
+            });
+            if (prev) selectEl.value = prev;
+        }
+
+        // Render a multi-select checklist of users into a container.
+        function usmRenderUserChecklist(containerId) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            if (!usmUsers.length) {
+                var empty = document.createElement('div');
+                empty.className = 'je-usm-loading';
+                empty.textContent = 'No users found.';
+                container.appendChild(empty);
+                return;
+            }
+            var grid = document.createElement('div');
+            grid.className = 'je-usm-checklist-grid';
+            usmUsers.forEach(function(u) {
+                var label = document.createElement('label');
+                label.className = 'je-usm-check-item';
+                var cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.className = containerId + '-cb';
+                cb.value = u.userId;
+                var name = document.createElement('span');
+                name.textContent = u.userName + (u.isAdmin ? ' (admin)' : '');
+                label.appendChild(cb);
+                label.appendChild(name);
+                grid.appendChild(label);
+            });
+            container.appendChild(grid);
+        }
+
+        function usmSelectedIds(containerId) {
+            return Array.prototype.slice
+                .call(document.querySelectorAll('.' + containerId + '-cb:checked'))
+                .map(function(cb) { return cb.value; });
+        }
+
+        // GET the user list and (re)populate every picker on the tab.
+        function usmLoadUsers() {
+            return ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/users'),
+                dataType: 'json'
+            }).then(function(res) {
+                usmUsers = (res && Array.isArray(res.users)) ? res.users : [];
+                usmFillUserSelect(document.getElementById('je-usm-actas-user'), 'Select a user…');
+                usmFillUserSelect(document.getElementById('je-usm-copy-from'), null);
+                usmFillUserSelect(document.getElementById('je-usm-profile-from'), null);
+                usmRenderUserChecklist('je-usm-copy-to-list');
+                usmRenderUserChecklist('je-usm-apply-to-list');
+            }).catch(function() {
+                usmUsers = [];
+                usmSetStatus('je-usm-actas-status', 'Unable to load users (is management enabled?).', 'error');
+            });
+        }
+
+        // Build the per-group availability checkboxes (checked = users may configure the group).
+        function loadUserManagementConfig(config) {
+            var enableEl = document.getElementById('userSettingsManagementEnabled');
+            if (enableEl) enableEl.checked = config.UserSettingsManagementEnabled !== false;
+
+            usmLockedGroups = Array.isArray(config.LockedUserSettingGroups) ? config.LockedUserSettingGroups.slice() : [];
+
+            var availWrap = document.getElementById('je-usm-availability');
+            if (availWrap) {
+                availWrap.innerHTML = '';
+                // One availability checkbox per lockable group (USM_GROUPS = the 14 panel-backed
+                // server lock groups). Editor-only groups (reviews/calendar/hidden-content) are
+                // not in this list, so they never get an availability lock.
+                USM_GROUPS.forEach(function(g) {
+                    var item = document.createElement('label');
+                    item.className = 'je-usm-avail-item';
+                    var cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.className = 'je-usm-avail-cb';
+                    cb.setAttribute('data-group', g.key);
+                    cb.checked = usmLockedGroups.indexOf(g.key) === -1;
+                    var span = document.createElement('span');
+                    span.textContent = g.label;
+                    item.appendChild(cb);
+                    item.appendChild(span);
+                    availWrap.appendChild(item);
+                });
+            }
+
+            // Refresh pickers + profiles whenever the config (re)loads.
+            usmLoadUsers();
+            usmLoadProfiles();
+        }
+
+        // Read the availability checkboxes → array of LOCKED group keys (unchecked = locked).
+        function collectLockedSettingGroups() {
+            var locked = [];
+            document.querySelectorAll('.je-usm-avail-cb').forEach(function(cb) {
+                if (!cb.checked) locked.push(cb.getAttribute('data-group'));
+            });
+            return locked;
+        }
+
+        // ── Act as user ─────────────────────────────────────────────────────
+        // Subtitle preset data (mirrors js/enhanced/subtitles.js).
+        var USM_SUB_STYLE_PRESETS = [
+            { name: "Clean White", textColor: "#FFFFFFFF", bgColor: "transparent", previewText: "Aa" },
+            { name: "Classic Black Box", textColor: "#FFFFFFFF", bgColor: "#000000FF", previewText: "Aa" },
+            { name: "Netflix Style", textColor: "#FFFFFFFF", bgColor: "#000000B2", previewText: "Aa" },
+            { name: "Cinema Yellow", textColor: "#FFFF00FF", bgColor: "#000000B2", previewText: "Aa" },
+            { name: "Soft Gray", textColor: "#FFFFFFFF", bgColor: "#444444B2", previewText: "Aa" },
+            { name: "High Contrast", textColor: "#000000FF", bgColor: "#FFFFFFFF", previewText: "Aa" }
+        ];
+        var USM_SUB_SIZE_PRESETS = [
+            { name: "Tiny", size: 0.8 }, { name: "Small", size: 1 }, { name: "Normal", size: 1.2 },
+            { name: "Large", size: 1.8 }, { name: "Extra Large", size: 2 }, { name: "Gigantic", size: 3 }
+        ];
+        var USM_SUB_FONT_PRESETS = [
+            { name: "Default", family: "inherit" }, { name: "Noto Sans", family: "Noto Sans,sans-serif" },
+            { name: "Sans Serif", family: "Arial,Helvetica,sans-serif" }, { name: "Typewriter", family: "Courier New,Courier,monospace" },
+            { name: "Roboto", family: "Roboto Mono,monospace" }
+        ];
+        var USM_QUALITY_CATS = [
+            { key: 'ShowResolutionTag', order: 'ResolutionTagOrder', def: 1, label: 'Resolution (4K, 1080p, ...)' },
+            { key: 'ShowSourceTag', order: 'SourceTagOrder', def: 2, label: 'Source (BluRay, DVD, HDTV, ...)' },
+            { key: 'ShowDynamicRangeTag', order: 'DynamicRangeTagOrder', def: 3, label: 'HDR (HDR10+, Dolby Vision)' },
+            { key: 'ShowSpecialFormatTag', order: 'SpecialFormatTagOrder', def: 4, label: 'Special format (IMAX, 3D)' },
+            { key: 'ShowVideoCodecTag', order: 'VideoCodecTagOrder', def: 5, label: 'Video format (HEVC, H264, AV1, ...)' },
+            { key: 'ShowAudioInfoTag', order: 'AudioInfoTagOrder', def: 6, label: 'Sound (Atmos, DTS, 5.1, 7.1, ...)' }
+        ];
+
+        function usmEsc(s) {
+            return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+        // Colour/position validators — settings values go into inline `style`, and usmEsc does NOT
+        // escape ; : ( ), so an unvalidated stored colour string could inject extra CSS declarations.
+        // These return only known-safe forms (validated hex / 'transparent' / clamped percent).
+        function usmSafeColor(v, fb) {
+            v = String(v == null ? '' : v);
+            return (v === 'transparent' || /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(v)) ? v : fb;
+        }
+        function usmHex6(v, fb) { v = String(v == null ? '' : v); return /^#[0-9a-fA-F]{6}/.test(v) ? v.substring(0, 7) : fb; }
+        function usmAlpha(v, fb) { v = String(v == null ? '' : v); return /^#[0-9a-fA-F]{8}$/.test(v) ? parseInt(v.substring(7, 9), 16) : fb; }
+        function usmClampPct(v, def) { var n = Number(v); return isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : def; }
+
+        // Builds the act-as editor as a faithful look-alike of the JE user settings panel
+        // (accordion sections, toggle cards, subtitle preset grids + colour pickers + position
+        // grid, tag position selectors + quality-tag reordering, Hidden Content cards).
+        // Reads/writes usmActAsSettings (PascalCase UserSettings) + usmActAsHc.Settings.
+        // No per-change save — the "Save for this user" button persists both files.
+        function usmRenderActAsEditor() {
+            var editor = document.getElementById('je-usm-actas-editor');
+            if (!editor) return;
+            var S = usmActAsSettings || {};
+            var HC = (usmActAsHc && usmActAsHc.Settings) ? usmActAsHc.Settings : null;
+
+            // ── HTML fragment builders (PascalCase keys) ──────────────────────
+            function on(key) { return (S[key] === true) ? ' checked' : ''; }
+            function onDef(obj, key) { return (obj && obj[key] !== false) ? ' checked' : ''; } // default-ON
+            function onTruthy(obj, key) { return (obj && obj[key] === true) ? ' checked' : ''; } // default-OFF
+
+            // Toggle card. store 'S' (settings, default-off) or explicit checked string.
+            function tog(key, label, desc) {
+                return '<div class="je-usm-p-card"><label class="je-usm-p-toggle">'
+                    + '<input type="checkbox" data-bind data-store="S" data-key="' + key + '"' + on(key) + '>'
+                    + '<div><div class="je-usm-p-title">' + usmEsc(label) + '</div>'
+                    + (desc ? '<div class="je-usm-p-desc">' + usmEsc(desc) + '</div>' : '')
+                    + '</div></label></div>';
+            }
+            // Hidden-content toggle card. checkedAttr is the pre-computed ' checked' string.
+            function hcTog(key, label, desc, checkedAttr) {
+                return '<div class="je-usm-p-card"><label class="je-usm-p-toggle">'
+                    + '<input type="checkbox" data-bind data-store="HC" data-key="' + key + '"' + checkedAttr + '>'
+                    + '<div><div class="je-usm-p-title">' + usmEsc(label) + '</div>'
+                    + (desc ? '<div class="je-usm-p-desc">' + usmEsc(desc) + '</div>' : '')
+                    + '</div></label></div>';
+            }
+            function selCtl(key, opts) {
+                var cur = (S[key] !== undefined && S[key] !== null) ? String(S[key]) : '';
+                var o = opts.map(function (op) {
+                    return '<option value="' + usmEsc(op[0]) + '"' + (op[0] === cur ? ' selected' : '') + '>' + usmEsc(op[1]) + '</option>';
+                }).join('');
+                return '<select class="je-usm-p-select" data-bind data-store="S" data-key="' + key + '">' + o + '</select>';
+            }
+            function possel(key) {
+                return '<div class="je-usm-possel" data-possel="' + key + '" title="Click to change position">'
+                    + '<div data-pos="top-left"></div><div data-pos="top-right"></div>'
+                    + '<div data-pos="bottom-left"></div><div data-pos="bottom-right"></div></div>';
+            }
+            // Tag toggle card WITH a position selector. quality=true adds the reorder sub-panel.
+            function tagCard(key, posKey, label, desc, quality) {
+                return '<div class="je-usm-p-card" data-group="' + (quality ? 'qualitytags' : (key === 'GenreTagsEnabled' ? 'genretags' : key === 'LanguageTagsEnabled' ? 'languagetags' : 'ratingtags')) + '">'
+                    + '<label class="je-usm-p-toggle je-usm-p-between"><div style="display:flex;align-items:center;gap:12px;">'
+                    + '<input type="checkbox" data-bind data-store="S" data-key="' + key + '"' + on(key) + (quality ? ' data-qmaster="1"' : '') + '>'
+                    + '<div><div class="je-usm-p-title">' + usmEsc(label) + '</div><div class="je-usm-p-desc">' + usmEsc(desc) + '</div></div>'
+                    + '</div>' + possel(posKey) + '</label>'
+                    + (quality ? qualitySubPanel() : '') + '</div>';
+            }
+            function qualitySubPanel() {
+                // Resolve effective order (user value → default) and sort.
+                var cats = USM_QUALITY_CATS.map(function (c) {
+                    var v = S[c.order];
+                    return { c: c, ord: (typeof v === 'number' && isFinite(v)) ? v : c.def };
+                }).sort(function (a, b) { return (a.ord - b.ord) || (a.c.def - b.c.def); });
+                var rows = cats.map(function (x, idx) {
+                    var c = x.c;
+                    var checked = (S[c.key] === false) ? '' : ' checked'; // sub-tags default ON
+                    return '<div class="je-usm-cat-row" data-cat-key="' + c.key + '" data-order-key="' + c.order + '">'
+                        + '<label class="je-usm-cat-lbl"><input type="checkbox"' + checked + '><span>' + usmEsc(c.label) + '</span></label>'
+                        + '<button type="button" class="je-usm-cat-btn je-usm-cat-up"' + (idx === 0 ? ' disabled' : '') + ' aria-label="Move up"><span class="material-icons">arrow_upward</span></button>'
+                        + '<button type="button" class="je-usm-cat-btn je-usm-cat-down"' + (idx === cats.length - 1 ? ' disabled' : '') + ' aria-label="Move down"><span class="material-icons">arrow_downward</span></button>'
+                        + '</div>';
+                }).join('');
+                var wrapDisp = (S.QualityTagsEnabled === true) ? 'block' : 'none';
+                return '<div class="je-usm-cat-wrap" data-qwrap style="display:' + wrapDisp + ';">'
+                    + '<button type="button" class="je-usm-cat-expander" data-qexpander aria-expanded="false">'
+                    + '<span class="material-icons je-usm-cat-chevron">chevron_right</span><span>Choose what to show</span></button></div>'
+                    + '<div class="je-usm-cat-list" data-qlist style="display:none;">' + rows + '</div>';
+            }
+            function presetGrid(kind, presets, activeIdx) {
+                var boxes = presets.map(function (p, i) {
+                    var inner, box = '';
+                    if (kind === 'style') {
+                        box = 'background-color:' + p.bgColor + '; color:' + p.textColor + '; border:1px solid rgba(255,255,255,0.3); text-shadow:#000 0 0 3px; width:40px; height:25px; border-radius:4px; line-height:25px;';
+                        inner = p.previewText || 'Aa';
+                    } else if (kind === 'size') {
+                        box = 'font-size:' + p.size + 'em; color:#fff; text-shadow:0 0 4px rgba(0,0,0,0.8);';
+                        inner = 'Aa';
+                    } else {
+                        box = 'font-family:' + p.family + '; color:#fff; text-shadow:0 0 4px rgba(0,0,0,0.8); font-size:1.5em;';
+                        inner = 'AaBb';
+                    }
+                    return '<div class="je-usm-preset-box' + (i === activeIdx ? ' je-usm-preset-active' : '') + '" data-preset="' + kind + '" data-idx="' + i + '" title="' + usmEsc(p.name) + '">'
+                        + '<span style="display:inline-block;text-align:center;font-weight:bold;' + box + '">' + inner + '</span></div>';
+                }).join('');
+                return '<div class="je-usm-p-presetgrid" data-presetgrid="' + kind + '">' + boxes + '</div>';
+            }
+            function section(group, icon, title, bodyHtml, note) {
+                return '<details class="je-usm-p-section" open' + (group ? ' data-group="' + group + '"' : '') + '>'
+                    + '<summary><span class="material-icons">' + icon + '</span>' + usmEsc(title) + '</summary>'
+                    + (note ? '<div class="je-usm-p-note">' + note + '</div>' : '')
+                    + '<div class="je-usm-p-body">' + bodyHtml + '</div></details>';
+            }
+
+            var html = '';
+
+            // Playback
+            html += section('playback', 'play_circle', 'Playback Settings',
+                tog('AutoPauseEnabled', 'Auto-pause', 'Pause when switching tabs')
+                + tog('AutoResumeEnabled', 'Auto-resume', 'Resume when returning to tab')
+                + tog('AutoPipEnabled', 'Auto Picture-in-Picture', 'Automatically enter PiP when switching tabs')
+                + tog('LongPress2xEnabled', 'Long Press for 2x Speed (β)', 'Press and hold on the video to play at 2x speed (works best on mobile/touch devices)')
+                + '<div class="je-usm-p-card"><label class="je-usm-p-toggle">'
+                + '<input type="checkbox" data-bind data-store="S" data-key="PauseScreenEnabled"' + on('PauseScreenEnabled') + '>'
+                + '<div><div class="je-usm-p-title">Custom Pause Screen</div><div class="je-usm-p-desc">Show a stylized screen when videos are paused.</div></div></label>'
+                + '<div class="je-usm-p-inline"><label class="je-usm-p-desc" style="padding:0;white-space:nowrap;">Delay before showing (seconds):</label>'
+                + '<input type="number" class="je-usm-p-num" data-bind data-store="S" data-key="PauseScreenDelaySeconds" data-min="1" data-max="60" min="1" max="60" value="' + usmEsc((S.PauseScreenDelaySeconds != null ? S.PauseScreenDelaySeconds : 5)) + '"></div></div>');
+
+            // Auto Skip
+            html += section('autoskip', 'skip_next', 'Auto-Skip Settings',
+                tog('AutoSkipIntro', 'Automatically Skip Intro', '')
+                + tog('AutoSkipOutro', 'Automatically Skip Outro', ''),
+                'Depends on Intro-Skipper Plugin being available');
+
+            // Subtitles
+            var styleIdx = (S.SelectedStylePresetIndex != null && S.UsingCustomColors !== true) ? S.SelectedStylePresetIndex : -1;
+            var sizeIdx = (S.SelectedFontSizePresetIndex != null) ? S.SelectedFontSizePresetIndex : 2;
+            var fontIdx = (S.SelectedFontFamilyPresetIndex != null) ? S.SelectedFontFamilyPresetIndex : 0;
+            var txtC = S.CustomSubtitleTextColor || '#FFFFFFFF';
+            var bgC = S.CustomSubtitleBgColor || '#00000000';
+            var subBody =
+                tog('DisableCustomSubtitleStyles', 'Disable Custom Styles', "Use Jellyfin's default subtitle styles")
+                + '<div style="margin-bottom:16px;"><div class="je-usm-p-heading">Style</div>' + presetGrid('style', USM_SUB_STYLE_PRESETS, styleIdx) + '</div>'
+                + '<div class="je-usm-p-card" style="border-left-color:var(--je-accent);">'
+                + '<div class="je-usm-p-heading"><span class="material-icons" style="vertical-align:middle;">palette</span></div>'
+                + '<div class="je-usm-color-wrap"><div class="je-usm-color-cols">'
+                + '<div><div class="je-usm-color-lbl">Text</div><div class="je-usm-color-row">'
+                + '<input type="color" class="je-usm-color" id="usm-txt-color" value="' + usmHex6(txtC, '#FFFFFF') + '">'
+                + '<input type="range" class="je-usm-alpha" id="usm-txt-alpha" min="0" max="255" value="' + usmAlpha(txtC, 255) + '"></div></div>'
+                + '<div><div class="je-usm-color-lbl">Background</div><div class="je-usm-color-row">'
+                + '<input type="color" class="je-usm-color" id="usm-bg-color" value="' + (bgC === 'transparent' ? '#000000' : usmHex6(bgC, '#000000')) + '">'
+                + '<input type="range" class="je-usm-alpha" id="usm-bg-alpha" min="0" max="255" value="' + (bgC === 'transparent' ? 0 : usmAlpha(bgC, 0)) + '"></div></div></div>'
+                + '<div class="je-usm-color-preview" id="usm-color-preview" style="color:' + usmSafeColor(txtC, '#FFFFFFFF') + '; background-color:' + usmSafeColor(bgC, '#00000000') + ';">AaBbCcDd</div></div></div>'
+                + '<div style="margin-bottom:16px;"><div class="je-usm-p-heading">Size</div>' + presetGrid('size', USM_SUB_SIZE_PRESETS, sizeIdx) + '</div>'
+                + '<div style="margin-bottom:16px;"><div class="je-usm-p-heading">Font</div>' + presetGrid('font', USM_SUB_FONT_PRESETS, fontIdx) + '</div>'
+                + '<div class="je-usm-p-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+                + '<span class="je-usm-p-heading" style="margin:0;">Position</span>'
+                + '<button type="button" class="je-usm-reset-btn" id="usm-pos-reset"><span class="material-icons">restart_alt</span></button></div>'
+                + '<div class="je-usm-posgrid" id="usm-posgrid">'
+                + '<div style="position:absolute;inset:0;pointer-events:none;"><div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.08);transform:translateX(-50%);"></div><div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.08);transform:translateY(-50%);"></div></div>'
+                + '<div class="je-usm-posgrid-preview" id="usm-posgrid-preview" style="color:' + usmHex6(txtC, '#ffffff') + '; background-color:' + (bgC === '#00000000' ? 'transparent' : usmSafeColor(bgC, 'transparent')) + '; left:' + usmClampPct(S.SubtitleHorizontalPosition, 50) + '%; top:' + usmClampPct(S.SubtitleVerticalPosition, 85) + '%;">AaBbCcDd</div></div>'
+                + '<div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.4);text-align:center;">Requires Jellyfin subtitle style set to <b>Custom</b> in subtitle settings</div></div>';
+            html += section('subtitles', 'subtitles', 'Subtitle Settings', subBody);
+
+            // Random Button
+            html += section('random', 'shuffle', 'Random Button Settings',
+                tog('RandomButtonEnabled', 'Enable Random Button', 'Show random button in header')
+                + tog('RandomUnwatchedOnly', 'Unwatched Only', 'Only select from unwatched items')
+                + '<div class="je-usm-p-heading">Item Types</div><div class="je-usm-p-card"><div style="display:flex;gap:18px;">'
+                + '<label class="je-usm-p-toggle"><input type="checkbox" data-bind data-store="S" data-key="RandomIncludeMovies"' + on('RandomIncludeMovies') + '><span>Movies</span></label>'
+                + '<label class="je-usm-p-toggle"><input type="checkbox" data-bind data-store="S" data-key="RandomIncludeShows"' + on('RandomIncludeShows') + '><span>Shows</span></label></div></div>');
+
+            // UI section (each cluster carries its own lock group)
+            var uiBody =
+                '<div class="je-usm-p-card" data-group="watchprogress"><label class="je-usm-p-toggle">'
+                + '<input type="checkbox" data-bind data-store="S" data-key="ShowWatchProgress"' + on('ShowWatchProgress') + '>'
+                + '<div><div class="je-usm-p-title">Show Watch Progress</div><div class="je-usm-p-desc">Display watch progress on item detail pages. Choose display mode below.</div></div></label>'
+                + '<div class="je-usm-p-selrow"><div>' + selCtl('WatchProgressMode', [['percentage', 'Percentage'], ['time', 'Time Watched'], ['remaining', 'Time Remaining']]) + '</div>'
+                + '<div>' + selCtl('WatchProgressTimeFormat', [['hours', 'h:m'], ['full', 'y:mo:d:h:m']]) + '</div></div></div>'
+                + '<div data-group="filesizes">' + tog('ShowFileSizes', 'Show File Sizes', 'Display total file size on item detail pages.') + '</div>'
+                + '<div data-group="audiolanguages">' + tog('ShowAudioLanguages', 'Show Audio Languages', 'Display available audio languages on detail pages.') + '</div>'
+                + tagCard('QualityTagsEnabled', 'QualityTagsPosition', 'Show Quality Tags', 'Display 4K, HDR, etc., tags on posters.', true)
+                + tagCard('GenreTagsEnabled', 'GenreTagsPosition', 'Show Genre Tags', 'Display genre icons on posters.', false)
+                + tagCard('LanguageTagsEnabled', 'LanguageTagsPosition', 'Show Language Tags', 'Display audio language flags on posters.', false)
+                + tagCard('RatingTagsEnabled', 'RatingTagsPosition', 'Show Rating Tags', 'Display TMDB and Rotten Tomatoes ratings on posters.', false)
+                + '<div data-group="ratingtags">' + tog('ShowRatingInPlayer', 'Show Rating in Player', 'Show the content rating on the video player screen.') + '</div>'
+                + '<div data-group="peopletags">' + tog('PeopleTagsEnabled', 'Show People Tags', 'Display age, birthplace, and deceased status for cast members.') + '</div>'
+                + '<div data-group="qualitytags">' + tog('TagsHideOnHover', 'Hide Tags on Hover', 'Fade tag overlays when hovering over cards so buttons are easier to see') + '</div>'
+                + '<div data-group="removecontinuewatching">' + tog('RemoveContinueWatchingEnabled', 'Add Remove from Continue Watching Button', 'Adds a Remove option to the action sheet on Continue Watching Items. Removed items appear in Hidden Content, where each entry can be added back. Your playback position is always preserved.') + '</div>';
+            html += section('', 'tune', 'UI Settings', uiBody);
+
+            // Reviews + Calendar (editor-only, not lockable)
+            html += section('', 'rate_review', 'Reviews',
+                tog('ReviewsExpandedByDefault', 'Reviews Expanded by Default', 'Show the reviews section expanded on detail pages.'));
+            html += section('', 'calendar_month', 'Calendar',
+                '<div class="je-usm-p-card"><div class="je-usm-p-heading">Display mode</div>' + selCtl('CalendarDisplayMode', [['list', 'List'], ['cards', 'Cards'], ['backdrop', 'Backdrop']]) + '</div>'
+                + '<div class="je-usm-p-card"><div class="je-usm-p-heading">Default view</div>' + selCtl('CalendarDefaultViewMode', [['agenda', 'Agenda'], ['month', 'Month'], ['week', 'Week'], ['day', 'Day']]) + '</div>');
+
+            // Language
+            html += section('language', 'language', 'Language Settings',
+                '<div class="je-usm-p-card"><div class="je-usm-p-heading">Display Language</div>'
+                + '<input type="text" class="je-usm-p-input" data-bind data-store="S" data-key="DisplayLanguage" placeholder="Locale code (blank = Auto)" value="' + usmEsc(S.DisplayLanguage || '') + '">'
+                + '<div class="je-usm-p-desc" style="margin-top:8px;">Locale code for the Jellyfin Enhanced interface (e.g. en, de, fr). Blank = Auto.</div></div>');
+
+            // Hidden Content (only when it loaded)
+            if (HC) {
+                var hcBody =
+                    hcTog('Enabled', 'Enable Content Hiding', 'Hide specific movies and series from all browsing surfaces', onDef(HC, 'Enabled'))
+                    + hcTog('ShowHideButtons', 'Show Hide Buttons', 'Show the eye icon buttons for hiding content.', onDef(HC, 'ShowHideButtons'))
+                    + hcTog('ShowHideConfirmation', 'Show Confirmation Dialog', 'Show a confirmation dialog before hiding items', onDef(HC, 'ShowHideConfirmation'))
+                    + '<div class="je-usm-subhead">Hide Button Visibility</div>'
+                    + hcTog('ShowButtonJellyseerr', 'Show on Seerr Items', 'Show the hide button on Seerr discovery and search cards', onDef(HC, 'ShowButtonJellyseerr'))
+                    + hcTog('ShowButtonLibrary', 'Show in Library Views', 'Show the hide button on native Jellyfin library cards', onTruthy(HC, 'ShowButtonLibrary'))
+                    + hcTog('ShowButtonDetails', 'Show on Detail Pages', 'Show the hide button on movie and series detail pages', onDef(HC, 'ShowButtonDetails'))
+                    + hcTog('ShowButtonCast', 'Show on Cast/Actors', 'Show the hide button on cast and actor cards', onTruthy(HC, 'ShowButtonCast'))
+                    + '<div class="je-usm-subhead">Surface Filters</div>'
+                    + hcTog('FilterLibrary', 'Filter Library', 'Hide items from native Jellyfin library views', onDef(HC, 'FilterLibrary'))
+                    + hcTog('FilterDiscovery', 'Filter Discovery', 'Hide items from Seerr discovery pages', onDef(HC, 'FilterDiscovery'))
+                    + hcTog('FilterSearch', 'Filter Search', 'Hide items from search results (Jellyfin and Seerr)', onDef(HC, 'FilterSearch'))
+                    + hcTog('FilterCalendar', 'Filter Calendar', 'Hide items from the calendar view', onDef(HC, 'FilterCalendar'))
+                    + hcTog('FilterUpcoming', 'Filter Upcoming', 'Hide items from upcoming releases', onDef(HC, 'FilterUpcoming'))
+                    + hcTog('FilterRecommendations', 'Filter Recommendations', 'Hide items from similar/recommended sections', onDef(HC, 'FilterRecommendations'))
+                    + hcTog('FilterRequests', 'Filter Requests', 'Hide items from the requests/downloads page', onDef(HC, 'FilterRequests'))
+                    + hcTog('FilterNextUp', 'Filter Next Up', 'Hide items from the Next Up section on the home page', onDef(HC, 'FilterNextUp'))
+                    + hcTog('FilterContinueWatching', 'Filter Continue Watching', 'Hide items from the Continue Watching section', onDef(HC, 'FilterContinueWatching'))
+                    + '<div class="je-usm-subhead je-usm-exp">Experimental</div>'
+                    + hcTog('ExperimentalHideCollections', 'Hide Collections & Libraries', 'Allow hiding My Media libraries, collections, and playlists', onTruthy(HC, 'ExperimentalHideCollections'));
+                html += section('', 'visibility_off', 'Hidden Content', hcBody);
+            }
+
+            editor.innerHTML = '<div class="je-usm-panel">' + html + '</div>';
+            usmWireActAsEditor(editor);
+        }
+
+        // Wires all interactive controls in the rendered act-as panel.
+        function usmWireActAsEditor(root) {
+            function setNum(el) {
+                var n = parseInt(el.value, 10);
+                if (isNaN(n)) return;
+                var mn = parseInt(el.getAttribute('data-min'), 10);
+                var mx = parseInt(el.getAttribute('data-max'), 10);
+                if (!isNaN(mn)) n = Math.max(mn, n);
+                if (!isNaN(mx)) n = Math.min(mx, n);
+                el.value = n;
+                return n;
+            }
+            // Generic simple binds (checkbox / select / number / text).
+            root.querySelectorAll('[data-bind]').forEach(function (el) {
+                var store = el.getAttribute('data-store');
+                var key = el.getAttribute('data-key');
+                var target = function () { return store === 'HC' ? (usmActAsHc && usmActAsHc.Settings) : usmActAsSettings; };
+                var evt = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
+                el.addEventListener(evt, function () {
+                    var t = target(); if (!t) return;
+                    if (el.type === 'checkbox') t[key] = el.checked;
+                    else if (el.type === 'number') { var n = setNum(el); if (n !== undefined) t[key] = n; }
+                    else t[key] = el.value;
+                });
+            });
+
+            // Quality master toggle → show/hide sub-wrap.
+            var qMaster = root.querySelector('[data-qmaster]');
+            var qWrap = root.querySelector('[data-qwrap]');
+            var qList = root.querySelector('[data-qlist]');
+            var qExpander = root.querySelector('[data-qexpander]');
+            if (qMaster && qWrap) {
+                qMaster.addEventListener('change', function () {
+                    qWrap.style.display = qMaster.checked ? 'block' : 'none';
+                    if (!qMaster.checked && qList && qExpander) { qList.style.display = 'none'; qExpander.setAttribute('aria-expanded', 'false'); }
+                });
+            }
+            if (qExpander && qList) {
+                qExpander.addEventListener('click', function () {
+                    var open = qExpander.getAttribute('aria-expanded') === 'true';
+                    qExpander.setAttribute('aria-expanded', open ? 'false' : 'true');
+                    qList.style.display = open ? 'none' : 'block';
+                });
+            }
+            // Quality sub-toggle checkboxes + reorder.
+            if (qList) {
+                qList.addEventListener('change', function (e) {
+                    var t = e.target;
+                    if (!t || t.type !== 'checkbox') return;
+                    var row = t.closest('.je-usm-cat-row');
+                    if (row && usmActAsSettings) usmActAsSettings[row.getAttribute('data-cat-key')] = t.checked;
+                });
+                qList.addEventListener('click', function (e) {
+                    var btn = e.target.closest('.je-usm-cat-up, .je-usm-cat-down');
+                    if (!btn || btn.disabled) return;
+                    var row = btn.closest('.je-usm-cat-row');
+                    var up = btn.classList.contains('je-usm-cat-up');
+                    var sib = up ? row.previousElementSibling : row.nextElementSibling;
+                    if (!sib || !sib.classList.contains('je-usm-cat-row')) return;
+                    if (up) sib.parentNode.insertBefore(row, sib); else sib.parentNode.insertBefore(sib, row);
+                    var rows = qList.querySelectorAll('.je-usm-cat-row');
+                    rows.forEach(function (r, idx) {
+                        if (usmActAsSettings) usmActAsSettings[r.getAttribute('data-order-key')] = idx + 1;
+                        var u = r.querySelector('.je-usm-cat-up'), d = r.querySelector('.je-usm-cat-down');
+                        if (u) u.disabled = (idx === 0);
+                        if (d) d.disabled = (idx === rows.length - 1);
+                    });
+                });
+            }
+
+            // Position selectors (2x2).
+            root.querySelectorAll('[data-possel]').forEach(function (sel) {
+                var key = sel.getAttribute('data-possel');
+                var cells = sel.querySelectorAll('[data-pos]');
+                var hl = function () {
+                    var cur = (usmActAsSettings && usmActAsSettings[key]) || 'top-left';
+                    cells.forEach(function (c) { c.style.background = (c.getAttribute('data-pos') === cur) ? 'var(--je-accent)' : 'rgba(255,255,255,0.1)'; });
+                };
+                hl();
+                sel.addEventListener('click', function (e) {
+                    e.preventDefault(); e.stopPropagation();
+                    var cell = e.target.closest('[data-pos]');
+                    if (!cell || !usmActAsSettings) return;
+                    usmActAsSettings[key] = cell.getAttribute('data-pos');
+                    hl();
+                });
+            });
+
+            // Subtitle preset grids.
+            root.querySelectorAll('[data-presetgrid]').forEach(function (grid) {
+                var kind = grid.getAttribute('data-presetgrid');
+                grid.addEventListener('click', function (e) {
+                    var box = e.target.closest('.je-usm-preset-box');
+                    if (!box || !usmActAsSettings) return;
+                    var idx = parseInt(box.getAttribute('data-idx'), 10);
+                    if (kind === 'style') {
+                        var p = USM_SUB_STYLE_PRESETS[idx];
+                        usmActAsSettings.SelectedStylePresetIndex = idx;
+                        usmActAsSettings.UsingCustomColors = false;
+                        usmActAsSettings.CustomSubtitleTextColor = p.textColor;
+                        usmActAsSettings.CustomSubtitleBgColor = p.bgColor;
+                        // sync colour pickers + preview
+                        var tc = root.querySelector('#usm-txt-color'), ta = root.querySelector('#usm-txt-alpha');
+                        var bc = root.querySelector('#usm-bg-color'), ba = root.querySelector('#usm-bg-alpha');
+                        var pv = root.querySelector('#usm-color-preview');
+                        if (tc && ta) { tc.value = p.textColor.substring(0, 7); ta.value = parseInt(p.textColor.substring(7, 9) || 'FF', 16); }
+                        if (bc && ba) { bc.value = (p.bgColor === 'transparent' ? '#000000' : p.bgColor.substring(0, 7)); ba.value = (p.bgColor === 'transparent' ? 0 : parseInt(p.bgColor.substring(7, 9) || '00', 16)); }
+                        if (pv) { pv.style.color = p.textColor; pv.style.backgroundColor = p.bgColor; }
+                    } else if (kind === 'size') {
+                        usmActAsSettings.SelectedFontSizePresetIndex = idx;
+                    } else {
+                        usmActAsSettings.SelectedFontFamilyPresetIndex = idx;
+                    }
+                    grid.querySelectorAll('.je-usm-preset-box').forEach(function (b) { b.classList.remove('je-usm-preset-active'); });
+                    box.classList.add('je-usm-preset-active');
+                });
+            });
+
+            // Subtitle colour pickers + alpha → compose ARGB.
+            var txtColor = root.querySelector('#usm-txt-color'), txtAlpha = root.querySelector('#usm-txt-alpha');
+            var bgColor = root.querySelector('#usm-bg-color'), bgAlpha = root.querySelector('#usm-bg-alpha');
+            var preview = root.querySelector('#usm-color-preview');
+            var styleGrid = root.querySelector('[data-presetgrid="style"]');
+            function composeColors() {
+                if (!usmActAsSettings) return;
+                var t = txtColor.value + parseInt(txtAlpha.value).toString(16).padStart(2, '0').toUpperCase();
+                var b = bgColor.value + parseInt(bgAlpha.value).toString(16).padStart(2, '0').toUpperCase();
+                usmActAsSettings.CustomSubtitleTextColor = t;
+                usmActAsSettings.CustomSubtitleBgColor = b;
+                usmActAsSettings.UsingCustomColors = true;
+                if (styleGrid) styleGrid.querySelectorAll('.je-usm-preset-box').forEach(function (x) { x.classList.remove('je-usm-preset-active'); });
+                if (preview) { preview.style.color = t; preview.style.backgroundColor = b; }
+            }
+            [txtColor, txtAlpha, bgColor, bgAlpha].forEach(function (el) { if (el) el.addEventListener('input', composeColors); });
+
+            // Subtitle position drag grid.
+            var pg = root.querySelector('#usm-posgrid');
+            var pgPrev = root.querySelector('#usm-posgrid-preview');
+            var pgReset = root.querySelector('#usm-pos-reset');
+            if (pg) {
+                var apply = function (x, y) {
+                    x = Math.max(2, Math.min(98, x)); y = Math.max(2, Math.min(98, y));
+                    if (pgPrev) { pgPrev.style.left = x + '%'; pgPrev.style.top = y + '%'; }
+                    if (usmActAsSettings) { usmActAsSettings.SubtitleHorizontalPosition = Math.round(x); usmActAsSettings.SubtitleVerticalPosition = Math.round(y); }
+                };
+                var fromEvt = function (e) {
+                    var r = pg.getBoundingClientRect();
+                    var cx = e.touches ? e.touches[0].clientX : e.clientX;
+                    var cy = e.touches ? e.touches[0].clientY : e.clientY;
+                    return { x: ((cx - r.left) / r.width) * 100, y: ((cy - r.top) / r.height) * 100 };
+                };
+                // Document-level move/up listeners are attached only for the duration of a drag and
+                // removed on release, so re-rendering the editor (loading another user) never
+                // accumulates stale listeners.
+                var onMove = function (e) { var p = fromEvt(e); apply(p.x, p.y); };
+                var onUp = function () {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onUp);
+                };
+                pg.addEventListener('mousedown', function (e) {
+                    var p = fromEvt(e); apply(p.x, p.y); e.preventDefault();
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                });
+                pg.addEventListener('touchstart', function (e) {
+                    var p = fromEvt(e); apply(p.x, p.y); e.preventDefault();
+                    document.addEventListener('touchmove', onMove, { passive: true });
+                    document.addEventListener('touchend', onUp);
+                }, { passive: false });
+            }
+            if (pgReset) pgReset.addEventListener('click', function () {
+                if (usmActAsSettings) { usmActAsSettings.SubtitleHorizontalPosition = 50; usmActAsSettings.SubtitleVerticalPosition = 85; }
+                if (pgPrev) { pgPrev.style.left = '50%'; pgPrev.style.top = '85%'; }
+            });
+
+            // Disable + badge admin-locked groups (sections and UI clusters).
+            root.querySelectorAll('[data-group]').forEach(function (el) {
+                var key = el.getAttribute('data-group');
+                if (usmLockedGroups.indexOf(key) === -1) return;
+                el.classList.add('je-usm-locked');
+                el.querySelectorAll('input, select, textarea, button').forEach(function (c) { c.disabled = true; });
+                var badge = document.createElement('span');
+                badge.className = 'je-usm-p-badge';
+                badge.textContent = 'Locked — set by admin';
+                var summary = el.querySelector(':scope > summary');
+                if (summary) summary.appendChild(badge);
+                else el.insertBefore(badge, el.firstChild);
+            });
+        }
+
+        function usmActAsLoad() {
+            var sel = document.getElementById('je-usm-actas-user');
+            var uid = sel ? sel.value : '';
+            if (!uid) { usmSetStatus('je-usm-actas-status', 'Select a user first.', 'error'); return; }
+            usmSetStatus('je-usm-actas-status', 'Loading…', null);
+            // One admin-gated call returns the user's effective settings + hidden-content display
+            // settings (locks enforced server-side). The hidden ITEMS are never sent to the client
+            // — the save endpoint preserves them — so there's no stale-items hazard.
+            ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/user-settings/' + encodeURIComponent(uid) + '?_=' + Date.now()),
+                dataType: 'json'
+            }).then(function(res) {
+                usmActAsSettings = (res && res.settings) ? res.settings : {};
+                usmActAsHc = (res && res.hiddenContentSettings) ? { Settings: res.hiddenContentSettings } : null;
+                usmActAsUserId = uid;
+                usmRenderActAsEditor();
+                var editor = document.getElementById('je-usm-actas-editor');
+                var saveBtn = document.getElementById('je-usm-actas-save');
+                if (editor) editor.classList.remove('je-usm-hidden');
+                if (saveBtn) saveBtn.classList.remove('je-usm-hidden');
+                usmSetStatus('je-usm-actas-status', '', null);
+            }).catch(function() {
+                usmSetStatus('je-usm-actas-status', 'Failed to load this user’s settings.', 'error');
+            });
+        }
+
+        function usmActAsSave() {
+            if (!usmActAsSettings || !usmActAsUserId) return;
+            usmSetStatus('je-usm-actas-status', 'Saving…', null);
+            var body = { Settings: usmActAsSettings };
+            // Send only the Settings sub-object; the server RMW-preserves the user's hidden items.
+            if (usmActAsHc && usmActAsHc.Settings) body.HiddenContentSettings = usmActAsHc.Settings;
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/user-settings/' + encodeURIComponent(usmActAsUserId)),
+                data: JSON.stringify(body),
+                contentType: 'application/json'
+            }).then(function() {
+                usmSetStatus('je-usm-actas-status', 'Saved. The user sees the change next time their settings load.', 'ok');
+            }).catch(function() {
+                usmSetStatus('je-usm-actas-status', 'Failed to save.', 'error');
+            });
+        }
+
+        // ── Copy settings ───────────────────────────────────────────────────
+        function usmCopy() {
+            var from = document.getElementById('je-usm-copy-from');
+            var fromId = from ? from.value : '';
+            if (!fromId) { usmSetStatus('je-usm-copy-status', 'Choose a source user.', 'error'); return; }
+            var toIds = usmSelectedIds('je-usm-copy-to-list').filter(function(id) { return id !== fromId; });
+            if (!toIds.length) { usmSetStatus('je-usm-copy-status', 'Select at least one target user.', 'error'); return; }
+            var body = {
+                FromUserId: fromId,
+                ToUserIds: toIds,
+                IncludeSettings: document.getElementById('je-usm-copy-inc-settings').checked,
+                IncludeShortcuts: document.getElementById('je-usm-copy-inc-shortcuts').checked,
+                IncludeHiddenContentSettings: document.getElementById('je-usm-copy-inc-hc').checked
+            };
+            if (!body.IncludeSettings && !body.IncludeShortcuts && !body.IncludeHiddenContentSettings) {
+                usmSetStatus('je-usm-copy-status', 'Select at least one category to copy.', 'error'); return;
+            }
+            if (!confirm('Copy the selected settings to ' + toIds.length + ' user(s)? This overwrites those users’ current values.')) return;
+            usmSetStatus('je-usm-copy-status', 'Copying…', null);
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/copy-user-settings'),
+                data: JSON.stringify(body),
+                contentType: 'application/json',
+                dataType: 'json'
+            }).then(function(res) {
+                var applied = (res && res.applied) || 0;
+                var skipped = (res && res.skipped && res.skipped.length) || 0;
+                usmSetStatus('je-usm-copy-status', 'Copied to ' + applied + ' user(s)' + (skipped ? (', ' + skipped + ' skipped') : '') + '.', 'ok');
+            }).catch(function() {
+                usmSetStatus('je-usm-copy-status', 'Copy failed.', 'error');
+            });
+        }
+
+        // ── Profiles ────────────────────────────────────────────────────────
+        function usmLoadProfiles() {
+            return ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/setting-profiles'),
+                dataType: 'json'
+            }).then(function(res) {
+                var profiles = (res && Array.isArray(res.profiles)) ? res.profiles : [];
+                usmRenderProfileList(profiles);
+                var applySel = document.getElementById('je-usm-apply-profile');
+                if (applySel) {
+                    var prev = applySel.value;
+                    applySel.innerHTML = '';
+                    profiles.forEach(function(p) {
+                        var opt = document.createElement('option');
+                        opt.value = p.name;
+                        opt.textContent = p.name;
+                        applySel.appendChild(opt);
+                    });
+                    if (prev) applySel.value = prev;
+                }
+            }).catch(function() { /* feature may be disabled; leave lists empty */ });
+        }
+
+        function usmRenderProfileList(profiles) {
+            var listEl = document.getElementById('je-usm-profile-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            if (!profiles.length) {
+                var empty = document.createElement('div');
+                empty.className = 'je-usm-loading';
+                empty.textContent = 'No profiles yet.';
+                listEl.appendChild(empty);
+                return;
+            }
+            profiles.forEach(function(p) {
+                var row = document.createElement('div');
+                row.className = 'je-usm-profile-row';
+                var name = document.createElement('span');
+                name.className = 'je-usm-profile-name-text';
+                name.textContent = p.name;
+                var del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'je-usm-mini-btn je-usm-danger-btn';
+                del.textContent = 'Delete';
+                del.addEventListener('click', function() { usmDeleteProfile(p.name); });
+                row.appendChild(name);
+                row.appendChild(del);
+                listEl.appendChild(row);
+            });
+        }
+
+        function usmCreateProfile() {
+            var nameEl = document.getElementById('je-usm-profile-name');
+            var fromEl = document.getElementById('je-usm-profile-from');
+            var name = (nameEl ? nameEl.value : '').trim();
+            var fromId = fromEl ? fromEl.value : '';
+            if (!name) { usmSetStatus('je-usm-profile-create-status', 'Enter a profile name.', 'error'); return; }
+            if (!fromId) { usmSetStatus('je-usm-profile-create-status', 'Choose a user to snapshot.', 'error'); return; }
+            usmSetStatus('je-usm-profile-create-status', 'Saving…', null);
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/setting-profiles'),
+                data: JSON.stringify({ Name: name, FromUserId: fromId }),
+                contentType: 'application/json',
+                dataType: 'json'
+            }).then(function() {
+                if (nameEl) nameEl.value = '';
+                usmSetStatus('je-usm-profile-create-status', 'Profile “' + name + '” saved.', 'ok');
+                usmLoadProfiles();
+            }).catch(function() {
+                usmSetStatus('je-usm-profile-create-status', 'Failed to save profile (name may be invalid or the limit reached).', 'error');
+            });
+        }
+
+        function usmDeleteProfile(name) {
+            if (!confirm('Delete the profile “' + name + '”?')) return;
+            ApiClient.ajax({
+                type: 'DELETE',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/setting-profiles/' + encodeURIComponent(name))
+            }).then(function() {
+                usmSetStatus('je-usm-profile-create-status', 'Deleted “' + name + '”.', 'ok');
+                usmLoadProfiles();
+            }).catch(function() {
+                usmSetStatus('je-usm-profile-create-status', 'Failed to delete profile.', 'error');
+            });
+        }
+
+        function usmApplyProfile() {
+            var sel = document.getElementById('je-usm-apply-profile');
+            var name = sel ? sel.value : '';
+            if (!name) { usmSetStatus('je-usm-apply-status', 'Choose a profile.', 'error'); return; }
+            var toIds = usmSelectedIds('je-usm-apply-to-list');
+            if (!toIds.length) { usmSetStatus('je-usm-apply-status', 'Select at least one target user.', 'error'); return; }
+            var body = {
+                Name: name,
+                UserIds: toIds,
+                IncludeSettings: document.getElementById('je-usm-apply-inc-settings').checked,
+                IncludeShortcuts: document.getElementById('je-usm-apply-inc-shortcuts').checked,
+                IncludeHiddenContentSettings: document.getElementById('je-usm-apply-inc-hc').checked
+            };
+            if (!body.IncludeSettings && !body.IncludeShortcuts && !body.IncludeHiddenContentSettings) {
+                usmSetStatus('je-usm-apply-status', 'Select at least one category to apply.', 'error'); return;
+            }
+            if (!confirm('Apply profile “' + name + '” to ' + toIds.length + ' user(s)? This overwrites those users’ current values.')) return;
+            usmSetStatus('je-usm-apply-status', 'Applying…', null);
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('/JellyfinEnhanced/admin/apply-profile'),
+                data: JSON.stringify(body),
+                contentType: 'application/json',
+                dataType: 'json'
+            }).then(function(res) {
+                var applied = (res && res.applied) || 0;
+                var skipped = (res && res.skipped && res.skipped.length) || 0;
+                usmSetStatus('je-usm-apply-status', 'Applied to ' + applied + ' user(s)' + (skipped ? (', ' + skipped + ' skipped') : '') + '.', 'ok');
+            }).catch(function() {
+                usmSetStatus('je-usm-apply-status', 'Apply failed.', 'error');
+            });
+        }
+
+        // One-time listener wiring for the tab (idempotent guard).
+        function setupUserManagement() {
+            if (usmSetupDone) return;
+            usmSetupDone = true;
+            var on = function(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+            on('je-usm-actas-load', usmActAsLoad);
+            on('je-usm-actas-save', usmActAsSave);
+            on('je-usm-copy-apply', usmCopy);
+            on('je-usm-copy-selectall', function() { document.querySelectorAll('.je-usm-copy-to-list-cb').forEach(function(c) { c.checked = true; }); });
+            on('je-usm-copy-deselectall', function() { document.querySelectorAll('.je-usm-copy-to-list-cb').forEach(function(c) { c.checked = false; }); });
+            on('je-usm-profile-create', usmCreateProfile);
+            on('je-usm-apply-run', usmApplyProfile);
+            on('je-usm-apply-selectall', function() { document.querySelectorAll('.je-usm-apply-to-list-cb').forEach(function(c) { c.checked = true; }); });
+            on('je-usm-apply-deselectall', function() { document.querySelectorAll('.je-usm-apply-to-list-cb').forEach(function(c) { c.checked = false; }); });
         }
     })();
 </script>
