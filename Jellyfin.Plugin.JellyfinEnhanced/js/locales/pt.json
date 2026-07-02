@@ -565,5 +565,19 @@
     "active_streams_none": "Nenhum stream ativo",
     "reviews_avg_rating_tooltip": "Avaliação média de {count} utilizador(es)",
     "release_date_tooltip": "Data de lançamento/exibição (via TMDB)",
-    "panel_settings_subtitles_position_note": "Requer que o estilo das legendas do Jellyfin esteja definido como <b>Personalizado</b> nas definições de legendas"
+    "panel_settings_subtitles_position_note": "Requer que o estilo das legendas do Jellyfin esteja definido como <b>Personalizado</b> nas definições de legendas",
+    "arr_search_auto": "Pesquisar",
+    "arr_search_interactive": "Pesquisa interativa",
+    "arr_search_searching": "A pesquisar…",
+    "arr_search_triggered": "Pesquisa iniciada em {instance}",
+    "arr_search_failed": "Falha na pesquisa",
+    "arr_search_close": "Fechar",
+    "arr_search_loading": "A pesquisar nos indexadores…",
+    "arr_search_release_error": "Não foi possível carregar os lançamentos",
+    "arr_search_no_releases": "Nenhum lançamento encontrado",
+    "arr_search_result_count": "{count} lançamentos",
+    "arr_search_grab": "Obter",
+    "arr_search_grabbed": "Obtido",
+    "arr_search_grab_success": "Enviado para o cliente de download",
+    "arr_search_grab_failed": "Falha ao obter"
 }

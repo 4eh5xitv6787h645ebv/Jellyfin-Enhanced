@@ -565,5 +565,19 @@
     "active_streams_none": "لا توجد تدفقات نشطة",
     "reviews_avg_rating_tooltip": "متوسط التقييم من {count} مستخدم(ين)",
     "release_date_tooltip": "تاريخ الإصدار/العرض (عبر TMDB)",
-    "panel_settings_subtitles_position_note": "يتطلب أسلوب الترجمه الفرعيه لـ (جيلافين)"
+    "panel_settings_subtitles_position_note": "يتطلب أسلوب الترجمه الفرعيه لـ (جيلافين)",
+    "arr_search_auto": "بحث",
+    "arr_search_interactive": "بحث تفاعلي",
+    "arr_search_searching": "جارٍ البحث…",
+    "arr_search_triggered": "بدأ البحث على {instance}",
+    "arr_search_failed": "فشل البحث",
+    "arr_search_close": "إغلاق",
+    "arr_search_loading": "جارٍ البحث في المفهرسات…",
+    "arr_search_release_error": "تعذّر تحميل الإصدارات",
+    "arr_search_no_releases": "لم يتم العثور على إصدارات",
+    "arr_search_result_count": "{count} إصدار",
+    "arr_search_grab": "جلب",
+    "arr_search_grabbed": "تم الجلب",
+    "arr_search_grab_success": "تم الإرسال إلى برنامج التنزيل",
+    "arr_search_grab_failed": "فشل الجلب"
 }

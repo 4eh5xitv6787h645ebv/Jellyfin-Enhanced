@@ -565,5 +565,19 @@
     "active_streams_none": "Cap flux actiu",
     "reviews_avg_rating_tooltip": "Valoració mitjana de {count} usuari(s)",
     "release_date_tooltip": "Data de llançament/emissió (via TMDB)",
-    "panel_settings_subtitles_position_note": "Requereix l'estil de subtítols de Jellyfin a <b>Custom</b> en la configuració del subtítols"
+    "panel_settings_subtitles_position_note": "Requereix l'estil de subtítols de Jellyfin a <b>Custom</b> en la configuració del subtítols",
+    "arr_search_auto": "Cerca",
+    "arr_search_interactive": "Cerca interactiva",
+    "arr_search_searching": "S'està cercant…",
+    "arr_search_triggered": "Cerca iniciada a {instance}",
+    "arr_search_failed": "La cerca ha fallat",
+    "arr_search_close": "Tanca",
+    "arr_search_loading": "S'estan cercant els indexadors…",
+    "arr_search_release_error": "No s'han pogut carregar els llançaments",
+    "arr_search_no_releases": "No s'ha trobat cap llançament",
+    "arr_search_result_count": "{count} llançaments",
+    "arr_search_grab": "Baixa",
+    "arr_search_grabbed": "Baixat",
+    "arr_search_grab_success": "Enviat al client de baixades",
+    "arr_search_grab_failed": "La baixada ha fallat"
 }

@@ -565,5 +565,19 @@
     "active_streams_none": "Geen actieve streams",
     "reviews_avg_rating_tooltip": "Gemiddelde beoordeling van {count} gebruiker(s)",
     "release_date_tooltip": "Release-/uitzenddatum (via TMDB)",
-    "panel_settings_subtitles_position_note": "Vereist dat de Jellyfin-ondertitelstijl is ingesteld op <b>Aangepast</b> in de ondertitelinstellingen"
+    "panel_settings_subtitles_position_note": "Vereist dat de Jellyfin-ondertitelstijl is ingesteld op <b>Aangepast</b> in de ondertitelinstellingen",
+    "arr_search_auto": "Zoeken",
+    "arr_search_interactive": "Interactief zoeken",
+    "arr_search_searching": "Bezig met zoeken…",
+    "arr_search_triggered": "Zoekopdracht gestart op {instance}",
+    "arr_search_failed": "Zoeken mislukt",
+    "arr_search_close": "Sluiten",
+    "arr_search_loading": "Indexers doorzoeken…",
+    "arr_search_release_error": "Kan releases niet laden",
+    "arr_search_no_releases": "Geen releases gevonden",
+    "arr_search_result_count": "{count} releases",
+    "arr_search_grab": "Ophalen",
+    "arr_search_grabbed": "Opgehaald",
+    "arr_search_grab_success": "Naar downloadclient gestuurd",
+    "arr_search_grab_failed": "Ophalen mislukt"
 }

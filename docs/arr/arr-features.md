@@ -23,6 +23,7 @@ Quick access to Sonarr, Radarr, and Bazarr from Jellyfin, plus calendar and down
 The ARR integration provides convenient links to your Sonarr, Radarr, and Bazarr instances directly from Jellyfin item pages. Additionally, it can display *arr tags as clickable links and provide calendar and download monitoring pages.
 
 - **Quick Links** - Jump to Sonarr, Radarr, Bazarr pages for any item
+- **Interactive Search** - Trigger an automatic or manual (release-picker) search from the item's 3-dot / long-press menu
 - **Tag Links** - Display *arr tags as clickable links with filtering
 - **Calendar View** - Upcoming releases from Sonarr/Radarr
 - **Requests Page** - Monitor download queue and status
@@ -112,6 +113,39 @@ The original `SonarrUrl`, `SonarrApiKey`, `RadarrUrl`, and `RadarrApiKey` fields
 - Only visible to administrators
 - Automatically detects item type (movie/TV)
 - Shows relevant links only (Sonarr for TV, Radarr for movies)
+
+## Interactive Search
+
+Trigger a Sonarr/Radarr search for an item without leaving Jellyfin — straight from the native **3-dot menu** (or a **long-press** on touch devices) of a movie, series, season, or episode.
+
+!!! warning "Admin only"
+    Like *arr Links, this feature is only wired for administrators. Searching and grabbing releases queues real downloads on your Sonarr/Radarr instances, so it is intentionally gated. It uses the same Sonarr/Radarr instances configured for *arr Links.
+
+### Setup
+
+1. Configure at least one Sonarr and/or Radarr instance (see [Multi-Instance Support](#multi-instance-support) above — the same instances are shared)
+2. Go to **Dashboard** → **Plugins** → **Jellyfin Enhanced** → ***arr Settings** tab
+3. Under **Interactive Search**, check **"Enable Search & Interactive Search"**
+4. Click **Save**
+
+### Usage
+
+Open the **3-dot menu** on a movie, series, season, or episode (or long-press its card), then choose:
+
+- **Search** — fires an *automatic* search. Sonarr/Radarr picks the best release per your quality profile and grabs it. A toast confirms which instance the search started on.
+- **Interactive Search** — opens a modal listing the releases your indexers returned. Each row shows the quality, size, seeders/peers (torrents), age, indexer, language, and any rejection reasons. Press the **download** button on a release to grab that specific one.
+
+The correct command is chosen automatically for the item type:
+
+| Item | Automatic search | Interactive search |
+|---|---|---|
+| Movie | `MoviesSearch` (Radarr) | Releases for the movie |
+| Series | `SeriesSearch` (Sonarr) | — (open a season or episode) |
+| Season | `SeasonSearch` (Sonarr) | Season-pack releases |
+| Episode | `EpisodeSearch` (Sonarr) | Releases for the episode |
+
+!!! note
+    Releases that Sonarr/Radarr flagged as **rejected** (wrong quality, already imported, etc.) are still listed — dimmed, with the reason shown — so you can force-grab one if you know better. All matching is done by TMDB (movies) / TVDB (series) id, so the item must exist in your *arr instance.
 
 ## ARR Tags
 

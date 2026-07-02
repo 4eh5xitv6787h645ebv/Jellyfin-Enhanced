@@ -159,6 +159,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
             // Arr Links Settings
             ArrLinksEnabled = false;
+            // Arr Interactive Search (3-dot / long-press "Search" + "Interactive Search")
+            ArrSearchEnabled = false;
             SonarrUrl = "";
             RadarrUrl = "";
             BazarrUrl = "";
@@ -435,6 +437,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
         // Arr Links Settings
         public bool ArrLinksEnabled { get; set; }
+
+        /// <summary>
+        /// When true, admins get "Search" (automatic) and "Interactive Search" (manual release
+        /// picker) items in the 3-dot / long-press action sheet of movies, series, seasons and
+        /// episodes, driving the configured Sonarr/Radarr instances. Admin-only and independent of
+        /// <see cref="ArrLinksEnabled"/> — both share the multi-instance Sonarr/Radarr config below.
+        /// Defaults to false so the feature is opt-in.
+        /// </summary>
+        public bool ArrSearchEnabled { get; set; }
         public string SonarrUrl { get; set; }
         public string RadarrUrl { get; set; }
         public string BazarrUrl { get; set; }

@@ -565,5 +565,19 @@
     "jellyseerr_btn_view_status": "View Status",
     "jellyseerr_report_issue_submitting": "Submitting…",
     "jellyseerr_season_status_processing": "Processing",
-    "jellyseerr_toast_collection_requested": "Requested"
+    "jellyseerr_toast_collection_requested": "Requested",
+    "arr_search_auto": "חיפוש",
+    "arr_search_interactive": "חיפוש אינטראקטיבי",
+    "arr_search_searching": "מחפש…",
+    "arr_search_triggered": "החיפוש הופעל ב-{instance}",
+    "arr_search_failed": "החיפוש נכשל",
+    "arr_search_close": "סגור",
+    "arr_search_loading": "מחפש באינדקסרים…",
+    "arr_search_release_error": "לא ניתן לטעון גרסאות",
+    "arr_search_no_releases": "לא נמצאו גרסאות",
+    "arr_search_result_count": "{count} גרסאות",
+    "arr_search_grab": "הורד",
+    "arr_search_grabbed": "נוסף",
+    "arr_search_grab_success": "נשלח ללקוח ההורדות",
+    "arr_search_grab_failed": "ההורדה נכשלה"
 }

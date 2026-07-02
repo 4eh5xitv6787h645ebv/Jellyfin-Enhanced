@@ -565,5 +565,19 @@
     "jellyseerr_report_issue_type_other": "Inny",
     "reviews_avg_rating_tooltip": "Średnia ocena od {count} użytkownika(ów)",
     "release_date_tooltip": "Data wydania/emisji (przez TMDB)",
-    "panel_settings_subtitles_position_note": "Wymaga ustawienia stylu napisów Jellyfin na <b>Niestandardowy</b> w ustawieniach napisów"
+    "panel_settings_subtitles_position_note": "Wymaga ustawienia stylu napisów Jellyfin na <b>Niestandardowy</b> w ustawieniach napisów",
+    "arr_search_auto": "Szukaj",
+    "arr_search_interactive": "Wyszukiwanie interaktywne",
+    "arr_search_searching": "Wyszukiwanie…",
+    "arr_search_triggered": "Wyszukiwanie uruchomione w {instance}",
+    "arr_search_failed": "Wyszukiwanie nie powiodło się",
+    "arr_search_close": "Zamknij",
+    "arr_search_loading": "Przeszukiwanie indekserów…",
+    "arr_search_release_error": "Nie można załadować wydań",
+    "arr_search_no_releases": "Nie znaleziono wydań",
+    "arr_search_result_count": "Wydania: {count}",
+    "arr_search_grab": "Pobierz",
+    "arr_search_grabbed": "Pobrano",
+    "arr_search_grab_success": "Wysłano do klienta pobierania",
+    "arr_search_grab_failed": "Pobieranie nie powiodło się"
 }

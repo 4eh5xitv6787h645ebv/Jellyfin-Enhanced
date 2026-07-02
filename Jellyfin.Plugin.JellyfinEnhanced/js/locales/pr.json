@@ -565,5 +565,19 @@
     "active_streams_none": "Nenhum stream ativo",
     "reviews_avg_rating_tooltip": "Average rating from {count} matey(s)",
     "release_date_tooltip": "Sail Date, arr! (via TMDB)",
-    "panel_settings_subtitles_position_note": "Ye must set Jellyfin subtitle style to <b>Custom</b> in th' subtitle settings"
+    "panel_settings_subtitles_position_note": "Ye must set Jellyfin subtitle style to <b>Custom</b> in th' subtitle settings",
+    "arr_search_auto": "Hunt",
+    "arr_search_interactive": "Interactive Plunderin'",
+    "arr_search_searching": "Scourin' the seas…",
+    "arr_search_triggered": "The hunt be underway on {instance}",
+    "arr_search_failed": "The hunt be lost",
+    "arr_search_close": "Batten down",
+    "arr_search_loading": "Searchin' the indexer isles…",
+    "arr_search_release_error": "Couldn't haul in the booty",
+    "arr_search_no_releases": "No booty be found",
+    "arr_search_result_count": "{count} bounties",
+    "arr_search_grab": "Plunder",
+    "arr_search_grabbed": "Plundered",
+    "arr_search_grab_success": "Sent to the cargo hold",
+    "arr_search_grab_failed": "The plunder slipped away"
 }

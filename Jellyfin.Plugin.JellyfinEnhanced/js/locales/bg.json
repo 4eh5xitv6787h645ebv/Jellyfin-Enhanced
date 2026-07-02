@@ -565,5 +565,19 @@
     "active_streams_none": "Няма активни потоци",
     "reviews_avg_rating_tooltip": "Средна оценка от {count} потребител(и)",
     "release_date_tooltip": "Дата на издаване/излъчване (чрез TMDB)",
-    "panel_settings_subtitles_position_note": "Изисква стилът на субтитрите на Jellyfin да бъде зададен на <b>Персонализиран</b> в настройките за субтитри."
+    "panel_settings_subtitles_position_note": "Изисква стилът на субтитрите на Jellyfin да бъде зададен на <b>Персонализиран</b> в настройките за субтитри.",
+    "arr_search_auto": "Търсене",
+    "arr_search_interactive": "Интерактивно търсене",
+    "arr_search_searching": "Търсене…",
+    "arr_search_triggered": "Търсенето е стартирано на {instance}",
+    "arr_search_failed": "Търсенето е неуспешно",
+    "arr_search_close": "Затвори",
+    "arr_search_loading": "Търсене в индексаторите…",
+    "arr_search_release_error": "Изданията не можаха да се заредят",
+    "arr_search_no_releases": "Няма намерени издания",
+    "arr_search_result_count": "{count} издания",
+    "arr_search_grab": "Изтегли",
+    "arr_search_grabbed": "Изтеглено",
+    "arr_search_grab_success": "Изпратено към клиента за изтегляне",
+    "arr_search_grab_failed": "Изтеглянето е неуспешно"
 }

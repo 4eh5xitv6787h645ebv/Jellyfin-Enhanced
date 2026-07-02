@@ -58,6 +58,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
     │   └── ui.js
     ├── arr/
     │   ├── arr-links.js
+    │   ├── arr-search.js
     │   ├── arr-tag-links.js
     │   ├── calendar-page.js
     │   ├── calendar-custom-tab.js
@@ -147,6 +148,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 
 * **`/arr/`**: Contains components for Sonarr and Radarr integration.
     * **`arr-links.js`**: Adds convenient links to Sonarr, Radarr, and Bazarr on item detail pages only for administrators.
+    * **`arr-search.js`**: Adds "Search" (automatic) and "Interactive Search" (manual release picker) to the 3-dot / long-press action sheet of movies, series, seasons, and episodes for administrators, driving Sonarr/Radarr via the plugin's server-side endpoints.
     * **`arr-tag-links.js`**: Displays synced *arr tags as clickable links on item detail pages, with advanced filtering options to show only specific tags or hide unwanted ones.
     * **`calendar-page.js`**: Adds a calendar button in the sidebar which opens a view that shows the calendar of upcoming items from Radarr and Sonarr
     * **`calendar-custom-tab.js`**: Creates `<div class="jellyfinenhanced calendar"></div>` for CustomTabs plugin

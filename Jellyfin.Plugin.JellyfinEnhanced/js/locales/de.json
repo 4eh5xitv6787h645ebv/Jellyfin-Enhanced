@@ -565,5 +565,19 @@
     "active_streams_none": "Keine aktiven Streams",
     "reviews_avg_rating_tooltip": "Durchschnittliche Bewertung von {count} Benutzer(n)",
     "release_date_tooltip": "Veröffentlichungs-/Ausstrahlungsdatum (über TMDB)",
-    "panel_settings_subtitles_position_note": "Erfordert, dass der Jellyfin-Untertitelstil in den Untertiteleinstellungen auf <b>Benutzerdefiniert</b> gesetzt ist."
+    "panel_settings_subtitles_position_note": "Erfordert, dass der Jellyfin-Untertitelstil in den Untertiteleinstellungen auf <b>Benutzerdefiniert</b> gesetzt ist.",
+    "arr_search_auto": "Suchen",
+    "arr_search_interactive": "Interaktive Suche",
+    "arr_search_searching": "Suche läuft…",
+    "arr_search_triggered": "Suche auf {instance} gestartet",
+    "arr_search_failed": "Suche fehlgeschlagen",
+    "arr_search_close": "Schließen",
+    "arr_search_loading": "Indexer werden durchsucht…",
+    "arr_search_release_error": "Releases konnten nicht geladen werden",
+    "arr_search_no_releases": "Keine Releases gefunden",
+    "arr_search_result_count": "{count} Releases",
+    "arr_search_grab": "Herunterladen",
+    "arr_search_grabbed": "Übernommen",
+    "arr_search_grab_success": "An Download-Client gesendet",
+    "arr_search_grab_failed": "Download fehlgeschlagen"
 }

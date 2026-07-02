@@ -565,5 +565,19 @@
     "active_streams_none": "Inga aktiva strömmar",
     "reviews_avg_rating_tooltip": "Genomsnittligt betyg från {count} användare(s)",
     "release_date_tooltip": "Releasedatum/sändningsdatum (via TMDB)",
-    "panel_settings_subtitles_position_note": "Kräver Jellyfin subtitle stil inställd på <b>Custom</b> i undertextinställningar"
+    "panel_settings_subtitles_position_note": "Kräver Jellyfin subtitle stil inställd på <b>Custom</b> i undertextinställningar",
+    "arr_search_auto": "Sök",
+    "arr_search_interactive": "Interaktiv sökning",
+    "arr_search_searching": "Söker…",
+    "arr_search_triggered": "Sökning startad på {instance}",
+    "arr_search_failed": "Sökningen misslyckades",
+    "arr_search_close": "Stäng",
+    "arr_search_loading": "Söker i indexerare…",
+    "arr_search_release_error": "Kunde inte läsa in utgåvor",
+    "arr_search_no_releases": "Inga utgåvor hittades",
+    "arr_search_result_count": "{count} utgåvor",
+    "arr_search_grab": "Hämta",
+    "arr_search_grabbed": "Hämtad",
+    "arr_search_grab_success": "Skickad till nedladdningsklient",
+    "arr_search_grab_failed": "Hämtningen misslyckades"
 }

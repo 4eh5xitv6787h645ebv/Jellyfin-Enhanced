@@ -565,5 +565,19 @@
     "active_streams_none": "無活躍串流",
     "reviews_avg_rating_tooltip": "來自 {count} 位用戶嘅平均評分",
     "release_date_tooltip": "發行/播出日期（來自 TMDB）",
-    "panel_settings_subtitles_position_note": "需要喺字幕設定入面將 Jellyfin 字幕樣式設為 <b>自訂</b>"
+    "panel_settings_subtitles_position_note": "需要喺字幕設定入面將 Jellyfin 字幕樣式設為 <b>自訂</b>",
+    "arr_search_auto": "搜尋",
+    "arr_search_interactive": "互動式搜尋",
+    "arr_search_searching": "正在搜尋…",
+    "arr_search_triggered": "已在 {instance} 上開始搜尋",
+    "arr_search_failed": "搜尋失敗",
+    "arr_search_close": "關閉",
+    "arr_search_loading": "正在搜尋索引器…",
+    "arr_search_release_error": "無法載入資源",
+    "arr_search_no_releases": "找不到資源",
+    "arr_search_result_count": "{count} 個資源",
+    "arr_search_grab": "抓取",
+    "arr_search_grabbed": "已抓取",
+    "arr_search_grab_success": "已傳送到下載用戶端",
+    "arr_search_grab_failed": "抓取失敗"
 }

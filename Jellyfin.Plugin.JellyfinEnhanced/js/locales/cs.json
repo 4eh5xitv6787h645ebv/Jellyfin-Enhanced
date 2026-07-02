@@ -565,5 +565,19 @@
     "active_streams_none": "Žádné aktivní streamy",
     "reviews_avg_rating_tooltip": "Průměrné hodnocení od {count} uživatelů",
     "release_date_tooltip": "Datum vydání/vysílání (přes TMDB)",
-    "panel_settings_subtitles_position_note": "Vyžaduje styl Jellyfin titulky nastavený na <b>Vlastní</b> v nastavení titulků"
+    "panel_settings_subtitles_position_note": "Vyžaduje styl Jellyfin titulky nastavený na <b>Vlastní</b> v nastavení titulků",
+    "arr_search_auto": "Hledat",
+    "arr_search_interactive": "Interaktivní hledání",
+    "arr_search_searching": "Hledání…",
+    "arr_search_triggered": "Hledání spuštěno na {instance}",
+    "arr_search_failed": "Hledání selhalo",
+    "arr_search_close": "Zavřít",
+    "arr_search_loading": "Prohledávání indexerů…",
+    "arr_search_release_error": "Nepodařilo se načíst vydání",
+    "arr_search_no_releases": "Žádná vydání nenalezena",
+    "arr_search_result_count": "Vydání: {count}",
+    "arr_search_grab": "Stáhnout",
+    "arr_search_grabbed": "Přidáno",
+    "arr_search_grab_success": "Odesláno do stahovacího klienta",
+    "arr_search_grab_failed": "Stažení selhalo"
 }

@@ -565,5 +565,19 @@
     "active_streams_none": "Nincs aktív stream",
     "reviews_avg_rating_tooltip": "Átlagos értékelés {count} felhasználó(s)",
     "release_date_tooltip": "Megjelenés/sugárzás dátuma (TMDB-n keresztül)",
-    "panel_settings_subtitles_position_note": "A Jellyfin feliratstílusát a feliratbeállításokban <b>Egyéni</b> értékre kell állítani"
+    "panel_settings_subtitles_position_note": "A Jellyfin feliratstílusát a feliratbeállításokban <b>Egyéni</b> értékre kell állítani",
+    "arr_search_auto": "Keresés",
+    "arr_search_interactive": "Interaktív keresés",
+    "arr_search_searching": "Keresés…",
+    "arr_search_triggered": "Keresés elindítva itt: {instance}",
+    "arr_search_failed": "A keresés sikertelen",
+    "arr_search_close": "Bezárás",
+    "arr_search_loading": "Keresés az indexelőkben…",
+    "arr_search_release_error": "A kiadások nem tölthetők be",
+    "arr_search_no_releases": "Nem található kiadás",
+    "arr_search_result_count": "{count} kiadás",
+    "arr_search_grab": "Letöltés",
+    "arr_search_grabbed": "Hozzáadva",
+    "arr_search_grab_success": "Elküldve a letöltőkliensnek",
+    "arr_search_grab_failed": "A letöltés sikertelen"
 }

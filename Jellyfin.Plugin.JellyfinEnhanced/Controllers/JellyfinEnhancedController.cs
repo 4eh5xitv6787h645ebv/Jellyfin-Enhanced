@@ -2752,6 +2752,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.ShowArrLinksAsText,
                 config.ArrLinksShowStatusSingle,
 
+                // Arr Interactive Search (3-dot / long-press "Search" + "Interactive Search")
+                config.ArrSearchEnabled,
+
                 // Arr Tags Sync Settings
                 config.ArrTagsSyncEnabled,
                 config.ArrTagsPrefix,
@@ -5361,6 +5364,357 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 contextLabel: $"Radarr movie (TMDB {tmdbId})",
                 ct: ct).ConfigureAwait(false);
             return new ArrFetchOutcome { Match = match, Error = error };
+        }
+
+        // ==================== Arr Interactive Search ====================
+        // Admin-only "Search" (automatic) + "Interactive Search" (manual release picker) driving
+        // the configured Sonarr/Radarr instances from the 3-dot / long-press action sheet. The
+        // Jellyfin item is resolved to its arr entity entirely server-side so instance API keys
+        // never reach the browser. Reuses the multi-instance config + SSRF guard that back arr links.
+
+        /// <summary>Resolved Sonarr/Radarr entity for a Jellyfin item, produced by <see cref="ResolveArrTargetAsync"/>.</summary>
+        private sealed class ArrSearchTarget
+        {
+            public ArrInstance Instance = null!;
+            public ArrType Type;
+            public string Kind = string.Empty;   // movie | series | season | episode
+            public int MovieId;                  // Radarr
+            public int SeriesId;                 // Sonarr
+            public int? SeasonNumber;            // Sonarr season / episode
+            public int? EpisodeId;               // Sonarr episode
+            public string Title = string.Empty;  // friendly label for toasts / modal header
+        }
+
+        // Guard against unbounded client-supplied release identifiers on the grab endpoint.
+        private const int ArrReleaseGuidMaxLength = 4096;
+
+        private static int GetIntProviderId(BaseItem item, MetadataProvider provider)
+        {
+            var raw = item?.GetProviderId(provider);
+            return int.TryParse(raw, out var v) ? v : 0;
+        }
+
+        /// <summary>
+        /// SSRF-guarded GET against an arr instance returning the parsed JSON (array or object), or
+        /// <c>(null, error)</c>. Mirrors the error taxonomy of <see cref="FetchAndMapAsync{T}"/> but
+        /// hands back the raw <see cref="Newtonsoft.Json.Linq.JToken"/> so callers can inspect arrays.
+        /// </summary>
+        private async Task<(JToken? Json, string? Error)> ArrGetJsonAsync(
+            ArrInstance instance, string path, TimeSpan timeout, CancellationToken ct)
+        {
+            if (!await IsAllowedUrlAsync(instance.Url, ct).ConfigureAwait(false))
+                return (null, "URL rejected by SSRF guard");
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = timeout;
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{instance.Url.TrimEnd('/')}{path}");
+                request.Headers.TryAddWithoutValidation("X-Api-Key", instance.ApiKey);
+                var response = await client.SendAsync(request, ct).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Error($"Arr GET {path} on {instance.Name} failed: HTTP {(int)response.StatusCode}");
+                    return (null, $"HTTP {(int)response.StatusCode}");
+                }
+                var responseBody = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(responseBody)) return (null, null);
+                return (JToken.Parse(responseBody), null);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+            catch (HttpRequestException ex) { _logger.Error($"Arr GET {path} network error on {instance.Name}: {ex.Message}"); return (null, "network error"); }
+            catch (TaskCanceledException ex) { _logger.Error($"Arr GET {path} timeout on {instance.Name}: {ex.Message}"); return (null, "timeout"); }
+            catch (Newtonsoft.Json.JsonException ex) { _logger.Error($"Arr GET {path} invalid JSON on {instance.Name}: {ex.Message}"); return (null, "invalid response"); }
+            catch (Exception ex) { _logger.Error($"Arr GET {path} error on {instance.Name}: {ex.Message}"); return (null, "internal error"); }
+        }
+
+        /// <summary>SSRF-guarded POST of a JSON body against an arr instance. Returns <c>(ok, error)</c>.</summary>
+        private async Task<(bool Ok, string? Error)> ArrPostJsonAsync(
+            ArrInstance instance, string path, object body, TimeSpan timeout, CancellationToken ct)
+        {
+            if (!await IsAllowedUrlAsync(instance.Url, ct).ConfigureAwait(false))
+                return (false, "URL rejected by SSRF guard");
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = timeout;
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{instance.Url.TrimEnd('/')}{path}");
+                request.Headers.TryAddWithoutValidation("X-Api-Key", instance.ApiKey);
+                var payload = Newtonsoft.Json.JsonConvert.SerializeObject(body);
+                request.Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
+                var response = await client.SendAsync(request, ct).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Error($"Arr POST {path} on {instance.Name} failed: HTTP {(int)response.StatusCode}");
+                    return (false, $"HTTP {(int)response.StatusCode}");
+                }
+                return (true, null);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+            catch (HttpRequestException ex) { _logger.Error($"Arr POST {path} network error on {instance.Name}: {ex.Message}"); return (false, "network error"); }
+            catch (TaskCanceledException ex) { _logger.Error($"Arr POST {path} timeout on {instance.Name}: {ex.Message}"); return (false, "timeout"); }
+            catch (Exception ex) { _logger.Error($"Arr POST {path} error on {instance.Name}: {ex.Message}"); return (false, "internal error"); }
+        }
+
+        /// <summary>
+        /// Resolves a Jellyfin item to a single Sonarr/Radarr entity (first enabled instance that
+        /// contains it). Movies match Radarr by TMDB id; series/season/episode match Sonarr by the
+        /// series' TVDB id (episodes additionally resolve the Sonarr episode id from season+episode
+        /// number). Returns <c>(null, error, httpStatus)</c> when it cannot be resolved.
+        /// </summary>
+        private async Task<(ArrSearchTarget? Target, string? Error, int Status)> ResolveArrTargetAsync(Guid itemId, CancellationToken ct)
+        {
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null) return (null, "Plugin configuration not available", 500);
+
+            var item = _libraryManager.GetItemById(itemId);
+            if (item == null) return (null, "Item not found in library", 404);
+
+            // Movie → Radarr by TMDB id.
+            if (item is MediaBrowser.Controller.Entities.Movies.Movie movie)
+            {
+                var tmdb = GetIntProviderId(movie, MediaBrowser.Model.Entities.MetadataProvider.Tmdb);
+                if (tmdb <= 0) return (null, "This movie has no TMDB id, so it can't be matched to Radarr", 422);
+                var radarrs = config.GetEnabledRadarrInstances();
+                if (radarrs.Count == 0) return (null, "Radarr is not configured", 404);
+                // Track whether any instance errored (down/slow/5xx). If we fall through without a
+                // match AND an instance errored, report a transient 502 rather than a misleading
+                // "isn't in Radarr" 404 — we simply couldn't confirm absence.
+                var anyRadarrError = false;
+                foreach (var inst in radarrs)
+                {
+                    var (json, err) = await ArrGetJsonAsync(inst, $"/api/v3/movie?tmdbId={tmdb}", TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
+                    if (err != null) { anyRadarrError = true; continue; }
+                    var movieId = (int?)((json as JArray)?.FirstOrDefault()?["id"]) ?? 0;
+                    if (movieId > 0)
+                        return (new ArrSearchTarget { Instance = inst, Type = ArrType.Radarr, Kind = "movie", MovieId = movieId, Title = movie.Name ?? string.Empty }, null, 200);
+                }
+                return anyRadarrError
+                    ? (null, "Couldn't reach Radarr — please try again", 502)
+                    : (null, "This movie isn't in Radarr", 404);
+            }
+
+            // Series / season / episode → Sonarr by the series' TVDB id.
+            int tvdb;
+            int? seasonNumber = null;
+            int? episodeNumber = null;
+            string kind;
+            string title;
+
+            if (item is MediaBrowser.Controller.Entities.TV.Episode ep)
+            {
+                kind = "episode";
+                var seriesItem = _libraryManager.GetItemById(ep.SeriesId);
+                tvdb = seriesItem != null ? GetIntProviderId(seriesItem, MediaBrowser.Model.Entities.MetadataProvider.Tvdb) : 0;
+                seasonNumber = ep.ParentIndexNumber;
+                episodeNumber = ep.IndexNumber;
+                title = $"{seriesItem?.Name ?? ep.SeriesName} · S{seasonNumber:00}E{episodeNumber:00}";
+            }
+            else if (item is MediaBrowser.Controller.Entities.TV.Season season)
+            {
+                kind = "season";
+                var seriesItem = _libraryManager.GetItemById(season.SeriesId);
+                tvdb = seriesItem != null ? GetIntProviderId(seriesItem, MediaBrowser.Model.Entities.MetadataProvider.Tvdb) : 0;
+                seasonNumber = season.IndexNumber;
+                title = $"{seriesItem?.Name ?? season.SeriesName} · Season {seasonNumber}";
+            }
+            else if (item is MediaBrowser.Controller.Entities.TV.Series series)
+            {
+                kind = "series";
+                tvdb = GetIntProviderId(series, MediaBrowser.Model.Entities.MetadataProvider.Tvdb);
+                title = series.Name ?? string.Empty;
+            }
+            else
+            {
+                return (null, "Only movies, series, seasons and episodes can be searched", 400);
+            }
+
+            if (tvdb <= 0) return (null, "This series has no TVDB id, so it can't be matched to Sonarr", 422);
+            if ((kind == "episode" || kind == "season") && seasonNumber == null)
+                return (null, "Missing season number", 422);
+            if (kind == "episode" && episodeNumber == null)
+                return (null, "Missing episode number", 422);
+
+            var sonarrs = config.GetEnabledSonarrInstances();
+            if (sonarrs.Count == 0) return (null, "Sonarr is not configured", 404);
+
+            // See the Radarr note above — distinguish a transient instance error from genuine absence.
+            var anySonarrError = false;
+            foreach (var inst in sonarrs)
+            {
+                var (json, err) = await ArrGetJsonAsync(inst, $"/api/v3/series?tvdbId={tvdb}", TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
+                if (err != null) { anySonarrError = true; continue; }
+                var seriesId = (int?)((json as JArray)?.FirstOrDefault()?["id"]) ?? 0;
+                if (seriesId <= 0) continue;
+
+                var target = new ArrSearchTarget
+                {
+                    Instance = inst,
+                    Type = ArrType.Sonarr,
+                    Kind = kind,
+                    SeriesId = seriesId,
+                    SeasonNumber = seasonNumber,
+                    Title = title
+                };
+
+                if (kind == "episode")
+                {
+                    var (epJson, epErr) = await ArrGetJsonAsync(inst, $"/api/v3/episode?seriesId={seriesId}", TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
+                    // Series matched here but the episode list couldn't be fetched — treat as a
+                    // transient error for this instance and let another instance (if any) try.
+                    if (epErr != null) { anySonarrError = true; continue; }
+                    var match = (epJson as JArray)?.FirstOrDefault(e =>
+                        (int?)e["seasonNumber"] == seasonNumber && (int?)e["episodeNumber"] == episodeNumber);
+                    var episodeId = (int?)(match?["id"]) ?? 0;
+                    if (episodeId <= 0) return (null, "This episode isn't in Sonarr", 404);
+                    target.EpisodeId = episodeId;
+                }
+
+                return (target, null, 200);
+            }
+            return anySonarrError
+                ? (null, "Couldn't reach Sonarr — please try again", 502)
+                : (null, "This series isn't in Sonarr", 404);
+        }
+
+        /// <summary>Maps a Sonarr/Radarr release JSON object to the compact shape the modal renders.</summary>
+        private static object NormalizeArrRelease(JToken r)
+        {
+            var rejections = new List<string>();
+            if (r["rejections"] is JArray rejArr)
+                foreach (var x in rejArr) { var s = (string?)x; if (!string.IsNullOrEmpty(s)) rejections.Add(s!); }
+
+            var languages = new List<string>();
+            if (r["languages"] is JArray langArr)
+                foreach (var l in langArr) { var s = (string?)(l?["name"]); if (!string.IsNullOrEmpty(s)) languages.Add(s!); }
+
+            return new
+            {
+                guid = (string?)r["guid"] ?? string.Empty,
+                title = (string?)r["title"] ?? string.Empty,
+                indexer = (string?)r["indexer"] ?? string.Empty,
+                indexerId = (int?)r["indexerId"] ?? 0,
+                size = (long?)r["size"] ?? 0,
+                seeders = (int?)r["seeders"],
+                leechers = (int?)r["leechers"],
+                protocol = (string?)r["protocol"] ?? string.Empty,
+                quality = (string?)(r["quality"]?["quality"]?["name"]) ?? string.Empty,
+                languages,
+                ageHours = (double?)r["ageHours"] ?? (double?)r["age"] ?? 0,
+                approved = (bool?)r["approved"] ?? false,
+                rejections,
+                customFormatScore = (int?)r["customFormatScore"] ?? 0
+            };
+        }
+
+        [HttpPost("arr/search/auto")]
+        [Authorize]
+        public async Task<IActionResult> ArrSearchAuto([FromBody] Model.Arr.ArrSearchRequest body)
+        {
+            if (!IsAdminUser()) return Forbid();
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null) return StatusCode(500, new { error = "Plugin configuration not available" });
+            if (!config.ArrSearchEnabled) return StatusCode(403, new { error = "Interactive search is disabled" });
+            if (body == null || !Guid.TryParse(body.ItemId, out var itemGuid))
+                return BadRequest(new { error = "Invalid itemId" });
+
+            var ct = HttpContext.RequestAborted;
+            var (target, error, status) = await ResolveArrTargetAsync(itemGuid, ct).ConfigureAwait(false);
+            if (target == null) return StatusCode(status, new { error });
+
+            object cmd;
+            switch (target.Kind)
+            {
+                case "movie": cmd = new { name = "MoviesSearch", movieIds = new[] { target.MovieId } }; break;
+                case "series": cmd = new { name = "SeriesSearch", seriesId = target.SeriesId }; break;
+                case "season": cmd = new { name = "SeasonSearch", seriesId = target.SeriesId, seasonNumber = target.SeasonNumber }; break;
+                case "episode": cmd = new { name = "EpisodeSearch", episodeIds = new[] { target.EpisodeId } }; break;
+                default: return StatusCode(400, new { error = "Unsupported item kind" });
+            }
+
+            var (ok, postErr) = await ArrPostJsonAsync(target.Instance, "/api/v3/command", cmd, TimeSpan.FromSeconds(20), ct).ConfigureAwait(false);
+            if (!ok) return StatusCode(502, new { error = $"Search command failed: {postErr}" });
+            return Ok(new { ok = true, instanceName = target.Instance.Name, kind = target.Kind, title = target.Title });
+        }
+
+        [HttpGet("arr/search/releases")]
+        [Authorize]
+        public async Task<IActionResult> ArrSearchReleases([FromQuery] string itemId)
+        {
+            if (!IsAdminUser()) return Forbid();
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null) return StatusCode(500, new { error = "Plugin configuration not available" });
+            if (!config.ArrSearchEnabled) return StatusCode(403, new { error = "Interactive search is disabled" });
+            if (!Guid.TryParse(itemId, out var itemGuid)) return BadRequest(new { error = "Invalid itemId" });
+
+            var ct = HttpContext.RequestAborted;
+            var (target, error, status) = await ResolveArrTargetAsync(itemGuid, ct).ConfigureAwait(false);
+            if (target == null) return StatusCode(status, new { error });
+
+            string path;
+            switch (target.Kind)
+            {
+                case "movie": path = $"/api/v3/release?movieId={target.MovieId}"; break;
+                case "episode": path = $"/api/v3/release?episodeId={target.EpisodeId}"; break;
+                case "season": path = $"/api/v3/release?seriesId={target.SeriesId}&seasonNumber={target.SeasonNumber}"; break;
+                case "series": return StatusCode(422, new { error = "Interactive search isn't available for a whole series — open a season or an episode." });
+                default: return StatusCode(400, new { error = "Unsupported item kind" });
+            }
+
+            // Interactive search queries indexers live, so allow a generous timeout.
+            var (json, relErr) = await ArrGetJsonAsync(target.Instance, path, TimeSpan.FromSeconds(90), ct).ConfigureAwait(false);
+            if (relErr != null) return StatusCode(502, new { error = $"Release lookup failed: {relErr}" });
+
+            var releases = new List<object>();
+            if (json is JArray arr)
+                foreach (var r in arr) releases.Add(NormalizeArrRelease(r));
+
+            return Ok(new
+            {
+                instanceName = target.Instance.Name,
+                source = target.Type == ArrType.Radarr ? "radarr" : "sonarr",
+                kind = target.Kind,
+                title = target.Title,
+                releases
+            });
+        }
+
+        [HttpPost("arr/search/grab")]
+        [Authorize]
+        public async Task<IActionResult> ArrSearchGrab([FromBody] Model.Arr.ArrGrabRequest body)
+        {
+            if (!IsAdminUser()) return Forbid();
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null) return StatusCode(500, new { error = "Plugin configuration not available" });
+            if (!config.ArrSearchEnabled) return StatusCode(403, new { error = "Interactive search is disabled" });
+            if (body == null || !Guid.TryParse(body.ItemId, out var itemGuid))
+                return BadRequest(new { error = "Invalid itemId" });
+            if (string.IsNullOrWhiteSpace(body.Guid) || body.Guid.Length > ArrReleaseGuidMaxLength)
+                return BadRequest(new { error = "Invalid release guid" });
+            if (body.IndexerId < 0)
+                return BadRequest(new { error = "Invalid indexerId" });
+
+            var ct = HttpContext.RequestAborted;
+            var (target, error, status) = await ResolveArrTargetAsync(itemGuid, ct).ConfigureAwait(false);
+            if (target == null) return StatusCode(status, new { error });
+
+            // Sonarr/Radarr v3 grab a manual-search result via POST /api/v3/release, looking the
+            // release up from their cache by guid + indexerId. We ALSO include the resolved target id
+            // (movieId for Radarr, episodeId for a single Sonarr episode) so a release the arr could
+            // not cleanly auto-map still grabs against the right item, matching what the Sonarr/Radarr
+            // UI posts. We deliberately forward nothing else, so a client still can't forge a download
+            // URL — only pick which cached release, for which already-resolved item, to grab.
+            object payload;
+            if (target.Type == ArrType.Radarr)
+                payload = new { guid = body.Guid, indexerId = body.IndexerId, movieId = target.MovieId };
+            else if (target.Kind == "episode" && target.EpisodeId.HasValue)
+                payload = new { guid = body.Guid, indexerId = body.IndexerId, episodeId = target.EpisodeId.Value };
+            else
+                payload = new { guid = body.Guid, indexerId = body.IndexerId };
+            var (ok, postErr) = await ArrPostJsonAsync(target.Instance, "/api/v3/release", payload, TimeSpan.FromSeconds(30), ct).ConfigureAwait(false);
+            if (!ok) return StatusCode(502, new { error = $"Grab failed: {postErr}" });
+            return Ok(new { ok = true, instanceName = target.Instance.Name });
         }
 
         // ==================== Active Streams ====================

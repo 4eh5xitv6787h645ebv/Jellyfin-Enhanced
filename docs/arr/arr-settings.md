@@ -15,6 +15,21 @@ See [ARR Tag Links CSS](../advanced/css-customization.md/#arr-tag-links) for sty
 
 ---
 
+## Interactive Search
+
+Adds **Search** (automatic) and **Interactive Search** (manual release picker) to the native 3-dot / long-press menu of movies, series, seasons, and episodes. Admin only; uses the same Sonarr/Radarr instances configured for *arr Links.
+
+| Setting | Description |
+|---|---|
+| **Enable Search & Interactive Search** | Master toggle. When on, admins see *Search* and *Interactive Search* in the item's 3-dot / long-press menu. Off by default. |
+
+- **Search** queues an automatic search (`MoviesSearch` / `SeriesSearch` / `SeasonSearch` / `EpisodeSearch`) — Sonarr/Radarr grabs the best release for your profile.
+- **Interactive Search** opens a modal of indexer releases (quality, size, seeders, indexer, rejection reasons) so you can grab a specific one.
+
+All requests are proxied through the plugin's admin-gated, SSRF-guarded server endpoints, so instance API keys never reach the browser. See [Interactive Search](arr-features.md#interactive-search) for full usage.
+
+---
+
 ## Multi-Instance Configuration
 
 ### Instance Fields

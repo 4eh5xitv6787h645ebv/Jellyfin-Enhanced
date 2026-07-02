@@ -565,5 +565,19 @@
     "active_streams_count": "{count} Active Stream|{count} Active Streams",
     "active_streams_none": "No Active Streams",
     "reviews_avg_rating_tooltip": "Average rating from {count} user(s)",
-    "release_date_tooltip": "Release/Air Date (via TMDB)"
+    "release_date_tooltip": "Release/Air Date (via TMDB)",
+    "arr_search_auto": "Search",
+    "arr_search_interactive": "Interactive Search",
+    "arr_search_searching": "Searching…",
+    "arr_search_triggered": "Search started on {instance}",
+    "arr_search_failed": "Search failed",
+    "arr_search_close": "Close",
+    "arr_search_loading": "Searching indexers…",
+    "arr_search_release_error": "Couldn't load releases",
+    "arr_search_no_releases": "No releases found",
+    "arr_search_result_count": "{count} releases",
+    "arr_search_grab": "Grab",
+    "arr_search_grabbed": "Grabbed",
+    "arr_search_grab_success": "Sent to download client",
+    "arr_search_grab_failed": "Grab failed"
 }

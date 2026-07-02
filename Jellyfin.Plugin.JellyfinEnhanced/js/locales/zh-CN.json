@@ -565,5 +565,19 @@
     "active_streams_none": "无活跃流",
     "reviews_avg_rating_tooltip": "来自 {count} 位用户的平均评分",
     "release_date_tooltip": "发布/播出日期（来自 TMDB）",
-    "panel_settings_subtitles_position_note": "需要在字幕设置中将 Jellyfin 字幕样式设置为 <b>自定义</b>"
+    "panel_settings_subtitles_position_note": "需要在字幕设置中将 Jellyfin 字幕样式设置为 <b>自定义</b>",
+    "arr_search_auto": "搜索",
+    "arr_search_interactive": "交互式搜索",
+    "arr_search_searching": "正在搜索…",
+    "arr_search_triggered": "已在 {instance} 上开始搜索",
+    "arr_search_failed": "搜索失败",
+    "arr_search_close": "关闭",
+    "arr_search_loading": "正在搜索索引器…",
+    "arr_search_release_error": "无法加载资源",
+    "arr_search_no_releases": "未找到资源",
+    "arr_search_result_count": "{count} 个资源",
+    "arr_search_grab": "抓取",
+    "arr_search_grabbed": "已抓取",
+    "arr_search_grab_success": "已发送到下载客户端",
+    "arr_search_grab_failed": "抓取失败"
 }

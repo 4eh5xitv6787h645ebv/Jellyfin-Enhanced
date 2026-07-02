@@ -1887,4 +1887,15 @@
         fitRemoveItemToMenu(removeButton, scroller);
     };
 
+    // Expose the native action-sheet building blocks so other modules (e.g. arr interactive
+    // search) can inject items that look and size exactly like Jellyfin's own — without
+    // duplicating the class-mirroring / overflow-fitting logic that keeps them jank-free.
+    JE.actionSheet = {
+        getActiveScroller: getActiveActionSheetScroller,
+        buildItem: buildNativeActionSheetItem,
+        setIcon: setActionSheetItemIcon,
+        fitToMenu: fitRemoveItemToMenu,
+        closeOpen: closeOpenActionSheet
+    };
+
 })(window.JellyfinEnhanced);

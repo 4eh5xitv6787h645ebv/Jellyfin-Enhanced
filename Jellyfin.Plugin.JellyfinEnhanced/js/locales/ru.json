@@ -565,5 +565,19 @@
     "jellyseerr_report_issue_type_other": "Прочие",
     "reviews_avg_rating_tooltip": "Средний рейтинг от {count} user(s)",
     "release_date_tooltip": "Дата релиза/эфира (через TMDB)",
-    "panel_settings_subtitles_position_note": "Требуется стиль субтитров Jellyfin для <b>Custom</b> в настройках субтитров"
+    "panel_settings_subtitles_position_note": "Требуется стиль субтитров Jellyfin для <b>Custom</b> в настройках субтитров",
+    "arr_search_auto": "Поиск",
+    "arr_search_interactive": "Интерактивный поиск",
+    "arr_search_searching": "Поиск…",
+    "arr_search_triggered": "Поиск запущен на {instance}",
+    "arr_search_failed": "Ошибка поиска",
+    "arr_search_close": "Закрыть",
+    "arr_search_loading": "Поиск по индексаторам…",
+    "arr_search_release_error": "Не удалось загрузить релизы",
+    "arr_search_no_releases": "Релизы не найдены",
+    "arr_search_result_count": "Релизов: {count}",
+    "arr_search_grab": "Скачать",
+    "arr_search_grabbed": "Добавлено",
+    "arr_search_grab_success": "Отправлено в загрузчик",
+    "arr_search_grab_failed": "Не удалось скачать"
 }

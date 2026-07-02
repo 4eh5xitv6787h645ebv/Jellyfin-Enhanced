@@ -565,5 +565,19 @@
     "active_streams_none": "Ingen aktive streams",
     "reviews_avg_rating_tooltip": "Gennemsnitlig bedømmelse fra {count} bruger(r)",
     "release_date_tooltip": "Udgivelses-/udsendelsesdato (via TMDB)",
-    "panel_settings_subtitles_position_note": "Kræver Jellyfin undertekststil indstillet til <b>Brugerdefinerede</b> i undertekster"
+    "panel_settings_subtitles_position_note": "Kræver Jellyfin undertekststil indstillet til <b>Brugerdefinerede</b> i undertekster",
+    "arr_search_auto": "Søg",
+    "arr_search_interactive": "Interaktiv søgning",
+    "arr_search_searching": "Søger…",
+    "arr_search_triggered": "Søgning startet på {instance}",
+    "arr_search_failed": "Søgning mislykkedes",
+    "arr_search_close": "Luk",
+    "arr_search_loading": "Søger i indeksere…",
+    "arr_search_release_error": "Kunne ikke indlæse udgivelser",
+    "arr_search_no_releases": "Ingen udgivelser fundet",
+    "arr_search_result_count": "{count} udgivelser",
+    "arr_search_grab": "Hent",
+    "arr_search_grabbed": "Hentet",
+    "arr_search_grab_success": "Sendt til downloadklient",
+    "arr_search_grab_failed": "Hentning mislykkedes"
 }
