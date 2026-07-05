@@ -230,12 +230,10 @@ View upcoming releases from Sonarr and Radarr in a calendar interface.
 1. Go to **Dashboard** → **Plugins** → **Jellyfin Enhanced**
 2. Navigate to ***arr Settings** tab
 3. Check **"Enable Calendar Page"**
-4. Choose integration method:
-   - **Use Plugin Pages** - Adds sidebar link (requires [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) plugin)
-   - **Use Custom Tabs** - Adds custom tab (requires [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin)
-5. Configure calendar settings (see below)
-6. Click **Save**
-7. Restart Jellyfin if using Plugin Pages
+4. Configure calendar settings (see below)
+5. Click **Save**
+
+Once enabled, the Calendar page is delivered through the unified [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages) framework: it appears automatically wherever your layout keeps its library links (the AppBar action tray on modern desktop, the drawer on mobile, or the legacy sidebar), can be reordered per-user, and can optionally be surfaced through the Plugin Pages plugin with a single global toggle.
 
 ### Calendar Settings
 
@@ -269,8 +267,7 @@ View upcoming releases from Sonarr and Radarr in a calendar interface.
 
 **Access Calendar:**
 
-- Click "Calendar" in sidebar (Plugin Pages)
-- Navigate to custom tab (Custom Tabs)
+- Click **Calendar** in your layout's navigation (see [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages))
 - Direct URL: `/web/index.html#!/jellyfinenhanced/calendar`
 
 **Features:**
@@ -301,8 +298,9 @@ Monitor active downloads from Sonarr and Radarr in a dedicated page.
 1. Go to **Dashboard** → **Plugins** → **Jellyfin Enhanced**
 2. Navigate to ***arr Settings** tab
 3. Check **"Enable Requests Page"** (under "Requests Page (Downloads)")
-4. Choose integration method (Plugin Pages or Custom Tabs)
-5. Click **Save** and restart Jellyfin if using Plugin Pages
+4. Click **Save**
+
+Once enabled, the Requests page is delivered through the unified [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages) framework — it appears automatically in your layout's navigation, can be reordered per-user, and can optionally be surfaced through the Plugin Pages plugin.
 
 Direct URL: `/web/index.html#!/jellyfinenhanced/downloads`
 

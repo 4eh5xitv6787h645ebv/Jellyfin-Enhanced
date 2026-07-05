@@ -184,12 +184,10 @@ Monitor active downloads from Sonarr/Radarr and manage Seerr requests and issues
 3. Check **"Enable Requests Page"**
 4. Optionally check **"Show Downloads in Requests Page"** to display active *arr downloads (enabled by default)
 5. Optionally check **"Show Seerr Issues Section"** to display Seerr issues
-6. Choose integration method:
-   - **Use Plugin Pages** - Adds sidebar link (requires [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) plugin)
-   - **Use Custom Tabs** - Adds custom tab (requires [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin)
-7. Configure polling settings (see below)
-8. Click **Save**
-9. Restart Jellyfin if using Plugin Pages
+6. Configure polling settings (see below)
+7. Click **Save**
+
+Once enabled, the Requests page is delivered through the unified [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages) framework: it appears automatically wherever your layout keeps its library links (the AppBar action tray on modern desktop, the drawer on mobile, or the legacy sidebar), can be reordered per-user, and can optionally be surfaced through the Plugin Pages plugin with a single global toggle.
 
 !!! note "You only need one data source"
     The Requests Page draws from two **independent** sources and is useful with either one:
@@ -216,8 +214,7 @@ Monitor active downloads from Sonarr/Radarr and manage Seerr requests and issues
 
 #### Access Requests Page
 
-- Click "Requests" in sidebar (Plugin Pages)
-- Navigate to custom tab (Custom Tabs)
+- Click **Requests** in your layout's navigation (see [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages))
 - Direct URL: `/web/index.html#!/jellyfinenhanced/requests`
 
 #### Features

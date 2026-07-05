@@ -350,7 +350,7 @@ Hide specific items from your Jellyfin library without deleting them.
 - Hidden items don't appear in library
 - Easily unhide items later
 - Per-user hidden content
-- Manage via Enhanced panel or dedicated page
+- Manage via Enhanced panel or the dedicated Hidden Content navigation page
 
 ### Setup
 
@@ -358,12 +358,9 @@ Hide specific items from your Jellyfin library without deleting them.
 2. Navigate to **Enhanced Settings** tab
 3. Find **Hidden Content** section
 4. Check **"Enable Hidden Content"**
-5. Optional: Check **"Use Plugin Pages for Hidden Content Library"**
+5. Click **Save**
 
-   - Adds a sidebar link to dedicated Hidden Content page
-   - Requires [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) plugin
-   - Restart Jellyfin after enabling for first time
-6. Click **Save**
+Once enabled, the Hidden Content management page is delivered through the unified [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages) framework — it appears automatically wherever your layout keeps its library links, can be reordered per-user, and can optionally be surfaced through the Plugin Pages plugin with a single global toggle.
 
 ### Usage
 
@@ -382,8 +379,8 @@ Hide specific items from your Jellyfin library without deleting them.
 3. View all hidden items
 4. Click to unhide
 
-**Via Dedicated Page** (if enabled):
-1. Click "Hidden Content" in sidebar
+**Via the Hidden Content navigation page** (when enabled):
+1. Click **Hidden Content** in your layout's navigation (see [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages))
 2. View all hidden items with thumbnails
 3. Search and filter hidden items
 4. Click to unhide

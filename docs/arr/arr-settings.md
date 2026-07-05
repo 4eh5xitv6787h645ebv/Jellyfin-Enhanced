@@ -102,14 +102,12 @@ Found in the ***arr Settings** tab under "Calendar Page".
 | Setting | Description |
 |---|---|
 | **Enable Calendar Page** | Enables the calendar view for upcoming Sonarr/Radarr releases |
-| **Use Plugin Pages** | Adds a sidebar link (requires [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages)) |
-| **Use Custom Tabs** | Adds a custom tab (requires [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs)) |
 | **First Day of Week** | Monday or Sunday |
 | **Time Format** | 12-hour (`5pm/5:30pm`) or 24-hour (`17:00/17:30`) |
 | **Highlight Favorites** | Highlights favorite shows/movies based on Jellyfin favorites |
 | **Highlight Watched Series** | Highlights series you are currently watching |
 
-After enabling with Plugin Pages, restart Jellyfin for the sidebar link to appear.
+Once enabled, the Calendar page is delivered through the unified [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages) framework — it appears automatically in your layout's navigation, can be reordered (admin default + per-user), and can optionally be surfaced through the Plugin Pages plugin with a single global toggle. There are no per-page delivery options.
 
 Direct URL: `/web/index.html#!/jellyfinenhanced/calendar`
 
@@ -122,10 +120,10 @@ Found in the ***arr Settings** tab under "Requests Page (Downloads)".
 | Setting | Description |
 |---|---|
 | **Enable Requests Page** | Enables a dedicated page showing active downloads from Sonarr/Radarr |
-| **Use Plugin Pages** | Adds a sidebar link (requires [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages)) |
-| **Use Custom Tabs** | Adds a custom tab (requires [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs)) |
 | **Enable Auto-Refresh** | Automatically refreshes download status |
 | **Poll Interval** | How often to refresh, in seconds (30–300, default: 30) |
+
+Once enabled, the Requests page is delivered through the unified [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages) framework — it appears automatically in your layout's navigation, can be reordered (admin default + per-user), and can optionally be surfaced through the Plugin Pages plugin. There are no per-page delivery options.
 
 !!! note
     The Requests page for downloads is separate from the Seerr Requests page. Both can be enabled independently. The Seerr Requests page (showing media requests and issues) is configured in the **Seerr Settings** tab.

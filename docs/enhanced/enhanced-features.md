@@ -4,6 +4,40 @@ Jellyfin Enhanced bundles dozens of features into one convenient plugin. This gu
 
 ---
 
+## Navigation Pages
+
+Jellyfin Enhanced adds up to four standalone pages to your server — **Bookmarks**, **Requests**, **Calendar**, and **Hidden Content**. Each one is enabled independently from its own feature settings; once enabled, all four are delivered through a single, unified navigation framework.
+
+### Auto-native navigation
+
+Every enabled page appears automatically wherever Jellyfin's own library links live for the layout you're using — no extra plugin or configuration required:
+
+- **Modern desktop layout** — in the top **AppBar action tray**, alongside Jellyfin's own header actions
+- **Mobile** — in the **hamburger / drawer** menu
+- **Legacy layout** — in the **legacy sidebar**
+
+This replaces the older, separate delivery modes and fixes the long-standing problem where these pages were invisible on the modern desktop layout.
+
+### Reordering the pages
+
+The pages are reorderable at two levels:
+
+- **Admin default order** — in **Dashboard** → **Plugins** → **Jellyfin Enhanced**, the **Navigation Pages** section provides a drag-and-drop list that sets the default order for everyone.
+- **Per-user order** — each user can override the order for themselves in the Enhanced panel (press `?`) → **Settings** tab → **Navigation Pages**.
+
+A user's own order takes precedence; otherwise the admin default applies.
+
+### Optional: Plugin Pages integration
+
+By default the pages are delivered by the built-in auto-native navigation above. If you would rather have them registered as first-class Jellyfin main-menu entries, enable the single admin toggle **"Use the Plugin Pages plugin for navigation pages"** (config key `PagesUsePluginPages`) in **Dashboard** → **Plugins** → **Jellyfin Enhanced**.
+
+When enabled, each enabled page is registered as a real main-menu entry through the external [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) plugin, and the built-in navigation is suppressed to avoid duplicate links.
+
+!!! note
+    The Plugin Pages toggle applies to **all** navigation pages at once — it is a single global switch, not a per-page option. It requires the [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) plugin to be installed, and a Jellyfin restart for the menu entries to appear.
+
+---
+
 ## Content Management
 
 ### Hidden Content System
@@ -48,8 +82,7 @@ Per-user content hiding with server-side storage and granular filtering controls
 
 Access via:
 - Enhanced panel → Settings → Hidden Content
-- Sidebar navigation (if enabled)
-- Custom tab (if configured)
+- The **Hidden Content** [navigation page](#navigation-pages) (when the feature is enabled), shown wherever your layout keeps its library links
 
 **Management Features:**
 
@@ -78,9 +111,8 @@ Access via:
    - Filter Continue Watching
    - Filter recommendations
    - Filter requests page
-6. Choose integration method:
-   - Plugin Pages (requires Plugin Pages plugin)
-   - Custom Tabs (requires Custom Tabs plugin)
+
+Once enabled, the Hidden Content management page is delivered through the unified [Navigation Pages](#navigation-pages) framework — it appears automatically in your layout's navigation and can be reordered per-user or (optionally) surfaced via the Plugin Pages plugin.
 
 ### Remove from Continue Watching / Next Up
 
@@ -183,7 +215,7 @@ Save timestamps and jump to specific moments with visual timeline markers.
 - Visual markers on video timeline
 - Add custom labels to bookmarks
 - Sync bookmarks across duplicate items (same TMDB/TVDB ID)
-- Manage all bookmarks from Custom Tabs interface
+- Manage all bookmarks from the dedicated **Bookmarks** navigation page
 - Export/import bookmark data
 
 **Usage:**
@@ -195,7 +227,7 @@ Save timestamps and jump to specific moments with visual timeline markers.
 
 **Bookmark Management:**
 
-- Access via Custom Tabs plugin
+- Access via the **Bookmarks** [navigation page](#navigation-pages) (shown wherever your layout keeps its library links)
 - View all bookmarks across library
 - Clean up orphaned bookmarks
 - Detect and merge duplicates

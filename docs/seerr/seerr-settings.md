@@ -146,10 +146,9 @@ Display a dedicated page showing active downloads from *arr and requests from Se
 1. Go to **Dashboard** → **Plugins** → **Jellyfin Enhanced**
 2. Navigate to **Seerr Settings** tab (look for the section titled "Requests Page")
 3. Check **"Enable Requests Page"**
-4. Choose integration method:
-   - **Use Plugin Pages** - Adds sidebar link (requires [Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages) plugin)
-   - **Use Custom Tabs** - Adds custom tab (requires [Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs) plugin)
-5. Click **Save** and restart Jellyfin if using Plugin Pages
+4. Click **Save**
+
+Once enabled, the Requests page is delivered through the unified [Navigation Pages](../enhanced/enhanced-features.md#navigation-pages) framework — it appears automatically in your layout's navigation, can be reordered (admin default + per-user), and can optionally be surfaced through the Plugin Pages plugin with a single global toggle. There are no per-page delivery options.
 
 ### Show Downloads Section
 

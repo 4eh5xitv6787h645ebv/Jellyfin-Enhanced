@@ -31,13 +31,18 @@ Jellyfin.Plugin.JellyfinEnhanced/
     │   │                    # (fetched by plugin.js separately — before login / before the bundle)
     │   ├── splashscreen.ts / login-image.ts / translations.ts
     ├── enhanced/            # Core features. Flat singles: config, events, playback, subtitles,
-    │   │                    # pausescreen, themer, icons, native-tabs, osd-rating, tag-pipeline
+    │   │                    # pausescreen, themer, icons, osd-rating, tag-pipeline
+    │   ├── pages/           # Unified Navigation Pages framework: page registry, admin + per-user
+    │   │                    # order resolution, layout-aware nav injector (AppBar action tray on
+    │   │                    # modern desktop, MUI drawer on mobile, legacy sidebar), the page shell,
+    │   │                    # and the optional Plugin Pages bridge. Replaces the removed native-tabs
+    │   │                    # module and the per-feature nav / custom-tab modules
     │   ├── features/        # Split feature modules (random button, details page, release dates,
     │   │                    # remove-from-home, multi-select)
     │   ├── settings-panel/  # Split settings-panel modules (entry points, styles, panel, sections)
-    │   ├── bookmarks/       # Bookmarks + the bookmarks library page (library-*.ts)
+    │   ├── bookmarks/       # Bookmarks + the bookmarks navigation page (library-*.ts)
     │   ├── hidden-content/  # Hidden-content engine (data, save, filter, dialogs, panel, buttons)
-    │   └── hidden-content-page/  # Hidden-content admin page (state, render, cards, nav, custom tab)
+    │   └── hidden-content-page/  # Hidden-content admin page (state, render, cards)
     ├── jellyseerr/          # Seerr integration. Flat singles: api, request-manager, jellyseerr,
     │   │                    # seerr-status, modal, item-details, issue-reporter, seamless-scroll,
     │   │                    # hss-discovery-handler
@@ -48,8 +53,8 @@ Jellyfin.Plugin.JellyfinEnhanced/
     │                        # quota, results, request/season modals + internal.ts shared state)
     ├── arr/                 # Sonarr/Radarr integration. Flat singles: arr-links, arr-tag-links,
     │   │                    # arr-globals
-    │   ├── calendar/        # Calendar page (styles, data, render-*, actions, init) + custom-tab.ts
-    │   └── requests/        # Requests page (styles, data, render-*, actions, init) + custom-tab.ts
+    │   ├── calendar/        # Calendar page (styles, data, render-*, actions, init)
+    │   └── requests/        # Requests page (styles, data, render-*, actions, init)
     ├── tags/                # Tag renderer specs over core/tag-renderer-base + enhanced/tag-pipeline
     ├── elsewhere/           # Streaming-availability + reviews
     ├── extras/              # Active streams, colored ratings/icons, theme selector, plugin icons

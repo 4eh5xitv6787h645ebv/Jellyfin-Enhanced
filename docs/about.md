@@ -59,15 +59,10 @@ Jellyfin Enhanced is a comprehensive plugin that bundles advanced features and c
 - Media request management system
 - Jellyfin Enhanced provides deep integration with Seerr
 
-**[Custom Tabs](https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs)**
-
-- Custom navigation tabs for Jellyfin
-- Jellyfin Enhanced features can be embedded in custom tabs
-
 **[Plugin Pages](https://github.com/IAmParadox27/jellyfin-plugin-pages)**
 
-- Add custom pages to Jellyfin sidebar
-- Used by Jellyfin Enhanced for Calendar, Requests, Bookmarks, Hidden Content pages
+- Add custom pages to Jellyfin's main navigation
+- Optionally used by Jellyfin Enhanced to surface its Bookmarks, Requests, Calendar, and Hidden Content pages as main-menu entries (a single opt-in toggle — the built-in navigation works without it)
 
 **[File Transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation)**
 
