@@ -526,13 +526,6 @@
             // Fire-and-forget alongside the fetch wave; result available as JE.currentUser
             ApiClient.getCurrentUser().then(u => { JE.currentUser = u; }).catch(() => {});
 
-            const pluginsListPromise = ApiClient.ajax({
-                type: 'GET', url: ApiClient.getUrl('/Plugins'), dataType: 'json'
-            }).catch(e => {
-                console.warn('🪼 Jellyfin Enhanced: Could not verify installed plugins:', e);
-                return null;
-            });
-
             const fetchPromises = [
                 ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(`/JellyfinEnhanced/user-settings/${userId}/settings.json?_=${Date.now()}`), dataType: 'json' })
                          .then(data => ({ name: 'settings', status: 'fulfilled', value: data }))
@@ -585,30 +578,6 @@
                     url: ApiClient.getUrl(`/JellyfinEnhanced/tag-cache/${userId}`),
                     dataType: 'json'
                 }).catch(() => null);
-            }
-
-            // Clear stale UseCustomTabs / UsePluginPages config flags when those
-            // plugins are not installed.  Settings persist after uninstall, which
-            // causes sidebar injection to be skipped even though the delivery
-            // plugin is no longer present.
-            const installedPlugins = await pluginsListPromise;
-            if (Array.isArray(installedPlugins)) {
-                const hasCustomTabs = installedPlugins.some(p => p.Name === 'Custom Tabs');
-                const hasPluginPages = installedPlugins.some(p => p.Name === 'Plugin Pages');
-                if (!hasCustomTabs) {
-                    JE.pluginConfig.BookmarksUseCustomTabs = false;
-                    JE.pluginConfig.CalendarUseCustomTabs = false;
-                    JE.pluginConfig.HiddenContentUseCustomTabs = false;
-                    JE.pluginConfig.DownloadsUseCustomTabs = false;
-                }
-                if (!hasPluginPages) {
-                    JE.pluginConfig.BookmarksUsePluginPages = false;
-                    JE.pluginConfig.HiddenContentUsePluginPages = false;
-                    JE.pluginConfig.DownloadsUsePluginPages = false;
-                    JE.pluginConfig.CalendarUsePluginPages = false;
-                }
-            } else if (installedPlugins !== null) {
-                console.warn('🪼 Jellyfin Enhanced: Could not verify installed plugins: unexpected /Plugins response');
             }
 
             // Check if server has triggered a translation cache clear

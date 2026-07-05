@@ -7,13 +7,10 @@
 // Loads last among the hidden-content-page-* modules.
 
 import { JE } from '../../globals';
-import { state, pluginPagesExists } from './state';
+import { state } from './state';
 import { injectStyles } from './styles';
 import { renderPage } from './render';
-import {
-    showPage, hidePage, interceptNavigation, handleNavigation, handleViewShow,
-    handleNavClick, injectNavigation, setupNavigationWatcher, renderForCustomTab
-} from './nav';
+import { renderForCustomTab, registerHiddenContentPage } from './nav';
 
 const logPrefix = '🪼 Jellyfin Enhanced: Hidden Content Page:';
 
@@ -58,23 +55,11 @@ function initialize(): void {
         }
     });
 
-    const usingPluginPages = pluginPagesExists && config.HiddenContentUsePluginPages;
-    if (usingPluginPages) {
-        console.log(`${logPrefix} Hidden content page is injected via Plugin Pages`);
-        return;
-    }
-
-    injectNavigation();
-    setupNavigationWatcher();
-
-    window.addEventListener("hashchange", interceptNavigation, true);
-    window.addEventListener("popstate", interceptNavigation, true);
-    document.addEventListener("viewshow", handleViewShow);
-    document.addEventListener("click", handleNavClick);
-    window.addEventListener("hashchange", handleNavigation);
-    window.addEventListener("popstate", handleNavigation);
-
-    handleNavigation();
+    // Register with the unified Pages framework — it owns the nav entry (on
+    // whichever layout), the standalone page container, ordering, show/hide and
+    // routing. Plugin Pages integration (when enabled) suppresses the auto-native
+    // nav there instead of here.
+    registerHiddenContentPage();
 
     console.log(`${logPrefix} Hidden content page module initialized`);
 }
@@ -85,8 +70,10 @@ function initialize(): void {
 
 JE.hiddenContentPage = {
     initialize,
-    showPage,
-    hidePage,
+    // showPage/hidePage now delegate to the shared Pages shell (kept on the
+    // surface for back-compat with any external caller).
+    showPage: () => JE.pages?.show('hidden-content'),
+    hidePage: () => JE.pages?.hide(),
     renderPage,
     renderForCustomTab,
     injectStyles,

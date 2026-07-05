@@ -415,36 +415,3 @@ export function renderPage(targetContainer?: HTMLElement): void {
         });
     }
 }
-
-/**
- * Create the downloads page container with proper Jellyfin page structure
- */
-export function createPageContainer(): HTMLElement {
-    let page = document.getElementById('je-downloads-page');
-    if (!page) {
-        page = document.createElement('div');
-        page.id = 'je-downloads-page';
-        // Use Jellyfin's page classes for proper integration
-        page.className = 'page type-interior mainAnimatedPage hide';
-        // Data attributes for header/back button integration
-        page.setAttribute('data-title', JE.t?.('requests_requests') || 'Requests');
-        page.setAttribute('data-backbutton', 'true');
-        page.setAttribute('data-url', '#/downloads');
-        page.setAttribute('data-type', 'custom');
-        page.innerHTML = `
-        <div data-role="content">
-          <div class="content-primary je-downloads-page">
-            <div id="je-downloads-container" style="padding-top: 5em;"></div>
-          </div>
-        </div>
-      `;
-
-        const mainContent = document.querySelector('.mainAnimatedPages');
-        if (mainContent) {
-            mainContent.appendChild(page);
-        } else {
-            document.body.appendChild(page);
-        }
-    }
-    return page;
-}

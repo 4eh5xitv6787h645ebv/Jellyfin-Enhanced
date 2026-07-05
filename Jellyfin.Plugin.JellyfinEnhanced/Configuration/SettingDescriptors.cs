@@ -264,11 +264,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 PublicContextual("JellyseerrUrlMappings", ctx =>
                     ctx.IsAuthenticated ? (ctx.Config.JellyseerrUrlMappings ?? string.Empty) : string.Empty),
 
+                // Navigation Pages (unified framework) — client resolves the nav
+                // order (per-user PagesOrder → admin PagesOrder → registration)
+                // and suppresses the auto-native nav when Plugin Pages is on.
+                // PublicUser exposes the admin default (JE.pluginConfig.PagesOrder)
+                // AND pairs the per-user override (JE.currentSettings.pagesOrder).
+                Public("PagesUsePluginPages", c => c.PagesUsePluginPages),
+                PublicUser("PagesOrder", c => c.PagesOrder, nameof(UserSettings.PagesOrder)),
+
                 // Bookmarks Settings
                 Public("BookmarksEnabled", c => c.BookmarksEnabled),
-                Public("BookmarksUsePluginPages", c => c.BookmarksUsePluginPages),
-                Public("BookmarksUseCustomTabs", c => c.BookmarksUseCustomTabs),
-                Public("BookmarksUseNativeTab", c => c.BookmarksUseNativeTab),
 
                 // Arr Links Settings
                 Public("ArrLinksEnabled", c => c.ArrLinksEnabled),
@@ -305,18 +310,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 Public("DownloadsPageEnabled", c => c.DownloadsPageEnabled),
                 Public("DownloadsPageShowIssues", c => c.DownloadsPageShowIssues),
                 Public("ShowDownloadsInRequests", c => c.ShowDownloadsInRequests),
-                Public("DownloadsUsePluginPages", c => c.DownloadsUsePluginPages),
-                Public("DownloadsUseCustomTabs", c => c.DownloadsUseCustomTabs),
-                Public("DownloadsUseNativeTab", c => c.DownloadsUseNativeTab),
                 Public("DownloadsPagePollingEnabled", c => c.DownloadsPagePollingEnabled),
                 Public("DownloadsPollIntervalSeconds", c => c.DownloadsPollIntervalSeconds),
                 Public("DownloadsFilterByUserRequests", c => c.DownloadsFilterByUserRequests),
 
                 // Calendar Page Settings
                 Public("CalendarPageEnabled", c => c.CalendarPageEnabled),
-                Public("CalendarUseCustomTabs", c => c.CalendarUseCustomTabs),
-                Public("CalendarUsePluginPages", c => c.CalendarUsePluginPages),
-                Public("CalendarUseNativeTab", c => c.CalendarUseNativeTab),
                 Public("CalendarFirstDayOfWeek", c => c.CalendarFirstDayOfWeek),
                 Public("CalendarTimeFormat", c => c.CalendarTimeFormat),
                 Public("CalendarHighlightFavorites", c => c.CalendarHighlightFavorites),
@@ -327,9 +326,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
                 // Hidden Content Settings
                 Public("HiddenContentEnabled", c => c.HiddenContentEnabled),
-                Public("HiddenContentUsePluginPages", c => c.HiddenContentUsePluginPages),
-                Public("HiddenContentUseCustomTabs", c => c.HiddenContentUseCustomTabs),
-                Public("HiddenContentUseNativeTab", c => c.HiddenContentUseNativeTab),
                 Public("HiddenContentAdmin", c => c.HiddenContentAdmin),
 
                 // Maintenance Mode

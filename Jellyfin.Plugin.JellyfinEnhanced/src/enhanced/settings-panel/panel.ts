@@ -9,7 +9,7 @@
 import { JE } from '../../globals';
 import { buildPanelHtml } from './template';
 import { wireShortcutEditor } from './shortcut-editor';
-import { wireSettingsListeners, wireMiscSettingsControls } from './settings';
+import { wireSettingsListeners, wireMiscSettingsControls, wirePagesReorder } from './settings';
 import { wireHiddenContentListeners } from './hidden-content-tab';
 import { wireLanguageControls } from './language';
 
@@ -300,5 +300,6 @@ JE.showEnhancedPanel = async () => {
     wireSettingsListeners(ctx);
     wireHiddenContentListeners(ctx);
     wireMiscSettingsControls(ctx);
+    wirePagesReorder(ctx);
     wireLanguageControls(ctx);
 };

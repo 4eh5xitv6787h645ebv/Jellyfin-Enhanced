@@ -45,9 +45,6 @@ export interface ArrPluginConfig extends PluginConfig {
     DownloadsPageShowIssues?: boolean;
     DownloadsPagePollingEnabled?: boolean;
     DownloadsPollIntervalSeconds?: number;
-    DownloadsUseCustomTabs?: boolean;
-    DownloadsUseNativeTab?: boolean;
-    DownloadsUsePluginPages?: boolean;
     CalendarPageEnabled?: boolean;
     CalendarFirstDayOfWeek?: string;
     CalendarTimeFormat?: string;
@@ -56,9 +53,6 @@ export interface ArrPluginConfig extends PluginConfig {
     CalendarFilterByLibraryAccess?: boolean;
     CalendarShowOnlyRequested?: boolean;
     CalendarForceOnlyRequested?: boolean;
-    CalendarUseCustomTabs?: boolean;
-    CalendarUseNativeTab?: boolean;
-    CalendarUsePluginPages?: boolean;
 }
 
 /** The per-user settings keys the arr modules read/write, typed. */
@@ -125,7 +119,7 @@ export type ArrJE = Omit<
     JEGlobal,
     | 'pluginConfig' | 'currentSettings' | 'helpers' | 'themer' | 't'
     | 'currentUser' | 'loadSettings' | 'saveUserSettings' | 'icon' | 'IconName'
-    | 'hiddenContent' | 'nativeTabs' | 'jellyseerrIssueReporter'
+    | 'hiddenContent' | 'jellyseerrIssueReporter'
 > & {
     pluginConfig: ArrPluginConfig;
     currentSettings?: ArrUserSettings;
@@ -148,11 +142,6 @@ export type ArrJE = Omit<
         filterRequestItems?: <T>(items: T[]) => T[];
         filterCalendarEvents?: <T>(events: T[]) => T[];
         [key: string]: unknown;
-    };
-    /** Native home-tab registry (js/enhanced/native-tabs.js — legacy half). */
-    nativeTabs?: {
-        register: (id: string, title: string, onMount: (panel: HTMLElement) => void, icon?: string) => void;
-        unregister: (id: string) => void;
     };
     /** Jellyseerr issue-report modal (js/jellyseerr/issue-reporter.js). */
     jellyseerrIssueReporter?: {

@@ -60,6 +60,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string DisplayLanguage { get; set; } = string.Empty;
         public string CalendarDisplayMode { get; set; } = "list";
         public string CalendarDefaultViewMode { get; set; } = "agenda";
+
+        /// <summary>
+        /// Per-user override of the navigation page order, by page id. Empty means
+        /// "inherit the admin default" (PluginConfiguration.PagesOrder) — so an
+        /// admin re-order propagates to users who never customised their own.
+        /// </summary>
+        public List<string> PagesOrder { get; set; } = new();
     }
 
     public class UserShortcuts

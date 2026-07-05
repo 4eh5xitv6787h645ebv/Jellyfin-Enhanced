@@ -4,8 +4,8 @@
 // unhide-confirmation dialog.
 // (Converted from js/enhanced/hidden-content-page-state.js — bodies semantically
 // identical; the JE.internals.hiddenContentPage bag is now real module exports.)
-// Loads first: owns the state object and parse-time sidebar/Plugin-Pages
-// detection that every other hidden-content-page-* module reads.
+// Loads first: owns the shared page-state object every other hidden-content-page-*
+// module reads.
 
 import { JE } from '../../globals';
 
@@ -39,11 +39,6 @@ export interface HiddenContentPageState {
     adminLoadError: boolean;
     adminLoadToken: number;
 }
-
-export const sidebar = document.querySelector('.mainDrawer-scrollContainer');
-export const pluginPagesExists = !!sidebar?.querySelector(
-    'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.HiddenContentPage"]'
-);
 
 // ============================================================
 // State

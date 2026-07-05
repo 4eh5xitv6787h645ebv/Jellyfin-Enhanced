@@ -8,6 +8,7 @@
 import { JE } from '../../globals';
 import { toast } from '../../core/ui-kit';
 import { showReleaseNotesNotification } from './release-notes';
+import { buildPagesReorderList, currentResolvedOrder } from '../pages/reorder';
 import type { PanelContext } from './panel';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -546,4 +547,42 @@ export function wireMiscSettingsControls(ctx: PanelContext): void {
     setupPresetHandlers('subtitle-style-presets-container', (JE as any).subtitlePresets, 'style');
     setupPresetHandlers('font-size-presets-container', (JE as any).fontSizePresets, 'font-size');
     setupPresetHandlers('font-family-presets-container', (JE as any).fontFamilyPresets, 'font-family');
+}
+
+/**
+ * Wires the per-user "Navigation Pages" reorder control in the Settings tab.
+ * Drag reordering writes JE.currentSettings.pagesOrder, persists it and calls
+ * JE.pages.refresh() so the nav updates live. The section stays hidden unless at
+ * least two pages are registered (nothing to arrange otherwise). Reset clears
+ * the per-user override so the admin default order applies again.
+ * @param ctx Shared panel context assembled in settings-panel/panel.ts.
+ */
+export function wirePagesReorder(ctx: PanelContext): void {
+    const { resetAutoCloseTimer } = ctx;
+    const section = document.getElementById('je-panel-pages-section');
+    const list = document.getElementById('je-panel-pages-order');
+    const resetBtn = document.getElementById('je-panel-pages-reset');
+    if (!section || !list) return;
+
+    const save = (ids: string[]): void => {
+        (JE.currentSettings as any).pagesOrder = ids;
+        void JE.saveUserSettings!('settings.json', JE.currentSettings);
+        JE.pages?.refresh();
+        resetAutoCloseTimer();
+    };
+
+    const render = (): void => {
+        const count = buildPagesReorderList(list, currentResolvedOrder(), save);
+        section.style.display = count >= 2 ? '' : 'none';
+    };
+
+    render();
+
+    resetBtn?.addEventListener('click', () => {
+        (JE.currentSettings as any).pagesOrder = [];
+        void JE.saveUserSettings!('settings.json', JE.currentSettings);
+        JE.pages?.refresh();
+        render();
+        resetAutoCloseTimer();
+    });
 }

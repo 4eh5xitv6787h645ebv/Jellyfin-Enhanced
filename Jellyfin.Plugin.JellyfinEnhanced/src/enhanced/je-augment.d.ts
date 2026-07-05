@@ -38,9 +38,13 @@ declare module '../types/je' {
         [key: string]: unknown;
     }
 
-    interface NativeTabsApi {
-        register(id: string, title: string, onMount: (panel: HTMLElement) => void, icon?: string): void;
-        unregister(id: string): void;
+    /** Unified Pages framework surface (src/enhanced/pages). */
+    interface PagesApi {
+        register(def: import('./pages/types').JePageDefinition): void;
+        show(id: string): void;
+        hide(): void;
+        refresh(): void;
+        list(): string[];
     }
 
     interface JEGlobal {
@@ -61,8 +65,8 @@ declare module '../types/je' {
         /** Provided by js/plugin.js (camelCase→PascalCase for C# serialization). */
         toPascalCase?: (value: unknown) => unknown;
 
-        // enhanced/native-tabs
-        nativeTabs?: NativeTabsApi;
+        // enhanced/pages — unified Pages framework
+        pages?: PagesApi;
 
         // enhanced/icons
         icon?: (name: string) => string;

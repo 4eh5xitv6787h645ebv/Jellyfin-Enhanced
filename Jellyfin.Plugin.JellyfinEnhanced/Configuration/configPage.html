@@ -537,9 +537,34 @@
                     <div class="je-info-banner je-fieldset-wide je-tab-intro">
                         <i class="material-icons je-info-icon">integration_instructions</i>
                         <div>
-                            These features add or replace pages in the Jellyfin web UI. Support integration with <a target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a> (sidebar) or <a target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs">Custom Tabs</a> (home page).
+                            These features add pages to the Jellyfin web UI. Jellyfin Enhanced shows each enabled page as a native navigation entry, and can optionally register them with <a target="_blank" href="https://github.com/IAmParadox27/jellyfin-plugin-pages">Plugin Pages</a>.
                         </div>
                     </div>
+
+                    <fieldset>
+                        <legend class="sectionTitle">Navigation Pages</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline-center" style="margin-bottom: 15px;">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">reorder</i>
+                                    <div>
+                                        Jellyfin Enhanced shows each enabled page (Bookmarks, Requests, Calendar, Hidden Content) as a native navigation entry &mdash; in the top bar on desktop, the hamburger drawer on mobile, and the sidebar on the legacy layout. Drag the pages below to set the default order; each user can still override their own.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="je-pages-order" data-config-key="PagesOrder"></div>
+
+                            <div class="checkboxContainer"><label><input id="pagesUsePluginPages" data-config-key="PagesUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use the Plugin Pages plugin for navigation pages</span></label></div>
+                            <div class="je-setting-description" data-desc-for="pagesUsePluginPages">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Registers the enabled pages in Jellyfin's real main menu via the external <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> plugin, and suppresses Jellyfin Enhanced's built-in navigation entries so the pages don't appear twice.<br/>
+                                    <strong>Note:</strong> Requires the Plugin Pages plugin to be installed. Jellyfin must be restarted after enabling this for the first time.
+                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
 
                     <fieldset>
                         <legend class="sectionTitle">Bookmarks</legend>
@@ -561,64 +586,6 @@
                             <div class="je-setting-description" data-desc-for="bookmarksEnabled">
                                 <div class="fieldDescription je-field-desc-lg">Save custom bookmarks/timestamps while watching videos to quickly jump back to your favorite scenes or moments.</div>
                             </div>
-
-                            <div class="checkboxContainer"><label><input id="bookmarksUseNativeTab" data-config-key="BookmarksUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Bookmarks as a native Home tab</span></label></div>
-                            <div class="je-setting-description" data-desc-for="bookmarksUseNativeTab">
-                                <div class="fieldDescription je-field-desc-xl">Adds Bookmarks as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="bookmarksUsePluginPages" data-config-key="BookmarksUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Bookmarks Library</span></label></div>
-                            <div class="je-setting-description" data-desc-for="bookmarksUsePluginPages">
-                                <div class="fieldDescription je-field-desc-xl">
-                                    Adds a "Bookmarks" link to the sidebar via <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a>.<br/>
-                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
-                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
-                                </div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="bookmarksUseCustomTabs" data-config-key="BookmarksUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs for Bookmarks</span></label></div>
-
-                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="bookmarksUseCustomTabs,bookmarksEnabled">
-                                <label><input id="bookmarksAutoCreateCustomTab" data-config-key="BookmarksAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
-                            </div>
-                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="bookmarksAutoCreateCustomTab" data-gated-by="bookmarksUseCustomTabs,bookmarksEnabled">
-                                <div class="fieldDescription je-field-desc-md">
-                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs for Bookmarks" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
-                                </div>
-                            </div>
-
-                            <div class="je-setting-description" data-desc-for="bookmarksUseCustomTabs">
-                                <div class="je-info-banner-inline">
-                                    <div class="je-info-banner-row">
-                                        <i class="material-icons je-info-icon">info</i>
-                                        <div>
-                                            <h4 class="je-custom-tabs-h4">
-                                                Embed Bookmarks in Custom Tabs:
-                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
-                                            </h4>
-                                            <p class="fieldDescription je-custom-tabs-p">Display the Bookmarks library in a Custom Tabs tab instead of the sidebar link.</p>
-                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
-                                            <ol class="fieldDescription je-custom-tabs-ol">
-                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
-                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
-                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Bookmarks").</li>
-                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
-                                            </ol>
-                                            <div class="je-copy-code-wrapper">
-                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="sections bookmarks"&gt;&lt;/div&gt;' type="button">
-                                                    <i class="material-icons je-copy-icon">content_copy</i>
-                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
-                                                </button>
-                                                <pre class="je-code-pre"><code>&lt;div class="sections bookmarks"&gt;&lt;/div&gt;</code></pre>
-                                            </div>
-                                            <div class="fieldDescription je-field-desc-mt">
-                                                Already have Custom Tabs installed?
-                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </fieldset>
 
@@ -636,64 +603,6 @@
                             <div class="checkboxContainer je-main-feature"><label><input id="hiddenContentEnabled" data-config-key="HiddenContentEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Hidden Content</span></label></div>
                             <div class="je-setting-description" data-desc-for="hiddenContentEnabled">
                                 <div class="fieldDescription je-field-desc-xl">Enable or disable the Hidden Content feature server-wide. When disabled, hide buttons, filtering, sidebar navigation, and settings panel options are all removed. User data is preserved and restored when re-enabled.</div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="hiddenContentUseNativeTab" data-config-key="HiddenContentUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Hidden Content as a native Home tab</span></label></div>
-                            <div class="je-setting-description" data-desc-for="hiddenContentUseNativeTab">
-                                <div class="fieldDescription je-field-desc-xl">Adds Hidden Content as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="hiddenContentUsePluginPages" data-config-key="HiddenContentUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Hidden Content</span></label></div>
-                            <div class="je-setting-description" data-desc-for="hiddenContentUsePluginPages">
-                                <div class="fieldDescription je-field-desc-xl">
-                                    Replaces the default Hidden Content page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/>
-                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
-                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
-                                </div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="hiddenContentUseCustomTabs" data-config-key="HiddenContentUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs for Hidden Content</span></label></div>
-
-                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="hiddenContentUseCustomTabs,hiddenContentEnabled">
-                                <label><input id="hiddenContentAutoCreateCustomTab" data-config-key="HiddenContentAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
-                            </div>
-                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="hiddenContentAutoCreateCustomTab" data-gated-by="hiddenContentUseCustomTabs,hiddenContentEnabled">
-                                <div class="fieldDescription je-field-desc-md">
-                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs for Hidden Content" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
-                                </div>
-                            </div>
-
-                            <div class="je-setting-description" data-desc-for="hiddenContentUseCustomTabs">
-                                <div class="je-info-banner-inline">
-                                    <div class="je-info-banner-row">
-                                        <i class="material-icons je-info-icon">info</i>
-                                        <div>
-                                            <h4 class="je-custom-tabs-h4">
-                                                Embed Hidden Content in Custom Tabs:
-                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
-                                            </h4>
-                                            <p class="fieldDescription je-custom-tabs-p">Display the Hidden Content page in a Custom Tabs tab instead of the sidebar link.</p>
-                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
-                                            <ol class="fieldDescription je-custom-tabs-ol">
-                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
-                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
-                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Hidden Content").</li>
-                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
-                                            </ol>
-                                            <div class="je-copy-code-wrapper">
-                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced hidden-content"&gt;&lt;/div&gt;' type="button">
-                                                    <i class="material-icons je-copy-icon">content_copy</i>
-                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
-                                                </button>
-                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced hidden-content"&gt;&lt;/div&gt;</code></pre>
-                                            </div>
-                                            <div class="fieldDescription je-field-desc-mt">
-                                                Already have Custom Tabs installed?
-                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <details class="je-details-section" data-gated-by="hiddenContentEnabled">
@@ -838,58 +747,6 @@
                             <div class="je-setting-description" data-desc-for="downloadsPageShowIssues">
                                 <div class="fieldDescription je-field-desc-xl">Shows open/resolved Seerr issues beneath Requests.</div>
                             </div>
-                            <div class="checkboxContainer"><label><input id="downloadsUseNativeTab" data-config-key="DownloadsUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Requests as a native Home tab</span></label></div>
-                            <div class="je-setting-description" data-desc-for="downloadsUseNativeTab">
-                                <div class="fieldDescription je-field-desc-xl">Adds Requests as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
-                            </div>
-                            <div class="checkboxContainer"><label><input id="downloadsUsePluginPages" data-config-key="DownloadsUsePluginPages" data-config-default="true" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Requests</span></label></div>
-                            <div class="je-setting-description" data-desc-for="downloadsUsePluginPages">
-                                <div class="fieldDescription je-field-desc-xl">Replaces the default Requests page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.<span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span></div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="downloadsUseCustomTabs" data-config-key="DownloadsUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs for Requests</span></label></div>
-
-                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="downloadsUseCustomTabs,downloadsPageEnabled">
-                                <label><input id="downloadsAutoCreateCustomTab" data-config-key="DownloadsAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
-                            </div>
-                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="downloadsAutoCreateCustomTab" data-gated-by="downloadsUseCustomTabs,downloadsPageEnabled">
-                                <div class="fieldDescription je-field-desc-md">
-                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs for Requests" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
-                                </div>
-                            </div>
-
-                            <div class="je-setting-description" data-desc-for="downloadsUseCustomTabs">
-                                <div class="je-info-banner-inline">
-                                    <div class="je-info-banner-row">
-                                        <i class="material-icons je-info-icon">info</i>
-                                        <div>
-                                            <h4 class="je-custom-tabs-h4">
-                                                Embed Requests in Custom Tabs:
-                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
-                                            </h4>
-                                            <p class="fieldDescription je-custom-tabs-p">Display the Requests page in a Custom Tabs tab instead of the sidebar link.</p>
-                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
-                                            <ol class="fieldDescription je-custom-tabs-ol">
-                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
-                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
-                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Requests")</li>
-                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
-                                            </ol>
-                                            <div class="je-copy-code-wrapper">
-                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced requests"&gt;&lt;/div&gt;' type="button">
-                                                    <i class="material-icons je-copy-icon">content_copy</i>
-                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
-                                                </button>
-                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced requests"&gt;&lt;/div&gt;</code></pre>
-                                            </div>
-                                            <div class="fieldDescription je-field-desc-mt">
-                                                Already have Custom Tabs installed?
-                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
                             <div class="checkboxContainer"><label><input id="downloadsPagePollingEnabled" data-config-key="DownloadsPagePollingEnabled" data-config-default="true" is="emby-checkbox" type="checkbox"/><span>Enable Auto-Refresh</span></label></div>
                             <div class="je-setting-description" data-desc-for="downloadsPagePollingEnabled">
@@ -922,63 +779,6 @@
                             <div class="checkboxContainer je-main-feature"><label><input id="calendarPageEnabled" data-config-key="CalendarPageEnabled" data-config-default="true" is="emby-checkbox" type="checkbox"/><span>Enable Calendar Page</span></label></div>
                             <div class="je-setting-description" data-desc-for="calendarPageEnabled">
                                 <div class="fieldDescription je-field-desc-xl">Adds a "Calendar" link to the navigation showing upcoming releases from Sonarr/Radarr.</div>
-                            </div>
-                            <div class="checkboxContainer"><label><input id="calendarUseNativeTab" data-config-key="CalendarUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Calendar as a native Home tab</span></label></div>
-                            <div class="je-setting-description" data-desc-for="calendarUseNativeTab">
-                                <div class="fieldDescription je-field-desc-xl">Adds Calendar as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="calendarUsePluginPages" data-config-key="CalendarUsePluginPages" data-config-default="true" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages</span></label></div>
-                            <div class="je-setting-description" data-desc-for="calendarUsePluginPages">
-                                <div class="fieldDescription je-field-desc-xl">
-                                    Replaces the default Calendar page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/>
-                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
-                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
-                                </div>
-                            </div>
-
-                            <div class="checkboxContainer"><label><input id="calendarUseCustomTabs" data-config-key="CalendarUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs</span></label></div>
-
-                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="calendarUseCustomTabs,calendarPageEnabled">
-                                <label><input id="calendarAutoCreateCustomTab" data-config-key="CalendarAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
-                            </div>
-                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="calendarAutoCreateCustomTab" data-gated-by="calendarUseCustomTabs,calendarPageEnabled">
-                                <div class="fieldDescription je-field-desc-md">
-                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
-                                </div>
-                            </div>
-
-                            <div class="je-setting-description" data-desc-for="calendarUseCustomTabs">
-                                <div class="je-info-banner-inline">
-                                    <div class="je-info-banner-row">
-                                        <i class="material-icons je-info-icon">info</i>
-                                        <div>
-                                            <h4 class="je-custom-tabs-h4">
-                                                Embed Calendar in Custom Tabs:
-                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
-                                            </h4>
-                                            <p class="fieldDescription je-custom-tabs-p">Display the Calendar page in a Custom Tabs tab instead of the sidebar link.</p>
-                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
-                                            <ol class="fieldDescription je-custom-tabs-ol">
-                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
-                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
-                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Calendar").</li>
-                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
-                                            </ol>
-                                            <div class="je-copy-code-wrapper">
-                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced calendar"&gt;&lt;/div&gt;' type="button">
-                                                    <i class="material-icons je-copy-icon">content_copy</i>
-                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
-                                                </button>
-                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced calendar"&gt;&lt;/div&gt;</code></pre>
-                                            </div>
-                                            <div class="fieldDescription je-field-desc-mt">
-                                                Already have Custom Tabs installed?
-                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <div class="inputContainer">

@@ -355,36 +355,6 @@ function renderLegend(): string {
     `;
 }
 
-// Create or get page container element
-export function createPageContainer(): HTMLElement {
-    let page = document.getElementById('je-calendar-page');
-    if (!page) {
-        page = document.createElement('div');
-        page.id = 'je-calendar-page';
-        page.className = 'page type-interior mainAnimatedPage hide';
-        page.setAttribute('data-title', 'Calendar');
-        page.setAttribute('data-backbutton', 'true');
-        page.setAttribute('data-url', '#/calendar');
-        page.setAttribute('data-type', 'custom');
-        page.innerHTML = `
-        <div data-role="content">
-          <div class="content-primary je-calendar-page">
-            <div id="je-calendar-container" style="padding-top: 5em; padding-left: 0.5em; padding-right: 0.5em;"></div>
-          </div>
-        </div>
-      `;
-
-        const mainContent = document.querySelector('.mainAnimatedPages');
-        if (mainContent) {
-            mainContent.appendChild(page);
-        } else {
-            document.body.appendChild(page);
-        }
-    }
-
-    return page;
-}
-
 /**
  * Render the full page.
  * @param targetContainer - Optional container to render into
@@ -401,10 +371,12 @@ export function renderPage(targetContainer?: HTMLElement): void {
         // Re-use stored custom tab container, but not on Plugin Pages route
         container = state._customTabContainer;
     } else {
+        // No caller container: render into the container the Pages shell (mount)
+        // or the Plugin Pages embed created. If it isn't present there's nothing
+        // to render into (the shell owns the standalone page wrapper now).
         state._customTabContainer = null;
-        const page = createPageContainer();
         container = document.getElementById('je-calendar-container');
-        if (!page || !container) return;
+        if (!container) return;
     }
 
     if (typeof state.sidebarCollapsed !== 'boolean') {

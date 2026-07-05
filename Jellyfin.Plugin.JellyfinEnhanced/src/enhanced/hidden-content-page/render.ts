@@ -14,9 +14,6 @@ import {
     openAdminAddModal
 } from './admin';
 import { createGroupCard, createSection } from './cards';
-// Cross-module reference (defined in hidden-content-page/nav.ts). ES-module
-// cyclic edge — only ever invoked at call time, never during module evaluation.
-import { createPageContainer } from './nav';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -256,10 +253,12 @@ export function renderPage(targetContainer?: HTMLElement): void {
         // Re-use stored custom tab container, but not on Plugin Pages route
         container = state._customTabContainer;
     } else {
+        // No caller container: render into the container the Pages shell (mount)
+        // or the Plugin Pages embed created. If it isn't present there's nothing
+        // to render into (the shell owns the standalone page wrapper now).
         state._customTabContainer = null;
-        const page = createPageContainer();
         container = document.getElementById("je-hidden-content-container");
-        if (!page || !container) return;
+        if (!container) return;
     }
 
     // Publish theme colours so the admin controls follow the active theme (Purple Haze, etc.).

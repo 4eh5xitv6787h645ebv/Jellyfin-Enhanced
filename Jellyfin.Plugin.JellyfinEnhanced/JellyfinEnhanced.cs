@@ -304,7 +304,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 .Any(x => (string?)x?["Id"] == $"{namespaceName}.HiddenContentPage");
 
             // Only add calendar page if it's enabled and using plugin pages
-            if (!calendarExists && pluginConfig.CalendarPageEnabled && pluginConfig.CalendarUsePluginPages)
+            if (!calendarExists && pluginConfig.CalendarPageEnabled && pluginConfig.PagesUsePluginPages)
             {
                 pages.Add(new JsonObject
                 {
@@ -316,7 +316,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 });
             }
             // Remove calendar page if it exists but is now disabled or not using plugin pages
-            else if (calendarExists && (!pluginConfig.CalendarPageEnabled || !pluginConfig.CalendarUsePluginPages))
+            else if (calendarExists && (!pluginConfig.CalendarPageEnabled || !pluginConfig.PagesUsePluginPages))
             {
                 var calendarPage = pages
                     .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.CalendarPage");
@@ -327,7 +327,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
 
             // Only add downloads page if it's enabled and using plugin pages
-            if (!downloadsExists && pluginConfig.DownloadsPageEnabled && pluginConfig.DownloadsUsePluginPages)
+            if (!downloadsExists && pluginConfig.DownloadsPageEnabled && pluginConfig.PagesUsePluginPages)
             {
                 pages.Add(new JsonObject
                 {
@@ -339,7 +339,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 });
             }
             // Remove downloads page if it exists but is now disabled or not using plugin pages
-            else if (downloadsExists && (!pluginConfig.DownloadsPageEnabled || !pluginConfig.DownloadsUsePluginPages))
+            else if (downloadsExists && (!pluginConfig.DownloadsPageEnabled || !pluginConfig.PagesUsePluginPages))
             {
                 var downloadsPage = pages
                     .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.DownloadsPage");
@@ -350,7 +350,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
 
             // Only add bookmarks page if it's enabled and using plugin pages
-            if (!bookmarksExists && pluginConfig.BookmarksEnabled && pluginConfig.BookmarksUsePluginPages)
+            if (!bookmarksExists && pluginConfig.BookmarksEnabled && pluginConfig.PagesUsePluginPages)
             {
                 pages.Add(new JsonObject
                 {
@@ -362,7 +362,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 });
             }
             // Remove bookmarks page if it exists but is now disabled or not using plugin pages
-            else if (bookmarksExists && (!pluginConfig.BookmarksEnabled || !pluginConfig.BookmarksUsePluginPages))
+            else if (bookmarksExists && (!pluginConfig.BookmarksEnabled || !pluginConfig.PagesUsePluginPages))
             {
                 var bookmarksPage = pages
                     .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.BookmarksPage");
@@ -373,7 +373,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
 
             // Only add hidden content page if it's enabled and using plugin pages
-            if (!hiddenContentExists && pluginConfig.HiddenContentEnabled && pluginConfig.HiddenContentUsePluginPages)
+            if (!hiddenContentExists && pluginConfig.HiddenContentEnabled && pluginConfig.PagesUsePluginPages)
             {
                 pages.Add(new JsonObject
                 {
@@ -385,7 +385,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 });
             }
             // Remove hidden content page if it exists but is now disabled or not using plugin pages
-            else if (hiddenContentExists && (!pluginConfig.HiddenContentEnabled || !pluginConfig.HiddenContentUsePluginPages))
+            else if (hiddenContentExists && (!pluginConfig.HiddenContentEnabled || !pluginConfig.PagesUsePluginPages))
             {
                 var hiddenContentPage = pages
                     .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.HiddenContentPage");

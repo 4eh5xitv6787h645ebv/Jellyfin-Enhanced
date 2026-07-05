@@ -130,6 +130,15 @@ export function buildPanelHtml(ctx: PanelContext): string {
                     </div>
                 </div>` : ''}
                 <div id="settings-content" class="tab-content" style="padding-top: 20px; padding-bottom: 20px; width: 50vw;">
+                    ${/* Navigation Pages reorder — hidden by wirePagesReorder when fewer than 2 pages are registered. */ ''}
+                    <details id="je-panel-pages-section" style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground}; display: none;">
+                        <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.t!('pages_nav_section_title')}</summary>
+                        <div style="padding: 0 16px 16px 16px;">
+                            <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-bottom: 12px;">${JE.t!('pages_nav_order_hint')}</div>
+                            <div id="je-panel-pages-order"></div>
+                            <button id="je-panel-pages-reset" style="margin-top:12px; padding:8px 12px; background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:6px; font-size:13px; cursor:pointer; font-family:inherit;">${JE.t!('pages_nav_reset')}</button>
+                        </div>
+                    </details>
                     <details style="margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: ${detailsBackground};">
                         <summary style="padding: 16px; font-weight: 600; color: ${primaryAccentColor}; cursor: pointer; user-select: none; font-family: inherit;">${JE.icon!(JE.IconName!.PLAYBACK)} ${JE.t!('panel_settings_playback')}</summary>
                         <div style="padding: 0 16px 16px 16px;">

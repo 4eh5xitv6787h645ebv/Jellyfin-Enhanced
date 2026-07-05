@@ -17,5 +17,3 @@ import './calendar/render-events';
 import './calendar/render-views';
 import './calendar/actions';
 import './calendar/init';
-import './requests/custom-tab';
-import './calendar/custom-tab';

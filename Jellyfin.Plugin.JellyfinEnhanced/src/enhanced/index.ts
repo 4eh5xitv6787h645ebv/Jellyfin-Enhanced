@@ -7,7 +7,10 @@
 // convert, because later legacy files still assume everything above them ran.
 import './config';
 import './helpers';
-import './native-tabs';
+// Unified Pages framework — must load before any page feature registers
+// (bookmarks + hidden-content below, and the arr calendar/requests via the
+// JE.pages facade). Replaces the former native-tabs registry.
+import './pages/index';
 import './tag-pipeline';
 import './icons';
 // features modules — order matters: -details-media-info and -release-dates
@@ -42,7 +45,6 @@ import './hidden-content-page/cards';
 import './hidden-content-page/render';
 import './hidden-content-page/nav';
 import './hidden-content-page/init';
-import './hidden-content-page/custom-tab';
 import './subtitles';
 import './themer';
 // ui modules — order matters: -release-notes exports GITHUB_REPO + the release-

@@ -53,5 +53,6 @@
   "ReviewsExpandedByDefault": false,
   "DisplayLanguage": "français",
   "CalendarDisplayMode": "grid",
-  "CalendarDefaultViewMode": "agenda"
+  "CalendarDefaultViewMode": "agenda",
+  "PagesOrder": []
 }
