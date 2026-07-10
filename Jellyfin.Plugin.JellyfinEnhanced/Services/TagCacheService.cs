@@ -6,11 +6,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -23,13 +25,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     {
         private readonly ILibraryManager _libraryManager;
         private readonly IApplicationPaths _applicationPaths;
-        private readonly Logger _logger;
+        private readonly ILogger<TagCacheService> _logger;
         private volatile ConcurrentDictionary<string, TagCacheEntry> _cache = new();
+        private readonly object _cacheMutationLock = new();
+        private readonly object _fullBuildLock = new();
         private readonly object _saveLock = new();
+        // While a full cache is built off to the side, event-driven mutations
+        // continue updating the live cache and are journaled here for replay at
+        // publish. A null value is a removal tombstone.
+        private Dictionary<string, TagCacheEntry?>? _rebuildMutations;
         private long _version;
         private long _lastModified;
+        private long _changeVersion;
+        private long _persistedChangeVersion;
         private Timer? _debounceSaveTimer;
-        private volatile bool _dirty;
+
+        internal Action? SaveSnapshotCapturedForTest { get; set; }
 
         // Bump whenever a TagCacheEntry field the STRIP paths depend on is added,
         // so a cache serialized by an older build is discarded and rebuilt. v2
@@ -52,7 +63,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             BaseItemKind.BoxSet,
         };
 
-        public TagCacheService(ILibraryManager libraryManager, IApplicationPaths applicationPaths, Logger logger)
+        public TagCacheService(ILibraryManager libraryManager, IApplicationPaths applicationPaths, ILogger<TagCacheService> logger)
         {
             _libraryManager = libraryManager;
             _applicationPaths = applicationPaths;
@@ -63,6 +74,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         public long LastModified => Interlocked.Read(ref _lastModified);
         public int Count => _cache.Count;
 
+        internal bool ContainsKeyForTest(string key) => _cache.ContainsKey(key);
+
         private string CacheFilePath =>
             Path.Combine(_applicationPaths.PluginsPath, "configurations", "Jellyfin.Plugin.JellyfinEnhanced", "tag-cache.json");
 
@@ -72,52 +85,156 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         /// </summary>
         public void BuildFullCache(IProgress<double>? progress, CancellationToken cancellationToken)
         {
-            _logger.Info("[TagCache] Starting full cache build...");
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-
-            var allItems = _libraryManager.GetItemList(new InternalItemsQuery
+            lock (_fullBuildLock)
             {
-                IncludeItemTypes = TaggableTypes.ToArray(),
-                IsVirtualItem = false,
-                Recursive = true
-            }).ToList();
+                _logger.LogInformation("[TagCache] Starting full cache build...");
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                BeginRebuildMutationCapture();
+                var published = false;
 
-            _logger.Info($"[TagCache] Found {allItems.Count} taggable items");
-
-            var newCache = new ConcurrentDictionary<string, TagCacheEntry>();
-            var processed = 0;
-
-            foreach (var item in allItems)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var entry = BuildEntryForItem(item);
-                if (entry != null)
+                try
                 {
-                    var key = item.Id.ToString("N").ToLowerInvariant();
-                    newCache[key] = entry;
+                    var allItems = _libraryManager.GetItemList(new InternalItemsQuery
+                    {
+                        IncludeItemTypes = TaggableTypes.ToArray(),
+                        IsVirtualItem = false,
+                        Recursive = true
+                    }).ToList();
+
+                    _logger.LogInformation($"[TagCache] Found {allItems.Count} taggable items");
+
+                    var newCache = new ConcurrentDictionary<string, TagCacheEntry>();
+                    var processed = 0;
+
+                    foreach (var item in allItems)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        var entry = BuildEntryForItem(item);
+                        if (entry != null)
+                        {
+                            var key = item.Id.ToString("N").ToLowerInvariant();
+                            newCache[key] = entry;
+                        }
+
+                        processed++;
+                        if (processed % 500 == 0)
+                        {
+                            progress?.Report((double)processed / allItems.Count * 100);
+                        }
+                    }
+
+                    PublishRebuiltCache(newCache);
+                    published = true;
+                    Interlocked.Increment(ref _version);
+                    Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                    _userAccessCache.Clear();
+                    progress?.Report(100);
+
+                    sw.Stop();
+                    _logger.LogInformation($"[TagCache] Full cache build complete: {_cache.Count} entries in {sw.Elapsed.TotalSeconds:F1}s");
+
+                    SaveToDisk();
                 }
-
-                processed++;
-                if (processed % 500 == 0)
+                finally
                 {
-                    progress?.Report((double)processed / allItems.Count * 100);
+                    if (!published)
+                    {
+                        AbortRebuildMutationCapture();
+                    }
                 }
             }
-
-            // Atomic reference swap — readers see old or new cache, never partial
-            _cache = newCache;
-            Interlocked.Increment(ref _version);
-            Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-            // Invalidate user access cache since items may have changed
-            _userAccessCache.Clear();
-            progress?.Report(100);
-
-            sw.Stop();
-            _logger.Info($"[TagCache] Full cache build complete: {_cache.Count} entries in {sw.Elapsed.TotalSeconds:F1}s");
-
-            SaveToDisk();
         }
+
+        private void BeginRebuildMutationCapture()
+        {
+            lock (_cacheMutationLock)
+            {
+                if (_rebuildMutations != null)
+                {
+                    throw new InvalidOperationException("A tag-cache rebuild is already active.");
+                }
+                _rebuildMutations = new Dictionary<string, TagCacheEntry?>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private void PublishRebuiltCache(ConcurrentDictionary<string, TagCacheEntry> rebuilt)
+        {
+            lock (_cacheMutationLock)
+            {
+                if (_rebuildMutations == null)
+                {
+                    throw new InvalidOperationException("No tag-cache rebuild is active.");
+                }
+
+                foreach (var mutation in _rebuildMutations)
+                {
+                    if (mutation.Value == null)
+                    {
+                        rebuilt.TryRemove(mutation.Key, out _);
+                    }
+                    else
+                    {
+                        rebuilt[mutation.Key] = mutation.Value;
+                    }
+                }
+
+                _cache = rebuilt;
+                _rebuildMutations = null;
+                Interlocked.Increment(ref _changeVersion);
+            }
+        }
+
+        private void AbortRebuildMutationCapture()
+        {
+            lock (_cacheMutationLock)
+            {
+                _rebuildMutations = null;
+            }
+        }
+
+        private void CommitCacheEntry(string key, TagCacheEntry entry)
+        {
+            lock (_cacheMutationLock)
+            {
+                _cache[key] = entry;
+                if (_rebuildMutations != null)
+                {
+                    _rebuildMutations[key] = entry;
+                }
+                Interlocked.Increment(ref _changeVersion);
+            }
+        }
+
+        private bool CommitCacheRemoval(string key)
+        {
+            lock (_cacheMutationLock)
+            {
+                var removed = _cache.TryRemove(key, out _);
+                var journaled = _rebuildMutations != null;
+                if (_rebuildMutations != null)
+                {
+                    _rebuildMutations[key] = null;
+                }
+                if (removed || journaled)
+                {
+                    Interlocked.Increment(ref _changeVersion);
+                }
+                return removed || journaled;
+            }
+        }
+
+        internal void BeginRebuildForTest() => BeginRebuildMutationCapture();
+
+        internal void PublishRebuildForTest(Dictionary<string, TagCacheEntry> entries)
+            => PublishRebuiltCache(new ConcurrentDictionary<string, TagCacheEntry>(entries));
+
+        internal void UpsertEntryForTest(string key, TagCacheEntry entry) => CommitCacheEntry(key, entry);
+
+        internal void RemoveEntryForTest(string key) => CommitCacheRemoval(key);
+
+        internal bool HasUnsavedChangesForTest
+            => Interlocked.Read(ref _changeVersion) != Interlocked.Read(ref _persistedChangeVersion);
 
         /// <summary>
         /// Update (or insert) a single item in the cache.
@@ -132,7 +249,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             if (entry != null)
             {
                 var key = item.Id.ToString("N").ToLowerInvariant();
-                _cache[key] = entry;
+                CommitCacheEntry(key, entry);
                 Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                 ScheduleDebouncedSave();
             }
@@ -144,7 +261,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         public void RemoveItem(Guid itemId)
         {
             var key = itemId.ToString("N").ToLowerInvariant();
-            if (_cache.TryRemove(key, out _))
+            if (CommitCacheRemoval(key))
             {
                 Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                 ScheduleDebouncedSave();
@@ -192,6 +309,216 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             return result;
         }
 
+        // ── Spoiler Guard per-user tag-strip (F3) ────────────────────────────
+        //
+        // The JE tag pipeline reads the server cache BEFORE it fetches per-batch
+        // tag-data, so a guarded (unwatched, spoiler-listed) card would still
+        // render rating/genre overlays from the cached entry unless we strip the
+        // cache response too. TagCacheService stores ONE shared TagCacheEntry per
+        // item across ALL users, so the strip NEVER mutates a cached entry — it
+        // replaces the affected key with a stripped Clone() for this response only.
+        //
+        // The gating logic (scope + watched) is pulled out into pure static helpers
+        // so the controller can inject the runtime facts as delegates
+        // (IUserDataManager / ILibraryManager) and the unit tests can drive it with
+        // in-memory fakes — no live library required.
+
+        internal enum TagStripDecision
+        {
+            /// <summary>Not in spoiler scope, or already watched → serve the shared entry unchanged.</summary>
+            Keep,
+            /// <summary>Exempt season (S≤1 or any episode watched) → strip only the series-fallback rating.</summary>
+            SeasonRatingOnly,
+            /// <summary>Guarded + unwatched → full strip per the enabled toggles.</summary>
+            Strip,
+        }
+
+        /// <summary>
+        /// Resolve the strip decision for a single cache entry. Pure: the two runtime
+        /// facts the reference reads from the live library (played-state, season
+        /// index / any-watched) are injected as delegates, so this mirrors the
+        /// GetCacheForUser gating without a live ILibraryManager/IUserDataManager.
+        /// </summary>
+        /// <param name="key">Cache key (item id, N format).</param>
+        /// <param name="entry">The shared cache entry (never mutated here).</param>
+        /// <param name="spState">The requesting user's spoiler state.</param>
+        /// <param name="isMovieInScope">Movie scope test (direct opt-in or via an opted-in collection).</param>
+        /// <param name="isPlayed">Played test for Episode/Movie entries (false when the item can't be resolved → strip).</param>
+        /// <param name="seasonIndexNumber">Season IndexNumber, or null when the id isn't a resolvable Season → strip.</param>
+        /// <param name="seasonAnyWatched">Any-episode-watched probe, only invoked for guarded seasons with IndexNumber &gt; 1.</param>
+        /// <param name="onKeyNotGuid">Callback when a cache key doesn't parse as a Guid (played check skipped, entry still stripped).</param>
+        internal static TagStripDecision ResolveTagStripDecision(
+            string key,
+            TagCacheEntry entry,
+            UserSpoilerBlur spState,
+            Func<Guid, bool> isMovieInScope,
+            Func<Guid, bool> isPlayed,
+            Func<Guid, int?> seasonIndexNumber,
+            Func<Guid, bool> seasonAnyWatched,
+            Action<string> onKeyNotGuid)
+        {
+            var isEpisode = string.Equals(entry.Type, "Episode", StringComparison.Ordinal);
+            var isSeason = string.Equals(entry.Type, "Season", StringComparison.Ordinal);
+            var isMovie = string.Equals(entry.Type, "Movie", StringComparison.Ordinal);
+            var isSeries = string.Equals(entry.Type, "Series", StringComparison.Ordinal);
+            if (!isEpisode && !isSeason && !isMovie && !isSeries) return TagStripDecision.Keep;
+
+            // ── Scope gate ──
+            if (isMovie)
+            {
+                // In scope if directly in Movies dict OR a child of an opted-in collection.
+                if (!Guid.TryParse(key, out var mGuid)) return TagStripDecision.Keep;
+                if (!isMovieInScope(mGuid)) return TagStripDecision.Keep;
+            }
+            else if (isSeries)
+            {
+                // Series-level entry: strip only when Spoiler Guard is on for THIS
+                // series (key == series ID). Covers home-rail cards bound to seriesId
+                // when "Use episode images in Next Up/Continue Watching" is OFF.
+                if (!spState.Series.ContainsKey(key)) return TagStripDecision.Keep;
+            }
+            else
+            {
+                // Episode/Season resolved via the entry's captured parent SeriesId.
+                if (string.IsNullOrEmpty(entry.SeriesId)) return TagStripDecision.Keep;
+                if (!spState.Series.ContainsKey(entry.SeriesId)) return TagStripDecision.Keep;
+            }
+
+            // ── Watched / season-exempt gate ──
+            // Played state is checked in-memory (no per-entry library scan). Episodes:
+            // Played skips the strip. Seasons: S≤1 OR any-episode-watched are exempt
+            // (poster + non-rating tags kept, only the series-fallback rating stripped).
+            if (Guid.TryParse(key, out var entryGuid))
+            {
+                if (isEpisode || isMovie)
+                {
+                    if (isPlayed(entryGuid)) return TagStripDecision.Keep;
+                }
+                else if (isSeason)
+                {
+                    var sNum = seasonIndexNumber(entryGuid);
+                    if (sNum.HasValue)
+                    {
+                        // S0/S1 posters always pass (their existence isn't a spoiler),
+                        // as do seasons with any watched episode — "exempt".
+                        var exempt = sNum.Value <= 1 || seasonAnyWatched(entryGuid);
+                        if (exempt) return TagStripDecision.SeasonRatingOnly;
+                    }
+                    // sNum == null (id isn't a resolvable Season) falls through to Strip.
+                }
+            }
+            else
+            {
+                // A future TagCacheService key-format change is observable rather than
+                // silently stripping every rail; the played check is skipped, but the
+                // scope-matched entry is still stripped (fail-closed).
+                onKeyNotGuid(key);
+            }
+
+            return TagStripDecision.Strip;
+        }
+
+        /// <summary>
+        /// Produce the entry to serve for a resolved decision. NEVER mutates
+        /// <paramref name="entry"/>: returns a stripped <see cref="TagCacheEntry.Clone"/>
+        /// when something changes, else the original shared instance.
+        /// </summary>
+        internal static TagCacheEntry ApplyTagStrip(
+            TagCacheEntry entry,
+            TagStripDecision decision,
+            bool stripGenres,
+            bool stripRatings,
+            bool sanitizeTitleStreams)
+        {
+            if (decision == TagStripDecision.Keep) return entry;
+
+            if (decision == TagStripDecision.SeasonRatingOnly)
+            {
+                // Exempt seasons keep their poster + non-rating tags, but a season
+                // carries only the series-FALLBACK rating (hidden on the guarded
+                // series everywhere else). Strip just the rating so it can't surface
+                // via the server tag cache. Nothing to do when ratings aren't being
+                // stripped or the entry has no rating — serve the shared instance.
+                if (stripRatings && (entry.CommunityRating != null || entry.CriticRating != null))
+                {
+                    var seasonStripped = entry.Clone();
+                    seasonStripped.CommunityRating = null;
+                    seasonStripped.CriticRating = null;
+                    return seasonStripped;
+                }
+                return entry;
+            }
+
+            // Full strip. Clone before mutating — see TagCacheEntry.Clone().
+            var stripped = entry.Clone();
+            if (stripGenres)
+            {
+                stripped.Genres = Array.Empty<string>();
+                stripped.AudioLanguages = null;
+                stripped.StreamData = null;
+            }
+            if (stripRatings)
+            {
+                stripped.CommunityRating = null;
+                stripped.CriticRating = null;
+            }
+            // When StreamData wasn't already wiped by the tag-strip but title
+            // replacement / overview strip is on, sanitize its title-bearing fields.
+            // Clone StreamData (same cross-user-mutation hazard). qualitytags.js
+            // recomputes overlay text from Codec/Height/VideoRangeType, so dropping
+            // DisplayTitle/ItemName/paths is acceptable.
+            if (sanitizeTitleStreams && stripped.StreamData != null && !stripGenres)
+            {
+                var sd = stripped.StreamData;
+                stripped.StreamData = new TagStreamData
+                {
+                    ItemName = null,
+                    ItemPath = null,
+                    Streams = sd.Streams?.Select(st => new TagMediaStream
+                    {
+                        Type = st.Type,
+                        Language = st.Language,
+                        Codec = st.Codec,
+                        CodecTag = st.CodecTag,
+                        Profile = st.Profile,
+                        Height = st.Height,
+                        Channels = st.Channels,
+                        ChannelLayout = st.ChannelLayout,
+                        VideoRangeType = st.VideoRangeType,
+                        DisplayTitle = null,
+                    }).ToList(),
+                    Sources = sd.Sources?.Select(_ => new TagMediaSource
+                    {
+                        Path = null,
+                        Name = null,
+                    }).ToList(),
+                };
+            }
+            return stripped;
+        }
+
+        /// <summary>
+        /// Walk a per-user cache response and replace each guarded entry with its
+        /// stripped clone. Mutates the supplied dictionary (a per-request result), not
+        /// the shared cache. <paramref name="resolve"/> yields the per-entry decision.
+        /// </summary>
+        internal static void StripCacheForUser(
+            IDictionary<string, TagCacheEntry> items,
+            bool stripGenres,
+            bool stripRatings,
+            bool sanitizeTitleStreams,
+            Func<string, TagCacheEntry, TagStripDecision> resolve)
+        {
+            foreach (var key in items.Keys.ToList())
+            {
+                var entry = items[key];
+                if (entry == null) continue;
+                var decision = resolve(key, entry);
+                if (decision == TagStripDecision.Keep) continue;
+                items[key] = ApplyTagStrip(entry, decision, stripGenres, stripRatings, sanitizeTitleStreams);
+            }
+        }
+
         /// <summary>
         /// Load the cache from disk on startup.
         /// </summary>
@@ -200,7 +527,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var path = CacheFilePath;
             if (!File.Exists(path))
             {
-                _logger.Info("[TagCache] No cache file found, starting empty");
+                _logger.LogInformation("[TagCache] No cache file found, starting empty");
                 return;
             }
 
@@ -215,19 +542,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     // process. Starting empty is safe — the Build task rebuilds it.
                     if (data.SchemaVersion != CurrentCacheSchemaVersion)
                     {
-                        _logger.Info($"[TagCache] On-disk cache schema v{data.SchemaVersion} != current v{CurrentCacheSchemaVersion}; discarding {data.Items.Count} entries and rebuilding on next scan.");
+                        _logger.LogInformation($"[TagCache] On-disk cache schema v{data.SchemaVersion} != current v{CurrentCacheSchemaVersion}; discarding {data.Items.Count} entries and rebuilding on next scan.");
                         return;
                     }
                     var loaded = new ConcurrentDictionary<string, TagCacheEntry>(data.Items);
-                    _cache = loaded;
-                    Interlocked.Exchange(ref _version, data.Version);
-                    Interlocked.Exchange(ref _lastModified, data.LastModified);
-                    _logger.Info($"[TagCache] Loaded {_cache.Count} entries from disk (v{data.Version}, schema v{data.SchemaVersion})");
+                    lock (_cacheMutationLock)
+                    {
+                        _cache = loaded;
+                        Interlocked.Exchange(ref _version, data.Version);
+                        Interlocked.Exchange(ref _lastModified, data.LastModified);
+                        Interlocked.Exchange(ref _changeVersion, 0);
+                        Interlocked.Exchange(ref _persistedChangeVersion, 0);
+                    }
+                    _logger.LogInformation($"[TagCache] Loaded {_cache.Count} entries from disk (v{data.Version}, schema v{data.SchemaVersion})");
                 }
             }
             catch (Exception ex)
             {
-                _logger.Warning($"[TagCache] Failed to load cache from disk: {ex.Message}");
+                _logger.LogWarning($"[TagCache] Failed to load cache from disk: {ex.Message}");
             }
         }
 
@@ -243,31 +575,46 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     var dir = Path.GetDirectoryName(CacheFilePath);
                     if (dir != null) Directory.CreateDirectory(dir);
 
+                    Dictionary<string, TagCacheEntry> itemSnapshot;
+                    long changeVersionToPersist;
+                    long cacheVersion;
+                    long lastModified;
+                    lock (_cacheMutationLock)
+                    {
+                        itemSnapshot = new Dictionary<string, TagCacheEntry>(_cache);
+                        changeVersionToPersist = Interlocked.Read(ref _changeVersion);
+                        cacheVersion = Interlocked.Read(ref _version);
+                        lastModified = Interlocked.Read(ref _lastModified);
+                    }
+                    SaveSnapshotCapturedForTest?.Invoke();
+
                     var data = new TagCacheDiskFormat
                     {
                         SchemaVersion = CurrentCacheSchemaVersion,
-                        Version = Interlocked.Read(ref _version),
-                        LastModified = Interlocked.Read(ref _lastModified),
-                        Items = new Dictionary<string, TagCacheEntry>(_cache)
+                        Version = cacheVersion,
+                        LastModified = lastModified,
+                        Items = itemSnapshot
                     };
 
                     var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false });
                     var tempPath = CacheFilePath + ".tmp";
                     File.WriteAllText(tempPath, json);
                     File.Move(tempPath, CacheFilePath, overwrite: true);
-                    _dirty = false;
-                    _logger.Info($"[TagCache] Saved {_cache.Count} entries to disk");
+                    // Only acknowledge the generation captured in itemSnapshot.
+                    // A concurrent update has a larger _changeVersion and remains
+                    // dirty for the timer's next pass.
+                    Interlocked.Exchange(ref _persistedChangeVersion, changeVersionToPersist);
+                    _logger.LogInformation($"[TagCache] Saved {itemSnapshot.Count} entries to disk");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"[TagCache] Failed to save cache to disk: {ex.Message}");
+                    _logger.LogError($"[TagCache] Failed to save cache to disk: {ex.Message}");
                 }
             }
         }
 
         private void ScheduleDebouncedSave()
         {
-            _dirty = true;
             // Reuse existing timer if possible, otherwise create a new one.
             // Change() resets the countdown without creating a new object.
             var existing = _debounceSaveTimer;
@@ -282,7 +629,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             var timer = new Timer(_ =>
             {
-                if (_dirty) SaveToDisk();
+                if (Interlocked.Read(ref _changeVersion) != Interlocked.Read(ref _persistedChangeVersion))
+                {
+                    SaveToDisk();
+                }
             }, null, TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
             var old = Interlocked.Exchange(ref _debounceSaveTimer, timer);
             if (old != null && !ReferenceEquals(old, timer))
@@ -295,7 +645,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             var timer = Interlocked.Exchange(ref _debounceSaveTimer, null);
             timer?.Dispose();
-            if (_dirty) SaveToDisk();
+            if (Interlocked.Read(ref _changeVersion) != Interlocked.Read(ref _persistedChangeVersion))
+            {
+                SaveToDisk();
+            }
         }
 
         /// <summary>
@@ -414,7 +767,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.Warning($"[TagCache] Failed to build entry for {item.Id}: {ex.Message}");
+                _logger.LogWarning($"[TagCache] Failed to build entry for {item.Id}: {ex.Message}");
                 return null;
             }
         }
@@ -469,7 +822,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.Warning($"[TagCache] Failed to extract media data for {item.Id}: {ex.Message}");
+                _logger.LogWarning($"[TagCache] Failed to extract media data for {item.Id}: {ex.Message}");
             }
 
             return (streams, sources, languages.ToArray());
@@ -491,7 +844,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.Warning($"[TagCache] Failed to get first episode for {container.Id}: {ex.Message}");
+                _logger.LogWarning($"[TagCache] Failed to get first episode for {container.Id}: {ex.Message}");
                 return null;
             }
         }
@@ -513,7 +866,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.Warning($"[TagCache] Failed to get parent series for {item.Id}: {ex.Message}");
+                _logger.LogWarning($"[TagCache] Failed to get parent series for {item.Id}: {ex.Message}");
             }
             return null;
         }

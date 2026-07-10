@@ -8,7 +8,9 @@ using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
-using Newtonsoft.Json;
+using System.Text.Json;
+using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -29,11 +31,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     public class MaintenanceModeService
     {
         private readonly IUserManager _userManager;
-        private readonly Logger _logger;
+        private readonly ILogger<MaintenanceModeService> _logger;
         private readonly string _stateFilePath;
         private readonly object _lock = new();
 
-        public MaintenanceModeService(IUserManager userManager, IApplicationPaths appPaths, Logger logger)
+        public MaintenanceModeService(IUserManager userManager, IApplicationPaths appPaths, ILogger<MaintenanceModeService> logger)
         {
             _userManager = userManager;
             _logger = logger;
@@ -64,7 +66,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 currentState.Message = message ?? string.Empty;
                 currentState.EndsAt = durationMinutes > 0 ? DateTime.UtcNow.AddMinutes(durationMinutes) : null;
                 SaveState(currentState);
-                _logger.Info("[Maintenance] Message/duration updated (already active).");
+                _logger.LogInformation("[Maintenance] Message/duration updated (already active).");
                 return;
             }
 
@@ -119,14 +121,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     if (changed)
                     {
                         await _userManager.UpdatePolicyAsync(user.Id, dto.Policy).ConfigureAwait(false);
-                        _logger.Info($"[Maintenance] Updated user '{user.Username}'" +
+                        _logger.LogInformation($"[Maintenance] Updated user '{user.Username}'" +
                             $"{(doAccounts && accountDisabled.Contains(user.Id.ToString()) ? " (account disabled)" : "")}" +
                             $"{(doRemote  && remoteDisabled.Contains(user.Id.ToString())  ? " (remote disabled)"  : "")}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"[Maintenance] Failed to update user '{user.Username}': {ex.Message}");
+                    _logger.LogError($"[Maintenance] Failed to update user '{user.Username}': {ex.Message}");
                 }
             }
 
@@ -142,7 +144,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             };
 
             SaveState(newState);
-            _logger.Info($"[Maintenance] Mode enabled. Action={action}, " +
+            _logger.LogInformation($"[Maintenance] Mode enabled. Action={action}, " +
                 $"AccountsDisabled={accountDisabled.Count}, RemoteDisabled={remoteDisabled.Count}");
         }
 
@@ -154,7 +156,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 state = LoadState();
                 if (!state.IsActive)
                 {
-                    _logger.Info("[Maintenance] Already inactive — skipping disable.");
+                    _logger.LogInformation("[Maintenance] Already inactive — skipping disable.");
                     return;
                 }
                 // Mark inactive immediately so concurrent calls short-circuit
@@ -185,15 +187,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     if (remoteSet.Contains(idStr))  dto.Policy.EnableRemoteAccess = true;
 
                     await _userManager.UpdatePolicyAsync(userId, dto.Policy).ConfigureAwait(false);
-                    _logger.Info($"[Maintenance] Restored user '{user.Username}'");
+                    _logger.LogInformation($"[Maintenance] Restored user '{user.Username}'");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"[Maintenance] Failed to restore user {idStr}: {ex.Message}");
+                    _logger.LogError($"[Maintenance] Failed to restore user {idStr}: {ex.Message}");
                 }
             }
 
-            _logger.Info("[Maintenance] Mode disabled.");
+            _logger.LogInformation("[Maintenance] Mode disabled.");
         }
 
         private MaintenanceState LoadState()
@@ -202,11 +204,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 if (!File.Exists(_stateFilePath)) return new MaintenanceState();
                 var json = File.ReadAllText(_stateFilePath);
-                return JsonConvert.DeserializeObject<MaintenanceState>(json) ?? new MaintenanceState();
+                // Newtonsoft equivalent: JsonConvert.DeserializeObject<MaintenanceState>(json).
+                return JsonSerializer.Deserialize<MaintenanceState>(json, PersistedJson.ReadOptions) ?? new MaintenanceState();
             }
             catch (Exception ex)
             {
-                _logger.Error($"[Maintenance] Failed to load state: {ex.Message}");
+                _logger.LogError($"[Maintenance] Failed to load state: {ex.Message}");
                 return new MaintenanceState();
             }
         }
@@ -215,11 +218,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             try
             {
-                File.WriteAllText(_stateFilePath, JsonConvert.SerializeObject(state, Formatting.Indented));
+                // Newtonsoft equivalent: JsonConvert.SerializeObject(state, Formatting.Indented).
+                File.WriteAllText(_stateFilePath, JsonSerializer.Serialize(state, PersistedJson.WriteOptions));
             }
             catch (Exception ex)
             {
-                _logger.Error($"[Maintenance] Failed to save state: {ex.Message}");
+                _logger.LogError($"[Maintenance] Failed to save state: {ex.Message}");
             }
         }
     }

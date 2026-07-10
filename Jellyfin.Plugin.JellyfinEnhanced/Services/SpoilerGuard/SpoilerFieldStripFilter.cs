@@ -110,17 +110,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly ILibraryManager _libraryManager;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
+        private readonly IPluginConfigProvider _configProvider;
 
         public SpoilerFieldStripFilter(
             SpoilerUserResolver resolver,
             ILibraryManager libraryManager,
             IUserManager userManager,
-            IUserDataManager userDataManager)
+            IUserDataManager userDataManager,
+            IPluginConfigProvider configProvider)
         {
             _resolver = resolver;
             _libraryManager = libraryManager;
             _userManager = userManager;
             _userDataManager = userDataManager;
+            _configProvider = configProvider;
         }
 
         public Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -130,7 +133,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // unchanged so non-matching routes pay zero overhead.
             if (!IsTargetRoute(context)) return next();
 
-            var cfg = JellyfinEnhanced.Instance?.Configuration;
+            var cfg = _configProvider.ConfigurationOrNull;
             if (cfg?.SpoilerBlurEnabled != true) return next();
             // Do NOT short-circuit on AnyStripToggleOn. The pipeline's
             // cache-bust pass (MutateImageTagsForCacheBust) must run on

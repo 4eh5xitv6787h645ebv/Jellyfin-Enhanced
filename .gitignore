@@ -60,6 +60,8 @@ ProgramData-UI*/
 
 [Dd]ebug/
 [Rr]elease/
+# ...but the release tooling is source, not build output
+!scripts/release/
 build/
 [Bb]in/
 [Oo]bj/
@@ -159,8 +161,6 @@ dllssigned/
 
 # Node modules
 node_modules/
-package-lock.json
-package.json
 TRANSLATION_GUIDE.md
 
 # Windows Azure Build Output
@@ -322,3 +322,6 @@ auth.json
 /.vscode
 /site
 /.kiro
+
+# Generated client bundle (esbuild output; built by the csproj BuildClientBundle target)
+Jellyfin.Plugin.JellyfinEnhanced/dist/

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -34,7 +35,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     /// </summary>
     public class BrandingAssetStartupFilter : IStartupFilter
     {
-        private readonly Logger _logger;
+        private readonly ILogger<BrandingAssetStartupFilter> _logger;
+        private readonly IPluginConfigProvider _configProvider;
         private int _loggedOnce;
 
         private static readonly RegexOptions Opts = RegexOptions.IgnoreCase | RegexOptions.Compiled;
@@ -62,9 +64,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             (new Regex(@"^touchicon\d*(\.[0-9a-f]+)?\.png$", Opts, MatchTimeout), "apple-touch-icon.png"),
         };
 
-        public BrandingAssetStartupFilter(Logger logger)
+        public BrandingAssetStartupFilter(ILogger<BrandingAssetStartupFilter> logger, IPluginConfigProvider configProvider)
         {
             _logger = logger;
+            _configProvider = configProvider;
         }
 
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
@@ -85,7 +88,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return;
             }
 
-            var config = JellyfinEnhanced.Instance?.Configuration;
+            var config = _configProvider.ConfigurationOrNull;
             if (config == null || config.DisableBrandingMiddleware)
             {
                 await nextMw().ConfigureAwait(false);
@@ -152,7 +155,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                             if (Interlocked.Exchange(ref _loggedOnce, 1) == 0)
                             {
-                                _logger.Info("Jellyfin Enhanced: serving custom branding via request-time middleware (IStartupFilter).");
+                                _logger.LogInformation("Jellyfin Enhanced: serving custom branding via request-time middleware (IStartupFilter).");
                             }
 
                             // HEAD: headers only, no body.
@@ -169,7 +172,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             catch (Exception ex)
             {
                 // Never break asset serving — fall through to the stock asset below.
-                _logger.Warning($"Branding middleware error (serving stock asset): {ex.Message}");
+                _logger.LogWarning($"Branding middleware error (serving stock asset): {ex.Message}");
             }
 
             // No custom image (or an error): let jellyfin-web serve the stock asset.

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
@@ -26,17 +27,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
     public sealed class SpoilerAutoEnableOnFirstPlayConsumer : IEventConsumer<PlaybackStartEventArgs>
     {
         private readonly UserConfigurationManager _configManager;
+        private readonly IPluginConfigProvider _configProvider;
         private readonly ILibraryManager _libraryManager;
         private readonly IUserManager _userManager;
-        private readonly Logger _logger;
+        private readonly ILogger<SpoilerAutoEnableOnFirstPlayConsumer> _logger;
 
         public SpoilerAutoEnableOnFirstPlayConsumer(
             UserConfigurationManager configManager,
+            IPluginConfigProvider configProvider,
             ILibraryManager libraryManager,
             IUserManager userManager,
-            Logger logger)
+            ILogger<SpoilerAutoEnableOnFirstPlayConsumer> logger)
         {
             _configManager = configManager;
+            _configProvider = configProvider;
             _libraryManager = libraryManager;
             _userManager = userManager;
             _logger = logger;
@@ -46,7 +50,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
         {
             try
             {
-                var cfg = JellyfinEnhanced.Instance?.Configuration;
+                var cfg = _configProvider.ConfigurationOrNull;
                 if (cfg?.SpoilerBlurEnabled != true) return Task.CompletedTask;
                 if (cfg?.SpoilerAutoEnableOnFirstPlay != true) return Task.CompletedTask;
 
@@ -116,18 +120,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
                 }
                 catch (InvalidDataException ex)
                 {
-                    _logger.Warning($"SpoilerAutoEnable: skipping {userId}/{seriesIdN} due to corrupt spoilerblur.json: {ex.Message}");
+                    _logger.LogWarning($"SpoilerAutoEnable: skipping {userId}/{seriesIdN} due to corrupt spoilerblur.json: {ex.Message}");
                     return Task.CompletedTask;
                 }
 
                 if (changed > 0)
                 {
-                    _logger.Info($"SpoilerAutoEnable: enabled Spoiler Guard for series '{seriesName}' ({seriesIdN}) on first-play of S1E1 by user {userId}");
+                    _logger.LogInformation($"SpoilerAutoEnable: enabled Spoiler Guard for series '{seriesName}' ({seriesIdN}) on first-play of S1E1 by user {userId}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.Warning($"SpoilerAutoEnable: consumer failed: {ex.Message}");
+                _logger.LogWarning($"SpoilerAutoEnable: consumer failed: {ex.Message}");
             }
 
             return Task.CompletedTask;

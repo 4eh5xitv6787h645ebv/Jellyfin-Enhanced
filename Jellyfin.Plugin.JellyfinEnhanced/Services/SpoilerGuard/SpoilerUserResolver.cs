@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -55,13 +56,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly UserConfigurationManager _userConfigManager;
         private readonly ISessionManager _sessionManager;
         private readonly ILibraryManager _libraryManager;
-        private readonly Logger _logger;
+        private readonly ILogger<SpoilerUserResolver> _logger;
 
         public SpoilerUserResolver(
             UserConfigurationManager userConfigManager,
             ISessionManager sessionManager,
             ILibraryManager libraryManager,
-            Logger logger)
+            ILogger<SpoilerUserResolver> logger)
         {
             _userConfigManager = userConfigManager;
             _sessionManager = sessionManager;
@@ -391,7 +392,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var stored = _warnedAt.AddOrUpdate(key, now,
                 (_, last) => (now - last) >= PerKeyWarnInterval ? now : last);
             if (stored != now) return;
-            _logger.Warning(message);
+            _logger.LogWarning(message);
         }
 
         // Track per-user corruption events so the admin can surface a

@@ -35,13 +35,17 @@
     <ItemGroup>
       <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinVersion)" />
       <PackageReference Include="Jellyfin.Model" Version="$(JellyfinVersion)" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
       <!--
         Spoiler Blur uses SkiaSharp for the Gaussian blur. Jellyfin ships SkiaSharp.dll in /usr/lib/jellyfin/bin/ as its own thumbnail engine, so we compile against the package but exclude the runtime asset (Private=false + ExcludeAssets=runtime). The host's already-loaded copy wins. This keeps the plugin DLL deployment a single file with no native deps.
       -->
       <PackageReference Include="SkiaSharp" Version="3.116.1" PrivateAssets="all">
         <ExcludeAssets>runtime</ExcludeAssets>
       </PackageReference>
+    </ItemGroup>
+
+    <!-- Let the unit-test project exercise internal helpers (e.g. JellyseerrUserResolver). -->
+    <ItemGroup>
+      <InternalsVisibleTo Include="JellyfinEnhanced.Tests" />
     </ItemGroup>
 
 
@@ -59,8 +63,39 @@
     <EmbeddedResource Include="Configuration\configPage.html"/>
     <None Remove="Configuration\configPage.css"/>
     <EmbeddedResource Include="Configuration\configPage.css"/>
+    <None Remove="Configuration\config-page.js"/>
+    <EmbeddedResource Include="Configuration\config-page.js"/>
     <None Remove="plugin.js"/>
     <EmbeddedResource Include="js\**" />
   </ItemGroup>
+
+  <!-- Production client bundle: js/** compiled by esbuild into dist/je.bundle.js
+       (scripts/build-bundle.js) on every build, then embedded so ConfigController
+       can serve it at /JellyfinEnhanced/dist/. dist/ is generated output — never
+       committed (gitignored) — so the EmbeddedResource items are added INSIDE the
+       target (after the files exist) rather than via a static glob, which would
+       evaluate before the bundle is built and embed nothing on a clean checkout. -->
+  <Target Name="BuildClientBundle" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <NpmWorkingDir>$(MSBuildThisFileDirectory)..</NpmWorkingDir>
+    </PropertyGroup>
+
+    <!-- Guard: fail with a clear message when npm is missing, instead of an opaque
+         Exec error. Node/npm is required on build machines (CI runners have it). -->
+    <Exec Command="npm --version" WorkingDirectory="$(NpmWorkingDir)" IgnoreExitCode="true" ContinueOnError="true" StandardOutputImportance="low" StandardErrorImportance="low">
+      <Output TaskParameter="ExitCode" PropertyName="NpmProbeExitCode" />
+    </Exec>
+    <Error Condition="'$(NpmProbeExitCode)' != '0'"
+           Text="npm was not found on PATH. Building this plugin requires Node.js + npm to produce the client bundle (dist/je.bundle.js). Install Node.js (https://nodejs.org) and re-run the build." />
+
+    <!-- First build on a clean checkout: install the JS toolchain (esbuild). -->
+    <Exec Command="npm ci --no-audit --no-fund" WorkingDirectory="$(NpmWorkingDir)" Condition="!Exists('$(NpmWorkingDir)/node_modules/esbuild')" />
+
+    <Exec Command="npm run build:bundle" WorkingDirectory="$(NpmWorkingDir)" />
+
+    <ItemGroup>
+      <EmbeddedResource Include="dist\**" />
+    </ItemGroup>
+  </Target>
 
 </Project>

@@ -34,14 +34,52 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // forward-auth proxies (Authelia / Pangolin / Authentik) returning
             // 302 to a login URL are detected as `UpstreamRedirect` instead of
             // silently followed and producing a 200 + login HTML body.
-            // SeerrHttpHelper.UseClientName(name) selects this for outbound
-            // Seerr/TMDB calls.
+            // SeerrHttpHelper.CreateClient(factory) selects this for outbound
+            // Seerr calls.
             serviceCollection.AddHttpClient(Helpers.Jellyseerr.SeerrHttpHelper.NamedClient)
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
                 {
                     AllowAutoRedirect = false
                 });
-            serviceCollection.AddSingleton<Logger>();
+
+            // Named clients for the remaining upstreams (see PluginHttpClients for
+            // the per-upstream rationale). Both use the default handler — redirects
+            // followed — and keep the .NET default 100s timeout; call sites that need
+            // a shorter deadline set it per factory-created instance. API keys are
+            // attached per-request (HttpRequestMessage), never via DefaultRequestHeaders.
+            serviceCollection.AddHttpClient(Helpers.PluginHttpClients.ArrClient);
+            serviceCollection.AddHttpClient(Helpers.PluginHttpClients.TmdbClient);
+            // Dedicated JellyfinEnhanced_*.log sink (a documented product feature)
+            // plus a closed-generic ILogger<T> registration for every plugin type.
+            // Each FileForwardingLogger<T> writes the file AND forwards to the host
+            // (Serilog) logger, exactly like the former custom Logger. Self-wiring
+            // closed generics is deliberate: Jellyfin boots with UseSerilog() and no
+            // LoggerProviderCollection, so a DI-registered ILoggerProvider would
+            // never be invoked; and the closed generics only override ILogger<T>
+            // for this assembly's types, never for Jellyfin core categories.
+            serviceCollection.AddSingleton<Logging.JellyfinEnhancedFileLoggerProvider>();
+            foreach (var consumerType in typeof(PluginServiceRegistrator).Assembly.GetTypes())
+            {
+                if (!consumerType.IsClass || consumerType.IsAbstract || consumerType.IsGenericTypeDefinition || consumerType.IsNested)
+                {
+                    continue;
+                }
+
+                var serviceType = typeof(Microsoft.Extensions.Logging.ILogger<>).MakeGenericType(consumerType);
+                var implementationType = typeof(Logging.FileForwardingLogger<>).MakeGenericType(consumerType);
+                serviceCollection.AddSingleton(serviceType, sp => ActivatorUtilities.CreateInstance(sp, implementationType));
+            }
+
+            // Live view over the plugin configuration (re-read per access, never
+            // snapshotted) so admin saves take effect immediately in consumers.
+            serviceCollection.AddSingleton<Services.IPluginConfigProvider, Services.PluginConfigProvider>();
+            // Provider-id → item lookups via the supported ILibraryManager query
+            // surface (replaces the former raw EF access to Jellyfin's internal DB).
+            serviceCollection.AddSingleton<Data.IItemLookupService, Data.ItemLookupService>();
+            // Process-wide Seerr/TMDB caches (formerly the static SeerrCaches
+            // holder). Must stay a singleton: controllers, the user-import task
+            // and the plugin's config-change hook all share one instance.
+            serviceCollection.AddSingleton<Services.Jellyseerr.ISeerrCache, Services.Jellyseerr.SeerrCache>();
             serviceCollection.AddSingleton<UserConfigurationManager>();
             serviceCollection.AddSingleton<AutoSeasonRequestService>();
             serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();
@@ -72,6 +110,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Shared user-resolution + state-load helper. One instance, both filters use it
             // so the IPv6 / shared-IP / fail-closed logic stays in ONE place.
             serviceCollection.AddSingleton<SpoilerUserResolver>();
+            serviceCollection.AddSingleton<SpoilerPendingService>();
             serviceCollection.AddSingleton<SpoilerBlurImageFilter>();
             // Spoiler Field Strip: removes spoiler-y metadata (Overview, ratings,
             // title, cast, etc.) from BaseItemDto responses for guarded unwatched episodes.
