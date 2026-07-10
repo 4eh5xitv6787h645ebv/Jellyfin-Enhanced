@@ -61,6 +61,21 @@ jobs:
         with:
           fetch-depth: 0 # full history: changelog + previous-tag detection
 
+      - name: Enforce writable fork destination
+        run: |
+          if [ "$GITHUB_REPOSITORY" != "4eh5xitv6787h645ebv/Jellyfin-Enhanced" ]; then
+            echo "::error::Release writes are allowed only in 4eh5xitv6787h645ebv/Jellyfin-Enhanced"
+            exit 1
+          fi
+          push_url="$(git remote get-url --push origin)"
+          case "$push_url" in
+            https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced|https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced.git|git@github.com:4eh5xitv6787h645ebv/Jellyfin-Enhanced|git@github.com:4eh5xitv6787h645ebv/Jellyfin-Enhanced.git|ssh://git@github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced|ssh://git@github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced.git) ;;
+            *)
+              echo "::error::Refusing release writes with unexpected push remote: $push_url"
+              exit 1
+              ;;
+          esac
+
       - name: Setup .NET
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
@@ -98,6 +113,9 @@ jobs:
 
       - name: Syntax check (node --check, every served file)
         run: npm run syntax
+
+      - name: Architecture check (plain JavaScript + modular boundaries)
+        run: npm run architecture
 
       - name: ESLint
         run: npm run lint
@@ -218,6 +236,14 @@ jobs:
           git checkout -B "$branch"
           git add manifest.json
           git commit -m "chore: update manifest for $VERSION"
+          push_url="$(git remote get-url --push origin)"
+          case "$push_url" in
+            https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced|https://github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced.git|git@github.com:4eh5xitv6787h645ebv/Jellyfin-Enhanced|git@github.com:4eh5xitv6787h645ebv/Jellyfin-Enhanced.git|ssh://git@github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced|ssh://git@github.com/4eh5xitv6787h645ebv/Jellyfin-Enhanced.git) ;;
+            *)
+              echo "::error::Refusing to push release branch to unexpected remote: $push_url"
+              exit 1
+              ;;
+          esac
           git push --force origin "$branch"
           default_branch="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"
           release_url="https://github.com/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME"

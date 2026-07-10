@@ -8,8 +8,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Services;
 
 /// <summary>
 /// Covers the pure helpers on <see cref="JellyseerrUserResolver"/> (hoisted from the
-/// two auto-request services). NormalizeUserId decides cache-key identity for the
-/// process-wide Jellyseerr user-id cache, and GetConfiguredUrls decides which base
+/// two auto-request services). NormalizeUserId decides cache-key identity for each
+/// service's Jellyseerr user-id cache, and GetConfiguredUrls decides which base
 /// URLs the plugin fans requests out to — both must be stable across refactors.
 /// </summary>
 public class JellyseerrUserResolverTests
@@ -93,6 +93,36 @@ public class JellyseerrUserResolverTests
         // URL/API key — the config-gate still short-circuits before HTTP.
         provider.Current = new PluginConfiguration { JellyseerrUrls = "", JellyseerrApiKey = "" };
         Assert.Null(await resolver.GetJellyseerrUserId("abcdef1234567890abcdef1234567890"));
+    }
+
+    [Fact]
+    public async Task ResolverInstances_DoNotShareUserIdMappings()
+    {
+        const string jellyfinUserId = "abcdef1234567890abcdef1234567890";
+        var provider = new FakePluginConfigProvider(new PluginConfiguration
+        {
+            JellyseerrUrls = "https://seerr.example.test",
+            JellyseerrApiKey = "test-key",
+        });
+
+        var firstHandler = new RecordingHttpMessageHandler();
+        firstHandler.AddResponse(
+            "/api/v1/user",
+            "{\"results\":[{\"jellyfinUserId\":\"abcdef12-3456-7890-abcd-ef1234567890\",\"id\":11}]}");
+        var secondHandler = new RecordingHttpMessageHandler();
+        secondHandler.AddResponse(
+            "/api/v1/user",
+            "{\"results\":[{\"jellyfinUserId\":\"abcdef12-3456-7890-abcd-ef1234567890\",\"id\":22}]}");
+
+        var first = new JellyseerrUserResolver(
+            new RecordingHttpClientFactory(firstHandler), NullLogger.Instance, provider, "[Movie]");
+        var second = new JellyseerrUserResolver(
+            new RecordingHttpClientFactory(secondHandler), NullLogger.Instance, provider, "[Season]");
+
+        Assert.Equal("11", await first.GetJellyseerrUserId(jellyfinUserId));
+        Assert.Equal("22", await second.GetJellyseerrUserId(jellyfinUserId));
+        Assert.Single(firstHandler.Requests);
+        Assert.Single(secondHandler.Requests);
     }
 
     private sealed class ThrowingHttpClientFactory : IHttpClientFactory

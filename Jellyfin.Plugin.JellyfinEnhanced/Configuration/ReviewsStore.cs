@@ -90,7 +90,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 // Newtonsoft equivalent: JsonConvert.DeserializeObject<AllReviewsStore>(json)
                 // with default settings (no null-skipping — this store has no
                 // non-nullable members a null could break).
-                var parsed = JsonSerializer.Deserialize<AllReviewsStore>(json, PersistedJson.ReadOptions);
+                var parsed = PersistedJson.Deserialize<AllReviewsStore>(json);
                 if (parsed == null)
                 {
                     if (throwOnCorruption)

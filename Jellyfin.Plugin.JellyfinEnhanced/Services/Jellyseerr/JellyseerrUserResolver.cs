@@ -11,18 +11,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
     /// <summary>
     /// Resolves Jellyfin user ids to Jellyseerr user ids, with a TTL cache.
     /// Hoisted from byte-identical private helpers in AutoMovieRequestService and
-    /// AutoSeasonRequestService (only the log prefixes differed). The cache is static
-    /// so both singleton services share one process-wide cache, matching the previous
-    /// effective semantics (two identical per-singleton dicts).
+    /// AutoSeasonRequestService (only the log prefixes differed). Each resolver keeps
+    /// its own cache, matching the two separate per-service caches on main. Sharing a
+    /// process-wide cache would let one service reuse the other service's stale mapping
+    /// after an admin changes Seerr servers.
     ///
     /// Note: the controller base's own Seerr user resolution (SeerrCache) is a
     /// separate copy consolidated in a later phase.
     /// </summary>
     internal class JellyseerrUserResolver
     {
-        // Process-wide cache shared by all resolver instances.
-        private static readonly Dictionary<string, (string JellyseerrUserId, DateTime CachedAt)> _jellyseerrUserIdCache = new();
-        private static readonly object _userIdCacheLock = new();
+        private readonly Dictionary<string, (string JellyseerrUserId, DateTime CachedAt)> _jellyseerrUserIdCache = new();
+        private readonly object _userIdCacheLock = new();
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger _logger;

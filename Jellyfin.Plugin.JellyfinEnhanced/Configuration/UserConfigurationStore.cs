@@ -102,7 +102,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                     // overwrites the user's real data with defaults.
                     // (Newtonsoft equivalent: NullValueHandling.Ignore on deserialization,
                     // reproduced by the StripNullMembers pre-pass — see PersistedJson.)
-                    var node = JsonNode.Parse(json, documentOptions: PersistedJson.ParseOptions);
+                    var node = PersistedJson.ParseNode(json);
                     var settings = PersistedJson.StripNullMembers(node) is JsonNode stripped
                         ? stripped.Deserialize<T>(PersistedJson.ReadOptions)
                         : default;
@@ -159,7 +159,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 // Match the lenient reader's schema-drift handling: a stored null
                 // for a property that later became non-nullable is ignored so a
                 // strict RMW does not quarantine otherwise-valid user data.
-                var node = JsonNode.Parse(json, documentOptions: PersistedJson.ParseOptions);
+                var node = PersistedJson.ParseNode(json);
                 var parsed = PersistedJson.StripNullMembers(node) is JsonNode stripped
                     ? stripped.Deserialize<T>(PersistedJson.ReadOptions)
                     : default;

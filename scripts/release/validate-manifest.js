@@ -12,7 +12,7 @@
  * Hard failures (exit 1):
  *   - file unreadable / not valid JSON
  *   - wrong top-level shape (must be an array of plugin objects)
- *   - plugin missing name/guid/versions, or guid not a UUID
+ *   - manifest is not the single expected Jellyfin Enhanced plugin name/GUID
  *   - version entry missing a required field, or a field has the wrong type
  *   - version/targetAbi not 4-part dotted numbers (e.g. 11.12.0.0)
  *   - checksum not 32 uppercase hex chars (Jellyfin uses MD5)
@@ -45,6 +45,8 @@ const CHECKSUM_RE = /^[0-9A-F]{32}$/;
 const TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 const SOURCE_URL_RE =
     /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/releases\/download\/[^/\s]+\/([^/\s]+\.zip)$/;
+const EXPECTED_PLUGIN_NAME = 'Jellyfin Enhanced';
+const EXPECTED_PLUGIN_GUID = 'f69e946a-4b3c-4e9a-8f0a-8d7c1b2c4d9b';
 
 const REQUIRED_ENTRY_FIELDS = ['changelog', 'targetAbi', 'version', 'sourceUrl', 'checksum', 'timestamp'];
 
@@ -64,6 +66,13 @@ function expectedZipName(targetAbi) {
     return `Jellyfin.Plugin.JellyfinEnhanced_${threePart}.zip`;
 }
 
+/** Parses a manifest timestamp without accepting Date's day/month normalization. */
+function parseManifestTimestamp(timestamp) {
+    const parsed = new Date(`${timestamp}Z`);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toISOString().slice(0, 19) === timestamp ? parsed.getTime() : null;
+}
+
 /**
  * Validates parsed manifest data.
  * @param {unknown} data Parsed JSON content of manifest.json.
@@ -77,6 +86,9 @@ function validateManifest(data) {
         errors.push('manifest must be a non-empty JSON array of plugin objects');
         return { errors, warnings };
     }
+    if (data.length !== 1) {
+        errors.push(`manifest must contain exactly one plugin object, found ${data.length}`);
+    }
 
     data.forEach((plugin, pi) => {
         const where = `plugin[${pi}]`;
@@ -84,11 +96,12 @@ function validateManifest(data) {
             errors.push(`${where}: must be an object`);
             return;
         }
-        if (typeof plugin.name !== 'string' || plugin.name.length === 0) {
-            errors.push(`${where}: missing "name"`);
+        if (plugin.name !== EXPECTED_PLUGIN_NAME) {
+            errors.push(`${where}: "name" must be "${EXPECTED_PLUGIN_NAME}"`);
         }
-        if (typeof plugin.guid !== 'string' || !GUID_RE.test(plugin.guid)) {
-            errors.push(`${where}: "guid" must be a UUID`);
+        if (typeof plugin.guid !== 'string' || !GUID_RE.test(plugin.guid)
+            || plugin.guid.toLowerCase() !== EXPECTED_PLUGIN_GUID) {
+            errors.push(`${where}: "guid" must be ${EXPECTED_PLUGIN_GUID}`);
         }
         if (!Array.isArray(plugin.versions) || plugin.versions.length === 0) {
             errors.push(`${where}: "versions" must be a non-empty array`);
@@ -124,13 +137,14 @@ function validateManifest(data) {
             if (typeof timestamp === 'string') {
                 if (!TIMESTAMP_RE.test(timestamp)) {
                     errors.push(`${at}: timestamp "${timestamp}" is not YYYY-MM-DDTHH:MM:SS`);
-                } else if (Number.isNaN(Date.parse(`${timestamp}Z`))) {
+                } else if (parseManifestTimestamp(timestamp) === null) {
                     errors.push(`${at}: timestamp "${timestamp}" is not a real date`);
                 } else {
-                    if (lastTimestamp !== null && Date.parse(`${timestamp}Z`) > lastTimestamp) {
+                    const parsedTimestamp = parseManifestTimestamp(timestamp);
+                    if (lastTimestamp !== null && parsedTimestamp > lastTimestamp) {
                         warnings.push(`${at}: timestamp ${timestamp} is newer than the entry above it`);
                     }
-                    lastTimestamp = Date.parse(`${timestamp}Z`);
+                    lastTimestamp = parsedTimestamp;
                 }
             }
 
@@ -213,4 +227,4 @@ if (require.main === module) {
     main();
 }
 
-module.exports = { validateManifest, compareVersions, expectedZipName };
+module.exports = { validateManifest, compareVersions, expectedZipName, parseManifestTimestamp };

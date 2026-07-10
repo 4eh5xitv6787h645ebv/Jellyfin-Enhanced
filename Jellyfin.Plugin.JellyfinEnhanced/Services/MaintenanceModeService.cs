@@ -205,7 +205,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 if (!File.Exists(_stateFilePath)) return new MaintenanceState();
                 var json = File.ReadAllText(_stateFilePath);
                 // Newtonsoft equivalent: JsonConvert.DeserializeObject<MaintenanceState>(json).
-                return JsonSerializer.Deserialize<MaintenanceState>(json, PersistedJson.ReadOptions) ?? new MaintenanceState();
+                return PersistedJson.Deserialize<MaintenanceState>(json) ?? new MaintenanceState();
             }
             catch (Exception ex)
             {

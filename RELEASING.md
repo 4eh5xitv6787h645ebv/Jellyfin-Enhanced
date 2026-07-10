@@ -13,12 +13,14 @@ updates, and a malformed entry bricks in-app updates for all users.
 
    ```bash
    git tag 11.13.0.0
+   git remote get-url --push origin
+   # Stop unless this is 4eh5xitv6787h645ebv/Jellyfin-Enhanced.
    git push origin 11.13.0.0
    ```
 
 3. The **Release** workflow then:
    - runs the full quality gates (both plugin targets, unit tests, JS
-     syntax/lint/type checks) — any failure aborts the release;
+     syntax/architecture/lint/type checks) — any failure aborts the release;
    - builds both flavors with the tag stamped as `AssemblyVersion`/
      `FileVersion` (the tag is the single source of truth — the version in
      the csproj is never bumped by CI);

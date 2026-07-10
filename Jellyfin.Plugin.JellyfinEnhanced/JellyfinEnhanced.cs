@@ -265,9 +265,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 // ParseOptions keeps Newtonsoft's tolerance for comments/trailing
                 // commas: this file may be hand-edited or written by other tools,
                 // and JObject.Parse accepted both.
-                config = JsonNode.Parse(
-                    File.ReadAllText(pluginPagesConfig),
-                    documentOptions: PersistedJson.ParseOptions)!.AsObject();
+                config = PersistedJson.ParseNode(File.ReadAllText(pluginPagesConfig))!.AsObject();
             }
 
             if (!config.ContainsKey("pages"))

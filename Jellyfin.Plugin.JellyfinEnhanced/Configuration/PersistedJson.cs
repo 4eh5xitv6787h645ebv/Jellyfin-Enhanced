@@ -15,12 +15,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
     /// hidden-content/watchlist files, the shared reviews.json, and
     /// maintenance-state.json).
     ///
-    /// These options replicate the exact on-disk format and read tolerance of
-    /// the original Newtonsoft.Json persistence path, so files written by any
-    /// previous plugin version keep reading correctly and files written by this
-    /// version stay readable by older plugin versions. The contract is pinned
-    /// byte-for-byte by UserFileFormatGoldenTests and semantically by
-    /// UserFileReadCompatTests — change anything here only with those tests.
+    /// These options replicate the on-disk format and the read tolerance used
+    /// by known files from the original Newtonsoft.Json persistence path. That
+    /// includes comments, trailing commas, single-quoted strings and unquoted
+    /// identifier property names. Files written by this version stay readable
+    /// by older plugin versions. The contract is pinned byte-for-byte by
+    /// UserFileFormatGoldenTests and semantically by UserFileReadCompatTests.
     /// </summary>
     internal static class PersistedJson
     {
@@ -90,6 +90,201 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             AllowTrailingCommas = true,
             CommentHandling = JsonCommentHandling.Skip,
         };
+
+        /// <summary>
+        /// Parses a persisted JSON document while preserving the Json.NET syntax
+        /// extensions supported by <see cref="NormalizeLegacyJson"/>.
+        /// </summary>
+        internal static JsonNode? ParseNode(string json)
+        {
+            try
+            {
+                return JsonNode.Parse(json, documentOptions: ParseOptions);
+            }
+            catch (JsonException)
+            {
+                var normalized = NormalizeLegacyJson(json);
+                if (ReferenceEquals(normalized, json))
+                {
+                    throw;
+                }
+
+                return JsonNode.Parse(normalized, documentOptions: ParseOptions);
+            }
+        }
+
+        /// <summary>
+        /// Deserializes persisted JSON with the same legacy-syntax compatibility
+        /// fallback as <see cref="ParseNode"/>.
+        /// </summary>
+        internal static T? Deserialize<T>(string json)
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<T>(json, ReadOptions);
+            }
+            catch (JsonException)
+            {
+                var normalized = NormalizeLegacyJson(json);
+                if (ReferenceEquals(normalized, json))
+                {
+                    throw;
+                }
+
+                return JsonSerializer.Deserialize<T>(normalized, ReadOptions);
+            }
+        }
+
+        /// <summary>
+        /// Converts Json.NET's commonly used JSON extensions (single-quoted
+        /// strings and unquoted identifier property names) to standard JSON.
+        /// Double-quoted strings and comments are copied verbatim, so content
+        /// inside either cannot be mistaken for syntax.
+        /// </summary>
+        private static string NormalizeLegacyJson(string json)
+        {
+            StringBuilder? output = null;
+            var inDoubleQuotedString = false;
+            var inSingleQuotedString = false;
+            var inLineComment = false;
+            var inBlockComment = false;
+
+            for (var i = 0; i < json.Length; i++)
+            {
+                var c = json[i];
+
+                if (inLineComment)
+                {
+                    output?.Append(c);
+                    if (c is '\r' or '\n')
+                    {
+                        inLineComment = false;
+                    }
+
+                    continue;
+                }
+
+                if (inBlockComment)
+                {
+                    output?.Append(c);
+                    if (c == '*' && i + 1 < json.Length && json[i + 1] == '/')
+                    {
+                        output?.Append('/');
+                        i++;
+                        inBlockComment = false;
+                    }
+
+                    continue;
+                }
+
+                if (inDoubleQuotedString)
+                {
+                    output?.Append(c);
+                    if (c == '\\' && i + 1 < json.Length)
+                    {
+                        output?.Append(json[++i]);
+                    }
+                    else if (c == '"')
+                    {
+                        inDoubleQuotedString = false;
+                    }
+
+                    continue;
+                }
+
+                if (inSingleQuotedString)
+                {
+                    if (c == '\\' && i + 1 < json.Length)
+                    {
+                        var escaped = json[++i];
+                        if (escaped == '\'')
+                        {
+                            output!.Append('\'');
+                        }
+                        else
+                        {
+                            output!.Append('\\').Append(escaped);
+                        }
+                    }
+                    else if (c == '\'')
+                    {
+                        output!.Append('"');
+                        inSingleQuotedString = false;
+                    }
+                    else if (c == '"')
+                    {
+                        output!.Append("\\\"");
+                    }
+                    else
+                    {
+                        output!.Append(c);
+                    }
+
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    output?.Append(c);
+                    inDoubleQuotedString = true;
+                }
+                else if (c == '\'')
+                {
+                    output ??= new StringBuilder(json.Length + 16).Append(json, 0, i);
+                    output.Append('"');
+                    inSingleQuotedString = true;
+                }
+                else if (IsLegacyPropertyNameStart(c))
+                {
+                    var end = i + 1;
+                    while (end < json.Length && IsLegacyPropertyNamePart(json[end]))
+                    {
+                        end++;
+                    }
+
+                    var colon = end;
+                    while (colon < json.Length && char.IsWhiteSpace(json[colon]))
+                    {
+                        colon++;
+                    }
+
+                    if (colon < json.Length && json[colon] == ':')
+                    {
+                        output ??= new StringBuilder(json.Length + 16).Append(json, 0, i);
+                        output.Append('"').Append(json, i, end - i).Append('"');
+                        i = end - 1;
+                    }
+                    else
+                    {
+                        output?.Append(c);
+                    }
+                }
+                else if (c == '/' && i + 1 < json.Length && json[i + 1] == '/')
+                {
+                    output?.Append("//");
+                    i++;
+                    inLineComment = true;
+                }
+                else if (c == '/' && i + 1 < json.Length && json[i + 1] == '*')
+                {
+                    output?.Append("/*");
+                    i++;
+                    inBlockComment = true;
+                }
+                else
+                {
+                    output?.Append(c);
+                }
+            }
+
+            return output?.ToString() ?? json;
+        }
+
+        private static bool IsLegacyPropertyNameStart(char c)
+            => c is '_' or '$' || char.IsLetter(c);
+
+        private static bool IsLegacyPropertyNamePart(char c)
+            => c is '_' or '$' || char.IsLetterOrDigit(c);
 
         /// <summary>
         /// Newtonsoft <c>NullValueHandling.Ignore</c> on DESERIALIZATION: a JSON null

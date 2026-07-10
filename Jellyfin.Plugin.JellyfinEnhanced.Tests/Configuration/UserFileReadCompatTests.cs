@@ -123,6 +123,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Configuration
             Assert.Equal("42", s.WatchProgressMode);    // 42 → "42"
         }
 
+        /// <summary>Json.NET accepted unquoted keys and single-quoted strings in
+        /// hand-edited files. Both read-only and read-modify-write paths must keep doing so.</summary>
+        [Fact]
+        public void LegacyJsonExtensions_BindInLenientAndStrictReads()
+        {
+            const string content = "{\n// don't treat this apostrophe as a delimiter\nAutoPauseEnabled: true,\n'LastOpenedTab': 'Kid\\'s \"Movies\"',\n}";
+            SeedUserFileRaw("settings.json", content);
+
+            var lenient = _manager.GetUserConfiguration<UserSettings>(UserId, "settings.json");
+            var strict = _manager.GetUserConfigurationStrict<UserSettings>(UserId, "settings.json");
+
+            Assert.True(lenient.AutoPauseEnabled);
+            Assert.Equal("Kid's \"Movies\"", lenient.LastOpenedTab);
+            Assert.True(strict.AutoPauseEnabled);
+            Assert.Equal("Kid's \"Movies\"", strict.LastOpenedTab);
+            Assert.Empty(Directory.GetFiles(UserDir, "settings.json.corrupt-*"));
+        }
+
         [Fact]
         public void LenientRead_HiddenContent_MixedLegacyShapes()
         {
@@ -184,6 +202,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Configuration
             var tv = store.Reviews["def:tv:1399"]; // camelCase member names bind
             Assert.Equal(3, tv.Rating);
             Assert.Equal("case-variant keys", tv.Content);
+        }
+
+        [Fact]
+        public void Reviews_SingleQuotedLegacyFile_RemainsReadable()
+        {
+            var configDir = Path.Combine(_baseDir, "configurations", "Jellyfin.Plugin.JellyfinEnhanced");
+            Directory.CreateDirectory(configDir);
+            File.WriteAllText(
+                Path.Combine(configDir, "reviews.json"),
+                "{'Reviews':{'abc:movie:1':{'UserId':'abc','MediaType':'movie','TmdbId':'1','Content':'Director\\'s cut'}}}");
+
+            var review = _manager.GetAllReviews().Reviews["abc:movie:1"];
+
+            Assert.Equal("Director's cut", review.Content);
         }
 
         // ─── Lenient read: corruption returns defaults (read-only paths) ─────────

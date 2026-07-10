@@ -238,7 +238,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     var json = File.ReadAllText(path);
                     if (string.IsNullOrWhiteSpace(json)) continue;
-                    var node = JsonNode.Parse(json, documentOptions: PersistedJson.ParseOptions);
+                    var node = PersistedJson.ParseNode(json);
                     var state = PersistedJson.StripNullMembers(node) is JsonNode stripped
                         ? stripped.Deserialize<UserSpoilerBlur>(PersistedJson.ReadOptions)
                         : null;
