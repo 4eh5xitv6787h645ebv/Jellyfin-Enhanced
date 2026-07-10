@@ -128,7 +128,7 @@ module.exports = [
     },
     {
         // Node-side tooling scripts (translation validation etc.)
-        files: ['scripts/**/*.js', 'eslint.config.js'],
+        files: ['scripts/**/*.js', 'tests/e2e/**/*.js', 'eslint.config.js', 'playwright.config.js'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'commonjs',
@@ -141,6 +141,12 @@ module.exports = [
                 Buffer: 'readonly',
                 setTimeout: 'readonly',
                 clearTimeout: 'readonly',
+                URL: 'readonly',
+                structuredClone: 'readonly',
+                // Playwright page.evaluate callbacks execute in the browser.
+                window: 'readonly',
+                document: 'readonly',
+                fetch: 'readonly',
             },
         },
         rules: {

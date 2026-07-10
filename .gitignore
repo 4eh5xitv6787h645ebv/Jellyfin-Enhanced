@@ -163,6 +163,12 @@ dllssigned/
 node_modules/
 TRANSLATION_GUIDE.md
 
+# Playwright E2E output and generated login state
+playwright/.auth/
+playwright-report/
+blob-report/
+test-results/
+
 # Windows Azure Build Output
 csx
 *.build.csdef
