@@ -31,12 +31,13 @@ See the [Contributing Translations](/Jellyfin-Enhanced/faq-support/contributing-
 Before contributing, familiarize yourself with the project structure. See the [Project Structure](README.md#-project-structure) section in the README for a detailed breakdown of the codebase and what each file does.
 
 Key directories:
-- `Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/` - Core functionality
+- `Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/` - Shared client composition and Jellyfin-facing features
+- `Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/{bookmarks,hidden-content,item-details,home-removal,player,settings-panel}/` - Feature-owned modules
 - `Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/` - Elsewhere and reviews functionality
 - `Jellyfin.Plugin.JellyfinEnhanced/js/extras/` - Other Scripts
-- `Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/` - Seerr integration
-- `Jellyfin.Plugin.JellyfinEnhanced/js/arr/` - *arr integration including calendar and requests
-- `Jellyfin.Plugin.JellyfinEnhanced/js/tags/` - Tag scripts (genre, language, people, quality, rating)
+- `Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/{discovery,more-info,ui}/` - Seerr feature boundaries
+- `Jellyfin.Plugin.JellyfinEnhanced/js/arr/{calendar,requests}/` - Sonarr/Radarr feature pages
+- `Jellyfin.Plugin.JellyfinEnhanced/js/tags/` - Shared tag pipeline and renderer modules
 - `Jellyfin.Plugin.JellyfinEnhanced/js/others/` - Miscellaneous scripts (letterboxd, splashscreen)
 - `Jellyfin.Plugin.JellyfinEnhanced/js/locales/` - Translation files
 

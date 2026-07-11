@@ -13,7 +13,7 @@
 // Frozen surfaces preserved by design:
 // - localStorage cache key NAMES (users' caches survive the refactor)
 // - rendered DOM (container classes, data-* tagged attributes)
-// - the tag-pipeline registerRenderer contract (enhanced/tag-pipeline.js)
+// - the tag-pipeline registerRenderer contract (tags/tag-pipeline.js)
 // - JE.reinitializeXTags function names (defined by each tag module,
 //   delegating to reinitialize() here)
 //

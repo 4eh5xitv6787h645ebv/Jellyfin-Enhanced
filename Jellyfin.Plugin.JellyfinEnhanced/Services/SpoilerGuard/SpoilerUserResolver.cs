@@ -28,7 +28,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private static readonly ConcurrentDictionary<string, DateTime> _warnedAt = new();
 
         // Per-browser identity cookie the web client sets on load (see
-        // js/enhanced/spoiler-blur.js). Browsers attach it to every same-origin
+        // js/enhanced/spoilerguard/identity.js). Browsers attach it to every same-origin
         // request INCLUDING anonymous <img>/CSS-background image fetches, which
         // on Jellyfin 12 carry no other user identity (the image endpoint ignores
         // the api_key query param for identity, and <img> tags can't send an

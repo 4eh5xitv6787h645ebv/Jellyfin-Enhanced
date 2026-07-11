@@ -4,7 +4,7 @@ Jellyfin Enhanced keeps its browser runtime in JavaScript. `plugin.js` is the si
 
 ### Client scripts (`Jellyfin.Plugin.JellyfinEnhanced/js/`)
 
-Every client module is a classic-script IIFE over the shared `window.JellyfinEnhanced` global (`JE`). `plugin.js` owns the load order, and modules execute in array order. Large features use focused, prefixed files or a feature subdirectory and share private state through `JE.internals.<feature>`.
+Every client module is a classic-script IIFE over the shared `window.JellyfinEnhanced` global (`JE`). `plugin.js` owns the load order, and modules execute in array order. Feature-owned modules live together in named subdirectories and share private state through `JE.internals.<feature>`; only cross-cutting composition modules stay at a domain root.
 
 ```text
 Jellyfin.Plugin.JellyfinEnhanced/
@@ -18,24 +18,26 @@ Jellyfin.Plugin.JellyfinEnhanced/
     │   ├── ui-kit.js        # Shared escaping, toast and CSS helpers
     │   ├── tag-renderer-base.js  # Common tag-renderer lifecycle and cache plumbing
     │   └── globals.d.ts     # Type-check metadata; not runtime TypeScript
-    ├── enhanced/            # Core playback, UI and content-management features
+    ├── enhanced/            # Shared composition plus Jellyfin-facing features
     │   ├── config.js / helpers.js / events.js / icons.js / translations.js / themer.js
-    │   ├── playback.js / subtitles.js / pausescreen.js / osd-rating.js / native-tabs.js
-    │   ├── tag-pipeline.js  # Scan/batch-fetch pipeline used by tags/
-    │   ├── features-*.js    # Random button, details, release dates and list actions
-    │   ├── ui-*.js          # Settings-panel entry points, templates, sections and styles
-    │   ├── bookmarks.js + bookmarks-library-*.js
-    │   ├── hidden-content-*.js + hidden-content-page-*.js
+    │   ├── native-tabs.js / ui-styles.js / features-random-button.js
+    │   ├── bookmarks/       # Player bookmarks and the bookmarks library page
+    │   ├── hidden-content/  # Hide/filter/dialog/page/tab modules in one boundary
+    │   ├── item-details/    # Detail-page media info, release dates and actions
+    │   ├── home-removal/    # Continue Watching and Next Up removal workflow
+    │   ├── player/          # Playback controls, subtitles, pause screen and OSD rating
+    │   ├── settings-panel/  # Panel template, settings sections and release notes
     │   └── spoilerguard/    # Focused Spoiler Guard modules; see below
     ├── jellyseerr/          # Seerr API, discovery, request and modal modules
-    │   ├── discovery-base.js + {genre,tag,network,person,collection}-discovery.js
-    │   ├── more-info-modal-*.js
-    │   └── ui-*.js
+    │   ├── discovery/       # Shared discovery state plus type-specific adapters
+    │   ├── more-info/       # More-info modal data, render, seasons and actions
+    │   ├── ui/              # Shared Seerr cards, buttons, popovers and modals
+    │   └── api.js / jellyseerr.js / item-details.js / issue-reporter.js
     ├── arr/                 # Sonarr/Radarr integration
     │   ├── arr-links.js / arr-tag-links.js
-    │   ├── calendar-page-*.js + calendar-custom-tab.js
-    │   └── requests-page-*.js + requests-custom-tab.js
-    ├── tags/                # Renderer specs over core/tag-renderer-base.js
+    │   ├── calendar/        # Calendar data, views, actions and tab adapter
+    │   └── requests/        # Requests/downloads data, cards, actions and tab adapter
+    ├── tags/                # Shared tag pipeline and renderer specs over core/
     ├── elsewhere/           # Streaming availability and reviews
     ├── extras/              # Active streams, ratings/icons, themes and login image
     ├── others/              # Splash screen and Letterboxd links
@@ -43,6 +45,8 @@ Jellyfin.Plugin.JellyfinEnhanced/
 ```
 
 `others/splashscreen.js` and `extras/login-image.js` load before normal boot, while `enhanced/translations.js` loads before login. Those scripts are intentionally outside the main feature array/bundle flow.
+
+Module basenames remain feature-prefixed so repository-wide search results are self-describing, while the directory identifies the owning boundary. `scripts/check-architecture.js` rejects known feature families that drift back into the flat domain roots.
 
 ### Spoiler Guard client boundary
 

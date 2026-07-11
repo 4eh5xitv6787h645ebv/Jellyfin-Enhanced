@@ -217,7 +217,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         private ActionResult GetScriptResource(string resourcePath)
         {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Jellyfin.Plugin.JellyfinEnhanced.{resourcePath.Replace('/', '.')}");
+            var resourceName = BuildEmbeddedResourceName(resourcePath);
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
             if (stream == null) return NotFound();
 
             // Pick a content type that matches the requested file. Defaults to JS for the
@@ -238,6 +239,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var devMode = _configProvider.ConfigurationOrNull?.DevMode == true;
             Response.Headers["Cache-Control"] = devMode ? "no-store" : "public, max-age=31536000, immutable";
             return new FileStreamResult(stream, contentType);
+        }
+
+        internal static string BuildEmbeddedResourceName(string resourcePath)
+        {
+            var segments = resourcePath.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            // The .NET SDK normalizes hyphens in embedded-resource directory names
+            // to underscores, while preserving the resource filename verbatim.
+            for (var index = 0; index < segments.Length - 1; index++)
+            {
+                segments[index] = segments[index].Replace('-', '_');
+            }
+
+            return $"Jellyfin.Plugin.JellyfinEnhanced.{string.Join('.', segments)}";
         }
     }
 }

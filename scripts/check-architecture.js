@@ -42,15 +42,24 @@ if (runtimeTypeScript.length > 0) {
 const retiredGodFiles = [
     'Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs',
     'Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar-page.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests-page.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks-library.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/features.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hidden-content-page.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hidden-content/hidden-content-page.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hidden-content.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hidden-content/hidden-content.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoiler-blur.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/spoiler-blur.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/ui.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settings-panel/ui.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/more-info-modal.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/more-info/more-info-modal.js',
     'Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui.js',
+    'Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui.js',
 ];
 const restoredGodFiles = retiredGodFiles.filter((file) => fs.existsSync(path.join(repoRoot, file)));
 if (restoredGodFiles.length > 0) {
@@ -68,6 +77,40 @@ const requiredCoreModules = [
 const missingCoreModules = requiredCoreModules.filter((file) => !fs.existsSync(path.join(clientRoot, 'core', file)));
 if (missingCoreModules.length > 0) {
     failures.push(`shared client core modules are missing:\n  ${missingCoreModules.join('\n  ')}`);
+}
+
+// Keep established feature families inside ownership directories so the
+// client tree stays navigable as modules are added. These rules only inspect
+// loose files at each domain root; shared composition modules remain allowed.
+const ownershipBoundaries = [
+    ['enhanced', 'bookmarks', /^bookmarks(?:-library)?-?.*\.js$/],
+    ['enhanced', 'hidden-content', /^hidden-content-.*\.js$/],
+    ['enhanced', 'home-removal', /^features-remove-.*\.js$/],
+    ['enhanced', 'item-details', /^features-(?:details|release-dates).*\.js$/],
+    ['enhanced', 'player', /^(?:osd-rating|pausescreen|playback|subtitles)\.js$/],
+    ['enhanced', 'settings-panel', /^ui-(?:entry-points|panel|release-notes).*\.js$/],
+    ['arr', 'calendar', /^calendar-(?:custom-tab|page-.*)\.js$/],
+    ['arr', 'requests', /^requests-(?:custom-tab|page-.*)\.js$/],
+    ['jellyseerr', 'discovery', /^(?:collection|genre|network|person|tag)-discovery\.js$|^discovery-(?:base|filter-utils)\.js$/],
+    ['jellyseerr', 'more-info', /^more-info-modal-.*\.js$/],
+    ['jellyseerr', 'ui', /^ui-.*\.js$/],
+];
+for (const [domain, feature, loosePattern] of ownershipBoundaries) {
+    const domainRoot = path.join(clientRoot, domain);
+    const featureRoot = path.join(domainRoot, feature);
+    if (!fs.existsSync(featureRoot)) {
+        failures.push(`client feature ownership directory is missing: ${domain}/${feature}`);
+        continue;
+    }
+    const misplaced = fs.readdirSync(domainRoot, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && loosePattern.test(entry.name))
+        .map((entry) => `${domain}/${entry.name}`);
+    if (misplaced.length > 0) {
+        failures.push(`client feature modules must live under ${domain}/${feature}/:\n  ${misplaced.join('\n  ')}`);
+    }
+}
+if (!fs.existsSync(path.join(clientRoot, 'tags', 'tag-pipeline.js'))) {
+    failures.push('shared tag pipeline must live with its renderer modules at tags/tag-pipeline.js');
 }
 
 const spoilerRoot = path.join(clientRoot, 'enhanced', 'spoilerguard');
@@ -149,11 +192,11 @@ if (fs.existsSync(spoilerIndexPath) && !/^\s*JE\.spoilerBlur\s*=/m.test(fs.readF
 }
 
 const requiredWiring = [
-    ['enhanced/features-details-page.js', [/JE\.spoilerBlur\.addSpoilerBlurButton/]],
-    ['enhanced/ui-panel-template.js', [/spoilerGuard\?\.buildSettingsHtml/]],
-    ['enhanced/ui-panel.js', [/spoilerGuard\?\.wireSettings/]],
-    ['jellyseerr/more-info-modal-render.js', [/data-mount="je-secondary-actions"/]],
-    ['jellyseerr/more-info-modal-actions.js', [/appendSeerrToggle/, /_renderActionsToken/]],
+    ['enhanced/item-details/features-details-page.js', [/JE\.spoilerBlur\.addSpoilerBlurButton/]],
+    ['enhanced/settings-panel/ui-panel-template.js', [/spoilerGuard\?\.buildSettingsHtml/]],
+    ['enhanced/settings-panel/ui-panel.js', [/spoilerGuard\?\.wireSettings/]],
+    ['jellyseerr/more-info/more-info-modal-render.js', [/data-mount="je-secondary-actions"/]],
+    ['jellyseerr/more-info/more-info-modal-actions.js', [/appendSeerrToggle/, /_renderActionsToken/]],
     ['tags/ratingtags.js', [/shouldSuppressRatingTag/, /sgType/, /sgSeriesId/, /sgPlayed/]],
 ];
 for (const [file, patterns] of requiredWiring) {
