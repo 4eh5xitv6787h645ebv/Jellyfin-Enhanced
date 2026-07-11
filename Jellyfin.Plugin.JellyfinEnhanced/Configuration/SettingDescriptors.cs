@@ -333,6 +333,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 Public("SpoilerBlurEnabled", c => c.SpoilerBlurEnabled),
                 Public("SpoilerBlurIntensity", c => c.SpoilerBlurIntensity),
                 Public("SpoilerBlurStrictRefresh", c => c.SpoilerBlurStrictRefresh),
+                Public("SpoilerStripSeriesOverview", c => c.SpoilerStripSeriesOverview ?? c.SpoilerStripOverview),
                 Public("SpoilerStripOverview", c => c.SpoilerStripOverview),
                 Public("SpoilerStripTags", c => c.SpoilerStripTags),
                 Public("SpoilerStripChapters", c => c.SpoilerStripChapters),

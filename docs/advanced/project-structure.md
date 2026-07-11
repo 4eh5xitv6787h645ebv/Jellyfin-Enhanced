@@ -68,11 +68,13 @@ The modules share private state through `JE.internals.spoilerGuard`. `index.js` 
 
 `Configuration/configPage.html` contains markup and minimal Jellyfin SPA bootstrap loaders. Application behavior lives in the external `Configuration/config-page.js`. Simple inputs declare their `PluginConfiguration` property with `data-config-key`; the generic binder loads and saves those fields, with narrowly scoped overrides for values that need validation or normalization.
 
+Admin-page icons, screenshots and the Material Symbols font resolve through the allow-listed local `/JellyfinEnhanced/cdn/` route. The HTML bootstrap owns the base-path-safe URL helper, while `config-page.js` assigns those URLs to declarative `data-je-cdn` images.
+
 The Spoiler Guard admin controls are part of that declarative binder:
 
 - Master enable, image replacement mode, blur intensity, backdrop protection and visible movie posters
 - Auto-enable on first play, auto-enable on Seerr request and strict refresh
-- Overview stripping and placeholder text, title replacement, tags, taglines, chapters, ratings and premiere dates
+- Independent TV-show and episode overview stripping with shared placeholder text, title replacement, tags, taglines, chapters, ratings and premiere dates
 - Cast stripping and cast scope, plus review suppression
 
 The placeholder override strips markup-context characters and limits the saved value to 200 characters. Blur intensity is clamped to the supported 5-100 range.
@@ -84,7 +86,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 ├── JellyfinEnhanced.cs         # Plugin registration and client script injection
 ├── PluginServiceRegistrator.cs # DI, named HttpClients, filters and logging
 ├── Controllers/                # Feature-area controllers over a shared base
-│   ├── ConfigController.cs     # Config, script/bundle and locale resources
+│   ├── ConfigController.cs     # Config, script/bundle, locale and local-CDN resources
 │   ├── SpoilerGuardController.cs
 │   ├── JellyseerrProxyController.cs / JellyseerrUserController.cs
 │   ├── ArrLinksController.cs / ArrCalendarController.cs / ArrRequestsController.cs
@@ -99,12 +101,15 @@ Jellyfin.Plugin.JellyfinEnhanced/
 │   ├── PersistedJson.cs        # Legacy-compatible JSON options
 │   └── configPage.html + config-page.js + configPage.css
 ├── Services/
+│   ├── Identity/               # Authenticated and image-request identity resolution
 │   ├── SpoilerGuard/           # Image/metadata protection and pending-intent services
 │   ├── Jellyseerr/             # Resolver and caches
+│   ├── CdnAssetService.cs      # Allow-listed local cache for third-party static assets
 │   └── ...                     # Auto-request, arr tags, maintenance and startup filters
 ├── Data/ItemLookupService.cs   # Jellyfin 10.11 and Jellyfin 12 provider-id lookup paths
 ├── EventHandlers/              # Playback/auto-enable events
-├── ScheduledTasks/ · Helpers/ · Model/ · Logging/ · PluginPages/
+├── ScheduledTasks/             # Tag-cache build and local-CDN refresh jobs
+├── Helpers/ · Model/ · Logging/ · PluginPages/
 └── dist/                       # Generated esbuild output; never committed
 ```
 
@@ -114,11 +119,15 @@ Jellyfin.Plugin.JellyfinEnhanced/
 - `Services/SpoilerGuard/SpoilerPendingService.cs` owns shared TMDB lookup, pending-record and promotion logic used by the controller and Seerr auto-arm flow.
 - `Services/SpoilerGuard/ImageBlurService.cs` produces blurred images, safe stock cards and fail-closed fallback images.
 - `Services/SpoilerGuard/SpoilerBlurImageFilter.cs` protects image responses for unwatched guarded content.
+- `Services/SpoilerGuard/SpoilerIdentityService.cs` mints and resolves stable per-user image identity markers.
+- `Services/SpoilerGuard/SpoilerIdentityTagFilter.cs` stamps item image tags so native clients carry those markers on image requests.
 - `Services/SpoilerGuard/SpoilerFieldStripFilter.cs` strips or rewrites spoiler-bearing metadata according to admin policy and per-user overrides.
 - `Services/SpoilerGuard/SpoilerSeerrPendingPromoter.cs` promotes pre-acquisition intents when requested media arrives.
-- `Services/SpoilerGuard/SpoilerUserResolver.cs` resolves the requesting user for response filters.
+- `Services/SpoilerGuard/SpoilerUserResolver.cs` loads per-user Spoiler Guard state for the identity resolved by `RequestIdentityService`.
+- `Services/Identity/RequestIdentityService.cs` resolves authenticated claims first, then image markers, single-user installs, cookies and shared-IP candidates.
 - `Controllers/TagCacheController.cs` owns the per-user, Spoiler Guard-aware tag projection; pure strip helpers live in `Services/TagCacheService.cs`.
 - `EventHandlers/SpoilerAutoEnableEvents.cs` enables protection on a qualifying first play of S1E1.
+- `EventHandlers/UserTopologyEvents.cs` invalidates identity caches when users are created or deleted.
 - `Model/TagCacheEntry.cs` carries the parent-series identity needed to suppress unwatched episode tag data without repeated library lookups.
 
 See [Spoiler Guard Features](../spoiler-guard/spoiler-guard-features.md) and [Spoiler Guard Settings](../spoiler-guard/spoiler-guard-settings.md) for behavior and administration details.

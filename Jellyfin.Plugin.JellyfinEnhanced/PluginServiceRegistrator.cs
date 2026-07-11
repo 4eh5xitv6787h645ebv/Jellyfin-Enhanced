@@ -49,6 +49,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // attached per-request (HttpRequestMessage), never via DefaultRequestHeaders.
             serviceCollection.AddHttpClient(Helpers.PluginHttpClients.ArrClient);
             serviceCollection.AddHttpClient(Helpers.PluginHttpClients.TmdbClient);
+            serviceCollection.AddHttpClient(Helpers.PluginHttpClients.CdnClient);
             // Dedicated JellyfinEnhanced_*.log sink (a documented product feature)
             // plus a closed-generic ILogger<T> registration for every plugin type.
             // Each FileForwardingLogger<T> writes the file AND forwards to the host
@@ -89,6 +90,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<SeerrScanTriggerService>();
             serviceCollection.AddSingleton<TagCacheService>();
             serviceCollection.AddSingleton<TagCacheMonitor>();
+            // Local CDN subsystem: serves every third-party static asset (icons, fonts,
+            // theme sheets, flags, remote locales) from the plugin's own route, backed by
+            // an on-disk cache that the RefreshCdnAssetsTask warms/refreshes every 24h.
+            serviceCollection.AddSingleton<CdnAssetService>();
+            serviceCollection.AddTransient<RefreshCdnAssetsTask>();
             serviceCollection.AddTransient<ArrTagsSyncTask>();
             serviceCollection.AddTransient<BuildTagCacheTask>();
             serviceCollection.AddTransient<JellyseerrWatchlistSyncTask>();
@@ -109,6 +115,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<ImageBlurService>();
             // Shared user-resolution + state-load helper. One instance, both filters use it
             // so the IPv6 / shared-IP / fail-closed logic stays in ONE place.
+            serviceCollection.AddSingleton<SpoilerIdentityService>();
+            serviceCollection.AddSingleton<RequestIdentityService>();
+            serviceCollection.AddSingleton<SpoilerIdentityTagFilter>();
             serviceCollection.AddSingleton<SpoilerUserResolver>();
             serviceCollection.AddSingleton<SpoilerPendingService>();
             serviceCollection.AddSingleton<SpoilerBlurImageFilter>();
@@ -118,6 +127,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Auto-enable spoiler mode for a series on first play of S1E1.
             // Gated by SpoilerAutoEnableOnFirstPlay; runs on every PlaybackStart.
             serviceCollection.AddScoped<IEventConsumer<PlaybackStartEventArgs>, SpoilerAutoEnableOnFirstPlayConsumer>();
+            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserCreatedEventArgs>, UserCreatedIdentityInvalidator>();
+            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserDeletedEventArgs>, UserDeletedIdentityInvalidator>();
 
             // Promotes pending pre-acquisition Spoiler Guard entries (PendingTmdb)
             // into real Series/Movies entries when matching library items land.
@@ -127,10 +138,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             {
                 // All three are IAsyncActionFilters that rewrite the response after
                 // `await next()`, so post-processing runs in REVERSE registration order.
-                // Composition is order-independent anyway (HC drops whole items; the
-                // spoiler filters edit fields of survivors), but keep HC registered
-                // first so its short-circuit paths run last on the way out.
+                // Identity-tag stamping must run after field-strip cache-busting so
+                // clients echo the final "sb-...-jeu..." tag on image requests.
                 o.Filters.AddService<HiddenContentResponseFilter>();
+                o.Filters.AddService<SpoilerIdentityTagFilter>();
                 o.Filters.AddService<SpoilerFieldStripFilter>();
                 o.Filters.AddService<SpoilerBlurImageFilter>();
             });

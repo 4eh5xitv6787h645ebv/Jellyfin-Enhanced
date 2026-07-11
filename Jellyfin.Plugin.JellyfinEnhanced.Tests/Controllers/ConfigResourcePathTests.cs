@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Controllers
@@ -23,6 +24,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Controllers
             string expected)
         {
             Assert.Equal(expected, ConfigController.BuildEmbeddedResourceName(resourcePath));
+        }
+
+        [Fact]
+        public void DedicatedController_OwnsLocalCdnRoute()
+        {
+            var method = typeof(ConfigController).GetMethod(nameof(ConfigController.GetCdnAsset));
+            var route = Assert.Single(method!.GetCustomAttributes(typeof(HttpGetAttribute), inherit: false));
+
+            Assert.Equal("cdn/{source}/{**path}", ((HttpGetAttribute)route).Template);
+            Assert.Null(typeof(ConfigController).Assembly.GetType(
+                "Jellyfin.Plugin.JellyfinEnhanced.Controllers.JellyfinEnhancedController"));
         }
     }
 }

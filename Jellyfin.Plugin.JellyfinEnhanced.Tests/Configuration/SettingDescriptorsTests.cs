@@ -54,5 +54,30 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Configuration
             Assert.DoesNotContain("WatchProgressDefaultMode", publicPayload.Keys);
             Assert.DoesNotContain("WatchProgressDefaultMode", privatePayload.Keys);
         }
+
+        [Fact]
+        public void SeriesOverviewSetting_FallsBackUntilExplicitlyConfigured()
+        {
+            var inherited = new PluginConfiguration
+            {
+                SpoilerStripOverview = false,
+                SpoilerStripSeriesOverview = null,
+            };
+            var explicitOverride = new PluginConfiguration
+            {
+                SpoilerStripOverview = false,
+                SpoilerStripSeriesOverview = true,
+            };
+
+            var inheritedPayload = SettingDescriptors.BuildPayload(
+                SettingExposure.Public,
+                new SettingContext(inherited, IsAuthenticated: true));
+            var explicitPayload = SettingDescriptors.BuildPayload(
+                SettingExposure.Public,
+                new SettingContext(explicitOverride, IsAuthenticated: true));
+
+            Assert.Equal(false, inheritedPayload["SpoilerStripSeriesOverview"]);
+            Assert.Equal(true, explicitPayload["SpoilerStripSeriesOverview"]);
+        }
     }
 }

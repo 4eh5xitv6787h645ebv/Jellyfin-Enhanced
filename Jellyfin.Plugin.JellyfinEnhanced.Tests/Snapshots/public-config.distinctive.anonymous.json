@@ -265,15 +265,16 @@
   "SpoilerStripPremiereDate": true,
   "SpoilerStripRatings": true,
   "SpoilerStripReviews": true,
+  "SpoilerStripSeriesOverview": true,
   "SpoilerStripTaglines": true,
   "SpoilerStripTags": true,
   "SyncJellyseerrWatchlist": false,
   "TagCacheServerMode": true,
-  "TagsCacheTtlDays": 1225,
+  "TagsCacheTtlDays": 1226,
   "TagsHideOnHover": false,
   "ThemeSelectorEnabled": false,
   "TmdbEnabled": true,
-  "ToastDuration": 1228,
+  "ToastDuration": 1229,
   "UseIcons": true,
-  "VideoCodecTagOrder": 1231
+  "VideoCodecTagOrder": 1232
 }

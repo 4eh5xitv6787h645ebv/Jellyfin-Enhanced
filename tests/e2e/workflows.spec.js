@@ -30,8 +30,8 @@ test('admin configuration bootstraps declarative fields and switches tabs', asyn
     const keys = await page.locator('#JellyfinEnhancedPage [data-config-key]').evaluateAll(elements => {
         return elements.map(element => element.dataset.configKey);
     });
-    expect(keys).toHaveLength(199);
-    expect(new Set(keys).size).toBe(199);
+    expect(keys).toHaveLength(200);
+    expect(new Set(keys).size).toBe(200);
 
     const config = await page.evaluate(() => {
         return window.ApiClient.getPluginConfiguration('f69e946a-4b3c-4e9a-8f0a-8d7c1b2c4d9b');

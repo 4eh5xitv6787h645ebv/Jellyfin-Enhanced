@@ -73,7 +73,7 @@
 
         try {
             const data = await fetchAdvancedRequestData('movie');
-            populateAdvancedOptions(modalElement, data, 'movie');
+            populateAdvancedOptions(modalElement, data, 'movie', is4k);
         } catch (error) {
             console.error(`${logPrefix} Failed to load advanced options:`, error);
             JE.toast(JE.t('jellyseerr_err_load_server_options'), 3000);
@@ -142,7 +142,7 @@
             const year = movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : '';
             const poster = movie.posterPath
                 ? `https://image.tmdb.org/t/p/w92${movie.posterPath}`
-                : 'https://i.ibb.co/fdbkXQdP/jellyseerr-poster-not-found.png';
+                : JE.cdn.url('ibb', 'fdbkXQdP/jellyseerr-poster-not-found.png');
 
             return `
                 <div class="jellyseerr-collection-movie-row">
@@ -262,7 +262,7 @@
         if (showAdvanced) {
             try {
                 const advancedData = await fetchAdvancedRequestData('movie');
-                populateAdvancedOptions(modalInstance.modalElement, advancedData, 'movie');
+                populateAdvancedOptions(modalInstance.modalElement, advancedData, 'movie', false);
             } catch (error) {
                 console.error('Failed to load advanced options:', error);
             }

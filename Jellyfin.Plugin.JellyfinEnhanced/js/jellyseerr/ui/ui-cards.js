@@ -29,7 +29,7 @@
             && /^\/[A-Za-z0-9_\-\.]+\.(jpg|jpeg|png|webp|avif)$/i.test(p);
         const posterUrl = isSafePosterPath(item.posterPath)
             ? `https://image.tmdb.org/t/p/w400${item.posterPath}`
-            : 'https://i.ibb.co/fdbkXQdP/jellyseerr-poster-not-found.png';
+            : JE.cdn.url('ibb', 'fdbkXQdP/jellyseerr-poster-not-found.png');
         const rating = item.voteAverage ? item.voteAverage.toFixed(1) : 'N/A';
         // Escape API-sourced values before interpolation into search card HTML
         const titleText = escapeHtml(item.title || item.name);
@@ -88,7 +88,7 @@
                        title="${jellyfinHref ? titleText : (useMoreInfoModal ? titleText : (jellyseerrUrl ? (JE.t('jellyseerr_card_view_on_jellyseerr') || 'View on Jellyseerr') : titleText))}"><bdi>${titleText}</bdi></a>
                 </div>
                 <div class="cardText cardTextCentered cardText-secondary jellyseerr-meta">
-                    <img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/seerr.svg" class="jellyseerr-icon-on-card" alt="Seerr"/>
+                    <img src="${JE.cdn.selfhst('svg/seerr.svg')}" class="jellyseerr-icon-on-card" alt="Seerr"/>
                     <bdi>${year}</bdi>
                     <div class="jellyseerr-rating">${icons.star}<span>${rating}</span></div>
                 </div>

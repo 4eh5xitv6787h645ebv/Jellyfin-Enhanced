@@ -306,7 +306,7 @@
         if (showAdvanced) {
             try {
                 const data = await fetchAdvancedRequestData('tv');
-                populateAdvancedOptions(modalInstance.modalElement, data, 'tv');
+                populateAdvancedOptions(modalInstance.modalElement, data, 'tv', is4k);
             } catch (error) {
                 console.error(`${logPrefix} Failed to load TV advanced options:`, error);
                 JE.toast(JE.t('jellyseerr_err_load_server_options'), 3000);

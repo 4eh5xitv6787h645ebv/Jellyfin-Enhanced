@@ -11,7 +11,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
     /// Hygiene rules enforced here:
     ///   - never mutate <c>DefaultRequestHeaders</c> on a factory client — API keys
     ///     go on the <see cref="HttpRequestMessage"/> via <see cref="BuildArrRequest"/>;
-    ///   - both clients keep the .NET default 100-second timeout. Call sites that
+    ///   - named clients keep the .NET default 100-second timeout. Call sites that
     ///     need a shorter deadline set <c>HttpClient.Timeout</c> on their own
     ///     factory-created instance (instance-scoped, so this is safe) — the long
     ///     default exists for ArrTagService's full-library tag sync, which can
@@ -30,6 +30,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
         /// <summary>TMDB client (api.themoviedb.org; the API key travels in the query string).</summary>
         public const string TmdbClient = "JellyfinEnhancedTmdb";
 
+        /// <summary>Allow-listed third-party static assets cached by the local CDN service.</summary>
+        public const string CdnClient = "JellyfinEnhancedCdn";
+
         public static HttpClient CreateArrClient(IHttpClientFactory factory)
         {
             // Same fallback pattern as SeerrHttpHelper.CreateClient: if the named
@@ -41,6 +44,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
         public static HttpClient CreateTmdbClient(IHttpClientFactory factory)
         {
             try { return factory.CreateClient(TmdbClient); }
+            catch { return factory.CreateClient(); }
+        }
+
+        public static HttpClient CreateCdnClient(IHttpClientFactory factory)
+        {
+            try { return factory.CreateClient(CdnClient); }
             catch { return factory.CreateClient(); }
         }
 

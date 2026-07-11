@@ -77,7 +77,7 @@
             icon = document.createElement('img');
             icon.id = 'jellyseerr-search-icon';
             icon.className = 'jellyseerr-icon';
-            icon.src = 'https://cdn.jsdelivr.net/gh/selfhst/icons/svg/seerr.svg';
+            icon.src = JE.cdn.selfhst('svg/seerr.svg');
             icon.alt = 'Seerr';
 
             let tapCount = 0;

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -50,14 +51,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
     [ApiController]
     public class ConfigController : JellyfinEnhancedControllerBase
     {
+        private readonly CdnAssetService _cdnAssetService;
+
         public ConfigController(
             IHttpClientFactory httpClientFactory,
             ILogger<ConfigController> logger,
             IUserManager userManager,
             ISeerrCache seerrCache,
-            IPluginConfigProvider configProvider)
+            IPluginConfigProvider configProvider,
+            CdnAssetService cdnAssetService)
             : base(httpClientFactory, logger, userManager, seerrCache, configProvider)
         {
+            _cdnAssetService = cdnAssetService;
         }
 
         [HttpGet("script")]
@@ -182,6 +187,48 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 .ToArray();
 
             return Ok(locales);
+        }
+
+        /// <summary>
+        /// Serves allow-listed third-party static assets from the plugin's on-disk
+        /// cache. This route is anonymous because image and stylesheet requests
+        /// cannot attach a Jellyfin token; source and path validation in
+        /// <see cref="CdnAssetService"/> prevents open-proxy use.
+        /// </summary>
+        [HttpGet("cdn/{source}/{**path}")]
+        public async Task<IActionResult> GetCdnAsset(
+            string source,
+            string path,
+            CancellationToken cancellationToken)
+        {
+            if (!_cdnAssetService.IsValidSource(source))
+            {
+                return NotFound();
+            }
+
+            var asset = await _cdnAssetService
+                .GetAsync(source, path ?? string.Empty, forceRefresh: false, cancellationToken)
+                .ConfigureAwait(false);
+            if (asset == null)
+            {
+                return NotFound();
+            }
+
+            Response.Headers["Cache-Control"] = "public, max-age=86400";
+            Response.Headers["ETag"] = asset.ETag;
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            if (asset.ContentType.Equals("image/svg+xml", StringComparison.OrdinalIgnoreCase))
+            {
+                Response.Headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+            }
+
+            if (Request.Headers.TryGetValue("If-None-Match", out var ifNoneMatch)
+                && ifNoneMatch.ToString().Contains(asset.ETag, StringComparison.Ordinal))
+            {
+                return StatusCode(StatusCodes.Status304NotModified);
+            }
+
+            return File(asset.Content, asset.ContentType);
         }
 
         [HttpGet("locales/{lang}.json")]

@@ -4,6 +4,17 @@
             const page = document.querySelector('#JellyfinEnhancedPage');
             const form = document.querySelector('#JellyfinEnhancedForm');
 
+            // Resolve allow-listed admin images through the plugin's local CDN route.
+            // The bootstrap in configPage.html defines a base-path-safe helper before
+            // this external script is loaded.
+            try {
+                document.querySelectorAll('img[data-je-cdn]').forEach((img) => {
+                    img.src = window.jeCdnUrl(img.getAttribute('data-je-cdn'));
+                });
+            } catch (e) {
+                console.warn('[JE] Failed to rewrite CDN image sources', e);
+            }
+
             // Theme detector: Jellyfin's themes hard-swap theme.css (no CSS
             // variable contract) so we infer dark vs. light from the computed
             // background-color of <html>. Dark themes return something like
@@ -1942,6 +1953,15 @@
                     el.value = v === 'All' ? 'All' : 'GuestStars';
                 }
             },
+            SpoilerStripSeriesOverview: {
+                load: function (el, v, config) {
+                    // Configs saved before the independent series switch inherit
+                    // the existing episode-overview policy on their first load.
+                    el.checked = v === undefined || v === null
+                        ? config.SpoilerStripOverview !== false
+                        : v !== false;
+                }
+            },
             SpoilerOverviewPlaceholder: {
                 save: function (el) {
                     // Keep the main-branch defence-in-depth validation: this value
@@ -1965,7 +1985,7 @@
                 const override = CONFIG_FIELD_OVERRIDES[key];
                 const v = config[key];
                 if (override && override.load) {
-                    override.load(el, v);
+                    override.load(el, v, config);
                 } else if (el.type === 'checkbox') {
                     el.checked = el.dataset.configDefault === 'true' ? v !== false : !!v;
                 } else if ('configFallback' in el.dataset) {
@@ -3289,8 +3309,7 @@
             { parent: 'triggerSeerrScanOnItemAdded', label: 'Trigger Seerr scan on item added', children: ['seerrScanDebounceSeconds'] },
             { parent: 'bookmarksEnabled', label: 'Enable Bookmarks', children: ['bookmarksUsePluginPages', 'bookmarksUseNativeTab', 'bookmarksUseCustomTabs'] },
             { parent: 'hiddenContentEnabled', label: 'Enable Hidden Content', children: ['hiddenContentUsePluginPages', 'hiddenContentUseNativeTab', 'hiddenContentUseCustomTabs'] },
-            { parent: 'spoilerBlurEnabled', label: 'Enable Spoiler Guard', children: ['spoilerBlurMode', 'spoilerBlurIntensity', 'spoilerBlurArtwork', 'spoilerKeepMoviePosters', 'spoilerAutoEnableOnFirstPlay', 'spoilerAutoEnableOnSeerrRequest', 'spoilerBlurStrictRefresh', 'spoilerStripOverview', 'spoilerStripTags', 'spoilerStripChapters', 'spoilerStripTaglines', 'spoilerStripRatings', 'spoilerStripPremiereDate', 'spoilerReplaceTitle', 'spoilerStripCast', 'spoilerStripReviews'] },
-            { parent: 'spoilerStripOverview', label: 'Hide episode descriptions', children: ['spoilerOverviewPlaceholder'] },
+            { parent: 'spoilerBlurEnabled', label: 'Enable Spoiler Guard', children: ['spoilerBlurMode', 'spoilerBlurIntensity', 'spoilerBlurArtwork', 'spoilerKeepMoviePosters', 'spoilerAutoEnableOnFirstPlay', 'spoilerAutoEnableOnSeerrRequest', 'spoilerBlurStrictRefresh', 'spoilerStripSeriesOverview', 'spoilerStripOverview', 'spoilerOverviewPlaceholder', 'spoilerStripTags', 'spoilerStripChapters', 'spoilerStripTaglines', 'spoilerStripRatings', 'spoilerStripPremiereDate', 'spoilerReplaceTitle', 'spoilerStripCast', 'spoilerStripReviews'] },
             { parent: 'spoilerStripCast', label: 'Hide cast on unwatched episodes', children: ['spoilerStripCastMode'] }
         ];
 

@@ -107,6 +107,80 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Services
             }
         }
 
+        [Fact]
+        public void PendingChanges_LastWriteWinsWithinOneBatch()
+        {
+            var pending = new TagCachePendingChanges();
+            var id = Guid.NewGuid();
+
+            pending.Record(id, removed: false);
+            pending.Record(id, removed: true);
+
+            var change = Assert.Single(pending.Drain());
+            Assert.Equal(id, change.Id);
+            Assert.True(change.Removed);
+            Assert.True(pending.IsEmpty);
+        }
+
+        [Fact]
+        public void PendingChanges_RecordDuringDrain_RemainsForNextBatch()
+        {
+            var pending = new TagCachePendingChanges();
+            var id = Guid.NewGuid();
+            pending.Record(id, removed: false);
+
+            var first = pending.DrainForTest(() => pending.Record(id, removed: true));
+
+            Assert.Empty(first);
+            var change = Assert.Single(pending.Drain());
+            Assert.Equal(id, change.Id);
+            Assert.True(change.Removed);
+        }
+
+        [Fact]
+        public void ComputeFlushDelay_UsesDebounceUntilHardCap()
+        {
+            var now = new DateTime(2026, 1, 1, 0, 0, 30, DateTimeKind.Utc);
+            var debounce = TimeSpan.FromSeconds(3);
+            var maxWait = TimeSpan.FromSeconds(30);
+
+            Assert.Equal(
+                TimeSpan.FromSeconds(1),
+                TagCacheService.ComputeFlushDelay(now.AddSeconds(-29).Ticks, now, debounce, maxWait));
+            Assert.Equal(
+                TimeSpan.Zero,
+                TagCacheService.ComputeFlushDelay(now.AddSeconds(-31).Ticks, now, debounce, maxWait));
+            Assert.Equal(
+                debounce,
+                TagCacheService.ComputeFlushDelay(now.AddSeconds(-1).Ticks, now, debounce, maxWait));
+        }
+
+        [Fact]
+        public void ReconciliationSweep_DoesNotDeleteEntryRebuiltAfterSnapshot()
+        {
+            var dir = NewTempDir();
+            try
+            {
+                using var service = NewService(dir);
+                var key = Guid.NewGuid().ToString("N");
+                var snapshotted = new TagCacheEntry { Type = "Movie" };
+                var rebuilt = new TagCacheEntry { Type = "Movie", LastUpdated = 42 };
+                service.UpsertEntryForTest(key, snapshotted);
+
+                // Models FlushPending replacing the entry after ReconcileCacheCore
+                // captured its sweep snapshot but after the live-id query omitted it.
+                service.UpsertEntryForTest(key, rebuilt);
+                var removed = service.RemoveEntryIfUnchangedForTest(key, snapshotted);
+
+                Assert.False(removed);
+                Assert.Same(rebuilt, service.GetEntryForTest(key));
+            }
+            finally
+            {
+                Directory.Delete(dir, recursive: true);
+            }
+        }
+
         private static TagCacheService NewService(string dir)
             => new(null!, new StubAppPaths(dir), NullLogger<TagCacheService>.Instance);
 

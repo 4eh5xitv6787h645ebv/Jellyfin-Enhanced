@@ -265,6 +265,7 @@
   "SpoilerStripPremiereDate": true,
   "SpoilerStripRatings": true,
   "SpoilerStripReviews": true,
+  "SpoilerStripSeriesOverview": true,
   "SpoilerStripTaglines": true,
   "SpoilerStripTags": true,
   "SyncJellyseerrWatchlist": false,

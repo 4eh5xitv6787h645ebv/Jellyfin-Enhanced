@@ -53,6 +53,9 @@
         operation.then(function() {
             renderButton(button, enable);
             button.setAttribute('data-je-spoiler-state', enable ? 'on' : 'off');
+            // Keep separate per-kind keys so translators can tailor the
+            // wording later; all enabled messages are deliberately
+            // mode-neutral because images may be hidden or blurred.
             let key;
             if (enable) {
                 key = kind === 'movie' ? 'spoiler_blur_enabled_movie_toast'

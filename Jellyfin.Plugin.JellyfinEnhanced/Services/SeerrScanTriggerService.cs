@@ -62,6 +62,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
         private void OnItemAdded(object? sender, ItemChangeEventArgs e)
         {
+            // Fires synchronously on Jellyfin's library-scan thread — only cheap config/kind
+            // checks then a counter bump + debounce-timer reset here; the Seerr HTTP POST runs off the
+            // timer thread.
             try
             {
                 if (_configProvider.ConfigurationOrNull is not PluginConfiguration config) return;

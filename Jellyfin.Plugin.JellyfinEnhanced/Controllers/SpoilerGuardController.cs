@@ -318,6 +318,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     {
                         state.Prefs = new SpoilerBlurUserPrefs
                         {
+                            HideSeriesDescriptions = body.HideSeriesDescriptions,
                             HideEpisodeDescriptions = body.HideEpisodeDescriptions,
                             HideTags = body.HideTags,
                             HideChapterNames = body.HideChapterNames,
