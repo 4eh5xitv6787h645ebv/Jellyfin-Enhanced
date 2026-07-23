@@ -230,6 +230,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 // but the client gate `pluginConfig.JellyseerrShowCollectionDiscovery !== false`
                 // never saw the key, so disabling collection discovery had no effect.
                 Public("JellyseerrShowCollectionDiscovery", c => c.JellyseerrShowCollectionDiscovery),
+                Public("JellyseerrShowDetailPageLink", c => c.JellyseerrShowDetailPageLink),
+                Public("JellyseerrShowDetailPageLinkAsText", c => c.JellyseerrShowDetailPageLinkAsText),
                 Public("JellyseerrExcludeLibraryItems", c => c.JellyseerrExcludeLibraryItems),
                 Public("JellyseerrExcludeBlocklistedItems", c => c.JellyseerrExcludeBlocklistedItems),
                 Public("JellyseerrDisableCache", c => c.JellyseerrDisableCache),

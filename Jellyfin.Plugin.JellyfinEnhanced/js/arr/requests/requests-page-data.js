@@ -1,8 +1,7 @@
 // /js/arr/requests/requests-page-data.js
-// Requests Page — state, avatar handling and data access (split from
-// requests-page.js). The former raw JSON fetch() calls with hand-built auth
-// headers are routed through JE.core.api.plugin; the avatar fetch stays raw
-// because it returns a binary blob (JE.core.api is JSON-only).
+// Requests Page — state and data access (split from requests-page.js).
+// JSON calls use JE.core.api.plugin; shared authenticated avatar handling
+// lives in JE.helpers so the More Info modal can reuse the same blob cache.
 (function () {
   "use strict";
 
@@ -42,137 +41,6 @@
   };
 
   const issueMediaCache = new Map();
-  const avatarObjectUrlCache = new Map();
-  const avatarFetchPromises = new Map();
-
-  /**
-   * Get API authentication headers.
-   * Only used by the avatar blob fetch below — every JSON call goes through
-   * JE.core.api.plugin, which builds its own auth headers.
-   */
-  function getAuthHeaders() {
-    const token = ApiClient.accessToken ? ApiClient.accessToken() : "";
-    return {
-      "Authorization": 'MediaBrowser Token="' + token + '"',
-      "X-MediaBrowser-Token": token,
-      "Content-Type": "application/json",
-    };
-  }
-
-  /**
-   * Revoke all cached avatar blob URLs and clear the result cache.
-   * @param {boolean} [includeInFlight] - If true, also cancel pending fetch promises.
-   *   Pass true on page teardown; omit on re-render to let in-flight fetches complete.
-   */
-  function clearAvatarObjectUrlCache(includeInFlight) {
-    avatarObjectUrlCache.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
-    avatarObjectUrlCache.clear();
-    // Only clear in-flight promises on page teardown, not on re-render.
-    // Clearing mid-flight would cause duplicate downloads for the same avatar.
-    if (includeInFlight) {
-      avatarFetchPromises.clear();
-    }
-  }
-
-  function isSafeAvatarUrl(url) {
-    if (!url || typeof url !== "string") return false;
-
-    // Relative paths are resolved by the browser against current origin and are allowed.
-    if (url.startsWith("/")) return true;
-
-    if (url.startsWith("blob:")) return true;
-
-    try {
-      const parsed = new URL(url, window.location.origin);
-      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-        return true;
-      }
-
-      // Only allow image data URLs.
-      if (parsed.protocol === "data:") {
-        return /^data:image\//i.test(url);
-      }
-    } catch {
-      return false;
-    }
-
-    return false;
-  }
-
-  /**
-   * Resolve a protected avatar URL to a blob object URL.
-   * Deduplicates concurrent fetches so that multiple cards referencing the
-   * same avatar share a single network request instead of each downloading
-   * the full image independently.
-   * @param {string} avatarUrl - The avatar proxy URL to resolve
-   * @returns {Promise<string>} A blob: object URL, or "" on failure
-   */
-  async function resolveProtectedAvatarUrl(avatarUrl) {
-    if (!avatarUrl) return "";
-
-    if (!isSafeAvatarUrl(avatarUrl)) {
-      return "";
-    }
-
-    if (!avatarUrl.startsWith("/JellyfinEnhanced/proxy/avatar")) return avatarUrl;
-
-    if (avatarObjectUrlCache.has(avatarUrl)) {
-      return avatarObjectUrlCache.get(avatarUrl);
-    }
-
-    // Deduplicate in-flight fetches: if a fetch for this URL is already
-    // in progress, await the same promise instead of starting a new one.
-    // This prevents N parallel downloads of the same large avatar image
-    // when N request cards reference the same user.
-    if (avatarFetchPromises.has(avatarUrl)) {
-      return avatarFetchPromises.get(avatarUrl);
-    }
-
-    const fetchPromise = (async () => {
-      try {
-        const response = await fetch(ApiClient.getUrl(avatarUrl), { headers: getAuthHeaders() });
-        if (!response.ok) return "";
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        avatarObjectUrlCache.set(avatarUrl, objectUrl);
-        return objectUrl;
-      } catch {
-        return "";
-      } finally {
-        avatarFetchPromises.delete(avatarUrl);
-      }
-    })();
-
-    avatarFetchPromises.set(avatarUrl, fetchPromise);
-    return fetchPromise;
-  }
-
-  function hydrateAvatarImages(container) {
-    const avatarImgs = container.querySelectorAll("img.je-request-avatar[data-avatar-src]");
-    avatarImgs.forEach(async (img) => {
-      const sourceUrl = img.getAttribute("data-avatar-src");
-      if (!sourceUrl) {
-        img.style.display = "none";
-        return;
-      }
-
-      const resolvedUrl = await resolveProtectedAvatarUrl(sourceUrl);
-      if (!img.isConnected) return;
-
-      if (!resolvedUrl) {
-        img.style.display = "none";
-        return;
-      }
-
-      if (!isSafeAvatarUrl(resolvedUrl)) {
-        img.style.display = "none";
-        return;
-      }
-
-      img.src = resolvedUrl;
-      img.style.display = "";
-    });
-  }
 
   /**
    * Fetch download queue from backend
@@ -415,8 +283,8 @@
   }
 
   P.state = state;
-  P.clearAvatarObjectUrlCache = clearAvatarObjectUrlCache;
-  P.hydrateAvatarImages = hydrateAvatarImages;
+  P.clearAvatarObjectUrlCache = JE.helpers.clearAvatarObjectUrlCache;
+  P.hydrateAvatarImages = JE.helpers.hydrateAvatarImages;
   P.fetchRequests = fetchRequests;
   P.fetchIssues = fetchIssues;
   P.getIssueMediaType = getIssueMediaType;

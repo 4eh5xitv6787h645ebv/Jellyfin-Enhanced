@@ -7,6 +7,7 @@
     JE.internals = JE.internals || {};
     const internal = JE.internals.moreInfoModal = JE.internals.moreInfoModal || { state: { currentModal: null } };
     const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr More Info:';
+    const MediaStatus = JE.seerrStatus.MEDIA;
 
 /**
  * Fetch ratings from Jellyseerr API
@@ -53,28 +54,40 @@ async function fetchRatings(tmdbId, mediaType) {
     }
 }
 
+function sanitizeMediaInfo4kStatus(data) {
+    const mediaInfo = data?.mediaInfo;
+    if (!mediaInfo || mediaInfo.status4k !== MediaStatus.AVAILABLE) return;
+    const hasDistinct4kLibraryItem = mediaInfo.jellyfinMediaId4k
+        && mediaInfo.jellyfinMediaId4k !== mediaInfo.jellyfinMediaId;
+    if (!hasDistinct4kLibraryItem) {
+        mediaInfo.status4k = MediaStatus.UNKNOWN;
+    }
+}
+
 /**
  * Fetch media details from Jellyseerr API via proxy.  */
 async function fetchMediaDetails(tmdbId, mediaType) {
     try {
-        const JE = window.JellyfinEnhanced;
+        let data;
         if (JE && JE.jellyseerrAPI) {
-            return mediaType === 'movie'
+            data = mediaType === 'movie'
                 ? await JE.jellyseerrAPI.fetchMovieDetails(tmdbId)
                 : await JE.jellyseerrAPI.fetchTvShowDetails(tmdbId);
+        } else {
+            const endpoint = mediaType === 'movie'
+                ? `/movie/${tmdbId}`
+                : `/tv/${tmdbId}`;
+
+            data = await ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl(`/JellyfinEnhanced/jellyseerr${endpoint}`),
+                headers: { 'X-Jellyfin-User-Id': ApiClient.getCurrentUserId() },
+                dataType: 'json'
+            });
         }
-        const endpoint = mediaType === 'movie'
-            ? `/movie/${tmdbId}`
-            : `/tv/${tmdbId}`;
 
-        const response = await ApiClient.ajax({
-            type: 'GET',
-            url: ApiClient.getUrl(`/JellyfinEnhanced/jellyseerr${endpoint}`),
-            headers: { 'X-Jellyfin-User-Id': ApiClient.getCurrentUserId() },
-            dataType: 'json'
-        });
-
-        return response;
+        sanitizeMediaInfo4kStatus(data);
+        return data;
     } catch (error) {
         console.error(`${logPrefix} Failed to fetch ${mediaType} details for TMDB ID ${tmdbId}:`, error);
         throw error;

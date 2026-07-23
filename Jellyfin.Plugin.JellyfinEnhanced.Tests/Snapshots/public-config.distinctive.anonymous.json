@@ -80,6 +80,8 @@
   "JellyseerrExcludeLibraryItems": true,
   "JellyseerrShowAdvanced": false,
   "JellyseerrShowCollectionDiscovery": true,
+  "JellyseerrShowDetailPageLink": true,
+  "JellyseerrShowDetailPageLinkAsText": false,
   "JellyseerrShowGenreDiscovery": true,
   "JellyseerrShowIssueIndicator": false,
   "JellyseerrShowNetworkDiscovery": true,
@@ -114,7 +116,7 @@
   "RatingTagsEnabled": false,
   "RatingTagsPosition": "cfg-RatingTagsPosition",
   "RemoveContinueWatchingEnabled": false,
-  "ResolutionTagOrder": 1171,
+  "ResolutionTagOrder": 1173,
   "ReviewsExpandedByDefault": false,
   "Shortcuts": [
     {
@@ -230,6 +232,12 @@
       "Key": "Z",
       "Label": "Jump to Last Position",
       "Name": "JumpToLastPosition"
+    },
+    {
+      "Category": "Player",
+      "Key": "0-9",
+      "Label": "Jump to % of video",
+      "Name": "JumpToPercentage"
     }
   ],
   "ShowArrLinksAsText": false,
@@ -252,11 +260,11 @@
   "ShowUserReviews": false,
   "ShowVideoCodecTag": true,
   "ShowWatchProgress": false,
-  "SourceTagOrder": 1199,
-  "SpecialFormatTagOrder": 1200,
+  "SourceTagOrder": 1201,
+  "SpecialFormatTagOrder": 1202,
   "SplashScreenImageUrl": "cfg-SplashScreenImageUrl",
   "SpoilerBlurEnabled": false,
-  "SpoilerBlurIntensity": 1206,
+  "SpoilerBlurIntensity": 1208,
   "SpoilerBlurStrictRefresh": false,
   "SpoilerReplaceTitle": true,
   "SpoilerStripCast": true,
@@ -270,11 +278,11 @@
   "SpoilerStripTags": true,
   "SyncJellyseerrWatchlist": false,
   "TagCacheServerMode": true,
-  "TagsCacheTtlDays": 1226,
+  "TagsCacheTtlDays": 1228,
   "TagsHideOnHover": false,
   "ThemeSelectorEnabled": false,
   "TmdbEnabled": true,
-  "ToastDuration": 1229,
+  "ToastDuration": 1231,
   "UseIcons": true,
-  "VideoCodecTagOrder": 1232
+  "VideoCodecTagOrder": 1234
 }

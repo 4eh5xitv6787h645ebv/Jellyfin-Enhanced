@@ -1310,6 +1310,14 @@
                             <div class="je-setting-description" data-desc-for="showElsewhereOnJellyseerr">
                                 <div class="fieldDescription je-field-desc-xl">Displays icons of available streaming services (from your default region) on Seerr Posters.<br/><br/><b>Requires TMDB API Key to be configured in Elsewhere Settings</b></div>
                             </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrShowDetailPageLink" data-config-key="JellyseerrShowDetailPageLink" data-config-default="true" is="emby-checkbox" type="checkbox"/><span>Show Seerr link on item detail pages</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrShowDetailPageLink">
+                                <div class="fieldDescription je-field-desc-xl">Adds a Seerr tag to the External Links row on movie/show detail pages. With the More Info modal enabled, the tag opens that modal; otherwise it links directly to the item in Seerr.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrShowDetailPageLinkAsText" data-config-key="JellyseerrShowDetailPageLinkAsText" is="emby-checkbox" type="checkbox"/><span>Show as text instead of icon</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrShowDetailPageLinkAsText">
+                                <div class="fieldDescription je-field-desc-xl">Renders the detail-page link as the word “Seerr” instead of the Seerr icon.</div>
+                            </div>
 
                             <details class="je-details-section">
                                 <summary>Item Pages Discovery</summary>
@@ -2297,7 +2305,9 @@
                                     </p>
                                 </div>
                                 <button is="emby-button" type="button" id="add-shortcut-btn" class="emby-button raised">Add</button>
+                                <button is="emby-button" type="button" id="disable-shortcut-btn" class="emby-button raised button-cancel" title="Disables this shortcut for every user on the server">Disable</button>
                             </div>
+                            <div class="fieldDescription je-field-desc-mt">Select a shortcut above and click <b>Disable</b> to turn it off server-wide. Users can still re-enable it from their Enhanced Panel.</div>
                             <div id="shortcut-error-comment" style="display: none; color: #ff6b6b; margin-top:5px;"></div>
 
                             <h4 style="margin-top:20px;">Current Overrides</h4>

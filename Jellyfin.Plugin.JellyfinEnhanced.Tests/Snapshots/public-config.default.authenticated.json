@@ -80,6 +80,8 @@
   "JellyseerrExcludeLibraryItems": true,
   "JellyseerrShowAdvanced": false,
   "JellyseerrShowCollectionDiscovery": true,
+  "JellyseerrShowDetailPageLink": true,
+  "JellyseerrShowDetailPageLinkAsText": false,
   "JellyseerrShowGenreDiscovery": true,
   "JellyseerrShowIssueIndicator": false,
   "JellyseerrShowNetworkDiscovery": true,
@@ -230,6 +232,12 @@
       "Key": "Z",
       "Label": "Jump to Last Position",
       "Name": "JumpToLastPosition"
+    },
+    {
+      "Category": "Player",
+      "Key": "0-9",
+      "Label": "Jump to % of video",
+      "Name": "JumpToPercentage"
     }
   ],
   "ShowArrLinksAsText": false,

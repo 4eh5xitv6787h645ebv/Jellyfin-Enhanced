@@ -69,6 +69,7 @@ function buildModalContent(data, mediaType) {
                                         <span class="genres">${data.genres?.map(g => escapeHtml(g.name)).join(', ') || 'N/A'}</span>
                                     </div>
                                     ${data.tagline ? `<p class="tagline">${escapeHtml(data.tagline)}</p>` : ''}
+                                    <div class="je-requested-by" data-mount="je-requested-by"></div>
                                     <div class="je-downloads" data-mount="je-downloads"></div>
                                     <div class="je-more-info-actions" data-mount="je-actions"></div>
                                     <div class="je-more-info-secondary-actions" data-mount="je-secondary-actions"></div>

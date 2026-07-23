@@ -17,6 +17,85 @@
     const itemCache = new Map();
     const ITEM_CACHE_TTL_MS = 30000; // 30s -- long enough for batch prefetch to warm cache before tag systems scan
 
+    // Protected Seerr avatars require authenticated blob fetches because a
+    // plain <img> cannot attach Jellyfin auth headers. Keep one shared cache
+    // for the Requests page and Seerr More Info modal.
+    const avatarObjectUrlCache = new Map();
+    const avatarFetchPromises = new Map();
+
+    function getAvatarAuthHeaders() {
+        const token = ApiClient.accessToken ? ApiClient.accessToken() : '';
+        return {
+            'Authorization': 'MediaBrowser Token="' + token + '"',
+            'X-MediaBrowser-Token': token,
+        };
+    }
+
+    function isSafeAvatarUrl(url) {
+        if (!url || typeof url !== 'string') return false;
+        if (url.startsWith('/') || url.startsWith('blob:')) return true;
+
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return true;
+            if (parsed.protocol === 'data:') return /^data:image\//i.test(url);
+        } catch {
+            return false;
+        }
+        return false;
+    }
+
+    async function resolveProtectedAvatarUrl(avatarUrl) {
+        if (!isSafeAvatarUrl(avatarUrl)) return '';
+        if (!avatarUrl.startsWith('/JellyfinEnhanced/proxy/avatar')) return avatarUrl;
+        if (avatarObjectUrlCache.has(avatarUrl)) return avatarObjectUrlCache.get(avatarUrl);
+        if (avatarFetchPromises.has(avatarUrl)) return avatarFetchPromises.get(avatarUrl);
+
+        const fetchPromise = (async () => {
+            try {
+                const response = await fetch(ApiClient.getUrl(avatarUrl), { headers: getAvatarAuthHeaders() });
+                if (!response.ok) return '';
+                const objectUrl = URL.createObjectURL(await response.blob());
+                avatarObjectUrlCache.set(avatarUrl, objectUrl);
+                return objectUrl;
+            } catch {
+                return '';
+            } finally {
+                avatarFetchPromises.delete(avatarUrl);
+            }
+        })();
+
+        avatarFetchPromises.set(avatarUrl, fetchPromise);
+        return fetchPromise;
+    }
+
+    function hydrateAvatarImages(container) {
+        const avatarImgs = container.querySelectorAll('img.je-request-avatar[data-avatar-src]');
+        avatarImgs.forEach(async (img) => {
+            const sourceUrl = img.getAttribute('data-avatar-src');
+            if (!sourceUrl) {
+                img.style.display = 'none';
+                return;
+            }
+
+            const resolvedUrl = await resolveProtectedAvatarUrl(sourceUrl);
+            if (!img.isConnected) return;
+            if (!resolvedUrl || !isSafeAvatarUrl(resolvedUrl)) {
+                img.style.display = 'none';
+                return;
+            }
+
+            img.src = resolvedUrl;
+            img.style.display = '';
+        });
+    }
+
+    function clearAvatarObjectUrlCache(includeInFlight) {
+        avatarObjectUrlCache.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
+        avatarObjectUrlCache.clear();
+        if (includeInFlight) avatarFetchPromises.clear();
+    }
+
     /**
      * Deduplicated item fetch with short TTL cache.
      * Prevents multiple modules from requesting the same item concurrently on detail page navigation.
@@ -336,6 +415,10 @@
         removeCSS: (id) => JE.core.ui.removeCss(id), // (core)
         escHtml: (s) => JE.core.ui.escapeHtml(s), // (core)
         createExternalLink,
+        isSafeAvatarUrl,
+        resolveProtectedAvatarUrl,
+        hydrateAvatarImages,
+        clearAvatarObjectUrlCache,
         getHandlerCount: () => JE.core.navigation.getViewHandlerCount(), // (core)
         getObserverCount: () => JE.core.dom.getObserverCount(), // (core)
         getBodySubscriberCount: () => JE.core.dom.getBodySubscriberCount() // (core)

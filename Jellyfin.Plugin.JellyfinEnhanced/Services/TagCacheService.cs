@@ -40,6 +40,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private long _changeVersion;
         private long _persistedChangeVersion;
         private Timer? _debounceSaveTimer;
+        private long _firstDirtyTicks; // 0 = nothing dirty since the last disk save
+
+        // Persist 30 seconds after the latest applied change, but cap sustained
+        // change streams at one full-cache write every five minutes.
+        private static readonly TimeSpan SaveDebounce = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan SaveMaxWait = TimeSpan.FromMinutes(5);
 
         internal Action? SaveSnapshotCapturedForTest { get; set; }
 
@@ -228,6 +234,29 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     _rebuildMutations[key] = entry;
                 }
                 Interlocked.Increment(ref _changeVersion);
+            }
+        }
+
+        private bool CommitCacheEntryIfChanged(string key, TagCacheEntry entry)
+        {
+            lock (_cacheMutationLock)
+            {
+                // Jellyfin raises ItemUpdated for many no-op scan and chapter
+                // operations. Preserve the existing LastUpdated stamp and avoid
+                // serializing the full cache when no client-visible field changed.
+                if (_cache.TryGetValue(key, out var existing)
+                    && TagCacheEntry.ContentEquals(existing, entry))
+                {
+                    return false;
+                }
+
+                _cache[key] = entry;
+                if (_rebuildMutations != null)
+                {
+                    _rebuildMutations[key] = entry;
+                }
+                Interlocked.Increment(ref _changeVersion);
+                return true;
             }
         }
 
@@ -564,14 +593,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             if (entry == null) return false;
 
             var key = id.ToString("N").ToLowerInvariant();
-            CommitCacheEntry(key, entry);
-            return true;
+            return CommitCacheEntryIfChanged(key, entry);
         }
 
         private bool RemoveEntry(Guid id)
         {
             var key = id.ToString("N").ToLowerInvariant();
-            return CommitCacheRemoval(key);
+            if (!CommitCacheRemoval(key)) return false;
+
+            // A delta payload cannot represent a missing key, so force clients
+            // to perform a full reload when an item is removed.
+            Interlocked.Increment(ref _version);
+            return true;
         }
 
         /// <summary>
@@ -883,6 +916,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             lock (_saveLock)
             {
+                // Reset before capturing the snapshot so a concurrent mutation
+                // starts a fresh capped debounce window for its follow-up save.
+                var previousStamp = Interlocked.Exchange(ref _firstDirtyTicks, 0);
                 try
                 {
                     var dir = Path.GetDirectoryName(CacheFilePath);
@@ -924,6 +960,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
                 catch (Exception ex)
                 {
+                    if (previousStamp != 0)
+                    {
+                        Interlocked.CompareExchange(ref _firstDirtyTicks, previousStamp, 0);
+                    }
                     _logger.LogError($"[TagCache] Failed to save cache to disk: {ex.Message}");
                 }
             }
@@ -931,6 +971,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
         private void ScheduleDebouncedSave()
         {
+            Interlocked.CompareExchange(ref _firstDirtyTicks, DateTime.UtcNow.Ticks, 0);
             // During/after shutdown, persist synchronously instead of arming a timer that a
             // torn-down service would never fire. This is what keeps a flush that finishes
             // AFTER Dispose's (bounded) wait from losing its applied changes — it saves them
@@ -943,6 +984,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
                 return;
             }
+
+            var due = ComputeFlushDelay(
+                Interlocked.Read(ref _firstDirtyTicks),
+                DateTime.UtcNow,
+                SaveDebounce,
+                SaveMaxWait);
+
             // Reuse existing timer if possible, otherwise create a new one.
             // Change() resets the countdown without creating a new object.
             var existing = _debounceSaveTimer;
@@ -950,7 +998,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 try
                 {
-                    existing.Change(TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
+                    existing.Change(due, Timeout.InfiniteTimeSpan);
                     return;
                 }
                 catch (ObjectDisposedException) { }
@@ -961,7 +1009,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     SaveToDisk();
                 }
-            }, null, TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
+            }, null, due, Timeout.InfiniteTimeSpan);
             var old = Interlocked.Exchange(ref _debounceSaveTimer, timer);
             if (old != null && !ReferenceEquals(old, timer))
             {

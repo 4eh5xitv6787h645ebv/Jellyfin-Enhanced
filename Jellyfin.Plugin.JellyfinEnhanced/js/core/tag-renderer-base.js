@@ -160,10 +160,16 @@
          */
         function defaultShouldIgnore(el) {
             if (!state.ignoreSelectors) state.ignoreSelectors = buildIgnoreSelectors();
+            // The shared pipeline renders into `.je-tag-host`, which is a
+            // sibling of `.cardImageContainer` inside `.cardScalable`. Resolve
+            // back to the image container before applying exclusion selectors.
+            const target = el.closest('.cardImageContainer')
+                || el.closest('.cardScalable')?.querySelector('.cardImageContainer')
+                || el;
             return state.ignoreSelectors.some((selector) => {
                 try {
-                    if (el.matches(selector)) return true;
-                    return el.closest(selector) !== null;
+                    if (target.matches(selector)) return true;
+                    return target.closest(selector) !== null;
                 } catch {
                     return false; // Silently handle potential errors with complex selectors
                 }

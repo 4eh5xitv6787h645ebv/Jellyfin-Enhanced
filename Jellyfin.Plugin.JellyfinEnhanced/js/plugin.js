@@ -750,6 +750,7 @@
                 'jellyseerr/more-info/more-info-modal-actions-tv.js',
                 'jellyseerr/more-info/more-info-modal-actions.js',
                 'jellyseerr/more-info/more-info-modal-init.js',
+                'jellyseerr/seerr-detail-link.js',
                 'jellyseerr/hss-discovery-handler.js',
                 'jellyseerr/item-details.js',
                 'jellyseerr/issue-reporter.js',
@@ -864,6 +865,7 @@
             if (typeof JE.initializeUserReviewTags === 'function' && JE.pluginConfig?.ShowUserReviews && JE.pluginConfig?.ShowUserRatingOnPosters && JE.currentSettings?.ratingTagsEnabled) JE.initializeUserReviewTags();
             if (typeof JE.initializeArrLinksScript === 'function' && JE.pluginConfig?.ArrLinksEnabled) JE.initializeArrLinksScript();
             if (typeof JE.initializeArrTagLinksScript === 'function' && JE.pluginConfig?.ArrTagsShowAsLinks) JE.initializeArrTagLinksScript();
+            if (typeof JE.initializeSeerrDetailLinkScript === 'function' && JE.pluginConfig?.JellyseerrEnabled && JE.pluginConfig?.JellyseerrShowDetailPageLink) JE.initializeSeerrDetailLinkScript();
             if (typeof JE.initializeLetterboxdLinksScript === 'function' && JE.pluginConfig?.LetterboxdEnabled) JE.initializeLetterboxdLinksScript();
             if (typeof JE.initializeReviewsScript === 'function' && (JE.pluginConfig?.ShowReviews || JE.pluginConfig?.ShowUserReviews)) JE.initializeReviewsScript();
             if (typeof JE.initializeLanguageTags === 'function' && JE.currentSettings?.languageTagsEnabled) JE.initializeLanguageTags();

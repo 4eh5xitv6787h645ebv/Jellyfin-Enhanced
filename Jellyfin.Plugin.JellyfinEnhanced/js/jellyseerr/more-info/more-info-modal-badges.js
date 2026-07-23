@@ -91,9 +91,15 @@ function buildMediaFacts(data, mediaType, tmdbId) {
     const jellyseerrBaseUrl = JE.jellyseerrAPI?.resolveJellyseerrBaseUrl() || '';
     const jellyseerrLink = jellyseerrBaseUrl ? `${jellyseerrBaseUrl}/${mediaType}/${tmdbId}` : null;
 
-    // Jellyfin library IDs (set when item is available in the local library)
+    // Only expose a 4K deep link when Seerr reports genuine 4K availability
+    // and that variant points at a distinct Jellyfin library item.
     const jellyfinMediaId = data.mediaInfo?.jellyfinMediaId || null;
-    const jellyfinMediaId4k = data.mediaInfo?.jellyfinMediaId4k || null;
+    const is4kAvailable = data.mediaInfo?.status4k === JE.seerrStatus.MEDIA.AVAILABLE;
+    const jellyfinMediaId4k = (is4kAvailable
+        && data.mediaInfo?.jellyfinMediaId4k
+        && data.mediaInfo.jellyfinMediaId4k !== jellyfinMediaId)
+        ? data.mediaInfo.jellyfinMediaId4k
+        : null;
 
     const jellyfinSvg = '<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 512 512"><defs><linearGradient id="je_jfl_a" x1="97.487" x2="522.047" y1="483.902" y2="729.018" gradientTransform="translate(0 -278)" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:#aa5cc3"/><stop offset="1" style="stop-color:#00a4dc"/></linearGradient><linearGradient id="je_jfl_b" x1="94.186" x2="518.747" y1="489.619" y2="734.735" gradientTransform="translate(0 -278)" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:#aa5cc3"/><stop offset="1" style="stop-color:#00a4dc"/></linearGradient></defs><path d="M256 196.2c-22.4 0-94.8 131.3-83.8 153.4s156.8 21.9 167.7 0-61.3-153.4-83.9-153.4" style="fill:url(#je_jfl_a)"/><path d="M256 0C188.3 0-29.8 395.4 3.4 462.2s472.3 66 505.2 0S323.8 0 256 0m165.6 404.3c-21.6 43.2-309.3 43.8-331.1 0S211.7 101.4 256 101.4 443.2 361 421.6 404.3" style="fill:url(#je_jfl_b)"/></svg>';
     const jellyfinSvg4k = '<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 512 512"><defs><linearGradient id="jf4k-a" x1="97.487" x2="522.047" y1="483.902" y2="729.018" gradientTransform="translate(0 -278)" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:#aa5cc3"/><stop offset="1" style="stop-color:#00a4dc"/></linearGradient><linearGradient id="jf4k-b" x1="94.186" x2="518.747" y1="489.619" y2="734.735" gradientTransform="translate(0 -278)" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:#aa5cc3"/><stop offset="1" style="stop-color:#00a4dc"/></linearGradient><linearGradient id="jf4k-c" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1a1a2e"/><stop offset="100%" style="stop-color:#16213e"/></linearGradient></defs><path d="M256 196.2c-22.4 0-94.8 131.3-83.8 153.4s156.8 21.9 167.7 0-61.3-153.4-83.9-153.4" style="fill:url(#jf4k-a)"/><path d="M256 0C188.3 0-29.8 395.4 3.4 462.2s472.3 66 505.2 0S323.8 0 256 0m165.6 404.3c-21.6 43.2-309.3 43.8-331.1 0S211.7 101.4 256 101.4 443.2 361 421.6 404.3" style="fill:url(#jf4k-b)"/><rect x="310" y="330" width="202" height="170" rx="20" fill="url(#jf4k-c)"/><rect x="312" y="332" width="198" height="166" rx="19" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/><text x="411" y="462" text-anchor="middle" fill="#fff" font-weight="900" font-size="140" font-family="Arial Black, Arial, sans-serif" letter-spacing="-3">4K</text></svg>';

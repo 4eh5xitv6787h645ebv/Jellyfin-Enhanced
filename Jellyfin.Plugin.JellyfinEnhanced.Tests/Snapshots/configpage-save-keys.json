@@ -123,6 +123,8 @@
   "JellyseerrResponseCacheTtlMinutes",
   "JellyseerrShowAdvanced",
   "JellyseerrShowCollectionDiscovery",
+  "JellyseerrShowDetailPageLink",
+  "JellyseerrShowDetailPageLinkAsText",
   "JellyseerrShowGenreDiscovery",
   "JellyseerrShowIssueIndicator",
   "JellyseerrShowNetworkDiscovery",

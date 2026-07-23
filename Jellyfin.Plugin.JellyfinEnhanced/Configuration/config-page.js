@@ -62,6 +62,7 @@
             const addShortcutSelect = document.getElementById('add-shortcut-select');
             const addShortcutKeyInput = document.getElementById('add-shortcut-key');
             const addShortcutBtn = document.getElementById('add-shortcut-btn');
+            const disableShortcutBtn = document.getElementById('disable-shortcut-btn');
             const shortcutErrorComment = document.getElementById('shortcut-error-comment');
 
             const testJellyseerrBtn = document.getElementById('testJellyseerrBtn');
@@ -671,7 +672,8 @@
             { Name: "SkipIntroOutro", Key: "O", Label: "Skip Intro/Outro", Category: "Player" },
             { Name: "FrameStepBack", Key: ",", Label: "Step Back One Frame", Category: "Player" },
             { Name: "FrameStepForward", Key: ".", Label: "Step Forward One Frame", Category: "Player" },
-            { Name: "JumpToLastPosition", Key: "Z", Label: "Jump to Last Position", Category: "Player" }
+            { Name: "JumpToLastPosition", Key: "Z", Label: "Jump to Last Position", Category: "Player" },
+            { Name: "JumpToPercentage", Key: "0-9", Label: "Jump to % of video", Category: "Player" }
         ];
 
         function renderOverrides() {
@@ -697,6 +699,11 @@
                 input.value = shortcut.Key;
                 input.style.flex = '1';
                 input.style.textAlign = 'center';
+                if (shortcut.Key === '') {
+                    input.placeholder = 'Disabled';
+                    input.style.opacity = '0.6';
+                    input.title = 'This shortcut is disabled server-wide. Type a key to re-enable it, or remove the override to restore its default.';
+                }
                 input.addEventListener('input', (e) => {
                     let value = e.target.value;
                     // Automatically convert single lowercase letters to uppercase ***
@@ -704,6 +711,8 @@
                         value = value.toUpperCase();
                         e.target.value = value;
                     }
+                    input.style.opacity = value === '' ? '0.6' : '';
+                    input.placeholder = value === '' ? 'Disabled' : '';
                     shortcutOverrides[index].Key = value;
                 });
 
@@ -742,6 +751,7 @@
             });
             addShortcutBtn.disabled = availableShortcuts.length === 0;
             addShortcutKeyInput.disabled = availableShortcuts.length === 0;
+            disableShortcutBtn.disabled = availableShortcuts.length === 0;
         }
 
         function showValidationError(elementToShake, message) {
@@ -791,6 +801,19 @@
             const defaultConfig = defaultShortcuts.find(s => s.Name === selectedName);
             if (defaultConfig) {
                 shortcutOverrides.push({ ...defaultConfig, Key: newKey });
+                renderOverrides();
+                populateAddShortcutDropdown();
+                addShortcutKeyInput.value = '';
+            }
+        });
+
+        disableShortcutBtn.addEventListener('click', () => {
+            const selectedName = addShortcutSelect.value;
+            if (!selectedName) return;
+
+            const defaultConfig = defaultShortcuts.find(s => s.Name === selectedName);
+            if (defaultConfig) {
+                shortcutOverrides.push({ ...defaultConfig, Key: '' });
                 renderOverrides();
                 populateAddShortcutDropdown();
                 addShortcutKeyInput.value = '';
@@ -3296,6 +3319,7 @@
             { parent: 'enableCustomSplashScreen', label: 'Enable Custom Splash Screen', children: ['splashScreenImageUrl'] },
             { parent: 'jellyseerrShowSearchResults', label: 'Show Seerr Results in Search', children: ['showCollectionsInSearch'] },
             { parent: 'jellyseerrShowReportButton', label: 'Show Report Issue button', children: ['jellyseerrShowIssueIndicator'] },
+            { parent: 'jellyseerrShowDetailPageLink', label: 'Show Seerr link on item detail pages', children: ['jellyseerrShowDetailPageLinkAsText'] },
             { parent: 'downloadsPageEnabled', label: 'Enable Requests Page', children: ['showDownloadsInRequests', 'downloadsPageShowIssues', 'downloadsUsePluginPages', 'downloadsUseNativeTab', 'downloadsUseCustomTabs', 'downloadsPagePollingEnabled'] },
             { parent: 'showDownloadsInRequests', label: 'Show Downloads in Requests Page', children: ['downloadsFilterByUserRequests'] },
             { parent: 'downloadsPagePollingEnabled', label: 'Enable Auto-Refresh', children: ['downloadsPollIntervalSeconds'] },
@@ -3791,6 +3815,12 @@
             feat('Seerr integration', bool('jellyseerrEnabled'), 'seerr',
                 seerrWarn ? 'Enabled but Seerr URL or API key missing' : 'Enabled',
                 seerrWarn);
+
+            var seerrLinkOn = bool('jellyseerrEnabled') && bool('jellyseerrShowDetailPageLink');
+            var seerrLinkWarn = seerrLinkOn && !seerrConfigured();
+            feat('Seerr detail-page link', seerrLinkOn, 'seerr',
+                seerrLinkWarn ? 'Enabled but Seerr URL or API key missing' : 'Enabled',
+                seerrLinkWarn);
 
             // Watchlist (Seerr tab). Sync and "add requested → watchlist" both
             // need KefinTweaks to actually render the watchlist UI in Jellyfin;

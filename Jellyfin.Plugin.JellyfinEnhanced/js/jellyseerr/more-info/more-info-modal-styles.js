@@ -245,6 +245,37 @@ const css = `
             margin: 0;
         }
 
+        .je-more-info-modal .je-requested-by:empty {
+            display: none;
+        }
+
+        .je-more-info-modal .je-requested-by-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-top: 0.3rem;
+        }
+
+        .je-more-info-modal .je-requested-by-label {
+            opacity: 0.7;
+        }
+
+        .je-more-info-modal .je-requested-by-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .je-more-info-modal .je-request-avatar {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
         .je-more-info-modal .je-more-info-actions {
             margin-top: 0.6rem;
             flex-direction: column;

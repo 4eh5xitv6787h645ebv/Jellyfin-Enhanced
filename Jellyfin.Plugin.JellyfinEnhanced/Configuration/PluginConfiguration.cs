@@ -125,7 +125,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 new Shortcut { Name = "SkipIntroOutro", Key = "O", Label = "Skip Intro/Outro", Category = "Player" },
                 new Shortcut { Name = "FrameStepBack", Key = ",", Label = "Step Back One Frame", Category = "Player" },
                 new Shortcut { Name = "FrameStepForward", Key = ".", Label = "Step Forward One Frame", Category = "Player" },
-                new Shortcut { Name = "JumpToLastPosition", Key = "Z", Label = "Jump to Last Position", Category = "Player" }
+                new Shortcut { Name = "JumpToLastPosition", Key = "Z", Label = "Jump to Last Position", Category = "Player" },
+                new Shortcut { Name = "JumpToPercentage", Key = "0-9", Label = "Jump to % of video", Category = "Player" }
             };
 
             // Seerr Search Settings
@@ -145,6 +146,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             JellyseerrShowTagDiscovery = true;
             JellyseerrShowPersonDiscovery = true;
             JellyseerrShowCollectionDiscovery = true;
+            JellyseerrShowDetailPageLink = true;
+            JellyseerrShowDetailPageLinkAsText = false;
             ShowElsewhereOnJellyseerr = false;
             JellyseerrUseMoreInfoModal = false;
             JellyseerrUrls = "";
@@ -442,6 +445,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool JellyseerrShowTagDiscovery { get; set; }
         public bool JellyseerrShowPersonDiscovery { get; set; }
         public bool JellyseerrShowCollectionDiscovery { get; set; }
+        public bool JellyseerrShowDetailPageLink { get; set; }
+        public bool JellyseerrShowDetailPageLinkAsText { get; set; }
         public bool JellyseerrExcludeLibraryItems { get; set; } = true;
         public bool JellyseerrExcludeBlocklistedItems { get; set; } = false;
         public bool ShowElsewhereOnJellyseerr { get; set; }

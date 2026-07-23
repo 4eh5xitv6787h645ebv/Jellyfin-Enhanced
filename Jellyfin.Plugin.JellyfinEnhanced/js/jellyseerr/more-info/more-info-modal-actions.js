@@ -272,6 +272,66 @@ async function maybeRenderMoreInfoQuotaChip(actionMount, mediaType) {
     }
 }
 
+function resolveRequesterAvatarSrc(avatar) {
+    if (!avatar) return null;
+    if (avatar.startsWith('/')) {
+        return ApiClient.getUrl('/JellyfinEnhanced/proxy/avatar', { path: avatar });
+    }
+    return avatar;
+}
+
+function renderRequestedBy(mount, mediaInfo) {
+    if (!mount) return;
+    const requests = Array.isArray(mediaInfo?.requests) ? mediaInfo.requests : [];
+    if (requests.length === 0) return;
+
+    const seen = new Set();
+    const entries = [];
+    requests.forEach(req => {
+        const requestedBy = req?.requestedBy;
+        const name = requestedBy?.displayName || requestedBy?.username;
+        if (!name) return;
+        const label = req.is4k ? `${name} (4K)` : name;
+        if (seen.has(label)) return;
+        seen.add(label);
+        entries.push({ label, avatarSrc: resolveRequesterAvatarSrc(requestedBy?.avatar) });
+    });
+    if (entries.length === 0) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'je-requested-by-row';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'je-requested-by-label';
+    labelEl.textContent = JE.t('jellyseerr_modal_requested_by') || 'Requested by';
+    wrapper.appendChild(labelEl);
+
+    entries.forEach(entry => {
+        const item = document.createElement('span');
+        item.className = 'je-requested-by-item';
+
+        if (entry.avatarSrc) {
+            const img = document.createElement('img');
+            img.className = 'je-request-avatar';
+            img.setAttribute('data-avatar-src', entry.avatarSrc);
+            img.alt = '';
+            img.loading = 'lazy';
+            img.style.display = 'none';
+            img.addEventListener('error', () => { img.style.display = 'none'; });
+            item.appendChild(img);
+        }
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'je-requested-by-name';
+        nameEl.textContent = entry.label;
+        item.appendChild(nameEl);
+        wrapper.appendChild(item);
+    });
+
+    mount.appendChild(wrapper);
+    JE.helpers?.hydrateAvatarImages?.(mount);
+}
+
 function renderActions(data, mediaType) {
     if (!state.currentModal) return;
 
@@ -279,12 +339,15 @@ function renderActions(data, mediaType) {
     const chipMount = state.currentModal.querySelector('[data-mount="je-status-chip"]');
     const downloadsMount = state.currentModal.querySelector('[data-mount="je-downloads"]');
     const secondaryMount = state.currentModal.querySelector('[data-mount="je-secondary-actions"]');
+    const requestedByMount = state.currentModal.querySelector('[data-mount="je-requested-by"]');
     if (actionMount) actionMount.innerHTML = '';
     if (chipMount) chipMount.innerHTML = '';
     if (downloadsMount) downloadsMount.innerHTML = '';
     if (secondaryMount) secondaryMount.innerHTML = '';
+    if (requestedByMount) requestedByMount.innerHTML = '';
 
     const myToken = ++_renderActionsToken;
+    renderRequestedBy(requestedByMount, data.mediaInfo);
     JE.internals.spoilerGuard?.appendSeerrToggle?.(secondaryMount, data, mediaType);
 
     if (mediaType === 'movie') {
