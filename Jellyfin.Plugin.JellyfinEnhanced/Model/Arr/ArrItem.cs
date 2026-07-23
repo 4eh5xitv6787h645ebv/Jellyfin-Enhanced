@@ -163,6 +163,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr {
         /// Not serialized to clients to avoid exposing server filesystem paths.
         /// </summary>
         [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string? RootFolderPath { get; set; }
     }
 }

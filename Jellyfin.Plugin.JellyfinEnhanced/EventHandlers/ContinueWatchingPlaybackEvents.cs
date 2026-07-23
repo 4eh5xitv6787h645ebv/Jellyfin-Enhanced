@@ -10,8 +10,6 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Hosting;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
 {
@@ -35,14 +33,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
             new(StringComparer.OrdinalIgnoreCase) { "continuewatching", "homesections" };
 
         private readonly UserConfigurationManager _configManager;
-        private readonly ILogger<ContinueWatchingPlaybackConsumer> _logger;
-        private readonly IPluginConfigProvider _configProvider;
+        private readonly Logger _logger;
 
-        public ContinueWatchingPlaybackConsumer(UserConfigurationManager configManager, ILogger<ContinueWatchingPlaybackConsumer> logger, IPluginConfigProvider configProvider)
+        public ContinueWatchingPlaybackConsumer(UserConfigurationManager configManager, Logger logger)
         {
             _configManager = configManager;
             _logger = logger;
-            _configProvider = configProvider;
         }
 
         public Task OnEvent(PlaybackStartEventArgs eventArgs)
@@ -52,7 +48,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
                 // Mirror the response filter's HC + RCW gate (HiddenContentResponseFilter.cs). When admin runs
                 // RCW=on / HC=off, the filter still strips continuewatching-scope entries; without this branch
                 // resume would never auto-clear those entries and the user would see them stay hidden forever.
-                var cfg = _configProvider.ConfigurationOrNull;
+                var cfg = JellyfinEnhanced.Instance?.Configuration;
                 var hcEnabled = cfg?.HiddenContentEnabled == true;
                 var rcwEnabled = cfg?.RemoveContinueWatchingEnabled == true;
                 if (!hcEnabled && !rcwEnabled)
@@ -115,18 +111,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
                 }
                 catch (InvalidDataException ex)
                 {
-                    _logger.LogWarning($"CW: skipping playback drop for user {userId} due to corrupt hidden-content.json: {ex.Message}");
+                    _logger.Warning($"CW: skipping playback drop for user {userId} due to corrupt hidden-content.json: {ex.Message}");
                     return Task.CompletedTask;
                 }
 
                 if (changed > 0)
                 {
-                    _logger.LogInformation($"CW: dropped/demoted {changed} hidden-content entr{(changed == 1 ? "y" : "ies")} for user {userId} on resume of item {item.Id}");
+                    _logger.Info($"CW: dropped/demoted {changed} hidden-content entr{(changed == 1 ? "y" : "ies")} for user {userId} on resume of item {item.Id}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"CW: playback-start consumer failed: {ex.Message}");
+                _logger.Warning($"CW: playback-start consumer failed: {ex.Message}");
             }
 
             return Task.CompletedTask;
@@ -138,13 +134,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
         private readonly ILibraryManager _libraryManager;
         private readonly UserConfigurationManager _configManager;
         private readonly IUserManager _userManager;
-        private readonly ILogger<ContinueWatchingLibraryHook> _logger;
+        private readonly Logger _logger;
 
         public ContinueWatchingLibraryHook(
             ILibraryManager libraryManager,
             UserConfigurationManager configManager,
             IUserManager userManager,
-            ILogger<ContinueWatchingLibraryHook> logger)
+            Logger logger)
         {
             _libraryManager = libraryManager;
             _configManager = configManager;
@@ -185,7 +181,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"CW: orphan-prune background task failed: {ex.Message}");
+                    _logger.Warning($"CW: orphan-prune background task failed: {ex.Message}");
                 }
             });
         }
@@ -211,11 +207,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
             }
             catch (InvalidDataException ex)
             {
-                _logger.LogWarning($"CW: skipping orphan-prune for user {userId} due to corrupt hidden-content.json: {ex.Message}");
+                _logger.Warning($"CW: skipping orphan-prune for user {userId} due to corrupt hidden-content.json: {ex.Message}");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"CW: orphan-prune failed for user {userId}: {ex.Message}");
+                _logger.Warning($"CW: orphan-prune failed for user {userId}: {ex.Message}");
             }
         }
     }

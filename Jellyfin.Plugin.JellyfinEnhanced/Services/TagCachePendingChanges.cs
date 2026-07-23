@@ -18,13 +18,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     /// </summary>
     internal sealed class TagCachePendingChanges
     {
-        // The sequence makes a drain's conditional removal distinguish the value it
-        // snapshotted from a newer Record for the same id. Without it, TryRemove(id)
-        // can remove a change that arrived after the drain began.
-        private readonly record struct PendingChange(bool Removed, long Sequence);
-
-        private readonly ConcurrentDictionary<Guid, PendingChange> _pending = new();
-        private long _sequence;
+        // id -> true when the last observed change was a removal, false for an add/update.
+        private readonly ConcurrentDictionary<Guid, bool> _pending = new();
 
         /// <summary>
         /// Record the latest intent for an id. Last write wins, so a removal that
@@ -34,7 +29,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         public void Record(Guid id, bool removed)
         {
             if (id == Guid.Empty) return;
-            _pending[id] = new PendingChange(removed, Interlocked.Increment(ref _sequence));
+            _pending[id] = removed;
         }
 
         public bool IsEmpty => _pending.IsEmpty;
@@ -47,26 +42,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         /// re-arms the worker), so no change is lost.
         /// </summary>
         public IReadOnlyList<(Guid Id, bool Removed)> Drain()
-            => DrainCore(afterSnapshot: null);
-
-        internal IReadOnlyList<(Guid Id, bool Removed)> DrainForTest(Action afterSnapshot)
-            => DrainCore(afterSnapshot);
-
-        private IReadOnlyList<(Guid Id, bool Removed)> DrainCore(Action? afterSnapshot)
         {
             var batch = new List<(Guid, bool)>(_pending.Count);
-            var snapshot = _pending.ToList();
-            afterSnapshot?.Invoke();
-
-            var collection = (ICollection<KeyValuePair<Guid, PendingChange>>)_pending;
-            foreach (var change in snapshot)
+            foreach (var id in _pending.Keys.ToList())
             {
-                // ConcurrentDictionary's ICollection.Remove pair overload removes
-                // only when both key and value still match. A newer Record changes
-                // Sequence, so it stays queued for the next drain.
-                if (collection.Remove(change))
+                if (_pending.TryRemove(id, out var removed))
                 {
-                    batch.Add((change.Key, change.Value.Removed));
+                    batch.Add((id, removed));
                 }
             }
 

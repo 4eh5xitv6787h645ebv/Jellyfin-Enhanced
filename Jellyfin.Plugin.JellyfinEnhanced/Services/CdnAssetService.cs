@@ -6,13 +6,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using MediaBrowser.Common.Configuration;
-using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -36,7 +34,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     /// </summary>
     public class CdnAssetService
     {
-        private readonly ILogger<CdnAssetService> _logger;
+        private readonly Logger _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _cacheDir;
 
@@ -85,10 +83,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private static long _tmpCounter;
         private static readonly object _sweepLock = new();
 
-        public CdnAssetService(
-            ILogger<CdnAssetService> logger,
-            IHttpClientFactory httpClientFactory,
-            IApplicationPaths applicationPaths)
+        public CdnAssetService(Logger logger, IHttpClientFactory httpClientFactory, IApplicationPaths applicationPaths)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
@@ -220,7 +215,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
             if (!IsSafePath(path))
             {
-                _logger.LogWarning($"[CDN] Rejected unsafe asset path for source '{source}'.");
+                _logger.Warning($"[CDN] Rejected unsafe asset path for source '{source}'.");
                 return null;
             }
 
@@ -279,7 +274,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // (resilience against transient CDN outages).
             if (TryReadDisk(binPath, metaPath, out var staleAsset, out _))
             {
-                _logger.LogDebug($"[CDN] Serving stale cached copy of '{key}' after upstream fetch failure.");
+                _logger.Debug($"[CDN] Serving stale cached copy of '{key}' after upstream fetch failure.");
                 Promote(key, staleAsset);
                 return staleAsset;
             }
@@ -315,7 +310,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     if (!src.FixedPaths.TryGetValue(path, out var fixedUrl))
                     {
-                        _logger.LogWarning($"[CDN] Unknown fixed-path key for source '{source}'.");
+                        _logger.Warning($"[CDN] Unknown fixed-path key for source '{source}'.");
                         return null;
                     }
 
@@ -326,7 +321,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     url = $"{src.BaseUrl}/{path}";
                 }
 
-                var client = PluginHttpClients.CreateCdnClient(_httpClientFactory);
+                var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(20);
 
                 using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -335,14 +330,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogDebug($"[CDN] Upstream returned {(int)response.StatusCode} for source '{source}'.");
+                    _logger.Debug($"[CDN] Upstream returned {(int)response.StatusCode} for source '{source}'.");
                     return null;
                 }
 
                 var contentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
                 if (!src.AllowedTypes.Contains(contentType))
                 {
-                    _logger.LogWarning($"[CDN] Upstream content-type '{contentType}' not allowed for source '{source}'.");
+                    _logger.Warning($"[CDN] Upstream content-type '{contentType}' not allowed for source '{source}'.");
                     return null;
                 }
 
@@ -350,14 +345,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 var declared = response.Content.Headers.ContentLength;
                 if (declared.HasValue && declared.Value > MaxAssetBytes)
                 {
-                    _logger.LogWarning($"[CDN] Asset for source '{source}' exceeds size cap ({declared.Value} bytes).");
+                    _logger.Warning($"[CDN] Asset for source '{source}' exceeds size cap ({declared.Value} bytes).");
                     return null;
                 }
 
                 var bytes = await ReadCappedAsync(response, cancellationToken).ConfigureAwait(false);
                 if (bytes == null)
                 {
-                    _logger.LogWarning($"[CDN] Asset for source '{source}' exceeded the size cap while streaming.");
+                    _logger.Warning($"[CDN] Asset for source '{source}' exceeded the size cap while streaming.");
                     return null;
                 }
 
@@ -380,7 +375,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[CDN] Fetch failed for source '{source}': {ex.Message}");
+                _logger.Warning($"[CDN] Fetch failed for source '{source}': {ex.Message}");
                 return null;
             }
         }
@@ -423,14 +418,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
                 else
                 {
-                    _logger.LogWarning($"[CDN] Failed to refresh known asset '{source}/{path}'.");
+                    _logger.Warning($"[CDN] Failed to refresh known asset '{source}/{path}'.");
                 }
 
                 done++;
                 progress?.Report((double)done / total * 100);
             }
 
-            _logger.LogInformation($"[CDN] Refreshed {ok}/{total} known assets into the local cache.");
+            _logger.Info($"[CDN] Refreshed {ok}/{total} known assets into the local cache.");
         }
 
         // ── Disk cache helpers ──────────────────────────────────────────────────────
@@ -450,7 +445,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[CDN] Could not create cache directory: {ex.Message}");
+                _logger.Warning($"[CDN] Could not create cache directory: {ex.Message}");
             }
         }
 
@@ -465,7 +460,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     return false;
                 }
 
-                var meta = JsonSerializer.Deserialize<CacheMeta>(File.ReadAllText(metaPath));
+                var meta = JsonConvert.DeserializeObject<CacheMeta>(File.ReadAllText(metaPath));
                 if (meta == null || string.IsNullOrEmpty(meta.ContentType) || string.IsNullOrEmpty(meta.ETag))
                 {
                     return false;
@@ -478,7 +473,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogDebug($"[CDN] Failed to read disk cache entry: {ex.Message}");
+                _logger.Debug($"[CDN] Failed to read disk cache entry: {ex.Message}");
                 return false;
             }
         }
@@ -488,7 +483,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(binPath)!);
-                var meta = JsonSerializer.Serialize(new CacheMeta
+                var meta = JsonConvert.SerializeObject(new CacheMeta
                 {
                     ContentType = asset.ContentType,
                     ETag = asset.ETag,
@@ -512,7 +507,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[CDN] Failed to write disk cache entry: {ex.Message}");
+                _logger.Warning($"[CDN] Failed to write disk cache entry: {ex.Message}");
             }
         }
 
@@ -540,7 +535,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[CDN] Cache budget sweep failed: {ex.Message}");
+                _logger.Warning($"[CDN] Cache budget sweep failed: {ex.Message}");
             }
             finally
             {
@@ -593,7 +588,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 catch { /* best effort; a file held open elsewhere is skipped */ }
             }
 
-            _logger.LogInformation($"[CDN] Cache over budget; evicted {evicted} oldest entries.");
+            _logger.Info($"[CDN] Cache over budget; evicted {evicted} oldest entries.");
         }
 
         private static void Promote(string key, CdnAsset asset)
@@ -612,7 +607,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         /// no protocol-relative escape, no CR/LF. The base host is fixed per source, so a
         /// valid path can only ever address a different file on the same trusted CDN.
         /// </summary>
-        internal static bool IsSafePath(string path)
+        private static bool IsSafePath(string path)
         {
             if (string.IsNullOrWhiteSpace(path) || path.Length > 512)
             {

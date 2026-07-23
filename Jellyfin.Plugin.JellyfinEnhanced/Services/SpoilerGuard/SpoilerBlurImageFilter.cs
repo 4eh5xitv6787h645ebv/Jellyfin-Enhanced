@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -101,8 +100,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly IUserDataManager _userDataManager;
         private readonly SpoilerUserResolver _resolver;
         private readonly ImageBlurService _blurService;
-        private readonly IPluginConfigProvider _configProvider;
-        private readonly ILogger<SpoilerBlurImageFilter> _logger;
+        private readonly Logger _logger;
 
         public SpoilerBlurImageFilter(
             ILibraryManager libraryManager,
@@ -111,8 +109,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             IChapterManager chapterManager,
             SpoilerUserResolver resolver,
             ImageBlurService blurService,
-            IPluginConfigProvider configProvider,
-            ILogger<SpoilerBlurImageFilter> logger)
+            Logger logger)
         {
             _libraryManager = libraryManager;
             _userManager = userManager;
@@ -120,7 +117,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             _chapterManager = chapterManager;
             _resolver = resolver;
             _blurService = blurService;
-            _configProvider = configProvider;
             _logger = logger;
 
             // When a user marks an episode (or season/series) played or
@@ -217,7 +213,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                             if (!_watchedCache.TryRemove(key, out _))
                             {
                                 // Hit may not exist (cold cache); not an error.
-                                // _logger.LogInformation($"[SpoilerBlur] UserDataSaved: no cache entry for season key {key} (cold cache or already evicted).");
+                                // _logger.Info($"[SpoilerBlur] UserDataSaved: no cache entry for season key {key} (cold cache or already evicted).");
                             }
                         }
                         else if (seriesId.HasValue && seriesId.Value != Guid.Empty)
@@ -283,7 +279,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"SpoilerBlurImageFilter: unsubscribe on Dispose threw: {ex.Message}");
+                _logger.Warning($"SpoilerBlurImageFilter: unsubscribe on Dispose threw: {ex.Message}");
             }
         }
 
@@ -299,7 +295,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
 
             // Plugin-level master switch. Saves the per-user file read on every image.
-            var pluginConfig = _configProvider.ConfigurationOrNull;
+            var pluginConfig = JellyfinEnhanced.Instance?.Configuration;
             if (pluginConfig?.SpoilerBlurEnabled != true)
             {
                 return next();
@@ -618,7 +614,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Spoiler Guard post-processing failed for episode {itemId} ({imageType}, {spoilerMode}): {ex.Message}");
+                _logger.Error($"Spoiler Guard post-processing failed for episode {itemId} ({imageType}, {spoilerMode}): {ex.Message}");
 
                 // Fail CLOSED in BOTH modes. An exception thrown before
                 // ReplaceWith*Async assigned executed.Result (e.g. ExtractBytesAsync
@@ -638,7 +634,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     }
                     catch (Exception fallbackEx)
                     {
-                        _logger.LogError($"Spoiler Guard: fail-closed fallback assignment failed for {itemId}: {fallbackEx.Message}");
+                        _logger.Error($"Spoiler Guard: fail-closed fallback assignment failed for {itemId}: {fallbackEx.Message}");
                     }
                 }
             }
@@ -680,7 +676,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 // Don't silently swallow; surface so operators can
                 // diagnose when the cache headers aren't actually
                 // being applied.
-                _logger.LogWarning($"ApplyNoStoreToResponse failed: {ex.Message}");
+                _logger.Warning($"ApplyNoStoreToResponse failed: {ex.Message}");
             }
         }
 
@@ -699,13 +695,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 httpContext.Response.OnStarting(() =>
                 {
                     try { ApplyNoStoreHeadersDirect(httpContext, imageType); }
-                    catch (Exception ex) { _logger.LogWarning($"OnStarting no-store override failed: {ex.Message}"); }
+                    catch (Exception ex) { _logger.Warning($"OnStarting no-store override failed: {ex.Message}"); }
                     return Task.CompletedTask;
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"RegisterNoStoreOnStarting failed: {ex.Message}");
+                _logger.Warning($"RegisterNoStoreOnStarting failed: {ex.Message}");
             }
         }
 
@@ -973,7 +969,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                         break;
                     }
                 }
-                // _logger.LogInformation($"[seasondiag] season={season.Id} {season.Name} total={total} withUd={withUd} anyWatched={anyWatched}");
+                // _logger.Info($"[seasondiag] season={season.Id} {season.Name} total={total} withUd={withUd} anyWatched={anyWatched}");
             }
             catch (Exception ex)
             {
@@ -1282,7 +1278,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 now,
                 (_, last) => (now - last) >= ShapeWarnInterval ? now : last);
             if (stored != now) return;
-            _logger.LogWarning($"Spoiler Guard: image action produced an unrecognized result type ({key}); blur is no-op for this shape. Re-warns hourly. Likely a Jellyfin upgrade changed the image controller's return type.");
+            _logger.Warning($"Spoiler Guard: image action produced an unrecognized result type ({key}); blur is no-op for this shape. Re-warns hourly. Likely a Jellyfin upgrade changed the image controller's return type.");
         }
     }
 }

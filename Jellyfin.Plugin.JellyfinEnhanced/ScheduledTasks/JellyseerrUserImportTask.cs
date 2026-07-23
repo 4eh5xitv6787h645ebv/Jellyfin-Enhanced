@@ -4,13 +4,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 {
@@ -18,22 +16,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
     {
         private readonly IUserManager _userManager;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<JellyseerrUserImportTask> _logger;
-        private readonly ISeerrCache _seerrCache;
-        private readonly IPluginConfigProvider _configProvider;
+        private readonly Logger _logger;
 
         public JellyseerrUserImportTask(
             IUserManager userManager,
             IHttpClientFactory httpClientFactory,
-            ILogger<JellyseerrUserImportTask> logger,
-            ISeerrCache seerrCache,
-            IPluginConfigProvider configProvider)
+            Logger logger)
         {
             _userManager = userManager;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
-            _seerrCache = seerrCache;
-            _configProvider = configProvider;
         }
 
         public string Name => "Import Jellyfin Users to Seerr";
@@ -58,23 +50,23 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
 
             if (config == null || !config.JellyseerrAutoImportUsers || !config.JellyseerrEnabled)
             {
-                _logger.LogInformation("[Jellyseerr User Import] Auto-import is disabled in plugin configuration.");
+                _logger.Info("[Jellyseerr User Import] Auto-import is disabled in plugin configuration.");
                 progress?.Report(100);
                 return;
             }
 
             if (string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
             {
-                _logger.LogWarning("[Jellyseerr User Import] Jellyseerr URL or API key not configured.");
+                _logger.Warning("[Jellyseerr User Import] Jellyseerr URL or API key not configured.");
                 progress?.Report(100);
                 return;
             }
 
-            _logger.LogInformation("[Jellyseerr User Import] Starting Jellyseerr user import task...");
+            _logger.Info("[Jellyseerr User Import] Starting Jellyseerr user import task...");
             progress?.Report(0);
 
             var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -85,7 +77,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 .Where(id => !blockedIds.Contains(id))
                 .ToList();
 
-            _logger.LogInformation($"[Jellyseerr User Import] Found {jellyfinUsers.Count} Jellyfin users ({userIds.Count} after excluding {blockedIds.Count} blocked).");
+            _logger.Info($"[Jellyseerr User Import] Found {jellyfinUsers.Count} Jellyfin users ({userIds.Count} after excluding {blockedIds.Count} blocked).");
             progress?.Report(25);
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -96,17 +88,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             {
                 // Only flush caches when at least one user was actually
                 // imported — otherwise a 0-imported partial-failure run wipes
-                // every healthy cache entry.
-                _seerrCache.ClearUserCaches();
+                // every healthy cache entry..                 JellyfinEnhancedController.ClearUserCaches();
             }
 
             if (importResult.Reached)
             {
-                _logger.LogInformation($"[Jellyseerr User Import] Completed. {importResult.Imported} new user(s) imported out of {userIds.Count} sent. Errors: {importResult.Errors.Count}");
+                _logger.Info($"[Jellyseerr User Import] Completed. {importResult.Imported} new user(s) imported out of {userIds.Count} sent. Errors: {importResult.Errors.Count}");
             }
             else
             {
-                _logger.LogWarning("[Jellyseerr User Import] Import failed on all configured Jellyseerr URLs.");
+                _logger.Warning("[Jellyseerr User Import] Import failed on all configured Jellyseerr URLs.");
             }
 
             progress?.Report(100);

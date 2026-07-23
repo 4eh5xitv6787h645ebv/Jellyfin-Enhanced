@@ -112,20 +112,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly ILibraryManager _libraryManager;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
-        private readonly IPluginConfigProvider _configProvider;
 
         public SpoilerFieldStripFilter(
             SpoilerUserResolver resolver,
             ILibraryManager libraryManager,
             IUserManager userManager,
-            IUserDataManager userDataManager,
-            IPluginConfigProvider configProvider)
+            IUserDataManager userDataManager)
         {
             _resolver = resolver;
             _libraryManager = libraryManager;
             _userManager = userManager;
             _userDataManager = userDataManager;
-            _configProvider = configProvider;
         }
 
         public Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -135,7 +132,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // unchanged so non-matching routes pay zero overhead.
             if (!IsTargetRoute(context)) return next();
 
-            var cfg = _configProvider.ConfigurationOrNull;
+            var cfg = JellyfinEnhanced.Instance?.Configuration;
             if (cfg?.SpoilerBlurEnabled != true) return next();
             // Do NOT short-circuit on AnyStripToggleOn. The pipeline's
             // cache-bust pass (MutateImageTagsForCacheBust) must run on
@@ -786,7 +783,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // path handles every guarded item kind, so choose the correct policy
         // before touching Overview instead of coupling Series back to the
         // legacy episode-description switch.
-        internal static bool ShouldStripOverview(
+        private static bool ShouldStripOverview(
             BaseItemDto item,
             UserSpoilerBlur userState,
             PluginConfiguration cfg)

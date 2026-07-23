@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -31,14 +30,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     /// </summary>
     public class ScriptInjectionStartupFilter : IStartupFilter
     {
-        private readonly ILogger<ScriptInjectionStartupFilter> _logger;
-        private readonly IPluginConfigProvider _configProvider;
+        private readonly Logger _logger;
         private int _loggedOnce;
 
-        public ScriptInjectionStartupFilter(ILogger<ScriptInjectionStartupFilter> logger, IPluginConfigProvider configProvider)
+        public ScriptInjectionStartupFilter(Logger logger)
         {
             _logger = logger;
-            _configProvider = configProvider;
         }
 
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
@@ -70,7 +67,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return;
             }
 
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || config.DisableScriptInjectionMiddleware)
             {
                 await nextMw().ConfigureAwait(false);
@@ -140,14 +137,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                     if (System.Threading.Interlocked.Exchange(ref _loggedOnce, 1) == 0)
                     {
-                        _logger.LogInformation("Jellyfin Enhanced: injected the client script via request-time middleware (IStartupFilter).");
+                        _logger.Info("Jellyfin Enhanced: injected the client script via request-time middleware (IStartupFilter).");
                     }
                 }
             }
             catch (Exception ex)
             {
                 // Never break index.html — serve whatever we have.
-                _logger.LogWarning($"Script injection middleware error (serving original HTML): {ex.Message}");
+                _logger.Warning($"Script injection middleware error (serving original HTML): {ex.Message}");
             }
 
             var bytes = Encoding.UTF8.GetBytes(html);

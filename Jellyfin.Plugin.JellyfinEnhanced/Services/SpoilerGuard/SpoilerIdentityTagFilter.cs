@@ -40,16 +40,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     {
         private readonly SpoilerIdentityService _identity;
         private readonly SpoilerUserResolver _resolver;
-        private readonly IPluginConfigProvider _configProvider;
 
         public SpoilerIdentityTagFilter(
             SpoilerIdentityService identity,
-            SpoilerUserResolver resolver,
-            IPluginConfigProvider configProvider)
+            SpoilerUserResolver resolver)
         {
             _identity = identity;
             _resolver = resolver;
-            _configProvider = configProvider;
         }
 
         // Non-async on purpose: this filter is registered globally (no route
@@ -59,7 +56,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // (mirrors SpoilerFieldStripFilter's fast-path pattern).
         public Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            var cfg = _configProvider.ConfigurationOrNull;
+            var cfg = JellyfinEnhanced.Instance?.Configuration;
             if (cfg?.SpoilerBlurEnabled != true)
             {
                 return next();

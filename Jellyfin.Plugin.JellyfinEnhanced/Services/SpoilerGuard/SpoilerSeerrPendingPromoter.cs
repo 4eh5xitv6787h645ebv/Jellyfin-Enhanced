@@ -1,20 +1,19 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -50,13 +49,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     {
         // Populated on StartAsync from the per-user spoilerblur.json files and
         // kept in sync by the controller endpoints + the sweeps below.
-        private sealed class PendingUserSet
-        {
-            public object SyncRoot { get; } = new object();
-            public HashSet<Guid> Users { get; } = new HashSet<Guid>();
-        }
-
-        private static readonly ConcurrentDictionary<string, PendingUserSet> _pendingUsersByKey
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, byte>> _pendingUsersByKey
             = new(StringComparer.OrdinalIgnoreCase);
 
         // Per-key sweep coalescing. _sweepRunning holds keys with an active
@@ -79,106 +72,56 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // Exposed so the controller's POST/DELETE endpoints can keep the gate
         // accurate without coupling to the hosted-service instance.
         public static void RegisterPending(string pendingKey, Guid userId)
-            => RegisterPendingCore(pendingKey, userId, afterLookup: null);
-
-        // Deterministic concurrency seam used by the gate regression test. The
-        // callback runs once after the outer entry lookup and before its lock.
-        internal static void RegisterPendingWithLookupHookForTest(
-            string pendingKey,
-            Guid userId,
-            Action afterLookup)
-            => RegisterPendingCore(pendingKey, userId, afterLookup);
-
-        private static void RegisterPendingCore(string pendingKey, Guid userId, Action? afterLookup)
         {
             if (string.IsNullOrEmpty(pendingKey) || userId == Guid.Empty) return;
-            var invokedHook = false;
-            while (true)
-            {
-                var users = _pendingUsersByKey.GetOrAdd(pendingKey, _ => new PendingUserSet());
-                if (!invokedHook)
-                {
-                    invokedHook = true;
-                    afterLookup?.Invoke();
-                }
-
-                lock (users.SyncRoot)
-                {
-                    // An unregister can detach an empty set after this thread's
-                    // GetOrAdd but before the lock. Never add to that orphan: retry
-                    // against the currently mapped set instead.
-                    if (!_pendingUsersByKey.TryGetValue(pendingKey, out var current)
-                        || !ReferenceEquals(current, users))
-                    {
-                        continue;
-                    }
-
-                    users.Users.Add(userId);
-                    return;
-                }
-            }
+            var users = _pendingUsersByKey.GetOrAdd(
+                pendingKey, _ => new ConcurrentDictionary<Guid, byte>());
+            users.TryAdd(userId, 0);
         }
 
         public static void UnregisterPending(string pendingKey, Guid userId)
         {
             if (string.IsNullOrEmpty(pendingKey) || userId == Guid.Empty) return;
-            while (_pendingUsersByKey.TryGetValue(pendingKey, out var users))
+            if (!_pendingUsersByKey.TryGetValue(pendingKey, out var users)) return;
+            users.TryRemove(userId, out _);
+            if (users.IsEmpty)
             {
-                lock (users.SyncRoot)
+                // Remove the key, but atomically: a concurrent RegisterPending
+                // could add a user to `users` between our IsEmpty check and the
+                // removal, which would strand that user's pending row (no sweep
+                // until restart). TryRemove(KeyValuePair) only deletes if the
+                // mapped set is STILL the same (now-empty) instance; if a racer
+                // swapped in a fresh set via GetOrAdd, or repopulated this one,
+                // the delete is refused. Re-check the recovered set and merge
+                // any late arrivals back so nothing is lost.
+                if (((ICollection<KeyValuePair<string, ConcurrentDictionary<Guid, byte>>>)_pendingUsersByKey)
+                        .Remove(new KeyValuePair<string, ConcurrentDictionary<Guid, byte>>(pendingKey, users))
+                    && !users.IsEmpty)
                 {
-                    if (!_pendingUsersByKey.TryGetValue(pendingKey, out var current)
-                        || !ReferenceEquals(current, users))
+                    foreach (var lateUser in users.Keys)
                     {
-                        continue;
+                        RegisterPending(pendingKey, lateUser);
                     }
-
-                    users.Users.Remove(userId);
-                    if (users.Users.Count == 0)
-                    {
-                        ((ICollection<KeyValuePair<string, PendingUserSet>>)_pendingUsersByKey)
-                            .Remove(new KeyValuePair<string, PendingUserSet>(pendingKey, users));
-                    }
-                    return;
                 }
             }
-        }
-
-        internal static bool IsPendingRegisteredForTest(string pendingKey, Guid userId)
-        {
-            while (_pendingUsersByKey.TryGetValue(pendingKey, out var users))
-            {
-                lock (users.SyncRoot)
-                {
-                    if (!_pendingUsersByKey.TryGetValue(pendingKey, out var current)
-                        || !ReferenceEquals(current, users))
-                    {
-                        continue;
-                    }
-                    return users.Users.Contains(userId);
-                }
-            }
-            return false;
         }
 
         private readonly ILibraryManager _libraryManager;
         private readonly IUserManager _userManager;
         private readonly UserConfigurationManager _configManager;
-        private readonly IPluginConfigProvider _configProvider;
         private readonly IApplicationPaths _appPaths;
-        private readonly ILogger<SpoilerSeerrPendingPromoter> _logger;
+        private readonly Logger _logger;
 
         public SpoilerSeerrPendingPromoter(
             ILibraryManager libraryManager,
             IUserManager userManager,
             UserConfigurationManager configManager,
-            IPluginConfigProvider configProvider,
             IApplicationPaths appPaths,
-            ILogger<SpoilerSeerrPendingPromoter> logger)
+            Logger logger)
         {
             _libraryManager = libraryManager;
             _userManager = userManager;
             _configManager = configManager;
-            _configProvider = configProvider;
             _appPaths = appPaths;
             _logger = logger;
         }
@@ -193,7 +136,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"SpoilerSeerrPromoter: startup scan failed (gate may miss already-pending entries until next write): {ex.Message}");
+                _logger.Warning($"SpoilerSeerrPromoter: startup scan failed (gate may miss already-pending entries until next write): {ex.Message}");
             }
             _libraryManager.ItemAdded += OnItemAdded;
             // ItemAdded fires before Jellyfin's TMDB provider has fetched
@@ -238,10 +181,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     var json = File.ReadAllText(path);
                     if (string.IsNullOrWhiteSpace(json)) continue;
-                    var node = PersistedJson.ParseNode(json);
-                    var state = PersistedJson.StripNullMembers(node) is JsonNode stripped
-                        ? stripped.Deserialize<UserSpoilerBlur>(PersistedJson.ReadOptions)
-                        : null;
+                    var state = JsonConvert.DeserializeObject<UserSpoilerBlur>(json);
                     if (state?.PendingTmdb == null) continue;
                     foreach (var key in state.PendingTmdb.Keys)
                     {
@@ -252,12 +192,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"SpoilerSeerrPromoter: skipping unreadable {path}: {ex.GetType().Name}");
+                    _logger.Warning($"SpoilerSeerrPromoter: skipping unreadable {path}: {ex.GetType().Name}");
                 }
             }
             if (keys > 0)
             {
-                _logger.LogInformation($"SpoilerSeerrPromoter: gate primed with {keys} pending key(s) across {users} user file(s)");
+                _logger.Info($"SpoilerSeerrPromoter: gate primed with {keys} pending key(s) across {users} user file(s)");
             }
         }
 
@@ -265,7 +205,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             try
             {
-                var cfg = _configProvider.ConfigurationOrNull;
+                var cfg = JellyfinEnhanced.Instance?.Configuration;
                 if (cfg?.SpoilerBlurEnabled != true) return;
 
                 var item = e?.Item;
@@ -289,7 +229,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"SpoilerSeerrPromoter: handler failed before scheduling: {ex.Message}");
+                _logger.Warning($"SpoilerSeerrPromoter: handler failed before scheduling: {ex.Message}");
             }
         }
 
@@ -316,7 +256,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"SpoilerSeerrPromoter: sweep for {pendingKey} failed: {ex.Message}");
+                    _logger.Warning($"SpoilerSeerrPromoter: sweep for {pendingKey} failed: {ex.Message}");
                 }
                 finally
                 {
@@ -336,27 +276,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             if (!_pendingUsersByKey.TryGetValue(pendingKey, out var users)) return;
 
-            Guid[] userSnapshot;
-            lock (users.SyncRoot)
-            {
-                if (!_pendingUsersByKey.TryGetValue(pendingKey, out var current)
-                    || !ReferenceEquals(current, users))
-                {
-                    return;
-                }
-                userSnapshot = users.Users.ToArray();
-            }
-
-            foreach (var userId in userSnapshot)
+            // Snapshot: the set can be mutated concurrently by the controller.
+            foreach (var userId in users.Keys.ToArray())
             {
                 try
                 {
-                    PromoteForUser(userId, itemId, pendingKey, itemName, isSeries);
+                    var outcome = PromoteForUser(userId, itemId, pendingKey, itemName, isSeries);
+                    if (outcome != PromotionOutcome.StillPending)
+                    {
+                        // Promoted, already gone, or user deleted — either way
+                        // this user no longer holds the pending key, so stop
+                        // sweeping them for it.
+                        UnregisterPending(pendingKey, userId);
+                    }
                 }
                 catch (Exception ex)
                 {
                     // Keep the user registered so a later event retries them.
-                    _logger.LogWarning($"SpoilerSeerrPromoter: per-user promotion failed for user {userId} on {pendingKey}: {ex.Message}");
+                    _logger.Warning($"SpoilerSeerrPromoter: per-user promotion failed for user {userId} on {pendingKey}: {ex.Message}");
                 }
             }
         }
@@ -371,11 +308,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private PromotionOutcome PromoteForUser(Guid userId, Guid itemId, string pendingKey, string itemName, bool isSeries)
         {
             var jUser = _userManager.GetUserById(userId);
-            if (jUser == null)
-            {
-                UnregisterPending(pendingKey, userId);
-                return PromotionOutcome.NotPending;
-            }
+            if (jUser == null) return PromotionOutcome.NotPending;
 
             // Library-access gate: if the user can't see the item (filtered
             // by library access), don't promote — they'd never see a card
@@ -387,7 +320,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"SpoilerSeerrPromoter: GetItemById({itemId},{userId}) threw {ex.GetType().Name}: {ex.Message}");
+                _logger.Warning($"SpoilerSeerrPromoter: GetItemById({itemId},{userId}) threw {ex.GetType().Name}: {ex.Message}");
                 return PromotionOutcome.StillPending;
             }
             if (visibleItem == null) return PromotionOutcome.StillPending;
@@ -399,43 +332,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             try
             {
                 var stillHadPending = new[] { false };
-                lock (_configManager.GetUserFileLock(userKey, fileName))
-                {
-                    _configManager.RmwUserConfiguration<UserSpoilerBlur>(
-                        userKey, fileName, state =>
+                _configManager.RmwUserConfiguration<UserSpoilerBlur>(
+                    userKey, fileName, state =>
+                    {
+                        if (!state.PendingTmdb.Remove(pendingKey)) return 0;
+                        stillHadPending[0] = true;
+                        if (isSeries)
                         {
-                            if (!state.PendingTmdb.Remove(pendingKey)) return 0;
-                            stillHadPending[0] = true;
-                            if (isSeries)
+                            if (state.Series.ContainsKey(itemKey)) return 1;
+                            state.Series[itemKey] = new SpoilerBlurSeriesEntry
                             {
-                                if (state.Series.ContainsKey(itemKey)) return 1;
-                                state.Series[itemKey] = new SpoilerBlurSeriesEntry
-                                {
-                                    SeriesId = itemKey,
-                                    SeriesName = itemName,
-                                    EnabledAt = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
-                                };
-                            }
-                            else
+                                SeriesId = itemKey,
+                                SeriesName = itemName,
+                                EnabledAt = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
+                            };
+                        }
+                        else
+                        {
+                            if (state.Movies.ContainsKey(itemKey)) return 1;
+                            state.Movies[itemKey] = new SpoilerBlurMovieEntry
                             {
-                                if (state.Movies.ContainsKey(itemKey)) return 1;
-                                state.Movies[itemKey] = new SpoilerBlurMovieEntry
-                                {
-                                    MovieId = itemKey,
-                                    MovieName = itemName,
-                                    EnabledAt = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
-                                };
-                            }
-                            return 1;
-                        });
-
-                    // Whether promoted or already absent, the authoritative file
-                    // no longer has this key. Reconcile before releasing its lock.
-                    UnregisterPending(pendingKey, userId);
-                }
+                                MovieId = itemKey,
+                                MovieName = itemName,
+                                EnabledAt = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
+                            };
+                        }
+                        return 1;
+                    });
                 if (stillHadPending[0])
                 {
-                    _logger.LogInformation($"SpoilerSeerrPromoter: promoted {pendingKey} -> {(isSeries ? "series" : "movie")} {itemKey} for user {userId}");
+                    _logger.Info($"SpoilerSeerrPromoter: promoted {pendingKey} -> {(isSeries ? "series" : "movie")} {itemKey} for user {userId}");
                     return PromotionOutcome.Promoted;
                 }
                 // File no longer holds the key (promoted via the controller's
@@ -444,9 +370,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (InvalidDataException ex)
             {
-                _logger.LogWarning($"SpoilerSeerrPromoter: skipping {userId}/{pendingKey} due to corrupt spoilerblur.json: {ex.Message}");
-                // Keep the user registered so a repaired or recreated file can
-                // recover on a later event.
+                _logger.Warning($"SpoilerSeerrPromoter: skipping {userId}/{pendingKey} due to corrupt spoilerblur.json: {ex.Message}");
+                // Strict read will keep failing until the file is repaired;
+                // keep the user registered so repair + a later event recovers.
                 return PromotionOutcome.StillPending;
             }
         }

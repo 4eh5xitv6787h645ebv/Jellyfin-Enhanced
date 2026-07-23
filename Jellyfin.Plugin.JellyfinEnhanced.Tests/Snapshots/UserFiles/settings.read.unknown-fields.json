@@ -1,6 +1,0 @@
-{
-  "AutoPauseEnabled": true,
-  "ThisFieldWasRemovedInV12": "old",
-  "AnotherUnknown": { "deep": [true, null, 1.5] },
-  "PauseScreenDelaySeconds": 8
-}

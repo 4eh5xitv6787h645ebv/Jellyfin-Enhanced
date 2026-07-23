@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -36,7 +35,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private const float MinSigma = 1f;
         private const float MaxSigma = 100f;
 
-        private readonly ILogger<ImageBlurService> _logger;
+        private readonly Logger _logger;
         private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
         private long _cacheBytes;
         private readonly object _evictionLock = new();
@@ -59,7 +58,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // hide-mode fail-closed invariant doesn't depend on Skia liveness.
         public byte[] HardcodedFallbackJpeg => _hardcodedFallbackJpeg;
 
-        public ImageBlurService(ILogger<ImageBlurService> logger)
+        public ImageBlurService(Logger logger)
         {
             _logger = logger;
         }
@@ -107,7 +106,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 // Debug-level (suppressed in normal operation) so a malformed-image
                 // flood — a corrupt poster somewhere in the library — can't fill the log.
-                _logger.LogDebug($"Spoiler Guard stock-card probe failed for input ({input?.Length ?? 0} bytes): {ex.GetType().Name}: {ex.Message}. Using default dims 600x900.");
+                _logger.Debug($"Spoiler Guard stock-card probe failed for input ({input?.Length ?? 0} bytes): {ex.GetType().Name}: {ex.Message}. Using default dims 600x900.");
             }
 
             byte[]? output;
@@ -123,7 +122,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Spoiler Guard stock-card render failed: {ex.Message}");
+                _logger.Error($"Spoiler Guard stock-card render failed: {ex.Message}");
                 return null;
             }
 
@@ -170,7 +169,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 // Debug-level since this fires for any malformed reference and we
                 // have a sane default (600x900).
-                _logger.LogDebug($"Spoiler Guard parent-art reference probe failed: {ex.GetType().Name}: {ex.Message}. Using default dims 600x900.");
+                _logger.Debug($"Spoiler Guard parent-art reference probe failed: {ex.GetType().Name}: {ex.Message}. Using default dims 600x900.");
             }
 
             byte[]? output;
@@ -206,7 +205,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Spoiler Guard parent-art resize failed: {ex.Message}");
+                _logger.Error($"Spoiler Guard parent-art resize failed: {ex.Message}");
                 return null;
             }
 
@@ -247,7 +246,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Spoiler Guard failed: {ex.Message}");
+                _logger.Error($"Spoiler Guard failed: {ex.Message}");
                 return null;
             }
 

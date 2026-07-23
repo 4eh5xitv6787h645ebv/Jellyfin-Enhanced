@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using MediaBrowser.Controller.Library;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -50,14 +49,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private static readonly TimeSpan MapTtl = TimeSpan.FromSeconds(60);
 
         private readonly IUserManager _userManager;
-        private readonly ILogger<SpoilerIdentityService> _logger;
+        private readonly Logger _logger;
 
         private readonly ConcurrentDictionary<Guid, string> _mintCache = new();
         private readonly object _mapLock = new();
         private Dictionary<string, Guid>? _markerMap;
         private DateTime _mapBuiltAt = DateTime.MinValue;
 
-        public SpoilerIdentityService(IUserManager userManager, ILogger<SpoilerIdentityService> logger)
+        public SpoilerIdentityService(IUserManager userManager, Logger logger)
         {
             _userManager = userManager;
             _logger = logger;
@@ -189,7 +188,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     foreach (var m in collided)
                     {
                         map.Remove(m);
-                        _logger.LogWarning($"Spoiler Guard identity: two users share marker {m}; both excluded from tag-based identity (falling back to IP matching for them).");
+                        _logger.Warning($"Spoiler Guard identity: two users share marker {m}; both excluded from tag-based identity (falling back to IP matching for them).");
                     }
 
                     _markerMap = map;
@@ -200,7 +199,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     // Keep serving the previous map (possibly stale) rather
                     // than failing resolution outright.
-                    _logger.LogWarning($"Spoiler Guard identity: user enumeration failed while building the marker map: {ex.Message}");
+                    _logger.Warning($"Spoiler Guard identity: user enumeration failed while building the marker map: {ex.Message}");
                     _mapBuiltAt = DateTime.UtcNow; // throttle retry storms
                     return _markerMap;
                 }

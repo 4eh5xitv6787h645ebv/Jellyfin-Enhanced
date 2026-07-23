@@ -5,7 +5,7 @@ using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using MediaBrowser.Controller.Library;
-using Microsoft.Extensions.Logging;
+using MediaBrowser.Controller.Session;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -77,12 +77,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly UserConfigurationManager _userConfigManager;
         private readonly ILibraryManager _libraryManager;
         private readonly RequestIdentityService _identity;
-        private readonly ILogger<SpoilerUserResolver> _logger;
+        private readonly Logger _logger;
 
         public SpoilerUserResolver(
             UserConfigurationManager userConfigManager,
             ILibraryManager libraryManager,
-            ILogger<SpoilerUserResolver> logger,
+            Logger logger,
             RequestIdentityService identity)
         {
             _userConfigManager = userConfigManager;
@@ -280,7 +280,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var stored = _warnedAt.AddOrUpdate(key, now,
                 (_, last) => (now - last) >= PerKeyWarnInterval ? now : last);
             if (stored != now) return;
-            _logger.LogWarning(message);
+            _logger.Warning(message);
         }
 
         // Track per-user corruption events so the admin can surface a

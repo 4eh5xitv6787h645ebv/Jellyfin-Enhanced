@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
     public class StartupService : IScheduledTask
     {
-        private readonly ILogger<StartupService> _logger;
+        private readonly Logger _logger;
         private readonly IApplicationPaths _applicationPaths;
         private readonly AutoSeasonRequestMonitor _autoSeasonRequestMonitor;
         private readonly AutoMovieRequestMonitor _autoMovieRequestMonitor;
@@ -20,14 +20,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly TagCacheService _tagCacheService;
         private readonly TagCacheMonitor _tagCacheMonitor;
         private readonly SeerrScanTriggerService _seerrScanTriggerService;
-        private readonly IPluginConfigProvider _configProvider;
 
         public string Name => "Jellyfin Enhanced Startup";
         public string Key => "JellyfinEnhancedStartup";
         public string Description => "Initializes Jellyfin Enhanced background services and performs necessary cleanups. The client script is injected at request time by the injection middleware.";
         public string Category => "Jellyfin Enhanced";
 
-        public StartupService(ILogger<StartupService> logger, IApplicationPaths applicationPaths, AutoSeasonRequestMonitor autoSeasonRequestMonitor, AutoMovieRequestMonitor autoMovieRequestMonitor, WatchlistMonitor watchlistMonitor, TagCacheService tagCacheService, TagCacheMonitor tagCacheMonitor, SeerrScanTriggerService seerrScanTriggerService, IPluginConfigProvider configProvider)
+        public StartupService(Logger logger, IApplicationPaths applicationPaths, AutoSeasonRequestMonitor autoSeasonRequestMonitor, AutoMovieRequestMonitor autoMovieRequestMonitor, WatchlistMonitor watchlistMonitor, TagCacheService tagCacheService, TagCacheMonitor tagCacheMonitor, SeerrScanTriggerService seerrScanTriggerService)
         {
             _logger = logger;
             _applicationPaths = applicationPaths;
@@ -37,14 +36,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             _tagCacheService = tagCacheService;
             _tagCacheMonitor = tagCacheMonitor;
             _seerrScanTriggerService = seerrScanTriggerService;
-            _configProvider = configProvider;
         }
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
             await Task.Run(() =>
             {
-                _logger.LogInformation("Jellyfin Enhanced Startup Task run successfully.");
+                _logger.Info("Jellyfin Enhanced Startup Task run successfully.");
                 EnsureScriptInjected();
 
                 // Initialize auto season request monitoring
@@ -64,24 +62,40 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 // A full rebuild runs daily at 3 AM or can be triggered manually.
                 // Wrapped in try/catch so a cache failure never prevents the rest of
                 // the plugin from working (tags just fall back to batch mode).
-                try
+                //
+                // Honor the "Server-Side Tag Cache" admin setting here: when it is
+                // disabled, the cache is fully out of service, so skip the load,
+                // the monitor, and the initial full build — an admin who opted out
+                // must not pay any cache cost at startup (historically the
+                // unconditional build here OOM-killed large-library servers in a
+                // startup crash loop; the build is paged now, but off means off).
+                // Clients fall back to per-page batch tag requests while the
+                // tag-cache endpoint returns 404 with the setting off.
+                if (JellyfinEnhanced.Instance?.Configuration?.TagCacheServerMode != true)
                 {
-                    _tagCacheService.LoadFromDisk();
-                    _tagCacheMonitor.Initialize();
-
-                    // First install: if no cache exists, build it now so tags work immediately
-                    if (_tagCacheService.Count == 0)
+                    _logger.Info("[TagCache] Server-Side Tag Cache is disabled; skipping cache load and build (tags will use batch fallback).");
+                }
+                else
+                {
+                    try
                     {
-                        _logger.LogInformation("[TagCache] No cache on disk, building initial cache...");
-                        _tagCacheService.BuildFullCache(null, CancellationToken.None);
+                        _tagCacheService.LoadFromDisk();
+                        _tagCacheMonitor.Initialize();
+
+                        // First install: if no cache exists, build it now so tags work immediately
+                        if (_tagCacheService.Count == 0)
+                        {
+                            _logger.Info("[TagCache] No cache on disk, building initial cache...");
+                            _tagCacheService.BuildFullCache(null, CancellationToken.None);
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        _logger.Error($"[TagCache] Failed to initialize tag cache (tags will use batch fallback): {ex.Message}");
                     }
                 }
-                catch (System.Exception ex)
-                {
-                    _logger.LogError($"[TagCache] Failed to initialize tag cache (tags will use batch fallback): {ex.Message}");
-                }
 
-                _logger.LogInformation("Jellyfin Enhanced Startup Task completed successfully.");
+                _logger.Info("Jellyfin Enhanced Startup Task completed successfully.");
             }, cancellationToken);
         }
 
@@ -93,16 +107,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // rewrite is kept only as an explicit fallback for admins who disable the middleware.
         private void EnsureScriptInjected()
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
 
             if (config != null && config.DisableScriptInjectionMiddleware)
             {
-                _logger.LogInformation("Script injection middleware is disabled; using the legacy on-disk index.html fallback.");
+                _logger.Info("Script injection middleware is disabled; using the legacy on-disk index.html fallback.");
                 JellyfinEnhanced.Instance?.InjectScript();
                 return;
             }
 
-            _logger.LogInformation("Client script will be injected at request time by the injection middleware.");
+            _logger.Info("Client script will be injected at request time by the injection middleware.");
         }
 
 

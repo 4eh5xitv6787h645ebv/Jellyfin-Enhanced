@@ -15,7 +15,8 @@ using System;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using MediaBrowser.Controller.Configuration;
-using System.Text.Json.Nodes;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using MediaBrowser.Common.Net;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -25,19 +26,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
     public class JellyfinEnhanced : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         private readonly IApplicationPaths _applicationPaths;
-        private readonly ILogger<JellyfinEnhanced> _logger;
+        private readonly Logger _logger;
         private const string PluginName = "Jellyfin Enhanced";
 
-        public JellyfinEnhanced(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, IXmlSerializer xmlSerializer, ILogger<JellyfinEnhanced> logger, Logging.JellyfinEnhancedFileLoggerProvider fileLogProvider) : base(applicationPaths, xmlSerializer)
+        public JellyfinEnhanced(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, IXmlSerializer xmlSerializer, Logger logger) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
             _applicationPaths = applicationPaths;
             _logger = logger;
-            _logger.LogInformation($"{PluginName} v{Version} initialized. Plugin logs will be written to: {fileLogProvider.CurrentLogFilePath}");
+            _logger.Info($"{PluginName} v{Version} initialized. Plugin logs will be written to: {_logger.CurrentLogFilePath}");
             // Set the User-Agent used by every Seerr/TMDB outbound HTTP call.
             // Cloudflare's Browser Integrity Check / Bot Fight Mode flags
-            // empty UA as bot.
-            Helpers.Jellyseerr.SeerrHttpHelper.UserAgent = $"JellyfinEnhanced/{Version}";
+            // empty UA as bot �            Helpers.Jellyseerr.SeerrHttpHelper.UserAgent = $"JellyfinEnhanced/{Version}";
             CleanupOldScript();
             CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
             BackfillMissingDefaultShortcuts();
@@ -83,7 +83,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
                 config.Shortcuts = deduped;
                 SaveConfiguration();
-                _logger.LogInformation(
+                _logger.Info(
                     $"Normalized shortcut list: dropped {duplicatesDropped} duplicate(s), " +
                     $"{malformed.Count} malformed entry/entries" +
                     (malformed.Count > 0 ? $" [{string.Join(", ", malformed)}]" : "") +
@@ -93,17 +93,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             catch (IOException ex)
             {
                 RollbackShortcuts(originalShortcuts);
-                _logger.LogError($"Failed to save normalized shortcut list to disk (check permissions and free space): {ex}");
+                _logger.Error($"Failed to save normalized shortcut list to disk (check permissions and free space): {ex}");
             }
             catch (UnauthorizedAccessException ex)
             {
                 RollbackShortcuts(originalShortcuts);
-                _logger.LogError($"Permission denied saving normalized shortcut list: {ex}");
+                _logger.Error($"Permission denied saving normalized shortcut list: {ex}");
             }
             catch (Exception ex)
             {
                 RollbackShortcuts(originalShortcuts);
-                _logger.LogError($"Unexpected error normalizing shortcut list: {ex}");
+                _logger.Error($"Unexpected error normalizing shortcut list: {ex}");
             }
         }
 
@@ -117,7 +117,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to roll back shortcut list after save failure: {ex}");
+                _logger.Error($"Failed to roll back shortcut list after save failure: {ex}");
             }
         }
 
@@ -168,7 +168,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 catch (Exception ex)
                 {
                     // Fall through to the bare version below.
-                    _logger.LogDebug($"ScriptCacheKey: couldn't read assembly file metadata, using bare version: {ex.Message}");
+                    _logger.Debug($"ScriptCacheKey: couldn't read assembly file metadata, using bare version: {ex.Message}");
                 }
 
                 return version;
@@ -197,26 +197,35 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             base.OnUninstalling();
         }
 
-        // Flush every Seerr-related cache the moment the admin saves config.
-        // Without this, fixing a bad URL/key/blocklist takes 10-30 minutes to
-        // take effect because of the user-id and response caches — admins see
-        // "still broken" after their fix and assume it didn't work
-        //.
+        // Config-save side effects: flush every Seerr-related cache (fixing a bad
+        // URL/key/blocklist must not take 10-30 minutes of cache TTL to appear
+        // fixed), and hand Server-Side Tag Cache OFF<->ON flips to the tag-cache
+        // transition queue — turning it off must actually release the cache
+        // memory, and turning it on must catch up on the off window right away
+        // rather than serving a stale snapshot until the daily 3 AM refresh.
         public override void UpdateConfiguration(BasePluginConfiguration configuration)
         {
+            // Capture the outgoing value BEFORE base.UpdateConfiguration replaces
+            // Configuration, so an actual OFF<->ON transition is distinguishable
+            // from an unrelated config save (this method fires on every save).
+            var tagCacheWasEnabled = Configuration?.TagCacheServerMode == true;
+
             base.UpdateConfiguration(configuration);
             try
             {
-                // The plugin itself is not DI-resolved; SeerrCache.Instance is the
-                // transitional bridge to the one DI-registered cache singleton the
-                // controllers use. Null only before the first cache consumer is
-                // constructed, i.e. when there is nothing to clear yet.
-                Services.Jellyseerr.SeerrCache.Instance?.ClearAllSeerrCachesOnConfigChange();
-                _logger.LogInformation("Jellyfin Enhanced: configuration updated — Seerr caches cleared.");
+                Controllers.JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+                _logger.Info("Jellyfin Enhanced: configuration updated — Seerr caches cleared.");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Jellyfin Enhanced: failed to clear Seerr caches on config update: {ex.Message}");
+                _logger.Warning($"Jellyfin Enhanced: failed to clear Seerr caches on config update: {ex.Message}");
+            }
+
+            // The transitions themselves run on a serialized background queue in
+            // TagCacheService (the save request must not block behind cache work).
+            if (tagCacheWasEnabled != (Configuration?.TagCacheServerMode == true))
+            {
+                Services.TagCacheService.Instance?.QueueServerModeTransition();
             }
         }
         private void CleanupOldScript()
@@ -226,7 +235,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 var indexPath = IndexHtmlPath;
                 if (!File.Exists(indexPath))
                 {
-                    _logger.LogError($"Could not find index.html at path: {indexPath}");
+                    _logger.Error($"Could not find index.html at path: {indexPath}");
                     return;
                 }
 
@@ -235,15 +244,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
                 if (regex.IsMatch(content))
                 {
-                    _logger.LogInformation("Found old Jellyfin Enhanced script tag in index.html. Removing it now.");
+                    _logger.Info("Found old Jellyfin Enhanced script tag in index.html. Removing it now.");
                     content = regex.Replace(content, string.Empty);
                     File.WriteAllText(indexPath, content);
-                    _logger.LogInformation("Successfully removed old script tag.");
+                    _logger.Info("Successfully removed old script tag.");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error during cleanup of old script from index.html: {ex.Message}");
+                _logger.Error($"Error during cleanup of old script from index.html: {ex.Message}");
             }
         }
         private void CheckPluginPages(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, int pluginPageConfigVersion)
@@ -252,7 +261,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             {
             string pluginPagesConfig = Path.Combine(applicationPaths.PluginConfigurationsPath, "Jellyfin.Plugin.PluginPages", "config.json");
 
-            JsonObject config = new JsonObject();
+            JObject config = new JObject();
             if (!File.Exists(pluginPagesConfig))
             {
                 FileInfo info = new FileInfo(pluginPagesConfig);
@@ -260,30 +269,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
             else
             {
-                // AsObject() throws on a non-object root, like JObject.Parse did —
-                // the outer catch turns either into a logged error, never a rewrite.
-                // ParseOptions keeps Newtonsoft's tolerance for comments/trailing
-                // commas: this file may be hand-edited or written by other tools,
-                // and JObject.Parse accepted both.
-                config = PersistedJson.ParseNode(File.ReadAllText(pluginPagesConfig))!.AsObject();
+                config = JObject.Parse(File.ReadAllText(pluginPagesConfig));
             }
 
             if (!config.ContainsKey("pages"))
             {
-                config.Add("pages", new JsonArray());
+                config.Add("pages", new JArray());
             }
 
             var namespaceName = typeof(JellyfinEnhanced).Namespace;
-            var pages = config["pages"]!.AsArray();
 
-            JsonObject? hssPageConfig = pages.FirstOrDefault(x =>
-                (string?)x?["Id"] == namespaceName) as JsonObject;
+            JObject? hssPageConfig = config.Value<JArray>("pages")!.FirstOrDefault(x =>
+                x.Value<string>("Id") == namespaceName) as JObject;
 
             if (hssPageConfig != null)
             {
-                if (((int?)hssPageConfig["Version"] ?? 0) < pluginPageConfigVersion)
+                if ((hssPageConfig.Value<int?>("Version") ?? 0) < pluginPageConfigVersion)
                 {
-                    pages.Remove(hssPageConfig);
+                    config.Value<JArray>("pages")!.Remove(hssPageConfig);
                 }
             }
 
@@ -300,22 +303,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
             var pluginConfig = Configuration;
 
-            bool calendarExists = pages
-                .Any(x => (string?)x?["Id"] == $"{namespaceName}.CalendarPage");
+            bool calendarExists = config.Value<JArray>("pages")!
+                .Any(x => x.Value<string>("Id") == $"{namespaceName}.CalendarPage");
 
-            bool downloadsExists = pages
-                .Any(x => (string?)x?["Id"] == $"{namespaceName}.DownloadsPage");
+            bool downloadsExists = config.Value<JArray>("pages")!
+                .Any(x => x.Value<string>("Id") == $"{namespaceName}.DownloadsPage");
 
-            bool bookmarksExists = pages
-                .Any(x => (string?)x?["Id"] == $"{namespaceName}.BookmarksPage");
+            bool bookmarksExists = config.Value<JArray>("pages")!
+                .Any(x => x.Value<string>("Id") == $"{namespaceName}.BookmarksPage");
 
-            bool hiddenContentExists = pages
-                .Any(x => (string?)x?["Id"] == $"{namespaceName}.HiddenContentPage");
+            bool hiddenContentExists = config.Value<JArray>("pages")!
+                .Any(x => x.Value<string>("Id") == $"{namespaceName}.HiddenContentPage");
 
             // Only add calendar page if it's enabled and using plugin pages
             if (!calendarExists && pluginConfig.CalendarPageEnabled && pluginConfig.CalendarUsePluginPages)
             {
-                pages.Add(new JsonObject
+                config.Value<JArray>("pages")!.Add(new JObject
                 {
                     { "Id", $"{namespaceName}.CalendarPage" },
                     { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/calendarPage" },
@@ -327,18 +330,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Remove calendar page if it exists but is now disabled or not using plugin pages
             else if (calendarExists && (!pluginConfig.CalendarPageEnabled || !pluginConfig.CalendarUsePluginPages))
             {
-                var calendarPage = pages
-                    .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.CalendarPage");
+                var calendarPage = config.Value<JArray>("pages")!
+                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.CalendarPage");
                 if (calendarPage != null)
                 {
-                    pages.Remove(calendarPage);
+                    config.Value<JArray>("pages")!.Remove(calendarPage);
                 }
             }
 
             // Only add downloads page if it's enabled and using plugin pages
             if (!downloadsExists && pluginConfig.DownloadsPageEnabled && pluginConfig.DownloadsUsePluginPages)
             {
-                pages.Add(new JsonObject
+                config.Value<JArray>("pages")!.Add(new JObject
                 {
                     { "Id", $"{namespaceName}.DownloadsPage" },
                     { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/downloadsPage" },
@@ -350,18 +353,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Remove downloads page if it exists but is now disabled or not using plugin pages
             else if (downloadsExists && (!pluginConfig.DownloadsPageEnabled || !pluginConfig.DownloadsUsePluginPages))
             {
-                var downloadsPage = pages
-                    .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.DownloadsPage");
+                var downloadsPage = config.Value<JArray>("pages")!
+                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.DownloadsPage");
                 if (downloadsPage != null)
                 {
-                    pages.Remove(downloadsPage);
+                    config.Value<JArray>("pages")!.Remove(downloadsPage);
                 }
             }
 
             // Only add bookmarks page if it's enabled and using plugin pages
             if (!bookmarksExists && pluginConfig.BookmarksEnabled && pluginConfig.BookmarksUsePluginPages)
             {
-                pages.Add(new JsonObject
+                config.Value<JArray>("pages")!.Add(new JObject
                 {
                     { "Id", $"{namespaceName}.BookmarksPage" },
                     { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/bookmarksPage" },
@@ -373,18 +376,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Remove bookmarks page if it exists but is now disabled or not using plugin pages
             else if (bookmarksExists && (!pluginConfig.BookmarksEnabled || !pluginConfig.BookmarksUsePluginPages))
             {
-                var bookmarksPage = pages
-                    .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.BookmarksPage");
+                var bookmarksPage = config.Value<JArray>("pages")!
+                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.BookmarksPage");
                 if (bookmarksPage != null)
                 {
-                    pages.Remove(bookmarksPage);
+                    config.Value<JArray>("pages")!.Remove(bookmarksPage);
                 }
             }
 
             // Only add hidden content page if it's enabled and using plugin pages
             if (!hiddenContentExists && pluginConfig.HiddenContentEnabled && pluginConfig.HiddenContentUsePluginPages)
             {
-                pages.Add(new JsonObject
+                config.Value<JArray>("pages")!.Add(new JObject
                 {
                     { "Id", $"{namespaceName}.HiddenContentPage" },
                     { "Url", $"{(supportsSubUrls ? "" : rootUrl)}/JellyfinEnhanced/hiddenContentPage" },
@@ -396,22 +399,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Remove hidden content page if it exists but is now disabled or not using plugin pages
             else if (hiddenContentExists && (!pluginConfig.HiddenContentEnabled || !pluginConfig.HiddenContentUsePluginPages))
             {
-                var hiddenContentPage = pages
-                    .FirstOrDefault(x => (string?)x?["Id"] == $"{namespaceName}.HiddenContentPage");
+                var hiddenContentPage = config.Value<JArray>("pages")!
+                    .FirstOrDefault(x => x.Value<string>("Id") == $"{namespaceName}.HiddenContentPage");
                 if (hiddenContentPage != null)
                 {
-                    pages.Remove(hiddenContentPage);
+                    config.Value<JArray>("pages")!.Remove(hiddenContentPage);
                 }
             }
 
-            // PluginPages' config.json is admin-visible on disk: keep the same
-            // human-readable shape JObject.ToString(Formatting.Indented) produced
-            // (2-space indent, raw non-ASCII) via the shared persistence options.
-            File.WriteAllText(pluginPagesConfig, config.ToJsonString(PersistedJson.WriteOptions));
+            File.WriteAllText(pluginPagesConfig, config.ToString(Formatting.Indented));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while updating Plugin Pages configuration: {ex.Message}");
+                _logger.Error($"Error while updating Plugin Pages configuration: {ex.Message}");
             }
         }
         private void UpdateIndexHtml(bool inject)
@@ -421,7 +421,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 var indexPath = IndexHtmlPath;
                 if (!File.Exists(indexPath))
                 {
-                    _logger.LogError($"Could not find index.html at path: {indexPath}");
+                    _logger.Error($"Could not find index.html at path: {indexPath}");
                     return;
                 }
 
@@ -438,24 +438,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                     if (content.Contains(closingBodyTag))
                     {
                         content = content.Replace(closingBodyTag, $"{scriptTag}\n{closingBodyTag}");
-                        _logger.LogInformation($"Successfully injected/updated the {PluginName} script.");
+                        _logger.Info($"Successfully injected/updated the {PluginName} script.");
                     }
                     else
                     {
-                        _logger.LogWarning("Could not find </body> tag in index.html. Script not injected.");
+                        _logger.Warning("Could not find </body> tag in index.html. Script not injected.");
                         return; // Return early if injection point not found
                     }
                 }
                 else
                 {
-                    _logger.LogInformation($"Successfully removed the {PluginName} script from index.html during uninstall.");
+                    _logger.Info($"Successfully removed the {PluginName} script from index.html during uninstall.");
                 }
 
                 File.WriteAllText(indexPath, content);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error while trying to update index.html: {ex.Message}");
+                _logger.Error($"Error while trying to update index.html: {ex.Message}");
             }
         }
 

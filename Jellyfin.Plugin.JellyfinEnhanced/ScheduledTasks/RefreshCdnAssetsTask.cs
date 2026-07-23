@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Model.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 {
@@ -17,10 +16,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
     /// </summary>
     public class RefreshCdnAssetsTask : IScheduledTask
     {
-        private readonly ILogger<RefreshCdnAssetsTask> _logger;
+        private readonly Logger _logger;
         private readonly CdnAssetService _cdnAssetService;
 
-        public RefreshCdnAssetsTask(ILogger<RefreshCdnAssetsTask> logger, CdnAssetService cdnAssetService)
+        public RefreshCdnAssetsTask(Logger logger, CdnAssetService cdnAssetService)
         {
             _logger = logger;
             _cdnAssetService = cdnAssetService;
@@ -52,17 +51,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
         {
             try
             {
-                _logger.LogInformation("[CDN] Refreshing local CDN asset cache…");
+                _logger.Info("[CDN] Refreshing local CDN asset cache…");
                 await _cdnAssetService.RefreshKnownAsync(progress, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("[CDN] CDN asset refresh cancelled.");
+                _logger.Info("[CDN] CDN asset refresh cancelled.");
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"[CDN] CDN asset refresh failed: {ex}");
+                _logger.Error($"[CDN] CDN asset refresh failed: {ex}");
                 throw;
             }
             finally

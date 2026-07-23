@@ -31,13 +31,12 @@ See the [Contributing Translations](/Jellyfin-Enhanced/faq-support/contributing-
 Before contributing, familiarize yourself with the project structure. See the [Project Structure](README.md#-project-structure) section in the README for a detailed breakdown of the codebase and what each file does.
 
 Key directories:
-- `Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/` - Shared client composition and Jellyfin-facing features
-- `Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/{bookmarks,hidden-content,item-details,home-removal,player,settings-panel}/` - Feature-owned modules
+- `Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/` - Core functionality
 - `Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/` - Elsewhere and reviews functionality
 - `Jellyfin.Plugin.JellyfinEnhanced/js/extras/` - Other Scripts
-- `Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/{discovery,more-info,ui}/` - Seerr feature boundaries
-- `Jellyfin.Plugin.JellyfinEnhanced/js/arr/{calendar,requests}/` - Sonarr/Radarr feature pages
-- `Jellyfin.Plugin.JellyfinEnhanced/js/tags/` - Shared tag pipeline and renderer modules
+- `Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/` - Seerr integration
+- `Jellyfin.Plugin.JellyfinEnhanced/js/arr/` - *arr integration including calendar and requests
+- `Jellyfin.Plugin.JellyfinEnhanced/js/tags/` - Tag scripts (genre, language, people, quality, rating)
 - `Jellyfin.Plugin.JellyfinEnhanced/js/others/` - Miscellaneous scripts (letterboxd, splashscreen)
 - `Jellyfin.Plugin.JellyfinEnhanced/js/locales/` - Translation files
 
@@ -150,28 +149,6 @@ Key directories:
    - If you want me to make any further changes, let me know
 
 ## 🧪 Testing
-
-### Automated checks (run these locally — CI enforces them)
-
-```bash
-# One-time setup
-npm install
-
-# Client scripts: architecture, parse, lint, and type checks
-npm run architecture         # plain-JavaScript and modular-boundary contract
-npm run syntax               # node --check on every served js/ file
-npm run lint                 # ESLint (errors gate CI; warnings are advisory)
-npm run typecheck            # tsc over files opting in with // @ts-check
-
-# Plugin: both runtime targets must compile, and unit tests must pass
-dotnet build Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj -c Release -p:JellyfinTarget=jf10   # Jellyfin 10.11 / net9.0
-dotnet build Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj -c Release -p:JellyfinTarget=jf12   # Jellyfin 12 / net10.0
-dotnet test                  # xUnit tests in Jellyfin.Plugin.JellyfinEnhanced.Tests
-```
-
-New JavaScript modules should start with `// @ts-check` so the type checker covers them; existing files opt in as they get touched. New C# logic that can be tested without a running Jellyfin server should come with unit tests.
-
-### Manual checklist
 
 Before submitting a PR, ensure you've tested:
 

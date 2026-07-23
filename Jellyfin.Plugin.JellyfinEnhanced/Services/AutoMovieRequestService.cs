@@ -11,48 +11,59 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Querying;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
     public class AutoMovieRequestService
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<AutoMovieRequestService> _logger;
-        private readonly IPluginConfigProvider _configProvider;
+        private readonly Logger _logger;
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
 
         // Track which movies have already been requested to avoid duplicates (with timestamps for expiry)
         private readonly Dictionary<string, Dictionary<string, DateTime>> _requestedMovies = new();
         private readonly object _movieCacheLock = new();
-        private readonly Jellyseerr.JellyseerrUserResolver _jellyseerrUserResolver;
+        private readonly Dictionary<string, (string JellyseerrUserId, DateTime CachedAt)> _jellyseerrUserIdCache = new();
+        private readonly object _userIdCacheLock = new();
 
         public AutoMovieRequestService(
             IHttpClientFactory httpClientFactory,
-            ILogger<AutoMovieRequestService> logger,
+            Logger logger,
             IUserManager userManager,
-            ILibraryManager libraryManager,
-            IPluginConfigProvider configProvider)
+            ILibraryManager libraryManager)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _userManager = userManager;
             _libraryManager = libraryManager;
-            _configProvider = configProvider;
-            _jellyseerrUserResolver = new Jellyseerr.JellyseerrUserResolver(httpClientFactory, logger, configProvider, "[Auto-Movie-Request]");
         }
 
         private static string[] GetConfiguredUrls(string? urls)
         {
-            return Jellyseerr.JellyseerrUserResolver.GetConfiguredUrls(urls);
+            return (urls ?? string.Empty)
+                .Split(new[] { '\r', '\n', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(url => url.Trim().TrimEnd('/'))
+                .Where(url => !string.IsNullOrWhiteSpace(url))
+                .ToArray();
+        }
+
+        private static string NormalizeUserId(string userId)
+        {
+            return userId.Replace("-", string.Empty).ToLowerInvariant();
+        }
+
+        private static TimeSpan GetJellyseerrUserIdCacheTtl()
+        {
+            var minutes = JellyfinEnhanced.Instance?.Configuration?.JellyseerrUserIdCacheTtlMinutes ?? 30;
+            return TimeSpan.FromMinutes(Math.Max(1, minutes));
         }
 
         // Checks a movie to determine if the next movie in collection should be requested.
         // Event-driven entry point called when a user starts watching a movie.
         public async Task CheckMovieForCollectionRequestAsync(BaseItem movieItem, Guid userId)
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || !config.AutoMovieRequestEnabled || !config.JellyseerrEnabled)
             {
                 return;
@@ -60,7 +71,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
             if (string.IsNullOrEmpty(config.TMDB_API_KEY))
             {
-                _logger.LogWarning("[Auto-Movie-Request] TMDB API key is not configured. Auto movie requests require TMDB API access.");
+                _logger.Warning("[Auto-Movie-Request] TMDB API key is not configured. Auto movie requests require TMDB API access.");
                 return;
             }
 
@@ -81,7 +92,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var tmdbId = GetTmdbId(movie);
             if (string.IsNullOrEmpty(tmdbId))
             {
-                _logger.LogDebug($"[Auto-Movie-Request] '{movie.Name}' has no TMDB ID");
+                _logger.Debug($"[Auto-Movie-Request] '{movie.Name}' has no TMDB ID");
                 return;
             }
 
@@ -89,17 +100,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var collectionInfo = await GetTmdbCollectionIdAsync(tmdbId);
             if (collectionInfo == null)
             {
-                // _logger.LogDebug($"[Auto-Movie-Request] '{movie.Name}' is not part of a TMDB collection");
+                // _logger.Debug($"[Auto-Movie-Request] '{movie.Name}' is not part of a TMDB collection");
                 return;
             }
 
-            _logger.LogInformation($"[Auto-Movie-Request] '{movie.Name}' is part of {collectionInfo.Name} (TMDB collection {collectionInfo.Id})");
+            _logger.Info($"[Auto-Movie-Request] '{movie.Name}' is part of {collectionInfo.Name} (TMDB collection {collectionInfo.Id})");
 
             // Get collection details from Jellyseerr
             var nextMovieInfo = await GetNextMovieInCollectionAsync(collectionInfo.Id, tmdbId);
             if (nextMovieInfo == null)
             {
-                // _logger.LogDebug($"[Auto-Movie-Request] No next movie found or next movie is already available/requested");
+                // _logger.Debug($"[Auto-Movie-Request] No next movie found or next movie is already available/requested");
                 return;
             }
 
@@ -126,7 +137,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 if (_requestedMovies[user.Id.ToString()].ContainsKey(requestKey))
                 {
-                    _logger.LogDebug($"[Auto-Movie-Request] Already requested '{nextMovieInfo.Title}' (cached)");
+                    _logger.Debug($"[Auto-Movie-Request] Already requested '{nextMovieInfo.Title}' (cached)");
                     return;
                 }
 
@@ -142,7 +153,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
             if (success)
             {
-                _logger.LogInformation($"[Auto-Movie-Request] ✓ Requested '{nextMovieInfo.Title}' (TMDB {nextMovieInfo.TmdbId}) for {user.Username}");
+                _logger.Info($"[Auto-Movie-Request] ✓ Requested '{nextMovieInfo.Title}' (TMDB {nextMovieInfo.TmdbId}) for {user.Username}");
             }
             else
             {
@@ -154,7 +165,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                         _requestedMovies[user.Id.ToString()].Remove(requestKey);
                     }
                 }
-                _logger.LogWarning($"[Auto-Movie-Request] ✗ Failed to request '{nextMovieInfo.Title}' (TMDB {nextMovieInfo.TmdbId}) for {user.Username}");
+                _logger.Warning($"[Auto-Movie-Request] ✗ Failed to request '{nextMovieInfo.Title}' (TMDB {nextMovieInfo.TmdbId}) for {user.Username}");
             }
         }
 
@@ -191,7 +202,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // Gets TMDB collection ID and name for a movie
         private async Task<CollectionInfo?> GetTmdbCollectionIdAsync(string tmdbId)
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrEmpty(config.TMDB_API_KEY))
             {
                 return null;
@@ -199,13 +210,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
             try
             {
-                var httpClient = Helpers.PluginHttpClients.CreateTmdbClient(_httpClientFactory);
+                var httpClient = _httpClientFactory.CreateClient();
                 var requestUrl = $"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={config.TMDB_API_KEY}";
 
                 var response = await httpClient.GetAsync(requestUrl);
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogDebug($"[Auto-Movie-Request] TMDB returned {response.StatusCode} for movie {tmdbId}");
+                    _logger.Debug($"[Auto-Movie-Request] TMDB returned {response.StatusCode} for movie {tmdbId}");
                     return null;
                 }
 
@@ -230,7 +241,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[Auto-Movie-Request] Error querying TMDB: {ex.Message}");
+                _logger.Warning($"[Auto-Movie-Request] Error querying TMDB: {ex.Message}");
             }
 
             return null;
@@ -239,7 +250,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // Gets next movie in collection from Jellyseerr collection endpoint
         private async Task<MovieInfo?> GetNextMovieInCollectionAsync(int collectionId, string currentTmdbId)
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
             {
                 return null;
@@ -263,7 +274,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                         var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUrl);
                         if (error != null)
                         {
-                            _logger.LogDebug($"[Auto-Movie-Request] Jellyseerr collection fetch failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
+                            _logger.Debug($"[Auto-Movie-Request] Jellyseerr collection fetch failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
                             continue;
                         }
 
@@ -302,7 +313,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                                             // 5 = available, 2 = pending, 3 = processing
                                             if (statusValue == 5 || statusValue == 2 || statusValue == 3)
                                             {
-                                                _logger.LogDebug($"[Auto-Movie-Request] Next movie already available or requested (status: {statusValue})");
+                                                _logger.Debug($"[Auto-Movie-Request] Next movie already available or requested (status: {statusValue})");
                                                 return null;
                                             }
                                         }
@@ -316,7 +327,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                                         {
                                             if (releaseDate > DateTime.Now)
                                             {
-                                                _logger.LogDebug($"[Auto-Movie-Request] Next movie is not yet released (release date: {releaseDate:yyyy-MM-dd}), skipping");
+                                                _logger.Debug($"[Auto-Movie-Request] Next movie is not yet released (release date: {releaseDate:yyyy-MM-dd}), skipping");
                                                 return null;
                                             }
                                         }
@@ -335,7 +346,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                                 }
                                 else
                                 {
-                                    // _logger.LogDebug($"[Auto-Movie-Request] Current movie is the last in collection or not found");
+                                    // _logger.Debug($"[Auto-Movie-Request] Current movie is the last in collection or not found");
                                     return null;
                                 }
                             }
@@ -343,14 +354,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogDebug($"[Auto-Movie-Request] Error checking Jellyseerr at {trimmedUrl}: {ex.Message}");
+                        _logger.Debug($"[Auto-Movie-Request] Error checking Jellyseerr at {trimmedUrl}: {ex.Message}");
                         continue;
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[Auto-Movie-Request] Error querying Jellyseerr collection: {ex.Message}");
+                _logger.Warning($"[Auto-Movie-Request] Error querying Jellyseerr collection: {ex.Message}");
             }
 
             return null;
@@ -359,7 +370,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // Gets the quality profile of a movie from its existing Jellyseerr request
         private async Task<QualityProfileSettings?> GetOriginalMovieQualityProfileAsync(string tmdbId)
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
             {
                 return null;
@@ -379,7 +390,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUrl);
                     if (error != null)
                     {
-                        _logger.LogDebug($"[Auto-Movie-Request] Quality profile lookup for movie {tmdbId} failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
+                        _logger.Debug($"[Auto-Movie-Request] Quality profile lookup for movie {tmdbId} failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
                         continue;
                     }
 
@@ -416,28 +427,28 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                             if (settings.ProfileId.HasValue || settings.ServerId.HasValue)
                             {
-                                _logger.LogDebug($"[Auto-Movie-Request] Found quality profile for TMDB {tmdbId}: profileId={settings.ProfileId}, serverId={settings.ServerId}, rootFolder={settings.RootFolder}, is4k={settings.Is4k}");
+                                _logger.Debug($"[Auto-Movie-Request] Found quality profile for TMDB {tmdbId}: profileId={settings.ProfileId}, serverId={settings.ServerId}, rootFolder={settings.RootFolder}, is4k={settings.Is4k}");
                                 return settings;
                             }
                         }
                     }
 
-                    _logger.LogDebug($"[Auto-Movie-Request] No request records found for TMDB {tmdbId} in Jellyseerr");
+                    _logger.Debug($"[Auto-Movie-Request] No request records found for TMDB {tmdbId} in Jellyseerr");
                     return null;
                 }
                 catch (HttpRequestException ex)
                 {
-                    _logger.LogDebug($"[Auto-Movie-Request] Failed to connect to {url}: {ex.Message}");
+                    _logger.Debug($"[Auto-Movie-Request] Failed to connect to {url}: {ex.Message}");
                     continue;
                 }
                 catch (JsonException ex)
                 {
-                    _logger.LogWarning($"[Auto-Movie-Request] Invalid response from {url}: {ex.Message}");
+                    _logger.Warning($"[Auto-Movie-Request] Invalid response from {url}: {ex.Message}");
                     continue;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"[Auto-Movie-Request] Unexpected error fetching quality profile from {url}: {ex.Message}");
+                    _logger.Warning($"[Auto-Movie-Request] Unexpected error fetching quality profile from {url}: {ex.Message}");
                     continue;
                 }
             }
@@ -448,7 +459,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // Resolves quality profile settings based on configuration mode
         private async Task<QualityProfileSettings?> ResolveQualityProfileAsync(string watchedTmdbId)
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null)
             {
                 return null;
@@ -461,13 +472,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 var settings = await GetOriginalMovieQualityProfileAsync(watchedTmdbId);
                 if (settings == null)
                 {
-                    _logger.LogWarning($"[Auto-Movie-Request] Could not determine quality profile for watched movie TMDB {watchedTmdbId}, falling back to default");
+                    _logger.Warning($"[Auto-Movie-Request] Could not determine quality profile for watched movie TMDB {watchedTmdbId}, falling back to default");
                     return null;
                 }
 
                 if (settings.Is4k && config.AutoMovieRequestFallbackOn4k)
                 {
-                    _logger.LogInformation($"[Auto-Movie-Request] Original movie used a 4K quality profile, falling back to default (AutoMovieRequestFallbackOn4k is enabled)");
+                    _logger.Info($"[Auto-Movie-Request] Original movie used a 4K quality profile, falling back to default (AutoMovieRequestFallbackOn4k is enabled)");
                     return null;
                 }
 
@@ -496,14 +507,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     return settings;
                 }
 
-                _logger.LogWarning("[Auto-Movie-Request] Custom quality profile mode selected but no values configured, falling back to default");
+                _logger.Warning("[Auto-Movie-Request] Custom quality profile mode selected but no values configured, falling back to default");
                 return null;
             }
 
             // "default" mode or unrecognized - no quality profile settings
             if (mode != "default")
             {
-                _logger.LogWarning($"[Auto-Movie-Request] Unrecognized quality mode '{mode}', treating as default");
+                _logger.Warning($"[Auto-Movie-Request] Unrecognized quality mode '{mode}', treating as default");
             }
             return null;
         }
@@ -521,10 +532,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // Requests a movie from Jellyseerr
         private async Task<bool> RequestMovie(string tmdbId, string jellyfinUserId, QualityProfileSettings? qualitySettings = null)
         {
-            var config = _configProvider.ConfigurationOrNull;
+            var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
             {
-                _logger.LogWarning("[Auto-Movie-Request] Jellyseerr configuration is missing");
+                _logger.Warning("[Auto-Movie-Request] Jellyseerr configuration is missing");
                 return false;
             }
 
@@ -532,7 +543,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var jellyseerrUserId = await GetJellyseerrUserId(jellyfinUserId);
             if (string.IsNullOrEmpty(jellyseerrUserId))
             {
-                _logger.LogWarning($"[Auto-Movie-Request] Could not find Jellyseerr user for Jellyfin user {jellyfinUserId}");
+                _logger.Warning($"[Auto-Movie-Request] Could not find Jellyseerr user for Jellyfin user {jellyfinUserId}");
                 return false;
             }
 
@@ -574,11 +585,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     {
                         return true;
                     }
-                    _logger.LogWarning($"[Auto-Movie-Request] Jellyseerr request failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
+                    _logger.Warning($"[Auto-Movie-Request] Jellyseerr request failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"[Auto-Movie-Request] Exception requesting movie from Jellyseerr at {url}: {ex.Message}");
+                    _logger.Error($"[Auto-Movie-Request] Exception requesting movie from Jellyseerr at {url}: {ex.Message}");
                 }
             }
 
@@ -586,9 +597,82 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         }
 
         // Gets the Jellyseerr user ID for a Jellyfin user
-        private Task<string?> GetJellyseerrUserId(string jellyfinUserId)
+        private async Task<string?> GetJellyseerrUserId(string jellyfinUserId)
         {
-            return _jellyseerrUserResolver.GetJellyseerrUserId(jellyfinUserId);
+            var config = JellyfinEnhanced.Instance?.Configuration;
+            if (config == null || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
+            {
+                return null;
+            }
+
+            var normalizedJellyfinUserId = NormalizeUserId(jellyfinUserId);
+
+            lock (_userIdCacheLock)
+            {
+                if (_jellyseerrUserIdCache.TryGetValue(normalizedJellyfinUserId, out var cached) &&
+                    DateTime.UtcNow - cached.CachedAt < GetJellyseerrUserIdCacheTtl())
+                {
+                    return cached.JellyseerrUserId;
+                }
+            }
+
+            var urls = GetConfiguredUrls(config.JellyseerrUrls);
+            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+
+            foreach (var url in urls)
+            {
+                try
+                {
+                    var requestUri = $"{url.Trim().TrimEnd('/')}/api/v1/user?take=1000";
+                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                        HttpMethod.Get, requestUri, config.JellyseerrApiKey);
+                    using var response = await httpClient.SendAsync(request);
+                    var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+
+                    if (error == null && content != null)
+                    {
+                        var usersResponse = JsonSerializer.Deserialize<JsonElement>(content);
+
+                        if (usersResponse.TryGetProperty("results", out var usersArray))
+                        {
+                            foreach (var userElement in usersArray.EnumerateArray())
+                            {
+                                if (userElement.TryGetProperty("jellyfinUserId", out var jfUserId) &&
+                                    userElement.TryGetProperty("id", out var id))
+                                {
+                                    var jellyseerrJfUserId = jfUserId.GetString();
+                                    if (!string.IsNullOrEmpty(jellyseerrJfUserId))
+                                    {
+                                        // Normalize both IDs for comparison (remove dashes)
+                                        var normalizedJellyseerrId = jellyseerrJfUserId.Replace("-", "").ToLowerInvariant();
+
+                                        if (normalizedJellyseerrId == normalizedJellyfinUserId)
+                                        {
+                                            var jellyseerrUserId = id.GetInt32().ToString();
+                                            lock (_userIdCacheLock)
+                                            {
+                                                _jellyseerrUserIdCache[normalizedJellyfinUserId] = (jellyseerrUserId, DateTime.UtcNow);
+                                            }
+                                            return jellyseerrUserId;
+                                        }
+                                    }
+                                }
+                            }
+                            _logger.Warning($"[Auto-Movie-Request] No Jellyseerr user found for Jellyfin user {jellyfinUserId}");
+                        }
+                    }
+                    else if (error != null)
+                    {
+                        _logger.Warning($"[Auto-Movie-Request] Failed to fetch users from Jellyseerr: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"[Auto-Movie-Request] Exception while trying to get Jellyseerr user ID from {url}: {ex.Message}");
+                }
+            }
+
+            return null;
         }
 
         // Clears the request cache (useful for testing or resetting)
@@ -598,7 +682,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 _requestedMovies.Clear();
             }
-            _logger.LogInformation("[Auto-Movie-Request] Cleared auto movie request cache");
+            _logger.Info("[Auto-Movie-Request] Cleared auto movie request cache");
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using MediaBrowser.Controller.Session;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -71,7 +70,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     public sealed class RequestIdentityService
     {
         // Per-browser identity cookie the web client sets on load (see
-        // js/enhanced/spoilerguard/identity.js). Browsers attach it to every
+        // js/enhanced/spoiler-blur.js). Browsers attach it to every
         // same-origin request INCLUDING anonymous <img>/CSS-background image
         // fetches, which carry no other user identity on Jellyfin 12 (the
         // image endpoint ignores legacy token params, and <img> tags can't
@@ -134,13 +133,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly ISessionManager _sessionManager;
         private readonly MediaBrowser.Controller.Library.IUserManager _userManager;
         private readonly SpoilerIdentityService _markers;
-        private readonly ILogger<RequestIdentityService> _logger;
+        private readonly Logger _logger;
 
         public RequestIdentityService(
             ISessionManager sessionManager,
             MediaBrowser.Controller.Library.IUserManager userManager,
             SpoilerIdentityService markers,
-            ILogger<RequestIdentityService> logger)
+            Logger logger)
         {
             _sessionManager = sessionManager;
             _userManager = userManager;
@@ -539,7 +538,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var stored = _warnedAt.AddOrUpdate(key, now,
                 (_, last) => (now - last) >= PerKeyWarnInterval ? now : last);
             if (stored != now) return;
-            _logger.LogWarning(message);
+            _logger.Warning(message);
         }
     }
 }

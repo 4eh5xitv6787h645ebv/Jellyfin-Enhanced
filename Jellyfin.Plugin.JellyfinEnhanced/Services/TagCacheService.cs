@@ -6,13 +6,11 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
-using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -25,29 +23,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     {
         private readonly ILibraryManager _libraryManager;
         private readonly IApplicationPaths _applicationPaths;
-        private readonly ILogger<TagCacheService> _logger;
+        private readonly Logger _logger;
         private volatile ConcurrentDictionary<string, TagCacheEntry> _cache = new();
-        private readonly object _cacheMutationLock = new();
         private readonly object _saveLock = new();
+
+        // Guards the {_cacheReleased, _cache, _version, _lastModified} generation
+        // as one unit for readers. Publish/release sites mutate all four inside
+        // this lock (nested within _saveLock, always in that order), and snapshot
+        // readers (GetCacheForUser) take ONLY this lock — its critical sections
+        // are a handful of field accesses, so readers never stall behind a
+        // multi-second SaveToDisk serialization the way they would on _saveLock.
+        private readonly object _publishLock = new();
         private readonly SemaphoreSlim _rebuildLock = new(1, 1);
-        // While a full cache is built off to the side, event-driven mutations
-        // continue updating the live cache and are journaled here for replay at
-        // publish. A null value is a removal tombstone.
-        private Dictionary<string, TagCacheEntry?>? _rebuildMutations;
         private long _version;
         private long _lastModified;
         private long _lastReconciledUtcTicks;
-        private long _changeVersion;
-        private long _persistedChangeVersion;
         private Timer? _debounceSaveTimer;
+        private volatile bool _dirty;
         private long _firstDirtyTicks; // 0 = nothing dirty since the last disk save
 
-        // Persist 30 seconds after the latest applied change, but cap sustained
-        // change streams at one full-cache write every five minutes.
+        // Disk-save cadence: a save runs 30s after the last applied change, but under
+        // sustained change (a metadata refresh where values really do change on every
+        // item) the trailing debounce would keep pushing the save out — so cap the
+        // deferral at 5 minutes from the first unsaved change. Worst case is one
+        // full-cache write per 5 minutes instead of one per flush cycle (~30s).
         private static readonly TimeSpan SaveDebounce = TimeSpan.FromSeconds(30);
         private static readonly TimeSpan SaveMaxWait = TimeSpan.FromMinutes(5);
-
-        internal Action? SaveSnapshotCapturedForTest { get; set; }
 
         // Incremental cache maintenance. Library-scan events are recorded here (O(1),
         // no DB/probe work) and drained by a debounced background worker so scans are
@@ -68,6 +69,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // starts empty (client falls back to the live/per-batch strip) until rebuild.
         private const int CurrentCacheSchemaVersion = 2;
 
+        // Page size for hydrating library items during full builds and
+        // reconciliation. Fetching the whole library with one GetItemList call
+        // materializes every BaseItem (full metadata, people, streams) at once,
+        // which on very large libraries (tens of thousands of items) can exceed
+        // the server's memory and OOM-kill Jellyfin. Fetching ids first and then
+        // hydrating in fixed-size pages bounds peak memory to one page of items
+        // regardless of library size. The resulting TagCacheEntry objects are
+        // small (a few hundred bytes) so the cache itself stays cheap.
+        private const int HydrationPageSize = 500;
+
         // User access cache: avoids expensive GetItemIds query on every request
         private readonly ConcurrentDictionary<string, (HashSet<string> Ids, DateTime CachedAt)> _userAccessCache = new();
         private static readonly TimeSpan UserAccessCacheTtl = TimeSpan.FromSeconds(60);
@@ -81,18 +92,66 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             BaseItemKind.BoxSet,
         };
 
-        public TagCacheService(ILibraryManager libraryManager, IApplicationPaths applicationPaths, ILogger<TagCacheService> logger)
+        public TagCacheService(ILibraryManager libraryManager, IApplicationPaths applicationPaths, Logger logger)
         {
             _libraryManager = libraryManager;
             _applicationPaths = applicationPaths;
             _logger = logger;
+
+            // The service is a DI singleton; expose it so the plugin's
+            // UpdateConfiguration override can reach the running instance when the
+            // admin toggles the Server-Side Tag Cache setting (same pattern as
+            // JellyfinEnhanced.Instance — the plugin class has no DI access).
+            Instance = this;
         }
+
+        /// <summary>
+        /// The running singleton, for the config-save transition hook in
+        /// <see cref="JellyfinEnhanced.UpdateConfiguration"/>. Null until DI
+        /// constructs the service (and again after disposal).
+        /// </summary>
+        internal static TagCacheService? Instance { get; private set; }
+
+        /// <summary>
+        /// Live read of the admin "Server-Side Tag Cache" setting. Long-running
+        /// builds re-check this at page boundaries so an admin turning the cache
+        /// off (e.g. under memory pressure) actually stops the work instead of
+        /// only preventing the next run.
+        /// </summary>
+        private static bool ServerModeEnabled => JellyfinEnhanced.Instance?.Configuration?.TagCacheServerMode == true;
+
+        /// <summary>
+        /// Shared abort condition for every expensive or state-publishing cache
+        /// phase (build pages, reconcile rebuild/sweep loops, publishes, saves):
+        /// stop when the admin turned the setting off OR the service is being
+        /// torn down. Checked mid-run, not just at entry, so neither a disable
+        /// nor a shutdown has to wait behind a large-library operation.
+        /// </summary>
+        private bool ShouldAbortCacheWork => _disposed || !ServerModeEnabled;
+
+        // True whenever the in-memory cache is NOT a published complete state:
+        // from construction until the first successful LoadFromDisk/full-build
+        // publish, and again between OnServerModeDisabled releasing the cache and
+        // the next publish. Distinguishes "empty/placeholder" from "has real
+        // entries": an incremental flush landing while unpublished (e.g. after a
+        // failed startup build, or in the release->re-enable window) would make
+        // the cache non-empty with a stray entry, and gating full builds and
+        // snapshot reloads on IsEmpty alone would then mistake that near-empty
+        // cache for a complete one — delta-reconciling and even persisting it.
+        // While true: flushes defer, SaveToDisk refuses, reconcile full-builds.
+        private volatile bool _cacheReleased = true;
+
+        // Serializes server-mode transitions (and orders them after one another)
+        // off the config-save thread. ContinueWith chaining keeps strict FIFO
+        // order for rapid toggles; each queued transition re-reads the CURRENT
+        // setting when it runs, so intermediate flips converge on the final state
+        // instead of racing each other's release/reload work.
+        private Task _transitionQueue = Task.CompletedTask;
+        private readonly object _transitionQueueLock = new();
 
         public long Version => Interlocked.Read(ref _version);
         public long LastModified => Interlocked.Read(ref _lastModified);
         public int Count => _cache.Count;
-
-        internal bool ContainsKeyForTest(string key) => _cache.ContainsKey(key);
 
         private string CacheFilePath =>
             Path.Combine(_applicationPaths.PluginsPath, "configurations", "Jellyfin.Plugin.JellyfinEnhanced", "tag-cache.json");
@@ -116,26 +175,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
         private void BuildFullCacheCore(IProgress<double>? progress, CancellationToken cancellationToken, DateTime reconciliationStartedUtc)
         {
-            _logger.LogInformation("[TagCache] Starting full cache build...");
+            _logger.Info("[TagCache] Starting full cache build...");
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            BeginRebuildMutationCapture();
-            var published = false;
 
-            try
+            // Ids only — a Guid list is tiny even for huge libraries. The heavy
+            // BaseItem hydration happens page by page below so the build never
+            // holds more than HydrationPageSize full items at a time.
+            var allIds = _libraryManager.GetItemIds(new InternalItemsQuery
             {
-                var allItems = _libraryManager.GetItemList(new InternalItemsQuery
+                IncludeItemTypes = TaggableTypes.ToArray(),
+                IsVirtualItem = false,
+                Recursive = true
+            });
+
+            _logger.Info($"[TagCache] Found {allIds.Count} taggable items");
+
+            var newCache = new ConcurrentDictionary<string, TagCacheEntry>();
+            var processed = 0;
+
+            foreach (var page in HydrateInPages(allIds, cancellationToken))
+            {
+                // Stop promptly if the admin turned the cache off (or the server
+                // is shutting down) mid-build; the partial result is discarded,
+                // not published.
+                if (ShouldAbortCacheWork)
                 {
-                    IncludeItemTypes = TaggableTypes.ToArray(),
-                    IsVirtualItem = false,
-                    Recursive = true
-                }).ToList();
+                    _logger.Info("[TagCache] Full build aborted (setting disabled or server shutting down); nothing published.");
+                    return;
+                }
 
-                _logger.LogInformation($"[TagCache] Found {allItems.Count} taggable items");
-
-                var newCache = new ConcurrentDictionary<string, TagCacheEntry>();
-                var processed = 0;
-
-                foreach (var item in allItems)
+                foreach (var item in page)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -145,166 +214,54 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                         var key = item.Id.ToString("N").ToLowerInvariant();
                         newCache[key] = entry;
                     }
-
-                    processed++;
-                    if (processed % 500 == 0)
-                    {
-                        progress?.Report(allItems.Count == 0 ? 100 : (double)processed / allItems.Count * 100);
-                    }
                 }
 
-                // Publish atomically after replaying any event-driven changes that
-                // arrived while the replacement cache was being constructed.
-                PublishRebuiltCache(newCache);
-                published = true;
-                Interlocked.Increment(ref _version);
-                Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-                Interlocked.Exchange(ref _lastReconciledUtcTicks, reconciliationStartedUtc.Ticks);
-                _userAccessCache.Clear();
-                progress?.Report(100);
-
-                sw.Stop();
-                _logger.LogInformation($"[TagCache] Full cache build complete: {_cache.Count} entries in {sw.Elapsed.TotalSeconds:F1}s");
-
-                SaveToDisk();
+                // An item deleted between the id query and its page hydration just
+                // doesn't come back, so advance by the page's actual size.
+                processed += page.Count;
+                progress?.Report((double)processed / allIds.Count * 100);
             }
-            finally
+
+            // Final gate before publishing (the loop check can't run when the
+            // setting flips after the last page). The swap below happens while
+            // this thread holds _rebuildLock and OnServerModeDisabled also runs
+            // under that lock, so a disable can't interleave with the publish —
+            // it either aborts the build here or releases the published cache
+            // afterwards.
+            if (ShouldAbortCacheWork)
             {
-                if (!published)
-                {
-                    AbortRebuildMutationCapture();
-                }
+                _logger.Info("[TagCache] Full build aborted (setting disabled or server shutting down); nothing published.");
+                return;
             }
-        }
 
-        private void BeginRebuildMutationCapture()
-        {
-            lock (_cacheMutationLock)
+            // Atomic reference swap — readers see old or new cache, never partial.
+            // Flag, swap AND version/timestamp under _saveLock: a stale-armed save
+            // timer can't observe the cleared flag with the placeholder still in
+            // _cache, and a snapshot read (GetCacheForUser) can't pair the new
+            // dictionary with the previous generation's version/timestamp — a
+            // request stamped with a pre-first-publish timestamp of 0 would
+            // permanently disable that client's delta refresh.
+            lock (_saveLock)
             {
-                if (_rebuildMutations != null)
+                lock (_publishLock)
                 {
-                    throw new InvalidOperationException("A tag-cache rebuild is already active.");
+                    _cacheReleased = false;
+                    _cache = newCache;
+                    Interlocked.Increment(ref _version);
+                    Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
                 }
-                _rebuildMutations = new Dictionary<string, TagCacheEntry?>(StringComparer.OrdinalIgnoreCase);
             }
+
+            Interlocked.Exchange(ref _lastReconciledUtcTicks, reconciliationStartedUtc.Ticks);
+            // Invalidate user access cache since items may have changed
+            _userAccessCache.Clear();
+            progress?.Report(100);
+
+            sw.Stop();
+            _logger.Info($"[TagCache] Full cache build complete: {_cache.Count} entries in {sw.Elapsed.TotalSeconds:F1}s");
+
+            SaveToDisk();
         }
-
-        private void PublishRebuiltCache(ConcurrentDictionary<string, TagCacheEntry> rebuilt)
-        {
-            lock (_cacheMutationLock)
-            {
-                if (_rebuildMutations == null)
-                {
-                    throw new InvalidOperationException("No tag-cache rebuild is active.");
-                }
-
-                foreach (var mutation in _rebuildMutations)
-                {
-                    if (mutation.Value == null)
-                    {
-                        rebuilt.TryRemove(mutation.Key, out _);
-                    }
-                    else
-                    {
-                        rebuilt[mutation.Key] = mutation.Value;
-                    }
-                }
-
-                _cache = rebuilt;
-                _rebuildMutations = null;
-                Interlocked.Increment(ref _changeVersion);
-            }
-        }
-
-        private void AbortRebuildMutationCapture()
-        {
-            lock (_cacheMutationLock)
-            {
-                _rebuildMutations = null;
-            }
-        }
-
-        private void CommitCacheEntry(string key, TagCacheEntry entry)
-        {
-            lock (_cacheMutationLock)
-            {
-                _cache[key] = entry;
-                if (_rebuildMutations != null)
-                {
-                    _rebuildMutations[key] = entry;
-                }
-                Interlocked.Increment(ref _changeVersion);
-            }
-        }
-
-        private bool CommitCacheEntryIfChanged(string key, TagCacheEntry entry)
-        {
-            lock (_cacheMutationLock)
-            {
-                // Jellyfin raises ItemUpdated for many no-op scan and chapter
-                // operations. Preserve the existing LastUpdated stamp and avoid
-                // serializing the full cache when no client-visible field changed.
-                if (_cache.TryGetValue(key, out var existing)
-                    && TagCacheEntry.ContentEquals(existing, entry))
-                {
-                    return false;
-                }
-
-                _cache[key] = entry;
-                if (_rebuildMutations != null)
-                {
-                    _rebuildMutations[key] = entry;
-                }
-                Interlocked.Increment(ref _changeVersion);
-                return true;
-            }
-        }
-
-        private bool CommitCacheRemoval(string key, TagCacheEntry? expectedEntry = null)
-        {
-            lock (_cacheMutationLock)
-            {
-                // Reconciliation sweeps a point-in-time entry snapshot. If an
-                // event rebuilt this key after that snapshot, do not delete the
-                // replacement based on stale live-id information.
-                if (expectedEntry != null
-                    && (!_cache.TryGetValue(key, out var current)
-                        || !ReferenceEquals(current, expectedEntry)))
-                {
-                    return false;
-                }
-
-                var removed = _cache.TryRemove(key, out _);
-                var journaled = _rebuildMutations != null;
-                if (_rebuildMutations != null)
-                {
-                    _rebuildMutations[key] = null;
-                }
-                if (removed || journaled)
-                {
-                    Interlocked.Increment(ref _changeVersion);
-                }
-                return removed || journaled;
-            }
-        }
-
-        internal void BeginRebuildForTest() => BeginRebuildMutationCapture();
-
-        internal void PublishRebuildForTest(Dictionary<string, TagCacheEntry> entries)
-            => PublishRebuiltCache(new ConcurrentDictionary<string, TagCacheEntry>(entries));
-
-        internal void UpsertEntryForTest(string key, TagCacheEntry entry) => CommitCacheEntry(key, entry);
-
-        internal void RemoveEntryForTest(string key) => CommitCacheRemoval(key);
-
-        internal TagCacheEntry? GetEntryForTest(string key)
-            => _cache.TryGetValue(key, out var entry) ? entry : null;
-
-        internal bool RemoveEntryIfUnchangedForTest(string key, TagCacheEntry expectedEntry)
-            => CommitCacheRemoval(key, expectedEntry);
-
-        internal bool HasUnsavedChangesForTest
-            => Interlocked.Read(ref _changeVersion) != Interlocked.Read(ref _persistedChangeVersion);
 
         /// <summary>
         /// Reconcile the persisted tag cache with Jellyfin's saved-item timestamps.
@@ -329,9 +286,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var reconciliationStartedUtc = DateTime.UtcNow;
             var previousTicks = Interlocked.Read(ref _lastReconciledUtcTicks);
 
-            if (_cache.IsEmpty)
+            // _cacheReleased also forces the full path: after a release, "has a
+            // few entries" (e.g. from any stray incremental work) must not be
+            // mistaken for a complete cache — a delta reconcile of it would serve
+            // a near-empty library as if whole.
+            if (_cacheReleased || _cache.IsEmpty)
             {
-                _logger.LogInformation("[TagCache] Cache is empty; running full build");
+                _logger.Info("[TagCache] Cache is empty; running full build");
                 BuildFullCacheCore(progress, cancellationToken, reconciliationStartedUtc);
                 return;
             }
@@ -340,56 +301,77 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 previousTicks = reconciliationStartedUtc.Ticks;
                 Interlocked.Exchange(ref _lastReconciledUtcTicks, previousTicks);
-                _logger.LogInformation("[TagCache] No previous reconciliation marker; seeding marker and running delta reconciliation");
+                _logger.Info("[TagCache] No previous reconciliation marker; seeding marker and running delta reconciliation");
             }
 
             var changedSinceUtc = new DateTime(previousTicks, DateTimeKind.Utc).Subtract(TimeSpan.FromMinutes(2));
-            _logger.LogInformation($"[TagCache] Reconciling changes since {changedSinceUtc:O}");
+            _logger.Info($"[TagCache] Reconciling changes since {changedSinceUtc:O}");
 
-            var changedItems = _libraryManager.GetItemList(new InternalItemsQuery
+            // Same paged hydration as the full build: after a sweeping change
+            // (e.g. a full metadata refresh) this delta can cover most of the
+            // library, so materializing it with one GetItemList call has the
+            // same OOM potential as the unpaged full build.
+            var changedIds = _libraryManager.GetItemIds(new InternalItemsQuery
             {
                 IncludeItemTypes = TaggableTypes.ToArray(),
                 IsVirtualItem = false,
                 Recursive = true,
                 MinDateLastSaved = changedSinceUtc
-            }).ToList();
+            });
 
             var idsToRebuild = new HashSet<Guid>();
-            foreach (var item in changedItems)
+            foreach (var page in HydrateInPages(changedIds, cancellationToken))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                idsToRebuild.Add(item.Id);
-
-                if (item is MediaBrowser.Controller.Entities.TV.Episode episode)
+                // Same mid-run gate as the full build: stop when the admin turns
+                // the cache off instead of finishing expensive work they opted out of.
+                if (ShouldAbortCacheWork)
                 {
-                    if (episode.SeriesId != Guid.Empty)
-                    {
-                        idsToRebuild.Add(episode.SeriesId);
-                    }
+                    _logger.Info("[TagCache] Reconciliation aborted (setting disabled or server shutting down).");
+                    return;
+                }
 
-                    if (episode.SeasonId != Guid.Empty)
+                foreach (var item in page)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    idsToRebuild.Add(item.Id);
+
+                    if (item is MediaBrowser.Controller.Entities.TV.Episode episode)
                     {
-                        idsToRebuild.Add(episode.SeasonId);
+                        if (episode.SeriesId != Guid.Empty)
+                        {
+                            idsToRebuild.Add(episode.SeriesId);
+                        }
+
+                        if (episode.SeasonId != Guid.Empty)
+                        {
+                            idsToRebuild.Add(episode.SeasonId);
+                        }
                     }
                 }
             }
 
             var changed = false;
-            var processed = 0;
+            var rebuilt = 0;
             foreach (var id in idsToRebuild)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                // After a sweeping change (full metadata refresh) this loop can
+                // cover most of the library, so it needs the same mid-run abort
+                // as the hydration pages — otherwise a disable mid-reconcile
+                // keeps doing per-item probe work the admin just opted out of.
+                if (ShouldAbortCacheWork)
+                {
+                    _logger.Info("[TagCache] Reconciliation aborted (setting disabled or server shutting down).");
+                    return;
+                }
+
                 changed |= RebuildEntry(id);
-                processed++;
-                progress?.Report(idsToRebuild.Count == 0 ? 50 : (double)processed / idsToRebuild.Count * 80);
+                rebuilt++;
+                progress?.Report(idsToRebuild.Count == 0 ? 50 : (double)rebuilt / idsToRebuild.Count * 80);
             }
 
-            // Snapshot entries before querying live ids. Inserts after this point
-            // are absent from the sweep; replacements are protected by the
-            // reference-conditional removal below.
-            var cachedSnapshot = _cache.ToList();
             var currentIds = _libraryManager.GetItemIds(new InternalItemsQuery
             {
                 IncludeItemTypes = TaggableTypes.ToArray(),
@@ -401,21 +383,118 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 .Select(id => id.ToString("N").ToLowerInvariant())
                 .ToHashSet(StringComparer.Ordinal);
 
-            foreach (var cachedEntry in cachedSnapshot)
+            // Collect the keys to sweep WITHOUT mutating the cache: entry updates
+            // above are idempotent and safe to abort mid-way (the marker didn't
+            // advance, so the next run redoes them), but removals are not — a
+            // removed entry takes its stored SeriesId with it, so an abort after
+            // partial removals could persist a cache whose deleted entries can
+            // never get their parent repair, with no version bump to make
+            // delta-polling clients drop them.
+            var keysToSweep = new List<string>();
+            foreach (var cachedKey in _cache.Keys)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (!liveKeys.Contains(cachedEntry.Key)
-                    && CommitCacheRemoval(cachedEntry.Key, cachedEntry.Value))
+                if (!liveKeys.Contains(cachedKey))
+                {
+                    keysToSweep.Add(cachedKey);
+                }
+            }
+
+            // Single commit gate. Everything after it — removals, parent Series/
+            // Season repairs, version bump, marker advance, disk save — runs as
+            // one unit with no further abort points, so the swept state is only
+            // ever observed (and persisted) complete. A disable landing during
+            // the commit waits on _rebuildLock for the bounded remainder.
+            if (ShouldAbortCacheWork)
+            {
+                _logger.Info("[TagCache] Reconciliation aborted before commit (setting disabled or server shutting down); nothing saved.");
+                return;
+            }
+
+            // Parents of swept entries. Removals that happened while the monitor
+            // wasn't listening (server-mode-off window, plugin stopped) never
+            // enqueued their parent Series rebuild, so a Series entry can keep
+            // serving first-episode data derived from a deleted item. The swept
+            // entry's stored SeriesId lets the sweep queue that repair here.
+            var parentSeriesToRebuild = new HashSet<Guid>();
+            foreach (var key in keysToSweep)
+            {
+                if (_cache.TryRemove(key, out var removedEntry))
                 {
                     changed = true;
+                    if (removedEntry?.SeriesId != null && Guid.TryParse(removedEntry.SeriesId, out var seriesId))
+                    {
+                        parentSeriesToRebuild.Add(seriesId);
+                    }
+                }
+            }
+
+            // Log-and-continue on every repair step, never throw: the removals
+            // above are already applied, so an exception escaping this loop would
+            // skip the version bump and save below — delta-polling clients would
+            // then keep the removed (phantom) entries until some unrelated change
+            // bumps the version. Failed steps are requeued by their own id via
+            // the incremental pipeline (EnqueueUpdate is O(1) and never throws;
+            // the flush retries once this lock frees), so a transient failure
+            // doesn't strand a parent entry either.
+            foreach (var seriesId in parentSeriesToRebuild)
+            {
+                try
+                {
+                    changed |= RebuildEntry(seriesId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"[TagCache] Failed to repair series entry {seriesId}: {ex.Message}");
+                    EnqueueUpdate(seriesId);
+                }
+
+                // The removed entry only records its SeriesId, so the deleted
+                // item's former Season can't be identified directly — but Season
+                // entries also derive first-episode data, so rebuild all of the
+                // affected series' seasons (a handful of items) rather than leave
+                // one serving streams from a deleted file indefinitely.
+                IReadOnlyList<BaseItem> seasons;
+                try
+                {
+                    seasons = GetSeasonsOfSeries(seriesId);
+                }
+                catch (Exception ex)
+                {
+                    // Season ids are unknowable without this query, so they can't
+                    // be requeued individually — the one residual staleness gap.
+                    _logger.Warning($"[TagCache] Failed to get seasons for series {seriesId}: {ex.Message}");
+                    continue;
+                }
+
+                foreach (var season in seasons)
+                {
+                    try
+                    {
+                        changed |= RebuildEntry(season.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning($"[TagCache] Failed to repair season entry {season.Id}: {ex.Message}");
+                        EnqueueUpdate(season.Id);
+                    }
                 }
             }
 
             if (changed)
             {
-                Interlocked.Increment(ref _version);
-                Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                // Under both locks so a snapshot read pairs the bumped version
+                // with the swept cache state (see the build-publish comment).
+                lock (_saveLock)
+                {
+                    lock (_publishLock)
+                    {
+                        Interlocked.Increment(ref _version);
+                        Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                    }
+                }
+
                 _userAccessCache.Clear();
             }
 
@@ -423,7 +502,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             progress?.Report(100);
             SaveToDisk();
 
-            _logger.LogInformation($"[TagCache] Reconciliation complete: {changedItems.Count} changed items, {idsToRebuild.Count} entries checked");
+            _logger.Info($"[TagCache] Reconciliation complete: {changedIds.Count} changed items, {idsToRebuild.Count} entries checked");
         }
 
         /// <summary>
@@ -536,20 +615,81 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return;
             }
 
+            var retryLater = false;
             try
             {
-                Interlocked.Exchange(ref _firstPendingTicks, 0);
-                if (ApplyBatch(_pending.Drain(), RebuildEntry, RemoveEntry))
+                // A full build/reconcile (or a server-mode transition) owns the
+                // cache: applying the batch now would write into a dictionary
+                // about to be swapped away — after having been drained from
+                // _pending. Defer instead; the queued ids apply to the NEW cache
+                // once the lock is free. (Wait(0): never block the timer thread
+                // for the duration of a large-library build.)
+                if (!_rebuildLock.Wait(0))
                 {
-                    Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-                    ScheduleDebouncedSave();
+                    // Restart the cap clock while deferring: the cap exists to stop
+                    // a busy scan from starving flushes, but flushes CANNOT run
+                    // while a rebuild owns the lock — leaving the stamp past the
+                    // cap would make every library event fire a zero-delay timer
+                    // tick for the whole build.
+                    Interlocked.Exchange(ref _firstPendingTicks, DateTime.UtcNow.Ticks);
+                    retryLater = true;
+                    return;
+                }
+
+                try
+                {
+                    // Mode check UNDER the lock (transitions also hold it), so the
+                    // observation can't race a concurrent release: applying a batch
+                    // into a released cache would repopulate memory the admin just
+                    // freed and mark it dirty for persistence. Discarding is safe —
+                    // the re-enable transition reconciles by item save timestamps,
+                    // which covers every id dropped here.
+                    if (!ServerModeEnabled)
+                    {
+                        Interlocked.Exchange(ref _firstPendingTicks, 0);
+                        _pending.Drain();
+                        return;
+                    }
+
+                    // Mode is ON but the cache is still the released placeholder:
+                    // an enable catch-up is queued or between its load/reconcile
+                    // steps. Applying now would seed a near-empty cache that the
+                    // reconcile would then mistake for a live one. Keep the ids
+                    // pending instead — they apply after the catch-up publishes.
+                    if (_cacheReleased)
+                    {
+                        Interlocked.Exchange(ref _firstPendingTicks, DateTime.UtcNow.Ticks);
+                        retryLater = true;
+                        return;
+                    }
+
+                    Interlocked.Exchange(ref _firstPendingTicks, 0);
+                    if (ApplyBatch(_pending.Drain(), RebuildEntry, RemoveEntry))
+                    {
+                        Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                        ScheduleDebouncedSave();
+                    }
+                }
+                finally
+                {
+                    _rebuildLock.Release();
                 }
             }
             finally
             {
                 Interlocked.Exchange(ref _flushing, 0);
-                // Ids recorded while we were draining/applying: run again (cap-aware).
-                if (!_pending.IsEmpty) ScheduleFlush();
+                if (retryLater)
+                {
+                    // Fixed debounce, NOT ScheduleFlush: the cap window has often
+                    // already elapsed here, and a zero-delay reschedule would
+                    // busy-spin the timer for the whole build.
+                    ArmFlushTimer(FlushDebounce);
+                }
+                else if (!_pending.IsEmpty)
+                {
+                    // Ids recorded while we were draining/applying: run again (cap-aware).
+                    ScheduleFlush();
+                }
             }
         }
 
@@ -570,7 +710,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning($"[TagCache] Failed to apply pending change for {id}: {ex.Message}");
+                    _logger.Warning($"[TagCache] Failed to apply pending change for {id}: {ex.Message}");
                 }
             }
 
@@ -593,29 +733,68 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             if (entry == null) return false;
 
             var key = id.ToString("N").ToLowerInvariant();
-            return CommitCacheEntryIfChanged(key, entry);
+
+            // No-op guard: Jellyfin raises ItemUpdated for every item a nightly
+            // library scan (or chapter/trickplay task) re-saves, whether or not any
+            // tag-relevant data changed. Reporting those rebuilds as changes made
+            // every scan re-serialize the entire cache to disk every ~30s for the
+            // scan's duration. Keeping the existing entry also preserves its
+            // LastUpdated stamp, so delta requests (?since=) correctly skip it.
+            if (_cache.TryGetValue(key, out var existing) && TagCacheEntry.ContentEquals(existing, entry))
+            {
+                return false;
+            }
+
+            _cache[key] = entry;
+            return true;
         }
 
         private bool RemoveEntry(Guid id)
         {
             var key = id.ToString("N").ToLowerInvariant();
-            if (!CommitCacheRemoval(key)) return false;
+            if (!_cache.TryRemove(key, out _)) return false;
 
-            // A delta payload cannot represent a missing key, so force clients
-            // to perform a full reload when an item is removed.
+            // Removals are the one mutation the ?since delta protocol cannot express
+            // (a deleted key simply stops appearing), so clients only purge a removed
+            // entry when the version changes and they do a full reload. Bump it here:
+            // with the no-op rebuild guard, a quiet night no longer bumps the version
+            // via reconciliation, which used to mask this gap.
             Interlocked.Increment(ref _version);
             return true;
         }
 
         /// <summary>
-        /// Get cache entries filtered by a user's library access.
+        /// Get cache entries filtered by a user's library access, together with
+        /// the version and timestamp belonging to the SAME cache generation.
         /// User access IDs are cached for 60 seconds to avoid expensive DB queries.
         /// Optionally returns only entries modified after a given timestamp.
+        /// The out values must come from the same _publishLock-guarded capture as
+        /// the dictionary reference: pairing a freshly published cache with the
+        /// previous generation's version/timestamp would let a client store a
+        /// pre-first-publish timestamp of 0 (which disables its delta refresh)
+        /// or a version the next poll can't detect a rebuild against.
         /// </summary>
-        public Dictionary<string, TagCacheEntry> GetCacheForUser(JUser user, long? since = null)
+        public Dictionary<string, TagCacheEntry> GetCacheForUser(JUser user, out long version, out long timestamp, long? since = null)
         {
-            // Capture local reference for thread safety (cache reference may be swapped)
-            var cache = _cache;
+            ConcurrentDictionary<string, TagCacheEntry> cache;
+            lock (_publishLock)
+            {
+                version = Interlocked.Read(ref _version);
+                timestamp = Interlocked.Read(ref _lastModified);
+                cache = _cache;
+
+                // A request that passed the controller's mode gate can still land
+                // here after a disable released the caches; running the expensive
+                // per-user GetItemIds then would park a large accessible-id set in
+                // _userAccessCache for the whole off window (nothing evicts it
+                // while the endpoint 404s). Serve empty instead — the client falls
+                // back to batch mode, exactly as if it had hit the 404.
+                if (!ServerModeEnabled || _cacheReleased)
+                {
+                    return new Dictionary<string, TagCacheEntry>();
+                }
+            }
+
             var userKey = user.Id.ToString("N");
 
             // Check user access cache
@@ -634,7 +813,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 accessibleSet = new HashSet<string>(
                     accessibleIds.Select(id => id.ToString("N").ToLowerInvariant())
                 );
-                _userAccessCache[userKey] = (accessibleSet, DateTime.UtcNow);
+
+                // Store under _publishLock with the released flag re-checked:
+                // the entry bail above is check-then-act, and a disable can
+                // complete while the GetItemIds query runs. The disable clears
+                // _userAccessCache inside the same lock as it sets the flag, so
+                // this store either lands before the clear (and is cleared) or
+                // sees the flag and skips — it can never repopulate the access
+                // cache for the off window.
+                lock (_publishLock)
+                {
+                    if (ServerModeEnabled && !_cacheReleased)
+                    {
+                        _userAccessCache[userKey] = (accessibleSet, DateTime.UtcNow);
+                    }
+                }
             }
 
             var result = new Dictionary<string, TagCacheEntry>();
@@ -648,232 +841,165 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             return result;
         }
 
-        // ── Spoiler Guard per-user tag-strip (F3) ────────────────────────────
-        //
-        // The JE tag pipeline reads the server cache BEFORE it fetches per-batch
-        // tag-data, so a guarded (unwatched, spoiler-listed) card would still
-        // render rating/genre overlays from the cached entry unless we strip the
-        // cache response too. TagCacheService stores ONE shared TagCacheEntry per
-        // item across ALL users, so the strip NEVER mutates a cached entry — it
-        // replaces the affected key with a stripped Clone() for this response only.
-        //
-        // The gating logic (scope + watched) is pulled out into pure static helpers
-        // so the controller can inject the runtime facts as delegates
-        // (IUserDataManager / ILibraryManager) and the unit tests can drive it with
-        // in-memory fakes — no live library required.
-
-        internal enum TagStripDecision
+        /// <summary>
+        /// Queue a server-mode transition after the admin saved a config where
+        /// the "Server-Side Tag Cache" setting flipped. Runs on a background
+        /// continuation — the config save must never block behind cache work —
+        /// and transitions are strictly serialized in save order, with each one
+        /// re-reading the CURRENT setting when it actually runs. Rapid toggles
+        /// therefore converge on the final state instead of an enable's snapshot
+        /// reload racing a later disable's release (both hooks are idempotent).
+        /// </summary>
+        internal void QueueServerModeTransition()
         {
-            /// <summary>Not in spoiler scope, or already watched → serve the shared entry unchanged.</summary>
-            Keep,
-            /// <summary>Exempt season (S≤1 or any episode watched) → strip only the series-fallback rating.</summary>
-            SeasonRatingOnly,
-            /// <summary>Guarded + unwatched → full strip per the enabled toggles.</summary>
-            Strip,
+            lock (_transitionQueueLock)
+            {
+                _transitionQueue = _transitionQueue.ContinueWith(
+                    _ => RunServerModeTransition(),
+                    CancellationToken.None,
+                    TaskContinuationOptions.None,
+                    TaskScheduler.Default);
+            }
+        }
+
+        private void RunServerModeTransition()
+        {
+            if (_disposed) return;
+
+            try
+            {
+                if (ServerModeEnabled)
+                {
+                    // Subscribe the monitor FIRST so items changed during the
+                    // (potentially long) catch-up queue as pending ids — the
+                    // flush defers while the rebuild lock is held and applies
+                    // them to the new cache after the swap.
+                    TagCacheMonitor.Instance?.EnsureSubscribed();
+                    OnServerModeEnabled();
+                }
+                else
+                {
+                    OnServerModeDisabled();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"[TagCache] Server-mode transition failed (tags fall back to batch mode until the next refresh): {ex.Message}");
+            }
         }
 
         /// <summary>
-        /// Resolve the strip decision for a single cache entry. Pure: the two runtime
-        /// facts the reference reads from the live library (played-state, season
-        /// index / any-watched) are injected as delegates, so this mirrors the
-        /// GetCacheForUser gating without a live ILibraryManager/IUserDataManager.
+        /// Transition to OFF. Persists any unsaved changes first — so the on-disk
+        /// snapshot stays current for a later re-enable — then releases the
+        /// in-memory cache and discards queued ids. Freeing memory on the running
+        /// server is precisely why an admin disables this on a memory-constrained
+        /// system, so "off" must mean the memory is actually returned, not just
+        /// that the endpoint 404s. Runs under _rebuildLock: an in-flight
+        /// build/reconcile sees the flipped setting at its next gate and aborts,
+        /// this then waits for that abort, so no rebuild or flush can repopulate
+        /// the released cache or overwrite the snapshot afterwards (their gates
+        /// and the save timer all re-check the setting).
         /// </summary>
-        /// <param name="key">Cache key (item id, N format).</param>
-        /// <param name="entry">The shared cache entry (never mutated here).</param>
-        /// <param name="spState">The requesting user's spoiler state.</param>
-        /// <param name="isMovieInScope">Movie scope test (direct opt-in or via an opted-in collection).</param>
-        /// <param name="isPlayed">Played test for Episode/Movie entries (false when the item can't be resolved → strip).</param>
-        /// <param name="seasonIndexNumber">Season IndexNumber, or null when the id isn't a resolvable Season → strip.</param>
-        /// <param name="seasonAnyWatched">Any-episode-watched probe, only invoked for guarded seasons with IndexNumber &gt; 1.</param>
-        /// <param name="onKeyNotGuid">Callback when a cache key doesn't parse as a Guid (played check skipped, entry still stripped).</param>
-        internal static TagStripDecision ResolveTagStripDecision(
-            string key,
-            TagCacheEntry entry,
-            UserSpoilerBlur spState,
-            Func<Guid, bool> isMovieInScope,
-            Func<Guid, bool> isPlayed,
-            Func<Guid, int?> seasonIndexNumber,
-            Func<Guid, bool> seasonAnyWatched,
-            Action<string> onKeyNotGuid)
+        internal void OnServerModeDisabled()
         {
-            var isEpisode = string.Equals(entry.Type, "Episode", StringComparison.Ordinal);
-            var isSeason = string.Equals(entry.Type, "Season", StringComparison.Ordinal);
-            var isMovie = string.Equals(entry.Type, "Movie", StringComparison.Ordinal);
-            var isSeries = string.Equals(entry.Type, "Series", StringComparison.Ordinal);
-            if (!isEpisode && !isSeason && !isMovie && !isSeries) return TagStripDecision.Keep;
+            _rebuildLock.Wait();
+            try
+            {
+                _pending.Drain();
+                Interlocked.Exchange(ref _firstPendingTicks, 0);
 
-            // ── Scope gate ──
-            if (isMovie)
-            {
-                // In scope if directly in Movies dict OR a child of an opted-in collection.
-                if (!Guid.TryParse(key, out var mGuid)) return TagStripDecision.Keep;
-                if (!isMovieInScope(mGuid)) return TagStripDecision.Keep;
-            }
-            else if (isSeries)
-            {
-                // Series-level entry: strip only when Spoiler Guard is on for THIS
-                // series (key == series ID). Covers home-rail cards bound to seriesId
-                // when "Use episode images in Next Up/Continue Watching" is OFF.
-                if (!spState.Series.ContainsKey(key)) return TagStripDecision.Keep;
-            }
-            else
-            {
-                // Episode/Season resolved via the entry's captured parent SeriesId.
-                if (string.IsNullOrEmpty(entry.SeriesId)) return TagStripDecision.Keep;
-                if (!spState.Series.ContainsKey(entry.SeriesId)) return TagStripDecision.Keep;
-            }
+                // _saveLock makes save-then-release atomic against the debounce
+                // save timer: a timer save either completes here first (and
+                // snapshots the still-full cache) or runs after the release and
+                // is rejected by SaveToDisk's _cacheReleased guard. (Monitor
+                // locks are reentrant, so the nested SaveToDisk is fine.)
+                lock (_saveLock)
+                {
+                    if (_dirty) SaveToDisk();
 
-            // ── Watched / season-exempt gate ──
-            // Played state is checked in-memory (no per-entry library scan). Episodes:
-            // Played skips the strip. Seasons: S≤1 OR any-episode-watched are exempt
-            // (poster + non-rating tags kept, only the series-fallback rating stripped).
-            if (Guid.TryParse(key, out var entryGuid))
-            {
-                if (isEpisode || isMovie)
-                {
-                    if (isPlayed(entryGuid)) return TagStripDecision.Keep;
-                }
-                else if (isSeason)
-                {
-                    var sNum = seasonIndexNumber(entryGuid);
-                    if (sNum.HasValue)
+                    // The user-access clear sits INSIDE _publishLock so it is
+                    // atomic with the flag: GetCacheForUser stores into
+                    // _userAccessCache only under this lock with the flag
+                    // re-checked, so no request can repopulate it post-release.
+                    lock (_publishLock)
                     {
-                        // S0/S1 posters always pass (their existence isn't a spoiler),
-                        // as do seasons with any watched episode — "exempt".
-                        var exempt = sNum.Value <= 1 || seasonAnyWatched(entryGuid);
-                        if (exempt) return TagStripDecision.SeasonRatingOnly;
+                        _cacheReleased = true;
+                        _cache = new ConcurrentDictionary<string, TagCacheEntry>();
+                        _userAccessCache.Clear();
                     }
-                    // sNum == null (id isn't a resolvable Season) falls through to Strip.
                 }
             }
-            else
+            finally
             {
-                // A future TagCacheService key-format change is observable rather than
-                // silently stripping every rail; the played check is skipped, but the
-                // scope-matched entry is still stripped (fail-closed).
-                onKeyNotGuid(key);
+                _rebuildLock.Release();
             }
 
-            return TagStripDecision.Strip;
+            _logger.Info("[TagCache] Server-Side Tag Cache disabled; in-memory cache released (snapshot kept on disk for re-enable).");
         }
 
         /// <summary>
-        /// Produce the entry to serve for a resolved decision. NEVER mutates
-        /// <paramref name="entry"/>: returns a stripped <see cref="TagCacheEntry.Clone"/>
-        /// when something changes, else the original shared instance.
+        /// Transition to ON. Restores the last persisted snapshot for instant
+        /// serving, then reconciles by item save timestamps (a full paged build
+        /// if no usable snapshot exists), so changes made during the off window
+        /// are caught up immediately instead of waiting for the daily task.
+        /// Reloads on _cacheReleased as well as IsEmpty: a single incremental
+        /// flush landing between release and re-enable would otherwise make the
+        /// cache "non-empty" and skip the reload, serving a near-empty cache as
+        /// if complete (the reload replaces such stray entries; the reconcile
+        /// re-covers them via their save timestamps).
         /// </summary>
-        internal static TagCacheEntry ApplyTagStrip(
-            TagCacheEntry entry,
-            TagStripDecision decision,
-            bool stripGenres,
-            bool stripRatings,
-            bool sanitizeTitleStreams)
+        internal void OnServerModeEnabled()
         {
-            if (decision == TagStripDecision.Keep) return entry;
-
-            if (decision == TagStripDecision.SeasonRatingOnly)
+            if (_cacheReleased || _cache.IsEmpty)
             {
-                // Exempt seasons keep their poster + non-rating tags, but a season
-                // carries only the series-FALLBACK rating (hidden on the guarded
-                // series everywhere else). Strip just the rating so it can't surface
-                // via the server tag cache. Nothing to do when ratings aren't being
-                // stripped or the entry has no rating — serve the shared instance.
-                if (stripRatings && (entry.CommunityRating != null || entry.CriticRating != null))
-                {
-                    var seasonStripped = entry.Clone();
-                    seasonStripped.CommunityRating = null;
-                    seasonStripped.CriticRating = null;
-                    return seasonStripped;
-                }
-                return entry;
+                LoadFromDisk();
             }
 
-            // Full strip. Clone before mutating — see TagCacheEntry.Clone().
-            var stripped = entry.Clone();
-            if (stripGenres)
-            {
-                stripped.Genres = Array.Empty<string>();
-                stripped.AudioLanguages = null;
-                stripped.StreamData = null;
-            }
-            if (stripRatings)
-            {
-                stripped.CommunityRating = null;
-                stripped.CriticRating = null;
-            }
-            // When StreamData wasn't already wiped by the tag-strip but title
-            // replacement / overview strip is on, sanitize its title-bearing fields.
-            // Clone StreamData (same cross-user-mutation hazard). qualitytags.js
-            // recomputes overlay text from Codec/Height/VideoRangeType, so dropping
-            // DisplayTitle/ItemName/paths is acceptable.
-            if (sanitizeTitleStreams && stripped.StreamData != null && !stripGenres)
-            {
-                var sd = stripped.StreamData;
-                stripped.StreamData = new TagStreamData
-                {
-                    ItemName = null,
-                    ItemPath = null,
-                    Streams = sd.Streams?.Select(st => new TagMediaStream
-                    {
-                        Type = st.Type,
-                        Language = st.Language,
-                        Codec = st.Codec,
-                        CodecTag = st.CodecTag,
-                        Profile = st.Profile,
-                        Height = st.Height,
-                        Channels = st.Channels,
-                        ChannelLayout = st.ChannelLayout,
-                        VideoRangeType = st.VideoRangeType,
-                        DisplayTitle = null,
-                    }).ToList(),
-                    Sources = sd.Sources?.Select(_ => new TagMediaSource
-                    {
-                        Path = null,
-                        Name = null,
-                    }).ToList(),
-                };
-            }
-            return stripped;
+            ReconcileCache(null, CancellationToken.None);
         }
 
         /// <summary>
-        /// Walk a per-user cache response and replace each guarded entry with its
-        /// stripped clone. Mutates the supplied dictionary (a per-request result), not
-        /// the shared cache. <paramref name="resolve"/> yields the per-entry decision.
-        /// </summary>
-        internal static void StripCacheForUser(
-            IDictionary<string, TagCacheEntry> items,
-            bool stripGenres,
-            bool stripRatings,
-            bool sanitizeTitleStreams,
-            Func<string, TagCacheEntry, TagStripDecision> resolve)
-        {
-            foreach (var key in items.Keys.ToList())
-            {
-                var entry = items[key];
-                if (entry == null) continue;
-                var decision = resolve(key, entry);
-                if (decision == TagStripDecision.Keep) continue;
-                items[key] = ApplyTagStrip(entry, decision, stripGenres, stripRatings, sanitizeTitleStreams);
-            }
-        }
-
-        /// <summary>
-        /// Load the cache from disk on startup.
+        /// Load the cache from disk (startup, or the re-enable transition).
+        /// Runs under _rebuildLock so the publish can't interleave with a
+        /// build's swap or a disable's release, and re-checks the setting under
+        /// the lock so a load racing a disable can't resurrect the cache the
+        /// disable just released.
         /// </summary>
         public void LoadFromDisk()
+        {
+            _rebuildLock.Wait();
+            try
+            {
+                if (ShouldAbortCacheWork) return;
+                LoadFromDiskCore();
+            }
+            finally
+            {
+                _rebuildLock.Release();
+            }
+        }
+
+        private void LoadFromDiskCore()
         {
             var path = CacheFilePath;
             if (!File.Exists(path))
             {
-                _logger.LogInformation("[TagCache] No cache file found, starting empty");
+                _logger.Info("[TagCache] No cache file found, starting empty");
                 return;
             }
 
             try
             {
-                var json = File.ReadAllText(path);
-                var data = JsonSerializer.Deserialize<TagCacheDiskFormat>(json);
+                // Deserialize straight from the file stream: on very large
+                // libraries the serialized cache is tens of MB, and reading it
+                // into an intermediate string would transiently double the load
+                // cost (UTF-16 string + object graph) for no benefit.
+                TagCacheDiskFormat? data;
+                using (var stream = File.OpenRead(path))
+                {
+                    data = JsonSerializer.Deserialize<TagCacheDiskFormat>(stream);
+                }
+
                 if (data?.Items != null)
                 {
                     // Discard a cache written by an older schema (e.g. predating
@@ -881,31 +1007,47 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     // process. Starting empty is safe — the refresh task rebuilds it.
                     if (data.SchemaVersion != CurrentCacheSchemaVersion)
                     {
-                        _logger.LogInformation($"[TagCache] On-disk cache schema v{data.SchemaVersion} != current v{CurrentCacheSchemaVersion}; discarding {data.Items.Count} entries and rebuilding on next scan.");
+                        _logger.Info($"[TagCache] On-disk cache schema v{data.SchemaVersion} != current v{CurrentCacheSchemaVersion}; discarding {data.Items.Count} entries and rebuilding on next scan.");
                         return;
                     }
+                    // Re-gate right before publishing: deserializing a large
+                    // snapshot takes long enough for the admin to flip the
+                    // setting off mid-load, and publishing then would park the
+                    // full cache in memory while the mode is off.
+                    if (ShouldAbortCacheWork)
+                    {
+                        _logger.Info("[TagCache] Disk load aborted (setting disabled or server shutting down); discarding.");
+                        return;
+                    }
+
                     var loaded = new ConcurrentDictionary<string, TagCacheEntry>(data.Items);
+
+                    // Same _saveLock discipline as the build publish: flag, swap
+                    // and version/timestamp change together or not at all from a
+                    // saver's or snapshot-reader's view.
+                    lock (_saveLock)
+                    {
+                        lock (_publishLock)
+                        {
+                            _cacheReleased = false;
+                            _cache = loaded;
+                            Interlocked.Exchange(ref _version, data.Version);
+                            Interlocked.Exchange(ref _lastModified, data.LastModified);
+                        }
+                    }
                     var reconciledTicks = data.LastReconciledUtcTicks;
                     if (reconciledTicks <= 0 && data.Items.Count > 0)
                     {
                         reconciledTicks = File.GetLastWriteTimeUtc(path).Ticks;
-                        _logger.LogInformation($"[TagCache] On-disk cache has no reconciliation marker; using cache file timestamp {new DateTime(reconciledTicks, DateTimeKind.Utc):O}");
+                        _logger.Info($"[TagCache] On-disk cache has no reconciliation marker; using cache file timestamp {new DateTime(reconciledTicks, DateTimeKind.Utc):O}");
                     }
-                    lock (_cacheMutationLock)
-                    {
-                        _cache = loaded;
-                        Interlocked.Exchange(ref _version, data.Version);
-                        Interlocked.Exchange(ref _lastModified, data.LastModified);
-                        Interlocked.Exchange(ref _lastReconciledUtcTicks, reconciledTicks);
-                        Interlocked.Exchange(ref _changeVersion, 0);
-                        Interlocked.Exchange(ref _persistedChangeVersion, 0);
-                    }
-                    _logger.LogInformation($"[TagCache] Loaded {_cache.Count} entries from disk (v{data.Version}, schema v{data.SchemaVersion})");
+                    Interlocked.Exchange(ref _lastReconciledUtcTicks, reconciledTicks);
+                    _logger.Info($"[TagCache] Loaded {_cache.Count} entries from disk (v{data.Version}, schema v{data.SchemaVersion})");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[TagCache] Failed to load cache from disk: {ex.Message}");
+                _logger.Warning($"[TagCache] Failed to load cache from disk: {ex.Message}");
             }
         }
 
@@ -916,61 +1058,79 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             lock (_saveLock)
             {
-                // Reset before capturing the snapshot so a concurrent mutation
-                // starts a fresh capped debounce window for its follow-up save.
+                // Released cache must never reach disk: a save timer that passed
+                // its dirty/mode check just before the release would otherwise
+                // block on this lock and then snapshot the swapped-in empty
+                // dictionary, overwriting the good snapshot. The release itself
+                // saves BEFORE setting _cacheReleased (under this same lock), and
+                // re-enable clears the flag before anything new needs saving.
+                if (_cacheReleased)
+                {
+                    return;
+                }
+                // Clear the dirty state BEFORE snapshotting, not after the write: a change
+                // applied while serialization is in progress isn't in the snapshot, and
+                // clearing afterwards would wipe its flag — the armed save timer would then
+                // see _dirty == false and skip, leaving that change unpersisted until the
+                // next event. Cleared first, a concurrent ScheduleDebouncedSave re-marks
+                // dirty and its timer performs a follow-up save that includes the change.
+                _dirty = false;
                 var previousStamp = Interlocked.Exchange(ref _firstDirtyTicks, 0);
+
                 try
                 {
                     var dir = Path.GetDirectoryName(CacheFilePath);
                     if (dir != null) Directory.CreateDirectory(dir);
 
-                    Dictionary<string, TagCacheEntry> itemSnapshot;
-                    long changeVersionToPersist;
-                    long cacheVersion;
-                    long lastModified;
-                    long lastReconciledUtcTicks;
-                    lock (_cacheMutationLock)
-                    {
-                        itemSnapshot = new Dictionary<string, TagCacheEntry>(_cache);
-                        changeVersionToPersist = Interlocked.Read(ref _changeVersion);
-                        cacheVersion = Interlocked.Read(ref _version);
-                        lastModified = Interlocked.Read(ref _lastModified);
-                        lastReconciledUtcTicks = Interlocked.Read(ref _lastReconciledUtcTicks);
-                    }
-                    SaveSnapshotCapturedForTest?.Invoke();
-
                     var data = new TagCacheDiskFormat
                     {
                         SchemaVersion = CurrentCacheSchemaVersion,
-                        Version = cacheVersion,
-                        LastModified = lastModified,
-                        LastReconciledUtcTicks = lastReconciledUtcTicks,
-                        Items = itemSnapshot
+                        Version = Interlocked.Read(ref _version),
+                        LastModified = Interlocked.Read(ref _lastModified),
+                        LastReconciledUtcTicks = Interlocked.Read(ref _lastReconciledUtcTicks),
+                        Items = new Dictionary<string, TagCacheEntry>(_cache)
                     };
 
-                    var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false });
+                    // Serialize straight to the temp file: building the whole
+                    // payload as one string first would transiently hold tens of
+                    // MB of UTF-16 on large libraries (see LoadFromDisk).
                     var tempPath = CacheFilePath + ".tmp";
-                    File.WriteAllText(tempPath, json);
+                    using (var stream = File.Create(tempPath))
+                    {
+                        JsonSerializer.Serialize(stream, data, new JsonSerializerOptions { WriteIndented = false });
+                    }
+
                     File.Move(tempPath, CacheFilePath, overwrite: true);
-                    // Only acknowledge the generation captured in itemSnapshot.
-                    // A concurrent update has a larger _changeVersion and remains
-                    // dirty for the timer's next pass.
-                    Interlocked.Exchange(ref _persistedChangeVersion, changeVersionToPersist);
-                    _logger.LogInformation($"[TagCache] Saved {itemSnapshot.Count} entries to disk");
+
+                    _logger.Info($"[TagCache] Saved {_cache.Count} entries to disk");
                 }
                 catch (Exception ex)
                 {
+                    // Failed write: restore the dirty state so Dispose's final
+                    // `if (_dirty) SaveToDisk()` and the next debounce cycle retry it.
+                    // Intentionally NOT re-arming the save timer here: with the cap
+                    // window already elapsed the due time would be zero, and a
+                    // persistent disk failure would spin fire-fail-rearm. The next
+                    // library event, shutdown, or daily reconcile retries instead.
+                    // Restore the ORIGINAL first-dirty stamp (not "now"): re-seeding
+                    // with the current time would restart the SaveMaxWait cap window
+                    // on every failed attempt and stretch the retry cadence. If a
+                    // concurrent ScheduleDebouncedSave already stamped a newer window,
+                    // keep that one — a slightly later cap is harmless.
+                    _dirty = true;
                     if (previousStamp != 0)
                     {
                         Interlocked.CompareExchange(ref _firstDirtyTicks, previousStamp, 0);
                     }
-                    _logger.LogError($"[TagCache] Failed to save cache to disk: {ex.Message}");
+
+                    _logger.Error($"[TagCache] Failed to save cache to disk: {ex.Message}");
                 }
             }
         }
 
         private void ScheduleDebouncedSave()
         {
+            _dirty = true;
             Interlocked.CompareExchange(ref _firstDirtyTicks, DateTime.UtcNow.Ticks, 0);
             // During/after shutdown, persist synchronously instead of arming a timer that a
             // torn-down service would never fire. This is what keeps a flush that finishes
@@ -978,18 +1138,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // now rather than relying on a debounce timer that will never run.
             if (_disposed)
             {
-                if (Interlocked.Read(ref _changeVersion) != Interlocked.Read(ref _persistedChangeVersion))
-                {
-                    SaveToDisk();
-                }
+                if (ServerModeEnabled) SaveToDisk();
                 return;
             }
 
-            var due = ComputeFlushDelay(
-                Interlocked.Read(ref _firstDirtyTicks),
-                DateTime.UtcNow,
-                SaveDebounce,
-                SaveMaxWait);
+            // Trailing debounce with a hard cap (same math as the flush timer): 30s after
+            // the last change, but never more than 5 minutes after the first unsaved one,
+            // so sustained real changes can't starve persistence NOR write every cycle.
+            var due = ComputeFlushDelay(Interlocked.Read(ref _firstDirtyTicks), DateTime.UtcNow, SaveDebounce, SaveMaxWait);
 
             // Reuse existing timer if possible, otherwise create a new one.
             // Change() resets the countdown without creating a new object.
@@ -1005,10 +1161,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             var timer = new Timer(_ =>
             {
-                if (Interlocked.Read(ref _changeVersion) != Interlocked.Read(ref _persistedChangeVersion))
-                {
-                    SaveToDisk();
-                }
+                // The mode gate keeps a save armed before a disable from writing
+                // the post-release (near-empty) cache over the good snapshot;
+                // OnServerModeDisabled does its own explicit save-if-dirty first.
+                if (_dirty && ServerModeEnabled) SaveToDisk();
             }, null, due, Timeout.InfiniteTimeSpan);
             var old = Interlocked.Exchange(ref _debounceSaveTimer, timer);
             if (old != null && !ReferenceEquals(old, timer))
@@ -1023,7 +1179,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 var orphan = Interlocked.Exchange(ref _debounceSaveTimer, null);
                 orphan?.Dispose();
-                SaveToDisk();
+                if (ServerModeEnabled) SaveToDisk();
             }
         }
 
@@ -1034,6 +1190,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // resurrecting a timer after teardown.
             _disposed = true;
 
+            if (ReferenceEquals(Instance, this))
+            {
+                Instance = null;
+            }
+
             var flush = Interlocked.Exchange(ref _flushTimer, null);
             flush?.Dispose(); // stops future callbacks; an in-flight one may still be applying
 
@@ -1041,8 +1202,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // for a running callback, so without this Dispose could drain an already-emptied
             // _pending, skip the save, and lose the in-flight flush's applied batch (it only
             // schedules a debounced save that never fires during shutdown). Waiting for _flushing
-            // to release means that flush has finished and advanced the change
-            // generation, so the save below catches it.
+            // to release means that flush has finished and set _dirty, so the save below catches it.
             var acquired = false;
             for (var i = 0; i < 500; i++) // ~5s cap, well under the shutdown grace period
             {
@@ -1062,14 +1222,28 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             // would leave those items stale until the next event or the daily rebuild.
             try
             {
-                if (ApplyBatch(_pending.Drain(), RebuildEntry, RemoveEntry))
+                // Only when the cache is actually in service: while the setting is
+                // off (or the cache is an unpublished placeholder) the entries
+                // would be applied into a dictionary whose save is refused anyway
+                // — guaranteed-discarded per-item probe work that can only delay
+                // shutdown. The dropped ids are re-covered by the next full build
+                // or timestamp reconcile.
+                if (ServerModeEnabled && !_cacheReleased)
                 {
-                    Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                    if (ApplyBatch(_pending.Drain(), RebuildEntry, RemoveEntry))
+                    {
+                        Interlocked.Exchange(ref _lastModified, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                        _dirty = true;
+                    }
+                }
+                else
+                {
+                    _pending.Drain();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[TagCache] Failed to flush pending changes on dispose: {ex.Message}");
+                _logger.Warning($"[TagCache] Failed to flush pending changes on dispose: {ex.Message}");
             }
             finally
             {
@@ -1078,10 +1252,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
             var timer = Interlocked.Exchange(ref _debounceSaveTimer, null);
             timer?.Dispose();
-            if (Interlocked.Read(ref _changeVersion) != Interlocked.Read(ref _persistedChangeVersion))
-            {
-                SaveToDisk();
-            }
+            if (_dirty && ServerModeEnabled) SaveToDisk();
         }
 
         /// <summary>
@@ -1200,7 +1371,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[TagCache] Failed to build entry for {item.Id}: {ex.Message}");
+                _logger.Warning($"[TagCache] Failed to build entry for {item.Id}: {ex.Message}");
                 return null;
             }
         }
@@ -1255,10 +1426,35 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[TagCache] Failed to extract media data for {item.Id}: {ex.Message}");
+                _logger.Warning($"[TagCache] Failed to extract media data for {item.Id}: {ex.Message}");
             }
 
             return (streams, sources, languages.ToArray());
+        }
+
+        /// <summary>
+        /// Hydrate library items for the given ids in fixed-size pages
+        /// (<see cref="HydrationPageSize"/>). Only one page of full BaseItems is
+        /// referenced at a time, which keeps full builds and reconciliation
+        /// memory-bounded on arbitrarily large libraries. An id that no longer
+        /// resolves (deleted between the id query and its page) is simply absent
+        /// from the returned page.
+        /// </summary>
+        private IEnumerable<IReadOnlyList<BaseItem>> HydrateInPages(IReadOnlyList<Guid> ids, CancellationToken cancellationToken)
+        {
+            for (var offset = 0; offset < ids.Count; offset += HydrationPageSize)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var count = Math.Min(HydrationPageSize, ids.Count - offset);
+                var pageIds = new Guid[count];
+                for (var i = 0; i < count; i++)
+                {
+                    pageIds[i] = ids[offset + i];
+                }
+
+                yield return _libraryManager.GetItemList(new InternalItemsQuery { ItemIds = pageIds });
+            }
         }
 
         private BaseItem? GetFirstEpisode(BaseItem container)
@@ -1277,9 +1473,29 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[TagCache] Failed to get first episode for {container.Id}: {ex.Message}");
+                _logger.Warning($"[TagCache] Failed to get first episode for {container.Id}: {ex.Message}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// All Season items of a series, for the reconcile sweep's parent repair.
+        /// Query failures propagate — the caller logs them and requeues what it
+        /// can, so swallowing here would silently disable that retry path.
+        /// </summary>
+        private IReadOnlyList<BaseItem> GetSeasonsOfSeries(Guid seriesId)
+        {
+            // IsVirtualItem must match the build/sweep queries: including a
+            // virtual season here would add an entry the next sweep's live-id
+            // set (virtual-excluded) doesn't contain, so it would be removed,
+            // trigger this repair again, and churn the cache version forever.
+            return _libraryManager.GetItemList(new InternalItemsQuery
+            {
+                ParentId = seriesId,
+                IncludeItemTypes = new[] { BaseItemKind.Season },
+                IsVirtualItem = false,
+                Recursive = true
+            });
         }
 
         private BaseItem? GetParentSeries(BaseItem item)
@@ -1299,7 +1515,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[TagCache] Failed to get parent series for {item.Id}: {ex.Message}");
+                _logger.Warning($"[TagCache] Failed to get parent series for {item.Id}: {ex.Message}");
             }
             return null;
         }
