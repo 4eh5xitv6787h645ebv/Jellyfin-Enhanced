@@ -12,6 +12,9 @@
     // getHeaderRightContainer below) so it's only added once.
     let muiHeaderButtonCSSInjected = false;
 
+    // Same, for the MUI-drawer alignment fix (see getSidebarContainer below).
+    let muiDrawerCSSInjected = false;
+
     // Array to store registered handlers
     const handlers = [];
 
@@ -742,48 +745,134 @@
      * left in the toolbar.
      * @returns {HTMLElement|null} The container, or null if no header is ready yet.
      */
+    /**
+     * Marks a resolved header-tray container so the shared stylesheet below can
+     * scope its single-row/scroll-containment rules to exactly the element the
+     * plugin injects buttons into.
+     */
+    function markHeaderTray(el) {
+        el.classList.add('je-header-tray');
+        return el;
+    }
+
+    /**
+     * Installs the one-time header-tray stylesheet. Two concerns share it:
+     *
+     * 1. MUI button sizing — the legacy .headerButton/.paper-icon-button-light
+     *    classes size themselves with `em` units relative to the *inherited*
+     *    font-size, tuned for the old .skinHeader context. Inside the MUI toolbar
+     *    the ambient font-size differs, so icons come out oversized/misaligned
+     *    next to native MUI IconButtons. Pin them to MUI's ~48px button / 24px
+     *    icon convention. !important beats callers (e.g. active-streams.js) that
+     *    set a fixed size via an #id selector, which otherwise outranks this.
+     *
+     * 2. Single-row scroll containment — the plugin owns no bar element: buttons
+     *    are injected into a native container that inherits Jellyfin's own wrap
+     *    behaviour, so many buttons wrap to 2-3 rows (worst on mobile, where the
+     *    MUI toolbar pushed the profile avatar onto a second row). Force the
+     *    resolved tray to a single horizontally-scrollable row with non-shrinking
+     *    children. The scrollbar is suppressed so an overflowing tray never grows
+     *    a gutter (which would shrink the content box and clip the buttons).
+     *    justify-content is overridden to flex-start because with nowrap the
+     *    native flex-end packs leading buttons into unreachable negative overflow
+     *    once the row overflows; in the fit case the rules below keep the buttons
+     *    right-packed so nothing visibly moves.
+     *
+     *    Modern (MUI) only — the tray is a flex sibling of the profile Box inside
+     *    a flex-wrap:wrap Toolbar. Lines are collected from each child's
+     *    hypothetical main size BEFORE flex-shrink resolves, so an auto (content)
+     *    basis claims a full line and pushes the avatar onto a second row. A
+     *    0 flex-basis (flex:1 1 0 + min-width:0) collapses the tray during line
+     *    collection, then grows it back into exactly the space left of the pinned
+     *    avatar. An auto inline-start margin on the visually-leading child keeps
+     *    the buttons packed against the avatar while the row fits (auto margins
+     *    absorb free space before justify-content) and resolves to 0 on overflow.
+     *    The visually-leading child is the native-tabs group (order:-1) when
+     *    present, else the DOM first child — exactly one child carries the margin.
+     *
+     *    Legacy only — the resolved tray IS the native .headerRight, which
+     *    CONTAINS the profile button as a trailing child of the scrollport.
+     *    Sticky-pin it to the inline-end edge so it stays visible while the
+     *    other buttons scroll beneath it (the pinned-avatar behaviour the modern
+     *    layout gets for free from its separate sibling Box). In the fit case
+     *    .headerRight is content-sized, so sticky is inert and nothing moves.
+     */
+    function ensureHeaderTrayCSS() {
+        if (muiHeaderButtonCSSInjected) return;
+        addCSS('je-mui-header-button-fix', `
+            .MuiToolbar-root .headerButton.paper-icon-button-light {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-sizing: border-box !important;
+                width: 48px !important;
+                height: 48px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 16px !important;
+            }
+            .MuiToolbar-root .headerButton.paper-icon-button-light > .material-icons {
+                font-size: 24px !important;
+            }
+            /* The repeated class bumps specificity to (0,5,0): site custom CSS is
+               known to pin flex-wrap:wrap on this exact Box with !important at
+               (0,4,0) as a wrap-to-second-row workaround for the old overflow bug,
+               which this scroll containment supersedes. Both are !important, so
+               only higher specificity can win. */
+            .je-header-tray.je-header-tray.je-header-tray.je-header-tray.je-header-tray {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                overflow-x: auto !important;
+                justify-content: flex-start !important;
+                scrollbar-width: none !important;
+            }
+            .je-header-tray::-webkit-scrollbar {
+                display: none !important;
+            }
+            .je-header-tray > * {
+                flex: 0 0 auto !important;
+            }
+            /* Legacy: the tray IS .headerRight and contains the profile button. */
+            .headerRight.je-header-tray > .headerUserButton {
+                position: sticky !important;
+                inset-inline-end: 0 !important;
+                z-index: 1 !important;
+            }
+            /* Modern (MUI): tray is a sibling of the profile Box in the toolbar.
+               Repeated class beats the (0,4,0) site-CSS flex-grow:0 override. */
+            .MuiToolbar-root .je-header-tray.je-header-tray.je-header-tray.je-header-tray {
+                flex: 1 1 0 !important;
+            }
+            .MuiToolbar-root .je-header-tray > #je-native-tabs-group {
+                margin-inline-start: auto !important;
+            }
+            .MuiToolbar-root .je-header-tray:not(:has(> #je-native-tabs-group)) > *:first-child {
+                margin-inline-start: auto !important;
+            }
+        `);
+        muiHeaderButtonCSSInjected = true;
+    }
+
     function getHeaderRightContainer() {
+        // Install before any early return so legacy-only sessions get it too.
+        ensureHeaderTrayCSS();
+
         const legacy = document.querySelector('.headerRight');
-        if (legacy && legacy.offsetParent !== null) return legacy;
+        if (legacy && legacy.offsetParent !== null) return markHeaderTray(legacy);
 
         const userMenuButton = document.querySelector('[aria-controls="app-user-menu"]');
         const toolbar = userMenuButton?.closest('.MuiToolbar-root') || document.querySelector('.MuiAppBar-root .MuiToolbar-root');
         if (!toolbar) return null;
-
-        // The legacy .headerButton/.paper-icon-button-light classes size themselves
-        // with `em` units relative to the *inherited* font-size, which was tuned for
-        // the old .skinHeader context. Inside the MUI toolbar the ambient font-size is
-        // different, so the icons come out oversized/misaligned next to the native MUI
-        // IconButtons. Pin them to MUI's own ~48px button / 24px icon convention instead.
-        // !important is needed because some callers (e.g. active-streams.js) set their
-        // own fixed-size CSS via an #id selector, which otherwise outranks this rule's
-        // specificity regardless of declaration order.
-        if (!muiHeaderButtonCSSInjected) {
-            addCSS('je-mui-header-button-fix', `
-                .MuiToolbar-root .headerButton.paper-icon-button-light {
-                    display: inline-flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    box-sizing: border-box !important;
-                    width: 48px !important;
-                    height: 48px !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    font-size: 16px !important;
-                }
-                .MuiToolbar-root .headerButton.paper-icon-button-light > .material-icons {
-                    font-size: 24px !important;
-                }
-            `);
-            muiHeaderButtonCSSInjected = true;
-        }
 
         let userMenuBox = userMenuButton;
         while (userMenuBox && userMenuBox.parentElement !== toolbar) {
             userMenuBox = userMenuBox.parentElement;
         }
         const buttonsTray = userMenuBox?.previousElementSibling;
-        if (buttonsTray) return buttonsTray;
+        if (buttonsTray) return markHeaderTray(buttonsTray);
 
         // No user-menu available (e.g. public/video pages) - fall back to a
         // synthetic container appended to the toolbar itself.
@@ -793,7 +882,7 @@
             container.className = 'headerRight';
             toolbar.appendChild(container);
         }
-        return container;
+        return markHeaderTray(container);
     }
 
     /**
@@ -827,6 +916,37 @@
         // on the SwipeableDrawer means this exists in the DOM even while closed.
         const muiDrawerPanel = document.querySelector('.MuiDrawer-paper');
         if (!muiDrawerPanel) return null;
+
+        // The injected section reuses the legacy navMenuOption markup, whose
+        // em-based padding and icon sizing were tuned for the legacy drawer. The
+        // MUI drawer's native rows are ListItemButtons (padding 8px 16px, a 56px
+        // ListItemIcon box, text starting at 72px), so untouched legacy rows sit
+        // visibly indented and cramped next to them. Align the injected rows to
+        // the native geometry — scoped to the MUI drawer so the legacy drawer
+        // keeps its native look.
+        if (!muiDrawerCSSInjected) {
+            addCSS('je-mui-drawer-fix', `
+                .MuiDrawer-paper .jellyfinEnhancedSection a.navMenuOption {
+                    display: flex !important;
+                    align-items: center !important;
+                    padding: 8px 16px !important;
+                    min-height: 45px !important;
+                }
+                .MuiDrawer-paper .jellyfinEnhancedSection .navMenuOptionIcon {
+                    min-width: 36px !important;
+                    width: auto !important;
+                    margin: 0 0 0 10px !important;
+                    font-size: 24px !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                }
+                .MuiDrawer-paper .jellyfinEnhancedSection .sidebarHeader {
+                    padding-left: 16px !important;
+                }
+            `);
+            muiDrawerCSSInjected = true;
+        }
 
         return muiDrawerPanel.querySelector('[role="presentation"]') || muiDrawerPanel;
     }
