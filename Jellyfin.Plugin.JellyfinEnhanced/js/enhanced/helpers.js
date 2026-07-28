@@ -853,7 +853,12 @@
                present, else the DOM first child. The plain first-child rule is the
                :has()-free fallback for older engines; on modern engines the :has()
                rule zeroes it whenever the tabs group is the one that should carry
-               the auto margin, so exactly one child ever does. */
+               the auto margin, so exactly one child ever does. (Known accepted
+               degradation: an engine without :has() that ALSO has the tabs group
+               in a non-first DOM position splits the free space between two auto
+               margins — a cosmetic mid-tray gap, still single-row and scrollable,
+               and strictly better than the pre-fix wrap. The tabs group is hidden
+               on the experimental layout, so the combination is rare.) */
             .MuiToolbar-root .je-header-tray > *:first-child {
                 margin-inline-start: auto !important;
             }
