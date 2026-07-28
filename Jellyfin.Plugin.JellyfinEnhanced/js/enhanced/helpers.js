@@ -934,32 +934,58 @@
         if (!muiDrawerPanel) return null;
 
         // The injected section reuses the legacy navMenuOption markup, whose
-        // em-based padding and icon sizing were tuned for the legacy drawer. The
-        // MUI drawer's native NAV rows (Libraries etc.) are ListItemButtons with
-        // 8px 16px padding and a 36px ListItemIcon box starting at x=26 (text at
-        // x=62 — measured; the taller server row above them uses a different 56px
-        // slot). Untouched legacy rows sit visibly indented and cramped next to
-        // them. Align the injected rows to the nav-row geometry — scoped to the
-        // MUI drawer so the legacy drawer keeps its native look.
+        // em-based margins/padding and icon sizing were tuned for the legacy
+        // drawer. The MUI drawer's native nav rows are ListItemButtons with
+        // 10px 30px padding, a 36px ListItemIcon box (≈1.5em glyph) at x=30,
+        // text at x=66 in the body font, and 48px row height; its section
+        // subheaders are 18px/700 at 70% alpha with 48px line height (all
+        // measured with server custom CSS disabled). Untouched legacy rows sit
+        // visibly indented (legacy side margins) and cramped next to them.
+        // Align the injected rows and the section header to that geometry —
+        // scoped to the MUI drawer so the legacy drawer keeps its native look.
         if (!muiDrawerCSSInjected) {
             addCSS('je-mui-drawer-fix', `
                 .MuiDrawer-paper .jellyfinEnhancedSection a.navMenuOption {
                     display: flex !important;
                     align-items: center !important;
-                    padding: 8px 16px !important;
-                    min-height: 45px !important;
+                    padding: 10px 30px !important;
+                    margin: 0 !important;
+                    min-height: 48px !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                    border-radius: 0 !important;
+                }
+                .MuiDrawer-paper .jellyfinEnhancedSection .navMenuOptionIcon,
+                .MuiDrawer-paper .jellyfinEnhancedSection .navMenuOptionText {
+                    /* Legacy drawer CSS nudges these with position:relative +
+                       negative inline offsets; neutralize so the flex row lays
+                       them out at the native positions. */
+                    position: static !important;
+                    left: auto !important;
+                    inset-inline-start: auto !important;
                 }
                 .MuiDrawer-paper .jellyfinEnhancedSection .navMenuOptionIcon {
                     min-width: 36px !important;
                     width: auto !important;
-                    margin: 0 0 0 10px !important;
-                    font-size: 24px !important;
+                    margin: 0 !important;
+                    font-size: 1.5em !important;
                     display: inline-flex !important;
                     align-items: center !important;
                     justify-content: flex-start !important;
                 }
+                .MuiDrawer-paper .jellyfinEnhancedSection .navMenuOptionText {
+                    font-family: "Noto Sans", sans-serif !important;
+                    line-height: 1.5 !important;
+                }
                 .MuiDrawer-paper .jellyfinEnhancedSection .sidebarHeader {
-                    padding-left: 16px !important;
+                    font-variant: petite-caps !important;
+                    margin: 0 !important;
+                    padding: 0 16px 0 12px !important;
+                    height: 48px !important;
+                    line-height: 48px !important;
+                    font-size: 18px !important;
+                    font-weight: 700 !important;
+                    color: rgba(255, 255, 255, 0.7) !important;
                 }
             `);
             muiDrawerCSSInjected = true;
