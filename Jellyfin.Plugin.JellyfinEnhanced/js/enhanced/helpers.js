@@ -846,11 +846,22 @@
             .MuiToolbar-root .je-header-tray.je-header-tray.je-header-tray.je-header-tray {
                 flex: 1 1 0 !important;
             }
+            /* Right-pack the buttons against the avatar while the row fits: an auto
+               inline-start margin on the visually-leading child absorbs the free
+               space (resolving to 0 on overflow, where flex-start takes over). The
+               visually-leading child is the native-tabs group (order:-1) when
+               present, else the DOM first child. The plain first-child rule is the
+               :has()-free fallback for older engines; on modern engines the :has()
+               rule zeroes it whenever the tabs group is the one that should carry
+               the auto margin, so exactly one child ever does. */
+            .MuiToolbar-root .je-header-tray > *:first-child {
+                margin-inline-start: auto !important;
+            }
             .MuiToolbar-root .je-header-tray > #je-native-tabs-group {
                 margin-inline-start: auto !important;
             }
-            .MuiToolbar-root .je-header-tray:not(:has(> #je-native-tabs-group)) > *:first-child {
-                margin-inline-start: auto !important;
+            .MuiToolbar-root .je-header-tray:has(> #je-native-tabs-group) > *:first-child:not(#je-native-tabs-group) {
+                margin-inline-start: 0 !important;
             }
         `);
         muiHeaderButtonCSSInjected = true;
@@ -919,11 +930,12 @@
 
         // The injected section reuses the legacy navMenuOption markup, whose
         // em-based padding and icon sizing were tuned for the legacy drawer. The
-        // MUI drawer's native rows are ListItemButtons (padding 8px 16px, a 56px
-        // ListItemIcon box, text starting at 72px), so untouched legacy rows sit
-        // visibly indented and cramped next to them. Align the injected rows to
-        // the native geometry — scoped to the MUI drawer so the legacy drawer
-        // keeps its native look.
+        // MUI drawer's native NAV rows (Libraries etc.) are ListItemButtons with
+        // 8px 16px padding and a 36px ListItemIcon box starting at x=26 (text at
+        // x=62 — measured; the taller server row above them uses a different 56px
+        // slot). Untouched legacy rows sit visibly indented and cramped next to
+        // them. Align the injected rows to the nav-row geometry — scoped to the
+        // MUI drawer so the legacy drawer keeps its native look.
         if (!muiDrawerCSSInjected) {
             addCSS('je-mui-drawer-fix', `
                 .MuiDrawer-paper .jellyfinEnhancedSection a.navMenuOption {
