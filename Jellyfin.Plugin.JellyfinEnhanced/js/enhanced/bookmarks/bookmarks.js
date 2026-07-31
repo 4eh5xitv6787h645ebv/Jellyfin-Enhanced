@@ -556,9 +556,6 @@
       details.tvdbId
     );
 
-    console.log('🪼 Bookmarks modal: Found', existingBookmarks.length, 'existing bookmarks for item', details.itemId);
-    console.log('🪼 Bookmarks modal: Mode =', mode, 'Existing bookmarks:', existingBookmarks);
-
     const isEdit = mode === 'edit' && existingBookmark;
     const title = isEdit ? JE.t('bookmark_edit_title') : (mode === 'view' ? 'Your Bookmarks' : JE.t('bookmark_add_title'));
     const timestamp = isEdit ? existingBookmark.timestamp : currentTime;

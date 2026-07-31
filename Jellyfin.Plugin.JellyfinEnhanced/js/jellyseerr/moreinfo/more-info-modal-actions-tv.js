@@ -1,11 +1,13 @@
-// /js/jellyseerr/more-info/more-info-modal-actions-tv.js
+// /js/jellyseerr/moreinfo/more-info-modal-actions-tv.js
 // TV request buttons: season request split-button, 4K variants and
 // the "Request More" button.
 (function(JE) {
     'use strict';
 
     JE.internals = JE.internals || {};
-    const internal = JE.internals.moreInfoModal = JE.internals.moreInfoModal || { state: { currentModal: null } };
+    // Shared state is seeded by more-info-modal-data.js, which plugin.js loads
+    // first in this group.
+    const internal = JE.internals.moreInfoModal;
     const DisplayStatus = JE.seerrStatus.DISPLAY;
 
 /**

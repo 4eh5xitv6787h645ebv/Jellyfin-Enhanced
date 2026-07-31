@@ -20,7 +20,7 @@
 
     JE.core = JE.core || {};
 
-    const logPrefix = '🪼 Jellyfin Enhanced: Request Manager:';
+    const logPrefix = '🪼 Jellyfin Enhanced: API Client:';
 
     // Configuration
     const CONFIG = {

@@ -1,5 +1,5 @@
 // @ts-check
-// /js/jellyseerr/more-info/more-info-modal-styles.js
+// /js/jellyseerr/moreinfo/more-info-modal-styles.js
 // CSS for the Jellyseerr more-info modal, injected once at load.
 (function(JE) {
     'use strict';

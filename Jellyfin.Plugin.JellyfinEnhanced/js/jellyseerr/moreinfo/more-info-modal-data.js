@@ -1,10 +1,13 @@
-// /js/jellyseerr/more-info/more-info-modal-data.js
+// /js/jellyseerr/moreinfo/more-info-modal-data.js
 // Fetch + pure data helpers for the more-info modal (ratings, details,
 // content rating resolution, currency formatting, error reporting).
 (function(JE) {
     'use strict';
 
     JE.internals = JE.internals || {};
+    // This module loads first in the More Info modal group, so it OWNS the shared
+    // state shape. Siblings read it and must not re-seed it — a duplicated
+    // default literal is silently dead everywhere but the first-loaded file.
     const internal = JE.internals.moreInfoModal = JE.internals.moreInfoModal || { state: { currentModal: null } };
     const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr More Info:';
     const MediaStatus = JE.seerrStatus.MEDIA;

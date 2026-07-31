@@ -9,8 +9,10 @@
   JE.internals = JE.internals || {};
   const P = (JE.internals.requestsPage = JE.internals.requestsPage || {});
 
-  // requests-page-render.js loads after this module — resolve renderPage at call time.
-  const renderPage = () => P.renderPage();
+  // requests-page-render.js loads after this module — resolve renderPage at call
+  // time. Forwards arguments: renderPage(targetContainer) is used by custom-tab
+  // mode to render into a container other than the standalone page.
+  const renderPage = (...args) => P.renderPage(...args);
 
   const logPrefix = '🪼 Jellyfin Enhanced: Requests Page:';
 

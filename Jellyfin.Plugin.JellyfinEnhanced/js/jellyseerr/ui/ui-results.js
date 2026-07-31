@@ -6,9 +6,9 @@
 
     const ui = JE.jellyseerrUI = JE.jellyseerrUI || {};
     JE.internals = JE.internals || {};
-    const internal = JE.internals.jellyseerrUi = JE.internals.jellyseerrUi || {
-        state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null }
-    };
+    // Shared state is seeded by ui-icons.js, which plugin.js loads first
+    // in this group.
+    const internal = JE.internals.jellyseerrUi;
     const state = internal.state;
     const logPrefix = '🪼 Jellyfin Enhanced: Seerr UI:';
     const MediaStatus = JE.seerrStatus.MEDIA;

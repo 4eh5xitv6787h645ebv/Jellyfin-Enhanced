@@ -1,11 +1,13 @@
-// /js/jellyseerr/more-info/more-info-modal-render.js
+// /js/jellyseerr/moreinfo/more-info-modal-render.js
 // Static HTML builders for the more-info modal body (header, panels,
 // crew/cast, trailers, keywords, collection card).
 (function(JE) {
     'use strict';
 
     JE.internals = JE.internals || {};
-    const internal = JE.internals.moreInfoModal = JE.internals.moreInfoModal || { state: { currentModal: null } };
+    // Shared state is seeded by more-info-modal-data.js, which plugin.js loads
+    // first in this group.
+    const internal = JE.internals.moreInfoModal;
     const escapeHtml = JE.escapeHtml;
 
 /**

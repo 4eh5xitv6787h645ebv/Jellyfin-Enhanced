@@ -5,6 +5,9 @@
 
     const ui = JE.jellyseerrUI = JE.jellyseerrUI || {};
     JE.internals = JE.internals || {};
+    // This module loads first in the Seerr UI group, so it OWNS the shared
+    // state shape. Siblings read it and must not re-seed it — a duplicated
+    // default literal is silently dead everywhere but the first-loaded file.
     const internal = JE.internals.jellyseerrUi = JE.internals.jellyseerrUi || {
         state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null }
     };

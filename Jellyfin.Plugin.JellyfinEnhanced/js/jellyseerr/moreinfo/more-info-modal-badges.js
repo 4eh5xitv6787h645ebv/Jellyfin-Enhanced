@@ -1,10 +1,12 @@
-// /js/jellyseerr/more-info/more-info-modal-badges.js
+// /js/jellyseerr/moreinfo/more-info-modal-badges.js
 // Rating logos, external media-fact links, status chips and download bars.
 (function(JE) {
     'use strict';
 
     JE.internals = JE.internals || {};
-    const internal = JE.internals.moreInfoModal = JE.internals.moreInfoModal || { state: { currentModal: null } };
+    // Shared state is seeded by more-info-modal-data.js, which plugin.js loads
+    // first in this group.
+    const internal = JE.internals.moreInfoModal;
     const escapeHtml = JE.escapeHtml;
 
 /**

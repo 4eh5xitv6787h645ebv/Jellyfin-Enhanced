@@ -1,11 +1,13 @@
-// /js/jellyseerr/more-info/more-info-modal-seasons.js
+// /js/jellyseerr/moreinfo/more-info-modal-seasons.js
 // Season-level logic: metadata backfill from TMDB, Jellyfin season links,
 // availability chips, unrequested-season detection and the seasons section.
 (function(JE) {
     'use strict';
 
     JE.internals = JE.internals || {};
-    const internal = JE.internals.moreInfoModal = JE.internals.moreInfoModal || { state: { currentModal: null } };
+    // Shared state is seeded by more-info-modal-data.js, which plugin.js loads
+    // first in this group.
+    const internal = JE.internals.moreInfoModal;
     const state = internal.state;
     const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr More Info:';
     const escapeHtml = JE.escapeHtml;

@@ -13,7 +13,7 @@
   const renderInto = P.renderInto;
 
   // recommendations-category.js loads after this module — resolve at call time.
-  const hideCategoryPage = () => P.hideCategoryPage();
+  const hideCategoryPage = (...args) => P.hideCategoryPage(...args);
 
   function createPageContainer() {
     let page = document.getElementById("je-recommendations-page");

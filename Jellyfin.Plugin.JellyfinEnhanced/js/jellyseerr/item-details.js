@@ -5,7 +5,7 @@
 (function(JE) {
     'use strict';
 
-    const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr Recommendations:';
+    const logPrefix = '🪼 Jellyfin Enhanced: Seerr Item Details:';
     const requestMoreLogPrefix = '🪼 Jellyfin Enhanced: Series Request More:';
 
     // Track processed items to avoid duplicate renders
@@ -499,7 +499,7 @@
      * Waits for `JE.jellyseerrMoreInfo.checkForUnrequestedSeasons` to become
      * available. The Jellyseerr modules are loaded in parallel by plugin.js
      * via dynamically-inserted <script> tags, so on a cold page load
-     * item-details.js may execute before more-info/more-info-modal-init.js has finished
+     * item-details.js may execute before moreinfo/more-info-modal-init.js has finished
      * parsing and attached its API. The checker is required for deciding
      * whether to render the Request More button.
      * @param {AbortSignal} [signal]
@@ -572,7 +572,7 @@
     /**
      * Renders a "Request More" button next to the Seasons section heading on
      * a Series detail page when the show has unrequested seasons in Seerr.
-     * Reuses checkForUnrequestedSeasons from more-info/more-info-modal-init.js so the
+     * Reuses checkForUnrequestedSeasons from moreinfo/more-info-modal-init.js so the
      * detection logic stays in one place.
      * @param {string} itemId - Jellyfin item ID
      */
@@ -604,7 +604,7 @@
 
             // Wait for the checker to become available — the Jellyseerr
             // modules load in parallel via dynamically-inserted <script>
-            // tags, so more-info/more-info-modal-init.js may still be parsing when we get
+            // tags, so moreinfo/more-info-modal-init.js may still be parsing when we get
             // here on a cold load. Polling up to 3s avoids a one-shot race
             // where the button would otherwise never appear until the user
             // navigates away and back.
