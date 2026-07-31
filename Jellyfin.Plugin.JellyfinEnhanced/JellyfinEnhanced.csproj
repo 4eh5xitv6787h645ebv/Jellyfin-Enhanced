@@ -63,6 +63,11 @@
     <EmbeddedResource Include="Configuration\configPage.css"/>
     <None Remove="plugin.js"/>
     <EmbeddedResource Include="js\**" />
+    <!-- Production client bundle: js/** compiled by esbuild into dist/je.bundle.js
+         (npm run build:bundle). Embedded so the plugin can serve it at
+         /JellyfinEnhanced/dist/. js/** stays embedded too — plugin.js falls back
+         to per-file loading when the bundle is absent or DevMode is on. -->
+    <EmbeddedResource Include="dist\**" />
   </ItemGroup>
 
 </Project>
