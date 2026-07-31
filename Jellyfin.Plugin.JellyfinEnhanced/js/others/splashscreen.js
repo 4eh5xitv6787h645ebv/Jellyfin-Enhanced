@@ -11,15 +11,18 @@
         removalDuration: 5000
     };
 
+    // Selectors that indicate the Jellyfin UI has painted something interactive.
+    // `.mainAnimatedPage` is the important one: viewContainer.js adds it as a CLASS to
+    // every legacy view, and every React route hard-codes it, so it is the only entry
+    // that matches on an arbitrary deep link. It was previously written as the ID
+    // selector '#mainAnimatedPage', which matches nothing in any Jellyfin client — with
+    // the result that deep-linking anywhere other than home/login/select-server left the
+    // splash up until the 20s hard timeout.
     const READY_SELECTORS = [
+        '.mainAnimatedPage',
         '.manualLoginForm',
-        '#mainAnimatedPage',
         '.homeSectionsContainer',
-        '.pageContainer',
-        '.slides-container',
-        '.backdrop-container',
-        'customTabButton_0',
-        '.editorsChoiceItemBanner'
+        '.pageContainer'
     ];
 
     let splashElement = null;
@@ -140,7 +143,7 @@
     function isUIReady() {
         for (const selector of READY_SELECTORS) {
             const element = document.querySelector(selector);
-            if (isElementShown(element) || (element && selector === '#mainAnimatedPage')) {
+            if (isElementShown(element)) {
                 return true;
             }
         }
@@ -166,7 +169,7 @@
             hardTimeout = null;
         }
         if (readyObserver) {
-            readyObserver.disconnect();
+            readyObserver.unsubscribe();
             readyObserver = null;
         }
 
@@ -371,15 +374,31 @@
                 hideSplashScreen('core UI detected');
             }
         };
-        const obs = new MutationObserver(bodyCallback);
-        obs.observe(document.body, { childList: true, subtree: true });
-        readyObserver = obs;
+        // This module is loaded early (plugin.js loadSplashScreenEarly), before the
+        // component stage, so JE.core.dom usually does not exist yet and the private
+        // fallback below is the live path. The shared-observer branch is kept so this
+        // upgrades automatically if the load order ever changes.
+        readyObserver = JE?.core?.dom?.onBodyMutation
+            ? JE.core.dom.onBodyMutation('je-splash-ready', bodyCallback)
+            : (() => {
+                const obs = new MutationObserver(bodyCallback);
+                obs.observe(document.body, { childList: true, subtree: true });
+                return { unsubscribe: () => obs.disconnect() };
+            })();
 
-        window.addEventListener('hashchange', () => {
-            if (isUIReady()) {
-                hideSplashScreen('hashchange ready');
-            }
-        });
+        // In-app navigation is pushState-only in both 10.11 and 12 (createHashRouter →
+        // router.navigate); neither client assigns location.hash. A raw 'hashchange'
+        // listener therefore never fired here except on browser back/forward.
+        // JE.core.navigation patches pushState, so onNavigate sees real navigation.
+        if (JE?.core?.navigation?.onNavigate) {
+            JE.core.navigation.onNavigate(() => {
+                if (isUIReady()) hideSplashScreen('navigation ready');
+            });
+        } else {
+            window.addEventListener('hashchange', () => {
+                if (isUIReady()) hideSplashScreen('hashchange ready');
+            });
+        }
 
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && isUIReady()) {

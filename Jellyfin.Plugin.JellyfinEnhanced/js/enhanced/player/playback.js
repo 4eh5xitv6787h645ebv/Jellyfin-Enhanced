@@ -370,94 +370,157 @@
         }
     };
 
+    // ── Native action-sheet helpers ──────────────────────────────────────────
+    //
+    // The OSD opens subtitle/audio menus through a dynamic import() of
+    // components/actionSheet — a webpack chunk fetched over HTTP on first use — so any
+    // fixed delay before reading the menu is a bet on network latency. That was the cause
+    // of "No Subtitles Found" (upstream #705): on a cold cache or remote server the sheet
+    // had not rendered within 200ms, and the toast fired even though the menu always
+    // contains at least an "Off" row, so it could never legitimately be empty.
+    //
+    // Three further traps this code has to avoid:
+    //  * Jellyfin leaves dismissed sheets in the document, so an unscoped query can read a
+    //    stale one. Every query below is scoped to a specific sheet element.
+    //  * document.body.click() does NOT close a sheet: dialogHelper only closes when the
+    //    event target IS the dialog container, which is a child of body.
+    //  * Sheet titles are localized. We compare against the OSD button's own title
+    //    attribute, which resolves the same translation key, instead of literal English.
+
+    /**
+     * @param {string} selector
+     * @returns {string} The localized title of an OSD button, or ''.
+     */
+    function osdButtonTitle(selector) {
+        const btn = document.querySelector(selector);
+        return ((btn && (btn.getAttribute('title') || btn.title)) || '').trim();
+    }
+
+    /**
+     * @param {Element|null} el
+     * @returns {boolean} True when the element is actually rendered.
+     */
+    function isVisibleSheet(el) {
+        return !!el && /** @type {HTMLElement} */ (el).offsetParent !== null;
+    }
+
+    /**
+     * Finds a visible action sheet whose title matches `title`.
+     * @param {string} title
+     * @returns {Element|null}
+     */
+    function findOpenSheetByTitle(title) {
+        if (!title) return null;
+        return Array.from(document.querySelectorAll('.actionSheet')).find(sheet =>
+            isVisibleSheet(sheet) &&
+            Array.from(sheet.querySelectorAll('.actionSheetTitle'))
+                .some(t => (t.textContent || '').trim() === title)
+        ) || null;
+    }
+
+    /**
+     * Closes the open native action sheet the way dialogHelper expects — by replaying the
+     * outside tap on the dialog container. document.body.click() is a no-op here.
+     * @returns {boolean} True when a close was attempted.
+     */
+    function closeOpenActionSheet() {
+        const sheet = Array.from(document.querySelectorAll('.actionSheet')).find(isVisibleSheet);
+        const container = sheet && sheet.closest('.dialogContainer');
+        if (!container) return false;
+        ['mousedown', 'click'].forEach(type => {
+            container.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+        });
+        return true;
+    }
+
+    /**
+     * Opens an OSD menu and resolves with the sheet element it created — waiting for the
+     * sheet to exist rather than guessing a delay.
+     * @param {string} buttonSelector - e.g. 'button.btnSubtitles'
+     * @returns {Promise<Element|null>} The new sheet, or null if it never appeared.
+     */
+    function openOsdMenu(buttonSelector) {
+        const before = new Set(document.querySelectorAll('.actionSheet'));
+        const btn = /** @type {HTMLElement|null} */ (document.querySelector(buttonSelector));
+        if (!btn) return Promise.resolve(null);
+        btn.click();
+        // Resolve only for a sheet that did not exist before the click AND has rendered its
+        // rows — a stale sheet would otherwise satisfy the selector immediately.
+        return JE.core.dom.waitForElement('.actionSheet', {
+            timeout: 5000,
+            quiet: true,
+            predicate: (el) => !before.has(el) && !!el.querySelector('.actionSheetMenuItem')
+        });
+    }
+
+    /**
+     * Cycles the track selection inside one already-resolved sheet.
+     * Real tracks are identified by a numeric data-id (the stream index, -1 for "Off"),
+     * which is language-independent — the previous code filtered by English label text.
+     * @param {Element} sheet
+     * @param {string} emptyToastKey
+     * @param {string} toastVar - 'subtitle' | 'audio'
+     */
+    function cycleWithinSheet(sheet, emptyToastKey, toastVar) {
+        const options = Array.from(sheet.querySelectorAll('.actionSheetMenuItem'))
+            .filter(item => /^-?\d+$/.test(item.getAttribute('data-id') || ''));
+
+        if (options.length === 0) {
+            JE.toast(JE.t(emptyToastKey));
+            closeOpenActionSheet();
+            return;
+        }
+
+        const currentIndex = options.findIndex(option => {
+            const checkIcon = option.querySelector('.listItemIcon.check');
+            return checkIcon && getComputedStyle(checkIcon).visibility !== 'hidden';
+        });
+
+        const next = options[(currentIndex + 1) % options.length];
+        if (!next) return;
+        /** @type {HTMLElement} */ (next).click();
+        const labelEl = next.querySelector('.listItemBodyText');
+        const label = ((labelEl && labelEl.textContent) || '').trim();
+        JE.toast(JE.t('toast_' + toastVar, { [toastVar]: label }));
+    }
+
+    /**
+     * Opens (or reuses) an OSD track menu and advances to the next track.
+     * @param {string} buttonSelector - OSD button that opens the menu.
+     * @param {string} emptyToastKey - Toast key when no tracks are present.
+     * @param {string} toastVar - Toast variable name ('subtitle' | 'audio').
+     */
+    function cycleTrackMenu(buttonSelector, emptyToastKey, toastVar) {
+        const alreadyOpen = findOpenSheetByTitle(osdButtonTitle(buttonSelector));
+        if (alreadyOpen) {
+            cycleWithinSheet(alreadyOpen, emptyToastKey, toastVar);
+            return;
+        }
+        // A different sheet may be open (e.g. audio while cycling subtitles) — close it so
+        // we never stack two sheets and then read rows from both at once.
+        closeOpenActionSheet();
+        openOsdMenu(buttonSelector).then(sheet => {
+            if (!sheet) {
+                JE.toast(JE.t(emptyToastKey));
+                closeOpenActionSheet();
+                return;
+            }
+            cycleWithinSheet(sheet, emptyToastKey, toastVar);
+        });
+    }
+
     /**
      * Cycles through available subtitle tracks in the OSD menu.
      */
     JE.cycleSubtitleTrack = () => {
-        const performCycle = () => {
-            const allItems = document.querySelectorAll('.actionSheetContent .listItem');
-            if (allItems.length === 0) {
-                JE.toast(JE.t('toast_no_subtitles_found'));
-                document.body.click();
-                return;
-            }
-
-            const subtitleOptions = Array.from(allItems).filter(item => {
-                const textElement = item.querySelector('.listItemBodyText');
-                return textElement && textElement.textContent.trim() !== 'Secondary Subtitles';
-            });
-
-            if (subtitleOptions.length === 0) {
-                JE.toast(JE.t('toast_no_subtitles_found'));
-                document.body.click();
-                return;
-            }
-
-            let currentIndex = subtitleOptions.findIndex(option => {
-                const checkIcon = option.querySelector('.listItemIcon.check');
-                return checkIcon && getComputedStyle(checkIcon).visibility !== 'hidden';
-            });
-
-            const nextIndex = (currentIndex + 1) % subtitleOptions.length;
-            const nextOption = subtitleOptions[nextIndex];
-
-            if (nextOption) {
-                nextOption.click();
-                const subtitleName = nextOption.querySelector('.listItemBodyText').textContent.trim();
-                JE.toast(JE.t('toast_subtitle', { subtitle: subtitleName }));
-            }
-        };
-
-        const subtitleMenuTitle = Array.from(document.querySelectorAll('.actionSheetContent .actionSheetTitle')).find(el => el.textContent === 'Subtitles');
-        if (subtitleMenuTitle) {
-            performCycle();
-        } else {
-            if (document.querySelector('.actionSheetContent')) {
-                document.body.click();
-            }
-            document.querySelector('button.btnSubtitles')?.click();
-            setTimeout(performCycle, 200);
-        }
+        cycleTrackMenu('button.btnSubtitles', 'toast_no_subtitles_found', 'subtitle');
     };
 
     /**
      * Cycles through available audio tracks in the OSD menu.
      */
     JE.cycleAudioTrack = () => {
-        const performCycle = () => {
-            const audioOptions = Array.from(document.querySelectorAll('.actionSheetContent .listItem')).filter(item => item.querySelector('.listItemBodyText.actionSheetItemText'));
-
-            if (audioOptions.length === 0) {
-                JE.toast(JE.t('toast_no_audio_tracks_found'));
-                document.body.click();
-                return;
-            }
-
-            let currentIndex = audioOptions.findIndex(option => {
-                const checkIcon = option.querySelector('.actionsheetMenuItemIcon.listItemIcon.check');
-                return checkIcon && getComputedStyle(checkIcon).visibility !== 'hidden';
-            });
-
-            const nextIndex = (currentIndex + 1) % audioOptions.length;
-            const nextOption = audioOptions[nextIndex];
-
-            if (nextOption) {
-                nextOption.click();
-                const audioName = nextOption.querySelector('.listItemBodyText.actionSheetItemText').textContent.trim();
-                JE.toast(JE.t('toast_audio', { audio: audioName }));
-            }
-        };
-
-        const audioMenuTitle = Array.from(document.querySelectorAll('.actionSheetContent .actionSheetTitle')).find(el => el.textContent === 'Audio');
-        if (audioMenuTitle) {
-            performCycle();
-        } else {
-            if (document.querySelector('.actionSheetContent')) {
-                document.body.click();
-            }
-            document.querySelector('button.btnAudio')?.click();
-            setTimeout(performCycle, 200);
-        }
+        cycleTrackMenu('button.btnAudio', 'toast_no_audio_tracks_found', 'audio');
     };
 
     /**
