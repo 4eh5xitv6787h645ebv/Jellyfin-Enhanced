@@ -6,7 +6,9 @@
 
     const moreInfoModal = JE.jellyseerrMoreInfo = JE.jellyseerrMoreInfo || {};
     JE.internals = JE.internals || {};
-    const internal = JE.internals.moreInfoModal = JE.internals.moreInfoModal || { state: { currentModal: null } };
+    // Shared state is seeded by more-info-modal-data.js, which plugin.js loads
+    // first in this group.
+    const internal = JE.internals.moreInfoModal;
     const state = internal.state;
     const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr More Info:';
 
