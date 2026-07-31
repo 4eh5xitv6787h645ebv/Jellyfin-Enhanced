@@ -27,6 +27,10 @@
     issuesTotalPages: 1,
     issuesError: false,
     issuesFilter: "open",
+    history: [],
+    historyVisible: true,
+    historyPage: 1,
+    historyTotalPages: 1,
     isLoading: false,
     pollTimer: null,
     pageVisible: false,
@@ -247,13 +251,44 @@
   }
 
   /**
+   * Fetch bounded ARR download history (recently imported/failed items) from backend
+   */
+  async function fetchHistory() {
+    if (!JE.pluginConfig?.DownloadsShowHistory) {
+      state.history = [];
+      state.historyVisible = false;
+      return null;
+    }
+
+    try {
+      const skip = (state.historyPage - 1) * 20;
+
+      const query = new URLSearchParams({
+        take: "20",
+        skip: String(skip),
+      });
+
+      const data = await JE.core.api.plugin(`/arr/history?${query.toString()}`);
+
+      state.history = data.items || [];
+      state.historyVisible = data.visible !== false;
+      state.historyTotalPages = data.totalPages || 1;
+      return data;
+    } catch (error) {
+      console.error(`${logPrefix} Failed to fetch history:`, error);
+      state.history = [];
+      return null;
+    }
+  }
+
+  /**
    * Load all data
    */
   async function loadAllData() {
     state.isLoading = true;
     renderPage();
 
-    await Promise.all([fetchDownloads(), fetchRequests(), fetchIssues()]);
+    await Promise.all([fetchDownloads(), fetchRequests(), fetchIssues(), fetchHistory()]);
 
     state.isLoading = false;
     renderPage();
@@ -287,6 +322,7 @@
   P.hydrateAvatarImages = JE.helpers.hydrateAvatarImages;
   P.fetchRequests = fetchRequests;
   P.fetchIssues = fetchIssues;
+  P.fetchHistory = fetchHistory;
   P.getIssueMediaType = getIssueMediaType;
   P.getIssueTmdbId = getIssueTmdbId;
   P.loadAllData = loadAllData;

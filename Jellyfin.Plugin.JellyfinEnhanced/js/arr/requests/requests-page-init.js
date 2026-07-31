@@ -460,6 +460,8 @@
     prevPage: P.prevPage,
     nextIssuesPage: P.nextIssuesPage,
     prevIssuesPage: P.prevIssuesPage,
+    nextHistoryPage: P.nextHistoryPage,
+    prevHistoryPage: P.prevHistoryPage,
     renderPage,
     renderForCustomTab,
     injectStyles,

@@ -13,6 +13,7 @@
     const state = internal.state;
     const escapeHtml = JE.escapeHtml;
     const icons = internal.icons; // requires ui-icons.js to be loaded first
+    const addTouchTapListener = JE.core.ui.addTouchTapListener;
 
     // ================================
     // DOWNLOAD PROGRESS POPOVER SYSTEM
@@ -283,7 +284,9 @@
             ui.toggleHoverPopoverLock(false);
             ui.hideHoverPopover();
         });
-        button.addEventListener('touchstart', (e) => {
+        // Tap (not swipe) toggles the popover; swipes starting on the request
+        // button keep scrolling the results row natively.
+        addTouchTapListener(button, (e) => {
             e.preventDefault();
             const popover = fillHoverPopover(item);
             if (popover) {
@@ -301,7 +304,7 @@
                     popover.classList.remove('show');
                 }
             }
-        }, { passive: false });
+        });
     }
     ui.formatEtaText = formatEtaText;
 

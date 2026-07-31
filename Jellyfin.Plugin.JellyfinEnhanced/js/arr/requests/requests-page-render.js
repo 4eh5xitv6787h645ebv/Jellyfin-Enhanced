@@ -16,6 +16,7 @@
   const renderDownloadCard = P.renderDownloadCard;
   const renderRequestCard = P.renderRequestCard;
   const renderIssueCard = P.renderIssueCard;
+  const renderHistoryCard = P.renderHistoryCard;
   const renderSeasonPackCard = P.renderSeasonPackCard;
   const clearAvatarObjectUrlCache = P.clearAvatarObjectUrlCache;
   const hydrateAvatarImages = P.hydrateAvatarImages;
@@ -257,6 +258,44 @@
               <button is="emby-button" type="button" class="emby-button" onclick="window.JellyfinEnhanced.downloadsPage.prevIssuesPage()" ${state.issuesPage <= 1 ? "disabled" : ""}><span class="material-icons">chevron_left</span></button>
               <span>${state.issuesPage} / ${state.issuesTotalPages}</span>
               <button is="emby-button" type="button" class="emby-button" onclick="window.JellyfinEnhanced.downloadsPage.nextIssuesPage()" ${state.issuesPage >= state.issuesTotalPages ? "disabled" : ""}><span class="material-icons">chevron_right</span></button>
+            </div>
+          `;
+        }
+      }
+
+      html += `</div>`;
+    }
+
+    // History Section - only shows if enabled and visible to the current user
+    if (JE.pluginConfig?.ShowDownloadsInRequests !== false
+      && JE.pluginConfig?.DownloadsShowHistory !== false
+      && state.historyVisible !== false) {
+      html += `<div class="je-downloads-section je-history-section">`;
+      const labelHistory = (JE.t && JE.t('requests_history')) || 'History';
+      html += `<h2>${labelHistory}</h2>`;
+
+      if (state.isLoading && state.history.length === 0) {
+        html += `<div class="je-loading">...</div>`;
+      } else if (state.history.length === 0) {
+        const labelNoHistory = (JE.t && JE.t('requests_no_history_found')) || 'No history found';
+        html += `
+          <div class="je-empty-state">
+            <div>${labelNoHistory}</div>
+          </div>
+        `;
+      } else {
+        html += `<div class="je-downloads-grid">`;
+        state.history.forEach((item) => {
+          html += renderHistoryCard(item);
+        });
+        html += `</div>`;
+
+        if (state.historyTotalPages > 1) {
+          html += `
+            <div class="je-pagination">
+              <button is="emby-button" type="button" class="emby-button" onclick="window.JellyfinEnhanced.downloadsPage.prevHistoryPage()" ${state.historyPage <= 1 ? "disabled" : ""}><span class="material-icons">chevron_left</span></button>
+              <span>${state.historyPage} / ${state.historyTotalPages}</span>
+              <button is="emby-button" type="button" class="emby-button" onclick="window.JellyfinEnhanced.downloadsPage.nextHistoryPage()" ${state.historyPage >= state.historyTotalPages ? "disabled" : ""}><span class="material-icons">chevron_right</span></button>
             </div>
           `;
         }

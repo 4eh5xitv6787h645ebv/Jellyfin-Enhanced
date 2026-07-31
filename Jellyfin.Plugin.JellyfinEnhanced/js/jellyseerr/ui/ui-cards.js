@@ -11,6 +11,7 @@
     const MediaStatus = JE.seerrStatus.MEDIA;
     const icons = internal.icons; // requires ui-icons.js to be loaded first
     const escapeHtml = JE.escapeHtml;
+    const addTouchTapListener = JE.core.ui.addTouchTapListener;
 
     /**
      * Creates an individual Seerr result card.
@@ -182,11 +183,13 @@
                 removeOverview();
             });
 
-            // Mobile/Touch: touchstart to show overview, second tap (click) on overview opens modal
+            // Mobile/Touch: tap to show overview, second tap (click) on overview opens modal
             imageContainer.style.cursor = 'pointer';
 
-            // Use touchstart for mobile to create overview (prevents touchend from immediately opening modal)
-            imageContainer.addEventListener('touchstart', (e) => {
+            // Tap (not swipe) creates the overview; preventDefault() on the tap's
+            // touchend suppresses the synthetic click so the fresh overview isn't
+            // immediately activated. Swipes keep scrolling the results row natively.
+            addTouchTapListener(imageContainer, (e) => {
                 if (e.target.closest('.jellyseerr-overview') || e.target.closest('.jellyseerr-request-button')) {
                     return;
                 }
@@ -198,11 +201,11 @@
                         document.addEventListener('click', handleOutsideClick);
                     }, 0);
                 }
-            }, { passive: false });
+            });
 
             // Desktop: use click event
             imageContainer.addEventListener('click', (e) => {
-                // Skip if touch device (touchstart already handled it)
+                // Skip if touch device (the tap handler already handled it)
                 if (e.type === 'click' && 'ontouchstart' in window) {
                     return;
                 }

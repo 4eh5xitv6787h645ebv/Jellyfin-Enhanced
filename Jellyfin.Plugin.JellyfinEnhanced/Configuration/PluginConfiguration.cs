@@ -250,6 +250,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             DownloadsPageShowIssues = false;
             ShowDownloadsInRequests = true;
             DownloadsFilterByUserRequests = true;
+            DownloadsShowHistory = true;
+            DownloadsHistoryAdminOnly = false;
 
             // Calendar Page Settings (Sonarr/Radarr Releases)
             CalendarPageEnabled = false;
@@ -265,6 +267,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             CalendarFilterByLibraryAccess = true;
             CalendarShowOnlyRequested = false;
             CalendarForceOnlyRequested = false;
+
+            // Recommendations Page Settings (Jellyseerr discover rows)
+            RecommendationsPageEnabled = false;
+            RecommendationsUsePluginPages = false;
+            RecommendationsUseCustomTabs = false;
+            RecommendationsUseNativeTab = false;
+            RecommendationsAutoCreateCustomTab = false;
+            RecommendationsCustomTabJeOwned = false;
 
             // Hidden Content Settings
             HiddenContentEnabled = false;
@@ -329,7 +339,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public string MaintenanceModeMessage { get; set; } = string.Empty;
         /// <summary>Sent as a native Jellyfin broadcast to all active sessions.</summary>
         public string MaintenanceModeNotificationMessage { get; set; } = string.Empty;
-        /// <summary>"disable_accounts" | "disable_remote" | "both"</summary>
+        /// <summary>"none" | "disable_accounts" | "disable_remote" | "both"</summary>
         public string MaintenanceModeAction { get; set; } = "disable_accounts";
         /// <summary>"all" or a JSON array of user ID strings.</summary>
         public string MaintenanceModeAffectedUsers { get; set; } = "all";
@@ -593,6 +603,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool DownloadsPageShowIssues { get; set; }
         public bool ShowDownloadsInRequests { get; set; }
         public bool DownloadsFilterByUserRequests { get; set; }
+        public bool DownloadsShowHistory { get; set; }
+        public bool DownloadsHistoryAdminOnly { get; set; }
 
         // Calendar Page Settings (Sonarr/Radarr Releases)
         public bool CalendarPageEnabled { get; set; }
@@ -615,6 +627,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool CalendarFilterByLibraryAccess { get; set; }
         public bool CalendarShowOnlyRequested { get; set; }
         public bool CalendarForceOnlyRequested { get; set; }
+
+        // Recommendations Page Settings (Jellyseerr discover rows)
+        public bool RecommendationsPageEnabled { get; set; }
+        public bool RecommendationsUsePluginPages { get; set; }
+        public bool RecommendationsUseCustomTabs { get; set; }
+        public bool RecommendationsUseNativeTab { get; set; }
+        public bool RecommendationsAutoCreateCustomTab { get; set; }
+        public bool RecommendationsCustomTabJeOwned { get; set; }
 
         // Hidden Content Settings
         public bool HiddenContentEnabled { get; set; }

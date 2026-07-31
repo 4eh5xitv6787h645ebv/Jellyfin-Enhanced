@@ -20,14 +20,66 @@
             /* Remove menu items render like native action-sheet items; only dim them while the removal is in flight. */
             .actionSheetMenuItem[data-id="remove-continue-watching"]:disabled,
             .actionSheetMenuItem[data-id="je-multiselect-remove"]:disabled { opacity: 0.6; cursor: default; }
-            .layout-mobile #jellyfin-enhanced-panel { width: 95vw; max-width: 95vw; }
+            /* Phone layout for the settings/help panel. Keyed on the VIEWPORT
+               (@media), not the legacy .layout-mobile html class, so it applies
+               on any client whose html classes don't discriminate layouts. The
+               .layout-mobile selectors are kept as belt-and-braces for the
+               legacy mobile layout. The full-screen sheet itself is declared in
+               the panel's own <style> block (max-width: 760px); these rules
+               handle the content that has to reflow inside it. */
             .layout-mobile #jellyfin-enhanced-panel .shortcuts-container { flex-direction: column; }
-            .layout-mobile #jellyfin-enhanced-panel #settings-content { width: auto !important; }
-            .layout-mobile #jellyfin-enhanced-panel .panel-main-content { padding: 0 15px; }
-            .layout-mobile #jellyfin-enhanced-panel .panel-footer { flex-direction: row; gap: 16px; }
-            .layout-mobile #jellyfin-enhanced-panel .close-helptext { display: none; }
-            .layout-mobile #jellyfin-enhanced-panel .footer-buttons { flex-direction: column; align-items: flex-end !important; width: 100%; gap: 10px; }
-            .layout-mobile #jellyfin-enhanced-panel .footer-buttons > * { justify-content: center; }
+            .layout-mobile #jellyfin-enhanced-panel .je-panel-main { padding: 4px 15px 20px 15px; }
+            #jellyfin-enhanced-panel .je-pause-delay-row,
+            #jellyfin-enhanced-panel .je-subtitle-color-layout,
+            #jellyfin-enhanced-panel .je-subtitle-color-controls,
+            #jellyfin-enhanced-panel .je-subtitle-color-control-row {
+                min-width: 0;
+                box-sizing: border-box;
+            }
+            #jellyfin-enhanced-panel .je-subtitle-color-control-row > input[type="range"] {
+                min-width: 0;
+                width: 100%;
+            }
+            @media (max-width: 768px) {
+                /* Shortcuts: stack the two columns and release the 400px min-width
+                   inline on each so they fit the narrow panel instead of clipping. */
+                #jellyfin-enhanced-panel .shortcuts-container { flex-direction: column; gap: 14px; }
+                #jellyfin-enhanced-panel .shortcuts-container > div { min-width: 0 !important; flex: 1 1 auto !important; }
+                #jellyfin-enhanced-panel .je-panel-main { padding: 4px 15px 20px 15px; }
+            }
+            @media (max-width: 420px) {
+                /* A 320px viewport leaves roughly 220px inside each settings
+                   card. Let the delay label share or wrap that row, and stack
+                   the subtitle preview below its colour controls instead of
+                   preserving their desktop intrinsic widths. */
+                #jellyfin-enhanced-panel .je-pause-delay-row {
+                    flex-wrap: wrap;
+                    padding-left: 0 !important;
+                }
+                #jellyfin-enhanced-panel .je-pause-delay-row > label {
+                    flex: 1 1 120px;
+                    min-width: 0;
+                    white-space: normal !important;
+                }
+                #jellyfin-enhanced-panel .je-pause-delay-row > input {
+                    flex: 0 0 60px;
+                    width: 60px !important;
+                    box-sizing: border-box;
+                }
+                #jellyfin-enhanced-panel .je-subtitle-color-layout {
+                    flex-direction: column;
+                }
+                #jellyfin-enhanced-panel .je-subtitle-color-controls,
+                #jellyfin-enhanced-panel #subtitleColorPreview {
+                    width: 100%;
+                    max-width: 100%;
+                }
+                #jellyfin-enhanced-panel #subtitleColorPreview {
+                    flex: 0 0 auto !important;
+                    align-self: stretch !important;
+                    box-sizing: border-box;
+                }
+            }
             @keyframes longPressGlow { from { box-shadow: 0 0 5px 2px var(--primary-accent-color, #fff); } to { box-shadow: 0 0 8px 15px transparent; } }
             .headerUserButton.long-press-active { animation: longPressGlow 750ms ease-out; }
             #jellyfin-enhanced-panel kbd {

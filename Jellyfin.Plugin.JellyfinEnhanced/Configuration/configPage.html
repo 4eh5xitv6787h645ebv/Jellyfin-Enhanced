@@ -986,6 +986,14 @@
                             <div class="je-setting-description" data-desc-for="downloadsPageShowIssues">
                                 <div class="fieldDescription je-field-desc-xl">Shows open/resolved Seerr issues beneath Requests.</div>
                             </div>
+                            <div class="checkboxContainer"><label><input id="downloadsShowHistory" is="emby-checkbox" type="checkbox"/><span>Show Download History Section</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsShowHistory">
+                                <div class="fieldDescription je-field-desc-xl">Shows a bounded history of recently imported (or failed-to-import) Sonarr/Radarr downloads beneath Requests, so items that vanish from the active queue after finishing are still visible.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="downloadsHistoryAdminOnly" is="emby-checkbox" type="checkbox"/><span>Restrict Download History to Admins</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsHistoryAdminOnly">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, only Jellyfin administrators see the Download History section. Regular users won't see it at all.</div>
+                            </div>
                             <div class="checkboxContainer"><label><input id="downloadsUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Requests as a native Home tab</span></label></div>
                             <div class="je-setting-description" data-desc-for="downloadsUseNativeTab">
                                 <div class="fieldDescription je-field-desc-xl">Adds Requests as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
@@ -1168,6 +1176,83 @@
                             <div class="checkboxContainer"><label><input id="calendarForceOnlyRequested" is="emby-checkbox" type="checkbox"/><span>Force Only Requested Items</span></label></div>
                             <div class="je-setting-description" data-desc-for="calendarForceOnlyRequested">
                                 <div class="fieldDescription">When enabled, the calendar always shows only your requested items and the Requests filter is hidden.</div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend class="sectionTitle">Seerr Recommendations Page</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline-center" style="margin-bottom: 15px;">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">auto_awesome</i>
+                                    <div>
+                                        <strong>Seerr Recommendations Page</strong> adds a dedicated view with Seerr-powered rows: Trending, Popular Movies, Popular TV Shows, Upcoming Movies and Upcoming TV Shows.<br/><br/>
+                                        <strong>Requirements:</strong> Seerr integration must be configured and enabled.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer je-main-feature"><label><input id="recommendationsPageEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Recommendations Page</span></label></div>
+                            <div class="je-setting-description" data-desc-for="recommendationsPageEnabled">
+                                <div class="fieldDescription je-field-desc-xl">Adds a "Seerr Recommendations" link to the navigation showing Seerr discover rows.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="recommendationsUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Recommendations as a native Home tab</span></label></div>
+                            <div class="je-setting-description" data-desc-for="recommendationsUseNativeTab">
+                                <div class="fieldDescription je-field-desc-xl">Adds Recommendations as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="recommendationsUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages</span></label></div>
+                            <div class="je-setting-description" data-desc-for="recommendationsUsePluginPages">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Replaces the default Recommendations page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/>
+                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
+                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="recommendationsUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs</span></label></div>
+
+                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="recommendationsUseCustomTabs,recommendationsPageEnabled">
+                                <label><input id="recommendationsAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
+                            </div>
+                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="recommendationsAutoCreateCustomTab" data-gated-by="recommendationsUseCustomTabs,recommendationsPageEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
+                                </div>
+                            </div>
+
+                            <div class="je-setting-description" data-desc-for="recommendationsUseCustomTabs">
+                                <div class="je-info-banner-inline">
+                                    <div class="je-info-banner-row">
+                                        <i class="material-icons je-info-icon">info</i>
+                                        <div>
+                                            <h4 class="je-custom-tabs-h4">
+                                                Embed Recommendations in Custom Tabs:
+                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
+                                            </h4>
+                                            <p class="fieldDescription je-custom-tabs-p">Display the Recommendations page in a Custom Tabs tab instead of the sidebar link.</p>
+                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
+                                            <ol class="fieldDescription je-custom-tabs-ol">
+                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
+                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Recommendations").</li>
+                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                            </ol>
+                                            <div class="je-copy-code-wrapper">
+                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced recommendations"&gt;&lt;/div&gt;' type="button">
+                                                    <i class="material-icons je-copy-icon">content_copy</i>
+                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                                </button>
+                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced recommendations"&gt;&lt;/div&gt;</code></pre>
+                                            </div>
+                                            <div class="fieldDescription je-field-desc-mt">
+                                                Already have Custom Tabs installed?
+                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </fieldset>
@@ -3484,7 +3569,8 @@
             { masterKey: 'BookmarksEnabled',      parentKey: 'BookmarksUseCustomTabs',     autoKey: 'BookmarksAutoCreateCustomTab',     ownedKey: 'BookmarksCustomTabJeOwned',     title: 'Bookmarks',      html: '<div class="sections bookmarks"></div>' },
             { masterKey: 'HiddenContentEnabled',  parentKey: 'HiddenContentUseCustomTabs', autoKey: 'HiddenContentAutoCreateCustomTab', ownedKey: 'HiddenContentCustomTabJeOwned', title: 'Hidden Content', html: '<div class="jellyfinenhanced hidden-content"></div>' },
             { masterKey: 'DownloadsPageEnabled',  parentKey: 'DownloadsUseCustomTabs',     autoKey: 'DownloadsAutoCreateCustomTab',     ownedKey: 'DownloadsCustomTabJeOwned',     title: 'Requests',       html: '<div class="jellyfinenhanced requests"></div>' },
-            { masterKey: 'CalendarPageEnabled',   parentKey: 'CalendarUseCustomTabs',      autoKey: 'CalendarAutoCreateCustomTab',      ownedKey: 'CalendarCustomTabJeOwned',      title: 'Calendar',       html: '<div class="jellyfinenhanced calendar"></div>' }
+            { masterKey: 'CalendarPageEnabled',   parentKey: 'CalendarUseCustomTabs',      autoKey: 'CalendarAutoCreateCustomTab',      ownedKey: 'CalendarCustomTabJeOwned',      title: 'Calendar',       html: '<div class="jellyfinenhanced calendar"></div>' },
+            { masterKey: 'RecommendationsPageEnabled', parentKey: 'RecommendationsUseCustomTabs', autoKey: 'RecommendationsAutoCreateCustomTab', ownedKey: 'RecommendationsCustomTabJeOwned', title: 'Recommendations', html: '<div class="jellyfinenhanced recommendations"></div>' }
         ];
 
         function isCustomTabsConfigShapeOk(cfg) {
@@ -4513,6 +4599,8 @@
                 document.querySelector('#showDownloadsInRequests').checked = config.ShowDownloadsInRequests !== false;
                 document.querySelector('#downloadsFilterByUserRequests').checked = config.DownloadsFilterByUserRequests !== false;
                 document.querySelector('#downloadsPageShowIssues').checked = config.DownloadsPageShowIssues === true;
+                document.querySelector('#downloadsShowHistory').checked = config.DownloadsShowHistory !== false;
+                document.querySelector('#downloadsHistoryAdminOnly').checked = config.DownloadsHistoryAdminOnly === true;
                 document.querySelector('#downloadsUsePluginPages').checked = config.DownloadsUsePluginPages !== false;
                 document.querySelector('#downloadsUseNativeTab').checked = config.DownloadsUseNativeTab === true;
                 document.querySelector('#downloadsUseCustomTabs').checked = config.DownloadsUseCustomTabs === true;
@@ -4535,6 +4623,14 @@
                 document.querySelector('#calendarFilterByLibraryAccess').checked = config.CalendarFilterByLibraryAccess !== false;
                 document.querySelector('#calendarShowOnlyRequested').checked = config.CalendarShowOnlyRequested || false;
                 document.querySelector('#calendarForceOnlyRequested').checked = config.CalendarForceOnlyRequested || false;
+
+                // Recommendations Page settings
+                document.querySelector('#recommendationsPageEnabled').checked = config.RecommendationsPageEnabled === true;
+                document.querySelector('#recommendationsUseNativeTab').checked = config.RecommendationsUseNativeTab === true;
+                document.querySelector('#recommendationsUsePluginPages').checked = config.RecommendationsUsePluginPages === true;
+                document.querySelector('#recommendationsUseCustomTabs').checked = config.RecommendationsUseCustomTabs === true;
+                var __rAuto = document.querySelector('#recommendationsAutoCreateCustomTab');
+                if (__rAuto) __rAuto.checked = config.RecommendationsAutoCreateCustomTab === true;
 
                 // Hidden Content settings
                 document.querySelector('#hiddenContentEnabled').checked = config.HiddenContentEnabled || false;
@@ -4657,8 +4753,9 @@
             const mmAccounts = document.getElementById('mmAction_accounts').checked;
             const mmRemote   = document.getElementById('mmAction_remote').checked;
             config.MaintenanceModeAction = (mmAccounts && mmRemote) ? 'both'
+                                         : mmAccounts               ? 'disable_accounts'
                                          : mmRemote                 ? 'disable_remote'
-                                         :                            'disable_accounts';
+                                         :                            'none';
             const mmUsersMode = (document.querySelector('input[name="maintenanceModeUsers"]:checked') || {}).value || 'all';
             if (mmUsersMode === 'all') {
                 config.MaintenanceModeAffectedUsers = 'all';
@@ -4893,6 +4990,8 @@
             config.ShowDownloadsInRequests = document.querySelector('#showDownloadsInRequests').checked;
             config.DownloadsFilterByUserRequests = document.querySelector('#downloadsFilterByUserRequests').checked;
             config.DownloadsPageShowIssues = document.querySelector('#downloadsPageShowIssues').checked;
+            config.DownloadsShowHistory = document.querySelector('#downloadsShowHistory').checked;
+            config.DownloadsHistoryAdminOnly = document.querySelector('#downloadsHistoryAdminOnly').checked;
             config.DownloadsUsePluginPages = document.querySelector('#downloadsUsePluginPages').checked;
             config.DownloadsPagePollingEnabled = document.querySelector('#downloadsPagePollingEnabled').checked;
             const pollInterval = parseInt(document.querySelector('#downloadsPollIntervalSeconds').value, 10);
@@ -4916,6 +5015,14 @@
             config.CalendarFilterByLibraryAccess = document.querySelector('#calendarFilterByLibraryAccess').checked;
             config.CalendarShowOnlyRequested = document.querySelector('#calendarShowOnlyRequested').checked;
             config.CalendarForceOnlyRequested = document.querySelector('#calendarForceOnlyRequested').checked;
+
+            // Recommendations Page settings
+            config.RecommendationsPageEnabled = document.querySelector('#recommendationsPageEnabled').checked;
+            config.RecommendationsUseNativeTab = document.querySelector('#recommendationsUseNativeTab').checked;
+            config.RecommendationsUsePluginPages = document.querySelector('#recommendationsUsePluginPages').checked;
+            config.RecommendationsUseCustomTabs = document.querySelector('#recommendationsUseCustomTabs').checked;
+            var __rAutoSave = document.querySelector('#recommendationsAutoCreateCustomTab');
+            config.RecommendationsAutoCreateCustomTab = !!(__rAutoSave && __rAutoSave.checked);
 
             // Hidden Content settings
             config.HiddenContentEnabled = document.querySelector('#hiddenContentEnabled').checked;
@@ -5848,10 +5955,12 @@
             { id: 'hiddenContentUsePluginPages',   checkFn: function() { return hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
             { id: 'downloadsUsePluginPages',       checkFn: function() { return hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
             { id: 'calendarUsePluginPages',        checkFn: function() { return hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
+            { id: 'recommendationsUsePluginPages', checkFn: function() { return hasPluginPages !== false; }, hint: 'Install Plugin Pages plugin to enable', icon: 'extension' },
             { id: 'bookmarksUseCustomTabs',        checkFn: function() { return hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
             { id: 'hiddenContentUseCustomTabs',    checkFn: function() { return hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
             { id: 'downloadsUseCustomTabs',        checkFn: function() { return hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
-            { id: 'calendarUseCustomTabs',         checkFn: function() { return hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' }
+            { id: 'calendarUseCustomTabs',         checkFn: function() { return hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' },
+            { id: 'recommendationsUseCustomTabs',  checkFn: function() { return hasCustomTabs !== false; }, hint: 'Install Custom Tabs plugin to enable', icon: 'extension' }
         ];
 
         /**
@@ -6037,13 +6146,15 @@
             { parent: 'jellyseerrShowSearchResults', label: 'Show Seerr Results in Search', children: ['showCollectionsInSearch'] },
             { parent: 'jellyseerrShowReportButton', label: 'Show Report Issue button', children: ['jellyseerrShowIssueIndicator'] },
             { parent: 'jellyseerrShowDetailPageLink', label: 'Show Seerr link on item detail pages', children: ['jellyseerrShowDetailPageLinkAsText'] },
-            { parent: 'downloadsPageEnabled', label: 'Enable Requests Page', children: ['showDownloadsInRequests', 'downloadsPageShowIssues', 'downloadsUsePluginPages', 'downloadsUseNativeTab', 'downloadsUseCustomTabs', 'downloadsPagePollingEnabled'] },
+            { parent: 'downloadsPageEnabled', label: 'Enable Requests Page', children: ['showDownloadsInRequests', 'downloadsPageShowIssues', 'downloadsShowHistory', 'downloadsUsePluginPages', 'downloadsUseNativeTab', 'downloadsUseCustomTabs', 'downloadsPagePollingEnabled'] },
             { parent: 'showDownloadsInRequests', label: 'Show Downloads in Requests Page', children: ['downloadsFilterByUserRequests'] },
+            { parent: 'downloadsShowHistory', label: 'Show Download History Section', children: ['downloadsHistoryAdminOnly'] },
             { parent: 'downloadsPagePollingEnabled', label: 'Enable Auto-Refresh', children: ['downloadsPollIntervalSeconds'] },
             { parent: 'arrLinksEnabled', label: 'Enable *arr Links', children: ['showArrLinksAsText', 'arrLinksShowStatusSingle'] },
             { parent: 'arrTagsSyncEnabled', label: 'Enable *arr Tags Sync', children: ['arrTagsPrefix', 'arrTagsClearOldTags', 'arrTagsShowAsLinks', 'arrTagsSyncFilter'] },
             { parent: 'arrTagsShowAsLinks', label: 'Show synced tags as links', children: ['arrTagsLinksFilter', 'arrTagsLinksHideFilter'] },
             { parent: 'calendarPageEnabled', label: 'Enable Calendar Page', children: ['calendarUsePluginPages', 'calendarUseNativeTab', 'calendarUseCustomTabs', 'calendarFirstDayOfWeek', 'calendarTimeFormat', 'calendarHighlightFavorites', 'calendarHighlightWatchedSeries', 'calendarFilterByLibraryAccess', 'calendarShowOnlyRequested', 'calendarForceOnlyRequested'] },
+            { parent: 'recommendationsPageEnabled', label: 'Enable Recommendations Page', children: ['recommendationsUseNativeTab', 'recommendationsUsePluginPages', 'recommendationsUseCustomTabs', 'recommendationsAutoCreateCustomTab'] },
             { parent: 'autoMovieRequestEnabled', label: 'Enable Automatic Movie Requests', children: ['autoMovieRequestTriggerOnStart', 'autoMovieRequestTriggerOnMinutesWatched', 'autoMovieRequestMinutesWatched', 'autoMovieRequestCheckReleaseDate', 'autoMovieRequestQualityMode', 'autoMovieRequestFallbackOn4k'] },
             { parent: 'autoSeasonRequestEnabled', label: 'Enable Automatic Season Requests', children: ['autoSeasonRequestRequireAllWatched', 'autoSeasonRequestThresholdValue'] },
             { parent: 'preventWatchlistReAddition', label: 'Prevent re-adding removed items', children: ['watchlistMemoryRetentionDays'] },

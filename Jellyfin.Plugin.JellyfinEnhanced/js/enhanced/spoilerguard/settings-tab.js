@@ -34,8 +34,8 @@
             </div>` : '';
 
         return `
-            <details style="margin-bottom:16px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:${ctx.detailsBackground};">
-                <summary style="padding:16px;font-weight:600;color:${ctx.primaryAccentColor};cursor:pointer;user-select:none;font-family:inherit;">${JE.icon(JE.IconName.BLUR_ON)} ${escape(JE.t('panel_settings_spoiler_guard'))}</summary>
+            <section class="je-pane" data-pane="spoiler-guard">
+                <h3 class="je-pane-title">${JE.icon(JE.IconName.BLUR_ON)} ${escape(JE.t('panel_settings_spoiler_guard'))}</h3>
                 <div style="padding:0 16px 16px 16px;">
                     <div style="font-weight:500;font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:8px;padding-left:4px;">${escape(JE.t('panel_settings_spoiler_guard_overrides_section'))}</div>
                     ${row('sbPrefHideSeriesOverview', 'HideSeriesDescriptions', 'panel_settings_spoiler_guard_override_series_overview', 'panel_settings_spoiler_guard_override_series_overview_desc', adminOn.seriesOverview)}
@@ -55,7 +55,7 @@
                         </label>
                     </div>
                 </div>
-            </details>`;
+            </section>`;
     };
 
     internal.wireSettings = function(ctx) {

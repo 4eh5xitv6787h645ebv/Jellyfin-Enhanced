@@ -17,6 +17,7 @@
   const resolveRequestStatus = P.resolveRequestStatus;
   const getIssueMediaType = P.getIssueMediaType;
   const getIssueTmdbId = P.getIssueTmdbId;
+  const translateStatus = P.translateStatus;
 
   const escapeHtml = JE.escapeHtml;
 
@@ -58,7 +59,7 @@
             ${item.subtitle ? `<div class="je-download-subtitle" title="${item.subtitle}">${item.subtitle}</div>` : ""}
             <div class="je-download-meta">
                 <span class="je-download-badge je-arr-badge" title="${sourceLabel}"><img src="${sourceIcon}" alt="${sourceLabel}" loading="lazy"></span>
-              <span class="je-download-badge" style="background: ${statusColor}">${item.status}</span>
+              <span class="je-download-badge" style="background: ${statusColor}">${escapeHtml(translateStatus(item.status))}</span>
             </div>
           </div>
         </div>
@@ -258,6 +259,57 @@
   }
 
   /**
+   * Render a history card (a recently imported or failed-to-import ARR event)
+   */
+  function renderHistoryCard(item) {
+    const sourceIcon = item.source === "Sonarr" ? SONARR_ICON_URL : RADARR_ICON_URL;
+    const sourceLabel = escapeHtml(item.instanceName || item.source);
+    const isPartial = item.eventType === "partial";
+    const isImported = item.eventType === "imported";
+    const statusLabel = isPartial
+      ? (JE.t?.("downloads_history_partial") || "Partially Imported")
+      : isImported
+        ? (JE.t?.("downloads_history_imported") || "Imported")
+        : (JE.t?.("downloads_history_failed") || "Import Failed");
+    const statusClass = isPartial ? "je-chip-partial" : (isImported ? "je-chip-available" : "je-chip-declined");
+
+    const episodeSummary = item.episodeCount
+      ? (JE.t?.("downloads_history_partial_summary") || "{imported}/{total} episodes imported")
+          .replace("{imported}", item.importedCount ?? 0)
+          .replace("{total}", item.episodeCount)
+      : null;
+
+    const posterHtml = item.posterUrl
+      ? `<img class="je-request-poster" src="${escapeHtml(item.posterUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+      : `<div class="je-request-poster placeholder"></div>`;
+
+    return `
+      <div class="je-request-card">
+        ${posterHtml}
+        <div class="je-request-info">
+          <div class="je-request-header">
+            <div>
+              <div class="je-request-title-row">
+                <div class="je-request-title">${escapeHtml(item.title || JE.t?.("requests_unknown") || "Unknown")}</div>
+                ${item.subtitle ? `<span class="je-request-year">${escapeHtml(item.subtitle)}</span>` : ""}
+              </div>
+              <span class="je-requests-status-chip ${statusClass}">${escapeHtml(statusLabel)}</span>
+              ${episodeSummary ? `<span class="je-download-subtitle">${escapeHtml(episodeSummary)}</span>` : ""}
+            </div>
+          </div>
+          <div class="je-request-meta">
+            <div class="je-request-meta-left">
+              <span class="je-download-badge je-arr-badge" title="${sourceLabel}"><img src="${sourceIcon}" alt="${sourceLabel}" loading="lazy"></span>
+              <span>${escapeHtml(sourceLabel)}</span>
+              ${item.date ? `<span>&#8226;</span><span>${escapeHtml(formatRelativeDate(item.date))}</span>` : ""}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Render a season pack card (collapsed view of multiple episodes)
    */
   function renderSeasonPackCard(group) {
@@ -308,7 +360,7 @@
             <div class="je-download-subtitle">${JE.t?.("requests_season") || "Season"} ${item.seasonNumber} (${group.episodeCount} ${JE.t?.("requests_episodes") || "episodes"})</div>
             <div class="je-download-meta">
               <span class="je-download-badge je-arr-badge" title="Sonarr"><img src="${SONARR_ICON_URL}" alt="Sonarr" loading="lazy"></span>
-              <span class="je-download-badge" style="background: ${statusColor}">${item.status}</span>
+              <span class="je-download-badge" style="background: ${statusColor}">${escapeHtml(translateStatus(item.status))}</span>
               <span class="je-download-badge" style="background: rgba(128,128,128,0.4)">${group.episodeRange}</span>
             </div>
           </div>
@@ -321,5 +373,6 @@
   P.renderDownloadCard = renderDownloadCard;
   P.renderRequestCard = renderRequestCard;
   P.renderIssueCard = renderIssueCard;
+  P.renderHistoryCard = renderHistoryCard;
   P.renderSeasonPackCard = renderSeasonPackCard;
 })();

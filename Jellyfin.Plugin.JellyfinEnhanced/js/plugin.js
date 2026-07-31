@@ -729,6 +729,14 @@
                 'jellyseerr/discovery/genre-discovery.js',
                 'jellyseerr/discovery/tag-discovery.js',
                 'jellyseerr/discovery/collection-discovery.js',
+                'jellyseerr/recommendations/recommendations-styles.js',
+                'jellyseerr/recommendations/recommendations-catalog.js',
+                'jellyseerr/recommendations/recommendations-data.js',
+                'jellyseerr/recommendations/recommendations-render.js',
+                'jellyseerr/recommendations/recommendations-page.js',
+                'jellyseerr/recommendations/recommendations-category.js',
+                'jellyseerr/recommendations/recommendations-init.js',
+                'jellyseerr/recommendations/recommendations-custom-tab.js',
 
                 // tags
                 'tags/genretags.js',

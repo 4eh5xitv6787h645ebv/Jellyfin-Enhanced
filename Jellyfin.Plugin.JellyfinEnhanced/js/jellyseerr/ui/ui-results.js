@@ -13,6 +13,12 @@
     const logPrefix = '🪼 Jellyfin Enhanced: Seerr UI:';
     const MediaStatus = JE.seerrStatus.MEDIA;
     const icons = internal.icons; // requires ui-icons.js to be loaded first
+    const addTouchTapListener = JE.core.ui.addTouchTapListener;
+
+    // Only one search-results reposition watcher may be live at a time; a newer
+    // render must cancel the previous one (see renderJellyseerrResults).
+    let pendingRepositionObserver = null;
+    let pendingRepositionTimeout = null;
 
     // Keep card buttons in sync when a request is made from other surfaces (e.g., more info modal)
     function markCardRequested(tmdbId, mediaType, is4k = false) {
@@ -95,7 +101,11 @@
             };
 
             icon.addEventListener('click', handleIconInteraction);
-            icon.addEventListener('touchend', (e) => { e.preventDefault(); handleIconInteraction(); }, { passive: false });
+            // Tap detection (rather than a bare touchend) so a scroll gesture that
+            // happens to start on the icon is not miscounted toward the double-tap
+            // filter toggle; preventDefault() suppresses the synthetic click that
+            // would otherwise double-count the tap via the click listener above.
+            addTouchTapListener(icon, (e) => { e.preventDefault(); handleIconInteraction(); });
             icon.setAttribute('tabindex', '0');
             icon.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -184,8 +194,16 @@
             return;
         }
 
-        const oldSection = searchPage.querySelector('.jellyseerr-section');
-        if(oldSection) oldSection.remove();
+        if (pendingRepositionObserver) {
+            pendingRepositionObserver.disconnect();
+            pendingRepositionObserver = null;
+        }
+        if (pendingRepositionTimeout) {
+            clearTimeout(pendingRepositionTimeout);
+            pendingRepositionTimeout = null;
+        }
+
+        searchPage.querySelectorAll('.jellyseerr-section').forEach(section => section.remove());
 
         const sectionToInject = createJellyseerrSection(results, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound);
 
@@ -242,15 +260,22 @@
         // and reposition once they do
         if (!isAfterPrimary) {
             const observer = new MutationObserver(() => {
+                if (!sectionToInject.isConnected) {
+                    // A newer render call has replaced this section — stop watching.
+                    observer.disconnect();
+                    return;
+                }
                 if (findLastPrimarySection()) {
                     observer.disconnect();
-                    clearTimeout(fallbackTimeout);
+                    clearTimeout(pendingRepositionTimeout);
+                    pendingRepositionObserver = null;
                     positionSection();
                 }
             });
             observer.observe(searchPage, { childList: true, subtree: true });
+            pendingRepositionObserver = observer;
             // Safety timeout — disconnect if primary sections never appear
-            const fallbackTimeout = setTimeout(() => observer.disconnect(), 5000);
+            pendingRepositionTimeout = setTimeout(() => observer.disconnect(), 5000);
         }
     };
 

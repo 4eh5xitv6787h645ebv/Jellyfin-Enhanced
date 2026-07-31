@@ -12,6 +12,7 @@
   const renderPage = P.renderPage;
   const fetchRequests = P.fetchRequests;
   const fetchIssues = P.fetchIssues;
+  const fetchHistory = P.fetchHistory;
 
   /**
    * Filter downloads by status
@@ -81,6 +82,20 @@
     }
   }
 
+  function nextHistoryPage() {
+    if (state.historyPage < state.historyTotalPages) {
+      state.historyPage++;
+      fetchHistory().then(() => renderPage());
+    }
+  }
+
+  function prevHistoryPage() {
+    if (state.historyPage > 1) {
+      state.historyPage--;
+      fetchHistory().then(() => renderPage());
+    }
+  }
+
   P.filterDownloads = filterDownloads;
   P.searchDownloads = searchDownloads;
   P.filterRequests = filterRequests;
@@ -89,4 +104,6 @@
   P.prevPage = prevPage;
   P.nextIssuesPage = nextIssuesPage;
   P.prevIssuesPage = prevIssuesPage;
+  P.nextHistoryPage = nextHistoryPage;
+  P.prevHistoryPage = prevHistoryPage;
 })();
