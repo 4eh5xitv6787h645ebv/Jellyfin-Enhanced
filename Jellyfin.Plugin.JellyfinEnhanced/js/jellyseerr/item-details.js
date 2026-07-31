@@ -5,7 +5,7 @@
 (function(JE) {
     'use strict';
 
-    const logPrefix = '🪼 Jellyfin Enhanced: Jellyseerr Recommendations:';
+    const logPrefix = '🪼 Jellyfin Enhanced: Seerr Item Details:';
     const requestMoreLogPrefix = '🪼 Jellyfin Enhanced: Series Request More:';
 
     // Track processed items to avoid duplicate renders

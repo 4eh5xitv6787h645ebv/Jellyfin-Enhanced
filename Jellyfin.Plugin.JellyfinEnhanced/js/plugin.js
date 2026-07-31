@@ -606,9 +606,11 @@
                 'enhanced/native-tabs.js',
                 'tags/tag-pipeline.js',
                 'enhanced/icons.js',
-                // Spoiler Guard modules. Dependency order is pinned by
-                // scripts/check-architecture.js; index.js publishes the public
-                // JE.spoilerBlur facade only after every implementation piece.
+                // Spoiler Guard modules. Dependency order is maintained by hand —
+                // nothing validates this array, and a module placed before one
+                // whose exports it reads at load time binds `undefined` silently.
+                // index.js publishes the public JE.spoilerBlur facade only after
+                // every implementation piece.
                 'enhanced/spoilerguard/ids.js',
                 'enhanced/spoilerguard/state.js',
                 'enhanced/spoilerguard/image-refresh.js',
