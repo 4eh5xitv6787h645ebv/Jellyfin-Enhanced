@@ -25,18 +25,6 @@
         return JE.core.api.plugin(path, options);
     }
 
-    internal.resetState = function() {
-        enabledSeries.clear();
-        enabledMovies.clear();
-        enabledCollections.clear();
-        enabledPendingTmdb.clear();
-        tmdbToJellyfin.clear();
-        userPrefs = {};
-        loaded = false;
-        loadOk = false;
-        statePromise = null;
-    };
-
     internal.loadState = function() {
         if (statePromise) return statePromise;
         statePromise = request('/spoiler-blur/series')

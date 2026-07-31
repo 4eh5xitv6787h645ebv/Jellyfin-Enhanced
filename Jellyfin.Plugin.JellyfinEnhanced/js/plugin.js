@@ -616,7 +616,6 @@
                 'enhanced/spoilerguard/dialog.js',
                 'enhanced/spoilerguard/identity.js',
                 'enhanced/spoilerguard/styles.js',
-                'enhanced/spoilerguard/suppression.js',
                 'enhanced/spoilerguard/settings-tab.js',
                 'enhanced/spoilerguard/seerr-toggle.js',
                 'enhanced/spoilerguard/detail-button.js',

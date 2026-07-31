@@ -24,8 +24,6 @@
   var useCustomTabs = !!window.JellyfinEnhanced?.pluginConfig?.DownloadsUseCustomTabs;
   var useNativeTab = !!window.JellyfinEnhanced?.pluginConfig?.DownloadsUseNativeTab;
 
-  console.log('🪼 Jellyfin Enhanced: [requests-custom-tab] DownloadsUseCustomTabs=' + useCustomTabs + ', DownloadsUseNativeTab=' + useNativeTab);
-
   if (!useCustomTabs && !useNativeTab) {
     return;
   }

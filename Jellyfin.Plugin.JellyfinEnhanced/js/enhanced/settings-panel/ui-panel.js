@@ -321,19 +321,6 @@
             panelMediaCleanups.push(() => phoneMedia.removeEventListener('change', handlePhoneMediaChange));
         })();
 
-        // Autoscroll when details sections open
-        const allDetails = help.querySelectorAll('details');
-        allDetails.forEach((details, index) => {
-            details.addEventListener('toggle', () => {
-                if (details.open) {
-                    setTimeout(() => {
-                        details.scrollIntoView({ behavior: 'smooth', block: index === 0 ? 'center' : 'nearest' });
-                    }, 150);
-                }
-                resetAutoCloseTimer();
-            });
-        });
-
         // --- Event Handlers for Settings Panel ---
         // '?' is a close shortcut, so it must not fire while the caret sits in the
         // section search box (or any other panel text field) — otherwise typing a
