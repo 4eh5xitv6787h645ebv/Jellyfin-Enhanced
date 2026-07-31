@@ -23,7 +23,7 @@
     pageVisible: false,
     previousPage: null,
     locationSignature: null,
-    locationTimer: null,
+    locationUnsubscribe: null,
   };
 
   /** Re-evaluated each call so it stays correct even when the sidebar renders late. */
@@ -167,26 +167,38 @@
    * Jellyfin's router uses pushState which doesn't fire popstate/hashchange.
    */
   function startLocationWatcher() {
-    if (pageState.locationTimer) return;
+    if (pageState.locationUnsubscribe) return;
     pageState.locationSignature = `${window.location.pathname}${window.location.hash}`;
-    pageState.locationTimer = setInterval(() => {
+    const check = () => {
       const signature = `${window.location.pathname}${window.location.hash}`;
       if (signature !== pageState.locationSignature) {
         pageState.locationSignature = signature;
         handleNavigation();
       }
-    }, LOCATION_WATCH_INTERVAL_MS);
+    };
+    // Both web clients route through createHashRouter -> router.navigate(), i.e.
+    // history.pushState only: in-app navigation fires neither hashchange nor popstate.
+    // JE.core.navigation patches pushState, so onNavigate sees it immediately instead of
+    // up to LOCATION_WATCH_INTERVAL_MS later. The interval remains as a fallback for the
+    // (unexpected) case where core/navigation.js has not loaded.
+    pageState.locationUnsubscribe = JE.helpers?.onNavigate
+      ? JE.helpers.onNavigate(check)
+      : (() => {
+          const t = setInterval(check, LOCATION_WATCH_INTERVAL_MS);
+          return () => clearInterval(t);
+        })();
   }
 
   /**
    * Stops the location polling interval.
    */
   function stopLocationWatcher() {
-    if (pageState.locationTimer) {
-      clearInterval(pageState.locationTimer);
-      pageState.locationTimer = null;
+    if (pageState.locationUnsubscribe) {
+      pageState.locationUnsubscribe();
+      pageState.locationUnsubscribe = null;
     }
   }
+
 
   /**
    * Handles navigation events -- shows or hides the page based on the URL.

@@ -44,26 +44,38 @@
    * Jellyfin's router uses pushState which doesn't fire popstate/hashchange.
    */
   function startLocationWatcher() {
-    if (state.locationTimer) return;
+    if (state.locationUnsubscribe) return;
     state.locationSignature = `${window.location.pathname}${window.location.hash}`;
-    state.locationTimer = setInterval(() => {
+    const check = () => {
       const signature = `${window.location.pathname}${window.location.hash}`;
       if (signature !== state.locationSignature) {
         state.locationSignature = signature;
         handleNavigation();
       }
-    }, LOCATION_WATCH_INTERVAL_MS);
+    };
+    // Both web clients route through createHashRouter -> router.navigate(), i.e.
+    // history.pushState only: in-app navigation fires neither hashchange nor popstate.
+    // JE.core.navigation patches pushState, so onNavigate sees it immediately instead of
+    // up to LOCATION_WATCH_INTERVAL_MS later. The interval remains as a fallback for the
+    // (unexpected) case where core/navigation.js has not loaded.
+    state.locationUnsubscribe = JE.helpers?.onNavigate
+      ? JE.helpers.onNavigate(check)
+      : (() => {
+          const t = setInterval(check, LOCATION_WATCH_INTERVAL_MS);
+          return () => clearInterval(t);
+        })();
   }
 
   /**
    * Stops the location polling interval.
    */
   function stopLocationWatcher() {
-    if (state.locationTimer) {
-      clearInterval(state.locationTimer);
-      state.locationTimer = null;
+    if (state.locationUnsubscribe) {
+      state.locationUnsubscribe();
+      state.locationUnsubscribe = null;
     }
   }
+
 
   /**
    * Creates or retrieves the hidden-content page container element.

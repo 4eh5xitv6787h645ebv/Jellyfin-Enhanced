@@ -27,7 +27,7 @@
     searchQuery: '',
     scopedOnly: false,
     locationSignature: null,
-    locationTimer: null,
+    locationUnsubscribe: null,
     _customTabContainer: null,
     // Admin cross-user view: an admin can view another user's hidden content
     // read-only via a toolbar dropdown. All of these stay inert/empty for non-admins.

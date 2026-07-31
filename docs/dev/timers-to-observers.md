@@ -142,3 +142,30 @@ so the extra search-string-only firings are harmless.
   Sites needing those must use `JE.core.dom.createObserver` with an attribute filter.
 - Everything here stays **plain JavaScript** — IIFE modules over the `JE` global, JSDoc for
   types, no TypeScript and no build step, consistent with PR #723.
+
+---
+
+### 4. Two 150 ms location pollers replaced with `pushState` events
+
+**Severity:** medium (CPU) / high (the bug in #3 above).
+**Upstream:** yes.
+
+`hidden-content-page-nav.js` and `bookmarks-library-page.js` each ran
+`setInterval(check, 150)` — ~6.7 wakeups/sec — while their page was open, comparing a
+`pathname + hash` signature.
+
+These are copy-paste descendants of the calendar page's pre-migration watcher. Commit
+`3bbc170` ("Use event navigation & prefetched currentUser") introduced `JE.helpers.onNavigate`
+and migrated calendar, requests and arr-links, but it was scoped to `arr/` — these two
+already existed and were simply never revisited. There was no technical blocker.
+
+Verified before migrating that `onNavigate` covers what they need: it keys on
+`window.location.href`, a strict superset of `pathname + hash`. It fires additionally on
+search-string-only changes, which is harmless because both `handleNavigation` bodies are
+idempotent (`showPage`/`hidePage` early-return on `pageVisible`). Both `showPage()`
+implementations also set `pageVisible = true` *before* their own `pushState`, so the
+re-entrant event their own navigation triggers is absorbed.
+
+**Fix:** both now subscribe to `JE.helpers.onNavigate`, with the interval retained only as a
+fallback for the unexpected case where `core/navigation.js` has not loaded. The
+`locationTimer` state field became `locationUnsubscribe`.
