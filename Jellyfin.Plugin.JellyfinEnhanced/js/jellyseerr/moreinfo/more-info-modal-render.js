@@ -1,4 +1,4 @@
-// /js/jellyseerr/more-info/more-info-modal-render.js
+// /js/jellyseerr/moreinfo/more-info-modal-render.js
 // Static HTML builders for the more-info modal body (header, panels,
 // crew/cast, trailers, keywords, collection card).
 (function(JE) {

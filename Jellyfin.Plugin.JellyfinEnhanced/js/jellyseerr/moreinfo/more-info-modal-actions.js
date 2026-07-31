@@ -1,4 +1,4 @@
-// /js/jellyseerr/more-info/more-info-modal-actions.js
+// /js/jellyseerr/moreinfo/more-info-modal-actions.js
 // Action-area rendering: movie request buttons, requested chips, quota chip
 // and the renderActions orchestrator for the action/chip/download mounts.
 (function(JE) {

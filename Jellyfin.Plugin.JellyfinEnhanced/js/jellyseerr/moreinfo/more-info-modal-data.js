@@ -1,4 +1,4 @@
-// /js/jellyseerr/more-info/more-info-modal-data.js
+// /js/jellyseerr/moreinfo/more-info-modal-data.js
 // Fetch + pure data helpers for the more-info modal (ratings, details,
 // content rating resolution, currency formatting, error reporting).
 (function(JE) {

@@ -1,4 +1,4 @@
-// /js/jellyseerr/more-info/more-info-modal-init.js
+// /js/jellyseerr/moreinfo/more-info-modal-init.js
 // Public surface + orchestration for the Jellyseerr more-info modal:
 // open/close, modal lifecycle, refresh and navigation cleanup.
 (function(JE) {

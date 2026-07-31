@@ -1,4 +1,4 @@
-// /js/jellyseerr/more-info/more-info-modal-seasons.js
+// /js/jellyseerr/moreinfo/more-info-modal-seasons.js
 // Season-level logic: metadata backfill from TMDB, Jellyfin season links,
 // availability chips, unrequested-season detection and the seasons section.
 (function(JE) {

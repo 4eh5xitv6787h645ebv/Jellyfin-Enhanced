@@ -1,4 +1,4 @@
-// /js/jellyseerr/more-info/more-info-modal-badges.js
+// /js/jellyseerr/moreinfo/more-info-modal-badges.js
 // Rating logos, external media-fact links, status chips and download bars.
 (function(JE) {
     'use strict';

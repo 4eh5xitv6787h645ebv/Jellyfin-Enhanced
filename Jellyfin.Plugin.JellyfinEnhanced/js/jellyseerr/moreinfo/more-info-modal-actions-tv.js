@@ -1,4 +1,4 @@
-// /js/jellyseerr/more-info/more-info-modal-actions-tv.js
+// /js/jellyseerr/moreinfo/more-info-modal-actions-tv.js
 // TV request buttons: season request split-button, 4K variants and
 // the "Request More" button.
 (function(JE) {
