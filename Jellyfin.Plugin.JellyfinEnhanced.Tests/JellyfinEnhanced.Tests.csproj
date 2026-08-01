@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Keep the test host on the same ABI as the plugin artifact under test. -->
+    <JellyfinTarget Condition="'$(JellyfinTarget)' == ''">jf12</JellyfinTarget>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <RootNamespace>Jellyfin.Plugin.JellyfinEnhanced.Tests</RootNamespace>
+    <AssemblyName>JellyfinEnhanced.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(JellyfinTarget)' == 'jf12'">
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(JellyfinTarget)' == 'jf10'">
+    <TargetFramework>net9.0</TargetFramework>
+  </PropertyGroup>
+
+  <Target Name="ValidateJellyfinTarget" BeforeTargets="PrepareForBuild">
+    <Error
+      Condition="'$(JellyfinTarget)' != 'jf10' and '$(JellyfinTarget)' != 'jf12'"
+      Text="JellyfinTarget must be either jf10 or jf12." />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference
+      Include="..\Jellyfin.Plugin.JellyfinEnhanced\JellyfinEnhanced.csproj"
+      AdditionalProperties="JellyfinTarget=$(JellyfinTarget)" />
+  </ItemGroup>
+
+</Project>

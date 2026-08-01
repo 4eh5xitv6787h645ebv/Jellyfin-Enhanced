@@ -1721,6 +1721,27 @@
                     </fieldset>
 
                     <fieldset>
+                        <legend class="sectionTitle">Parental Controls</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="seerrRespectParentalRatings" is="emby-checkbox" type="checkbox"/><span>Respect Jellyfin parental controls for Seerr and TMDB results</span></label></div>
+                            <div class="je-setting-description" data-desc-for="seerrRespectParentalRatings">
+                                <div class="fieldDescription je-field-desc-xl">Filters external movie and TV results on the server using each authenticated Jellyfin user's maximum parental rating and unrated-item policy. Blocked detail pages, subresources, and request mutations are denied before their data can be returned or sent to Seerr. Administrators retain Jellyfin's normal bypass.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="seerrRespectBlockedTags" is="emby-checkbox" type="checkbox"/><span>Respect Jellyfin blocked and allowed tags</span></label></div>
+                            <div class="je-setting-description" data-desc-for="seerrRespectBlockedTags">
+                                <div class="fieldDescription je-field-desc-xl">Matches Jellyfin policy tags against TMDB keyword names; blocked tags also match genre names. Blocked tags win, and a configured allowed-tag list remains a strict allow-list.</div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="seerrParentalRatingCacheTtlMinutes">Parental metadata cache TTL (min)</label>
+                                <input id="seerrParentalRatingCacheTtlMinutes" is="emby-input" type="number" min="1" max="10080" value="1440"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="seerrParentalRatingCacheTtlMinutes">
+                                <div class="fieldDescription">How long title certifications, keywords, and genres are cached. The cache is bounded and is invalidated immediately whenever plugin configuration changes. Default: 1440 minutes.</div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
                         <legend class="sectionTitle">Debug</legend>
                         <div class="configSection">
                             <div class="checkboxContainer"><label><input id="jellyseerrDisableCache" is="emby-checkbox" type="checkbox"/><span>Disable server-side response cache</span></label></div>
@@ -4511,6 +4532,9 @@
                 document.querySelector('#jellyseerrDisableCache').checked = !!config.JellyseerrDisableCache;
                 document.querySelector('#jellyseerrResponseCacheTtlMinutes').value = config.JellyseerrResponseCacheTtlMinutes || 10;
                 document.querySelector('#jellyseerrUserIdCacheTtlMinutes').value = config.JellyseerrUserIdCacheTtlMinutes || 30;
+                document.querySelector('#seerrRespectParentalRatings').checked = config.SeerrRespectParentalRatings !== false;
+                document.querySelector('#seerrRespectBlockedTags').checked = config.SeerrRespectBlockedTags !== false;
+                document.querySelector('#seerrParentalRatingCacheTtlMinutes').value = config.SeerrParentalRatingCacheTtlMinutes || 1440;
                 document.querySelector('#showElsewhereOnJellyseerr').checked = config.ShowElsewhereOnJellyseerr;
                 document.querySelector('#jellyseerrUrls').value = config.JellyseerrUrls;
                 document.querySelector('#JellyseerrApiKey').value = config.JellyseerrApiKey;
@@ -4850,6 +4874,9 @@
             config.JellyseerrDisableCache = document.querySelector('#jellyseerrDisableCache').checked;
             config.JellyseerrResponseCacheTtlMinutes = parseInt(document.querySelector('#jellyseerrResponseCacheTtlMinutes').value, 10) || 10;
             config.JellyseerrUserIdCacheTtlMinutes = parseInt(document.querySelector('#jellyseerrUserIdCacheTtlMinutes').value, 10) || 30;
+            config.SeerrRespectParentalRatings = document.querySelector('#seerrRespectParentalRatings').checked;
+            config.SeerrRespectBlockedTags = document.querySelector('#seerrRespectBlockedTags').checked;
+            config.SeerrParentalRatingCacheTtlMinutes = Math.min(10080, Math.max(1, parseInt(document.querySelector('#seerrParentalRatingCacheTtlMinutes').value, 10) || 1440));
             config.JellyseerrShowNetworkDiscovery = document.querySelector('#jellyseerrShowNetworkDiscovery').checked;
             config.JellyseerrShowGenreDiscovery = document.querySelector('#jellyseerrShowGenreDiscovery').checked;
             config.JellyseerrShowTagDiscovery = document.querySelector('#jellyseerrShowTagDiscovery').checked;
