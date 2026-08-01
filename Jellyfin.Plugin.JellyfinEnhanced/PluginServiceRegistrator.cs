@@ -2,6 +2,7 @@ using System.Net.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
@@ -47,6 +48,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();
             serviceCollection.AddSingleton<AutoMovieRequestService>();
             serviceCollection.AddSingleton<AutoMovieRequestMonitor>();
+            serviceCollection.AddSingleton<ISeerrParentalFilter, SeerrParentalFilter>();
             serviceCollection.AddSingleton<WatchlistMonitor>();
             serviceCollection.AddSingleton<SeerrScanTriggerService>();
             serviceCollection.AddSingleton<TagCacheService>();

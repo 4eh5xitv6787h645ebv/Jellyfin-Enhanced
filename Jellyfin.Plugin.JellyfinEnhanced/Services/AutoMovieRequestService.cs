@@ -6,11 +6,13 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
+using Jellyfin.Data;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Querying;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
@@ -20,6 +22,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly Logger _logger;
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
+        private readonly ISeerrParentalFilter _seerrParentalFilter;
 
         // Track which movies have already been requested to avoid duplicates (with timestamps for expiry)
         private readonly Dictionary<string, Dictionary<string, DateTime>> _requestedMovies = new();
@@ -31,12 +34,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             IHttpClientFactory httpClientFactory,
             Logger logger,
             IUserManager userManager,
-            ILibraryManager libraryManager)
+            ILibraryManager libraryManager,
+            ISeerrParentalFilter seerrParentalFilter)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _userManager = userManager;
             _libraryManager = libraryManager;
+            _seerrParentalFilter = seerrParentalFilter;
         }
 
         private static string[] GetConfiguredUrls(string? urls)
@@ -539,6 +544,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return false;
             }
 
+            if (!int.TryParse(tmdbId, out var numericTmdbId) || numericTmdbId <= 0)
+            {
+                _logger.Warning("[Auto-Movie-Request] Refusing request with an invalid TMDB ID.");
+                return false;
+            }
+
+            var jellyfinUser = Guid.TryParse(jellyfinUserId, out var userId)
+                ? _userManager.GetUserById(userId)
+                : null;
+            var isAdmin = jellyfinUser != null
+                && jellyfinUser.HasPermission(Jellyfin.Database.Implementations.Enums.PermissionKind.IsAdministrator);
+            if (await _seerrParentalFilter.IsBlockedAsync(
+                    "movie",
+                    numericTmdbId,
+                    new SeerrCaller(jellyfinUserId, isAdmin)).ConfigureAwait(false))
+            {
+                _logger.Warning($"[Auto-Movie-Request] Parental controls blocked movie TMDB {numericTmdbId} for the requesting Jellyfin user.");
+                return false;
+            }
+
             // Get Jellyseerr user ID
             var jellyseerrUserId = await GetJellyseerrUserId(jellyfinUserId);
             if (string.IsNullOrEmpty(jellyseerrUserId))
@@ -559,7 +584,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     var requestBody = new Dictionary<string, object>
                     {
                         { "mediaType", "movie" },
-                        { "mediaId", int.Parse(tmdbId) }
+                        { "mediaId", numericTmdbId }
                     };
 
                     if (qualitySettings != null)

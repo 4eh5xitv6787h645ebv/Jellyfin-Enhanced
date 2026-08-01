@@ -157,6 +157,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             JellyseerrDisableCache = false;
             JellyseerrResponseCacheTtlMinutes = 10;
             JellyseerrUserIdCacheTtlMinutes = 30;
+            SeerrRespectParentalRatings = true;
+            SeerrRespectBlockedTags = true;
+            SeerrParentalRatingCacheTtlMinutes = 1440;
             TriggerSeerrScanOnItemAdded = false;
             SeerrScanDebounceSeconds = 60;
 
@@ -473,6 +476,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool JellyseerrDisableCache { get; set; }
         public int JellyseerrResponseCacheTtlMinutes { get; set; }
         public int JellyseerrUserIdCacheTtlMinutes { get; set; }
+        public bool SeerrRespectParentalRatings { get; set; }
+        public bool SeerrRespectBlockedTags { get; set; }
+        public int SeerrParentalRatingCacheTtlMinutes { get; set; }
 
         // Arr Links Settings
         public bool ArrLinksEnabled { get; set; }

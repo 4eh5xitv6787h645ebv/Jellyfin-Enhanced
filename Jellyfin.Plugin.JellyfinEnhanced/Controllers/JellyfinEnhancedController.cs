@@ -33,6 +33,7 @@ using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -57,6 +58,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly Services.MaintenanceModeService _maintenanceModeService;
         private readonly Services.CdnAssetService _cdnAssetService;
         private readonly Services.SpoilerUserResolver _spoilerResolver;
+        private readonly ISeerrParentalFilter _seerrParentalFilter;
+        private static ISeerrParentalFilter? _seerrParentalFilterForInvalidation;
 
         // Server-side cache for proxied avatar images to avoid re-fetching from
         // upstream Seerr on every request. Entries expire after 1 hour.
@@ -169,7 +172,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             MediaBrowser.Controller.Session.ISessionManager sessionManager,
             Services.MaintenanceModeService maintenanceModeService,
             Services.CdnAssetService cdnAssetService,
-            Services.SpoilerUserResolver spoilerResolver)
+            Services.SpoilerUserResolver spoilerResolver,
+            ISeerrParentalFilter seerrParentalFilter)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -185,6 +189,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _maintenanceModeService = maintenanceModeService;
             _cdnAssetService = cdnAssetService;
             _spoilerResolver = spoilerResolver;
+            _seerrParentalFilter = seerrParentalFilter;
+            _seerrParentalFilterForInvalidation = seerrParentalFilter;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId, bool bypassCache = false, bool allowAutoImport = true)
@@ -454,6 +460,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // queue/history caches rather than waiting out their TTL.
             lock (_arrQueueCacheLock) { _arrQueueCache = null; }
             lock (_arrHistoryCacheLock) { _arrHistoryCache = null; }
+            // The metadata cache is title-neutral but bound to the complete
+            // upstream/configuration generation. A save bumps that generation
+            // and clears in-flight/cache state before any later response uses it.
+            _seerrParentalFilterForInvalidation?.InvalidateConfiguration();
         }
 
         private async Task<string?> GetJellyseerrUserId(string jellyfinUserId)
@@ -556,7 +566,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // per-user to be safe; only the truly content-only TMDB sliders
             // and direct genre/keyword/person lookups are shared.
             if (apiPath.StartsWith("/api/v1/genres/", StringComparison.OrdinalIgnoreCase)) return true;
-            if (apiPath.StartsWith("/api/v1/person/", StringComparison.OrdinalIgnoreCase)) return true;
+            // Bare person detail is user-neutral. Combined credits contains title
+            // rows and user-local media state, so it must remain per-user.
+            if (apiPath.StartsWith("/api/v1/person/", StringComparison.OrdinalIgnoreCase)
+                && !apiPath.Contains("/combined_credits", StringComparison.OrdinalIgnoreCase)) return true;
             if (apiPath.StartsWith("/api/v1/keyword", StringComparison.OrdinalIgnoreCase)) return true;
             // For discover/movies?genre=X and discover/tv?genre=X paths
             // (query-string discovery), the response includes mediaInfo
@@ -615,6 +628,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 _logger.Warning("Could not resolve Jellyfin user ID from the authenticated principal.");
                 return Forbid();
             }
+
+            // Caller identity and administrator status are derived exclusively
+            // from the authenticated Jellyfin principal and server-side user DB.
+            var parentalCaller = new SeerrCaller(jellyfinUserId, IsAdminUser());
 
             // resolve the Seerr user ONCE up-front and reuse for
             // both ID-extraction and the non-admin permission check below.
@@ -728,6 +745,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
+            if (method == HttpMethod.Post
+                && string.Equals(apiPath, "/api/v1/request", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!SeerrRequestMediaParser.TryParse(content, out var requestMedia))
+                {
+                    return BadRequest(new
+                    {
+                        error = true,
+                        code = "invalid_request_title",
+                        message = "Request body must contain exactly one movie or tv mediaType and one positive integer mediaId."
+                    });
+                }
+
+                if (await _seerrParentalFilter.IsBlockedAsync(requestMedia.MediaType, requestMedia.TmdbId, parentalCaller).ConfigureAwait(false))
+                {
+                    _logger.Warning($"Parental controls blocked a Seerr {requestMedia.MediaType} request for TMDB {requestMedia.TmdbId} by user {ResolveUserDisplay(jellyfinUserId)}.");
+                    return StatusCode(403);
+                }
+            }
+
             // Check server-side response cache for cacheable endpoints.
             // bifurcate cache key. Public discovery
             // endpoints return identical content for all users, so include the
@@ -741,13 +778,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 : $"{jellyfinUserId}:{apiPath}";
             if (isCacheable)
             {
+                string? cachedBody = null;
                 lock (_responseCacheLock)
                 {
                     if (_responseCache.TryGetValue(cacheKey, out var cached) &&
                         DateTime.UtcNow - cached.CachedAt < GetResponseCacheTtl())
                     {
-                        return Content(cached.Content, "application/json");
+                        cachedBody = cached.Content;
                     }
+                }
+
+                if (cachedBody != null)
+                {
+                    return await ApplySeerrParentalFilterAsync(cachedBody, apiPath, parentalCaller).ConfigureAwait(false);
                 }
             }
 
@@ -828,7 +871,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         {
                             EvictMovieTvCacheForRequest(content);
                         }
-                        return Content(json, "application/json");
+                        return await ApplySeerrParentalFilterAsync(json, apiPath, parentalCaller).ConfigureAwait(false);
                     }
 
                     _logger.Warning($"Seerr request failed for user {ResolveUserDisplay(jellyfinUserId)} at {trimmedUrl}: code={error!.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
@@ -864,6 +907,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             return StatusCode(lastStatusCode, lastErrorBody);
+        }
+
+        private async Task<IActionResult> ApplySeerrParentalFilterAsync(string json, string apiPath, SeerrCaller caller)
+        {
+            var filtered = await _seerrParentalFilter.ApplyAsync(json, apiPath, caller).ConfigureAwait(false);
+            if (!filtered.Succeeded)
+            {
+                _logger.Warning($"Seerr parental filtering could not authoritatively evaluate {apiPath}; failing closed.");
+                return StatusCode(503);
+            }
+
+            return filtered.Block
+                ? StatusCode(403)
+                : Content(filtered.Body, "application/json");
         }
 
         [HttpGet("jellyseerr/status")]
@@ -3020,14 +3077,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(503, "TMDB API key is not configured.");
             }
 
-            var httpClient = _httpClientFactory.CreateClient();
+            var jellyfinUserId = UserHelper.GetCurrentUserId(User)?.ToString();
+            if (string.IsNullOrEmpty(jellyfinUserId))
+            {
+                return StatusCode(403);
+            }
+
+            // Include the complete query string in classification. In particular,
+            // append_to_response can turn an otherwise safe detail into a title
+            // list, and encoded parameter names must not bypass that check.
+            var classifiedPath = apiPath + HttpContext.Request.QueryString.Value;
+            var caller = new SeerrCaller(jellyfinUserId, IsAdminUser());
+            if (await _seerrParentalFilter.IsTmdbProxyPathBlockedAsync(classifiedPath, caller).ConfigureAwait(false))
+            {
+                _logger.Warning($"TMDB parental gate denied path {apiPath} for user {ResolveUserDisplay(jellyfinUserId)}.");
+                return StatusCode(403);
+            }
+
+            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            httpClient.Timeout = TimeSpan.FromSeconds(15);
             var queryString = HttpContext.Request.QueryString;
             var separator = queryString.HasValue ? "&" : "?";
-            var requestUri = $"https://api.themoviedb.org/3/{apiPath}{queryString}{separator}api_key={config.TMDB_API_KEY}";
+            var requestUri = $"https://api.themoviedb.org/3/{apiPath}{queryString}{separator}api_key={Uri.EscapeDataString(config.TMDB_API_KEY)}";
 
             try
             {
-                var response = await httpClient.GetAsync(requestUri);
+                using var response = await httpClient.GetAsync(requestUri);
                 var content = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -8170,6 +8245,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     });
                 }
 
+                // This request-page path bypasses the generic Seerr proxy. Apply
+                // the same server-side filter before parsing or launching title
+                // enrichment so removed rows cannot leak through enrichment work.
+                var requestCaller = new SeerrCaller(jellyfinUserId, IsAdminUser());
+                var parentalResult = await _seerrParentalFilter.ApplyAsync(
+                    json!,
+                    "/api/v1/request",
+                    requestCaller).ConfigureAwait(false);
+                if (!parentalResult.Succeeded)
+                {
+                    return StatusCode(503, new
+                    {
+                        error = true,
+                        code = "parental_filter_unavailable",
+                        message = "Request results could not be evaluated safely.",
+                        requests = new List<object>(),
+                        totalPages = 0,
+                        totalResults = 0
+                    });
+                }
+                if (parentalResult.Block)
+                {
+                    return StatusCode(403);
+                }
+                json = parentalResult.Body;
+
                 var data = JObject.Parse(json!);
 
                 var requests = new List<object>();
@@ -8444,8 +8545,71 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (string.IsNullOrEmpty(jellyseerrUrl))
                 return StatusCode(503, new { error = true, message = "No valid Seerr URL configured." });
 
-            var requestUri = $"{jellyseerrUrl}/api/v1/request/{requestId}/{action}";
             var client = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            client.Timeout = TimeSpan.FromSeconds(15);
+
+            // Approval grants access to a title and is therefore a protected
+            // mutation. Resolve the request's associated title from the same
+            // Seerr source and gate it before sending the non-idempotent POST.
+            if (action == "approve" && !IsAdminUser())
+            {
+                var detailUri = $"{jellyseerrUrl}/api/v1/request/{requestId}";
+                using var detailRequest = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    HttpMethod.Get, detailUri, config.JellyseerrApiKey, jellyseerrUser.Id.ToString());
+                using var detailResponse = await client.SendAsync(detailRequest);
+                var (detailJson, detailError) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(detailResponse, detailUri);
+                if (detailError != null || string.IsNullOrEmpty(detailJson))
+                {
+                    _logger.Warning($"Could not resolve Seerr request {requestId} before approval; failing closed.");
+                    return StatusCode(502, new { error = true, code = "request_title_unavailable", message = "The request title could not be verified safely." });
+                }
+
+                string? mediaType = null;
+                var tmdbId = 0;
+                try
+                {
+                    using var detailDocument = JsonDocument.Parse(detailJson);
+                    var root = detailDocument.RootElement;
+                    if (root.TryGetProperty("media", out var media) && media.ValueKind == JsonValueKind.Object)
+                    {
+                        if (media.TryGetProperty("mediaType", out var nestedType) && nestedType.ValueKind == JsonValueKind.String)
+                            mediaType = nestedType.GetString();
+                        if (media.TryGetProperty("tmdbId", out var nestedId))
+                        {
+                            if (nestedId.ValueKind == JsonValueKind.Number) nestedId.TryGetInt32(out tmdbId);
+                            else if (nestedId.ValueKind == JsonValueKind.String) int.TryParse(nestedId.GetString(), out tmdbId);
+                        }
+                    }
+                    if (string.IsNullOrEmpty(mediaType)
+                        && root.TryGetProperty("type", out var rootType)
+                        && rootType.ValueKind == JsonValueKind.String)
+                    {
+                        mediaType = rootType.GetString();
+                    }
+                }
+                catch (JsonException)
+                {
+                    // The strict validation immediately below fails closed.
+                }
+
+                var normalizedMediaType = string.Equals(mediaType, "movie", StringComparison.OrdinalIgnoreCase)
+                    ? "movie"
+                    : string.Equals(mediaType, "tv", StringComparison.OrdinalIgnoreCase) ? "tv" : null;
+                if (normalizedMediaType == null || tmdbId <= 0)
+                {
+                    _logger.Warning($"Seerr request {requestId} had no authoritative title identity; approval blocked.");
+                    return StatusCode(403);
+                }
+
+                var approvalCaller = new SeerrCaller(jellyfinUserId, IsAdminUser());
+                if (await _seerrParentalFilter.IsBlockedAsync(normalizedMediaType, tmdbId, approvalCaller).ConfigureAwait(false))
+                {
+                    _logger.Warning($"Parental controls blocked approval of Seerr request {requestId} for user {ResolveUserDisplay(jellyfinUserId)}.");
+                    return StatusCode(403);
+                }
+            }
+
+            var requestUri = $"{jellyseerrUrl}/api/v1/request/{requestId}/{action}";
             using var httpRequest = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
                 HttpMethod.Post, requestUri, config.JellyseerrApiKey, jellyseerrUser.Id.ToString());
             using var response = await client.SendAsync(httpRequest);

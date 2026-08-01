@@ -7,11 +7,13 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
+using Jellyfin.Data;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Querying;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr;
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
     public class AutoSeasonRequestService
@@ -21,6 +23,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
+        private readonly ISeerrParentalFilter _seerrParentalFilter;
 
         // In-memory cache of recently requested seasons to avoid duplicates (keyed by tmdbId_seasonNumber, global across all users)
         private readonly Dictionary<string, DateTime> _requestedSeasons = new();
@@ -36,13 +39,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             Logger logger,
             IUserManager userManager,
             IUserDataManager userDataManager,
-            ILibraryManager libraryManager)
+            ILibraryManager libraryManager,
+            ISeerrParentalFilter seerrParentalFilter)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _userManager = userManager;
             _userDataManager = userDataManager;
             _libraryManager = libraryManager;
+            _seerrParentalFilter = seerrParentalFilter;
         }
 
         private static string[] GetConfiguredUrls(string? urls)
@@ -588,6 +593,26 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 return false;
             }
 
+            if (!int.TryParse(tmdbId, out var numericTmdbId) || numericTmdbId <= 0)
+            {
+                _logger.Warning("[Auto-Season-Request] Refusing request with an invalid TMDB ID.");
+                return false;
+            }
+
+            var jellyfinUser = Guid.TryParse(jellyfinUserId, out var userId)
+                ? _userManager.GetUserById(userId)
+                : null;
+            var isAdmin = jellyfinUser != null
+                && jellyfinUser.HasPermission(Jellyfin.Database.Implementations.Enums.PermissionKind.IsAdministrator);
+            if (await _seerrParentalFilter.IsBlockedAsync(
+                    "tv",
+                    numericTmdbId,
+                    new SeerrCaller(jellyfinUserId, isAdmin)).ConfigureAwait(false))
+            {
+                _logger.Warning($"[Auto-Season-Request] Parental controls blocked series TMDB {numericTmdbId} for the requesting Jellyfin user.");
+                return false;
+            }
+
             // Get Jellyseerr user ID
             var jellyseerrUserId = await GetJellyseerrUserId(jellyfinUserId);
             if (string.IsNullOrEmpty(jellyseerrUserId))
@@ -608,7 +633,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     var requestBody = new
                     {
                         mediaType = "tv",
-                        mediaId = int.Parse(tmdbId),
+                        mediaId = numericTmdbId,
                         seasons = new[] { seasonNumber }
                     };
 
