@@ -26,6 +26,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
     {
         private const int MaximumCacheEntries = 4096;
         private const int MaximumConcurrentFetches = 20;
+        private const int MaximumCacheTtlMinutes = 10080;
         private static readonly TimeSpan OverallBudget = TimeSpan.FromSeconds(12);
         private static readonly TimeSpan PerFetchTimeout = TimeSpan.FromSeconds(8);
 
@@ -102,7 +103,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             internal bool HasTagRules => BlockedTags.Count > 0 || AllowedTags.Count > 0;
 
             internal bool HasRestrictions
-                => MaxScore is not null || BlockUnrated.Count > 0 || HasTagRules;
+                => MaxScore is not null
+                    || BlockUnrated.Contains(UnratedItem.Movie)
+                    || BlockUnrated.Contains(UnratedItem.Series)
+                    || HasTagRules;
         }
 
         private readonly record struct GateContext(
@@ -154,6 +158,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             internal string? ParentMediaType { get; init; }
 
             internal int ParentTmdbId { get; init; }
+
+            internal int ExpectedEntityId { get; init; }
         }
 
         private enum ItemKind
@@ -190,7 +196,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
                     case EndpointCategory.DirectDetail:
                         return EvaluateDirectDetail(json, plan, gate);
                     case EndpointCategory.NestedDetail:
-                        return await EvaluateNestedDetailAsync(json, gate).ConfigureAwait(false);
+                        return await EvaluateNestedDetailAsync(json, plan, gate).ConfigureAwait(false);
                     case EndpointCategory.ParentSubresource:
                         return await IsTitleBlockedAsync(
                             plan.ParentMediaType!,
@@ -246,6 +252,48 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             catch (Exception ex)
             {
                 _logger.Warning($"Seerr parental mutation gate failed for {SafeMediaType(mediaType)}/{tmdbId}: {ex.GetType().Name}. Blocking.");
+                return true;
+            }
+        }
+
+        public async Task<bool> IsSeerrProxyPathBlockedAsync(string seerrApiPath, SeerrCaller caller)
+        {
+            try
+            {
+                var resolution = ResolveGate(caller);
+                if (resolution.Kind == GateResolutionKind.NotApplicable)
+                {
+                    return false;
+                }
+
+                if (resolution.Kind == GateResolutionKind.Failed)
+                {
+                    return true;
+                }
+
+                var plan = ClassifyPath(seerrApiPath);
+                if (plan.Category == EndpointCategory.Deny)
+                {
+                    return true;
+                }
+
+                if (plan.ParentTmdbId <= 0
+                    || string.IsNullOrEmpty(plan.ParentMediaType)
+                    || (plan.Category != EndpointCategory.DirectDetail
+                        && plan.Category != EndpointCategory.ParentSubresource
+                        && plan.Category != EndpointCategory.List))
+                {
+                    return false;
+                }
+
+                return await IsTitleBlockedAsync(
+                    plan.ParentMediaType,
+                    plan.ParentTmdbId,
+                    resolution.Gate).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Seerr parental proxy gate failed for {SafePath(seerrApiPath)}: {ex.GetType().Name}. Blocking.");
                 return true;
             }
         }
@@ -393,7 +441,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             var region = string.IsNullOrWhiteSpace(config.DEFAULT_REGION)
                 ? "US"
                 : config.DEFAULT_REGION.Trim().ToUpperInvariant();
-            var cacheMinutes = Math.Max(1, config.SeerrParentalRatingCacheTtlMinutes);
+            var cacheMinutes = Math.Clamp(
+                config.SeerrParentalRatingCacheTtlMinutes,
+                1,
+                MaximumCacheTtlMinutes);
             var sourceIdentity = Digest(new
             {
                 SeerrEnabled = config.JellyseerrEnabled,
@@ -496,8 +547,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
                 using var document = JsonDocument.Parse(json);
                 var detail = document.RootElement;
                 if (detail.ValueKind != JsonValueKind.Object
-                    || !TryGetPositiveId(detail, "id", out var bodyId)
-                    || bodyId != plan.ParentTmdbId
+                    || !HasSingleExpectedId(detail, plan.ParentTmdbId)
                     || !TryReadAdult(detail, out var adult)
                     || adult == true)
                 {
@@ -525,28 +575,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             }
         }
 
-        private async Task<SeerrParentalResult> EvaluateNestedDetailAsync(string json, GateContext gate)
+        private async Task<SeerrParentalResult> EvaluateNestedDetailAsync(
+            string json,
+            EndpointPlan plan,
+            GateContext gate)
         {
-            JsonNode? parsed;
-            try
-            {
-                parsed = JsonNode.Parse(json);
-            }
-            catch (JsonException)
+            if (!SeerrRequestMediaParser.TryParseNestedDetail(
+                    json,
+                    plan.ExpectedEntityId,
+                    out var media))
             {
                 return new SeerrParentalResult(true, string.Empty);
             }
 
-            if (parsed is not JsonObject root
-                || root["media"] is not JsonObject media
-                || !TryResolveTitleIdentity(media, "tmdbId", null, out var mediaType, out var tmdbId)
-                || !TryReadAdult(media, out var adult)
-                || adult)
-            {
-                return new SeerrParentalResult(true, string.Empty);
-            }
-
-            return await IsTitleBlockedAsync(mediaType, tmdbId, gate).ConfigureAwait(false)
+            return await IsTitleBlockedAsync(media.MediaType, media.TmdbId, gate).ConfigureAwait(false)
                 ? new SeerrParentalResult(true, string.Empty)
                 : new SeerrParentalResult(false, json);
         }
@@ -571,6 +613,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
                 return new SeerrParentalResult(false, string.Empty, Succeeded: false);
             }
 
+            var hasResults = root.ContainsKey("results");
+            var hasMedia = root.ContainsKey("media");
+            if (hasResults == hasMedia)
+            {
+                // A request endpoint is either a list or a single nested-media
+                // detail. Accepting both (or neither) would let malformed JSON
+                // choose whichever branch happened to be evaluated first.
+                return new SeerrParentalResult(false, string.Empty, Succeeded: false);
+            }
+
             if (root["results"] is JsonArray)
             {
                 var filtered = await FilterParsedListAsync(root, plan, gate).ConfigureAwait(false);
@@ -579,17 +631,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
                     : new SeerrParentalResult(false, string.Empty, Succeeded: false);
             }
 
-            if (root["media"] is JsonObject media
-                && TryResolveTitleIdentity(media, "tmdbId", null, out var mediaType, out var tmdbId)
-                && TryReadAdult(media, out var adult)
-                && !adult)
+            if (hasResults)
             {
-                return await IsTitleBlockedAsync(mediaType, tmdbId, gate).ConfigureAwait(false)
+                return new SeerrParentalResult(false, string.Empty, Succeeded: false);
+            }
+
+            if (hasMedia
+                && SeerrRequestMediaParser.TryParseNestedDetail(json, null, out var media))
+            {
+                return await IsTitleBlockedAsync(media.MediaType, media.TmdbId, gate).ConfigureAwait(false)
                     ? new SeerrParentalResult(true, string.Empty)
                     : new SeerrParentalResult(false, json);
             }
 
-            return new SeerrParentalResult(true, string.Empty);
+            return new SeerrParentalResult(false, string.Empty, Succeeded: false);
         }
 
         private async Task<(bool Success, string Body)> FilterListAsync(
@@ -898,8 +953,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             bool requireTags,
             bool captureTags)
         {
-            if (detail.ValueKind != JsonValueKind.Object || !TryReadAdult(detail, out var adult))
+            if (detail.ValueKind != JsonValueKind.Object
+                || !TryReadAdult(detail, out var adult)
+                || !SeerrCertificationExtractor.HasAuthoritativeShape(detail, mediaType))
             {
+                return null;
+            }
+
+            if (string.Equals(mediaType, "movie", StringComparison.OrdinalIgnoreCase)
+                && adult is null)
+            {
+                // Movie mutation/detail decisions must carry TMDB's explicit
+                // adult flag; a certification-only fragment is insufficient.
                 return null;
             }
 
@@ -1013,7 +1078,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             {
                 var fetched = await FetchDetailAsync(mediaType, tmdbId, gate, needTags, timeout.Token)
                     .ConfigureAwait(false);
-                if (fetched.Detail is null || !IsCurrent(gate))
+                if (fetched.Detail is null
+                    || !HasSingleExpectedId(fetched.Detail.Value, tmdbId)
+                    || !IsCurrent(gate))
                 {
                     return null;
                 }
@@ -1132,7 +1199,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
             }
 
             var resource = mediaType == "tv" ? "content_ratings" : "release_dates";
-            var uri = $"https://api.themoviedb.org/3/{mediaType}/{tmdbId.ToString(CultureInfo.InvariantCulture)}/{resource}?api_key={Uri.EscapeDataString(apiKey)}";
+            var append = Uri.EscapeDataString(resource);
+            var uri = $"https://api.themoviedb.org/3/{mediaType}/{tmdbId.ToString(CultureInfo.InvariantCulture)}?api_key={Uri.EscapeDataString(apiKey)}&append_to_response={append}";
             return await FetchTmdbJsonAsync(uri, mediaType, tmdbId, cancellationToken).ConfigureAwait(false);
         }
 
@@ -1352,8 +1420,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
                     };
                 }
 
-                return segments.Length == 4 && TryParsePositiveId(segments[3], out _)
-                    ? new EndpointPlan { Category = EndpointCategory.NestedDetail }
+                return segments.Length == 4 && TryParsePositiveId(segments[3], out var entityId)
+                    ? new EndpointPlan
+                    {
+                        Category = EndpointCategory.NestedDetail,
+                        ExpectedEntityId = entityId,
+                    }
                     : new EndpointPlan { Category = EndpointCategory.Deny };
             }
 
@@ -1437,30 +1509,53 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
 
             if (Eq(segments[2], "discover"))
             {
-                var idField = segments.Length >= 4 && Eq(segments[3], "watchlist")
-                    ? "tmdbId"
-                    : "id";
-                string? hint = null;
-                if (segments.Length >= 4 && Eq(segments[3], "movies"))
+                if (segments.Length == 5
+                    && Eq(segments[3], "genreslider")
+                    && NormalizeMediaType(segments[4]) is not null)
                 {
-                    hint = "movie";
-                }
-                else if (segments.Length >= 4 && Eq(segments[3], "tv"))
-                {
-                    hint = "tv";
-                }
-                else if (segments.Length >= 5 && Eq(segments[3], "genreslider"))
-                {
-                    hint = NormalizeMediaType(segments[4]);
+                    // Seerr returns a top-level array of genre descriptors
+                    // ({id,name,backdrops}), not movie/TV result objects. The
+                    // backdrop strings carry no title identity that this gate
+                    // could classify, and this audited route is ordinary UI
+                    // metadata rather than a generic title passthrough.
+                    return new EndpointPlan { Category = EndpointCategory.None };
                 }
 
-                return new EndpointPlan
+                if (segments.Length == 4 && Eq(segments[3], "watchlist"))
                 {
-                    Category = EndpointCategory.List,
-                    Container = ListContainer.Results,
-                    IdField = idField,
-                    MediaTypeHint = hint,
-                };
+                    return new EndpointPlan
+                    {
+                        Category = EndpointCategory.List,
+                        Container = ListContainer.Results,
+                        IdField = "tmdbId",
+                        RequireTitle = true,
+                    };
+                }
+
+                if (segments.Length == 4 && Eq(segments[3], "trending"))
+                {
+                    return new EndpointPlan
+                    {
+                        Category = EndpointCategory.List,
+                        Container = ListContainer.Results,
+                    };
+                }
+
+                if (segments.Length >= 4
+                    && (Eq(segments[3], "movies") || Eq(segments[3], "tv")))
+                {
+                    return new EndpointPlan
+                    {
+                        Category = EndpointCategory.List,
+                        Container = ListContainer.Results,
+                        MediaTypeHint = Eq(segments[3], "tv") ? "tv" : "movie",
+                        RequireTitle = true,
+                    };
+                }
+
+                // No other discover shape is exposed by Enhanced today. Keep
+                // future/unknown discover paths fail-closed for restricted users.
+                return new EndpointPlan { Category = EndpointCategory.Deny };
             }
 
             return new EndpointPlan { Category = EndpointCategory.None };
@@ -1502,29 +1597,35 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
         private static ItemKind ResolveItemKind(JsonObject item, string? hint)
         {
             var normalizedHint = NormalizeMediaType(hint);
+            var hasCamelType = item.ContainsKey("mediaType");
+            var hasSnakeType = item.ContainsKey("media_type");
+            if (hasCamelType && hasSnakeType)
+            {
+                return ItemKind.Unknown;
+            }
+
+            var hasExplicitType = hasCamelType || hasSnakeType;
+            var raw = hasCamelType
+                ? ReadString(item, "mediaType")
+                : hasSnakeType ? ReadString(item, "media_type") : null;
+            var explicitKind = string.Equals(raw, "movie", StringComparison.OrdinalIgnoreCase)
+                ? ItemKind.Movie
+                : string.Equals(raw, "tv", StringComparison.OrdinalIgnoreCase)
+                    ? ItemKind.Tv
+                    : string.Equals(raw, "person", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(raw, "collection", StringComparison.OrdinalIgnoreCase)
+                            ? ItemKind.NonTitle
+                            : ItemKind.Unknown;
+
             if (normalizedHint is not null)
             {
-                return normalizedHint == "tv" ? ItemKind.Tv : ItemKind.Movie;
+                var hintedKind = normalizedHint == "tv" ? ItemKind.Tv : ItemKind.Movie;
+                return !hasExplicitType || explicitKind == hintedKind
+                    ? hintedKind
+                    : ItemKind.Unknown;
             }
 
-            var raw = ReadString(item, "mediaType") ?? ReadString(item, "media_type");
-            if (string.Equals(raw, "movie", StringComparison.OrdinalIgnoreCase))
-            {
-                return ItemKind.Movie;
-            }
-
-            if (string.Equals(raw, "tv", StringComparison.OrdinalIgnoreCase))
-            {
-                return ItemKind.Tv;
-            }
-
-            if (string.Equals(raw, "person", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(raw, "collection", StringComparison.OrdinalIgnoreCase))
-            {
-                return ItemKind.NonTitle;
-            }
-
-            return ItemKind.Unknown;
+            return explicitKind;
         }
 
         private static bool TryResolveTitleIdentity(
@@ -1604,6 +1705,27 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
 
             return value.ValueKind == JsonValueKind.String
                 && TryParsePositiveId(value.GetString(), out id);
+        }
+
+        private static bool HasSingleExpectedId(JsonElement item, int expectedId)
+        {
+            if (item.ValueKind != JsonValueKind.Object || expectedId <= 0)
+            {
+                return false;
+            }
+
+            var idCount = 0;
+            foreach (var property in item.EnumerateObject())
+            {
+                if (property.NameEquals("id"))
+                {
+                    idCount++;
+                }
+            }
+
+            return idCount == 1
+                && TryGetPositiveId(item, "id", out var actualId)
+                && actualId == expectedId;
         }
 
         private static bool TryParsePositiveId(string? value, out int id)

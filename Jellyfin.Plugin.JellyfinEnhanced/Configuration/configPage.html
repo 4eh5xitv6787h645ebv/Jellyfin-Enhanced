@@ -4876,7 +4876,7 @@
             config.JellyseerrUserIdCacheTtlMinutes = parseInt(document.querySelector('#jellyseerrUserIdCacheTtlMinutes').value, 10) || 30;
             config.SeerrRespectParentalRatings = document.querySelector('#seerrRespectParentalRatings').checked;
             config.SeerrRespectBlockedTags = document.querySelector('#seerrRespectBlockedTags').checked;
-            config.SeerrParentalRatingCacheTtlMinutes = Math.max(1, parseInt(document.querySelector('#seerrParentalRatingCacheTtlMinutes').value, 10) || 1440);
+            config.SeerrParentalRatingCacheTtlMinutes = Math.min(10080, Math.max(1, parseInt(document.querySelector('#seerrParentalRatingCacheTtlMinutes').value, 10) || 1440));
             config.JellyseerrShowNetworkDiscovery = document.querySelector('#jellyseerrShowNetworkDiscovery').checked;
             config.JellyseerrShowGenreDiscovery = document.querySelector('#jellyseerrShowGenreDiscovery').checked;
             config.JellyseerrShowTagDiscovery = document.querySelector('#jellyseerrShowTagDiscovery').checked;

@@ -67,6 +67,8 @@ Optional:
   JE581_ALLOW_MUTATION           1 acknowledges a broken server may forward it
   JE581_REQUEST_PATH             defaults to /JellyfinEnhanced/jellyseerr/request
   JE581_REQUEST_BODY_JSON        defaults to blocked mediaType/mediaId JSON
+  JE581_SEERR_BASE_URL           enables before/after upstream mutation proof
+  JE581_SEERR_API_KEY            required with JE581_SEERR_BASE_URL
 
 --check never sends a network request and never prints token values.`);
 }
@@ -168,6 +170,27 @@ function parseBaseUrl(value, required) {
     return parsed.href.replace(/\/+$/, '');
 }
 
+function parseSeerrBaseUrl(value) {
+    if (value === null) return null;
+
+    let parsed;
+    try {
+        parsed = new URL(value);
+    } catch {
+        throw new Error('JE581_SEERR_BASE_URL must be an absolute HTTP or HTTPS URL.');
+    }
+
+    if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
+        || parsed.username
+        || parsed.password
+        || parsed.search
+        || parsed.hash) {
+        throw new Error('JE581_SEERR_BASE_URL must be an HTTP(S) origin/path without credentials, query, or fragment.');
+    }
+
+    return parsed.href.replace(/\/+$/, '');
+}
+
 function parseTimeout(value) {
     if (value === null) return 30000;
     if (!/^\d+$/.test(value)) throw new Error('JE581_TIMEOUT_MS must be an integer.');
@@ -216,6 +239,12 @@ function readConfiguration(mode, strict) {
     const requestPathValue = requireValue('JE581_REQUEST_PATH', false, missing)
         || '/JellyfinEnhanced/jellyseerr/request';
     const requestBodyValue = requireValue('JE581_REQUEST_BODY_JSON', false, missing);
+    const seerrBaseUrlValue = requireValue('JE581_SEERR_BASE_URL', false, missing);
+    const seerrApiKey = requireValue('JE581_SEERR_API_KEY', false, missing);
+    if ((seerrBaseUrlValue === null) !== (seerrApiKey === null)) {
+        throw new Error('JE581_SEERR_BASE_URL and JE581_SEERR_API_KEY must be supplied together.');
+    }
+    validateToken('JE581_SEERR_API_KEY', seerrApiKey);
 
     let requestBody = null;
     if (requestBodyValue !== null) {
@@ -247,7 +276,9 @@ function readConfiguration(mode, strict) {
         checkBlockedRequest,
         allowMutation,
         requestPath: validatePluginPath('JE581_REQUEST_PATH', requestPathValue, true),
-        requestBody
+        requestBody,
+        seerrBaseUrl: parseSeerrBaseUrl(seerrBaseUrlValue),
+        seerrApiKey
     };
 }
 
@@ -279,6 +310,48 @@ async function requestApi(config, label, token, path, options = {}) {
     } catch (error) {
         const reason = error?.name === 'AbortError' ? 'timed out' : 'network request failed';
         fail(`${label}: ${method} ${path}`, reason);
+        return null;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function readSeerrRequestCount(config, label) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+    try {
+        const response = await fetch(
+            `${config.seerrBaseUrl}/api/v1/request?take=1000&skip=0&filter=all`,
+            {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Api-Key': config.seerrApiKey
+                },
+                redirect: 'manual',
+                signal: controller.signal
+            }
+        );
+        if (!response.ok) {
+            fail(label, `Seerr request snapshot returned HTTP ${response.status}`);
+            return null;
+        }
+
+        const payload = await response.json();
+        if (payload === null || typeof payload !== 'object' || !Array.isArray(payload.results)) {
+            fail(label, 'Seerr request snapshot had an unexpected JSON shape');
+            return null;
+        }
+
+        return payload.results.filter((row) => {
+            const media = row?.media;
+            return media !== null
+                && typeof media === 'object'
+                && normalizeMediaType(media.mediaType) === config.blockedType
+                && readPositiveId(media.tmdbId) === config.blockedId;
+        }).length;
+    } catch (error) {
+        const reason = error?.name === 'AbortError' ? 'timed out' : 'could not be read';
+        fail(label, `Seerr request snapshot ${reason}`);
         return null;
     } finally {
         clearTimeout(timer);
@@ -580,6 +653,10 @@ async function verifyCurrentRestrictions(config) {
             mediaType: config.blockedType,
             mediaId: config.blockedId
         };
+        const canProveOrdering = config.seerrBaseUrl !== null && config.seerrApiKey !== null;
+        const beforeCount = canProveOrdering
+            ? await readSeerrRequestCount(config, 'pre-mutation Seerr request snapshot')
+            : null;
         const requestResponse = await requestApi(
             config,
             'restricted blocked-title request',
@@ -587,7 +664,35 @@ async function verifyCurrentRestrictions(config) {
             config.requestPath,
             { method: 'POST', body }
         );
-        expectStatus(requestResponse, 403, 'restricted blocked-title request is rejected before Seerr');
+        const rejected = expectStatus(
+            requestResponse,
+            403,
+            'restricted blocked-title request returns 403'
+        );
+
+        if (!canProveOrdering) {
+            skip(
+                'blocked request is rejected before Seerr mutation',
+                'set JE581_SEERR_BASE_URL and JE581_SEERR_API_KEY to compare upstream state'
+            );
+        } else if (beforeCount !== null && beforeCount > 0) {
+            skip(
+                'blocked request is rejected before Seerr mutation',
+                'the blocked title already has a Seerr request, so ordering is not observable'
+            );
+        } else if (beforeCount !== null && rejected) {
+            const afterCount = await readSeerrRequestCount(
+                config,
+                'post-mutation Seerr request snapshot'
+            );
+            if (afterCount !== null) {
+                assertCondition(
+                    afterCount === beforeCount,
+                    'blocked request is rejected before Seerr mutation',
+                    `${beforeCount} matching requests before and ${afterCount} after`
+                );
+            }
+        }
     }
 
     skip(

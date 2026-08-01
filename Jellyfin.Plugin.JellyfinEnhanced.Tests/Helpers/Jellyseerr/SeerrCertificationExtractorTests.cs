@@ -114,6 +114,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Helpers.Jellyseerr
             Assert.Null(result.Iso);
         }
 
+        [Theory]
+        [InlineData("{\"releases\":{\"results\":[]}}", "movie", true)]
+        [InlineData("{\"contentRatings\":{\"results\":[]}}", "tv", true)]
+        [InlineData("{\"releases\":{\"results\":[{\"iso_3166_1\":\"US\"}]}}", "movie", false)]
+        [InlineData("{\"contentRatings\":{\"results\":[{\"iso_3166_1\":\"US\"}]}}", "tv", false)]
+        [InlineData("{\"release_dates\":{\"results\":[]},\"results\":[]}", "movie", false)]
+        public void AuthoritativeShape_DistinguishesUnratedFromMalformed(
+            string json,
+            string mediaType,
+            bool expected)
+            => Assert.Equal(
+                expected,
+                SeerrCertificationExtractor.HasAuthoritativeShape(Parse(json), mediaType));
+
         [Fact]
         public void SelectedBlankRegion_IsUnratedWithoutCrossRegionSubstitution()
         {

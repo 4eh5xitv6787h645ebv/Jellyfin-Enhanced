@@ -16,6 +16,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Jellyseerr
 
         Task<bool> IsBlockedAsync(string mediaType, int tmdbId, SeerrCaller caller);
 
+        Task<bool> IsSeerrProxyPathBlockedAsync(string seerrApiPath, SeerrCaller caller);
+
         Task<bool> IsTmdbProxyPathBlockedAsync(string tmdbApiPath, SeerrCaller caller);
 
         /// <summary>Starts a fresh configuration generation and discards cached metadata.</summary>

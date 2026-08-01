@@ -765,6 +765,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
+            // Gate title-addressed routes before the client request is sent to
+            // Seerr. Besides avoiding a restricted request altogether, this
+            // keeps the result fail-closed when the requested subresource is
+            // temporarily failing upstream: the parent metadata lookup still
+            // yields the authoritative 403 decision.
+            if (await _seerrParentalFilter.IsSeerrProxyPathBlockedAsync(apiPath, parentalCaller).ConfigureAwait(false))
+            {
+                var queryIndex = apiPath.IndexOf('?');
+                var safePath = queryIndex >= 0 ? apiPath.Substring(0, queryIndex) : apiPath;
+                _logger.Warning($"Parental controls blocked Seerr path {safePath} for user {ResolveUserDisplay(jellyfinUserId)} before proxying.");
+                return StatusCode(403);
+            }
+
             // Check server-side response cache for cacheable endpoints.
             // bifurcate cache key. Public discovery
             // endpoints return identical content for all users, so include the
@@ -918,9 +931,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(503);
             }
 
-            return filtered.Block
-                ? StatusCode(403)
-                : Content(filtered.Body, "application/json");
+            if (filtered.Block)
+            {
+                var queryIndex = apiPath.IndexOf('?');
+                var safePath = queryIndex >= 0 ? apiPath.Substring(0, queryIndex) : apiPath;
+                _logger.Warning($"Parental controls blocked Seerr path {safePath} for user {ResolveUserDisplay(caller.JellyfinUserId ?? "unknown")}.");
+                return StatusCode(403);
+            }
+
+            return Content(filtered.Body, "application/json");
         }
 
         [HttpGet("jellyseerr/status")]
@@ -8483,13 +8502,23 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     JellyseerrPermission.ADMIN | JellyseerrPermission.MANAGE_REQUESTS
                 );
 
-                return Ok(new
+                var responseBody = new Dictionary<string, object?>
                 {
-                    requests = requests,
-                    totalPages = totalPages,
-                    totalResults = totalResults,
-                    canApproveRequests = canApproveRequests
-                });
+                    ["requests"] = requests,
+                    ["totalPages"] = totalPages,
+                    ["totalResults"] = totalResults,
+                    ["canApproveRequests"] = canApproveRequests,
+                };
+                if (!isComingSoonFilter
+                    && data["jellyfinEnhancedPagination"] is JObject paginationMarker)
+                {
+                    // The parental filter preserves Seerr's totals as upper
+                    // bounds because it only evaluates the current page. Keep
+                    // that contract visible after this endpoint's enrichment.
+                    responseBody["jellyfinEnhancedPagination"] = paginationMarker;
+                }
+
+                return Ok(responseBody);
             }
             catch (Exception ex)
             {
@@ -8564,45 +8593,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     return StatusCode(502, new { error = true, code = "request_title_unavailable", message = "The request title could not be verified safely." });
                 }
 
-                string? mediaType = null;
-                var tmdbId = 0;
-                try
+                if (!SeerrRequestMediaParser.TryParseNestedDetail(
+                        detailJson,
+                        requestId,
+                        out var approvalMedia))
                 {
-                    using var detailDocument = JsonDocument.Parse(detailJson);
-                    var root = detailDocument.RootElement;
-                    if (root.TryGetProperty("media", out var media) && media.ValueKind == JsonValueKind.Object)
-                    {
-                        if (media.TryGetProperty("mediaType", out var nestedType) && nestedType.ValueKind == JsonValueKind.String)
-                            mediaType = nestedType.GetString();
-                        if (media.TryGetProperty("tmdbId", out var nestedId))
-                        {
-                            if (nestedId.ValueKind == JsonValueKind.Number) nestedId.TryGetInt32(out tmdbId);
-                            else if (nestedId.ValueKind == JsonValueKind.String) int.TryParse(nestedId.GetString(), out tmdbId);
-                        }
-                    }
-                    if (string.IsNullOrEmpty(mediaType)
-                        && root.TryGetProperty("type", out var rootType)
-                        && rootType.ValueKind == JsonValueKind.String)
-                    {
-                        mediaType = rootType.GetString();
-                    }
-                }
-                catch (JsonException)
-                {
-                    // The strict validation immediately below fails closed.
-                }
-
-                var normalizedMediaType = string.Equals(mediaType, "movie", StringComparison.OrdinalIgnoreCase)
-                    ? "movie"
-                    : string.Equals(mediaType, "tv", StringComparison.OrdinalIgnoreCase) ? "tv" : null;
-                if (normalizedMediaType == null || tmdbId <= 0)
-                {
-                    _logger.Warning($"Seerr request {requestId} had no authoritative title identity; approval blocked.");
+                    _logger.Warning($"Seerr request {requestId} had a mismatched or ambiguous title identity; approval blocked.");
                     return StatusCode(403);
                 }
 
                 var approvalCaller = new SeerrCaller(jellyfinUserId, IsAdminUser());
-                if (await _seerrParentalFilter.IsBlockedAsync(normalizedMediaType, tmdbId, approvalCaller).ConfigureAwait(false))
+                if (await _seerrParentalFilter.IsBlockedAsync(
+                        approvalMedia.MediaType,
+                        approvalMedia.TmdbId,
+                        approvalCaller).ConfigureAwait(false))
                 {
                     _logger.Warning($"Parental controls blocked approval of Seerr request {requestId} for user {ResolveUserDisplay(jellyfinUserId)}.");
                     return StatusCode(403);

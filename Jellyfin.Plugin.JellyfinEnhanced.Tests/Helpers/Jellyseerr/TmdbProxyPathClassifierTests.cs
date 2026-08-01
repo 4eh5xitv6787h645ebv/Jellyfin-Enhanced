@@ -12,6 +12,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Helpers.Jellyseerr
         [Theory]
         [InlineData("search/keyword")]
         [InlineData("search/keyword?query=space")]
+        [InlineData("search/keyword?query=space%20opera")]
         [InlineData("search/company")]
         [InlineData("genres/movie")]
         [InlineData("genres/tv?language=en")]
@@ -85,6 +86,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Tests.Helpers.Jellyseerr
         [InlineData("movie/550/%2e/videos")]
         [InlineData("search/%2e%2e/movie/550")]
         public void DotSegmentsAreRestricted(string path)
+            => Assert.Equal(TmdbProxyGate.Restricted, TmdbProxyPathClassifier.Classify(path).Gate);
+
+        [Theory]
+        [InlineData("movie/100/%73imilar")]
+        [InlineData("movie/100/%72ecommendations")]
+        [InlineData(@"movie/100/\../similar")]
+        [InlineData(@"movie/100/\..\..\..\search/movie")]
+        public void ResidualPathEncodingOrBackslashesAreRestricted(string path)
             => Assert.Equal(TmdbProxyGate.Restricted, TmdbProxyPathClassifier.Classify(path).Gate);
     }
 }

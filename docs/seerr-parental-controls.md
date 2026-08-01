@@ -49,8 +49,8 @@ crew data are still evaluated.
 
 ## Protected surfaces
 
-The policy is applied to every plugin route that can expose or mutate a Seerr or
-TMDB movie or television title.
+The policy is applied to every plugin route that can expose a Seerr or TMDB
+movie or television title, or create or approve access to one.
 
 | Surface | Behaviour for a restricted caller |
 | --- | --- |
@@ -60,8 +60,10 @@ TMDB movie or television title.
 | Mutations | Validates a movie/TV type and positive TMDB ID before forwarding a request. This includes season requests, request approval, and automatic movie/season requests. A blocked or unverifiable title is not forwarded. Declining a request remains possible because it cannot grant access. |
 
 Seerr account, quota, status, genre metadata, service configuration, user-import,
-and administrator maintenance routes are not title details and are not removed
-by the filter.
+issue creation, and administrator maintenance routes do not create title access
+and are not removed by the mutation gate. Title-bearing issue list and detail
+responses are still filtered, and Seerr's existing issue permissions remain in
+force.
 
 ## Failure and cache behaviour
 
@@ -138,7 +140,10 @@ node tools/verify-seerr-parental-controls.mjs --live
 Set `JE581_CHECK_TMDB=1` to include raw TMDB detail checks. The blocked-request
 POST is deliberately skipped unless both `JE581_CHECK_BLOCKED_REQUEST=1` and
 `JE581_ALLOW_MUTATION=1` are set: if the server is vulnerable, that test could
-reach Seerr and create a real request.
+reach Seerr and create a real request. Set `JE581_SEERR_BASE_URL` and
+`JE581_SEERR_API_KEY` as well to snapshot the isolated Seerr request list before
+and after the POST, proving that the `403` occurred before any upstream
+mutation. The verifier never prints the API key.
 
 To test live policy removal, first run `--live`, remove the same restricted
 user's policy in Jellyfin without restarting the server, and then run:

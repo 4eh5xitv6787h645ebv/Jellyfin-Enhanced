@@ -35,7 +35,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
                 path = path.Substring(0, queryIndex);
             }
 
-            if (HasAppendToResponse(query))
+            // ASP.NET decodes the catch-all route once, while System.Uri applies
+            // another round of canonicalization before HttpClient sends it.
+            // Residual escapes or backslashes could therefore classify as a
+            // harmless parent subresource but be forwarded as /similar,
+            // /recommendations, or even an unrelated title search.
+            if (path.Contains('%')
+                || path.Contains('\\')
+                || HasAppendToResponse(query))
             {
                 return restricted;
             }
