@@ -69,6 +69,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             HideReviewsFromHiddenUsers = true;
             HideReviewsFromDisabledUsers = true;
             ShowReleaseDates = false;
+
+            // Awards
+            AwardsEnabled = false;
+            AwardsShowBanner = true;
+            AwardsStyle = "native";
+            AwardsExpandedByDefault = false;
+            AwardsUseWikidata = true;
+            AwardsCacheTtlDays = 30;
+            AwardsMaxCacheEntries = 50000;
+            AwardsOmdbApiKey = "";
+
             ShowUserRatingOnPosters = false;
             ShowUserRatingDash = true;
             PauseScreenEnabled = true;
@@ -395,6 +406,41 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool HideReviewsFromHiddenUsers { get; set; } = true;
         public bool HideReviewsFromDisabledUsers { get; set; } = true;
         public bool ShowReleaseDates { get; set; }
+
+        /// <summary>Master switch for the Awards feature. Off until an admin opts in.</summary>
+        public bool AwardsEnabled { get; set; }
+
+        /// <summary>Admin default for the per-user "show the awards banner" toggle.</summary>
+        public bool AwardsShowBanner { get; set; }
+
+        /// <summary>
+        /// How the awards block is presented: "native" to match Jellyfin's own detail
+        /// sections, or "tmdb" for the standalone banner styled after TMDB's.
+        /// </summary>
+        public string AwardsStyle { get; set; } = "native";
+
+        /// <summary>Admin default for the per-user "open the awards list automatically" toggle.</summary>
+        public bool AwardsExpandedByDefault { get; set; }
+
+        /// <summary>
+        /// Query Wikidata for the per-award breakdown. Turning this off keeps the
+        /// headline counts (which come from data Jellyfin already holds locally) while
+        /// making the feature entirely free of outbound requests.
+        /// </summary>
+        public bool AwardsUseWikidata { get; set; }
+
+        /// <summary>How long a cached awards record stays fresh, in days.</summary>
+        public int AwardsCacheTtlDays { get; set; }
+
+        /// <summary>Upper bound on cached awards records before the oldest are evicted.</summary>
+        public int AwardsMaxCacheEntries { get; set; }
+
+        /// <summary>
+        /// Optional OMDb API key, used only for titles Jellyfin has not already cached
+        /// OMDb data for. Left empty, the feature simply skips those titles.
+        /// </summary>
+        public string AwardsOmdbApiKey { get; set; } = string.Empty;
+
         public bool ShowUserRatingOnPosters { get; set; } = false;
         /// <summary>
         /// When true (default), shows a "—" on poster cards for items the user hasn't rated yet.

@@ -57,6 +57,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly Services.MaintenanceModeService _maintenanceModeService;
         private readonly Services.CdnAssetService _cdnAssetService;
         private readonly Services.SpoilerUserResolver _spoilerResolver;
+        private readonly Services.AwardsService _awardsService;
 
         // Server-side cache for proxied avatar images to avoid re-fetching from
         // upstream Seerr on every request. Entries expire after 1 hour.
@@ -169,7 +170,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             MediaBrowser.Controller.Session.ISessionManager sessionManager,
             Services.MaintenanceModeService maintenanceModeService,
             Services.CdnAssetService cdnAssetService,
-            Services.SpoilerUserResolver spoilerResolver)
+            Services.SpoilerUserResolver spoilerResolver,
+            Services.AwardsService awardsService)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -185,6 +187,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _maintenanceModeService = maintenanceModeService;
             _cdnAssetService = cdnAssetService;
             _spoilerResolver = spoilerResolver;
+            _awardsService = awardsService;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId, bool bypassCache = false, bool allowAutoImport = true)
@@ -2013,6 +2016,88 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return ProxyJellyseerrRequest(AppendDiscoverFilters($"/api/v1/discover/movies?page={page}&keywords={keywordId}"), HttpMethod.Get);
         }
 
+        /// <summary>
+        /// Returns the cached awards record for a library item, fetching it on first use.
+        /// </summary>
+        /// <param name="itemId">The Jellyfin item id.</param>
+        /// <param name="refresh">
+        /// Bypass a fresh cache entry and refetch. Subject to a per-title cooldown in
+        /// the service, so this cannot be used to hammer an upstream service.
+        /// </param>
+        /// <returns>
+        /// The awards payload, or 204 when the feature is off, the item type is not
+        /// supported, or the item has no provider id to look up.
+        /// </returns>
+        [HttpGet("awards/{itemId}")]
+        [Authorize]
+        public async Task<IActionResult> GetAwards(Guid itemId, [FromQuery] bool refresh = false)
+        {
+            if (JellyfinEnhanced.Instance?.Configuration?.AwardsEnabled != true)
+            {
+                return NoContent();
+            }
+
+            try
+            {
+                var record = await _awardsService.GetForItemAsync(itemId, refresh, HttpContext.RequestAborted).ConfigureAwait(false);
+                if (record == null)
+                {
+                    return NoContent();
+                }
+
+                return Ok(new
+                {
+                    key = record.Key,
+                    summary = record.Summary,
+                    entries = record.Entries,
+                    noAwards = record.NoAwards,
+                    sources = record.Sources,
+                    fetchedUtc = record.FetchedUtc == DateTime.MinValue
+                        ? null
+                        : record.FetchedUtc.ToString("o", System.Globalization.CultureInfo.InvariantCulture)
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                // The browser navigated away mid-request; nothing to report.
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Awards: lookup failed for item {itemId}: {ex.Message}");
+                // Deliberately generic so upstream errors and internal paths are not
+                // echoed back to the client.
+                return StatusCode(500, new { message = "Could not load awards." });
+            }
+        }
+
+        /// <summary>Cache counters for the admin config page.</summary>
+        [HttpGet("awards/cache/stats")]
+        [Authorize]
+        public IActionResult GetAwardsCacheStats()
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            return Ok(_awardsService.GetStats());
+        }
+
+        /// <summary>Empties the awards cache so every title is looked up again.</summary>
+        [HttpPost("awards/cache/clear")]
+        [Authorize]
+        public IActionResult ClearAwardsCache()
+        {
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            _awardsService.ClearCache();
+            return Ok(new { message = "Awards cache cleared." });
+        }
+
         [HttpGet("tmdb/search/person")]
         [Authorize]
         public Task<IActionResult> SearchTmdbPerson([FromQuery] string query)
@@ -2841,6 +2926,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.HideReviewsFromHiddenUsers,
                 config.HideReviewsFromDisabledUsers,
                 config.ShowReleaseDates,
+                config.AwardsEnabled,
+                config.AwardsShowBanner,
+                config.AwardsStyle,
+                config.AwardsExpandedByDefault,
                 config.ShowUserRatingOnPosters,
                 config.ShowUserRatingDash,
                 config.PauseScreenEnabled,

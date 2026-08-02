@@ -1986,6 +1986,64 @@
                     </fieldset>
 
                     <fieldset>
+                        <legend class="sectionTitle">Awards</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline je-banner-managed">
+                                <i class="material-icons je-info-icon" aria-hidden="true">info</i>
+                                <span class="fieldDescription">Award counts come from the OMDb data Jellyfin already caches locally for your library, so no API key is needed. The per-award breakdown is looked up from Wikidata. Results are stored on disk and re-checked on the cache lifetime below.</span>
+                            </div>
+                            <div class="checkboxContainer je-main-feature"><label><input id="awardsEnabled" is="emby-checkbox" type="checkbox"/><span>Show Awards</span></label></div>
+                            <div class="je-setting-description" data-desc-for="awardsEnabled">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">Adds a banner to Movie and Series detail pages showing award wins and nominations, which expands into the full breakdown.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="awardsShowBanner" is="emby-checkbox" type="checkbox"/><span>Show the banner by default</span></label></div>
+                            <div class="je-setting-description" data-desc-for="awardsShowBanner">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">Default for all users. Each user can turn the banner off for themselves in the Jellyfin Enhanced settings panel.</div>
+                            </div>
+                            <div class="selectContainer">
+                                <label class="selectLabel" for="awardsStyle">Awards Appearance</label>
+                                <select is="emby-select" id="awardsStyle" class="emby-select-withcolor emby-select">
+                                    <option value="native">Native — matches Jellyfin's own detail sections</option>
+                                    <option value="tmdb">Banner — standalone bar styled after TMDB's</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="awardsStyle">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">"Native" renders the awards as a normal Jellyfin section, using the same heading and chips as the rest of the page, so it follows the active theme. "Banner" reproduces the standalone teal bar from TMDB. Both show the same information.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="awardsExpandedByDefault" is="emby-checkbox" type="checkbox"/><span>Expand awards by default</span></label></div>
+                            <div class="je-setting-description" data-desc-for="awardsExpandedByDefault">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, the full award breakdown opens automatically instead of showing only the banner (unless the user overrides it).</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="awardsUseWikidata" is="emby-checkbox" type="checkbox"/><span>Fetch the award breakdown from Wikidata</span></label></div>
+                            <div class="je-setting-description" data-desc-for="awardsUseWikidata">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">Turn this off to keep the feature entirely offline. The banner still shows counts from Jellyfin's local OMDb cache, but the expanded list of individual awards will be unavailable.</div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="awardsCacheTtlDays">Awards Cache Duration (days)</label>
+                                <input id="awardsCacheTtlDays" is="emby-input" type="number" min="1" max="365" value="30"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="awardsCacheTtlDays">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">How long a looked-up result is reused before it is refreshed. A scheduled task ("Refresh Awards Cache") re-fetches entries older than this once a day.</div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="awardsOmdbApiKey">OMDb API Key (optional)</label>
+                                <input id="awardsOmdbApiKey" is="emby-input" type="text" placeholder="Leave blank to use only Jellyfin's local cache"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="awardsOmdbApiKey">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">Only used for titles Jellyfin has not already cached OMDb data for. Get a free key at omdbapi.com. Leaving this blank is fine — those titles simply fall back to the Wikidata breakdown.</div>
+                            </div>
+                            <div class="je-timing-test-row">
+                                <button id="awardsClearCache" type="button" class="emby-button raised raised-mini je-timing-test-btn" aria-label="Clear the awards cache">
+                                    <i class="material-icons" aria-hidden="true">delete_sweep</i><span>Clear Awards Cache</span>
+                                </button>
+                            </div>
+                            <div class="je-setting-description">
+                                <div class="fieldDescription je-field-desc-sm-font-lg" id="awardsCacheStats"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
                         <legend class="sectionTitle">Release Dates</legend>
                         <div class="configSection">
                             <div class="checkboxContainer je-main-feature"><label><input id="showReleaseDate" is="emby-checkbox" type="checkbox"/><span>Show Release/Air Date</span></label></div>
@@ -4482,6 +4540,13 @@
                 document.querySelector('#showUserReviews').checked = !!config.ShowUserReviews;
                 document.querySelector('#reviewsExpandedByDefault').checked = config.ReviewsExpandedByDefault;
                 document.querySelector('#showReleaseDate').checked = !!config.ShowReleaseDates;
+                document.querySelector('#awardsEnabled').checked = !!config.AwardsEnabled;
+                document.querySelector('#awardsShowBanner').checked = config.AwardsShowBanner !== false;
+                document.querySelector('#awardsStyle').value = config.AwardsStyle === 'tmdb' ? 'tmdb' : 'native';
+                document.querySelector('#awardsExpandedByDefault').checked = !!config.AwardsExpandedByDefault;
+                document.querySelector('#awardsUseWikidata').checked = config.AwardsUseWikidata !== false;
+                document.querySelector('#awardsCacheTtlDays').value = config.AwardsCacheTtlDays || 30;
+                document.querySelector('#awardsOmdbApiKey').value = config.AwardsOmdbApiKey || '';
                 document.querySelector('#hideReviewsFromHiddenUsers').checked = config.HideReviewsFromHiddenUsers !== false;
                 document.querySelector('#hideReviewsFromDisabledUsers').checked = config.HideReviewsFromDisabledUsers !== false;
                 document.querySelector('#showUserRatingDash').checked = config.ShowUserRatingDash !== false;
@@ -4830,6 +4895,13 @@
             config.ShowUserReviews = document.querySelector('#showUserReviews').checked;
             config.ReviewsExpandedByDefault = document.querySelector('#reviewsExpandedByDefault').checked;
             config.ShowReleaseDates = document.querySelector('#showReleaseDate').checked;
+            config.AwardsEnabled = document.querySelector('#awardsEnabled').checked;
+            config.AwardsShowBanner = document.querySelector('#awardsShowBanner').checked;
+            config.AwardsStyle = document.querySelector('#awardsStyle').value === 'tmdb' ? 'tmdb' : 'native';
+            config.AwardsExpandedByDefault = document.querySelector('#awardsExpandedByDefault').checked;
+            config.AwardsUseWikidata = document.querySelector('#awardsUseWikidata').checked;
+            config.AwardsCacheTtlDays = parseInt(document.querySelector('#awardsCacheTtlDays').value, 10) || 30;
+            config.AwardsOmdbApiKey = document.querySelector('#awardsOmdbApiKey').value.trim();
             config.HideReviewsFromHiddenUsers = document.querySelector('#hideReviewsFromHiddenUsers').checked;
             config.HideReviewsFromDisabledUsers = document.querySelector('#hideReviewsFromDisabledUsers').checked;
             config.ShowUserRatingDash = document.querySelector('#showUserRatingDash').checked;
@@ -5727,6 +5799,9 @@
         })();
 
         page.addEventListener('pageshow', loadConfig);
+        // Declared later in this script; the listener only runs on a real pageshow,
+        // by which point the function definition has been hoisted.
+        page.addEventListener('pageshow', function() { refreshAwardsCacheStats(); });
         form.addEventListener('submit', saveConfig);
         resetAllUserSettingsBtn.addEventListener('click', resetAllUserSettings);
         initAutoMovieQualityMode();
@@ -6134,6 +6209,7 @@
             { parent: 'elsewhereEnabled', label: 'Enable Elsewhere', children: ['DEFAULT_REGION', 'DEFAULT_PROVIDERS', 'IGNORE_PROVIDERS', 'ElsewhereCustomBrandingText', 'ElsewhereCustomBrandingImageUrl', 'showReviews', 'reviewsExpandedByDefault'] },
             { parent: 'showReviews', label: 'Show Reviews', children: ['reviewsExpandedByDefault'] },
             { parent: 'showUserReviews', label: 'Enable User Reviews', children: ['hideReviewsFromHiddenUsers', 'hideReviewsFromDisabledUsers', 'showUserRatingDash', 'showUserRatingOnPosters'] },
+            { parent: 'awardsEnabled', label: 'Show Awards', children: ['awardsShowBanner', 'awardsStyle', 'awardsExpandedByDefault', 'awardsUseWikidata', 'awardsCacheTtlDays', 'awardsOmdbApiKey'] },
             { parent: 'randomButtonEnabled', label: 'Enable Random Button', children: ['randomUnwatchedOnly', 'randomIncludeMovies', 'randomIncludeShows'] },
             { parent: 'showWatchProgress', label: 'Show watch progress', children: ['watchProgressDefaultMode', 'watchProgressTimeFormat'] },
             { parent: 'qualityTagsEnabled', label: 'Enable Quality Tags', children: ['qualityTagsPosition', 'showResolutionTag', 'showSourceTag', 'showDynamicRangeTag', 'showSpecialFormatTag', 'showVideoCodecTag', 'showAudioInfoTag'], noHint: true },
@@ -7634,6 +7710,49 @@
         }
 
         document.querySelector('#triggerSeerrScanNowBtn').addEventListener('click', triggerSeerrScanNow);
+
+        /**
+         * Renders the awards cache counters under the "Clear Awards Cache" button.
+         * Failures are silent: the counters are informational, and a server that
+         * cannot answer should not put an error banner on the config page.
+         */
+        function refreshAwardsCacheStats() {
+            var target = document.querySelector('#awardsCacheStats');
+            if (!target) return;
+
+            ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl('/JellyfinEnhanced/awards/cache/stats'),
+                dataType: 'json'
+            }).then(function(stats) {
+                if (!stats || !stats.entries) {
+                    target.textContent = 'Nothing cached yet. Entries are added the first time someone opens a detail page.';
+                    return;
+                }
+                target.textContent = stats.entries + ' titles cached ('
+                    + stats.withAwards + ' with awards, '
+                    + stats.withoutAwards + ' with none, '
+                    + stats.stale + ' due for refresh).';
+            }).catch(function() {
+                target.textContent = '';
+            });
+        }
+
+        document.querySelector('#awardsClearCache').addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('/JellyfinEnhanced/awards/cache/clear')
+            }).then(function() {
+                Dashboard.alert({ title: 'Awards', message: 'Awards cache cleared.' });
+                refreshAwardsCacheStats();
+            }).catch(function() {
+                Dashboard.alert({ title: 'Awards', message: 'Could not clear the awards cache.' });
+            }).finally(function() {
+                btn.disabled = false;
+            });
+        });
 
         /**
          * Quick Action: re-test every external-service connection by proxying

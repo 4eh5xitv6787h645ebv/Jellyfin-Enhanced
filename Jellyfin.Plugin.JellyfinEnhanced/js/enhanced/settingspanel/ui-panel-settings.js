@@ -20,7 +20,13 @@
         const { createToast, resetAutoCloseTimer } = ctx;
 
         const addSettingToggleListener = (id, settingKey, featureKey, requiresRefresh = false) => {
-            document.getElementById(id).addEventListener('change', (e) => {
+            // Some rows are only in the template when a feature is enabled, so the
+            // element can legitimately be absent. Without this guard the first
+            // missing one throws and every registration after it silently never
+            // happens, leaving the rest of the tab's controls inert.
+            const toggleEl = document.getElementById(id);
+            if (!toggleEl) return;
+            toggleEl.addEventListener('change', (e) => {
                 JE.currentSettings[settingKey] = e.target.checked;
                 JE.saveUserSettings('settings.json', JE.currentSettings);
                 let toastMessage = createToast(featureKey, e.target.checked);
@@ -85,6 +91,12 @@
                 if (id === 'showWatchProgressToggle' && !e.target.checked) document.querySelectorAll('.mediaInfoItem-watchProgress').forEach(el => el.remove());
                 if (id === 'showFileSizesToggle' && !e.target.checked) document.querySelectorAll('.mediaInfoItem-fileSize').forEach(el => el.remove());
                 if (id === 'showAudioLanguagesToggle' && !e.target.checked) document.querySelectorAll('.mediaInfoItem-audioLanguage').forEach(el => el.remove());
+                if (id === 'showAwardsToggle' || id === 'awardsExpandedToggle') {
+                    // Drop the banner and the per-session lookup cache so the next
+                    // detail-page render picks the new preference up immediately.
+                    document.querySelectorAll('.je-awards').forEach(el => el.remove());
+                    JE.internals?.awards?.resetAwardsCache?.();
+                }
                 resetAutoCloseTimer();
             });
         };
@@ -117,6 +129,26 @@
         addSettingToggleListener('showFileSizesToggle', 'showFileSizes', 'feature_file_size_display');
         addSettingToggleListener('showAudioLanguagesToggle', 'showAudioLanguages', 'feature_audio_language_display');
         addSettingToggleListener('removeContinueWatchingToggle', 'removeContinueWatchingEnabled', 'feature_remove_continue_watching');
+        // Only present when the admin has enabled the Awards feature; the helper
+        // tolerates the absent element.
+        addSettingToggleListener('showAwardsToggle', 'showAwards', 'panel_settings_awards');
+        addSettingToggleListener('awardsExpandedToggle', 'awardsExpandedByDefault', 'panel_settings_awards_expanded');
+
+        // Appearance override. An empty value means "follow the admin default",
+        // which is why it is stored as null rather than a style name.
+        const awardsStyleSelect = document.getElementById('awardsStyleSelect');
+        if (awardsStyleSelect) {
+            awardsStyleSelect.addEventListener('change', (e) => {
+                JE.currentSettings.awardsStyle = e.target.value || null;
+                JE.saveUserSettings('settings.json', JE.currentSettings);
+                // Drop the rendered section and the per-session lookup cache so the
+                // next detail page draws in the newly chosen style.
+                document.querySelectorAll('.je-awards').forEach(el => el.remove());
+                JE.internals?.awards?.resetAwardsCache?.();
+                JE.toast(JE.t('panel_settings_awards_style'));
+                resetAutoCloseTimer();
+            });
+        }
         addSettingToggleListener('qualityTagsToggle', 'qualityTagsEnabled', 'feature_quality_tags', true);
         // Show or hide the nested category section when the master quality-tags toggle changes
         const qualityMasterToggle = document.getElementById('qualityTagsToggle');

@@ -437,6 +437,47 @@ See [Elsewhere Features](../elsewhere/elsewhere-features.md#tmdb-reviews) for fu
 
 ---
 
+### Awards
+
+Show the awards a movie or series has won and been nominated for, on its detail page.
+
+A banner appears under the external links reading, for example, **Won 1 Oscar · 27 Wins | 25 Nominations**. Clicking it expands the full breakdown, grouped by award body, with the category, ceremony, year and the people credited on each award.
+
+**Features:**
+
+- Headline win and nomination counts, plus the title's most notable award ("Won 1 Oscar", "Nominated for 2 Primetime Emmys")
+- Expandable breakdown grouped by award body, with the Academy Awards, Emmys, Golden Globes and BAFTAs listed first
+- Winner and nominee rows are visually distinct
+- Each award name links out to its Wikipedia article, so you can read what the award actually is
+- Works on Movie and Series detail pages
+- Results are stored on the server so a title is only looked up once
+- A **Refresh** link in the expanded panel re-checks a single title on demand
+
+**Where the data comes from:**
+
+| Part | Source |
+| --- | --- |
+| Win/nomination counts | The OMDb metadata Jellyfin already caches locally for your library — no API key or extra request needed |
+| The per-award breakdown | [Wikidata](https://www.wikidata.org), queried once per title |
+
+!!! note
+    The counts and the breakdown come from different databases, so the list can be shorter than the totals in the banner. The counts are IMDb's complete tally; the breakdown covers the major award bodies Wikidata records in a structured form. Nothing is missing from the count — the list is simply the part that can be shown in detail.
+
+**Setup (admin):**
+
+1. Go to **Dashboard** → **Plugins** → **Jellyfin Enhanced**
+2. Navigate to the **Enhanced Settings** tab
+3. Enable **"Show Awards"** under **Awards**
+4. Click **Save**
+
+Admins can also choose the **Awards Appearance** — *Native*, which draws the awards as an ordinary Jellyfin section that follows your theme, or *Banner*, which reproduces TMDB's standalone teal bar. See [Awards settings](enhanced-settings.md#appearance).
+
+Each user can then turn the banner off for themselves, have it open expanded by default, or pick their own appearance, from the Enhanced panel → **Settings** → **UI Settings**.
+
+See [Awards settings](enhanced-settings.md#awards) for the caching and refresh options.
+
+---
+
 ## Visual Enhancements
 
 ### Quality Tags

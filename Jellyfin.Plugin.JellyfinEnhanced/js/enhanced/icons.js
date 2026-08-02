@@ -55,7 +55,8 @@
         FONT: 'font',
         TV: 'tv',
         QUESTION: 'question',
-        REWIND: 'rewind'
+        REWIND: 'rewind',
+        TROPHY: 'trophy'
     });
 
     const validIconNames = new Set(Object.values(IconName));
@@ -104,7 +105,8 @@
         font: '🔤',
         tv: '📺',
         question: '❓',
-        rewind: '⏮️'
+        rewind: '⏮️',
+        trophy: '🏆'
     };
 
     const LUCIDE = {
@@ -151,7 +153,8 @@
         font: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>',
         tv: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>',
         question: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>',
-        rewind: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>'
+        rewind: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>',
+        trophy: '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>'
     };
 
     const MUI = {
@@ -198,7 +201,8 @@
         font: '<span class="material-icons" style="font-size:1em;vertical-align:middle;">text_fields</span>',
         tv: '<span class="material-icons" style="font-size:1em;vertical-align:middle;">tv</span>',
         question: '<span class="material-icons" style="font-size:1em;vertical-align:middle;">help</span>',
-        rewind: '<span class="material-icons" style="font-size:1em;vertical-align:middle;">skip_previous</span>'
+        rewind: '<span class="material-icons" style="font-size:1em;vertical-align:middle;">skip_previous</span>',
+        trophy: '<span class="material-icons" style="font-size:1em;vertical-align:middle;">emoji_events</span>'
     };
 
     JE.icon = function (name) {

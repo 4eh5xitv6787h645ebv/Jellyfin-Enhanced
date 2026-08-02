@@ -51,6 +51,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<SeerrScanTriggerService>();
             serviceCollection.AddSingleton<TagCacheService>();
             serviceCollection.AddSingleton<TagCacheMonitor>();
+            // Awards: OmdbAwardsSource reads the OMDb JSON Jellyfin core already caches
+            // on disk, WikidataAwardsSource supplies the per-award breakdown, and
+            // AwardsService owns the persistent cache both write into.
+            serviceCollection.AddSingleton<OmdbAwardsSource>();
+            serviceCollection.AddSingleton<WikidataAwardsSource>();
+            serviceCollection.AddSingleton<AwardsService>();
+            serviceCollection.AddTransient<RefreshAwardsCacheTask>();
             // Local CDN subsystem: serves every third-party static asset (icons, fonts,
             // theme sheets, flags, remote locales) from the plugin's own route, backed by
             // an on-disk cache that the RefreshCdnAssetsTask warms/refreshes every 24h.

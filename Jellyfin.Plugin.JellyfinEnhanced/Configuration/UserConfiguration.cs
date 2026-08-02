@@ -58,6 +58,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         public bool RemoveContinueWatchingEnabled { get; set; }
         public string LastOpenedTab { get; set; } = string.Empty;
         public bool ReviewsExpandedByDefault { get; set; }
+
+        // Awards. Nullable so "the user has never touched this" is distinguishable
+        // from "the user turned it off" — only the former falls through to the
+        // admin default in PluginConfiguration.
+        public bool? ShowAwards { get; set; }
+        public bool? AwardsExpandedByDefault { get; set; }
+
+        // "native", "tmdb", or null/empty to follow the admin default.
+        public string? AwardsStyle { get; set; }
         public string DisplayLanguage { get; set; } = string.Empty;
         public string CalendarDisplayMode { get; set; } = "list";
         public string CalendarDefaultViewMode { get; set; } = "agenda";

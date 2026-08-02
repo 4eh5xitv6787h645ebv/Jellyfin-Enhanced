@@ -324,6 +324,28 @@
                                     <div><div style="font-weight:500;">${JE.t('panel_settings_ui_audio_languages')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_ui_audio_languages_desc')}</div></div>
                                 </label>
                             </div>
+                            ${JE.pluginConfig.AwardsEnabled ? `
+                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                    <input type="checkbox" id="showAwardsToggle" ${JE.resolveAwardsSetting('showAwards', 'AwardsShowBanner', true) ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                    <div><div style="font-weight:500;">${JE.t('panel_settings_awards')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_awards_desc')}</div></div>
+                                </label>
+                            </div>
+                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                    <input type="checkbox" id="awardsExpandedToggle" ${JE.resolveAwardsSetting('awardsExpandedByDefault', 'AwardsExpandedByDefault', false) ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                    <div><div style="font-weight:500;">${JE.t('panel_settings_awards_expanded')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('panel_settings_awards_expanded_desc')}</div></div>
+                                </label>
+                            </div>
+                            <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
+                                <div style="font-weight:500;">${JE.t('panel_settings_awards_style')}</div>
+                                <div style="font-size:12px; color:rgba(255,255,255,0.6); margin: 2px 0 8px;">${JE.t('panel_settings_awards_style_desc')}</div>
+                                <select id="awardsStyleSelect" style="width:100%; background:${detailsBackground}; color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:6px;">
+                                    <option value="" ${!JE.currentSettings.awardsStyle ? 'selected' : ''}>${JE.t('panel_settings_awards_style_default')}</option>
+                                    <option value="native" ${JE.currentSettings.awardsStyle === 'native' ? 'selected' : ''}>${JE.t('panel_settings_awards_style_native')}</option>
+                                    <option value="tmdb" ${JE.currentSettings.awardsStyle === 'tmdb' ? 'selected' : ''}>${JE.t('panel_settings_awards_style_banner')}</option>
+                                </select>
+                            </div>` : ''}
                             <div style="margin-bottom: 16px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
                                     <div style="display: flex; align-items: center; gap: 12px;">

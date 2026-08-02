@@ -272,6 +272,13 @@
                 JE.spoilerBlur.addSpoilerBlurButton(itemId, visiblePage, lastDetailsItemType);
             }
 
+            // Awards render on Movie and Series pages. Kept before the media-info
+            // type gate so the banner still appears when the other detail
+            // enhancements are switched off.
+            if (typeof JE.internals?.awards?.displayAwards === 'function') {
+                JE.internals.awards.displayAwards(itemId, lastDetailsItemType, visiblePage);
+            }
+
             // Skip unsupported item types for media features
             if (!FEATURES_SUPPORTED_TYPES.includes(lastDetailsItemType)) {
                 return;

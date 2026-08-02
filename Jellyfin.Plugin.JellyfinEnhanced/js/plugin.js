@@ -631,6 +631,8 @@
                 'enhanced/features-random-button.js',
                 'enhanced/itemdetails/features-details-media-info.js',
                 'enhanced/itemdetails/features-release-dates.js',
+                // Publishes JE.internals.awards, which -details-page.js calls.
+                'enhanced/itemdetails/features-awards.js',
                 'enhanced/itemdetails/features-details-page.js',
                 'enhanced/homeremoval/features-remove-home.js',
                 'enhanced/homeremoval/features-remove-multiselect.js',
