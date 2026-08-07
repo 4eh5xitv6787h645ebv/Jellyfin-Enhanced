@@ -25,6 +25,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             DisableScriptInjectionMiddleware = false;
             DisableBrandingMiddleware = false;
 
+            // Smart Client Refresh — keeps already-open browser tabs / app WebViews
+            // from running a stale page after a plugin update, server restart or config
+            // save. On by default in "Smart" mode: it only ever reloads at a verified
+            // safe moment (no playback, no dialogs, user idle), so the default is
+            // strictly an improvement over silently serving stale JS.
+            ClientRefreshMode = "Smart";
+            ClientRefreshOnPluginUpdate = true;
+            ClientRefreshOnJellyfinUpdate = true;
+            ClientRefreshOnConfigChange = true;
+            ClientRefreshShowNotices = true;
+            ClientRefreshPollSeconds = 30;
+            ClientRefreshIdleSeconds = 5;
+
             // Maintenance Mode
             MaintenanceModeEnabled = false;
             MaintenanceModeMessage = "This server is currently undergoing maintenance. Please try again.";
@@ -361,6 +374,43 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
         // (BrandingAssetStartupFilter). When true, custom logo/banner/favicon images
         // are not served and jellyfin-web's stock assets are used. Default false.
         public bool DisableBrandingMiddleware { get; set; }
+
+        // ── Smart Client Refresh ──────────────────────────────────────────────
+        // Surfaced verbatim (PascalCase) through /JellyfinEnhanced/public-config and
+        // the client-refresh state endpoint. See Services/ClientRefreshStateService.
+
+        /// <summary>
+        /// How an already-open client reacts to a stale page.
+        /// "Smart" (reload any safe page once the user goes idle) | "HomeOnly" (only
+        /// reload once the client is back on Home) | "Notify" (never reload on its own,
+        /// just tell the user) | "Disabled". Anything unrecognised is treated as
+        /// "Disabled" by <see cref="Services.ClientRefreshStateService.NormalizeMode"/>.
+        /// </summary>
+        public string ClientRefreshMode { get; set; } = "Smart";
+
+        /// <summary>React when the Jellyfin Enhanced plugin binary itself changes (content-hashed, so same-version rebuilds count).</summary>
+        public bool ClientRefreshOnPluginUpdate { get; set; }
+
+        /// <summary>React when the Jellyfin server process changes — i.e. any restart or server update.</summary>
+        public bool ClientRefreshOnJellyfinUpdate { get; set; }
+
+        /// <summary>React when an admin saves this plugin's configuration.</summary>
+        public bool ClientRefreshOnConfigChange { get; set; }
+
+        /// <summary>Show the user-facing "reload available" notice. Off = refresh silently at the next safe point.</summary>
+        public bool ClientRefreshShowNotices { get; set; }
+
+        /// <summary>
+        /// How often a VISIBLE client re-checks the state endpoint, in seconds.
+        /// Clamped to 5–3600 server-side; hidden/background clients don't poll at all.
+        /// </summary>
+        public int ClientRefreshPollSeconds { get; set; }
+
+        /// <summary>
+        /// Smart-mode only: seconds of user inactivity required before an automatic
+        /// reload is allowed. Clamped to 0–300 server-side.
+        /// </summary>
+        public int ClientRefreshIdleSeconds { get; set; }
 
         // Jellyfin Elsewhere Settings
         public bool ElsewhereEnabled { get; set; }
