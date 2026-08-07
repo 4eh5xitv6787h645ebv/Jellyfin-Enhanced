@@ -46,7 +46,7 @@
 
                 try {
                     const [localeCodes, cultures] = await Promise.all([
-                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/locales'), dataType: 'json' }),
+                        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/locales', { v: (document.querySelector('script[plugin="Jellyfin Enhanced"]')?.getAttribute('version')) || Date.now() }), dataType: 'json' }),
                         ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/Localization/Cultures'), dataType: 'json' })
                     ]);
 

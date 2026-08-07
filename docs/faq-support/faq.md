@@ -54,6 +54,10 @@ The userscript has been discontinued as the plugin functionality has grown signi
 
 **See this page in [Installation Troubleshooting](../installation/troubleshooting.md/#update-not-working)**
 
+!!! note
+
+    Recent versions refresh open tabs automatically once an update has been installed, so you should no longer need a manual hard refresh to pick one up — see [Client Refresh settings](../enhanced/enhanced-settings.md#client-refresh). If you're on an older version, or Client Refresh is set to **Disabled**, hard-refresh manually (++ctrl+f5++) after updating.
+
 
 ### I see "permission denied" errors in logs!!
 
@@ -183,6 +187,10 @@ Option B (manual in Seerr):
 4. Adjust position if needed
 
 **Clear Cache:**
+
+!!! note
+
+    Recent versions refresh open tabs automatically after a plugin update or settings save — see [Client Refresh settings](../enhanced/enhanced-settings.md#client-refresh). If you're on an older version, or Client Refresh is set to **Disabled**, hard-refresh manually as follows.
 
 1. Hard refresh browser (Ctrl+F5)
 

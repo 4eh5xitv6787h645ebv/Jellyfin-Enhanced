@@ -36,6 +36,10 @@ If Weblate is temporarily unavailable, maintainers can still update locale files
 ### Translation Updates
 
 - Synced from repository updates (including Weblate commits)
-- Cached for 24 hours
+- Cached in the browser for 24 hours
 - Available immediately after merge
 - No plugin update needed
+
+!!! note
+
+    The 24-hour cache is not the only thing that expires it. Cached translations are keyed to the plugin build, so **every plugin rebuild invalidates them** — including a re-upload of the same version number. Bundled string changes therefore land as soon as the client picks up the new build, without waiting out the 24 hours.
