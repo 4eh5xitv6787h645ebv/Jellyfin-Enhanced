@@ -903,6 +903,12 @@
     // Create custom modal
     const modal = document.createElement('div');
     modal.className = 'je-bm-player-modal-overlay';
+    // Blocks smart client refresh while the bookmark form is open (see the
+    // data-je-refresh-hold contract in enhanced/client-refresh.js) — the label
+    // input is unsaved until Add/Save. Created on open and removed on every
+    // close path (close button, cancel, backdrop, submit, viewshow), so the
+    // static attribute leaves with the element.
+    modal.setAttribute('data-je-refresh-hold', 'bookmark-edit');
     modal.innerHTML = `
       <div class="je-bm-player-modal-container">
         <button class="je-bookmark-modal-close">×</button>

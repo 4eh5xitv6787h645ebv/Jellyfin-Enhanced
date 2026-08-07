@@ -209,6 +209,12 @@
 
         const overlay = document.createElement('div');
         overlay.className = 'je-hidden-management-overlay';
+        // Blocks smart client refresh while the management panel is open (see
+        // the data-je-refresh-hold contract in enhanced/client-refresh.js) —
+        // it hosts a live search box and per-item unhide actions. The overlay
+        // is created on open and removed on every close path, so the static
+        // attribute cannot leak.
+        overlay.setAttribute('data-je-refresh-hold', 'hidden-content-manage');
 
         const panel = document.createElement('div');
         panel.className = 'je-hidden-management-panel';

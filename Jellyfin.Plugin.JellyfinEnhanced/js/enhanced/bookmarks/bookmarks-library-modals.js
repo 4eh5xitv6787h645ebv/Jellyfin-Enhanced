@@ -27,6 +27,11 @@
 
     const modal = document.createElement('div');
     modal.className = 'je-bm-library-modal-overlay';
+    // Blocks smart client refresh while the offset form is open (see the
+    // data-je-refresh-hold contract in enhanced/client-refresh.js) — the offset
+    // input is unsaved until Apply. Created on open and removed on every close
+    // path (close button, cancel, backdrop, apply), so it cannot leak.
+    modal.setAttribute('data-je-refresh-hold', 'bookmark-offset');
     modal.innerHTML = `
       <div class="je-bm-library-modal-container" style="max-width: 550px;">
         <button class="je-bm-library-modal-close">×</button>
@@ -188,6 +193,11 @@
 
     const modal = document.createElement('div');
     modal.className = 'je-bm-library-modal-overlay';
+    // Blocks smart client refresh while the duplicate-merge review is open (see
+    // the data-je-refresh-hold contract in enhanced/client-refresh.js) — merging
+    // rewrites bookmark records. Created on open and removed on every close path
+    // (close button, cancel, backdrop, adjust-offset, merge), so it cannot leak.
+    modal.setAttribute('data-je-refresh-hold', 'bookmark-duplicates');
     modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;';
     modal.innerHTML = `
       <div class="je-bm-library-modal-container" style="max-width: 700px; background: #181818; border-radius: 12px; padding: 24px; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto;">

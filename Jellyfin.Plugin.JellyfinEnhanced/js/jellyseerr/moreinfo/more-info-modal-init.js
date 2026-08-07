@@ -107,6 +107,13 @@ function showModal(data, mediaType) {
 
     const modal = document.createElement('div');
     modal.className = 'je-more-info-modal';
+    // Blocks smart client refresh while the More Info modal is open (see the
+    // data-je-refresh-hold contract in enhanced/client-refresh.js) — it is a
+    // bare div with no role/aria-modal that hosts request actions and season
+    // selection. Created on open and removed by moreInfoModal.close() on every
+    // path (close button, Escape, viewshow navigation, re-open), so the static
+    // attribute always leaves with the element.
+    modal.setAttribute('data-je-refresh-hold', 'seerr-more-info');
     modal.innerHTML = internal.buildModalContent(data, mediaType);
     // Tag modal so async updates only apply to the current item
     modal.dataset.tmdbId = String(data.id || '');
