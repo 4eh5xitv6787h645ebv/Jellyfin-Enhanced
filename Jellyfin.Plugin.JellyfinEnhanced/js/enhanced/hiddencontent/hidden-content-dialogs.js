@@ -304,6 +304,12 @@
 
         const overlay = document.createElement('div');
         overlay.className = 'je-hide-confirm-overlay';
+        // Blocks smart client refresh while the confirmation is up (see the
+        // data-je-refresh-hold contract in enhanced/client-refresh.js). The
+        // overlay is a bare div with no role/aria-modal, and it is created on
+        // open and removed on every close path, so a static attribute cannot
+        // leak a permanent hold.
+        overlay.setAttribute('data-je-refresh-hold', 'hidden-content-confirm');
 
         const dialog = document.createElement('div');
         dialog.className = 'je-hide-confirm-dialog';

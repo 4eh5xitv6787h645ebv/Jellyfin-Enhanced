@@ -58,6 +58,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly Services.CdnAssetService _cdnAssetService;
         private readonly Services.SpoilerUserResolver _spoilerResolver;
         private readonly Services.WikidataAwardsService _wikidataAwardsService;
+        private readonly Services.ClientRefreshStateService _clientRefreshState;
 
         // Server-side cache for proxied avatar images to avoid re-fetching from
         // upstream Seerr on every request. Entries expire after 1 hour.
@@ -171,7 +172,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             Services.MaintenanceModeService maintenanceModeService,
             Services.CdnAssetService cdnAssetService,
             Services.SpoilerUserResolver spoilerResolver,
-            Services.WikidataAwardsService wikidataAwardsService)
+            Services.WikidataAwardsService wikidataAwardsService,
+            Services.ClientRefreshStateService clientRefreshState)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -188,6 +190,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _cdnAssetService = cdnAssetService;
             _spoilerResolver = spoilerResolver;
             _wikidataAwardsService = wikidataAwardsService;
+            _clientRefreshState = clientRefreshState;
         }
 
         private async Task<JellyseerrUser?> GetJellyseerrUser(string jellyfinUserId, bool bypassCache = false, bool allowAutoImport = true)
@@ -3013,7 +3016,88 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 config.SpoilerReplaceTitle,
                 config.SpoilerStripCast,
                 config.SpoilerStripReviews,
+
+                // Smart Client Refresh — exposed for parity with the admin config
+                // surface and external tooling. The refresh module itself does NOT
+                // read these: its policy arrives via the injected bootstrap payload
+                // and the authenticated /client-refresh-state endpoint (which clamp
+                // and normalize server-side). None of these are sensitive: they
+                // describe reload behaviour only.
+                config.ClientRefreshMode,
+                config.ClientRefreshOnPluginUpdate,
+                config.ClientRefreshOnJellyfinUpdate,
+                config.ClientRefreshOnConfigChange,
+                config.ClientRefreshShowNotices,
+                config.ClientRefreshPollSeconds,
+                config.ClientRefreshIdleSeconds,
             });
+        }
+
+        // ── Smart Client Refresh ──────────────────────────────────────────────
+        // Lets already-open clients notice that the plugin, the server process or the
+        // admin configuration changed under them, and reload at a safe moment instead
+        // of running stale JS until the user happens to hit F5. The whole contract is
+        // three small endpoints; there is no websocket/push lane by design (see
+        // Services/ClientRefreshStateService for the rationale).
+
+        /// <summary>
+        /// Current refresh identities + policy. Polled by visible clients on the
+        /// admin-configured interval. Never cached — a cached response would report a
+        /// stale identity, which is exactly the failure this feature exists to fix.
+        /// </summary>
+        [HttpGet("client-refresh-state")]
+        [Authorize]
+        public ActionResult<Services.ClientRefreshState> GetClientRefreshState()
+        {
+            Response.Headers["Cache-Control"] = "no-store";
+            return Ok(_clientRefreshState.GetState());
+        }
+
+        /// <summary>
+        /// Publishes the page's refresh baseline as a global BEFORE the main client
+        /// bundle loads, so the bundle can compare "the identities that produced this
+        /// document" against later polls without an extra round trip.
+        ///
+        /// [AllowAnonymous] by necessity: this is loaded by a plain &lt;script&gt; tag on
+        /// the login page, which cannot carry a Jellyfin token. Safe to expose — the
+        /// body carries only opaque hashes, counters and the admin's refresh policy;
+        /// no user data, no credentials, and nothing that isn't already derivable from
+        /// the served static assets.
+        /// </summary>
+        [HttpGet("client-refresh-bootstrap.js")]
+        [AllowAnonymous]
+        public ActionResult GetClientRefreshBootstrap()
+        {
+            Response.Headers["Cache-Control"] = "no-store";
+            // The body is executed as script, so forbid MIME sniffing outright.
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+            // System.Text.Json with default options emits property names verbatim
+            // (PascalCase), matching what Ok(state) produces on the sibling endpoint.
+            // Do NOT swap this for Newtonsoft — JE's Newtonsoft usage elsewhere is
+            // configured for camelCase payloads and would silently break the contract.
+            var state = System.Text.Json.JsonSerializer.Serialize(_clientRefreshState.GetState());
+            return Content(
+                $"window.__JellyfinEnhancedRefreshBootstrap={state};",
+                "text/javascript; charset=utf-8");
+        }
+
+        /// <summary>
+        /// Admin-only "refresh every open client now". Bumps a process-local counter
+        /// that clients compare against the value they booted with; it does not force
+        /// anything immediately — each client still waits for its own safe point.
+        /// </summary>
+        [HttpPost("client-refresh")]
+        [Authorize]
+        public ActionResult RequestClientRefresh()
+        {
+            Response.Headers["Cache-Control"] = "no-store";
+            if (!IsAdminUser())
+            {
+                return Forbid();
+            }
+
+            return Ok(new { ForceRevision = _clientRefreshState.RequestRefresh() });
         }
 
         [HttpGet("tmdb/{**apiPath}")]
@@ -3093,7 +3177,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         [HttpGet("locales")]
         [Authorize]
-        [ResponseCache(Duration = 86400)]
         public ActionResult GetAvailableLocales()
         {
             var prefix = "Jellyfin.Plugin.JellyfinEnhanced.js.locales.";
@@ -3105,6 +3188,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 .Where(code => code != "en") // Exclude base English (en-GB and en-US are the usable variants)
                 .OrderBy(code => code, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
+
+            // The list is baked into the assembly, so for the lifetime of a given
+            // plugin build it can never change — mark it immutable so browsers skip
+            // even the revalidation round trip. A plugin update changes the served
+            // script's cache key, which is what re-pulls this. (Replaces the former
+            // [ResponseCache(Duration = 86400)] attribute so hit/miss caching lives in
+            // one place alongside the per-locale endpoint below.)
+            Response.Headers["Cache-Control"] = JellyfinEnhanced.Instance?.Configuration?.DevMode == true
+                ? "no-store"
+                : "public, max-age=86400, immutable";
 
             return Ok(locales);
         }
@@ -3163,6 +3256,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var sanitizedLang = Path.GetFileName(lang); // Basic sanitization
             var resourcePath = $"Jellyfin.Plugin.JellyfinEnhanced.js.locales.{sanitizedLang}.json";
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourcePath);
+            // Tracks which language actually got served, so the Content-Language header
+            // below reports the fallback (e.g. "de") rather than the requested "de-DE".
+            var servedLang = sanitizedLang;
 
             if (stream == null && sanitizedLang.Contains('-'))
             {
@@ -3175,6 +3271,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(fallbackPath);
                 if (stream != null)
                 {
+                    servedLang = baseLang;
                     _logger.Info($"Locale file not found for {sanitizedLang}, falling back to base language {baseLang}");
                 }
             }
@@ -3182,11 +3279,43 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (stream == null)
             {
                 _logger.Warning($"Locale file not found for language: {sanitizedLang}");
+                // Short positive-ish cache on the miss. A locale that doesn't exist today
+                // may exist after a plugin update, so this must NOT be immutable — but 5
+                // minutes still stops a client that retries on every navigation from
+                // hammering the server with 404s.
+                Response.Headers["Cache-Control"] = "public, max-age=300";
                 return NotFound();
+            }
+
+            // Locale JSON is an embedded resource: for a given plugin build its bytes can
+            // never change, so it is genuinely immutable. Clients bust it via the script
+            // cache key when the plugin updates. Without this header the browser
+            // re-fetched every locale file on every page load.
+            Response.Headers["Cache-Control"] = JellyfinEnhanced.Instance?.Configuration?.DevMode == true
+                ? "no-store"
+                : "public, max-age=86400, immutable";
+            // Only emit Content-Language for a value that actually looks like a language
+            // tag — `servedLang` came from user input, and a header must never carry
+            // arbitrary caller-controlled text.
+            if (IsSimpleLanguageTag(servedLang))
+            {
+                Response.Headers["Content-Language"] = servedLang;
             }
 
             return new FileStreamResult(stream, "application/json");
         }
+
+        /// <summary>
+        /// Conservative BCP-47-ish check (letters, digits and internal hyphens only)
+        /// used to decide whether a resolved locale code is safe to echo in a response
+        /// header.
+        /// </summary>
+        private static bool IsSimpleLanguageTag(string value)
+            => !string.IsNullOrEmpty(value)
+                && value.Length <= 32
+                && value[0] != '-'
+                && value[^1] != '-'
+                && value.All(c => char.IsAsciiLetterOrDigit(c) || c == '-');
 
         private ActionResult GetScriptResource(string resourcePath)
         {

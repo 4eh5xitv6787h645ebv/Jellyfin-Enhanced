@@ -175,16 +175,69 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             }
         }
 
-        // The single source of truth for the client-script tag. Consumed both by the
-        // request-time injection middleware (ScriptInjectionStartupFilter) and by the
-        // legacy on-disk index.html rewrite, so the two never drift. plugin.js reads
-        // the plugin/version/dev attributes off this tag.
+        // Content-derived identity of this exact plugin build: SHA-256 of the DLL
+        // bytes, falling back to a hash of the assembly's ModuleVersionId when the
+        // file can't be read (single-file hosting). Unlike ScriptCacheKey this is
+        // stable across server restarts for the same binary, so clients can compare
+        // it against the build that served their page to detect a plugin update —
+        // including a same-version binary replacement. Computed once per process.
+        private static readonly Lazy<string> _pluginBuildId = new Lazy<string>(() =>
+        {
+            var assembly = typeof(JellyfinEnhanced).Assembly;
+            try
+            {
+                var location = assembly.Location;
+                if (!string.IsNullOrEmpty(location) && File.Exists(location))
+                {
+                    using var sha = System.Security.Cryptography.SHA256.Create();
+                    using var stream = File.OpenRead(location);
+                    return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
+                }
+            }
+            catch
+            {
+                // Fall through to the ModuleVersionId fallback below.
+            }
+
+            using var fallbackSha = System.Security.Cryptography.SHA256.Create();
+            var mvid = assembly.ManifestModule.ModuleVersionId.ToString("N");
+            return Convert.ToHexString(fallbackSha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(mvid))).ToLowerInvariant();
+        });
+
+        internal static string PluginBuildId => _pluginBuildId.Value;
+
+        // The single source of truth for the ordered client-script tags. Consumed both
+        // by the request-time injection middleware (ScriptInjectionStartupFilter) and by
+        // the legacy on-disk index.html rewrite, so the two never drift. The bootstrap
+        // tag comes first so it captures a document baseline before the main script
+        // loads. plugin.js reads the plugin/version/dev/build attributes off either tag.
         internal string BuildScriptTag()
         {
             var cacheKey = ScriptCacheKey;
             var devMode = Configuration?.DevMode == true;
-            return $"<script plugin=\"{Name}\" version=\"{cacheKey}\" dev=\"{(devMode ? "true" : "false")}\" src=\"../JellyfinEnhanced/script?v={cacheKey}\" defer></script>";
+            return BuildScriptTags(Name, cacheKey, devMode, PluginBuildId);
         }
+
+        // Pure tag construction, split out from BuildScriptTag so the exact emitted
+        // markup can be asserted without a live plugin instance.
+        internal static string BuildScriptTags(
+            string pluginName,
+            string cacheKey,
+            bool devMode,
+            string buildId)
+        {
+            var attributes = $"plugin=\"{pluginName}\" version=\"{cacheKey}\" dev=\"{(devMode ? "true" : "false")}\" build=\"{buildId}\"";
+            return $"<script {attributes} data-je-refresh-bootstrap=\"true\" src=\"../JellyfinEnhanced/client-refresh-bootstrap.js?v={cacheKey}\" defer></script>\n"
+                + $"<script {attributes} src=\"../JellyfinEnhanced/script?v={cacheKey}\" defer></script>";
+        }
+
+        // Matches every script tag this plugin owns, whichever quoting style and
+        // trailing newline it was written with. Both the bootstrap and the loader tag
+        // carry the same plugin="Jellyfin Enhanced" marker, so a single scrub removes
+        // the whole pair — that is what makes injection idempotent and lets a stale
+        // ?v= tag be replaced rather than left behind as a duplicate load.
+        internal static Regex OwnScriptTagRegex() =>
+            new Regex($"<script[^>]*plugin=[\"']{Regex.Escape(PluginName)}[\"'][^>]*>\\s*</script>\\n?");
 
         public void InjectScript()
         {
@@ -240,7 +293,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 }
 
                 var content = File.ReadAllText(indexPath);
-                var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
+                var regex = OwnScriptTagRegex();
 
                 if (regex.IsMatch(content))
                 {
@@ -427,9 +480,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
                 var content = File.ReadAllText(indexPath);
                 var scriptTag = BuildScriptTag();
-                var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
+                var regex = OwnScriptTagRegex();
 
-                // Remove any old versions of the script tag first
+                // Remove any old versions of the script tags first (the shared regex
+                // matches both the bootstrap and the loader tag), so re-running this
+                // always leaves exactly one current pair.
                 content = regex.Replace(content, string.Empty);
 
                 if (inject)

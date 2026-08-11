@@ -2,6 +2,34 @@
 (function() {
     'use strict';
 
+    // ── Smart client refresh bootstrap capture ───────────────────────────────
+    // The server injects a tiny anonymous bootstrap script BEFORE this loader,
+    // which assigns the current refresh watermark (build id, Jellyfin process
+    // generation, config revisions, policy) to a global. Read it here — the
+    // earliest point plugin code runs — and remove the global afterwards so the
+    // page keeps no ambient copy for other scripts to read or tamper with.
+    // The payload is UNVALIDATED at this point; js/enhanced/client-refresh.js
+    // owns the trust boundary.
+    const clientRefreshBootstrap = window.__JellyfinEnhancedRefreshBootstrap;
+    try {
+        delete window.__JellyfinEnhancedRefreshBootstrap;
+    } catch (_) {
+        // Non-configurable property (some hardened WebViews) — blank it instead.
+        window.__JellyfinEnhancedRefreshBootstrap = undefined;
+    }
+
+    // Content-addressed id of the plugin build THIS page actually loaded,
+    // stamped on the injected script tags. Compared against the server's live
+    // build id to detect "this tab is running yesterday's bundle". The loader
+    // tag is preferred over the bootstrap tag (both carry the attribute) so the
+    // id always describes the bundle that is really executing. Empty string
+    // when the server is too old to stamp it — the client then skips
+    // plugin-update detection entirely rather than guessing.
+    const loadedBuildId = (
+        document.querySelector('script[plugin="Jellyfin Enhanced"]:not([data-je-refresh-bootstrap])')
+        || document.querySelector('script[plugin="Jellyfin Enhanced"]')
+    )?.getAttribute('build') || '';
+
     // Create the global namespace immediately with placeholders
     window.JellyfinEnhanced = {
         // Shared core layer, populated by js/core/*.js (navigation, lifecycle,
@@ -11,6 +39,10 @@
         userConfig: { settings: {}, shortcuts: { Shortcuts: [] }, bookmarks: { Bookmarks: {} }, elsewhere: {}, hiddenContent: { items: {}, settings: {} } },
         translations: {},
         pluginVersion: 'unknown',
+        // Smart client refresh inputs, captured above before anything else runs.
+        // Consumed (and validated) by js/enhanced/client-refresh.js.
+        clientRefreshBootstrap,
+        loadedBuildId,
         // Local CDN helper. Every third-party static asset (icons, fonts, flags, theme
         // sheets, remote locales) is served from the plugin's own route
         // (/JellyfinEnhanced/cdn/{source}/{path}) — backed by an on-disk cache refreshed
@@ -752,6 +784,16 @@
                 'core/tag-renderer-base.js',
 
                 // enhanced
+                // Smart client refresh is first in this group on purpose: it
+                // consumes only core/* (navigation for the route signal,
+                // lifecycle for listener ownership, api-client for the
+                // authenticated state poll, ui-kit for notices) plus JE.t,
+                // which stage 1 has already populated. Loading it here starts
+                // the convergence poll as early as possible, and keeps it
+                // independent of every feature module below — a tab running an
+                // outdated bundle must still be able to update itself even if
+                // some later module fails to load.
+                'enhanced/client-refresh.js',
                 'enhanced/config.js',
                 'enhanced/helpers.js',
                 'enhanced/native-tabs.js',

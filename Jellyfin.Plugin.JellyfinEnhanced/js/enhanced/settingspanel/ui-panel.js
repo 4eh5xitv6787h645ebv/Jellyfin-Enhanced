@@ -71,6 +71,11 @@
 
         const help = document.createElement('div');
         help.id = panelId;
+        // Blocks smart client refresh while the panel is open (see the
+        // data-je-refresh-hold contract in enhanced/client-refresh.js) — the
+        // panel is a bare div with no role/aria-modal, so without this a
+        // pending refresh could reload the page mid-configuration.
+        help.setAttribute('data-je-refresh-hold', 'settings-panel');
         Object.assign(help.style, {
             position: 'fixed',
             top: '50%',

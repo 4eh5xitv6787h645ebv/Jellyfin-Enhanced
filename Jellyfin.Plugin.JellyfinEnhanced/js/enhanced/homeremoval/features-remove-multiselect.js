@@ -65,6 +65,12 @@
 
             const overlay = document.createElement('div');
             overlay.className = 'je-remove-confirm-overlay';
+            // Blocks smart client refresh while the destructive multi-remove
+            // confirmation is up (see the data-je-refresh-hold contract in
+            // enhanced/client-refresh.js). The overlay is created on open and
+            // `close()` removes it on every path (cancel, confirm, backdrop,
+            // Escape, pre-emptive teardown), so a static attribute cannot leak.
+            overlay.setAttribute('data-je-refresh-hold', 'home-remove-confirm');
             // Above Jellyfin's action sheet / dialog (z-index 999999) so it's never behind a closing menu.
             overlay.style.cssText = 'position:fixed;inset:0;z-index:1000001;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;';
 

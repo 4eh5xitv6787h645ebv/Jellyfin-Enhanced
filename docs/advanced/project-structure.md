@@ -6,7 +6,11 @@ The plugin architecture uses a single entry point (`plugin.js`) that dynamically
 
 Three client scripts are **not** in that array and are loaded by their own dedicated loaders: `others/splashscreen.js` and `extras/login-image.js` (both injected early, before the component stage, so they can affect the login screen) and `enhanced/translations.js` (loaded at the start of `initialize()`, ahead of the component stage).
 
-The client is delivered by `Services/ScriptInjectionStartupFilter.cs`, which injects `plugin.js` into the web client; all `js/**` files are embedded resources (`JellyfinEnhanced.csproj`) served by `GetScript` in `Controllers/JellyfinEnhancedController.cs`.
+The client is delivered by `Services/ScriptInjectionStartupFilter.cs`, ASP.NET middleware that rewrites `index.html` **at request time** — it never writes to the web folder, so the injection survives a `jellyfin-web` upgrade and works on Jellyfin 10.11 and 12 alike. Each rewritten shell is cached per representation and served with its own transformed `ETag`, so warm requests are answered by validator-only revalidation rather than a re-transform, and conditional requests are always evaluated against the transformed validator instead of the source's.
+
+The middleware scrubs every tag the plugin owns and inserts exactly one current **bootstrap + loader pair** (`JellyfinEnhanced.BuildScriptTags`), which makes repeated rewrites idempotent — a stale `?v=` tag is replaced, never duplicated. The bootstrap tag (`client-refresh-bootstrap.js`) comes first so it captures a document baseline before the main script loads; the loader tag pulls `plugin.js`. Both carry the same `plugin` / `version` / `dev` / `build` attributes, and `version` holds the full script cache key (plugin version + build timestamp) that every module URL and the translation cache key are derived from — so a same-version rebuild busts client caches too.
+
+All `js/**` files are embedded resources (`JellyfinEnhanced.csproj`) served by `GetScript` in `Controllers/JellyfinEnhancedController.cs`, immutably cached under their per-build URLs.
 
 ### File Structure
 
@@ -47,7 +51,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 │       └── SpoilerUserResolver.cs
 └── js/
     ├── plugin.js
-    ├── locales/                      # 26 translation files (en.json, de.json, …)
+    ├── locales/                      # 29 translation files (en.json, de.json, …)
     ├── core/
     │   ├── api-client.js
     │   ├── dom-observer.js
@@ -58,6 +62,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
     │   ├── tag-renderer-base.js
     │   └── ui-kit.js
     ├── enhanced/
+    │   ├── client-refresh.js
     │   ├── config.js
     │   ├── events.js
     │   ├── features-random-button.js
@@ -203,6 +208,7 @@ Directory names avoid hyphens (`settingspanel`, not `settings-panel`). Embedded-
     * **`ui-kit.js`**: `escapeHtml`, `toast`, deduped CSS injection, and scroll-friendly tap detection (`addTouchTapListener`).
 
 * **`/enhanced/`**: Core "Jellyfin Enhanced" functionality.
+    * **`client-refresh.js`**: Smart client refresh — polls the server from visible sessions only, detects plugin updates, Jellyfin restarts, admin config saves and admin-forced refreshes, and reloads the tab once it is safe (no playback, no open dialog, not on an editing page, user idle) according to the admin-selected mode. Validates the payload the bootstrap tag collected, holds pending refreshes rather than cancelling them, and caps reloads at 3 per minute so a bad state cannot become a reload loop. Deliberately first in the `enhanced` group of `allComponentScripts`: it depends only on `core/*` and `JE.t`, so a tab running an outdated bundle can still update itself even if a later module fails to load. See [Client Refresh settings](../enhanced/enhanced-settings.md#client-refresh).
     * **`config.js`**: Manages all settings, both from the plugin backend and the user's local storage.
     * **`events.js`**: Listens for user input, browser events and DOM changes to trigger the appropriate functions from other components.
     * **`features-random-button.js`**: The random item button.

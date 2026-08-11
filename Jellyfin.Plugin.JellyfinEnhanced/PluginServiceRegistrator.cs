@@ -43,6 +43,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                 });
             serviceCollection.AddSingleton<Logger>();
             serviceCollection.AddSingleton<UserConfigurationManager>();
+
+            // Smart Client Refresh: one process-wide holder for the identities open
+            // clients poll (plugin build id, per-process Jellyfin generation, config
+            // revision, admin force counter). MUST be a singleton — the force counter
+            // and the config-revision counter are process state, and a per-request
+            // instance would reset them on every call. SystemId/version are pulled from
+            // the host here because the service takes no Jellyfin dependencies itself.
+            serviceCollection.AddSingleton(_ => new ClientRefreshStateService(
+                applicationHost.SystemId,
+                applicationHost.ApplicationVersionString));
             serviceCollection.AddSingleton<AutoSeasonRequestService>();
             serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();
             serviceCollection.AddSingleton<AutoMovieRequestService>();

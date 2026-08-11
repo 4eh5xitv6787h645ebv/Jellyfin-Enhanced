@@ -15,6 +15,10 @@
 
 **Clear Browser Cache:**
 
+!!! note
+
+    Recent versions refresh open tabs automatically after a plugin update or server restart — see [Client Refresh settings](../enhanced/enhanced-settings.md#client-refresh). If you're on an older version, or Client Refresh is set to **Disabled**, clear the cache and hard-refresh manually as follows.
+
 1. Open menu:
 
   Windows/Linux: ++ctrl+shift+delete++
@@ -51,6 +55,10 @@
 
 
 ## Update Not Working
+
+!!! note
+
+    Recent versions refresh open tabs automatically after an update, so a manual hard refresh is normally no longer part of updating — see [Client Refresh settings](../enhanced/enhanced-settings.md#client-refresh). If you're on an older version, or Client Refresh is set to **Disabled**, hard-refresh manually as the last step below.
 
 **Clean Update Process:**
 

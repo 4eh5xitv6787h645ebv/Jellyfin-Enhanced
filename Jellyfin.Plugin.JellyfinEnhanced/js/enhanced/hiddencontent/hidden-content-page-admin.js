@@ -313,6 +313,12 @@
     document.querySelector('.je-hidden-admin-add-overlay')?.remove();
     const overlay = document.createElement('div');
     overlay.className = 'je-hidden-management-overlay je-hidden-admin-add-overlay';
+    // Blocks smart client refresh while the admin add-modal is open (see the
+    // data-je-refresh-hold contract in enhanced/client-refresh.js) — it holds
+    // a search box and in-flight hide actions against another user's list.
+    // Created on open and removed on every close path, so a static attribute
+    // cannot leak a permanent hold.
+    overlay.setAttribute('data-je-refresh-hold', 'hidden-content-admin-add');
     const panel = document.createElement('div');
     panel.className = 'je-hidden-management-panel';
 

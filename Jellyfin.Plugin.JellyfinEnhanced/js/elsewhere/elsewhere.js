@@ -411,6 +411,7 @@
 
             document.getElementById('cancel-settings').onclick = () => {
                 modal.style.display = 'none';
+                modal.removeAttribute('data-je-refresh-hold');
             };
 
             document.getElementById('save-settings').onclick = () => {
@@ -435,6 +436,7 @@
                 userServices = selectedServices;
 
                 modal.style.display = 'none';
+                modal.removeAttribute('data-je-refresh-hold');
 
                 const elsewhereSettings = {
                     Region: userRegion,
@@ -448,6 +450,7 @@
             modal.onclick = (e) => {
                 if (e.target === modal) {
                     modal.style.display = 'none';
+                    modal.removeAttribute('data-je-refresh-hold');
                 }
             };
         }
@@ -751,6 +754,11 @@
             settingsButton.onclick = () => {
                 const modal = document.getElementById('streaming-settings-modal');
                 if (modal) {
+                    // Hold smart client refresh while the modal is open — it is a
+                    // persistent display-toggled element with unsaved selections,
+                    // invisible to the refresh safety gate's dialog probe otherwise
+                    // (see the data-je-refresh-hold contract in enhanced/client-refresh.js).
+                    modal.setAttribute('data-je-refresh-hold', 'elsewhere-settings');
                     modal.style.display = 'flex';
                 }
             };
