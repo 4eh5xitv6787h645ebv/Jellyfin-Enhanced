@@ -35,20 +35,60 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 _hcCache.TryRemove(userId, out _);
         }
 
-        private static readonly Dictionary<(string, string), (string Surface, ResponseHandler Handler)> _routes
+        // Shared immutable surface sets. Kept as statics so neither route matching nor per-request
+        // surface resolution allocates.
+        private static readonly string[] ContinueWatchingSurface = { "continuewatching" };
+        private static readonly string[] LibrarySurface = { "library" };
+        private static readonly string[] NextUpSurface = { "nextup" };
+        private static readonly string[] UpcomingSurface = { "upcoming" };
+        private static readonly string[] RecommendationsSurface = { "recommendations" };
+        private static readonly string[] SearchSurface = { "search" };
+
+        // A route whose Surfaces is null resolves its surface(s) per request - see ResolveSurfaces.
+        private static readonly Dictionary<(string, string), (string[]? Surfaces, ResponseHandler Handler)> _routes
             = new(KeyComparer.Instance)
         {
-            { ("Items", "GetResumeItems"),         ("continuewatching", FilterQueryResult) },
-            { ("Items", "GetResumeItemsLegacy"),   ("continuewatching", FilterQueryResult) },
-            { ("Items", "GetItems"),               ("library",          FilterQueryResult) },
-            { ("Items", "GetItemsByUserIdLegacy"), ("library",          FilterQueryResult) },
-            { ("UserLibrary", "GetLatestMedia"),       ("library", FilterEnumerable) },
-            { ("UserLibrary", "GetLatestMediaLegacy"), ("library", FilterEnumerable) },
-            { ("TvShows", "GetNextUp"),                ("nextup",          FilterQueryResult) },
-            { ("TvShows", "GetUpcomingEpisodes"),      ("upcoming",        FilterQueryResult) },
-            { ("Suggestions", "GetSuggestions"),       ("recommendations", FilterQueryResult) },
-            { ("Suggestions", "GetSuggestionsLegacy"), ("recommendations", FilterQueryResult) },
-            { ("Search", "GetSearchHints"),            ("search",          FilterSearchHints) },
+            { ("Items", "GetResumeItems"),         (ContinueWatchingSurface, FilterQueryResult) },
+            { ("Items", "GetResumeItemsLegacy"),   (ContinueWatchingSurface, FilterQueryResult) },
+            { ("Items", "GetItems"),               (LibrarySurface,          FilterQueryResult) },
+            { ("Items", "GetItemsByUserIdLegacy"), (LibrarySurface,          FilterQueryResult) },
+            { ("UserLibrary", "GetLatestMedia"),       (LibrarySurface, FilterEnumerable) },
+            { ("UserLibrary", "GetLatestMediaLegacy"), (LibrarySurface, FilterEnumerable) },
+            { ("TvShows", "GetNextUp"),                (NextUpSurface,          FilterQueryResult) },
+            { ("TvShows", "GetUpcomingEpisodes"),      (UpcomingSurface,        FilterQueryResult) },
+            { ("Suggestions", "GetSuggestions"),       (RecommendationsSurface, FilterQueryResult) },
+            { ("Suggestions", "GetSuggestionsLegacy"), (RecommendationsSurface, FilterQueryResult) },
+            { ("Search", "GetSearchHints"),            (SearchSurface,          FilterSearchHints) },
+
+            // Home Screen Sections (IAmParadox27/jellyfin-plugin-home-sections) builds the home rows from
+            // its OWN endpoint instead of Jellyfin's native ones, so on an HSS home screen a "Remove from
+            // Continue Watching" hide that /UserItems/Resume honours came straight back on the next refresh.
+            // Its response is a plain BaseItemDtoQueryResult, so the native handler fits as-is. The surface
+            // is not fixed per route (it depends on which section was asked for), so it is left null here
+            // and resolved from the {sectionType} route value per request. Matching on controller/action
+            // name alone means no compile-time or runtime dependency on the plugin: with HSS absent the
+            // route simply never matches and nothing here runs.
+            { ("HomeScreen", "GetSectionContent"),     (null, FilterQueryResult) },
+        };
+
+        /// <summary>
+        /// Maps a Home Screen Sections section id (its `{sectionType}` route value) to the hide surface(s)
+        /// that row represents. Only the rows that mirror a scoped JE surface are listed; every other
+        /// section falls back to "library" (see <see cref="ResolveSurfaces"/>).
+        /// </summary>
+        /// <remarks>
+        /// Deliberately not listed: HSS's Upcoming rows are built from Sonarr/Radarr/Lidarr/Readarr calendar
+        /// data as synthetic DTOs with a fresh Guid per item per request, and its Seerr-backed rows carry
+        /// external ids, so no entry could ever match a hide for them either way.
+        /// </remarks>
+        private static readonly Dictionary<string, string[]> _homeScreenSectionSurfaces
+            = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "ContinueWatching", ContinueWatchingSurface },
+            { "NextUp",           NextUpSurface },
+            // A single combined row rendering resume items followed by next-up items: an item the user
+            // removed from EITHER surface must not reappear through it, so both scopes are applied.
+            { "ContinueWatchingNextUp", new[] { "continuewatching", "nextup" } },
         };
 
         private delegate void ResponseHandler(ActionExecutedContext executed, HideContext hide, string surface, Logger logger);
@@ -91,15 +131,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var hcEnabled = JellyfinEnhanced.Instance?.Configuration?.HiddenContentEnabled == true;
             var rcwEnabled = JellyfinEnhanced.Instance?.Configuration?.RemoveContinueWatchingEnabled == true;
 
-            // /Items doubles as library list + search results — searchTerm wins, then fall back to library.
-            var surface = (route.Surface == "library" && HasSearchTerm(context))
-                ? "search"
-                : route.Surface;
+            var surfaces = ResolveSurfaces(context, route.Surfaces);
 
             // RemoveContinueWatchingEnabled keeps the home-section Remove surfaces (Continue
             // Watching + Next Up) filtering on even when HC's master switch is off.
-            var isRemoveSurface = string.Equals(surface, "continuewatching", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(surface, "nextup", StringComparison.OrdinalIgnoreCase);
+            var isRemoveSurface = false;
+            foreach (var s in surfaces)
+            {
+                if (string.Equals(s, "continuewatching", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(s, "nextup", StringComparison.OrdinalIgnoreCase))
+                {
+                    isRemoveSurface = true;
+                    break;
+                }
+            }
             if (!hcEnabled && !(rcwEnabled && isRemoveSurface))
             {
                 await next().ConfigureAwait(false);
@@ -121,21 +166,62 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
 
             // Pure metadata-resolver Ids calls bypass — JE's batchCheckParentSeries cascade caches missing IDs as deleted forever.
-            if (surface == "library" && IsMetadataResolverIdsCall(context))
+            if (surfaces.Length == 1 && surfaces[0] == "library" && IsMetadataResolverIdsCall(context))
             {
                 await next().ConfigureAwait(false);
                 return;
             }
 
             var executed = await next().ConfigureAwait(false);
-            try
+            // One pass per surface. A row that spans two surfaces (HSS's combined Continue Watching +
+            // Next Up section) must drop anything hidden on either, and each pass re-reads the result
+            // the previous one wrote, so the drops compose and TotalRecordCount stays consistent.
+            foreach (var surface in surfaces)
             {
-                route.Handler(executed, hide, surface, _logger);
+                try
+                {
+                    route.Handler(executed, hide, surface, _logger);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"HC response filter handler failed for surface '{surface}' — entries will pass through unfiltered for this request: {ex.Message}");
+                }
             }
-            catch (Exception ex)
+        }
+
+        /// <summary>
+        /// Resolves the hide surface(s) a request should be filtered against.
+        /// </summary>
+        /// <param name="context">The executing action, for route values and query string.</param>
+        /// <param name="routeSurfaces">The route's fixed surfaces, or null when they are request-dependent.</param>
+        /// <returns>One or more surface names; never empty.</returns>
+        private static string[] ResolveSurfaces(ActionExecutingContext context, string[]? routeSurfaces)
+        {
+            // Home Screen Sections: the row's surface is whichever section was requested.
+            if (routeSurfaces is null)
             {
-                _logger.Error($"HC response filter handler failed for surface '{route.Surface}' — entries will pass through unfiltered for this request: {ex.Message}");
+                var sectionType = context.RouteData?.Values is { } rv
+                    && rv.TryGetValue("sectionType", out var rawSection)
+                        ? rawSection as string
+                        : null;
+
+                // Unmapped, unknown and plugin-registered section types fall back to "library" — the same
+                // treatment a native library list gets, so only a global hide reaches them (no scope is
+                // ever stored as "library"). Conservative by design: a future HSS section keeps working
+                // without a JE update, and a row-scoped hide can never over-hide somewhere it shouldn't.
+                return !string.IsNullOrEmpty(sectionType)
+                    && _homeScreenSectionSurfaces.TryGetValue(sectionType, out var sectionSurfaces)
+                        ? sectionSurfaces
+                        : LibrarySurface;
             }
+
+            // /Items doubles as library list + search results — searchTerm wins, then fall back to library.
+            if (routeSurfaces.Length == 1 && routeSurfaces[0] == "library" && HasSearchTerm(context))
+            {
+                return SearchSurface;
+            }
+
+            return routeSurfaces;
         }
 
         private static bool HasSearchTerm(ActionExecutingContext context)
@@ -161,7 +247,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private static bool IsRecursiveTrue(IQueryCollection q, string key)
             => q.TryGetValue(key, out var v) && string.Equals(v.ToString().Trim(), "true", StringComparison.OrdinalIgnoreCase);
 
-        private static bool TryGetRoute(ActionExecutingContext context, out (string Surface, ResponseHandler Handler) route)
+        private static bool TryGetRoute(ActionExecutingContext context, out (string[]? Surfaces, ResponseHandler Handler) route)
         {
             route = default;
             var rv = context.RouteData?.Values;
