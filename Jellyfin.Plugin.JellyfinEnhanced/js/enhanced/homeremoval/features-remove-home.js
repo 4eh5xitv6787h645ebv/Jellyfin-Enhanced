@@ -113,38 +113,114 @@
     // ~150ms of a menu opening; this bounds how stale a context can be before we ignore it.
     const REMOVE_CONTEXT_TTL_MS = 5000;
 
+    // Section-level surface verdict, cached per section element so a full-page card scan does
+    // not re-query the same row's title/link once per card. Keyed weakly, so a re-rendered
+    // section is re-evaluated rather than keeping a stale entry alive.
+    const sectionSurfaceCache = new WeakMap();
+
+    // Home Screen Sections stamps its section id onto the row element as a class, which is a
+    // locale-independent identifier for the rows JE cares about. 'both' means the row renders
+    // resume items and next-up items together, so only the card itself can say which it is.
+    const HSS_ROW_CLASS_SURFACE = {
+        continuewatching: 'continuewatching',
+        nextup: 'nextup',
+        continuewatchingnextup: 'both',
+    };
+
     /**
-     * Determines which home-screen surface a card belongs to, using locale-independent
-     * signals so detection survives translated section titles and custom themes:
-     *   • Next Up — the section title is a link to the Next Up list (`?type=nextup`).
-     *   • Continue Watching — resume cards carry a `data-positionticks` playback position.
-     * A localized section-title text check is kept as a last-resort fallback.
+     * Classifies a home row as Continue Watching, Next Up, both, or neither — using the row's
+     * own markup rather than its (translated) heading wherever possible.
+     * @param {Element} section A `.section` / `.verticalSection` / `.homeSection` element.
+     * @returns {'continuewatching'|'nextup'|'both'|null}
+     */
+    function classifyRow(section) {
+        for (const cls of section.classList) {
+            const hit = HSS_ROW_CLASS_SURFACE[cls.toLowerCase()];
+            if (hit) return hit;
+        }
+
+        // A Home Screen Sections row is fully described by the class checked above, and it is
+        // the ONLY thing that describes it: HSS stamps jellyfin-web's playback-monitor marker
+        // onto every row it renders, including Recently Added, so the native test below would
+        // read those as resume rows. Its rows are identifiable by the page index it tags them
+        // with, so stop here rather than fall through to a marker it overloads.
+        if (section.hasAttribute('data-page')) return null;
+
+        // Native Next Up: its heading links to the Next Up list. Absent on the TV layout,
+        // which renders a bare <h2> — that case is caught by the data-monitor test below.
+        if (section.querySelector('a[href*="type=nextup"]')) return 'nextup';
+
+        // Resume and Next Up are the only home rows jellyfin-web asks to re-render on playback
+        // events, so a monitored row is one of the two. Both carry the same marker, so the
+        // caller's per-card playback position decides which.
+        const monitored = section.querySelector('.itemsContainer[data-monitor]');
+        if (monitored && /playback/i.test(monitored.getAttribute('data-monitor') || '')) return 'both';
+
+        // Last resort for themes/markup with none of the above: the (English) heading text.
+        const title = (section.querySelector('.sectionTitle, h2, .headerText, .sectionTitle-sectionTitle')?.textContent || '')
+            .toLowerCase().trim();
+        if (title.includes('next up')) return 'nextup';
+        if (title.includes('continue watching')) return 'continuewatching';
+        return null;
+    }
+
+    /**
+     * Determines the home surface a card is being *displayed on*, or null when it is not in a
+     * Continue Watching / Next Up row at all.
+     *
+     * Strict by design: a resume item also appears in rows like "Recently Added", and those
+     * cards carry a playback position too, so treating the position alone as proof of surface
+     * would let a Continue-Watching-scoped hide blank the item everywhere it shows up. The row
+     * decides the kind; the card's playback position only disambiguates a combined row (Home
+     * Screen Sections renders one "Continue Watching / Next Up" section holding both).
      * @param {Element} el A `.card` element, or any element inside/representing one.
      * @returns {'continuewatching'|'nextup'|null}
      */
-    JE.detectCardSurface = function(el) {
+    JE.detectCardRowSurface = function(el) {
         if (!el) return null;
         const card = (typeof el.closest === 'function' ? el.closest('.card') : null) || el;
         const section = typeof card.closest === 'function'
             ? card.closest('.section, .verticalSection, .homeSection')
             : null;
+        if (!section) return null;
 
-        // Next Up: the section title links to the Next Up list — present regardless of locale.
-        if (section && section.querySelector('a[href*="type=nextup"]')) return 'nextup';
+        // Only the row-level verdict is cached — the per-card test below always runs, so a
+        // resume card in a combined row is never served a stale "nextup".
+        let kind;
+        if (sectionSurfaceCache.has(section)) {
+            kind = sectionSurfaceCache.get(section);
+        } else {
+            kind = classifyRow(section);
+            sectionSurfaceCache.set(section, kind);
+        }
+        if (!kind) return null;
+        if (kind !== 'both') return kind;
 
-        // Continue Watching: only resume cards expose a playback position.
         const ticks = (card.getAttribute && card.getAttribute('data-positionticks'))
             || (el.getAttribute && el.getAttribute('data-positionticks'));
-        if (ticks) return 'continuewatching';
+        return ticks ? 'continuewatching' : 'nextup';
+    };
 
-        // Fallback for markup/themes without the link or ticks: localized section title text.
-        if (section) {
-            const title = (section.querySelector('.sectionTitle, h2, .headerText, .sectionTitle-sectionTitle')?.textContent || '')
-                .toLowerCase().trim();
-            if (title.includes('next up')) return 'nextup';
-            if (title.includes('continue watching')) return 'continuewatching';
-        }
-        return null;
+    /**
+     * Which surface a Remove action on this card should be scoped to.
+     *
+     * Deliberately more generous than {@link JE.detectCardRowSurface}: when the row cannot be
+     * identified (a custom theme, an unrecognised layout) a card that carries a playback
+     * position is still a Continue Watching item, and offering Remove there is useful — the
+     * worst case is writing a scope for a surface the user was not looking at, which hides
+     * nothing extra. Filtering cannot afford the same guess, which is why it is a separate call.
+     * @param {Element} el A `.card` element, or any element inside/representing one.
+     * @returns {'continuewatching'|'nextup'|null}
+     */
+    JE.detectCardSurface = function(el) {
+        if (!el) return null;
+        const row = JE.detectCardRowSurface(el);
+        if (row) return row;
+
+        const card = (typeof el.closest === 'function' ? el.closest('.card') : null) || el;
+        const ticks = (card.getAttribute && card.getAttribute('data-positionticks'))
+            || (el.getAttribute && el.getAttribute('data-positionticks'));
+        return ticks ? 'continuewatching' : null;
     };
 
     /**
