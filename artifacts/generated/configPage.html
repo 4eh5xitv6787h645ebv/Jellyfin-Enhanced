@@ -9827,15 +9827,16 @@ function createDashboardPersistence({
     // starts (and possibly fails) right away still has a dirty-indicator baseline of
     // saved values. Late feature populations retain their existing settling
     // interval: the baseline is refreshed after 500 ms unless a newer load or
-    // disposal superseded it, or a write is in flight (its completion marks saved
-    // itself, and a form edited during a failed write must stay dirty).
+    // disposal superseded it. Starting a write cancels the refresh: a successful
+    // write marks saved itself, and a form edited around a failed write must stay
+    // dirty rather than become the baseline.
     function markLoadedBaseline() {
         jeMarkSaved();
         clearSavedSnapshotTimer();
         const generation = snapshotGeneration;
         savedSnapshotTimer = lifecycle.setTimeout(() => {
             savedSnapshotTimer = undefined;
-            if (lifecycle.disposed || generation !== snapshotGeneration || mutationInFlight) return;
+            if (lifecycle.disposed || generation !== snapshotGeneration) return;
             jeMarkSaved();
         }, 500);
     }
@@ -9920,9 +9921,11 @@ function createDashboardPersistence({
             return false;
         }
         mutationInFlight = true;
-        // A pending load must not repopulate the form mid-write. The hydration
-        // baseline (see markLoadedBaseline) is kept, so a failed save stays dirty.
+        // A pending load must not repopulate the form mid-write, and the delayed
+        // baseline refresh is cancelled so a failed save leaves edits dirty against
+        // the hydration baseline (see markLoadedBaseline).
         loadGeneration++;
+        clearSavedSnapshotTimer();
         const saveButtons = document.querySelectorAll('.je-save-dock-btn');
         saveButtonStates = Array.from(saveButtons, (button) => ({ button, disabled: button.disabled }));
         try {
