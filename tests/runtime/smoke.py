@@ -273,11 +273,17 @@ def main():
             report["error"] = str(error)
             raise
         finally:
+            # Each cleanup step is independent: a container that never started has no
+            # logs, and a failed log capture must not skip removal or the report.
             try:
                 (output / "server.log").write_text(docker("logs", name))
-            finally:
+            except subprocess.CalledProcessError as error:
+                (output / "server.log").write_text(f"docker logs unavailable: {error}\n")
+            try:
                 docker("rm", "--force", name)
-                (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
+            except subprocess.CalledProcessError as error:
+                report.setdefault("cleanup_error", str(error))
+            (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
 
 
 if __name__ == "__main__":

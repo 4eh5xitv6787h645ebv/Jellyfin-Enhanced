@@ -36,6 +36,10 @@ function validateManifest(manifest, availableFiles) {
 }
 
 function renderBootstrap(manifest) {
+    const bootstrapDirectory = path.join(root, 'src/host/bootstrap');
+    const unlisted = fs.readdirSync(bootstrapDirectory)
+        .filter(name => name.endsWith('.js') && !sources.includes(name.replace(/\.js$/, '')));
+    if (unlisted.length) throw new Error(`Bootstrap sources are not composed: ${unlisted.join(', ')}. Add them to the ordered sources list in tools/build/build-bootstrap.js.`);
     const body = sources.map(name => {
         const source = fs.readFileSync(path.join(root, 'src/host/bootstrap', `${name}.js`), 'utf8');
         new vm.Script(source, { filename: `${name}.js` });

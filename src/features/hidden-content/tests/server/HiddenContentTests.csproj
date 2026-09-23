@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../server/HiddenContentPolicy.cs" Link="Production/HiddenContentPolicy.cs" />
-    <ProjectReference Include="../../../../JellyfinEnhanced.csproj" />
+    <Compile Include="../../settings/UserHiddenContent.cs" Link="Production/UserHiddenContent.cs" />
+    <Compile Include="../../settings/HiddenContentSettings.cs" Link="Production/HiddenContentSettings.cs" />
+    <Compile Include="../../settings/HiddenContentItem.cs" Link="Production/HiddenContentItem.cs" />
   </ItemGroup>
 </Project>

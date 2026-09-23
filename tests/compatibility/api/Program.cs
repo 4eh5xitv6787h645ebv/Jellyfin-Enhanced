@@ -10,6 +10,7 @@ var fixture = JsonSerializer.Deserialize<List<ActionContract>>(
     File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "controller-contract-baseline.json")))!;
 var expected = fixture.ToDictionary(x => x.name, x => CanonicalSignature(ParseMethod(x.signature)));
 var actual = new Dictionary<string, string>();
+var routes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 var failures = new List<string>();
 foreach (var path in Directory.EnumerateFiles(Path.Combine(root, "src"), "*.cs", SearchOption.AllDirectories)
     .Where(path => !Path.GetRelativePath(root, path).Split(Path.DirectorySeparatorChar).Any(part => part is "tests" or "bin" or "obj")))
@@ -32,6 +33,15 @@ foreach (var path in Directory.EnumerateFiles(Path.Combine(root, "src"), "*.cs",
         if (!actual.TryAdd(name, CanonicalSignature(method)))
             failures.Add($"Duplicate HTTP action name: {name}");
         var controller = (ClassDeclarationSyntax)method.Parent!;
+        // Splitting one controller into many can silently create two actions for one
+        // verb/route pair, which ASP.NET only reports at request time (AmbiguousMatchException).
+        foreach (var http in method.AttributeLists.SelectMany(x => x.Attributes).Where(x => x.Name.ToString().StartsWith("Http", StringComparison.Ordinal)))
+        {
+            var template = http.ArgumentList?.Arguments.FirstOrDefault(a => a.NameEquals == null)?.Expression.ToString().Trim('"') ?? string.Empty;
+            var key = $"{http.Name} JellyfinEnhanced/{template}";
+            if (!routes.TryAdd(key, $"{controller.Identifier}.{name}"))
+                failures.Add($"Ambiguous route: {key} is declared by {routes[key]} and {controller.Identifier}.{name}");
+        }
         var route = controller.AttributeLists.SelectMany(x => x.Attributes).SingleOrDefault(x => x.Name.ToString() == "Route");
         if (route?.ArgumentList?.Arguments.Single().Expression.ToString() != "\"JellyfinEnhanced\"")
             failures.Add($"Unexpected route prefix: {controller.Identifier}");
@@ -46,7 +56,7 @@ foreach (var (name, signature) in expected)
 }
 foreach (var extra in actual.Keys.Except(expected.Keys)) failures.Add($"Unrecorded HTTP action: {extra}");
 if (failures.Count > 0) throw new InvalidOperationException(string.Join("\n", failures));
-Console.WriteLine($"PASS: {expected.Count} upstream HTTP action contracts, including routes, authorization, binding and defaults.");
+Console.WriteLine($"PASS: {expected.Count} upstream HTTP action contracts, including routes, authorization, binding and defaults; {routes.Count} verb/route pairs are unambiguous.");
 
 await SeerrStatusScenarios.RunAsync();
 

@@ -1,4 +1,9 @@
 <Project>
+  <PropertyGroup>
+    <!-- Source-built (distro) SDKs ship without prune package data for ASP.NET Core
+         framework references; the plugin and its checks do not depend on pruning. -->
+    <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'JellyfinEnhanced'">
     <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts/bin/</BaseOutputPath>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts/obj/plugin/</BaseIntermediateOutputPath>

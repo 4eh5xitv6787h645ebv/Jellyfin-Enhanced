@@ -58,8 +58,17 @@ if (mode === '--all' || mode === '--backend') {
         const assembly = `artifacts/bin/Release/${framework}/Jellyfin.Plugin.JellyfinEnhanced.dll`;
         run('dotnet', ['run', '--project', 'tests/compatibility/resources/ArtifactContracts.csproj', '--', assembly]);
     }
+    // Run every backend test program so one failure does not hide the others' results.
+    const failed = [];
     for (const testProject of [...files('tests'), ...files('src')].filter(path => path.endsWith('.csproj') && path !== project && !path.startsWith('tests/compatibility/resources/'))) {
-        run('dotnet', ['run', '--project', testProject]);
+        console.log(`\n> dotnet run --project ${testProject}`);
+        const result = spawnSync('dotnet', ['run', '--project', testProject], { cwd: root, stdio: 'inherit' });
+        if (result.error) throw result.error;
+        if (result.status !== 0) failed.push(`${testProject} (exit ${result.status})`);
+    }
+    if (failed.length) {
+        console.error(`\nBackend test programs failed:\n  ${failed.join('\n  ')}`);
+        process.exit(1);
     }
 }
 console.log(`\nJE checks passed (${mode.slice(2)}).`);

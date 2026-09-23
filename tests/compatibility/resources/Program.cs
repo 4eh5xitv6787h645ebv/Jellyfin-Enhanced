@@ -21,7 +21,7 @@ foreach (var handle in metadata.ManifestResources)
 
 if (args.Contains("--record"))
 {
-    Console.WriteLine(JsonSerializer.Serialize(resources.Keys.Order().ToArray(), new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine(JsonSerializer.Serialize(resources.Keys.Order(StringComparer.Ordinal).ToArray(), new JsonSerializerOptions { WriteIndented = true }));
     return;
 }
 

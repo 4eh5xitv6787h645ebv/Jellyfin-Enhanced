@@ -1,7 +1,7 @@
 {
   "id": "host",
   "standalone": {
-    "../../artifacts/generated/plugin.js": "Injected public entry point; generated from frontend/bootstrap."
+    "../../artifacts/generated/plugin.js": "Injected public entry point; generated from src/host/bootstrap and feature startup sources."
   },
   "assets": [
     "../../artifacts/generated/configPage.css",

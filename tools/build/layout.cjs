@@ -51,6 +51,12 @@ function readLayout(repository = root) {
 
     for (const descriptor of descriptors) {
         const definition = readJson(descriptor);
+        if (!definition || typeof definition !== 'object' || Array.isArray(definition)) throw new Error(`Descriptor must be an object: ${descriptor}`);
+        for (const key of Object.keys(definition)) {
+            if (!['id', 'modules', 'standalone', 'assets', 'startup'].includes(key)) throw new Error(`Unknown descriptor key "${key}" in ${descriptor}; use id, modules, standalone, assets or startup`);
+        }
+        if (definition.assets !== undefined && !Array.isArray(definition.assets)) throw new Error(`Assets must be an array of sources: ${descriptor}`);
+        if (definition.standalone !== undefined && (typeof definition.standalone !== 'object' || Array.isArray(definition.standalone))) throw new Error(`Standalone must map sources to loading reasons: ${descriptor}`);
         const directory = path.dirname(path.join(repository, descriptor));
         const owner = definition.id;
         const isFeature = descriptor.startsWith('src/features/');
