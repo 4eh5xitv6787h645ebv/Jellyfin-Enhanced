@@ -60,8 +60,5 @@
       "shared/ui-kit"
     ]
   },
-  "assets": [
-    "client/README.md"
-  ],
   "startup": "client/startup.js"
 }

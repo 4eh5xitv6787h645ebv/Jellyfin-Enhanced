@@ -1731,7 +1731,7 @@
     },
     {
       "path": "plugin.js",
-      "reason": "Injected public entry point; generated from frontend/bootstrap.",
+      "reason": "Injected public entry point; generated from src/host/bootstrap and feature startup sources.",
       "source": "artifacts/generated/plugin.js"
     },
     {

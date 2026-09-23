@@ -61,11 +61,6 @@
     }
   },
   {
-    "source": "src/features/active-streams/client/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.README.md",
-    "owner": "active-streams"
-  },
-  {
     "source": "src/features/activity/client/colored-activity-icons.js",
     "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.colored-activity-icons.js",
     "owner": "activity",
@@ -187,11 +182,6 @@
     }
   },
   {
-    "source": "src/features/appearance/client/standalone-integrations.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.others.README.md",
-    "owner": "appearance"
-  },
-  {
     "source": "src/features/arr/client/arr-links-data.js",
     "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-links-data.js",
     "owner": "arr",
@@ -241,11 +231,6 @@
       ],
       "order": 171
     }
-  },
-  {
-    "source": "src/features/arr/client/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.README.md",
-    "owner": "arr"
   },
   {
     "source": "src/features/bookmarks/client/bookmarks-model.js",
@@ -422,11 +407,6 @@
   {
     "source": "src/features/bookmarks/client/BookmarksPage.html",
     "resource": "Jellyfin.Plugin.JellyfinEnhanced.PluginPages.BookmarksPage.html",
-    "owner": "bookmarks"
-  },
-  {
-    "source": "src/features/bookmarks/client/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.README.md",
     "owner": "bookmarks"
   },
   {
@@ -1167,11 +1147,6 @@
       ],
       "order": 87
     }
-  },
-  {
-    "source": "src/features/playback/client/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.README.md",
-    "owner": "playback"
   },
   {
     "source": "src/features/ratings/client/awards.js",
@@ -2043,21 +2018,6 @@
     "owner": "seerr"
   },
   {
-    "source": "src/features/seerr/client/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.README.md",
-    "owner": "seerr"
-  },
-  {
-    "source": "src/features/seerr/client/api/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.README.md",
-    "owner": "seerr"
-  },
-  {
-    "source": "src/features/seerr/client/discovery/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.README.md",
-    "owner": "seerr"
-  },
-  {
     "source": "src/features/spoiler-guard/client/ids.js",
     "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.ids.js",
     "owner": "spoiler-guard",
@@ -2251,11 +2211,6 @@
     }
   },
   {
-    "source": "src/features/streaming-availability/client/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.README.md",
-    "owner": "streaming-availability"
-  },
-  {
     "source": "src/features/tags/client/tag-pipeline.js",
     "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.tag-pipeline.js",
     "owner": "tags",
@@ -2377,11 +2332,6 @@
     }
   },
   {
-    "source": "src/features/tags/client/README.md",
-    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.README.md",
-    "owner": "tags"
-  },
-  {
     "source": "src/features/user-settings/client/config.js",
     "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.config.js",
     "owner": "user-settings",
@@ -2487,7 +2437,7 @@
     "owner": "host",
     "standalone": {
       "path": "plugin.js",
-      "reason": "Injected public entry point; generated from frontend/bootstrap."
+      "reason": "Injected public entry point; generated from src/host/bootstrap and feature startup sources."
     }
   },
   {

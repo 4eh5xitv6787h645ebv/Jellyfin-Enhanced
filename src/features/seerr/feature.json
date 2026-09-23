@@ -220,10 +220,7 @@
     ]
   },
   "assets": [
-    "client/RecommendationsPage.html",
-    "client/README.md",
-    "client/api/README.md",
-    "client/discovery/README.md"
+    "client/RecommendationsPage.html"
   ],
   "startup": "client/startup.js"
 }

@@ -6,7 +6,6 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/active-streams/client/view.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.view.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/active-streams/client/broadcast.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.broadcast.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/active-streams/client/active-streams.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.active-streams.js" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/active-streams/client/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/activity/client/colored-activity-icons.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.colored-activity-icons.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/activity/client/activity-page.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.activity-page.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/activity/client/activity-custom-tab.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.activity-custom-tab.js" />
@@ -17,12 +16,10 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/appearance/client/theme-selector.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.theme-selector.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/appearance/client/login-image.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.login-image.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/appearance/client/splashscreen.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.others.splashscreen.js" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/appearance/client/standalone-integrations.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.others.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/arr/client/arr-links-data.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-links-data.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/arr/client/arr-links-view.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-links-view.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/arr/client/arr-links.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-links.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/arr/client/arr-tag-links.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-tag-links.js" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/arr/client/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/bookmarks/client/bookmarks-model.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-model.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/bookmarks/client/bookmarks-items.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-items.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/bookmarks/client/bookmarks-store.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-store.js" />
@@ -38,7 +35,6 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/bookmarks/client/bookmarks-library-replacements.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-replacements.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/bookmarks/client/bookmarks-library-init.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-init.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/bookmarks/client/BookmarksPage.html" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.PluginPages.BookmarksPage.html" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/bookmarks/client/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/calendar/client/calendar-page-styles.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-styles.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/calendar/client/calendar-page-data.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-data.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/calendar/client/calendar-page-render-events.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-render-events.js" />
@@ -99,7 +95,6 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/playback/client/pause-screen-styles.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.pause-screen-styles.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/playback/client/pausescreen.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.pausescreen.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/playback/client/playback-rating-badge.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.playback-rating-badge.js" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/playback/client/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/ratings/client/awards.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.awards.awards.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/ratings/client/mdblist-ratings.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.others.mdblist-ratings.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/ratings/client/colored-ratings.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.extras.colored-ratings.js" />
@@ -170,9 +165,6 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/seerr/client/recommendations/recommendations-init.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-init.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/seerr/client/recommendations/recommendations-custom-tab.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-custom-tab.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/seerr/client/RecommendationsPage.html" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.PluginPages.RecommendationsPage.html" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/seerr/client/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.README.md" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/seerr/client/api/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.README.md" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/seerr/client/discovery/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/spoiler-guard/client/ids.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.ids.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/spoiler-guard/client/state.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.state.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/spoiler-guard/client/image-refresh.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.image-refresh.js" />
@@ -189,7 +181,6 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/streaming-availability/client/elsewhere-api.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.elsewhere-api.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/streaming-availability/client/elsewhere-panel.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.elsewhere-panel.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/streaming-availability/client/elsewhere.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.elsewhere.js" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/streaming-availability/client/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/tags/client/tag-pipeline.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.tags.tag-pipeline.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/tags/client/genretags.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.tags.genretags.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/tags/client/languagetags.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.tags.languagetags.js" />
@@ -199,7 +190,6 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/tags/client/qualitytags.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.tags.qualitytags.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/tags/client/ratingtags.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.tags.ratingtags.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/tags/client/userreviewtags.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.tags.userreviewtags.js" />
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/tags/client/README.md" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.tags.README.md" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/user-settings/client/config.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.config.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/user-settings/client/ui-entry-points.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-entry-points.js" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../src/features/user-settings/client/ui-release-notes.js" LogicalName="Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-release-notes.js" />

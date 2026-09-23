@@ -18,8 +18,5 @@
       "active-streams/broadcast"
     ]
   },
-  "assets": [
-    "client/README.md"
-  ],
   "startup": "client/startup.js"
 }

@@ -26,8 +26,5 @@
     "client/login-image.js": "Loaded before authentication when public config enables the login image.",
     "client/splashscreen.js": "Loaded before authentication by prelogin."
   },
-  "assets": [
-    "client/standalone-integrations.md"
-  ],
   "startup": "client/startup.js"
 }

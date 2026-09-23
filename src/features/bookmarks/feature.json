@@ -49,8 +49,7 @@
     ]
   },
   "assets": [
-    "client/BookmarksPage.html",
-    "client/README.md"
+    "client/BookmarksPage.html"
   ],
   "startup": "client/startup.js"
 }
