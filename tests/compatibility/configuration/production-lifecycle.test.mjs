@@ -59,6 +59,7 @@ async function hydratedHarness(saved = {}) {
     h.trace.reads = 0;
     h.trace.show = 0;
     h.trace.hide = 0;
+    h.trace.saved = 0;
     return h;
 }
 
@@ -91,29 +92,46 @@ test('production failed load keeps saving refused so markup defaults cannot repl
     assert.equal(h.trace.writes.length, 1);
 });
 
-test('production failed save keeps the delayed clean snapshot so the dirty indicator has a baseline', async () => {
-    const h = await hydratedHarness({ Feature: 'saved' });
-    h.context.ApiClient.updatePluginConfiguration = async () => { throw new Error('write failed'); };
-    await h.save();
-    assert.equal(h.trace.saved, 0);
+test('production failed save keeps the hydration baseline and never adopts edits made during the write', async () => {
+    const h = productionHarness({ Feature: 'saved' });
+    assert.equal(await h.load(), true);
+    assert.equal(h.trace.saved, 1, 'hydration takes the baseline before any save can start');
+    h.element('featureValue').value = 'edited';
+    const write = deferred();
+    h.context.ApiClient.updatePluginConfiguration = () => write.promise;
+    const saving = h.save();
+    await flush();
+    h.runTimers();
+    assert.equal(h.trace.saved, 1, 'the delayed refresh must not snapshot a form whose write is pending');
+    write.reject(new Error('write failed'));
+    await saving;
+    assert.equal(h.trace.saved, 1);
     assert.equal(h.trace.alerts[0].title, 'Save failed');
     h.runTimers();
-    assert.equal(h.trace.saved, 1, "the load's delayed snapshot survives a failed save");
+    assert.equal(h.trace.saved, 1, 'a failed write leaves the edited form dirty against the hydration baseline');
     h.persistence.dispose();
     h.runTimers();
-    assert.equal(h.trace.saved, 1, 'disposal drops pending snapshots');
+    assert.equal(h.trace.saved, 1, 'disposal drops pending refreshes');
+});
+
+test('production apply-to-all refuses before confirming when the form is not hydrated', async () => {
+    const h = productionHarness({ Feature: 'saved' });
+    assert.equal(await h.applyToAll(), false);
+    assert.equal(h.trace.confirmations.length, 0);
+    assert.equal(h.trace.writes.length, 0);
+    assert.equal(h.trace.alerts[0].title, 'Settings not loaded');
 });
 
 test('production load restores fields and ownership before dependency refresh and delayed clean snapshot', async () => {
     const h = productionHarness({ Feature: 'saved value', ManagedOwned: true });
     assert.equal(await h.load(), true);
-    assert.deepEqual(h.calls, ['plugins', 'restore-ownership', 'load', 'normalize-load', 'dependencies', 'requirements']);
+    assert.deepEqual(h.calls, ['plugins', 'restore-ownership', 'load', 'normalize-load', 'dependencies', 'requirements', 'saved']);
     assert.equal(h.element('featureValue').value, 'saved value');
     assert.equal(h.ownership.ManagedOwned, true);
     assert.equal(h.trace.hide, 1);
-    assert.equal(h.trace.saved, 0);
+    assert.equal(h.trace.saved, 1, 'the hydrated form is the clean baseline immediately');
     h.runTimers();
-    assert.equal(h.trace.saved, 1);
+    assert.equal(h.trace.saved, 2, 'late feature populations refresh the baseline');
 });
 
 test('production rejected load recovers the spinner, preserves dirty state and can retry', async () => {
@@ -128,7 +146,7 @@ test('production rejected load recovers the spinner, preserves dirty state and c
     assert.equal(await h.load(), true);
     h.runTimers();
     assert.equal(h.element('featureValue').value, 'retry');
-    assert.equal(h.trace.saved, 1);
+    assert.equal(h.trace.saved, 2);
 });
 
 test('production older config response cannot overwrite a newer pageshow load', async () => {
@@ -144,7 +162,7 @@ test('production older config response cannot overwrite a newer pageshow load', 
     assert.equal(h.element('featureValue').value, 'newest');
     assert.deepEqual(h.loaded, [{ Feature: 'newest' }]);
     h.runTimers();
-    assert.equal(h.trace.saved, 1);
+    assert.equal(h.trace.saved, 2, 'only the newest load takes baselines');
 });
 
 test('production stale load failure cannot hide the current load spinner or alert', async () => {
@@ -237,7 +255,7 @@ test('production apply-to-all preserves operation order and partial Custom Tabs 
     assert.equal(h.calls.includes('maintenance'), false, 'apply-to-all retains its own side-effect contract');
 });
 
-test('production save starts invalidate pending page loads and defer delayed clean snapshots', async () => {
+test('production save starts invalidate pending page loads and skip the delayed baseline refresh', async () => {
     const h = productionHarness({ Feature: 'original' });
     await h.load();
     const obsoleteSnapshot = h.scheduled[0];
@@ -247,11 +265,11 @@ test('production save starts invalidate pending page loads and defer delayed cle
     const saving = h.save();
     await flush();
     obsoleteSnapshot();
-    assert.equal(h.trace.saved, 0);
+    assert.equal(h.trace.saved, 1, 'the delayed refresh is skipped while the write is pending');
     assert.equal(await h.load(), false, 'pageshow must not reload while a save is committing');
     write.resolve({});
     await saving;
-    assert.equal(h.trace.saved, 1);
+    assert.equal(h.trace.saved, 2);
 
     const pendingLoad = deferred();
     h.context.ApiClient.getPluginConfiguration = () => pendingLoad.promise;

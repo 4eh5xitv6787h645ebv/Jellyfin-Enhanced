@@ -38,7 +38,9 @@ foreach (var path in Directory.EnumerateFiles(Path.Combine(root, "src"), "*.cs",
         foreach (var http in method.AttributeLists.SelectMany(x => x.Attributes).Where(x => x.Name.ToString().StartsWith("Http", StringComparison.Ordinal)))
         {
             var template = http.ArgumentList?.Arguments.FirstOrDefault(a => a.NameEquals == null)?.Expression.ToString().Trim('"') ?? string.Empty;
-            var key = $"{http.Name} JellyfinEnhanced/{template}";
+            // Route parameters match by position, not name, and trailing slashes are ignored.
+            var normalized = System.Text.RegularExpressions.Regex.Replace(template, @"\{[^}]*\}", "{}").Trim('/');
+            var key = $"{http.Name} JellyfinEnhanced/{normalized}";
             if (!routes.TryAdd(key, $"{controller.Identifier}.{name}"))
                 failures.Add($"Ambiguous route: {key} is declared by {routes[key]} and {controller.Identifier}.{name}");
         }

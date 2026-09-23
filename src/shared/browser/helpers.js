@@ -56,7 +56,7 @@
     // Sourced from JE.currentSettings.isAdmin, which the server computes fresh
     // from the authenticated caller on every settings.json GET and never
     // persists to the file (see GetUserSettingsSettings in
-    // JellyfinEnhancedController.cs). This is a UX gate only: every admin-only
+    // src/features/user-settings/api/UserSettingsController.cs). This is a UX gate only: every admin-only
     // endpoint enforces access independently server-side.
     /**
      * @returns {boolean}

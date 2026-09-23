@@ -277,11 +277,11 @@ def main():
             # logs, and a failed log capture must not skip removal or the report.
             try:
                 (output / "server.log").write_text(docker("logs", name))
-            except subprocess.CalledProcessError as error:
+            except (subprocess.CalledProcessError, OSError) as error:
                 (output / "server.log").write_text(f"docker logs unavailable: {error}\n")
             try:
                 docker("rm", "--force", name)
-            except subprocess.CalledProcessError as error:
+            except (subprocess.CalledProcessError, OSError) as error:
                 report.setdefault("cleanup_error", str(error))
             (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
 

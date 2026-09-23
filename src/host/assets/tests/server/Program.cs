@@ -128,11 +128,11 @@ static async Task CheckLocaleLayouts(Logger logger, string root)
     var service = new CdnAssetService(logger, handler, new TestPaths(root));
     string NewLocale() => "locale-" + Guid.NewGuid().ToString("N") + ".json";
 
-    var legacy = NewLocale();
+    var rootLayout = NewLocale();
     handler.Respond = _ => Response("application/json", "{\"layout\":\"root\"}");
-    var asset = await service.GetAsync("locales", legacy, false, default);
-    Check(asset != null && handler.Requests.SequenceEqual(new[] { rootBase + legacy }), "Root locale layout succeeds without a fallback request");
-    Check(await service.GetAsync("locales", legacy, false, default) == asset && handler.Calls == 1, "Root-layout locale caches under its public key");
+    var asset = await service.GetAsync("locales", rootLayout, false, default);
+    Check(asset != null && handler.Requests.SequenceEqual(new[] { rootBase + rootLayout }), "Root locale layout succeeds without a fallback request");
+    Check(await service.GetAsync("locales", rootLayout, false, default) == asset && handler.Calls == 1, "Root-layout locale caches under its public key");
 
     var relocated = NewLocale();
     handler.Requests.Clear();

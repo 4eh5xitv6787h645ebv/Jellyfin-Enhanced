@@ -1,9 +1,9 @@
 # Host HTTP endpoints
 
 This directory contains the endpoints that expose plugin configuration, host compatibility,
-and embedded assets. `JellyfinEnhancedController` is a static cache-invalidation compatibility
-entry point; it publishes no MVC actions. Feature endpoints live with their implementations
-under `src/features/<feature>/api`.
+and embedded assets. Feature endpoints live with their implementations under
+`src/features/<feature>/api`; Seerr cache invalidation used by configuration updates and
+scheduled imports is `SeerrCacheInvalidation` in `src/features/seerr/server/`.
 
 Every concrete controller retains the `JellyfinEnhanced` route prefix. File placement does not
 change client URLs. Authorization, request limits, content types, cache metadata, and parameter

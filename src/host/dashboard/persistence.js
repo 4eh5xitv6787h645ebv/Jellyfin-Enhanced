@@ -44,17 +44,20 @@ function createDashboardPersistence({
         savedSnapshotTimer = undefined;
     }
 
-    // Late feature populations retain their existing settling interval. A newer
-    // load or disposal discards the delayed clean snapshot; a save in progress only
-    // defers it, so a failed save still leaves a usable dirty baseline.
-    function scheduleSavedSnapshot() {
+    // The clean baseline is taken as soon as the form is hydrated, so a save that
+    // starts (and possibly fails) right away still has a dirty-indicator baseline of
+    // saved values. Late feature populations retain their existing settling
+    // interval: the baseline is refreshed after 500 ms unless a newer load or
+    // disposal superseded it, or a write is in flight (its completion marks saved
+    // itself, and a form edited during a failed write must stay dirty).
+    function markLoadedBaseline() {
+        jeMarkSaved();
         clearSavedSnapshotTimer();
         const generation = snapshotGeneration;
         savedSnapshotTimer = lifecycle.setTimeout(() => {
             savedSnapshotTimer = undefined;
-            if (lifecycle.disposed || generation !== snapshotGeneration) return;
-            if (mutationInFlight) scheduleSavedSnapshot();
-            else jeMarkSaved();
+            if (lifecycle.disposed || generation !== snapshotGeneration || mutationInFlight) return;
+            jeMarkSaved();
         }, 500);
     }
 
@@ -99,7 +102,7 @@ function createDashboardPersistence({
             hydrated = true;
             updateAllDependencies();
             updateRequestsRequirementsBanner();
-            scheduleSavedSnapshot();
+            markLoadedBaseline();
             return true;
         } catch (error) {
             if (isCurrent()) {
@@ -133,14 +136,13 @@ function createDashboardPersistence({
             alert({
                 title: 'Settings not loaded',
                 message:
-                    'Jellyfin Enhanced settings have not finished loading, so saving now would replace your saved configuration with defaults. Wait for the page to load, or reopen it, then try again.',
+                    'Jellyfin Enhanced settings have not finished loading, so saving now would replace your saved configuration with defaults. If the page is still loading, wait for it to finish. If loading failed, reload the page and check the browser console and server logs for the reported error.',
             });
             return false;
         }
         mutationInFlight = true;
-        // A pending load must not repopulate the form mid-write. The delayed clean
-        // snapshot is only deferred (see scheduleSavedSnapshot), so a failed save
-        // still leaves a dirty-indicator baseline.
+        // A pending load must not repopulate the form mid-write. The hydration
+        // baseline (see markLoadedBaseline) is kept, so a failed save stays dirty.
         loadGeneration++;
         const saveButtons = document.querySelectorAll('.je-save-dock-btn');
         saveButtonStates = Array.from(saveButtons, (button) => ({ button, disabled: button.disabled }));
@@ -225,6 +227,7 @@ function createDashboardPersistence({
 
     async function resetAllUserSettings() {
         if (lifecycle.disposed || mutationInFlight) return false;
+        if (!hydrated) return persistConfiguration(true);
         if (
             !confirm(
                 "Are you sure?\n\nThis saves the current configuration, then copies these Display/Playback/etc. values into every user's Enhanced Panel settings, replacing anything they've customized for themselves. This cannot be undone per-user; each user would have to re-apply their own preferences afterward.",
