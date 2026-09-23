@@ -103,13 +103,13 @@ be reproduced without those temporary files:
 ```sh
 # After installing the optional browser dependencies described in tests/runtime/README.md:
 tests/runtime/.venv/bin/python tests/runtime/smoke.py --target jf12 \
-  --artifact Jellyfin.Plugin.JellyfinEnhanced/bin/Release/net10.0/Jellyfin.Plugin.JellyfinEnhanced.dll \
-  --module-manifest frontend/module-manifest.json --browser \
+  --artifact artifacts/bin/Release/net10.0/Jellyfin.Plugin.JellyfinEnhanced.dll \
+  --module-manifest artifacts/generated/module-manifest.json --browser \
   --output tests/runtime/results/jf12
 
 tests/runtime/.venv/bin/python tests/runtime/smoke.py --target jf10 \
-  --artifact Jellyfin.Plugin.JellyfinEnhanced/bin/Release/net9.0/Jellyfin.Plugin.JellyfinEnhanced.dll \
-  --module-manifest frontend/module-manifest.json --browser \
+  --artifact artifacts/bin/Release/net9.0/Jellyfin.Plugin.JellyfinEnhanced.dll \
+  --module-manifest artifacts/generated/module-manifest.json --browser \
   --output tests/runtime/results/jf10
 ```
 

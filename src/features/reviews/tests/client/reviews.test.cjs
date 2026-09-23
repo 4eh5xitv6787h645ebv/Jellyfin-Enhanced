@@ -135,4 +135,3 @@ test('review styles preserve dynamic font resolution and inject once', () => {
     assert.match(styles[0].textContent, /url\(\/fonts\/materialsymbolsrounded.woff2\)/);
     assert.match(styles[0].textContent, /\.je-review-star-picker/);
 });
-

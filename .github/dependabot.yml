@@ -59,6 +59,9 @@ updates:
           - "patch"
 
   - package-ecosystem: nuget
-    directory: /src
+    directories:
+      - /src
+      - /src/**/tests/**
+      - /tests/**
     schedule:
       interval: daily

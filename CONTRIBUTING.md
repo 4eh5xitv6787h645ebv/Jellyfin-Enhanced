@@ -6,6 +6,8 @@ Contributions can improve features, fix bugs, clarify documentation, or translat
 
 Install **.NET SDK 10** and **Node.js 22 or later**. Build and regression tools use their standard libraries; **no `npm install` is needed**. Python 3 is needed only for the optional documentation build and Docker/browser smoke harness. Run commands from the repository root.
 
+The backend test programs run on the ASP.NET Core shared runtime that matches the SDK, so install the full SDK bundle (Microsoft's installer or `dotnet-install.sh`). Some distribution packages split the ASP.NET Core runtime and targeting pack into separate packages or ship mismatched patch versions; if `npm run check:backend` reports `app-launch-failed`, install the matching `aspnetcore-runtime` or use the Microsoft SDK.
+
 ```sh
 npm run generate       # Compose resource maps, bootstrap and dashboard assets
 npm run check:static   # Freshness, registration, syntax, translations and Node tests
@@ -45,7 +47,7 @@ For example, a bookmark change starts in [`src/features/bookmarks/`](src/feature
 | Build/check tools and common test helpers | `tools/` |
 | Whole-plugin compatibility and disposable runtime checks | `tests/compatibility/`, [tests/runtime](tests/runtime/README.md) |
 
-**Do not edit `artifacts/generated/` directly.** Existing API routes, public asset URLs, embedded-resource names, serialized properties and defaults remain compatibility contracts. Source locations describe ownership; explicit resource mappings preserve delivery names independently.
+**Do not edit `artifacts/generated/` or `css/ratings.css` directly.** The stylesheet copy exists because released plugins load `@main/css/ratings.css` from jsDelivr; its source is `src/features/ratings/client/ratings.css`, and `npm run generate` refreshes the copy. Existing API routes, public asset URLs, embedded-resource names, serialized properties and defaults remain compatibility contracts. Source locations describe ownership; explicit resource mappings preserve delivery names independently.
 
 ## Add or change a backend endpoint
 

@@ -87,4 +87,3 @@ namespace MediaBrowser.Controller.Library
     public interface ILibraryManager { ItemsResult GetItemsResult(Entities.InternalItemsQuery query); }
     public sealed class ItemsResult { public Entities.BaseItem[] Items { get; set; } = []; }
 }
-

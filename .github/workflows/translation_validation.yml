@@ -62,7 +62,7 @@ jobs:
 
             # Check if filename is a two- or three-letter code or region-specific code (e.g., en.json, zh-HK.json)
             if ! [[ "$filename" =~ ^[a-z]{2,3}(-[A-Z]{2})?\.json$ ]]; then
-              echo "::error file=$file::Invalid filename. Filename must be ISO 639-1 language code, optionally with ISO 3166-1 region (e.g., es.json, zh-HK.json, pt-BR.json)."
+              echo "::error file=$file::Invalid filename. Filename must be an ISO 639-1 or ISO 639-3 language code, optionally with an ISO 3166-1 region (e.g., es.json, gsw.json, zh-HK.json, pt-BR.json)."
               exit 1
             fi
           done

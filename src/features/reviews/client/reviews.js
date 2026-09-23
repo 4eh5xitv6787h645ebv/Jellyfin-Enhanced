@@ -442,4 +442,3 @@
         });
     };
 })(window.JellyfinEnhanced);
-

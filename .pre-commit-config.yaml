@@ -10,5 +10,9 @@ repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.4.0
   hooks:
+  # Dashboard fragments are concatenated byte-for-byte into the generated
+  # settings page; their trailing whitespace is part of the delivered markup.
   - id: end-of-file-fixer
+    exclude: ^(src/features/[^/]+/settings/(sections|styles)/|src/host/dashboard/(tabs|styles)/|artifacts/generated/)
   - id: trailing-whitespace
+    exclude: ^(src/features/[^/]+/settings/(sections|styles)/|src/host/dashboard/(tabs|styles)/|artifacts/generated/)

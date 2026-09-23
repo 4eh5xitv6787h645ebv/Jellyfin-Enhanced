@@ -53,6 +53,14 @@ extra:
       link: https://discord.gg/EYNFf7y4CG
       name: Jellyfin Community Discord - Jellyfin Enhanced Channel
 
+# Internal implementation and validation records stay in the repository for
+# reviewers but are not part of the published documentation site.
+exclude_docs: |
+  advanced/maintainability-plan.md
+  advanced/maintainability-validation.md
+  advanced/simplification-plan.md
+  advanced/feature-layout-validation.md
+
 plugins:
   - search:
       lang: en
