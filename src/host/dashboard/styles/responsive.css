@@ -1,0 +1,114 @@
+/* Responsive utility */
+#keyboard .configSection > div[style*="display:flex"] {
+    flex-wrap: wrap;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .je-save-dock {
+        flex-direction: column;
+        bottom: 10px;
+        width: 90%;
+        border-radius: 20px;
+        padding: 12px;
+    }
+    .je-save-dock .je-save-dock-btn { width: 100%; justify-content: center; }
+    /* Mobile stacks the dock vertically, so swap the divider from right to bottom. */
+    .je-unsaved-badge {
+        justify-content: center;
+        width: 100%;
+        padding: 0 0 10px;
+        margin: 0 0 6px;
+        border-right: none;
+        border-bottom: 1px solid var(--je-border);
+    }
+    .je-tab-bar { padding: 10px 0; }
+    /* Prefix with #JellyfinEnhancedPage to match the base rule's specificity
+       (1,1,0). Class-only selectors (0,1,0) here lose the cascade to the
+       prefixed base, leaving desktop padding/grid values stuck on phones. */
+    #JellyfinEnhancedPage .jellyfin-tab-button { padding: 8px 14px; }
+    .je-tab-icon { font-size: 18px !important; }
+
+    /* The tab content grid uses minmax(480px, 1fr) for desktop multi-column.
+       On viewports narrower than the 480px min, the grid forces horizontal
+       overflow (descriptions get cut off, page scrolls sideways). Collapse
+       to single column under 768px so cards stack cleanly. The prefix is
+       required for specificity parity with the base rule at line ~654. */
+    #JellyfinEnhancedPage .jellyfin-tab-content.active {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    /* Grid items default to `min-width: auto` (their intrinsic content width).
+       Banners and fieldsets containing flex layouts have a wide intrinsic min
+       (the longest line of unwrapped text), which forces grid items wider than
+       the column even with `1fr`. Set `min-width: 0` so items honor the column
+       width and let their text/contents wrap inside. */
+    .jellyfin-tab-content.active > * {
+        min-width: 0;
+    }
+
+    /* Flex children default to min-width: auto, which equals their intrinsic
+       content width. Inside info banners, that means the inner text div refuses
+       to shrink below the longest line — pushing the whole page wider than the
+       viewport. Force `min-width: 0` so flex children honor their parent's
+       width, and force long words/URLs to break instead of overflowing. */
+    .je-info-banner > *,
+    .je-info-banner-inline > *,
+    .je-info-banner-inline-center > *,
+    .je-info-banner-compact > *,
+    .je-note-banner > *,
+    .je-mobile-banner > *,
+    .je-danger-banner > *,
+    .je-purple-banner > *,
+    .je-dep-banner > *,
+    .je-splash-info-banner > *,
+    .je-info-banner-row > * {
+        min-width: 0;
+    }
+    .fieldDescription, .je-setting-description {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    /* Same anti-overflow for the form itself in case any ancestor's min-width
+       forces it wide; let it shrink to viewport. */
+    #JellyfinEnhancedForm {
+        min-width: 0;
+    }
+
+    /* Header row: title + the two action buttons + search. The action
+       buttons ("Docs & Help" / "Descriptions") were wrapping to 3 lines
+       and overflowing the viewport. Shrink padding + let the title row
+       wrap so buttons drop below if needed. */
+    #JellyfinEnhancedPage .sectionTitleContainer { gap: 8px; }
+    #JellyfinEnhancedPage .sectionTitleContainer h2 { font-size: 1.4em; flex: 1 1 100%; }
+    .je-header-title-row {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .je-help-link, .je-desc-toggle {
+        padding: 6px 10px;
+        font-size: 0.85em;
+    }
+    #settingsSearchContainer {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+}
+
+/* Sub-mobile: tighten typography + ensure the buttons stay tappable.
+   Labels stay visible (no icon fallback anymore after the header icons
+   were removed — an icon-less button with a hidden label would render
+   as an empty square). 44×44 min size meets WCAG 2.1 AAA. */
+@media (max-width: 420px) {
+    .je-help-link,
+    .je-desc-toggle {
+        min-height: 44px;
+        padding: 8px 12px;
+        font-size: 0.82em;
+    }
+    #JellyfinEnhancedPage .sectionTitleContainer h2 { font-size: 1.25em; }
+}
+
+#settingsSearchClear { display: none; }
+#settingsSearchClear.show { display: flex; }
+

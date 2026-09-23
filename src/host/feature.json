@@ -1,0 +1,11 @@
+{
+  "id": "host",
+  "standalone": {
+    "../../artifacts/generated/plugin.js": "Injected public entry point; generated from frontend/bootstrap."
+  },
+  "assets": [
+    "../../artifacts/generated/configPage.css",
+    "../../artifacts/generated/configPage.html",
+    "dashboard/whats-new-seed.json"
+  ]
+}

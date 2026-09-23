@@ -1,0 +1,64 @@
+                <div id="overview" class="jellyfin-tab-content active">
+                    <div class="je-info-banner je-fieldset-wide je-overview-intro">
+                        <i class="material-icons je-info-icon">dashboard</i>
+                        <div>
+                            The essential enhancement suite for Jellyfin, bundling advanced features and customizations into one convenient plugin.<br/><br/>
+                            This <strong>Overview</strong> is a read-only snapshot: service connection health, which optional companion plugins are installed, and which features are currently enabled or misconfigured. <em>To turn features on or off, use the other tabs above</em> (Display, Playback, Pages, Seerr, *arr, Extras, …). Clicking any card here jumps straight to the tab that owns it.
+                        </div>
+                    </div>
+
+                    <fieldset class="je-overview-section">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">sensors</i>Service Status</legend>
+                        <div class="configSection">
+                            <div class="je-service-dashboard" id="je-service-dashboard">
+                                <div class="je-checklist-empty">Loading service status…</div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="je-overview-section" id="overview-optional-plugins-section">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">extension</i>Optional Dependencies</legend>
+                        <div class="configSection">
+                            <div class="je-optional-plugins-dashboard" id="je-optional-plugins"></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="je-overview-section" id="overview-features-section">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">toggle_on</i>Features</legend>
+                        <div class="configSection">
+                            <div class="je-features-dashboard" id="je-features-dashboard">
+                                <div class="je-checklist-empty">Loading features…</div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="je-overview-section" id="overview-quick-actions-section">
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">bolt</i>Quick Actions</legend>
+                        <div class="configSection">
+                            <div class="je-quick-actions-grid" id="je-quick-actions-grid">
+                                <button type="button" id="retestAllConnectionsBtn" class="je-quick-action" data-action="retest-all">
+                                    <i class="material-icons je-quick-action-icon" aria-hidden="true">sync</i>
+                                    <div class="je-quick-action-text">
+                                        <span class="je-quick-action-title">Re-test all service connections</span>
+                                        <span class="je-quick-action-detail">Re-runs the TMDB / Seerr / Sonarr / Radarr tests</span>
+                                    </div>
+                                </button>
+                                <button type="button" id="resetAllUserSettingsBtn" class="je-quick-action" data-action="apply-all-users">
+                                    <i class="material-icons je-quick-action-icon" aria-hidden="true">group</i>
+                                    <div class="je-quick-action-text">
+                                        <span class="je-quick-action-title">Overwrite everyone's personal settings</span>
+                                        <span class="je-quick-action-detail">Copies the values on this page (Display, Playback, ...) into every user's Enhanced Panel, replacing anything they've customized for themselves</span>
+                                    </div>
+                                </button>
+                                <button type="button" id="clearTagCachesQuickBtn" class="je-quick-action" data-action="clear-tag-caches">
+                                    <i class="material-icons je-quick-action-icon" aria-hidden="true">cleaning_services</i>
+                                    <div class="je-quick-action-text">
+                                        <span class="je-quick-action-title">Clear all client tag caches</span>
+                                        <span class="je-quick-action-detail">Forces every client to rebuild its localStorage tag cache</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+

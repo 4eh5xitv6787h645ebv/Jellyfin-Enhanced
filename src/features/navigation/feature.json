@@ -1,0 +1,34 @@
+{
+  "id": "navigation",
+  "modules": {
+    "client/header-actions.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/native-tabs.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/features-random-button.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/features-remove-home.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/features-remove-multiselect.js": [
+      "navigation/features-remove-home"
+    ],
+    "client/events.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "startup": "client/startup.js"
+}

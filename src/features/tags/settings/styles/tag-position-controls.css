@@ -1,0 +1,36 @@
+/* Media Tags rows — pair an Enable toggle with its Position dropdown on
+   one row so the relationship is obvious without an "Advanced" accordion.
+   Falls to a stacked layout on narrow viewports so the dropdown doesn't
+   shrink unreadably. */
+.je-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.je-tag-row > .checkboxContainer {
+    flex: 1 1 200px;
+    margin: 0;
+    min-width: 0;
+}
+.je-tag-row > .je-tag-position {
+    flex: 0 0 auto;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.je-tag-row > .je-tag-position .inputLabel {
+    font-size: 0.85em;
+    margin: 0;
+    white-space: nowrap;
+}
+.je-tag-row > .je-tag-position .emby-select {
+    min-width: 140px;
+}
+@media (max-width: 600px) {
+    .je-tag-row > .je-tag-position {
+        flex: 1 1 100%;
+    }
+}
+

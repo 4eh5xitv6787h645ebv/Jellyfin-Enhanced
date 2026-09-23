@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../server/parental-filter/SeerrParentalFilter.cs" Link="Production/SeerrParentalFilter.cs" />
+    <Compile Include="../../../server/parental-filter/SeerrEndpointClassifier.cs" Link="Production/SeerrEndpointClassifier.cs" />
+    <Compile Include="../../../server/parental-filter/SeerrListFilter.cs" Link="Production/SeerrListFilter.cs" />
+    <Compile Include="../../../server/parental-filter/SeerrParentalDecision.cs" Link="Production/SeerrParentalDecision.cs" />
+    <Compile Include="../../../server/parental-filter/SeerrParentalMetadataClient.cs" Link="Production/SeerrParentalMetadataClient.cs" />
+    <Compile Include="../../../server/parental-filter/SeerrParentalSignature.cs" Link="Production/SeerrParentalSignature.cs" />
+    <Compile Include="../../../server/parental-filter/SeerrResponseReader.cs" Link="Production/SeerrResponseReader.cs" />
+    <Compile Include="../../../server/parental-filter/SeerrSignatureProvider.cs" Link="Production/SeerrSignatureProvider.cs" />
+    <Compile Include="../../../integrations/ParentalRatingDecision.cs" Link="Production/ParentalRatingDecision.cs" />
+    <Compile Include="../../../integrations/ParentalTagDecision.cs" Link="Production/ParentalTagDecision.cs" />
+    <Compile Include="../../../integrations/SeerrCertificationExtractor.cs" Link="Production/SeerrCertificationExtractor.cs" />
+    <Compile Include="../../../integrations/SeerrTagSignatureExtractor.cs" Link="Production/SeerrTagSignatureExtractor.cs" />
+    <Compile Include="../../../integrations/SeerrHttpHelper.cs" Link="Production/SeerrHttpHelper.cs" />
+  </ItemGroup>
+</Project>

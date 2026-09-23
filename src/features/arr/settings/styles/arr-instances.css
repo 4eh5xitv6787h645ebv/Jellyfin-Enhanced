@@ -1,0 +1,131 @@
+/* ---------------------------------------------------------------------------
+   Arr instance cards
+   --------------------------------------------------------------------------- */
+/* Instance cards mirror the .je-details-section (Tag Filters) look: subtle
+   on rest, slightly lighter on open, no strong accent border. Keep a
+   chevron summary prefix but mute the color so it feels consistent with
+   other collapsibles on the page. */
+.arr-instance-card {
+    background: var(--je-overlay);
+    border: 1px solid var(--je-border-subtle);
+    border-radius: 10px;
+    margin: 5px 0 10px 0;
+    overflow: hidden;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+.arr-instance-card:hover  { border-color: var(--je-border); }
+.arr-instance-card[open] {
+    background: var(--je-surface-1);
+    border-color: var(--je-border);
+}
+.arr-instance-card > summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    background: transparent;
+    color: rgba(240, 240, 240, 0.82);
+}
+.arr-instance-card > summary::-webkit-details-marker { display: none; }
+.arr-instance-card > summary::before {
+    content: "\e5cc";
+    font-family: "Material Icons";
+    font-size: 20px;
+    transition: transform 0.2s;
+    color: var(--je-text-subtle);
+}
+.arr-instance-card[open] > summary::before {
+    transform: rotate(90deg);
+    color: var(--je-text-strong);
+}
+
+/* Custom toggle for the per-instance Enabled checkbox (can't use is="emby-checkbox"
+   because the summary row has no <label><span> wrapper). Renders as a
+   pill-style switch that inherits the accent color when checked. */
+.arr-instance-enabled {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 34px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--je-surface-3);
+    border: 1px solid var(--je-border-strong);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.18s ease, border-color 0.18s ease;
+    margin: 0;
+}
+.arr-instance-enabled::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ddd;
+    transform: translateY(-50%);
+    transition: left 0.18s ease, background 0.18s ease;
+}
+.arr-instance-enabled:hover {
+    border-color: var(--je-text-dim);
+}
+.arr-instance-enabled:checked {
+    background: color-mix(in srgb, var(--primary-accent-color, #00a4dc) 70%, transparent);
+    border-color: var(--primary-accent-color, #00a4dc);
+}
+.arr-instance-enabled:checked::before {
+    left: 18px;
+    background: #fff;
+}
+.arr-instance-enabled:focus-visible {
+    outline: 2px solid var(--primary-accent-color, #00a4dc);
+    outline-offset: 2px;
+}
+.arr-instance-summary-name { flex: 1; font-weight: 600; }
+.arr-instance-summary-url {
+    color: var(--je-text-subtle);
+    font-size: 0.85em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 250px;
+}
+.arr-instance-card-body {
+    padding: 15px 18px;
+    border-top: 1px solid var(--je-border);
+}
+.arr-instance-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.arr-instance-disabled { opacity: 0.6; }
+.arr-instance-disabled > summary .arr-instance-enabled { opacity: 1; }
+.arr-instance-disabled > summary .arr-instance-summary-name {
+    text-decoration: line-through;
+    color: var(--je-text-muted);
+}
+.arr-instance-disabled > .arr-instance-card-body {
+    pointer-events: none;
+}
+.arr-instance-remove {
+    background: transparent;
+    border: 1px solid rgba(220,53,69,0.5);
+    color: #ff6b6b;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s;
+}
+.arr-instance-remove:hover {
+    background: rgba(220,53,69,0.15);
+    color: #ff4c4c;
+}
+

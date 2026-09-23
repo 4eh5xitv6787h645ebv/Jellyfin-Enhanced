@@ -1,0 +1,41 @@
+/* ---------------------------------------------------------------------------
+   Base Form Container & Typography
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedPage {
+    color: inherit;
+    font-family: inherit;
+}
+
+/* Override Jellyfin admin's `.content-primary form { max-width: ~803px }`
+   default. The page-id prefix gives us higher specificity than the
+   admin theme, so we don't need !important.
+   Cap at 2400px so the tab grid (auto-fit, minmax(480px, 1fr)) can fit
+   4-5 cards on ultrawide while preventing single-row content (Overview's
+   status dashboard, Integration Health, Quick Actions — all of which span
+   `grid-column: 1 / -1`) from stretching across a 4K/5K viewport at a
+   single huge column. 2400px = 4 full cards at 480px wide + gaps. */
+#JellyfinEnhancedPage #JellyfinEnhancedForm {
+    max-width: 2400px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 120px; /* Space for sticky footer */
+}
+
+/* ---------------------------------------------------------------------------
+   Animations
+   --------------------------------------------------------------------------- */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.status-check { animation: spin 1s linear infinite; }
+.shake { animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both; }
+

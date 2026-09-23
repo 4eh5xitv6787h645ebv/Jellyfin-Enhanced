@@ -1,0 +1,44 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Subtitles</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="disableCustomSubtitleStyles" is="emby-checkbox" type="checkbox"/><span>Disable Custom Subtitle Styles by default</span></label></div>
+                            <div class="je-setting-description" data-desc-for="disableCustomSubtitleStyles">
+                                <div class="fieldDescription">Globally disables Jellyfin's custom subtitle style overrides so the source subtitle styling is shown unmodified.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="DefaultSubtitleStyle">Default Subtitle Style</label>
+                                <select is="emby-select" id="DefaultSubtitleStyle" name="DefaultSubtitleStyle" class="emby-select">
+                                    <option value="0">Clean White</option><option value="1">Classic Black Box</option><option value="2">Netflix Style</option>
+                                    <option value="3">Cinema Yellow</option><option value="4">Soft Gray</option><option value="5">High Contrast</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="DefaultSubtitleStyle">
+                                <div class="fieldDescription">Default subtitle style preset applied to new users; users can override in their personal settings.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="DefaultSubtitleSize">Default Subtitle Size</label>
+                                <select is="emby-select" id="DefaultSubtitleSize" name="DefaultSubtitleSize" class="emby-select">
+                                    <option value="0">Tiny</option><option value="1">Small</option><option value="2">Normal</option>
+                                    <option value="3">Large</option><option value="4">Extra Large</option><option value="5">Gigantic</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="DefaultSubtitleSize">
+                                <div class="fieldDescription">Default subtitle size applied to new users; users can override in their personal settings.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="DefaultSubtitleFont">Default Subtitle Font</label>
+                                <select is="emby-select" id="DefaultSubtitleFont" name="DefaultSubtitleFont" class="emby-select">
+                                    <option value="0">Default</option><option value="1">Noto Sans</option><option value="2">Sans Serif</option>
+                                    <option value="3">Typewriter</option><option value="4">Roboto</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="DefaultSubtitleFont">
+                                <div class="fieldDescription">Default subtitle font applied to new users; users can override in their personal settings.</div>
+                            </div>
+
+                        </div>
+                    </fieldset>
+

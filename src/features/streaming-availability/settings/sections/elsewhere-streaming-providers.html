@@ -1,0 +1,65 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Elsewhere (Streaming Providers)</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer je-main-feature"><label><input id="elsewhereEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Elsewhere</span></label></div>
+                            <div class="je-setting-description" data-desc-for="elsewhereEnabled">
+                                <div class="fieldDescription je-field-desc-xl">Adds an "Elsewhere" panel to item detail pages showing where the title is available on streaming services in the user's region (powered by TMDB watch-provider data).</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="TMDB_API_KEY">TMDB API Key</label>
+                                <div class="je-api-row">
+                                    <input id="TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" autocomplete="off" class="je-api-input"/>
+                                    <span id="tmdbStatusIndicator" class="material-icons"></span>
+                                    <button is="emby-button" type="button" class="testTmdbBtn emby-button raised button-submit">Test</button>
+                                </div>
+                            </div>
+                                    <div class="je-setting-description" data-desc-for="TMDB_API_KEY">
+                                        <div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" href="https://www.themoviedb.org/settings/api" target="_blank">How to?</a></div>
+                                        <div class="fieldDescription"><br/>Shared with Seerr Settings</div>
+                                    </div>
+
+                                <div class="inputContainer">
+                                    <label class="inputLabel" for="DEFAULT_REGION">Default Region</label>
+                                    <select id="DEFAULT_REGION" name="DEFAULT_REGION" is="emby-select" class="emby-select"></select>
+                                </div>
+                                    <div class="je-setting-description" data-desc-for="DEFAULT_REGION">
+                                        <div class="fieldDescription">The default region for streaming provider lookup. Empty defaults to US. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/regions.txt" target="_blank">Full List</a></div>
+                                    </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel" for="DEFAULT_PROVIDERS">Default Providers</label>
+                                    <input id="DEFAULT_PROVIDERS" class="emby-input" type="text" placeholder="e.g., Netflix,Hulu"/>
+                                </div>
+                                    <div class="je-setting-description" data-desc-for="DEFAULT_PROVIDERS">
+                                        <div class="fieldDescription">A list of default streaming providers to show. Leave blank to show all. <a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank">Full List</a></div>
+                                    </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="IGNORE_PROVIDERS">Ignore Providers</label>
+                                <input id="IGNORE_PROVIDERS" class="emby-input" type="text" placeholder="e.g., .*with Ads, Hulu"/>
+                            </div>
+                                <div class="je-setting-description" data-desc-for="IGNORE_PROVIDERS">
+                                    <div class="fieldDescription">A list of providers to ignore from the default region (supports regex).<a class="sectionTitle" href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Elsewhere/resources/providers.txt" target="_blank">Full List</a></div>
+                                </div>
+
+                            <details class="je-details-section">
+                                <summary>Custom Branding</summary>
+                                <div class="je-details-body">
+                                    <div class="inputContainer">
+                                        <label class="inputLabel" for="ElsewhereCustomBrandingText">Custom Branding Message</label>
+                                        <input id="ElsewhereCustomBrandingText" is="emby-input" type="text" placeholder="e.g., Only available on My Server"/>
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="ElsewhereCustomBrandingText">
+                                            <div class="fieldDescription">Custom message to display when content is not available on any streaming providers. Leave blank to disable custom branding.</div>
+                                        </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel" for="ElsewhereCustomBrandingImageUrl">Custom Branding Icon URL</label>
+                                        <input id="ElsewhereCustomBrandingImageUrl" is="emby-input" type="text" placeholder="/web/assets/img/icon.png"/>
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="ElsewhereCustomBrandingImageUrl">
+                                            <div class="fieldDescription">Optional URL for an icon to display next to the custom message. Leave blank for no icon.</div>
+                                        </div>
+                                </div>
+                            </details>
+                        </div>
+                    </fieldset>
+

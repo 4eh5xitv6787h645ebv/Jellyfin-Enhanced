@@ -1,0 +1,99 @@
+/* =============================================================================
+   Jellyfin Enhanced — Config Page Stylesheet (Modernized)
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   Theme-aware surface palette
+   ---------------------------------------------------------------------------
+   Jellyfin ships multiple themes (Dark, Pumpkin, Light, WMC, Blue Radiance,
+   Apple TV, Purple Haze). Each swaps a whole theme.css at runtime with
+   hardcoded colors — no CSS-variable contract we can rely on. So we define
+   our own small palette below, with dark defaults and a `.je-light-theme`
+   override block that kicks in when a tiny JS detector at page load decides
+   the current theme has a light body. `@media (prefers-color-scheme: light)`
+   acts as a secondary fallback for browser-level preferences.
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedPage {
+    /* Surface lift layers — slightly lighter than body bg */
+    --je-surface-1:      rgba(255, 255, 255, 0.03);
+    --je-surface-2:      rgba(255, 255, 255, 0.05);
+    --je-surface-3:      rgba(255, 255, 255, 0.08);
+    --je-surface-hover:  rgba(255, 255, 255, 0.08);
+    /* Borders */
+    --je-border-subtle:  rgba(255, 255, 255, 0.04);
+    --je-border:         rgba(255, 255, 255, 0.08);
+    --je-border-strong:  rgba(255, 255, 255, 0.12);
+    --je-border-focus:   rgba(255, 255, 255, 0.2);
+    /* Text — `inherit` stays legible under any theme's <html> color */
+    --je-text:           inherit;
+    --je-text-strong:    rgba(255, 255, 255, 0.87);
+    --je-text-muted:     rgba(255, 255, 255, 0.6);
+    --je-text-subtle:    rgba(255, 255, 255, 0.45);
+    --je-text-dim:       rgba(255, 255, 255, 0.3);
+    /* Subtle decorative gradients for card surfaces (light shine → transparent).
+       Swap to dark shine on light themes so cards keep a faint lift. */
+    --je-card-gradient:       linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+    --je-card-gradient-lift:  linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+    /* Dark overlays for intentionally-dark modals (preview panel, toasts) */
+    --je-overlay-soft:   rgba(0, 0, 0, 0.12);
+    --je-overlay:        rgba(0, 0, 0, 0.28);
+    --je-overlay-hard:   rgba(0, 0, 0, 0.55);
+    /* Accent tints (already theme-adapting via --primary-accent-color) */
+    --je-accent-tint-10: color-mix(in srgb, var(--primary-accent-color, #00a4dc) 10%, transparent);
+    --je-accent-tint-20: color-mix(in srgb, var(--primary-accent-color, #00a4dc) 20%, transparent);
+    --je-accent-border:  color-mix(in srgb, var(--primary-accent-color, #00a4dc) 40%, transparent);
+    /* Brighter than the raw accent color so inline text links stay readable on dark cards. */
+    --je-link-color:     color-mix(in srgb, var(--primary-accent-color, #00a4dc) 65%, #fff);
+    /* Fieldset header background picks up the active Jellyfin theme's accent color instead of flat gray. */
+    --je-legend-gradient: linear-gradient(to left, color-mix(in srgb, var(--primary-accent-color, #00a4dc) 22%, transparent) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+#JellyfinEnhancedPage.je-light-theme {
+    --je-surface-1:      rgba(0, 0, 0, 0.025);
+    --je-surface-2:      rgba(0, 0, 0, 0.05);
+    --je-surface-3:      rgba(0, 0, 0, 0.08);
+    --je-surface-hover:  rgba(0, 0, 0, 0.08);
+    --je-border-subtle:  rgba(0, 0, 0, 0.06);
+    --je-border:         rgba(0, 0, 0, 0.1);
+    --je-border-strong:  rgba(0, 0, 0, 0.15);
+    --je-border-focus:   rgba(0, 0, 0, 0.25);
+    --je-text-strong:    rgba(0, 0, 0, 0.87);
+    --je-text-muted:     rgba(0, 0, 0, 0.65);
+    --je-text-subtle:    rgba(0, 0, 0, 0.5);
+    --je-text-dim:       rgba(0, 0, 0, 0.35);
+    --je-card-gradient:       linear-gradient(145deg, rgba(0, 0, 0, 0.03) 0%, rgba(0, 0, 0, 0.01) 100%);
+    --je-card-gradient-lift:  linear-gradient(145deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.015) 100%);
+    --je-legend-gradient:     linear-gradient(to left, color-mix(in srgb, var(--primary-accent-color, #00a4dc) 18%, transparent) 0%, rgba(0, 0, 0, 0.01) 100%);
+    --je-link-color:          color-mix(in srgb, var(--primary-accent-color, #00a4dc) 75%, #000);
+    --je-overlay-soft:   rgba(0, 0, 0, 0.06);
+    --je-overlay:        rgba(0, 0, 0, 0.1);
+    --je-overlay-hard:   rgba(0, 0, 0, 0.35);
+}
+
+/* OS-level light preference as a fallback: only kicks in when the JS
+   detector hasn't explicitly declared the page dark (to let Jellyfin's
+   user-selected dark themes stay dark even on a light OS). */
+@media (prefers-color-scheme: light) {
+    #JellyfinEnhancedPage:not(.je-dark-theme):not(.je-light-theme) {
+        --je-surface-1:      rgba(0, 0, 0, 0.025);
+        --je-surface-2:      rgba(0, 0, 0, 0.05);
+        --je-surface-3:      rgba(0, 0, 0, 0.08);
+        --je-surface-hover:  rgba(0, 0, 0, 0.08);
+        --je-border-subtle:  rgba(0, 0, 0, 0.06);
+        --je-border:         rgba(0, 0, 0, 0.1);
+        --je-border-strong:  rgba(0, 0, 0, 0.15);
+        --je-border-focus:   rgba(0, 0, 0, 0.25);
+        --je-text-strong:    rgba(0, 0, 0, 0.87);
+        --je-text-muted:     rgba(0, 0, 0, 0.65);
+        --je-text-subtle:    rgba(0, 0, 0, 0.5);
+        --je-text-dim:       rgba(0, 0, 0, 0.35);
+        --je-card-gradient:       linear-gradient(145deg, rgba(0, 0, 0, 0.03) 0%, rgba(0, 0, 0, 0.01) 100%);
+        --je-card-gradient-lift:  linear-gradient(145deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.015) 100%);
+        --je-legend-gradient:     linear-gradient(to left, color-mix(in srgb, var(--primary-accent-color, #00a4dc) 18%, transparent) 0%, rgba(0, 0, 0, 0.01) 100%);
+        --je-link-color:          color-mix(in srgb, var(--primary-accent-color, #00a4dc) 75%, #000);
+        --je-overlay-soft:   rgba(0, 0, 0, 0.06);
+        --je-overlay:        rgba(0, 0, 0, 0.1);
+        --je-overlay-hard:   rgba(0, 0, 0, 0.35);
+    }
+}
+

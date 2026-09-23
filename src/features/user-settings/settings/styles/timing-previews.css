@@ -1,0 +1,126 @@
+/* =========================================================================
+   Timing preview buttons (Playback tab → Shortcuts Panel & Toast Timing)
+   Lets admins preview how long the shortcuts panel or a toast stays visible
+   with the current (unsaved) values from the form inputs.
+   ========================================================================= */
+
+/* Row wrapper lives OUTSIDE .je-setting-description so the preview buttons
+   stay visible even when "Descriptions" is toggled off (which hides every
+   .je-setting-description via body.je-hide-descriptions). Padding-left
+   mirrors the description indent so it lines up visually when descriptions
+   are on; margin-top collapses a bit when the preceding description is
+   hidden so it doesn't look stranded. */
+.je-timing-test-row {
+    padding-left: 14px;
+    margin: 2px 0 12px 0;
+}
+body.je-hide-descriptions .je-timing-test-row {
+    margin-top: 8px;
+}
+.je-timing-test-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+}
+.je-timing-test-btn .material-icons {
+    font-size: 1.1em;
+}
+
+/* Full-screen preview of the shortcuts panel autoclose timing — card styled
+   to match the real panel in js/enhanced/settingspanel/: solid rgb(24,24,24) bg,
+   subtle white border, 16px radius, centered on screen, backdrop blur. */
+.je-preview-panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--je-overlay-hard);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: je-preview-fade-in 0.2s ease;
+}
+.je-preview-panel-card {
+    background: rgb(24, 24, 24);
+    color: #fff;
+    border: 1px solid var(--je-border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    min-width: 350px;
+    max-width: min(520px, 90vw);
+    max-height: 90vh;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    font-size: 14px;
+    font-family: inherit;
+}
+.je-preview-panel-title {
+    font-size: 1.15em;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-accent-color, #00a4dc);
+}
+.je-preview-panel-body {
+    line-height: 1.5;
+    margin: 0 0 18px 0;
+    opacity: 0.92;
+}
+.je-preview-panel-countdown {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-weight: 700;
+    color: var(--primary-accent-color, #00a4dc);
+    white-space: nowrap;
+}
+.je-preview-panel-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Bottom-right toast preview — mirrors the real JE.toast() in js/core/ui-kit.js:
+   same position, dark gradient bg, accent border, backdrop blur, and
+   slide-in-from-right transition (not a keyframe animation). */
+.je-preview-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    transform: translateX(calc(100% + 20px));
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(40, 40, 40, 0.9));
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    z-index: 99999;
+    font-size: clamp(13px, 2vw, 16px);
+    font-weight: 500;
+    text-shadow: -1px -1px 10px black;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--primary-accent-color, rgba(255, 255, 255, 0.1));
+    max-width: clamp(280px, 80vw, 350px);
+    transition: transform 0.3s ease-out;
+    pointer-events: none;
+}
+.je-preview-toast.je-shown {
+    transform: translateX(0);
+}
+
+@keyframes je-preview-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .je-preview-panel-overlay { animation: none; }
+    .je-preview-toast { transition: none; }
+    .je-unsaved-badge .material-icons { animation: none; }
+}
+
+div#seerrMappingsValidationResult,
+div#sonarrMappingsValidationResult,
+div#radarrMappingsValidationResult,
+div#bazarrMappingsValidationResult {
+    padding: 10px;
+}

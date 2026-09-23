@@ -1,0 +1,23 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Debug</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="jellyseerrDisableCache" is="emby-checkbox" type="checkbox"/><span>Disable server-side response cache</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrDisableCache">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, all Seerr proxy requests bypass the server-side cache and are fetched fresh from Seerr every time. This is useful for testing but will increase load on your Seerr instance. <b>Not recommended for normal use.</b></div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="jellyseerrResponseCacheTtlMinutes">Response Cache TTL (min)</label>
+                                <input id="jellyseerrResponseCacheTtlMinutes" is="emby-input" type="number" min="1" value="10"/>
+                            </div>
+                                <div class="je-setting-description" data-desc-for="jellyseerrResponseCacheTtlMinutes">
+                                    <div class="fieldDescription">How long Seerr API responses (search, discovery, recommendations) are cached. Default: 10 minutes.</div>
+                                </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="jellyseerrUserIdCacheTtlMinutes">User ID Cache TTL (min)</label>
+                                <input id="jellyseerrUserIdCacheTtlMinutes" is="emby-input" type="number" min="1" value="30"/>
+                            </div>
+                                <div class="je-setting-description" data-desc-for="jellyseerrUserIdCacheTtlMinutes">
+                                    <div class="fieldDescription">How long the Jellyfin → Seerr user ID mapping is cached. Default: 30 minutes.</div>
+                                </div>
+                        </div>
+                    </fieldset>

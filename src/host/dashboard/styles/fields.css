@@ -1,0 +1,227 @@
+/* ---------------------------------------------------------------------------
+   Fieldsets (Cards)
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedForm fieldset {
+    background: rgba(22, 22, 22, 0.94);
+    border: 1px solid var(--je-border);
+    border-radius: 12px;
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.25s ease;
+}
+#JellyfinEnhancedForm fieldset:hover {
+    border-color: var(--je-border);
+}
+/* Native <legend> has peculiar layout — it's positioned relative to the
+   fieldset's top border and doesn't always respect width/display. The
+   `float: left; width: 100%;` trick normalizes it into a proper block
+   header that spans the full fieldset width. configSection then
+   `clear: both;` so its flow starts below the floated legend. */
+#JellyfinEnhancedForm legend.sectionTitle {
+    float: left;
+    width: 100%;
+    margin: 0;
+    padding: 14px 22px;
+    background: var(--je-legend-gradient);
+    font-size: 1.05em;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    border-bottom: 1px solid var(--je-border);
+    box-sizing: border-box;
+    color: #f5f5f5;
+}
+/* Keep the icon inline with the title on a row, now that the legend
+   is a floated block (display:flex would override the float). */
+#JellyfinEnhancedForm legend.sectionTitle .je-legend-icon {
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: -4px;
+}
+#JellyfinEnhancedPage .configSection {
+    clear: both;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Let specific fieldsets span full width */
+.jellyfin-tab-content.active > fieldset.je-fieldset-wide,
+.jellyfin-tab-content.active > fieldset.je-overview-section,
+.jellyfin-tab-content.active > fieldset:has(.je-branding-grid),
+.jellyfin-tab-content.active > fieldset:has(.arr-instances-list),
+.jellyfin-tab-content.active > fieldset:has(.je-textarea-large),
+.jellyfin-tab-content.active > fieldset:has(.je-seerr-label) {
+    grid-column: 1 / -1;
+}
+.jellyfin-tab-content.active > .je-info-banner,
+.jellyfin-tab-content.active > .je-dep-banner,
+.jellyfin-tab-content.active > .je-section-nav {
+    grid-column: 1 / -1;
+}
+
+/* ---------------------------------------------------------------------------
+   Inputs, Checkboxes & Form Elements
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedPage .configSection > .inputContainer,
+#JellyfinEnhancedPage .configSection > .selectContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+#JellyfinEnhancedPage .configSection > .inputContainer,
+#JellyfinEnhancedPage .configSection > .checkboxContainer,
+#JellyfinEnhancedPage .configSection > .selectContainer {
+    background: var(--je-surface-1);
+    border: 1px solid var(--je-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 5px !important;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+#JellyfinEnhancedPage .configSection > .inputContainer:hover,
+#JellyfinEnhancedPage .configSection > .checkboxContainer:hover,
+#JellyfinEnhancedPage .configSection > .selectContainer:hover {
+    border-color: var(--je-border);
+    background: var(--je-surface-1);
+}
+#JellyfinEnhancedPage .configSection > .inputContainer:focus-within,
+#JellyfinEnhancedPage .configSection > .checkboxContainer:focus-within,
+#JellyfinEnhancedPage .configSection > .selectContainer:focus-within {
+    border-color: var(--primary-accent-color, #00a4dc);
+    background: var(--je-surface-2);
+    box-shadow: 0 0 0 1px var(--primary-accent-color, #00a4dc) inset;
+}
+
+/* Ensure inputs span fully where intended */
+#JellyfinEnhancedPage .configSection > .inputContainer .emby-input,
+#JellyfinEnhancedPage .configSection > .inputContainer .emby-select,
+#JellyfinEnhancedPage .configSection > .inputContainer .emby-textarea,
+#JellyfinEnhancedPage .configSection > .selectContainer .emby-select {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* Consistent dropdown chevron across every <select> inside this config page.
+   Jellyfin admin's native emby-select styling sometimes shows no arrow
+   (depending on theme), which makes the control look like a text input. We
+   zero the native appearance and paint our own chevron SVG to guarantee a
+   visible "this is a dropdown" affordance that matches the accent color on
+   focus. */
+#JellyfinEnhancedPage select.emby-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='none' stroke='%23e0e0e0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M1.5 1.5 L6 6 L10.5 1.5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 8px;
+    padding-right: 36px !important;
+    cursor: pointer;
+}
+#JellyfinEnhancedPage select.emby-select:focus,
+#JellyfinEnhancedPage select.emby-select:focus-visible {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='none' stroke='%2300a4dc' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M1.5 1.5 L6 6 L10.5 1.5'/></svg>");
+}
+/* IE/Edge legacy — hide the built-in dropdown arrow to avoid double chevrons */
+#JellyfinEnhancedPage select.emby-select::-ms-expand { display: none; }
+
+#JellyfinEnhancedPage .checkboxContainer {
+    display: flex;
+    align-items: center;
+}
+#JellyfinEnhancedPage .checkboxContainer label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    cursor: pointer;
+    word-break: break-word;
+}
+#JellyfinEnhancedPage .checkboxContainer input[type="checkbox"] {
+    flex-shrink: 0;
+    margin: 0;
+}
+/* Slightly brighter, medium-weight labels — when descriptions are off
+   the label is the only cue, so make it readable first. */
+#JellyfinEnhancedPage .checkboxContainer label > span {
+    font-size: 0.95em;
+    font-weight: 500;
+    color: #e8e8e8;
+    line-height: 1.35;
+}
+#JellyfinEnhancedPage .inputContainer > label.inputLabel,
+#JellyfinEnhancedPage .selectContainer > label.selectLabel,
+#JellyfinEnhancedPage .inputContainer > label.selectLabel,
+#JellyfinEnhancedPage .selectContainer > label.inputLabel {
+    font-weight: 500;
+    color: #d0d0d0;
+    font-size: 0.9em;
+}
+
+/* Feature-enabler (main-feature) checkboxes — accent left-border +
+   gradient bg + bold label to signal "this toggle masters the feature
+   that this fieldset exists for." Add je-main-feature to the
+   checkboxContainer in HTML to opt in. */
+#JellyfinEnhancedPage .configSection > .je-main-feature {
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--primary-accent-color, #00a4dc) 14%, transparent) 0%,
+        color-mix(in srgb, var(--primary-accent-color, #00a4dc) 2%, transparent) 100%);
+    border-color: color-mix(in srgb, var(--primary-accent-color, #00a4dc) 22%, transparent);
+    border-left: 3px solid var(--primary-accent-color, #00a4dc);
+    margin-bottom: 12px !important;
+}
+#JellyfinEnhancedPage .configSection > .je-main-feature label > span {
+    font-weight: 600;
+    font-size: 1.02em;
+    color: #fff;
+    letter-spacing: 0.1px;
+}
+
+/* Integration-choice toggles (Plugin Pages vs Custom Tabs) — pair of
+   alternatives that answer "how do you want this feature delivered?".
+   Subtle purple/blue accent to distinguish from the feature-master. */
+#JellyfinEnhancedPage .configSection > .checkboxContainer:has(> label > input[id$="UsePluginPages"]),
+#JellyfinEnhancedPage .configSection > .checkboxContainer:has(> label > input[id$="UseCustomTabs"]) {
+    background: rgba(155, 89, 182, 0.05);
+    border-left: 2px solid rgba(155, 89, 182, 0.4);
+}
+
+#JellyfinEnhancedPage .fieldDescription {
+    color: #aaa;
+    font-size: 0.85em;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+/* Beautiful grouping of descriptions without negative margins */
+#JellyfinEnhancedPage .je-setting-description {
+    margin-top: 4px;
+    margin-bottom: 12px;
+    padding-left: 14px;
+    border-left: 2px solid var(--je-border);
+}
+#JellyfinEnhancedPage .checkboxContainer + .fieldDescription,
+#JellyfinEnhancedPage .inputContainer + .fieldDescription,
+#JellyfinEnhancedPage .selectContainer + .fieldDescription {
+    margin-top: 4px;
+    margin-bottom: 12px;
+    padding-left: 14px;
+    border-left: 2px solid var(--je-border);
+}
+#JellyfinEnhancedPage .configSection > .je-setting-description,
+#JellyfinEnhancedPage .je-details-body > .je-setting-description {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+#JellyfinEnhancedPage .je-setting-description > .fieldDescription {
+    margin-top: 0;
+}
+/* Tighten the gap inside accordion bodies — 15px reads as too loose for
+   a stack of toggle+description pairs since the description block already
+   has its border + padding making it visually distinct. */
+.je-details-body { gap: 10px; }
+

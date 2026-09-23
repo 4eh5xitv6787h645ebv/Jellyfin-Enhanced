@@ -1,0 +1,747 @@
+[
+  {
+    "name": "GetJellyseerrStatus",
+    "signature": "[HttpGet(\"jellyseerr/status\")]\n        [Authorize]\n        public async Task<IActionResult> GetJellyseerrStatus()",
+    "attributes": "[HttpGet(\"jellyseerr/status\")]\n        [Authorize]"
+  },
+  {
+    "name": "ValidateJellyseerr",
+    "signature": "[HttpGet(\"jellyseerr/validate\")]\n        [Authorize]\n        public async Task<IActionResult> ValidateJellyseerr([FromQuery] string url, [FromHeader(Name = \"X-Arr-ApiKey\")] string apiKey)",
+    "attributes": "[HttpGet(\"jellyseerr/validate\")]\n        [Authorize]"
+  },
+  {
+    "name": "TriggerJellyseerrRecentlyAddedScan",
+    "signature": "[HttpPost(\"jellyseerr/trigger-recently-added-scan\")]\n        [Authorize]\n        public async Task<IActionResult> TriggerJellyseerrRecentlyAddedScan([FromQuery] string url, [FromHeader(Name = \"X-Arr-ApiKey\")] string apiKey)",
+    "attributes": "[HttpPost(\"jellyseerr/trigger-recently-added-scan\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrUserStatus",
+    "signature": "[HttpGet(\"jellyseerr/user-status\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]\n        public async Task<IActionResult> GetJellyseerrUserStatus()",
+    "attributes": "[HttpGet(\"jellyseerr/user-status\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]"
+  },
+  {
+    "name": "GetPermissionAudit",
+    "signature": "[HttpGet(\"jellyseerr/permission-audit\")]\n        [Authorize]\n        public async Task<IActionResult> GetPermissionAudit()",
+    "attributes": "[HttpGet(\"jellyseerr/permission-audit\")]\n        [Authorize]"
+  },
+  {
+    "name": "JellyseerrSearch",
+    "signature": "[HttpGet(\"jellyseerr/search\")]\n        [Authorize]\n        public Task<IActionResult> JellyseerrSearch([FromQuery] string? query, [FromQuery] int page = 1, [FromQuery] string? language = null)",
+    "attributes": "[HttpGet(\"jellyseerr/search\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetSonarrInstances",
+    "signature": "[HttpGet(\"jellyseerr/sonarr\")]\n        [Authorize]\n        public Task<IActionResult> GetSonarrInstances()",
+    "attributes": "[HttpGet(\"jellyseerr/sonarr\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetRadarrInstances",
+    "signature": "[HttpGet(\"jellyseerr/radarr\")]\n        [Authorize]\n        public Task<IActionResult> GetRadarrInstances()",
+    "attributes": "[HttpGet(\"jellyseerr/radarr\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrArrSettings",
+    "signature": "[HttpGet(\"jellyseerr/settings/{type}\")]\n        [Authorize]\n        public async Task<IActionResult> GetJellyseerrArrSettings(string type)",
+    "attributes": "[HttpGet(\"jellyseerr/settings/{type}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetHostCompatibility",
+    "signature": "[HttpGet(\"host-compat\")]\n        [Authorize]\n        public ActionResult GetHostCompatibility()",
+    "attributes": "[HttpGet(\"host-compat\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyfinNetworkUrls",
+    "signature": "[HttpGet(\"jellyfin-urls\")]\n        [Authorize]\n        public ActionResult GetJellyfinNetworkUrls()",
+    "attributes": "[HttpGet(\"jellyfin-urls\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetServiceDetails",
+    "signature": "[HttpGet(\"jellyseerr/{type}/{serverId}\")]\n        [Authorize]\n        public Task<IActionResult> GetServiceDetails(string type, int serverId)",
+    "attributes": "[HttpGet(\"jellyseerr/{type}/{serverId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "JellyseerrRequest",
+    "signature": "[HttpPost(\"jellyseerr/request\")]\n        [Authorize]\n        public async Task<IActionResult> JellyseerrRequest([FromBody] JsonElement requestBody)",
+    "attributes": "[HttpPost(\"jellyseerr/request\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrRequests",
+    "signature": "[HttpGet(\"jellyseerr/request\")]\n        [Authorize]\n        public Task<IActionResult> GetJellyseerrRequests([FromQuery] int take = 500, [FromQuery] int skip = 0, [FromQuery] string filter = \"all\")",
+    "attributes": "[HttpGet(\"jellyseerr/request\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrQuota",
+    "signature": "[HttpGet(\"jellyseerr/quota\")]\n        [Authorize]\n        public async Task<IActionResult> GetJellyseerrQuota()",
+    "attributes": "[HttpGet(\"jellyseerr/quota\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTvShow",
+    "signature": "[HttpGet(\"jellyseerr/tv/{tmdbId}\")]\n        [Authorize]\n        public Task<IActionResult> GetTvShow(int tmdbId)",
+    "attributes": "[HttpGet(\"jellyseerr/tv/{tmdbId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTvSeason",
+    "signature": "[HttpGet(\"jellyseerr/tv/{tmdbId}/season/{seasonNumber}\")]\n        [Authorize]\n        public Task<IActionResult> GetTvSeason(int tmdbId, int seasonNumber)",
+    "attributes": "[HttpGet(\"jellyseerr/tv/{tmdbId}/season/{seasonNumber}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetMovie",
+    "signature": "[HttpGet(\"jellyseerr/movie/{tmdbId}\")]\n        [Authorize]\n        public Task<IActionResult> GetMovie(int tmdbId)",
+    "attributes": "[HttpGet(\"jellyseerr/movie/{tmdbId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetSimilarMovies",
+    "signature": "[HttpGet(\"jellyseerr/movie/{tmdbId}/similar\")]\n        [Authorize]\n        public Task<IActionResult> GetSimilarMovies(int tmdbId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/movie/{tmdbId}/similar\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetRecommendedMovies",
+    "signature": "[HttpGet(\"jellyseerr/movie/{tmdbId}/recommendations\")]\n        [Authorize]\n        public Task<IActionResult> GetRecommendedMovies(int tmdbId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/movie/{tmdbId}/recommendations\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetMovieRatingsCombined",
+    "signature": "[HttpGet(\"jellyseerr/movie/{tmdbId}/ratingscombined\")]\n        [Authorize]\n        public Task<IActionResult> GetMovieRatingsCombined(int tmdbId)",
+    "attributes": "[HttpGet(\"jellyseerr/movie/{tmdbId}/ratingscombined\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetSimilarTvShows",
+    "signature": "[HttpGet(\"jellyseerr/tv/{tmdbId}/similar\")]\n        [Authorize]\n        public Task<IActionResult> GetSimilarTvShows(int tmdbId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/tv/{tmdbId}/similar\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetRecommendedTvShows",
+    "signature": "[HttpGet(\"jellyseerr/tv/{tmdbId}/recommendations\")]\n        [Authorize]\n        public Task<IActionResult> GetRecommendedTvShows(int tmdbId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/tv/{tmdbId}/recommendations\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTvRatingsCombined",
+    "signature": "[HttpGet(\"jellyseerr/tv/{tmdbId}/ratings\")]\n        [Authorize]\n        public Task<IActionResult> GetTvRatingsCombined(int tmdbId)",
+    "attributes": "[HttpGet(\"jellyseerr/tv/{tmdbId}/ratings\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverTvByNetwork",
+    "signature": "[HttpGet(\"jellyseerr/discover/tv/network/{networkId}\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverTvByNetwork(int networkId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/tv/network/{networkId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverMoviesByStudio",
+    "signature": "[HttpGet(\"jellyseerr/discover/movies/studio/{studioId}\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverMoviesByStudio(int studioId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/movies/studio/{studioId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverTrending",
+    "signature": "[HttpGet(\"jellyseerr/discover/trending\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverTrending([FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/trending\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverMovies",
+    "signature": "[HttpGet(\"jellyseerr/discover/movies\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverMovies([FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/movies\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverTv",
+    "signature": "[HttpGet(\"jellyseerr/discover/tv\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverTv([FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/tv\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverUpcomingMovies",
+    "signature": "[HttpGet(\"jellyseerr/discover/movies/upcoming\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverUpcomingMovies([FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/movies/upcoming\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverUpcomingTv",
+    "signature": "[HttpGet(\"jellyseerr/discover/tv/upcoming\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverUpcomingTv([FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/tv/upcoming\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetStudioInfo",
+    "signature": "[HttpGet(\"studio/{studioId}\")]\n        [Authorize]\n        public IActionResult GetStudioInfo(Guid studioId)",
+    "attributes": "[HttpGet(\"studio/{studioId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetBoxSetInfo",
+    "signature": "[HttpGet(\"boxset/{boxsetId}\")]\n        [Authorize]\n        public IActionResult GetBoxSetInfo(Guid boxsetId)",
+    "attributes": "[HttpGet(\"boxset/{boxsetId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetPersonInfo",
+    "signature": "[HttpGet(\"person/{personId}\")]\n        [Authorize]\n        public async Task<IActionResult> GetPersonInfo(Guid personId, [FromQuery] Guid? itemId = null)",
+    "attributes": "[HttpGet(\"person/{personId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetGenreInfo",
+    "signature": "[HttpGet(\"genre/{genreId}\")]\n        [Authorize]\n        public IActionResult GetGenreInfo(Guid genreId)",
+    "attributes": "[HttpGet(\"genre/{genreId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrPerson",
+    "signature": "[HttpGet(\"jellyseerr/person/{personId}\")]\n        [Authorize]\n        public Task<IActionResult> GetJellyseerrPerson(int personId)",
+    "attributes": "[HttpGet(\"jellyseerr/person/{personId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrPersonCredits",
+    "signature": "[HttpGet(\"jellyseerr/person/{personId}/combined_credits\")]\n        [Authorize]\n        public Task<IActionResult> GetJellyseerrPersonCredits(int personId)",
+    "attributes": "[HttpGet(\"jellyseerr/person/{personId}/combined_credits\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverTvByGenre",
+    "signature": "[HttpGet(\"jellyseerr/discover/tv/genre/{genreId}\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverTvByGenre(int genreId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/tv/genre/{genreId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverMoviesByGenre",
+    "signature": "[HttpGet(\"jellyseerr/discover/movies/genre/{genreId}\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverMoviesByGenre(int genreId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/movies/genre/{genreId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverTvByKeyword",
+    "signature": "[HttpGet(\"jellyseerr/discover/tv/keyword/{keywordId}\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverTvByKeyword(int keywordId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/tv/keyword/{keywordId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "DiscoverMoviesByKeyword",
+    "signature": "[HttpGet(\"jellyseerr/discover/movies/keyword/{keywordId}\")]\n        [Authorize]\n        public Task<IActionResult> DiscoverMoviesByKeyword(int keywordId, [FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/discover/movies/keyword/{keywordId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "SearchTmdbPerson",
+    "signature": "[HttpGet(\"tmdb/search/person\")]\n        [Authorize]\n        public Task<IActionResult> SearchTmdbPerson([FromQuery] string query)",
+    "attributes": "[HttpGet(\"tmdb/search/person\")]\n        [Authorize]"
+  },
+  {
+    "name": "SearchTmdbKeyword",
+    "signature": "[HttpGet(\"tmdb/search/keyword\")]\n        [Authorize]\n        public Task<IActionResult> SearchTmdbKeyword([FromQuery] string query)",
+    "attributes": "[HttpGet(\"tmdb/search/keyword\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTmdbMovieGenres",
+    "signature": "[HttpGet(\"tmdb/genres/movie\")]\n        [Authorize]\n        public Task<IActionResult> GetTmdbMovieGenres()",
+    "attributes": "[HttpGet(\"tmdb/genres/movie\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTmdbTvGenres",
+    "signature": "[HttpGet(\"tmdb/genres/tv\")]\n        [Authorize]\n        public Task<IActionResult> GetTmdbTvGenres()",
+    "attributes": "[HttpGet(\"tmdb/genres/tv\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetMovieGenreSlider",
+    "signature": "[HttpGet(\"jellyseerr/discover/genreslider/movie\")]\n        [Authorize]\n        public Task<IActionResult> GetMovieGenreSlider()",
+    "attributes": "[HttpGet(\"jellyseerr/discover/genreslider/movie\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTvGenreSlider",
+    "signature": "[HttpGet(\"jellyseerr/discover/genreslider/tv\")]\n        [Authorize]\n        public Task<IActionResult> GetTvGenreSlider()",
+    "attributes": "[HttpGet(\"jellyseerr/discover/genreslider/tv\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetOverrideRules",
+    "signature": "[HttpGet(\"jellyseerr/overrideRule\")]\n        [Authorize]\n        public Task<IActionResult> GetOverrideRules()",
+    "attributes": "[HttpGet(\"jellyseerr/overrideRule\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetCollection",
+    "signature": "[HttpGet(\"jellyseerr/collection/{collectionId}\")]\n        [Authorize]\n        public Task<IActionResult> GetCollection(int collectionId)",
+    "attributes": "[HttpGet(\"jellyseerr/collection/{collectionId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrUsers",
+    "signature": "[HttpGet(\"jellyseerr/user\")]\n        [Authorize]\n        public Task<IActionResult> GetJellyseerrUsers([FromQuery] int take = 1000)",
+    "attributes": "[HttpGet(\"jellyseerr/user\")]\n        [Authorize]"
+  },
+  {
+    "name": "RequestTvSeasons",
+    "signature": "[HttpPost(\"jellyseerr/request/tv/{tmdbId}/seasons\")]\n        [Authorize]\n        public async Task<IActionResult> RequestTvSeasons(int tmdbId, [FromBody] JsonElement requestBody)",
+    "attributes": "[HttpPost(\"jellyseerr/request/tv/{tmdbId}/seasons\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrWatchlist",
+    "signature": "[HttpGet(\"jellyseerr/watchlist\")]\n        [Authorize]\n        public Task<IActionResult> GetJellyseerrWatchlist([FromQuery] int page = 1)",
+    "attributes": "[HttpGet(\"jellyseerr/watchlist\")]\n        [Authorize]"
+  },
+  {
+    "name": "SyncJellyseerrWatchlist",
+    "signature": "[HttpPost(\"jellyseerr/sync-watchlist\")]\n        [Authorize]\n        public async Task<IActionResult> SyncJellyseerrWatchlist()",
+    "attributes": "[HttpPost(\"jellyseerr/sync-watchlist\")]\n        [Authorize]"
+  },
+  {
+    "name": "ImportJellyseerrUsers",
+    "signature": "[HttpPost(\"jellyseerr/import-users\")]\n        [Authorize]\n        public async Task<IActionResult> ImportJellyseerrUsers()",
+    "attributes": "[HttpPost(\"jellyseerr/import-users\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrPartialRequestsSetting",
+    "signature": "[HttpGet(\"jellyseerr/settings/partial-requests\")]\n        [Authorize]\n        public async Task<IActionResult> GetJellyseerrPartialRequestsSetting()",
+    "attributes": "[HttpGet(\"jellyseerr/settings/partial-requests\")]\n        [Authorize]"
+  },
+  {
+    "name": "ValidateTmdb",
+    "signature": "[HttpGet(\"tmdb/validate\")]\n        [Authorize]\n        public async Task<IActionResult> ValidateTmdb([FromQuery] string apiKey)",
+    "attributes": "[HttpGet(\"tmdb/validate\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetMainScript",
+    "signature": "[HttpGet(\"script\")]\n        public ActionResult GetMainScript()",
+    "attributes": "[HttpGet(\"script\")]"
+  },
+  {
+    "name": "GetScript",
+    "signature": "[HttpGet(\"js/{**path}\")]\n        public ActionResult GetScript(string path)",
+    "attributes": "[HttpGet(\"js/{**path}\")]"
+  },
+  {
+    "name": "GetConfigPageStylesheet",
+    "signature": "[HttpGet(\"Configuration/configPage.css\")]\n        public ActionResult GetConfigPageStylesheet()",
+    "attributes": "[HttpGet(\"Configuration/configPage.css\")]"
+  },
+  {
+    "name": "GetVersion",
+    "signature": "[HttpGet(\"version\")]\n        public ActionResult GetVersion()",
+    "attributes": "[HttpGet(\"version\")]"
+  },
+  {
+    "name": "GetPrivateConfig",
+    "signature": "[HttpGet(\"private-config\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]\n        public ActionResult GetPrivateConfig()",
+    "attributes": "[HttpGet(\"private-config\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]"
+  },
+  {
+    "name": "GetPublicConfig",
+    "signature": "[HttpGet(\"public-config\")]\n        public ActionResult GetPublicConfig()",
+    "attributes": "[HttpGet(\"public-config\")]"
+  },
+  {
+    "name": "ProxyTmdbRequest",
+    "signature": "[HttpGet(\"tmdb/{**apiPath}\")]\n        [Authorize]\n        public async Task<IActionResult> ProxyTmdbRequest(string apiPath)",
+    "attributes": "[HttpGet(\"tmdb/{**apiPath}\")]\n        [Authorize]"
+  },
+  {
+    "name": "TrackUsage",
+    "signature": "[HttpPost(\"usage/track\")]\n        [Authorize]\n        public IActionResult TrackUsage([FromBody] JsonElement requestBody)",
+    "attributes": "[HttpPost(\"usage/track\")]\n        [Authorize]"
+  },
+  {
+    "name": "PreviewUsageReport",
+    "signature": "[HttpPost(\"usage/preview\")]\n        [Authorize]\n        public IActionResult PreviewUsageReport([FromBody] JsonElement requestBody)",
+    "attributes": "[HttpPost(\"usage/preview\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetAwards",
+    "signature": "[HttpGet(\"awards/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        public async Task<IActionResult> GetAwards(string mediaType, string tmdbId, CancellationToken cancellationToken)",
+    "attributes": "[HttpGet(\"awards/{mediaType}/{tmdbId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetMdblistRatings",
+    "signature": "[HttpGet(\"mdblist-ratings/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        public async Task<IActionResult> GetMdblistRatings(string mediaType, string tmdbId, CancellationToken cancellationToken)",
+    "attributes": "[HttpGet(\"mdblist-ratings/{mediaType}/{tmdbId}\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetMdblistAccountStatus",
+    "signature": "[HttpGet(\"mdblist-ratings/account-status\")]\n        [Authorize]\n        public async Task<IActionResult> GetMdblistAccountStatus([FromQuery] string? apiKey, CancellationToken cancellationToken)",
+    "attributes": "[HttpGet(\"mdblist-ratings/account-status\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetAvailableLocales",
+    "signature": "[HttpGet(\"locales\")]\n        [Authorize]\n        [ResponseCache(Duration = 86400)]\n        public ActionResult GetAvailableLocales()",
+    "attributes": "[HttpGet(\"locales\")]\n        [Authorize]\n        [ResponseCache(Duration = 86400)]"
+  },
+  {
+    "name": "GetCdnAsset",
+    "signature": "[HttpGet(\"cdn/{source}/{**path}\")]\n        public async Task<IActionResult> GetCdnAsset(string source, string path, CancellationToken cancellationToken)",
+    "attributes": "[HttpGet(\"cdn/{source}/{**path}\")]"
+  },
+  {
+    "name": "GetBundledFont",
+    "signature": "[HttpGet(\"fonts/{name}\")]\n        public IActionResult GetBundledFont(string name)",
+    "attributes": "[HttpGet(\"fonts/{name}\")]"
+  },
+  {
+    "name": "GetLocale",
+    "signature": "[HttpGet(\"locales/{lang}.json\")]\n        public ActionResult GetLocale(string lang)",
+    "attributes": "[HttpGet(\"locales/{lang}.json\")]"
+  },
+  {
+    "name": "GetUserSettingsSettings",
+    "signature": "[HttpGet(\"user-settings/{userId}/settings.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        public IActionResult GetUserSettingsSettings(string userId)",
+    "attributes": "[HttpGet(\"user-settings/{userId}/settings.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]"
+  },
+  {
+    "name": "GetUserSettingsShortcuts",
+    "signature": "[HttpGet(\"user-settings/{userId}/shortcuts.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        public IActionResult GetUserSettingsShortcuts(string userId)",
+    "attributes": "[HttpGet(\"user-settings/{userId}/shortcuts.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]"
+  },
+  {
+    "name": "GetUserSettingsElsewhere",
+    "signature": "[HttpGet(\"user-settings/{userId}/elsewhere.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        public IActionResult GetUserSettingsElsewhere(string userId)",
+    "attributes": "[HttpGet(\"user-settings/{userId}/elsewhere.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]"
+  },
+  {
+    "name": "SaveUserSettingsSettings",
+    "signature": "[HttpPost(\"user-settings/{userId}/settings.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult SaveUserSettingsSettings(string userId, [FromBody] UserSettings userConfiguration)",
+    "attributes": "[HttpPost(\"user-settings/{userId}/settings.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "SaveUserSettingsShortcuts",
+    "signature": "[HttpPost(\"user-settings/{userId}/shortcuts.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult SaveUserSettingsShortcuts(string userId, [FromBody] UserShortcuts userConfiguration)",
+    "attributes": "[HttpPost(\"user-settings/{userId}/shortcuts.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetUserBookmark",
+    "signature": "[HttpGet(\"user-settings/{userId}/bookmark.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]\n        public IActionResult GetUserBookmark(string userId)",
+    "attributes": "[HttpGet(\"user-settings/{userId}/bookmark.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "SaveUserBookmark",
+    "signature": "[HttpPost(\"user-settings/{userId}/bookmark.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult SaveUserBookmark(string userId, [FromBody] UserBookmark userConfiguration)",
+    "attributes": "[HttpPost(\"user-settings/{userId}/bookmark.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "AddUserBookmark",
+    "signature": "[HttpPost(\"user-settings/{userId}/bookmark.json/add\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult AddUserBookmark(string userId, [FromBody] AddBookmarkPayload payload)",
+    "attributes": "[HttpPost(\"user-settings/{userId}/bookmark.json/add\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "RemoveUserBookmark",
+    "signature": "[HttpDelete(\"user-settings/{userId}/bookmark.json/{bookmarkId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult RemoveUserBookmark(string userId, string bookmarkId)",
+    "attributes": "[HttpDelete(\"user-settings/{userId}/bookmark.json/{bookmarkId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "SaveUserSettingsElsewhere",
+    "signature": "[HttpPost(\"user-settings/{userId}/elsewhere.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult SaveUserSettingsElsewhere(string userId, [FromBody] ElsewhereSettings userConfiguration)",
+    "attributes": "[HttpPost(\"user-settings/{userId}/elsewhere.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetUserHiddenContent",
+    "signature": "[HttpGet(\"user-settings/{userId}/hidden-content.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]\n        public IActionResult GetUserHiddenContent(string userId)",
+    "attributes": "[HttpGet(\"user-settings/{userId}/hidden-content.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "SaveUserHiddenContent",
+    "signature": "[HttpPost(\"user-settings/{userId}/hidden-content.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult SaveUserHiddenContent(string userId, [FromBody] UserHiddenContent userConfiguration)",
+    "attributes": "[HttpPost(\"user-settings/{userId}/hidden-content.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetUserSpoilerBlur",
+    "signature": "[HttpGet(\"user-settings/{userId}/spoilerblur.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]\n        public IActionResult GetUserSpoilerBlur(string userId)",
+    "attributes": "[HttpGet(\"user-settings/{userId}/spoilerblur.json\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "SaveUserSpoilerBlur",
+    "signature": "[HttpPost(\"user-settings/{userId}/spoilerblur.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        [Consumes(\"application/json\")]\n        // Cap the body: 4\u00d71000 entries is a few hundred KB even with long names.\n        // 2 MB leaves headroom while removing Kestrel's ~28 MB default as a DoS lever.\n        [RequestSizeLimit(2 * 1024 * 1024)]\n        public IActionResult SaveUserSpoilerBlur(string userId, [FromBody] UserSpoilerBlur userConfiguration)",
+    "attributes": "[HttpPost(\"user-settings/{userId}/spoilerblur.json\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        [Consumes(\"application/json\")]\n        // Cap the body: 4\u00d71000 entries is a few hundred KB even with long names.\n        // 2 MB leaves headroom while removing Kestrel's ~28 MB default as a DoS lever.\n        [RequestSizeLimit(2 * 1024 * 1024)]"
+  },
+  {
+    "name": "GetHiddenContentUsers",
+    "signature": "[HttpGet(\"admin/hidden-content-users\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetHiddenContentUsers()",
+    "attributes": "[HttpGet(\"admin/hidden-content-users\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetUserHiddenContentForAdmin",
+    "signature": "[HttpGet(\"admin/hidden-content/{userId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetUserHiddenContentForAdmin(string userId)",
+    "attributes": "[HttpGet(\"admin/hidden-content/{userId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "AdminUnhideForUser",
+    "signature": "[HttpPost(\"admin/hidden-content/{userId}/unhide\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult AdminUnhideForUser(string userId, [FromBody] List<string> keys)",
+    "attributes": "[HttpPost(\"admin/hidden-content/{userId}/unhide\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "AdminHideForUser",
+    "signature": "[HttpPost(\"admin/hidden-content/{userId}/hide\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult AdminHideForUser(string userId, [FromBody] List<HiddenContentItem> items)",
+    "attributes": "[HttpPost(\"admin/hidden-content/{userId}/hide\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetSpoilerBlurHealth",
+    "signature": "[HttpGet(\"spoiler-blur/health\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetSpoilerBlurHealth()",
+    "attributes": "[HttpGet(\"spoiler-blur/health\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "AckSpoilerBlurCorruption",
+    "signature": "[HttpDelete(\"spoiler-blur/health/{targetUserId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult AckSpoilerBlurCorruption(string targetUserId)",
+    "attributes": "[HttpDelete(\"spoiler-blur/health/{targetUserId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetSpoilerBlurSeries",
+    "signature": "[HttpGet(\"spoiler-blur/series\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetSpoilerBlurSeries()",
+    "attributes": "[HttpGet(\"spoiler-blur/series\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetSpoilerBlurUserPrefs",
+    "signature": "[HttpGet(\"spoiler-blur/user-prefs\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetSpoilerBlurUserPrefs()",
+    "attributes": "[HttpGet(\"spoiler-blur/user-prefs\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "SetSpoilerBlurUserPrefs",
+    "signature": "[HttpPost(\"spoiler-blur/user-prefs\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        [Consumes(\"application/json\")]\n        [RequestSizeLimit(8 * 1024)]\n        public IActionResult SetSpoilerBlurUserPrefs([FromBody] SpoilerBlurUserPrefs? body)",
+    "attributes": "[HttpPost(\"spoiler-blur/user-prefs\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        [Consumes(\"application/json\")]\n        [RequestSizeLimit(8 * 1024)]"
+  },
+  {
+    "name": "EnableSpoilerBlurForSeries",
+    "signature": "[HttpPost(\"spoiler-blur/series/{seriesId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult EnableSpoilerBlurForSeries(string seriesId)",
+    "attributes": "[HttpPost(\"spoiler-blur/series/{seriesId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "DisableSpoilerBlurForSeries",
+    "signature": "[HttpDelete(\"spoiler-blur/series/{seriesId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult DisableSpoilerBlurForSeries(string seriesId)",
+    "attributes": "[HttpDelete(\"spoiler-blur/series/{seriesId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "EnableSpoilerBlurForMovie",
+    "signature": "[HttpPost(\"spoiler-blur/movies/{movieId}\")]\n        [Authorize]\n        [RequestSizeLimit(8 * 1024)]\n        [Produces(\"application/json\")]\n        public IActionResult EnableSpoilerBlurForMovie(string movieId, [FromBody] SpoilerBlurMovieRequest? body = null)",
+    "attributes": "[HttpPost(\"spoiler-blur/movies/{movieId}\")]\n        [Authorize]\n        [RequestSizeLimit(8 * 1024)]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "DisableSpoilerBlurForMovie",
+    "signature": "[HttpDelete(\"spoiler-blur/movies/{movieId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult DisableSpoilerBlurForMovie(string movieId)",
+    "attributes": "[HttpDelete(\"spoiler-blur/movies/{movieId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "EnableSpoilerBlurForCollection",
+    "signature": "[HttpPost(\"spoiler-blur/collections/{collectionId}\")]\n        [Authorize]\n        [RequestSizeLimit(8 * 1024)]\n        [Produces(\"application/json\")]\n        public IActionResult EnableSpoilerBlurForCollection(string collectionId, [FromBody] SpoilerBlurCollectionRequest? body = null)",
+    "attributes": "[HttpPost(\"spoiler-blur/collections/{collectionId}\")]\n        [Authorize]\n        [RequestSizeLimit(8 * 1024)]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "DisableSpoilerBlurForCollection",
+    "signature": "[HttpDelete(\"spoiler-blur/collections/{collectionId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult DisableSpoilerBlurForCollection(string collectionId)",
+    "attributes": "[HttpDelete(\"spoiler-blur/collections/{collectionId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "EnableSpoilerBlurPending",
+    "signature": "[HttpPost(\"spoiler-blur/pending/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult EnableSpoilerBlurPending(string mediaType, string tmdbId, [FromQuery] string? displayName = null)",
+    "attributes": "[HttpPost(\"spoiler-blur/pending/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "DisableSpoilerBlurPending",
+    "signature": "[HttpDelete(\"spoiler-blur/pending/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult DisableSpoilerBlurPending(string mediaType, string tmdbId)",
+    "attributes": "[HttpDelete(\"spoiler-blur/pending/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "HideFromContinueWatching",
+    "signature": "[HttpPost(\"continue-watching/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult HideFromContinueWatching(string itemId)",
+    "attributes": "[HttpPost(\"continue-watching/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "HideFromNextUp",
+    "signature": "[HttpPost(\"next-up/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult HideFromNextUp(string itemId)",
+    "attributes": "[HttpPost(\"next-up/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "UnhideFromContinueWatching",
+    "signature": "[HttpDelete(\"continue-watching/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult UnhideFromContinueWatching(string itemId)",
+    "attributes": "[HttpDelete(\"continue-watching/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "UnhideFromNextUp",
+    "signature": "[HttpDelete(\"next-up/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult UnhideFromNextUp(string itemId)",
+    "attributes": "[HttpDelete(\"next-up/hide/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetItemReviews",
+    "signature": "[HttpGet(\"reviews/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetItemReviews(string mediaType, string tmdbId)",
+    "attributes": "[HttpGet(\"reviews/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "UpsertReview",
+    "signature": "[HttpPost(\"reviews/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult UpsertReview(string mediaType, string tmdbId, [FromBody] ReviewPayload payload)",
+    "attributes": "[HttpPost(\"reviews/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "AdminUpsertReview",
+    "signature": "[HttpPost(\"reviews/admin/{userIdN}/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult AdminUpsertReview(string userIdN, string mediaType, string tmdbId, [FromBody] ReviewPayload payload)",
+    "attributes": "[HttpPost(\"reviews/admin/{userIdN}/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "DeleteReview",
+    "signature": "[HttpDelete(\"reviews/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult DeleteReview(string mediaType, string tmdbId)",
+    "attributes": "[HttpDelete(\"reviews/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "AdminDeleteReview",
+    "signature": "[HttpDelete(\"reviews/admin/{userIdN}/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult AdminDeleteReview(string userIdN, string mediaType, string tmdbId)",
+    "attributes": "[HttpDelete(\"reviews/admin/{userIdN}/{mediaType}/{tmdbId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "ResetAllUsersSettings",
+    "signature": "[HttpPost(\"reset-all-users-settings\")]\n        [Authorize]\n        public IActionResult ResetAllUsersSettings()",
+    "attributes": "[HttpPost(\"reset-all-users-settings\")]\n        [Authorize]"
+  },
+  {
+    "name": "RebuildTagCache",
+    "signature": "[HttpPost(\"tag-cache/rebuild\")]\n        [Authorize]\n        public IActionResult RebuildTagCache()",
+    "attributes": "[HttpPost(\"tag-cache/rebuild\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTagCache",
+    "signature": "[HttpGet(\"tag-cache/{userId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetTagCache(Guid userId, [FromQuery] long? since = null)",
+    "attributes": "[HttpGet(\"tag-cache/{userId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetActivityFeed",
+    "signature": "[HttpGet(\"activity\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]\n        public IActionResult GetActivityFeed([FromQuery] int limit = 50, CancellationToken cancellationToken = default)",
+    "attributes": "[HttpGet(\"activity\")]\n        [Authorize]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetWhatsNew",
+    "signature": "[HttpGet(\"whats-new\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetWhatsNew()",
+    "attributes": "[HttpGet(\"whats-new\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "DismissWhatsNew",
+    "signature": "[HttpPost(\"whats-new/dismiss\")]\n        [Authorize]\n        public IActionResult DismissWhatsNew()",
+    "attributes": "[HttpPost(\"whats-new/dismiss\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetTagData",
+    "signature": "[HttpPost(\"tag-data/{userId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetTagData(\n            Guid userId,\n            [FromBody] string[] ids,\n            [FromQuery] string? mediaSourceId = null)",
+    "attributes": "[HttpPost(\"tag-data/{userId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetFileSizeByItemId",
+    "signature": "[HttpGet(\"file-size/{userId}/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetFileSizeByItemId(Guid userId, Guid itemId, [FromQuery] string? mediaSourceId = null)",
+    "attributes": "[HttpGet(\"file-size/{userId}/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetWatchProgressByItemId",
+    "signature": "[HttpGet(\"watch-progress/{userId}/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]\n        public IActionResult GetWatchProgressByItemId(Guid userId, Guid itemId)",
+    "attributes": "[HttpGet(\"watch-progress/{userId}/{itemId}\")]\n        [Authorize]\n        [Produces(\"application/json\")]"
+  },
+  {
+    "name": "GetJellyseerrIssues",
+    "signature": "[HttpGet(\"jellyseerr/issue\")]\n        [Authorize]\n        public Task<IActionResult> GetJellyseerrIssues(\n            [FromQuery] int? mediaId,\n            [FromQuery] int take = 20,\n            [FromQuery] int skip = 0,\n            [FromQuery] string? filter = \"all\",\n            [FromQuery] string? sort = \"added\")",
+    "attributes": "[HttpGet(\"jellyseerr/issue\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetJellyseerrIssueById",
+    "signature": "[HttpGet(\"jellyseerr/issue/{id}\")]\n        [Authorize]\n        public Task<IActionResult> GetJellyseerrIssueById(int id)",
+    "attributes": "[HttpGet(\"jellyseerr/issue/{id}\")]\n        [Authorize]"
+  },
+  {
+    "name": "ReportJellyseerrIssue",
+    "signature": "[HttpPost(\"jellyseerr/issue\")]\n        [Authorize]\n        public async Task<IActionResult> ReportJellyseerrIssue([FromBody] JsonElement issueBody)",
+    "attributes": "[HttpPost(\"jellyseerr/issue\")]\n        [Authorize]"
+  },
+  {
+    "name": "UploadBrandingImage",
+    "signature": "[HttpPost(\"UploadBrandingImage\")]\n        [Authorize]\n        public async Task<IActionResult> UploadBrandingImage()",
+    "attributes": "[HttpPost(\"UploadBrandingImage\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetBrandingImage",
+    "signature": "[HttpGet(\"BrandingImage\")]\n        [Authorize]\n        public IActionResult GetBrandingImage([FromQuery] string? fileName)",
+    "attributes": "[HttpGet(\"BrandingImage\")]\n        [Authorize]"
+  },
+  {
+    "name": "DeleteBrandingImage",
+    "signature": "[HttpPost(\"DeleteBrandingImage\")]\n        [Authorize]\n        public IActionResult DeleteBrandingImage()",
+    "attributes": "[HttpPost(\"DeleteBrandingImage\")]\n        [Authorize]"
+  },
+  {
+    "name": "ValidateSonarr",
+    "signature": "[HttpGet(\"arr/validate/sonarr\")]\n        [Authorize]\n        public async Task<IActionResult> ValidateSonarr([FromQuery] string url, [FromHeader(Name = \"X-Arr-ApiKey\")] string apiKey)",
+    "attributes": "[HttpGet(\"arr/validate/sonarr\")]\n        [Authorize]"
+  },
+  {
+    "name": "ValidateRadarr",
+    "signature": "[HttpGet(\"arr/validate/radarr\")]\n        [Authorize]\n        public async Task<IActionResult> ValidateRadarr([FromQuery] string url, [FromHeader(Name = \"X-Arr-ApiKey\")] string apiKey)",
+    "attributes": "[HttpGet(\"arr/validate/radarr\")]\n        [Authorize]"
+  },
+  {
+    "name": "IdentifyUrl",
+    "signature": "[HttpGet(\"arr/identify-url\")]\n        [Authorize]\n        public async Task<IActionResult> IdentifyUrl([FromQuery] string url)",
+    "attributes": "[HttpGet(\"arr/identify-url\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetSeriesSlug",
+    "signature": "[HttpGet(\"arr/series-slug\")]\n        [Authorize]\n        public async Task<IActionResult> GetSeriesSlug([FromQuery] int tvdbId)",
+    "attributes": "[HttpGet(\"arr/series-slug\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetSeriesSlugs",
+    "signature": "[HttpGet(\"arr/series-slugs\")]\n        [Authorize]\n        public async Task<IActionResult> GetSeriesSlugs([FromQuery] int tvdbId)",
+    "attributes": "[HttpGet(\"arr/series-slugs\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetMovieInstances",
+    "signature": "[HttpGet(\"arr/movie-instances\")]\n        [Authorize]\n        public async Task<IActionResult> GetMovieInstances([FromQuery] int tmdbId)",
+    "attributes": "[HttpGet(\"arr/movie-instances\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetActiveSessions",
+    "signature": "[HttpGet(\"active-streams/sessions\")]\n        [Authorize]\n        public IActionResult GetActiveSessions()",
+    "attributes": "[HttpGet(\"active-streams/sessions\")]\n        [Authorize]"
+  },
+  {
+    "name": "BroadcastMessage",
+    "signature": "[HttpPost(\"active-streams/broadcast\")]\n        [Authorize]\n        public async Task<IActionResult> BroadcastMessage([FromBody] BroadcastMessageRequest request)",
+    "attributes": "[HttpPost(\"active-streams/broadcast\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetDownloadQueue",
+    "signature": "[HttpGet(\"arr/queue\")]\n        [Authorize]\n        public async Task<IActionResult> GetDownloadQueue()",
+    "attributes": "[HttpGet(\"arr/queue\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetDownloadHistory",
+    "signature": "[HttpGet(\"arr/history\")]\n        [Authorize]\n        public async Task<IActionResult> GetDownloadHistory([FromQuery] int take = 20, [FromQuery] int skip = 0)",
+    "attributes": "[HttpGet(\"arr/history\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetRequests",
+    "signature": "[HttpGet(\"arr/requests\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]\n        public async Task<IActionResult> GetRequests([FromQuery] int take = 20, [FromQuery] int skip = 0, [FromQuery] string? filter = null, [FromQuery] bool userOnly = false)",
+    "attributes": "[HttpGet(\"arr/requests\")]\n        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]\n        [Authorize]"
+  },
+  {
+    "name": "ActOnRequest",
+    "signature": "[HttpPost(\"arr/requests/{requestId}/approve\")]\n        [HttpPost(\"arr/requests/{requestId}/decline\")]\n        [Authorize]\n        public async Task<IActionResult> ActOnRequest([FromRoute] int requestId)",
+    "attributes": "[HttpPost(\"arr/requests/{requestId}/approve\")]\n        [HttpPost(\"arr/requests/{requestId}/decline\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetCalendarEvents",
+    "signature": "[HttpGet(\"arr/calendar\")]\n        [Authorize]\n        public async Task<IActionResult> GetCalendarEvents()",
+    "attributes": "[HttpGet(\"arr/calendar\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetCalendarUserDataForEvents",
+    "signature": "[HttpPost(\"arr/calendar/user-data\")]\n        [Authorize]\n        public IActionResult GetCalendarUserDataForEvents([FromBody] CalendarUserDataRequest request)",
+    "attributes": "[HttpPost(\"arr/calendar/user-data\")]\n        [Authorize]"
+  },
+  {
+    "name": "ProxyAvatar",
+    "signature": "[HttpGet(\"proxy/avatar\")]\n        [Authorize]\n        public async Task<IActionResult> ProxyAvatar([FromQuery] string path)",
+    "attributes": "[HttpGet(\"proxy/avatar\")]\n        [Authorize]"
+  },
+  {
+    "name": "GetItemIdByProviders",
+    "signature": "[Authorize]\n        [HttpGet(\"items/by-providers\")]\n        public ActionResult<Guid?> GetItemIdByProviders(\n            [FromQuery] Dictionary<string, string>? providers,\n            [FromQuery] string? types = null)",
+    "attributes": "[Authorize]\n        [HttpGet(\"items/by-providers\")]"
+  },
+  {
+    "name": "GetMaintenanceStatus",
+    "signature": "[Authorize]\n        [HttpGet(\"MaintenanceMode/Status\")]\n        public IActionResult GetMaintenanceStatus()",
+    "attributes": "[Authorize]\n        [HttpGet(\"MaintenanceMode/Status\")]"
+  },
+  {
+    "name": "EnableMaintenanceMode",
+    "signature": "[Authorize]\n        [HttpPost(\"MaintenanceMode/Enable\")]\n        public async Task<IActionResult> EnableMaintenanceMode([FromBody] MaintenanceModeRequest request)",
+    "attributes": "[Authorize]\n        [HttpPost(\"MaintenanceMode/Enable\")]"
+  },
+  {
+    "name": "DisableMaintenanceMode",
+    "signature": "[Authorize]\n        [HttpPost(\"MaintenanceMode/Disable\")]\n        public async Task<IActionResult> DisableMaintenanceMode()",
+    "attributes": "[Authorize]\n        [HttpPost(\"MaintenanceMode/Disable\")]"
+  },
+  {
+    "name": "GetMaintenanceModeUsers",
+    "signature": "[Authorize]\n        [HttpGet(\"MaintenanceMode/Users\")]\n        public IActionResult GetMaintenanceModeUsers()",
+    "attributes": "[Authorize]\n        [HttpGet(\"MaintenanceMode/Users\")]"
+  },
+  {
+    "name": "BroadcastMaintenanceMessage",
+    "signature": "[Authorize]\n        [HttpPost(\"MaintenanceMode/Broadcast\")]\n        public async Task<IActionResult> BroadcastMaintenanceMessage([FromBody] MaintenanceBroadcastRequest request)",
+    "attributes": "[Authorize]\n        [HttpPost(\"MaintenanceMode/Broadcast\")]"
+  },
+  {
+    "name": "GetView",
+    "signature": "[Authorize]\n        [HttpGet(\"{viewName}\")]\n        public ActionResult GetView([FromRoute] string viewName)",
+    "attributes": "[Authorize]\n        [HttpGet(\"{viewName}\")]"
+  }
+]

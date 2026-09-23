@@ -1,0 +1,33 @@
+{
+  "id": "user-settings",
+  "modules": {
+    "client/config.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/ui-entry-points.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/ui-release-notes.js": [
+      "user-settings/ui-entry-points"
+    ],
+    "client/ui-panel-template.js": [
+      "user-settings/ui-release-notes"
+    ],
+    "client/ui-panel-shortcut-editor.js": [
+      "user-settings/ui-panel-template"
+    ],
+    "client/ui-panel-settings.js": [
+      "user-settings/ui-panel-shortcut-editor"
+    ],
+    "client/ui-panel-language.js": [
+      "hidden-content/ui-panel-hidden-content"
+    ],
+    "client/ui-panel.js": [
+      "user-settings/ui-panel-language"
+    ]
+  }
+}

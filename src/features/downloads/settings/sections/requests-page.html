@@ -1,0 +1,111 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Requests Page</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline-center" style="margin-bottom: 15px;">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">download</i>
+                                    <div>
+                                        <strong>Requests Page</strong> shows a Requests Button in sidebar with a dedicated view of active downloads from Sonarr/Radarr and requests from Seerr.
+                                        <div id="requestsPageRequirementsLine" style="display: none; margin-top: 10px;">
+                                            <strong>Requirements:</strong> <span id="requestsPageRequirementsList">Configure Sonarr and/or Radarr, plus Seerr, URLs and API keys.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer je-main-feature"><label><input id="downloadsPageEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Requests Page</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsPageEnabled">
+                                <div class="fieldDescription je-field-desc-xl">Adds a "Requests" link to the navigation showing active downloads and requests.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="showDownloadsInRequests" is="emby-checkbox" type="checkbox"/><span>Show Downloads in Requests Page</span></label></div>
+                            <div class="je-setting-description" data-desc-for="showDownloadsInRequests">
+                                <div class="fieldDescription je-field-desc-xl">Shows active downloads from Sonarr/Radarr on the Requests page. (Requires *arr links and API keys to be configured)</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="downloadsFilterByUserRequests" is="emby-checkbox" type="checkbox"/><span>Filter Downloads by User Requests</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsFilterByUserRequests">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, non-admin users only see downloads for content they requested. When disabled, all authenticated users can see every item in the download queue, including content requested by other users.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="downloadsPageShowIssues" is="emby-checkbox" type="checkbox"/><span>Show Seerr Issues Section</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsPageShowIssues">
+                                <div class="fieldDescription je-field-desc-xl">Shows open/resolved Seerr issues beneath Requests.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="downloadsShowHistory" is="emby-checkbox" type="checkbox"/><span>Show Download History Section</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsShowHistory">
+                                <div class="fieldDescription je-field-desc-xl">Shows a bounded history of recently imported (or failed-to-import) Sonarr/Radarr downloads beneath Requests, so items that vanish from the active queue after finishing are still visible.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="downloadsHistoryAdminOnly" is="emby-checkbox" type="checkbox"/><span>Restrict Download History to Admins</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsHistoryAdminOnly">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, only Jellyfin administrators see the Download History section. Regular users won't see it at all.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="downloadsUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Requests as a native Home tab</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsUseNativeTab">
+                                <div class="fieldDescription je-field-desc-xl">Adds Requests as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="downloadsUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Requests</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsUsePluginPages">
+                                <div class="fieldDescription je-field-desc-xl">Replaces the default Requests page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/><strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.<span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span></div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="downloadsUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs for Requests</span></label></div>
+                            <div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-downloads" style="display:none;">
+                                <i class="material-icons je-note-icon">info</i>
+                                <div>On Jellyfin 12, <strong>"Add Requests as a native Home tab"</strong> is more reliable than Custom Tabs. Consider enabling it too.</div>
+                            </div>
+
+                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="downloadsUseCustomTabs,downloadsPageEnabled">
+                                <label><input id="downloadsAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
+                            </div>
+                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="downloadsAutoCreateCustomTab" data-gated-by="downloadsUseCustomTabs,downloadsPageEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs for Requests" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
+                                </div>
+                            </div>
+
+                            <div class="je-setting-description" data-desc-for="downloadsUseCustomTabs">
+                                <div class="je-info-banner-inline">
+                                    <div class="je-info-banner-row">
+                                        <i class="material-icons je-info-icon">info</i>
+                                        <div>
+                                            <h4 class="je-custom-tabs-h4">
+                                                Embed Requests in Custom Tabs:
+                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
+                                            </h4>
+                                            <p class="fieldDescription je-custom-tabs-p">Display the Requests page in a Custom Tabs tab instead of the sidebar link.</p>
+                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
+                                            <ol class="fieldDescription je-custom-tabs-ol">
+                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
+                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Requests")</li>
+                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                            </ol>
+                                            <div class="je-copy-code-wrapper">
+                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced requests"&gt;&lt;/div&gt;' type="button">
+                                                    <i class="material-icons je-copy-icon">content_copy</i>
+                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                                </button>
+                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced requests"&gt;&lt;/div&gt;</code></pre>
+                                            </div>
+                                            <div class="fieldDescription je-field-desc-mt">
+                                                Already have Custom Tabs installed?
+                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="downloadsPagePollingEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Auto-Refresh</span></label></div>
+                            <div class="je-setting-description" data-desc-for="downloadsPagePollingEnabled">
+                                <div class="fieldDescription">Periodically refresh the Requests page so download progress updates without manual reload.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="downloadsPollIntervalSeconds">Poll Interval (seconds)</label>
+                                <input id="downloadsPollIntervalSeconds" is="emby-input" type="number" min="30" max="300"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="downloadsPollIntervalSeconds">
+                                <div class="fieldDescription je-field-desc-xl">How often to refresh download status automatically. Minimum is 30 seconds and applies only when auto-refresh is enabled.</div>
+                            </div>
+                        </div>
+                    </fieldset>
+

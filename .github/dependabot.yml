@@ -59,6 +59,6 @@ updates:
           - "patch"
 
   - package-ecosystem: nuget
-    directory: /Jellyfin.Plugin.JellyfinEnhanced
+    directory: /src
     schedule:
       interval: daily

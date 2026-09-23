@@ -1,0 +1,44 @@
+                    <fieldset class="je-fieldset-wide">
+                        <legend class="sectionTitle">Usage Statistics</legend>
+                        <div class="configSection">
+                            <div class="je-setting-description">
+                                <div class="je-info-banner-compact">
+                                    <i class="material-icons je-info-icon-sm">info</i>
+                                    <div>
+                                        Fully opt-in and off by default. No URLs, API keys, usernames, filenames, or media titles are ever collected. <br/>
+                                        Turning this on always includes just an anonymous install ID, plugin version, and Jellyfin version/target, enough to answer "how many installs are on the latest version." Uncheck all three options below to share only that and nothing else. <br/>
+                                        See the live preview below for exactly what would be sent, or read the full breakdown of what each option collects and why: <a class="sectionTitle" href="https://n00bcodr.github.io/Jellyfin-Enhanced/advanced/community-analytics/" target="_blank" rel="noopener">Community Analytics documentation</a>.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer je-main-feature"><label><input id="analyticsEnabled" is="emby-checkbox" type="checkbox"/><span>Share Anonymous Usage Statistics</span></label></div>
+                            <div class="je-setting-description" data-desc-for="analyticsEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Periodically sends an anonymous report to the Jellyfin Enhanced community analytics project.
+                                    <br/>
+                                    Each install gets a random ID that identifies nothing about you or your server.
+                                </div>
+                            </div>
+
+                            <div id="analyticsSubOptionsContainer" style="margin-left: 20px;">
+                                <div class="checkboxContainer"><label><input id="analyticsShareFeatureFlags" is="emby-checkbox" type="checkbox"/><span>Feature toggle states (on/off only)</span></label></div>
+                                <div class="checkboxContainer"><label><input id="analyticsShareUsageCounts" is="emby-checkbox" type="checkbox"/><span>Feature usage counts</span></label></div>
+                                <div class="checkboxContainer"><label><input id="analyticsShareDataSizes" is="emby-checkbox" type="checkbox"/><span>Data file sizes (bytes only, never contents)</span></label></div>
+
+                                <div class="inputContainer">
+                                    <label class="inputLabel" for="analyticsReportIntervalDays">Reporting interval (days)</label>
+                                    <input id="analyticsReportIntervalDays" is="emby-input" type="number" min="7" max="30" step="1"/>
+                                    <div class="fieldDescription">How often a report is sent, between 7 and 30 days.</div>
+                                </div>
+
+                                <button id="analyticsPreviewBtn" class="emby-button raised" type="button" style="width:fit-content; margin-top: 10px;">Preview</button>
+                                <div id="analyticsPreviewContainer" style="display:none; margin-top: 10px;">
+                                    <div class="fieldDescription">This reflects what would be sent based on the selections above.</div>
+                                    <pre id="analyticsPreviewJson" class="je-json-preview" style="white-space: pre-wrap; word-break: break-all; max-height: 320px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; font-size: 12px;"></pre>
+                                </div>
+                                <div id="analyticsLastSent" class="fieldDescription" style="margin-top: 10px;"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+

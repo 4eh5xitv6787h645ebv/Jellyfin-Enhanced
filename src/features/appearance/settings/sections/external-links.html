@@ -1,0 +1,23 @@
+                    <fieldset>
+                        <legend class="sectionTitle">External Links</legend>
+                        <div class="configSection">
+{{include:features/item-details/settings/sections/external-links.html}}
+                            <div class="inputContainer" style="margin-top: 10px;">
+                                <label class="inputLabel" for="customPluginLinks">Sidebar Custom Links</label>
+                                <textarea id="customPluginLinks" class="emby-textarea emby-input" rows="3" placeholder="Page Name | icon_name"></textarea>
+                            </div>
+                                <div class="je-setting-description" data-desc-for="customPluginLinks">
+                                    <div class="fieldDescription je-field-desc-mt-sm">
+                                    <strong>Format:</strong> <code>Configuration Page Name | Material Icon Name</code><br/>
+                                    <strong>Important:</strong> Use the exact name that appears in the configuration page URL (e.g., "Jellyfin%20Tweaks" becomes "Jellyfin Tweaks")<br/>
+                                    <br/>
+                                    <a class="sectionTitle" href="https://fonts.google.com/icons?icon.set=Material+Icons" target="_blank">Browse Material Icons</a>
+                                    </div>
+                                    <div class="fieldDescription je-field-desc-mt-sm">
+                                        Use "Test Links" to preview your custom plugin links in the sidebar.<br/>Test links will appear immediately and disappear on page refresh.
+                                    </div>
+                                </div>
+                            <button id="testCustomPluginLinksBtn" class="emby-button raised" type="button" style="width:fit-content;">Test Links</button>
+                        </div>
+                    </fieldset>
+

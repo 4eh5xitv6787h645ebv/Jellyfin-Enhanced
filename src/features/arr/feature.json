@@ -1,0 +1,24 @@
+{
+  "id": "arr",
+  "modules": {
+    "client/arr-links-data.js": [],
+    "client/arr-links-view.js": [
+      "arr/arr-links-data"
+    ],
+    "client/arr-links.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "arr/arr-links-view"
+    ],
+    "client/arr-tag-links.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "assets": [
+    "client/README.md"
+  ],
+  "startup": "client/startup.js"
+}

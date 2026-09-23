@@ -1,0 +1,41 @@
+name: Disposable Jellyfin smoke checks
+
+# Real hosts are intentionally opt-in; the regular regression workflow needs no
+# Docker daemon, media, external-service accounts, or downloaded server images.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: jf12
+            framework: net10.0
+          - target: jf10
+            framework: net9.0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build target
+        run: dotnet build src/JellyfinEnhanced.csproj --configuration Release -p:JellyfinTarget=${{ matrix.target }}
+      - name: Install isolated browser dependencies
+        run: |
+          python3 -m venv tests/runtime/.venv
+          tests/runtime/.venv/bin/python -m pip install -r tests/runtime/requirements.txt
+          tests/runtime/.venv/bin/python -m playwright install --with-deps chromium
+      - name: Exercise a fresh server and restart
+        run: >-
+          tests/runtime/.venv/bin/python tests/runtime/smoke.py --target ${{ matrix.target }}
+          --artifact artifacts/bin/Release/${{ matrix.framework }}/Jellyfin.Plugin.JellyfinEnhanced.dll
+          --module-manifest artifacts/generated/module-manifest.json
+          --browser
+          --output tests/runtime/results/${{ matrix.target }}

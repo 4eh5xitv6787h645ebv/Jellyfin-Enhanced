@@ -1,0 +1,15 @@
+{
+  "name": "jellyfin-enhanced-development",
+  "private": true,
+  "description": "Dependency-free asset generation and regression checks for Jellyfin Enhanced",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "generate": "node tools/build/build-configuration.mjs && node tools/build/build-assets.mjs && node tools/build/build-bootstrap.js && node tools/build/generate-config-flag-groups.mjs",
+    "check": "node tools/checks/check.mjs",
+    "check:static": "node tools/checks/check.mjs --static",
+    "check:backend": "node tools/checks/check.mjs --backend",
+    "test": "node tools/checks/check.mjs --tests"
+  }
+}

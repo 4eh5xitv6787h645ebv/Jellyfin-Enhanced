@@ -1,0 +1,25 @@
+{
+  "id": "active-streams",
+  "modules": {
+    "client/model.js": [],
+    "client/styles.js": [
+      "active-streams/model"
+    ],
+    "client/view.js": [
+      "active-streams/styles"
+    ],
+    "client/broadcast.js": [
+      "active-streams/view"
+    ],
+    "client/active-streams.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "active-streams/broadcast"
+    ]
+  },
+  "assets": [
+    "client/README.md"
+  ],
+  "startup": "client/startup.js"
+}

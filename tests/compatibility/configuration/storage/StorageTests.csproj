@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Jellyfin.Model" Version="12.0.0" />
+    <Compile Include="../../../../src/host/configuration/PluginConfiguration.cs" Link="Production/PluginConfiguration.cs" />
+    <Compile Include="../../../../src/features/maintenance/settings/PluginConfiguration.Maintenance.cs" Link="Production/PluginConfiguration.Maintenance.cs" />
+    <Compile Include="../../../../src/features/user-settings/settings/PluginConfiguration.UserSettings.cs" Link="Production/PluginConfiguration.UserSettings.cs" />
+    <Compile Include="../../../../src/features/appearance/settings/PluginConfiguration.Appearance.cs" Link="Production/PluginConfiguration.Appearance.cs" />
+    <Compile Include="../../../../src/host/configuration/PluginConfiguration.Host.cs" Link="Production/PluginConfiguration.Host.cs" />
+    <Compile Include="../../../../src/features/streaming-availability/settings/PluginConfiguration.StreamingAvailability.cs" Link="Production/PluginConfiguration.StreamingAvailability.cs" />
+    <Compile Include="../../../../src/features/playback/settings/PluginConfiguration.Playback.cs" Link="Production/PluginConfiguration.Playback.cs" />
+    <Compile Include="../../../../src/features/navigation/settings/PluginConfiguration.Navigation.cs" Link="Production/PluginConfiguration.Navigation.cs" />
+    <Compile Include="../../../../src/features/item-details/settings/PluginConfiguration.ItemDetails.cs" Link="Production/PluginConfiguration.ItemDetails.cs" />
+    <Compile Include="../../../../src/features/hidden-content/settings/PluginConfiguration.HiddenContent.cs" Link="Production/PluginConfiguration.HiddenContent.cs" />
+    <Compile Include="../../../../src/features/reviews/settings/PluginConfiguration.Reviews.cs" Link="Production/PluginConfiguration.Reviews.cs" />
+    <Compile Include="../../../../src/features/ratings/settings/PluginConfiguration.Ratings.cs" Link="Production/PluginConfiguration.Ratings.cs" />
+    <Compile Include="../../../../src/features/tags/settings/PluginConfiguration.Tags.cs" Link="Production/PluginConfiguration.Tags.cs" />
+    <Compile Include="../../../../src/features/seerr/settings/PluginConfiguration.Seerr.cs" Link="Production/PluginConfiguration.Seerr.cs" />
+    <Compile Include="../../../../src/features/arr/settings/PluginConfiguration.Arr.cs" Link="Production/PluginConfiguration.Arr.cs" />
+    <Compile Include="../../../../src/features/calendar/settings/PluginConfiguration.Calendar.cs" Link="Production/PluginConfiguration.Calendar.cs" />
+    <Compile Include="../../../../src/features/bookmarks/settings/PluginConfiguration.Bookmarks.cs" Link="Production/PluginConfiguration.Bookmarks.cs" />
+    <Compile Include="../../../../src/features/active-streams/settings/PluginConfiguration.ActiveStreams.cs" Link="Production/PluginConfiguration.ActiveStreams.cs" />
+    <Compile Include="../../../../src/features/activity/settings/PluginConfiguration.Activity.cs" Link="Production/PluginConfiguration.Activity.cs" />
+    <Compile Include="../../../../src/features/downloads/settings/PluginConfiguration.Downloads.cs" Link="Production/PluginConfiguration.Downloads.cs" />
+    <Compile Include="../../../../src/features/spoiler-guard/settings/PluginConfiguration.SpoilerGuard.cs" Link="Production/PluginConfiguration.SpoilerGuard.cs" />
+    <Compile Include="../../../../src/features/analytics/settings/PluginConfiguration.Analytics.cs" Link="Production/PluginConfiguration.Analytics.cs" />
+    <Compile Include="../../../../src/features/user-settings/settings/Shortcut.cs" Link="Production/Shortcut.cs" />
+    <Compile Include="../../../../src/features/arr/server/ArrInstance.cs" Link="Production/ArrInstance.cs" />
+    <Compile Include="../../../../src/features/analytics/server/AnalyticsData.cs" Link="Production/AnalyticsData.cs" />
+    <Compile Include="../../../../src/features/playback/settings/UserSettings.Playback.cs" Link="Production/UserSettings.Playback.cs" />
+    <Compile Include="../../../../src/features/navigation/settings/UserSettings.Navigation.cs" Link="Production/UserSettings.Navigation.cs" />
+    <Compile Include="../../../../src/features/item-details/settings/UserSettings.ItemDetails.cs" Link="Production/UserSettings.ItemDetails.cs" />
+    <Compile Include="../../../../src/features/tags/settings/UserSettings.Tags.cs" Link="Production/UserSettings.Tags.cs" />
+    <Compile Include="../../../../src/features/hidden-content/settings/UserSettings.HiddenContent.cs" Link="Production/UserSettings.HiddenContent.cs" />
+    <Compile Include="../../../../src/features/user-settings/settings/UserSettings.UserSettings.cs" Link="Production/UserSettings.UserSettings.cs" />
+    <Compile Include="../../../../src/features/reviews/settings/UserSettings.Reviews.cs" Link="Production/UserSettings.Reviews.cs" />
+    <Compile Include="../../../../src/features/calendar/settings/UserSettings.Calendar.cs" Link="Production/UserSettings.Calendar.cs" />
+    <Compile Include="../../../../src/features/user-settings/settings/UserSettings.cs" Link="Production/UserSettings.cs" />
+    <Compile Include="../../../../src/features/spoiler-guard/settings/SpoilerBlurSeriesEntry.cs" Link="Production/SpoilerBlurSeriesEntry.cs" />
+    <Compile Include="../../../../src/features/spoiler-guard/settings/SpoilerBlurMovieEntry.cs" Link="Production/SpoilerBlurMovieEntry.cs" />
+    <Compile Include="../../../../src/features/spoiler-guard/settings/SpoilerBlurCollectionEntry.cs" Link="Production/SpoilerBlurCollectionEntry.cs" />
+    <Compile Include="../../../../src/features/spoiler-guard/settings/SpoilerBlurPendingEntry.cs" Link="Production/SpoilerBlurPendingEntry.cs" />
+    <Compile Include="../../../../src/features/spoiler-guard/settings/SpoilerBlurUserPrefs.cs" Link="Production/SpoilerBlurUserPrefs.cs" />
+    <Compile Include="../../../../src/features/spoiler-guard/settings/UserSpoilerBlur.cs" Link="Production/UserSpoilerBlur.cs" />
+    <Compile Include="../../../../src/features/user-settings/settings/UserShortcuts.cs" Link="Production/UserShortcuts.cs" />
+    <Compile Include="../../../../src/features/bookmarks/settings/BookmarkItem.cs" Link="Production/BookmarkItem.cs" />
+    <Compile Include="../../../../src/features/bookmarks/settings/UserBookmark.cs" Link="Production/UserBookmark.cs" />
+    <Compile Include="../../../../src/features/streaming-availability/settings/ElsewhereSettings.cs" Link="Production/ElsewhereSettings.cs" />
+    <Compile Include="../../../../src/features/seerr/settings/PendingWatchlistItem.cs" Link="Production/PendingWatchlistItem.cs" />
+    <Compile Include="../../../../src/features/seerr/settings/PendingWatchlistItems.cs" Link="Production/PendingWatchlistItems.cs" />
+    <Compile Include="../../../../src/features/seerr/settings/ProcessedWatchlistItem.cs" Link="Production/ProcessedWatchlistItem.cs" />
+    <Compile Include="../../../../src/features/seerr/settings/ProcessedWatchlistItems.cs" Link="Production/ProcessedWatchlistItems.cs" />
+    <Compile Include="../../../../src/features/hidden-content/settings/HiddenContentItem.cs" Link="Production/HiddenContentItem.cs" />
+    <Compile Include="../../../../src/features/hidden-content/settings/HiddenContentSettings.cs" Link="Production/HiddenContentSettings.cs" />
+    <Compile Include="../../../../src/features/hidden-content/settings/UserHiddenContent.cs" Link="Production/UserHiddenContent.cs" />
+    <Compile Include="../../../../src/features/reviews/settings/UserReview.cs" Link="Production/UserReview.cs" />
+    <Compile Include="../../../../src/features/reviews/settings/AllReviewsStore.cs" Link="Production/AllReviewsStore.cs" />
+    <Compile Include="../../../../src/features/activity/settings/ActivityEntry.cs" Link="Production/ActivityEntry.cs" />
+    <Compile Include="../../../../src/features/activity/settings/AllActivityStore.cs" Link="Production/AllActivityStore.cs" />
+    <Compile Include="../../../../src/shared/persistence/UserConfigurationManager.cs" Link="Production/UserConfigurationManager.cs" />
+    <Compile Include="../../../../src/features/reviews/server/UserConfigurationManager.Reviews.cs" Link="Production/UserConfigurationManager.Reviews.cs" />
+    <Compile Include="../../../../src/features/activity/server/UserConfigurationManager.Activity.cs" Link="Production/UserConfigurationManager.Activity.cs" />
+    <Compile Include="../../../../src/features/seerr/server/UserConfigurationManager.Seerr.cs" Link="Production/UserConfigurationManager.Seerr.cs" />
+    <Compile Include="../../../../src/features/seerr/server/ProcessedWatchlistStore.cs" Link="Production/ProcessedWatchlistStore.cs" />
+    <Compile Include="../../../../src/features/activity/server/ActivityStore.cs" Link="Production/ActivityStore.cs" />
+    <Compile Include="../../../../src/features/reviews/server/ReviewStore.cs" Link="Production/ReviewStore.cs" />
+    <None Include="schema-defaults.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('schema-defaults.json')" />
+    <None Include="plugin-defaults.xml" CopyToOutputDirectory="PreserveNewest" Condition="Exists('plugin-defaults.xml')" />
+  </ItemGroup>
+</Project>

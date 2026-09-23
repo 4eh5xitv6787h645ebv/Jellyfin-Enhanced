@@ -1,0 +1,24 @@
+{
+  "id": "activity",
+  "modules": {
+    "client/colored-activity-icons.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/activity-page.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/activity-custom-tab.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "assets": [
+    "client/ActivityPage.html"
+  ],
+  "startup": "client/startup.js"
+}

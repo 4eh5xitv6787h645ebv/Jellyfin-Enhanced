@@ -1,0 +1,55 @@
+/* ---------------------------------------------------------------------------
+   Collapsible info banners
+   When "Descriptions" is off, every .je-info-banner-inline(-center) folds
+   into a small clickable (i) next to its anchor (fieldset legend or the
+   checkbox label container). Clicking the icon expands the banner(s) in
+   place; clicking outside closes them. Banners inside a .je-setting-
+   description are re-surfaced via :has() without also revealing the plain
+   fieldDescription text in the same container.
+   --------------------------------------------------------------------------- */
+.je-banner-trigger {
+    display: none;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: 6px;
+    padding: 2px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--primary-accent-color, #00a4dc);
+    cursor: pointer;
+    opacity: 0.75;
+    transition: opacity 0.15s ease, background 0.15s ease;
+}
+.je-banner-trigger:hover { opacity: 1; }
+.je-banner-trigger[aria-expanded="true"] {
+    background: color-mix(in srgb, var(--primary-accent-color, #00a4dc) 20%, transparent);
+    opacity: 1;
+}
+.je-banner-trigger .material-icons {
+    font-size: 18px !important;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+body.je-hide-descriptions .je-banner-trigger { display: inline-flex; }
+body.je-hide-descriptions .je-banner-managed { display: none; }
+body.je-hide-descriptions .je-banner-managed.je-banner-open { display: block; }
+
+/* Per-banner gating: hide the banner + surface the trigger icon when the
+   gating parent checkbox (.je-setting-description[data-desc-for="X"] where
+   #X is a checkbox) is unchecked. Same UX as descriptions-off, but scoped
+   to a single banner group rather than global. */
+.je-banner-managed.je-banner-parent-off:not(.je-banner-open) { display: none; }
+.je-banner-managed.je-banner-parent-off.je-banner-open { display: block; }
+.je-banner-trigger.je-banner-parent-off { display: inline-flex; }
+
+/* Surface the parent description container only for sections whose banner
+   is explicitly opened, and suppress the plain description text within. */
+body.je-hide-descriptions .je-setting-description:has(.je-banner-managed.je-banner-open) {
+    display: block !important;
+}
+body.je-hide-descriptions .je-setting-description:has(.je-banner-managed.je-banner-open) > .fieldDescription {
+    display: none;
+}
+

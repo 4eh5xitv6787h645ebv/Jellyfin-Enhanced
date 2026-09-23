@@ -1,0 +1,141 @@
+/* ---------------------------------------------------------------------------
+   Sticky header region — title + search + tab bar stay pinned at the
+   viewport top; only the form content scrolls.
+   Jellyfin's `[data-role="content"]` ancestor sets `overflow: hidden`
+   which kills `position: sticky`. Override that ancestor (scoped to
+   our page) so sticky works on window scroll.
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedPage[data-role="page"] > [data-role="content"] {
+    overflow: visible;
+}
+.je-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1010;
+    padding: 8px 8px 0 8px;
+    margin: -8px -8px 20px -8px;
+    /* Background/blur/shadow applied only when the form is actually
+       scrolled — at scrollTop=0 the header is transparent so the
+       Jellyfin top bar / user avatar underneath stays visible. */
+    transition: background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.je-sticky-header.je-is-scrolled {
+    background: var(--je-overlay-hard);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border-bottom: 1px solid color-mix(in srgb, var(--primary-accent-color, #00a4dc) 18%, transparent);
+    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------------------------------------------------------------------------
+   Header & Search Bar
+   --------------------------------------------------------------------------- */
+#JellyfinEnhancedPage .sectionTitleContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 0;
+    padding: 10px 0 10px 0;
+    border-bottom: 1px solid var(--je-border);
+}
+#JellyfinEnhancedPage .sectionTitleContainer h2 {
+    font-size: 1.8em;
+    font-weight: 600;
+    margin: 0;
+}
+.je-header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#settingsSearchContainer {
+    min-width: 260px;
+    max-width: 350px;
+    flex: 1;
+}
+#settingsSearchContainer > div {
+    position: relative;
+    /* display: block is enough — the icon / count / clear are all
+       absolute-positioned. A flex container tried to treat them as
+       items and relied on `top: auto` resolving to the static position
+       under align-items: center, which some browsers render with
+       sub-pixel offsets. Using block + explicit top: 50% /
+       translateY(-50%) on each overlay is deterministic across
+       browsers. */
+    display: block;
+}
+#settingsSearchInput {
+    width: 100%;
+    /* Pad left for the search icon, right for count + clear button. */
+    padding: 10px 90px 10px 40px !important;
+    background: var(--je-overlay);
+    border: 1px solid var(--je-border);
+    border-radius: 20px;
+    color: #eee;
+    font-size: 0.9em;
+    outline: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    /* Ensure the input paints BELOW the overlay icons so its selection
+       highlight (native browser paint) doesn't cover them. */
+    position: relative;
+    z-index: 0;
+}
+#settingsSearchInput:focus {
+    background: var(--je-overlay-hard);
+    border-color: var(--primary-accent-color, #00a4dc);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-accent-color, #00a4dc) 20%, transparent);
+}
+.je-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--je-text-subtle);
+    pointer-events: none;
+    font-size: 18px !important;
+    line-height: 1;
+    /* Sit above the input so the native selection-highlight paint
+       (which can cover the input's full content box) never masks the
+       icon. */
+    z-index: 1;
+}
+#settingsSearchCount {
+    display: none;
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--je-text-muted);
+    font-size: 0.8em;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 1;
+}
+#settingsSearchClear {
+    display: none;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--je-surface-3);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.8em;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 2;
+}
+#settingsSearchClear:hover {
+    background: #dc3545;
+}
+

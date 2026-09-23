@@ -1,0 +1,34 @@
+/* ---------------------------------------------------------------------------
+   Setting description visibility toggle
+   --------------------------------------------------------------------------- */
+body.je-hide-descriptions .je-setting-description,
+body.je-hide-descriptions .je-optional-plugin-purpose { display: none !important; }
+body.je-hide-descriptions .je-overview-intro,
+body.je-hide-descriptions .je-tab-intro { display: none !important; }
+
+{{include:features/arr/settings/styles/import-controls.css}}
+/* On/Off pill — replaces the earlier Material-icons indicator that
+   vanished on themes whose raised-button fill matches the accent.
+   Pill is a small chip that flips its background between a muted
+   neutral (OFF) and the user's accent color (ON). Always reads
+   against the button because the chip has its own fill. */
+.je-desc-toggle-state {
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 18%, transparent);
+    color: currentColor;
+    line-height: 1.4;
+    min-width: 28px;
+    text-align: center;
+}
+.je-desc-toggle[aria-pressed="true"] .je-desc-toggle-state {
+    background: var(--primary-accent-color, #00a4dc);
+    color: #fff;
+}
+.je-desc-toggle-off { opacity: 0.85; }
+.je-desc-toggle-off:hover { opacity: 1; }
+

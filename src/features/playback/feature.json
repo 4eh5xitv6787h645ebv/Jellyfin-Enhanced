@@ -1,0 +1,67 @@
+{
+  "id": "playback",
+  "modules": {
+    "client/playback.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/frame-step.js": [
+      "playback/playback"
+    ],
+    "client/seek-history.js": [
+      "playback/playback"
+    ],
+    "client/segment-skip.js": [
+      "playback/playback"
+    ],
+    "client/track-menu.js": [
+      "playback/playback"
+    ],
+    "client/track-cycle.js": [
+      "playback/track-menu"
+    ],
+    "client/playback-info.js": [
+      "playback/playback"
+    ],
+    "client/long-press.js": [
+      "playback/playback"
+    ],
+    "client/auto-skip.js": [
+      "playback/frame-step",
+      "playback/seek-history",
+      "playback/segment-skip",
+      "playback/track-cycle",
+      "playback/playback-info",
+      "playback/long-press"
+    ],
+    "client/subtitles.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/osd-rating.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/pause-screen-data.js": [],
+    "client/pause-screen-styles.js": [],
+    "client/pausescreen.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "playback/pause-screen-data",
+      "playback/pause-screen-styles"
+    ],
+    "client/playback-rating-badge.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "assets": [
+    "client/README.md"
+  ],
+  "startup": "client/startup.js"
+}

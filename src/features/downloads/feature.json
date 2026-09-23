@@ -1,0 +1,37 @@
+{
+  "id": "downloads",
+  "modules": {
+    "client/requests-page-styles.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/requests-page-data.js": [
+      "downloads/requests-page-styles"
+    ],
+    "client/requests-page-render-helpers.js": [
+      "downloads/requests-page-data"
+    ],
+    "client/requests-page-render-cards.js": [
+      "downloads/requests-page-render-helpers"
+    ],
+    "client/requests-page-render.js": [
+      "downloads/requests-page-render-cards"
+    ],
+    "client/requests-page-actions.js": [
+      "downloads/requests-page-render"
+    ],
+    "client/requests-page-init.js": [
+      "downloads/requests-page-actions"
+    ],
+    "client/requests-custom-tab.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "assets": [
+    "client/DownloadsPage.html"
+  ],
+  "startup": "client/startup.js"
+}

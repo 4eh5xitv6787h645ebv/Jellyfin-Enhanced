@@ -1,0 +1,30 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Users</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="jellyseerrAutoImportUsers" is="emby-checkbox" type="checkbox"/><span>Auto import Jellyfin users to Seerr</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrAutoImportUsers">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Automatically import Jellyfin users into Seerr so they can use Seerr Search without needing to visit Seerr directly. New users are imported the first time they use Seerr Search; a scheduled task also bulk-imports periodically. Already-imported users are skipped.<br/><br/>
+                                    Configure the bulk import frequency in Jellyfin Dashboard &gt; Scheduled Tasks &gt; "Import Jellyfin Users to Seerr".
+                                </div>
+                            </div>
+
+                            <details id="blockedUsersDetails" class="je-details-section">
+                                <summary>Blocked Users <span id="blockedUsersCount">(none)</span></summary>
+                                <div class="je-details-body">
+                                    <div class="fieldDescription je-field-desc-md">
+                                        Select users to exclude from Seerr import. Blocked users will never be looked up or imported. No API calls are made for them.
+                                    </div>
+                                    <div id="blockedUsersContainer" style="max-height: 200px; overflow-y: auto;">
+                                        <span class="je-loading-text">Loading users...</span>
+                                    </div>
+                                    <div id="blockedUsersScrollHint" style="display: none;">▼ scroll for more</div>
+                                </div>
+                            </details>
+                            <input id="jellyseerrImportBlockedUsers" type="hidden" value=""/>
+
+                            <button id="btnImportJellyseerrUsers" is="emby-button" type="button" class="raised button-submit emby-button" style="width: fit-content;">Import Users Now</button>
+                            <div id="importUsersResult" style="display: none; margin-top:10px;"></div>
+                        </div>
+                    </fieldset>
+

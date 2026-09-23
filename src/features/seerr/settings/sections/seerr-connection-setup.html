@@ -1,0 +1,90 @@
+                    <fieldset data-dep-setup>
+                        <legend class="sectionTitle">Seerr Connection Setup</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer je-main-feature">
+                                <label><input id="jellyseerrEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Seerr integration</span></label>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrEnabled">
+                                <div class="fieldDescription je-field-desc-xl">Enables all Seerr-powered features for this server: Seerr search results, request buttons, the Requests page, auto-requests, and user import. Required for any Seerr feature to work.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="jellyseerrUrls">Seerr URL(s) <span style="font-size:0.8em; opacity:0.6;">(One per line)</span></label>
+                                <textarea class="emby-textarea emby-input je-textarea-medium" id="jellyseerrUrls" name="jellyseerrUrls" placeholder="http://192.168.1.10:5055&#10;https://jellyseerr.example.com"></textarea>
+                            </div>
+                                <div class="je-setting-description" data-desc-for="jellyseerrUrls">
+                                    <div class="fieldDescription">Enter your Seerr instance URLs, one per line. The script will use the first one that connects successfully.</div>
+                                </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="JellyseerrApiKey">Seerr API Key</label>
+                                <div class="je-api-row">
+                                    <input id="JellyseerrApiKey" is="emby-input" name="JellyseerrApiKey" type="text" autocomplete="off" class="je-api-input"/>
+                                    <span id="jellyseerrStatusIndicator" class="material-icons"></span>
+                                    <button is="emby-button" type="button" id="testJellyseerrBtn" class="emby-button raised button-submit">Test</button>
+                                </div>
+                            </div>
+                                    <div class="je-setting-description" data-desc-for="JellyseerrApiKey">
+                                        <div class="fieldDescription">API key from Seerr. (Settings &gt; General Settings &gt;  API Key)</div>
+                                    </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="jellyseerr_TMDB_API_KEY">TMDB API Key</label>
+                                <div class="je-api-row">
+                                    <input id="jellyseerr_TMDB_API_KEY" is="emby-input" name="TMDB_API_KEY" type="text" autocomplete="off" class="je-api-input"/>
+                                    <span id="jellyseerrTmdbStatusIndicator" class="material-icons"></span>
+                                    <button is="emby-button" type="button" class="testTmdbBtn emby-button raised button-submit">Test</button>
+                                </div>
+                            </div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerr_TMDB_API_KEY">
+                                        <div class="fieldDescription">Your API key from The Movie DB (TMDB). <a class="sectionTitle" href="https://www.themoviedb.org/settings/api" target="_blank">How to?</a><br/>TMDB API key for automatic movie collection requests and Seerr Collection Results. Shared with Elsewhere Settings</div>
+                                    </div>
+
+                            <details class="je-details-section">
+                                <summary>Advanced URL Mappings</summary>
+                                <div class="je-details-body">
+                                    <div class="inputContainer">
+                                        <label class="inputLabel je-seerr-label" for="jellyseerrUrlMappings">Seerr URL Mappings</label>
+                                        <textarea class="emby-textarea emby-input je-textarea-large" id="jellyseerrUrlMappings" name="jellyseerrUrlMappings" placeholder="https://jellyfin.mydomain.com|https://jellyseerr.mydomain.com"></textarea>
+                                    </div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrUrlMappings">
+                                        <div class="fieldDescription">
+                                            Map your Jellyfin URLs to specific Seerr URLs for displaying links to users. Users will get the appropriate Seerr link when using "Link result titles to Seerr instead of TMDB", based on what link they use to access Jellyfin.<br/>
+                                            Format: <code>JellyfinURL|SeerrURL</code>, one mapping per line.<br/>
+                                            If no mapping matches or this is empty, the first URL from above will be used.
+                                        </div>
+                                        <div class="je-info-banner-inline">
+                                            <i class="material-icons je-info-icon-sm">info</i>
+                                            <div>
+                                                <strong>URL Mapping Examples:</strong><br/>
+                                                • Remote access: <code>https://jellyfin.mydomain.com|https://jellyseerr.mydomain.com</code><br/>
+                                                • Local access: <code>http://192.168.1.10:8096|http://192.168.1.10:5055</code><br/>
+                                                • With base URL: <code>https://example.com/jellyfin|https://example.com/jellyseerr</code>
+                                            </div>
+                                        </div>
+                                        <div class="je-mobile-banner">
+                                            <i class="material-icons je-mobile-icon">phone_android</i>
+                                            <div>Make sure proper mappings are added to appropriate URLs in order for mobile clients to open Seerr links correctly.</div>
+                                        </div>
+                                        <div class="je-info-banner-inline-center">
+                                            <i class="material-icons je-info-icon-sm">info</i>
+                                            <div>
+                                                "<b>Enable Jellyfin Sign-In</b>" must be enabled in Seerr User Settings (/settings/users)<br/><br/>
+                                                All users must be imported to Seerr as Jellyfin users for them to be able to request content.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button is="emby-button" type="button" id="validateSeerrMappingsBtn" class="raised button-submit emby-button" style="width:fit-content;">Validate Mappings</button>
+                                    <div id="seerrMappingsValidationResult" style="display: none;"></div>
+                                </div>
+                            </details>
+
+                            <div class="je-purple-banner">
+                                <i class="material-icons je-purple-icon">favorite</i>
+                                <div style="font-size: 0.9em;">
+                                    <b>Jellyfin Enhanced is not affiliated with Seerr.</b><br/>
+                                    Seerr is an independent project. This plugin only uses Seerr's public API to integrate request and discovery features into Jellyfin.<br/>
+                                    Please report plugin issues to the <a class="sectionTitle" href="https://github.com/n00bcodr/Jellyfin-Enhanced/issues" target="_blank">Jellyfin Enhanced issue tracker</a>, not the Seerr team.
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+

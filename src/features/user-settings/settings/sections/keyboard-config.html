@@ -1,0 +1,41 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Keyboard Config</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="disableAllShortcuts" is="emby-checkbox" type="checkbox"/><span>Disable Keyboard Shortcuts</span></label></div>
+                            <div class="je-setting-description" data-desc-for="disableAllShortcuts">
+                                <div class="fieldDescription">Disables all keyboard shortcuts, and hides the 'Shortcuts' tab in enhanced panel</div>
+                                <div class="je-info-banner">
+                                <div class="je-info-banner-row">
+                                <i class="material-icons je-info-icon">info</i>
+                                <div>
+                                <strong>This will save the current configuration and apply all the above settings to every user on this server.</strong><br/>
+                                <strong>Note:</strong> Users can individually customize their own settings by opening the Enhanced Panel:<br/>
+                                • Press <code>?</code> key (default shortcut)<br/>
+                                • Long Press on user profile picture in the top-right corner<br/>
+                                • Through "Jellyfin Enhanced" link from the side bar<br/>
+                                • Access via playback controls menu during video playback (only on mobile devices)
+                            </div>
+                                </div>
+                                </div>
+                            </div>
+                            <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.05); margin: 5px 0;">
+
+                            <h4>Add Override</h4>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <select is="emby-select" class="emby-select" id="add-shortcut-select" style="flex:1;"></select>
+                                <input is="emby-input" id="add-shortcut-key" type="text" placeholder="Key (e.g. Shift+A)" style="flex:1;"/>
+                                <div class="je-setting-description" data-desc-for="add-shortcut-key">
+                                    <p class="fieldDescription je-field-desc-mt">
+                                    <b>Modifier Keys:</b> Use `Shift+`, `Ctrl+`, or `Alt+`. Examples: `Shift+A`, `Ctrl+S`.
+                                    </p>
+                                </div>
+                                <button is="emby-button" type="button" id="add-shortcut-btn" class="emby-button raised">Add</button>
+                                <button is="emby-button" type="button" id="disable-shortcut-btn" class="emby-button raised button-cancel" title="Disables this shortcut for every user on the server">Disable</button>
+                            </div>
+                            <div class="fieldDescription je-field-desc-mt">Select a shortcut above and click <b>Disable</b> to turn it off server-wide (the key field is ignored). Users can still re-enable it for themselves from their own Enhanced Panel.</div>
+                            <div id="shortcut-error-comment" style="display: none; color: #ff6b6b; margin-top:5px;"></div>
+
+                            <h4 style="margin-top:20px;">Current Overrides</h4>
+                            <div id="shortcut-list-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+                        </div>
+                    </fieldset>

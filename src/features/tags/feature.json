@@ -1,0 +1,49 @@
+{
+  "id": "tags",
+  "modules": {
+    "client/tag-pipeline.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/genretags.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/languagetags.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/peopletags.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/quality-analysis.js": [],
+    "client/quality-policy.js": [
+      "tags/quality-analysis"
+    ],
+    "client/qualitytags.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "tags/quality-policy"
+    ],
+    "client/ratingtags.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/userreviewtags.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "assets": [
+    "client/README.md"
+  ],
+  "startup": "client/startup.js"
+}

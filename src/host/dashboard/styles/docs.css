@@ -1,0 +1,53 @@
+/* ---------------------------------------------------------------------------
+   Docs tab — embedded live docs iframe
+   Breaks out of the form's 1400px max-width so the iframe goes edge-to-edge.
+   Keeps only a thin single-line header with the title + "open in new tab".
+   --------------------------------------------------------------------------- */
+/* Docs tab takes the full width of the form (matching the tab bar above it)
+   and uses a single-row header + tall iframe with no fieldset chrome. */
+#docs.jellyfin-tab-content.active {
+    display: block;
+    width: 100%;
+    padding: 0;
+    gap: 0;
+}
+.je-docs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(22, 22, 22, 0.94);
+    border-bottom: 1px solid var(--je-border);
+}
+.je-docs-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 1.05em;
+    color: var(--primary-accent-color, #00a4dc);
+}
+.je-docs-title .je-legend-icon { font-size: 20px !important; }
+.je-docs-open-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--primary-accent-color, #00a4dc);
+    text-decoration: none;
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+}
+.je-docs-open-link:hover { background: var(--je-surface-2); text-decoration: underline; }
+.je-docs-open-link .material-icons { font-size: 16px !important; }
+.je-docs-iframe {
+    width: 100%;
+    height: calc(100vh - 170px);
+    min-height: 520px;
+    border: 0;
+    background: #0f0f0f;
+    display: block;
+}
+

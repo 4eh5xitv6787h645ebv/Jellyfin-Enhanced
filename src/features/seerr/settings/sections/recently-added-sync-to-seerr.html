@@ -1,0 +1,33 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Recently Added Sync to Seerr</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="triggerSeerrScanOnItemAdded" is="emby-checkbox" type="checkbox"/><span>Trigger Seerr recently-added scan when new Jellyfin items are added</span></label></div>
+                            <div class="je-setting-description" data-desc-for="triggerSeerrScanOnItemAdded">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    When Jellyfin reports new library items added, enabling this triggers the "Jellyfin Recently Added Scan" job so that request statuses are immediately updated instead of waiting till next schedule run. Events are debounced, so a bulk import collapses into a single trigger.<br/><br/>
+                                    <strong>Tip:</strong> With this enabled, you can set Seerr's recently-added scan Frequency to a much longer interval (60 minutes) to reduce noise.
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="seerrScanDebounceSeconds">Debounce (seconds):</label>
+                                <input id="seerrScanDebounceSeconds" is="emby-input" type="number" min="5" max="3600" step="1"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="seerrScanDebounceSeconds">
+                                <div class="fieldDescription je-field-desc-mt-sm je-field-desc-md">
+                                    Wait this many seconds after the LAST item added before firing the scan. Default 60. Range 5 to 3600.
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <button id="triggerSeerrScanNowBtn" is="emby-button" type="button" class="raised"><span>Trigger scan now</span></button>
+                                <span id="triggerSeerrScanNowStatus" class="material-icons" aria-hidden="true"></span>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="triggerSeerrScanNowBtn">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Uses the Seerr URL and API key entered in the Setup section above. If multiple URLs are configured, the first reachable one is used.
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+

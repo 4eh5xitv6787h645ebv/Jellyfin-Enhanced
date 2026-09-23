@@ -1,0 +1,73 @@
+                    <fieldset>
+                        <legend class="sectionTitle"><i class="material-icons je-legend-icon" aria-hidden="true">label</i>Tags Sync</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer je-main-feature"><label><input id="arrTagsSyncEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Tags Sync</span></label></div>
+                            <div class="je-setting-description" data-desc-for="arrTagsSyncEnabled">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Fetches all tags from Radarr and Sonarr instances defined above and adds them as Jellyfin tags.
+                                    <br/><br/>
+                                <strong>Note:</strong> Run the sync task from Dashboard &gt; Scheduled Tasks &gt; "Sync Tags from *arr to Jellyfin" and configure how often it should run.
+                                </div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="arrTagsPrefix">Tag Prefix</label>
+                                <input id="arrTagsPrefix" is="emby-input" name="arrTagsPrefix" type="text" placeholder="JE Arr Tag: "/>
+                            </div>
+                                <div class="je-setting-description" data-desc-for="arrTagsPrefix">
+                                    <div class="fieldDescription">Prefix to add before each tag (e.g., "JE Arr Tag: " will result in "JE Arr Tag: 1 - Jellyfish")</div>
+                                </div>
+                            <div class="checkboxContainer"><label><input id="arrTagsClearOldTags" is="emby-checkbox" type="checkbox"/><span>Clear old tags before sync</span></label></div>
+                            <div class="je-setting-description" data-desc-for="arrTagsClearOldTags">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, removes all existing tags starting with the prefix before adding new ones. This keeps tags in sync with your *arr applications.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="arrTagsShowAsLinks" is="emby-checkbox" type="checkbox"/><span>Show synced tags as links</span></label></div>
+                            <div class="je-setting-description" data-desc-for="arrTagsShowAsLinks">
+                                <div class="fieldDescription je-field-desc-xl">Displays tags with the configured prefix as clickable links on item detail pages. Helpful if your theme hides tags.</div>
+                            </div>
+
+                            <details class="je-details-section">
+                                <summary>Tag Filters</summary>
+                                <div class="je-details-body">
+                                    <div class="inputContainer">
+                                        <label class="inputLabel">Sync to Jellyfin Filter</label>
+                                        <textarea class="emby-textarea emby-input je-textarea-medium" id="arrTagsSyncFilter" name="arrTagsSyncFilter" placeholder="One per line"></textarea>
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="arrTagsSyncFilter">
+                                            <div class="fieldDescription">
+                                                Only sync specific tags from *arr to Jellyfin. Enter one tag name per line (without the prefix).
+                                                <br/>Leave empty to sync all tags.
+                                                <br/><strong>Example:</strong> If you only want to sync "1 - Jellyfish" and "trakt" tags, enter:
+                                                <br/><code>1 - Jellyfish</code>
+                                            <br/><code>trakt</code>
+                                            </div>
+                                        </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel">Show as Links Filter</label>
+                                        <textarea class="emby-textarea emby-input je-textarea-medium" id="arrTagsLinksFilter" name="arrTagsLinksFilter" placeholder="One per line"></textarea>
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="arrTagsLinksFilter">
+                                            <div class="fieldDescription">
+                                                Only show specific tags as links. Enter one tag name per line (without the prefix).
+                                                <br/>Leave empty to show all tags with the prefix.
+                                                <br/><strong>Example:</strong> If you only want "JE Arr Tag: 1 - Jellyfish" and "JE Arr Tag: trakt" as links, enter:
+                                                <br/><code>1 - Jellyfish</code>
+                                            <br/><code>trakt</code>
+                                            </div>
+                                        </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel">Hide Specific Links Filter</label>
+                                        <textarea class="emby-textarea emby-input je-textarea-medium" id="arrTagsLinksHideFilter" name="arrTagsLinksHideFilter" placeholder="One per line"></textarea>
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="arrTagsLinksHideFilter">
+                                            <div class="fieldDescription">
+                                                Hide specific tags from being displayed as links. Enter one tag name per line (without the prefix).
+                                                <br/>This filter takes priority over the "Show" filter above.
+                                                <br/><strong>Example:</strong> To hide "JE Arr Tag: spam_tag" and "JE Arr Tag: test_tag" from links, enter:
+                                                <br/><code>spam_tag</code>
+                                            <br/><code>test_tag</code>
+                                            </div>
+                                        </div>
+                                </div>
+                            </details>
+                        </div>
+                    </fieldset>

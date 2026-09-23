@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <Compile Include="../../CdnAssetCatalog.cs" Link="Production/CdnAssetCatalog.cs" />
+    <Compile Include="../../CdnAssetService.cs" Link="Production/CdnAssetService.cs" />
+    <Compile Include="../../CdnAssetDiskCache.cs" Link="Production/CdnAssetDiskCache.cs" />
+    <Compile Include="../../CdnAssetFetcher.cs" Link="Production/CdnAssetFetcher.cs" />
+  </ItemGroup>
+</Project>

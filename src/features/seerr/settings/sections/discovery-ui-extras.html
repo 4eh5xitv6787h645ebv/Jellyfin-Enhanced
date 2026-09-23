@@ -1,0 +1,86 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Discovery &amp; UI Extras</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="jellyseerrUseMoreInfoModal" is="emby-checkbox" type="checkbox"/><span>Open results in "More Info" modal</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrUseMoreInfoModal">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, clicking a Seerr result title or poster opens an in-app More Info modal.<br/>When disabled, clicking will open the item in Seerr.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrAvailablePosterLinksToJellyfin" is="emby-checkbox" type="checkbox"/><span>Link available items' posters straight to Jellyfin</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrAvailablePosterLinksToJellyfin">
+                                <div class="fieldDescription je-field-desc-xl">For a Seerr result that's already available in your library, clicking the poster goes straight to the Jellyfin item, just like the title link already does. If "Open results in More Info modal" above is enabled, the modal can no longer be opened by clicking the poster of an available item.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrShowReportButton" is="emby-checkbox" type="checkbox"/><span>Show "Report Issue" button on items</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrShowReportButton">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, a small report icon will be added to item action icons allowing users to report playback/content issues to Seerr.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrShowIssueIndicator" is="emby-checkbox" type="checkbox"/><span>Show open issue indicator</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrShowIssueIndicator">
+                                <div class="fieldDescription je-field-desc-xl">When enabled, the report issue button turns orange and shows a count badge if the item has open issues in Seerr.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="showElsewhereOnJellyseerr" is="emby-checkbox" type="checkbox"/><span>Show Streaming Providers on Posters</span></label></div>
+                            <div class="je-setting-description" data-desc-for="showElsewhereOnJellyseerr">
+                                <div class="fieldDescription je-field-desc-xl">Displays icons of available streaming services (from your default region) on Seerr Posters.<br/><br/><b>Requires TMDB API Key to be configured in Elsewhere Settings</b></div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrShowDetailPageLink" is="emby-checkbox" type="checkbox"/><span>Show Seerr link on item detail pages</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrShowDetailPageLink">
+                                <div class="fieldDescription je-field-desc-xl">Adds a Seerr tag to the External Links row on movie/show detail pages (the same row TMDB/IMDb icons appear in, and *arr links when enabled; it shows there regardless of whether *arr links are configured). If "Open results in More Info modal" above is enabled, clicking it opens that modal (status, downloads, and who requested it); otherwise it links straight to the item on Seerr.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="jellyseerrShowDetailPageLinkAsText" is="emby-checkbox" type="checkbox"/><span>Show as text instead of icon</span></label></div>
+                            <div class="je-setting-description" data-desc-for="jellyseerrShowDetailPageLinkAsText">
+                                <div class="fieldDescription je-field-desc-xl">Renders the Seerr detail-page link as the word "Seerr" instead of the icon. Independent of the *arr links "show as text" setting, so it applies even when *arr links are disabled.</div>
+                            </div>
+
+                            <details class="je-details-section">
+                                <summary>Item Pages Discovery</summary>
+                                <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowSimilar" is="emby-checkbox" type="checkbox"/><span>Show similar items</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowSimilar">
+                                        <div class="fieldDescription je-field-desc-xl">Displays similar movies/shows from Seerr on item details pages. Limited to 20 items.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowRecommended" is="emby-checkbox" type="checkbox"/><span>Show recommended items</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowRecommended">
+                                        <div class="fieldDescription je-field-desc-xl">Displays recommended movies/shows from Seerr on item details pages. Limited to 20 items.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowRequestMoreOnSeries" is="emby-checkbox" type="checkbox"/><span>Show "Request More" button on Series</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowRequestMoreOnSeries">
+                                        <div class="fieldDescription je-field-desc-xl">Adds a "Request More" button beside the Seasons section heading on Series detail pages when the show has unrequested seasons in Seerr. Lets users request additional seasons without going through the search bar.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrExcludeLibraryItems" is="emby-checkbox" type="checkbox"/><span>Exclude items already in library</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrExcludeLibraryItems">
+                                        <div class="fieldDescription je-field-desc-xl">Hide similar/recommended items that already exist in your Jellyfin library from the results.<br/>If disabled, the items that are available link to the media item in the library.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrExcludeBlocklistedItems" is="emby-checkbox" type="checkbox"/><span>Exclude blocklisted items</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrExcludeBlocklistedItems">
+                                        <div class="fieldDescription je-field-desc-xl">When enabled, items marked as blocklisted in Seerr will not appear in similar/recommended suggestions.</div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <details class="je-details-section">
+                                <summary>"More" Discovery</summary>
+                                <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowNetworkDiscovery" is="emby-checkbox" type="checkbox"/><span>Show "More from Network"</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowNetworkDiscovery">
+                                        <div class="fieldDescription je-field-desc-md">When viewing a network page (e.g., Netflix, HBO), displays additional content from that network available in Seerr.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowGenreDiscovery" is="emby-checkbox" type="checkbox"/><span>Show "More Genre"</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowGenreDiscovery">
+                                        <div class="fieldDescription je-field-desc-md">When viewing a genre page (e.g., Action, Comedy), displays additional content in that genre from Seerr.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowTagDiscovery" is="emby-checkbox" type="checkbox"/><span>Show "More Tag"</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowTagDiscovery">
+                                        <div class="fieldDescription je-field-desc-md">When viewing a tag page (e.g., cooking, superhero), displays additional content with that keyword from Seerr.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowPersonDiscovery" is="emby-checkbox" type="checkbox"/><span>Show "More from Actor"</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowPersonDiscovery">
+                                        <div class="fieldDescription je-field-desc-md">When viewing an actor/person page, displays their filmography from Seerr including content not in your library.</div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="jellyseerrShowCollectionDiscovery" is="emby-checkbox" type="checkbox"/><span>Show missing collection movies</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="jellyseerrShowCollectionDiscovery">
+                                        <div class="fieldDescription je-field-desc-xl">When viewing a collection/BoxSet page, shows movies from the collection that are not yet in your library with request buttons.</div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </fieldset>
+

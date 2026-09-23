@@ -1,0 +1,89 @@
+                    <fieldset>
+                        <legend class="sectionTitle"><img class="je-legend-icon-img" data-je-cdn="mdblist-static/favicon.ico" alt="">MDBList Ratings</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer je-main-feature"><label><input id="mdblistRatingsEnabled" is="emby-checkbox" type="checkbox"/><span>Enable MDBList Ratings</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mdblistRatingsEnabled">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">
+                                    <ul style="margin:4px 0 0 20px; padding:0;">
+                                        <li>Shows TMDB, Rotten Tomatoes, IMDb, Trakt and other ratings on item-details pages</li>
+                                        <li>Can fill in Jellyfin's own missing Community/Critic Rating fields</li>
+                                        <li>Requires a free API key from mdblist.com</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="mdblistApiKey">MDBList API Key</label>
+                                <div class="je-api-row">
+                                    <input id="mdblistApiKey" is="emby-input" type="text" autocomplete="off" class="je-api-input"/>
+                                    <span id="mdblistStatusIndicator" class="material-icons"></span>
+                                    <button is="emby-button" type="button" id="checkMdblistStatusBtn" class="emby-button raised button-submit">Check</button>
+                                </div>
+                                <div id="mdblistStatusLine" style="margin: 4px 0 8px; font-size: 0.9em; opacity: 0.85;">&nbsp;</div>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="mdblistApiKey">
+                                <div class="fieldDescription">Your API key from <a class="sectionTitle" href="https://mdblist.com/preferences/#api" target="_blank">mdblist.com</a>.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="mdblistRatingsShowOnItemDetails" is="emby-checkbox" type="checkbox"/><span>Show Ratings Row on Item Details</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mdblistRatingsShowOnItemDetails">
+                                <div class="fieldDescription">Displays the MDBList ratings row on item-details pages.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="mdblistRatingsFetchEnabled" is="emby-checkbox" type="checkbox"/><span>Fetch Ratings from MDBList</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mdblistRatingsFetchEnabled">
+                                <div class="fieldDescription">Enables the <strong>Fetch Ratings from MDBList</strong> scheduled task (Dashboard → Scheduled Tasks):
+                                    <ul style="margin:4px 0 0 20px; padding:0;">
+                                        <li>Looks up MDBList data for any movie/series whose cached ratings are missing or stale, and saves it. Doesn't touch Jellyfin's own rating fields</li>
+                                        <li>A found title stays cached for 7 days (3 days for a confirmed "no match") before being refetched. Already-fresh titles are skipped on a re-run, so it's safe to schedule this frequently, even daily</li>
+                                        <li>Stops once today's quota drops to the reserve below</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="mdblistFetchReserve">Fetch Task Reserve</label>
+                                <input id="mdblistFetchReserve" is="emby-input" type="number" min="1" max="100000" value="400"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="mdblistFetchReserve">
+                                <div class="fieldDescription">The fetch task stops once today's live remaining quota drops to this many, reserving that much for people browsing the library (an item-details page fetches live if nothing's cached yet).</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="mdblistRatingsAutoSyncEnabled" is="emby-checkbox" type="checkbox"/><span>Sync Ratings from MDBList to Jellyfin</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mdblistRatingsAutoSyncEnabled">
+                                <div class="fieldDescription">Enables the <strong>Sync Ratings from MDBList to Jellyfin</strong> scheduled task:
+                                    <ul style="margin:4px 0 0 20px; padding:0;">
+                                        <li>Sets Community (TMDB) / Critic (Rotten Tomatoes) Ratings from whatever's already cached (see Fetch above) into Jellyfin's own fields</li>
+                                        <li>Requires the <strong>Fetch Ratings from MDBList</strong> task to be enabled and run first</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="mdblistRatingsOverwriteExisting" is="emby-checkbox" type="checkbox"/><span>Overwrite Existing Jellyfin Ratings</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mdblistRatingsOverwriteExisting">
+                                <div class="fieldDescription">
+                                    <ul style="margin:4px 0 0 20px; padding:0;">
+                                        <li><strong>Off</strong> (default): Only fills an empty rating, never revisits an item once both are set</li>
+                                        <li><strong>On</strong>: Every run re-sets every item's rating to MDBList's current cached value. This is also the only way ratings stay current over time</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <details id="mdblistSourcesAdminDetails" class="je-details-section">
+                                <summary>Configure ratings shown</summary>
+                                <div class="je-details-body">
+                                    <div class="fieldDescription je-field-desc-sm">Pick which ratings appear on the item-details row, and the order they're shown in. Use the <i class="material-icons je-cat-arrow-icon" aria-hidden="true">arrow_upward</i> / <i class="material-icons je-cat-arrow-icon" aria-hidden="true">arrow_downward</i> buttons to reorder. All checked by default.</div>
+                                    <div id="mdblistRatingsSourcesAdmin"></div>
+                                </div>
+                            </details>
+
+                            <div class="checkboxContainer"><label><input id="mdblistRatingsShowPercentSymbol" is="emby-checkbox" type="checkbox"/><span>Show % Symbol</span></label></div>
+                            <div class="je-setting-description" data-desc-for="mdblistRatingsShowPercentSymbol">
+                                <div class="fieldDescription">Appends "%" after each rating badge's number.</div>
+                            </div>
+
+                            <div class="fieldDescription" style="margin-top:8px; opacity:0.7; font-size:0.85em;">
+                                Based on <a class="sectionTitle" href="https://github.com/xroguel1ke/jellyfin_ratings" target="_blank">xroguel1ke</a>'s original script.
+                            </div>
+                        </div>
+                    </fieldset>

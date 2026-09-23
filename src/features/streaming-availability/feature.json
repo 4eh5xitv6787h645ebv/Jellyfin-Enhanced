@@ -1,0 +1,20 @@
+{
+  "id": "streaming-availability",
+  "modules": {
+    "client/elsewhere-settings.js": [],
+    "client/elsewhere-api.js": [],
+    "client/elsewhere-panel.js": [],
+    "client/elsewhere.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "streaming-availability/elsewhere-settings",
+      "streaming-availability/elsewhere-api",
+      "streaming-availability/elsewhere-panel"
+    ]
+  },
+  "assets": [
+    "client/README.md"
+  ],
+  "startup": "client/startup.js"
+}

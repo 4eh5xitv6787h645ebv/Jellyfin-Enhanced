@@ -1,0 +1,73 @@
+/* ---------------------------------------------------------------------------
+   Accordions (Details / Summary)
+   --------------------------------------------------------------------------- */
+.je-details-section, .je-seerr-details {
+    background: var(--je-overlay);
+    border: 1px solid var(--je-border-subtle);
+    border-radius: 10px;
+    margin: 5px 0 10px 0;
+    overflow: hidden;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+.je-details-section:hover, .je-seerr-details:hover {
+    border-color: var(--je-border);
+}
+.je-details-section[open], .je-seerr-details[open] {
+    background: var(--je-surface-1);
+    border-color: var(--je-border);
+}
+.je-details-section > summary, .je-seerr-details > summary {
+    background: transparent;
+    padding: 14px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+    user-select: none;
+    color: rgba(240, 240, 240, 0.82);
+    transition: color 0.2s ease;
+}
+.je-details-section[open] > summary,
+.je-seerr-details[open] > summary {
+    color: #f5f5f5;
+}
+.je-details-section > summary:hover,
+.je-seerr-details > summary:hover {
+    color: #fff;
+}
+.je-details-section > summary::-webkit-details-marker,
+.je-seerr-details > summary::-webkit-details-marker {
+    display: none;
+}
+.je-details-section > summary::after,
+.je-seerr-details > summary::after {
+    content: "chevron_right";
+    font-family: "Material Icons";
+    font-size: 24px;
+    display: inline-block;
+    transition: transform 0.25s ease, color 0.2s ease;
+    color: var(--je-text-subtle);
+    line-height: 1;
+    flex-shrink: 0;
+}
+.je-details-section[open] > summary::after,
+.je-seerr-details[open] > summary::after {
+    transform: rotate(90deg);
+    color: var(--primary-accent-color, #00a4dc);
+}
+.je-details-body {
+    padding: 0 20px 20px 20px;
+    border-top: 1px solid var(--je-border);
+    margin-top: 5px;
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.je-details-body > .je-setting-description {
+    margin-top: -2em;
+}
+

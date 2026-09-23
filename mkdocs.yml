@@ -180,6 +180,8 @@ nav:
     - CSS Customization: advanced/css-customization.md
     - API: advanced/api.md
     - Project Structure: advanced/project-structure.md
+    - Feature Ownership: advanced/feature-layout.md
+    - Spoiler Guard Development: advanced/spoiler-guard-development.md
   - FAQ + Support:
     - FAQ: faq-support/faq.md
     - Report issues: faq-support/report-issues.md

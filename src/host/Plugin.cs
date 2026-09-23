@@ -1,0 +1,512 @@
+// Global aliases
+global using JUser = Jellyfin.Database.Implementations.Entities.User;
+global using JSortOrder = Jellyfin.Database.Implementations.Enums.SortOrder;
+
+using System.Globalization;
+using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Plugins;
+using MediaBrowser.Model.Plugins;
+using MediaBrowser.Model.Serialization;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using MediaBrowser.Controller.Configuration;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using MediaBrowser.Common.Net;
+using System.Reflection;
+using System.Runtime.Loader;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Jellyfin.Plugin.JellyfinEnhanced
+{
+    public class JellyfinEnhanced : BasePlugin<PluginConfiguration>, IHasWebPages
+    {
+        private readonly IApplicationPaths _applicationPaths;
+        private readonly Logger _logger;
+        private readonly Services.AnalyticsReportingService _analyticsReportingService;
+        private const string PluginName = "Jellyfin Enhanced";
+
+        public JellyfinEnhanced(
+            IApplicationPaths applicationPaths,
+            IServerConfigurationManager serverConfigurationManager,
+            IXmlSerializer xmlSerializer,
+            Logger logger,
+            Services.AnalyticsReportingService analyticsReportingService,
+            Services.HostCompatibilityService hostCompatibility) : base(applicationPaths, xmlSerializer)
+        {
+            Instance = this;
+            _applicationPaths = applicationPaths;
+            _logger = logger;
+            _analyticsReportingService = analyticsReportingService;
+            _logger.Info($"{PluginName} v{Version} initialized. Plugin logs will be written to: {_logger.CurrentLogFilePath}");
+
+            if (hostCompatibility.IsMismatch)
+            {
+                // Logged here, the earliest point at which a plugin service can be
+                // resolved (the service itself needs only the app host), so the line
+                // lands before any scheduled task runs. StartupService repeats it so
+                // the verdict also shows up in the startup-task log on every boot.
+                _logger.Error($"BUILD/HOST MISMATCH: {hostCompatibility.MismatchMessage} Install {hostCompatibility.ExpectedAssetName} from {Services.HostCompatibilityService.ManifestUrl}");
+            }
+
+            // Set the User-Agent used by every Seerr/TMDB outbound HTTP call.
+            // Cloudflare's Browser Integrity Check / Bot Fight Mode flags
+            // empty UA as bot �            Helpers.Jellyseerr.SeerrHttpHelper.UserAgent = $"JellyfinEnhanced/{Version}";
+            CleanupOldScript();
+            CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
+            BackfillMissingDefaultShortcuts();
+        }
+
+        // Dedupes Shortcuts (XmlSerializer appends to constructor-initialized lists, doubling on each restart)
+        // and backfills missing defaults. Reverse iteration so persisted XML rows win over constructor defaults.
+        private void BackfillMissingDefaultShortcuts()
+        {
+            List<Shortcut>? originalShortcuts = null;
+            try
+            {
+                var config = Configuration;
+                if (config == null) return;
+                config.Shortcuts ??= new List<Shortcut>();
+                originalShortcuts = config.Shortcuts;
+
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                var dedupedReversed = new List<Shortcut>(originalShortcuts.Count);
+                var emptyKeyNames = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = originalShortcuts.Count - 1; i >= 0; i--)
+                {
+                    var s = originalShortcuts[i];
+                    var name = s?.Name ?? string.Empty;
+                    if (string.IsNullOrEmpty(name)) continue;
+                    if (string.IsNullOrEmpty(s?.Key))
+                    {
+                        emptyKeyNames.Add(name);
+                        continue;
+                    }
+                    if (seen.Add(name)) dedupedReversed.Add(s!);
+                }
+                var deduped = new List<Shortcut>(dedupedReversed.Count);
+                for (int i = dedupedReversed.Count - 1; i >= 0; i--) deduped.Add(dedupedReversed[i]);
+                var malformed = emptyKeyNames.Where(n => !seen.Contains(n)).ToList();
+                int duplicatesDropped = originalShortcuts.Count - deduped.Count - malformed.Count;
+
+                var defaults = new PluginConfiguration().Shortcuts ?? new List<Shortcut>();
+                var missing = defaults.Where(d => !seen.Contains(d.Name ?? string.Empty)).ToList();
+                deduped.AddRange(missing);
+
+                if (duplicatesDropped == 0 && missing.Count == 0 && malformed.Count == 0) return;
+
+                config.Shortcuts = deduped;
+                SaveConfiguration();
+                _logger.Info(
+                    $"Normalized shortcut list: dropped {duplicatesDropped} duplicate(s), " +
+                    $"{malformed.Count} malformed entry/entries" +
+                    (malformed.Count > 0 ? $" [{string.Join(", ", malformed)}]" : "") +
+                    $", added {missing.Count} missing default(s)" +
+                    (missing.Count > 0 ? $" [{string.Join(", ", missing.Select(s => s.Name))}]" : ""));
+            }
+            catch (IOException ex)
+            {
+                RollbackShortcuts(originalShortcuts);
+                _logger.Error($"Failed to save normalized shortcut list to disk (check permissions and free space): {ex}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                RollbackShortcuts(originalShortcuts);
+                _logger.Error($"Permission denied saving normalized shortcut list: {ex}");
+            }
+            catch (Exception ex)
+            {
+                RollbackShortcuts(originalShortcuts);
+                _logger.Error($"Unexpected error normalizing shortcut list: {ex}");
+            }
+        }
+
+        private void RollbackShortcuts(List<Shortcut>? original)
+        {
+            if (original == null) return;
+            try
+            {
+                var config = Configuration;
+                if (config != null) config.Shortcuts = original;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to roll back shortcut list after save failure: {ex}");
+            }
+        }
+
+        public override string Name => PluginName;
+        public override Guid Id => Guid.Parse("f69e946a-4b3c-4e9a-8f0a-8d7c1b2c4d9b");
+        public static JellyfinEnhanced? Instance { get; private set; }
+
+        private string IndexHtmlPath => Path.Combine(_applicationPaths.WebPath, "index.html");
+
+        public static string BrandingDirectory
+        {
+            get
+            {
+                if (Instance == null)
+                    return string.Empty;
+
+                var configPath = Instance.ConfigurationFilePath;
+                if (string.IsNullOrWhiteSpace(configPath))
+                    return string.Empty;
+
+                var configDir = Path.GetDirectoryName(configPath);
+                if (string.IsNullOrWhiteSpace(configDir))
+                    return string.Empty;
+
+                var pluginFolderName = Path.GetFileNameWithoutExtension(configPath) ?? "Jellyfin.Plugin.JellyfinEnhanced";
+                return Path.Combine(configDir, pluginFolderName, "custom_branding");
+            }
+        }
+
+        // Cache-busting key: plugin version plus the DLL's last-write timestamp, so
+        // every build yields a distinct value even when the version is unchanged
+        // (local dev/testing). Falls back to the bare version if the assembly
+        // location can't be read (e.g. single-file hosting).
+        internal string ScriptCacheKey
+        {
+            get
+            {
+                var version = Version?.ToString() ?? "unknown";
+                try
+                {
+                    var location = typeof(JellyfinEnhanced).Assembly.Location;
+                    if (!string.IsNullOrEmpty(location) && File.Exists(location))
+                    {
+                        var ticks = new FileInfo(location).LastWriteTimeUtc.Ticks;
+                        return $"{version}-{ticks}";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Fall through to the bare version below.
+                    _logger.Debug($"ScriptCacheKey: couldn't read assembly file metadata, using bare version: {ex.Message}");
+                }
+
+                return version;
+            }
+        }
+
+        // The single source of truth for the client-script tag. Consumed both by the
+        // request-time injection middleware (ScriptInjectionStartupFilter) and by the
+        // legacy on-disk index.html rewrite, so the two never drift. plugin.js reads
+        // the plugin/version/dev attributes off this tag.
+        internal string BuildScriptTag()
+        {
+            var cacheKey = ScriptCacheKey;
+            var devMode = Configuration?.DevMode == true;
+            return $"<script plugin=\"{Name}\" version=\"{cacheKey}\" dev=\"{(devMode ? "true" : "false")}\" src=\"../JellyfinEnhanced/script?v={cacheKey}\" defer></script>";
+        }
+
+        public void InjectScript()
+        {
+            UpdateIndexHtml(true);
+        }
+
+        public override void OnUninstalling()
+        {
+            UpdateIndexHtml(false);
+            base.OnUninstalling();
+        }
+
+        // Config-save side effects: flush every Seerr-related cache (fixing a bad
+        // URL/key/blocklist must not take 10-30 minutes of cache TTL to appear
+        // fixed), and hand Server-Side Tag Cache OFF<->ON flips to the tag-cache
+        // transition queue — turning it off must actually release the cache
+        // memory, and turning it on must catch up on the off window right away
+        // rather than serving a stale snapshot until the daily 3 AM refresh.
+        public override void UpdateConfiguration(BasePluginConfiguration configuration)
+        {
+            // Capture the outgoing value BEFORE base.UpdateConfiguration replaces
+            // Configuration, so an actual OFF<->ON transition is distinguishable
+            // from an unrelated config save (this method fires on every save).
+            var tagCacheWasEnabled = Configuration?.TagCacheServerMode == true;
+            var analyticsWasEnabled = Configuration?.AnalyticsEnabled == true;
+
+            // The Analytics* identity/bookkeeping fields are server-minted and
+            // never editable on the config page, but a save replaces the whole
+            // Configuration object with whatever the client posted. A snapshot
+            // fetched before a background registration/report finished would
+            // post them back empty, silently discarding this install's minted
+            // credentials — the backend row could then never be opted out, and
+            // the next send would register a duplicate install. Treat
+            // "incomplete incoming (either half missing — e.g. a restored
+            // backup with the secret redacted), complete current" as
+            // "preserve current". Runs under AnalyticsCredentialLock so the
+            // object swap can't interleave with AnalyticsReportingService
+            // writing freshly minted credentials to the live object — without
+            // it, registration could write to an already-replaced object and
+            // SaveConfiguration would persist empty credentials while the
+            // backend row exists.
+            lock (AnalyticsCredentialLock)
+            {
+                if (configuration is PluginConfiguration incoming && Configuration is PluginConfiguration current)
+                {
+                    var incomingIncomplete = string.IsNullOrEmpty(incoming.AnalyticsInstallId) || string.IsNullOrEmpty(incoming.AnalyticsInstallSecret);
+                    var currentComplete = !string.IsNullOrEmpty(current.AnalyticsInstallId) && !string.IsNullOrEmpty(current.AnalyticsInstallSecret);
+                    if (incomingIncomplete && currentComplete)
+                    {
+                        incoming.AnalyticsInstallId = current.AnalyticsInstallId;
+                        incoming.AnalyticsInstallSecret = current.AnalyticsInstallSecret;
+                    }
+                    if (incoming.AnalyticsLastReportedAt == 0 && current.AnalyticsLastReportedAt != 0)
+                    {
+                        incoming.AnalyticsLastReportedAt = current.AnalyticsLastReportedAt;
+                        incoming.AnalyticsLastPayloadJson = current.AnalyticsLastPayloadJson;
+                        incoming.AnalyticsLastReportedPluginVersion = current.AnalyticsLastReportedPluginVersion;
+                        incoming.AnalyticsLastReportedJellyfinTarget = current.AnalyticsLastReportedJellyfinTarget;
+                        incoming.AnalyticsLastReportedJellyfinVersion = current.AnalyticsLastReportedJellyfinVersion;
+                    }
+                }
+
+                base.UpdateConfiguration(configuration);
+            }
+            try
+            {
+                Controllers.JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+                _logger.Info("Jellyfin Enhanced: configuration updated — Seerr caches cleared.");
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Jellyfin Enhanced: failed to clear Seerr caches on config update: {ex.Message}");
+            }
+
+            // The transitions themselves run on a serialized background queue in
+            // TagCacheService (the save request must not block behind cache work).
+            if (tagCacheWasEnabled != (Configuration?.TagCacheServerMode == true))
+            {
+                Services.TagCacheService.Instance?.QueueServerModeTransition();
+            }
+
+            // ON->OFF: flag this install as opted out on the backend so it
+            // drops out of every public view without deleting its history.
+            // Queued (not bare Task.Run): a network call must never block a
+            // config save, but a quick OFF-then-ON toggle must also never let
+            // set_opted_out land AFTER the re-enable's report_stats — that
+            // would leave the install flagged opted out on the backend until
+            // the next due report, up to a full 7-30 day interval. The queue
+            // runs transitions strictly in save order, and each action
+            // re-checks the CURRENT enabled state when it actually runs, so a
+            // stale transition degrades to a no-op instead of undoing a newer one.
+            if (analyticsWasEnabled && Configuration?.AnalyticsEnabled != true)
+            {
+                QueueAnalyticsTransition("flag analytics opt-out", async () =>
+                {
+                    var config = Configuration;
+                    if (config == null || config.AnalyticsEnabled) return; // re-enabled meanwhile; opt-out is moot
+                    await _analyticsReportingService.SendOptOutAsync(config, CancellationToken.None).ConfigureAwait(false);
+                });
+            }
+
+            // OFF->ON: always force an immediate report rather than deferring to
+            // ReportIfDueAsync's interval/version check. On a first-ever opt-in
+            // that check would say "due" anyway, but on a disable-then-re-enable
+            // AnalyticsLastReportedAt/AnalyticsLastReportedPluginVersion still
+            // hold values from before the disable, so the check can say "not
+            // due" and skip sending, which would also leave opted_out=true on
+            // the backend forever, since only a real report_stats call clears it.
+            if (!analyticsWasEnabled && Configuration?.AnalyticsEnabled == true)
+            {
+                // Consent boundary: clear pre-consent counters SYNCHRONOUSLY,
+                // before the enabled=true state is acted on by anything else.
+                // Done here rather than inside the queued ForceSend so the
+                // daily scheduled send can't slip in between enable and the
+                // queued transition and ship a previous consent window's
+                // counters with a months-old period start.
+                _analyticsReportingService.ResetCountersForConsentBoundary();
+
+                QueueAnalyticsTransition("send initial analytics report", () =>
+                    _analyticsReportingService.ForceSendAsync(CancellationToken.None));
+            }
+        }
+
+        /// <summary>
+        /// Guards every read-modify-write of the Analytics install credentials
+        /// (AnalyticsInstallId/Secret) across UpdateConfiguration's object swap
+        /// and AnalyticsReportingService's post-HTTP writes + SaveConfiguration.
+        /// </summary>
+        internal static readonly object AnalyticsCredentialLock = new object();
+
+        private readonly object _analyticsTransitionLock = new object();
+        private Task _analyticsTransitionChain = Task.CompletedTask;
+
+        /// <summary>
+        /// Chains analytics opt-in/opt-out side effects so they run strictly in
+        /// the order the admin's saves produced them, off the request thread.
+        /// The chain can never fault: each link swallows and logs its own
+        /// errors, so one failed transition can't block every later one.
+        /// </summary>
+        private void QueueAnalyticsTransition(string description, Func<Task> action)
+        {
+            lock (_analyticsTransitionLock)
+            {
+                var previous = _analyticsTransitionChain;
+                _analyticsTransitionChain = Task.Run(async () =>
+                {
+                    await previous.ConfigureAwait(false);
+                    try
+                    {
+                        await action().ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Shutdown path, silent.
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning($"Jellyfin Enhanced: failed to {description}: {ex.Message}");
+                    }
+                });
+            }
+        }
+        private void CleanupOldScript()
+        {
+            try
+            {
+                var indexPath = IndexHtmlPath;
+                if (!File.Exists(indexPath))
+                {
+                    _logger.Error($"Could not find index.html at path: {indexPath}");
+                    return;
+                }
+
+                var content = File.ReadAllText(indexPath);
+                var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
+
+                if (regex.IsMatch(content))
+                {
+                    _logger.Info("Found old Jellyfin Enhanced script tag in index.html. Removing it now.");
+                    content = regex.Replace(content, string.Empty);
+                    File.WriteAllText(indexPath, content);
+                    _logger.Info("Successfully removed old script tag.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error during cleanup of old script from index.html: {ex.Message}");
+            }
+        }
+        private void CheckPluginPages(IApplicationPaths applicationPaths, IServerConfigurationManager serverConfigurationManager, int pluginPageConfigVersion)
+        {
+            try
+            {
+                var configPath = Path.Combine(applicationPaths.PluginConfigurationsPath, "Jellyfin.Plugin.PluginPages", "config.json");
+                var config = File.Exists(configPath) ? JObject.Parse(File.ReadAllText(configPath)) : new JObject();
+                if (!File.Exists(configPath)) new FileInfo(configPath).Directory?.Create();
+
+                var assembly = AssemblyLoadContext.All.SelectMany(x => x.Assemblies)
+                    .FirstOrDefault(x => x.FullName?.Contains("Jellyfin.Plugin.PluginPages") ?? false);
+                var supportsSubUrls = assembly != null && assembly.GetName().Version >= new Version("2.4.1.0");
+                var rootUrl = serverConfigurationManager.GetNetworkConfiguration().BaseUrl.TrimStart('/').Trim();
+                if (!string.IsNullOrEmpty(rootUrl)) rootUrl = $"/{rootUrl}";
+
+                Helpers.PluginPagesIntegration.Synchronize(config, Configuration, supportsSubUrls, rootUrl, pluginPageConfigVersion);
+                File.WriteAllText(configPath, config.ToString(Formatting.Indented));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error while updating Plugin Pages configuration: {ex.Message}");
+            }
+        }
+        private void UpdateIndexHtml(bool inject)
+        {
+            try
+            {
+                var indexPath = IndexHtmlPath;
+                if (!File.Exists(indexPath))
+                {
+                    _logger.Error($"Could not find index.html at path: {indexPath}");
+                    return;
+                }
+
+                var content = File.ReadAllText(indexPath);
+                var scriptTag = BuildScriptTag();
+                var regex = new Regex($"<script[^>]*plugin=[\"']{Name}[\"'][^>]*>\\s*</script>\\n?");
+
+                // Remove any old versions of the script tag first
+                content = regex.Replace(content, string.Empty);
+
+                if (inject)
+                {
+                    var closingBodyTag = "</body>";
+                    if (content.Contains(closingBodyTag))
+                    {
+                        content = content.Replace(closingBodyTag, $"{scriptTag}\n{closingBodyTag}");
+                        _logger.Info($"Successfully injected/updated the {PluginName} script.");
+                    }
+                    else
+                    {
+                        _logger.Warning("Could not find </body> tag in index.html. Script not injected.");
+                        return; // Return early if injection point not found
+                    }
+                }
+                else
+                {
+                    _logger.Info($"Successfully removed the {PluginName} script from index.html during uninstall.");
+                }
+
+                File.WriteAllText(indexPath, content);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error while trying to update index.html: {ex.Message}");
+            }
+        }
+
+        public IEnumerable<PluginPageInfo> GetPages()
+        {
+            return new[]
+            {
+                new PluginPageInfo
+                {
+                    Name = this.Name,
+                    DisplayName = "Jellyfin Enhanced",
+                    EnableInMainMenu = true,
+                    EmbeddedResourcePath = "Jellyfin.Plugin.JellyfinEnhanced.Configuration.configPage.html",
+                    // MenuIcon was previously ignored - jellyfin-web hardcoded <Folder /> regardless of
+                    // this value. Jellyfin 12 reads it https://github.com/jellyfin/jellyfin-web/commit/ca55f7998bb774b3c05af3ae410b1b24f72805a5
+                    MenuIcon = "tune"
+                }
+            };
+        }
+
+        public IEnumerable<PluginPageInfo> GetViews()
+        {
+            return new[]
+            {
+                new PluginPageInfo {
+                    Name = "calendarPage",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.CalendarPage.html"
+                },
+                new PluginPageInfo {
+                    Name = "downloadsPage",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.DownloadsPage.html"
+                },
+                new PluginPageInfo {
+                    Name = "bookmarksPage",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.BookmarksPage.html"
+                },
+                new PluginPageInfo {
+                    Name = "hiddenContentPage",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.HiddenContentPage.html"
+                },
+                new PluginPageInfo {
+                    Name = "recommendationsPage",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.RecommendationsPage.html"
+                },
+                new PluginPageInfo {
+                    Name = "activityPage",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.PluginPages.ActivityPage.html"
+                }
+            };
+        }
+    }
+}

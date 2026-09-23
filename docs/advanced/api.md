@@ -515,10 +515,10 @@ curl -X POST \
 
 ## Full Endpoint Index
 
-The sections above document Bookmarks, Reviews, Seerr, and Admin Hidden Content in full (auth, request/response shapes, edge cases). Everything else this plugin exposes is listed here as a map, method + path + a one-line purpose, so a client author knows what exists before reading `Controllers/JellyfinEnhancedController.cs` for the exact request/response shape. All paths are relative to `/JellyfinEnhanced/`. `[Authorize]` means any authenticated Jellyfin user or API key; admin-only endpoints are noted individually.
+The sections above document Bookmarks, Reviews, Seerr, and Admin Hidden Content in full (auth, request/response shapes, edge cases). Everything else this plugin exposes is listed here as a map, method + path + a one-line purpose, so a client author knows what exists before reading the feature controllers under `src/features/<feature>/api/` (or `src/host/api/` for plugin infrastructure) for the exact request/response shape. All paths are relative to `/JellyfinEnhanced/`. `[Authorize]` means any authenticated Jellyfin user or API key; admin-only endpoints are noted individually.
 
 !!! info "Not fully documented yet"
-    This index is deliberately terse. If you're building against one of these and need the exact request/response shape, the fastest source of truth is the corresponding controller method (grep the path string in `JellyfinEnhancedController.cs`) - contributions expanding any of these into full sections like the ones above are welcome.
+    This index is deliberately terse. If you're building against one of these and need the exact request/response shape, the fastest source of truth is the corresponding controller method (search the path string under `src/features/` and `src/host/api/`) - contributions expanding any of these into full sections like the ones above are welcome.
 
 ### Seerr Discovery & Requests
 

@@ -26,16 +26,21 @@ Use Weblate for all translation work:
 
 If Weblate is temporarily unavailable, maintainers can still update locale files directly:
 
-1. Go to `Jellyfin.Plugin.JellyfinEnhanced/js/locales/`
+1. Go to `locales/`
 2. Copy `en.json`
 3. Rename to your language code (e.g., `es.json`)
 4. Translate all English text
-5. Run translation validation script
-6. Submit a Pull Request
+5. For a new language, register its source and existing-style logical resource name in `src/shared/localization/resources.json`
+6. Run `npm run generate` and `npm run check:static` from the repository root
+7. Submit a Pull Request
+
+### Maintainer integration setup
+
+Repository locale sources now live in `locales/`. When configuring or migrating Weblate, use the root locale path and `locales/en.json` template; verify the external project file mask before publishing a repository layout change. Keep resource-registration metadata outside the locale directory.
 
 ### Translation Updates
 
 - Synced from repository updates (including Weblate commits)
 - Cached for 24 hours
-- Available immediately after merge
-- No plugin update needed
+- Updates to existing remote language content are available after merge/cache refresh
+- New bundled languages also need a resource registration and rebuilt plugin

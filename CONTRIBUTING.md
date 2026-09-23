@@ -1,228 +1,107 @@
 # Contributing to Jellyfin Enhanced
 
-Thank you for your interest in contributing to Jellyfin Enhanced! This document provides guidelines and information to help you get started.
+Contributions can improve features, fix bugs, clarify documentation, or translate the UI. Check existing [issues](https://github.com/n00bcodr/Jellyfin-Enhanced/issues), [pull requests](https://github.com/n00bcodr/Jellyfin-Enhanced/pulls), and [discussions](https://github.com/n00bcodr/Jellyfin-Enhanced/discussions) before starting overlapping work.
 
-## 🤝 Ways to Contribute
+## Build and check locally
 
-### 1. Code Contributions
+Install **.NET SDK 10** and **Node.js 22 or later**. Build and regression tools use their standard libraries; **no `npm install` is needed**. Python 3 is needed only for the optional documentation build and Docker/browser smoke harness. Run commands from the repository root.
 
-You can contribute code through:
-- **Open Pull Requests**: Check the [open PRs](https://github.com/n00bcodr/Jellyfin-Enhanced/pulls) for issues that need help
-- **Discussions**: Browse [Discussions](https://github.com/n00bcodr/Jellyfin-Enhanced/discussions) for feature requests and ideas that interest you
-- **Bug Fixes**: Fix any bugs you encounter and submit a PR
+```sh
+npm run generate       # Compose resource maps, bootstrap and dashboard assets
+npm run check:static   # Freshness, registration, syntax, translations and Node tests
+npm run check:backend  # Both release targets, compiled resources and backend tests
+npm run check          # Combined validation
+npm test               # Node regression tests only
+```
 
-> [!NOTE]
-> Feature requests that are considered niche use cases are often moved to Discussions. Feel free to implement any of these if they interest you!
+`dotnet build` from the root uses `JellyfinEnhanced.slnx` and builds the default `jf12` target. Tests run separately through the commands above. To build explicitly:
 
-### 2. Translation Contributions
+```sh
+dotnet build src/JellyfinEnhanced.csproj -c Release -p:JellyfinTarget=jf12
+dotnet build src/JellyfinEnhanced.csproj -c Release -p:JellyfinTarget=jf10
+```
 
-Help make Jellyfin Enhanced accessible to more users by contributing translations through Weblate:
+| Target | Host | Output directory |
+| --- | --- | --- |
+| `jf12` (default) | Jellyfin 12 / .NET 10 | `artifacts/bin/Release/net10.0/` |
+| `jf10` | Jellyfin 10.11 / .NET 9 | `artifacts/bin/Release/net9.0/` |
 
-- https://hosted.weblate.org/projects/jellyfinenhanced/
+Generated assets and resource mappings under `artifacts/generated/` are committed so a .NET-only consumer can build the plugin. When changing their sources, regenerate and include both source and artifact changes. The [maintainability workflow](.github/workflows/maintainability.yml) runs the same validation commands; security, dependency, translation and documentation workflows provide additional checks.
 
-See the [Contributing Translations](https://n00bcodr.github.io/Jellyfin-Enhanced/faq-support/contributing-translations/) section for details.
+## Start with the feature
 
+Open [`src/features/`](src/features/), choose the feature, and read its `README.md`. Each feature owns its API, server behavior, browser UI, settings, event/integration adapters and focused tests. The [feature ownership map](docs/advanced/feature-layout.md) identifies all feature directories and explains their boundaries.
 
-## 🚀 Getting Started
+For example, a bookmark change starts in [`src/features/bookmarks/`](src/features/bookmarks/): routes are in `api/`, browser behavior in `client/`, persisted properties and dashboard controls in `settings/`, and tests in `tests/`. Do not add bookmark-specific code to a global layer directory.
 
+| Concern | Owner |
+| --- | --- |
+| A feature's endpoint, behavior, setting or test | `src/features/<feature>/{api,server,client,settings,tests}/` |
+| Plugin lifecycle, DI and Jellyfin compatibility | `src/host/` |
+| Web asset delivery and bootstrap | `src/host/assets/`, `src/host/bootstrap/` |
+| Dashboard shell and cross-feature composition | [src/host/dashboard](src/host/dashboard/README.md) |
+| Reusable browser, identity, HTTP or persistence mechanics | [src/shared](src/shared/README.md) |
+| Translation strings | `locales/` |
+| Build/check tools and common test helpers | `tools/` |
+| Whole-plugin compatibility and disposable runtime checks | `tests/compatibility/`, [tests/runtime](tests/runtime/README.md) |
 
-### Project Structure
+**Do not edit `artifacts/generated/` directly.** Existing API routes, public asset URLs, embedded-resource names, serialized properties and defaults remain compatibility contracts. Source locations describe ownership; explicit resource mappings preserve delivery names independently.
 
-Before contributing, familiarize yourself with the project structure. See the [Project Structure](https://n00bcodr.github.io/Jellyfin-Enhanced/advanced/project-structure/) documentation page for a detailed breakdown of the codebase and what each file does.
+## Add or change a backend endpoint
 
-Key directories:
-- `Jellyfin.Plugin.JellyfinEnhanced/js/core/` - Shared layer (API client, navigation, lifecycle, DOM observers, UI primitives, tag renderer base)
-- `Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/` - Core functionality (settings panel, player, bookmarks, hidden content, Spoiler Guard)
-- `Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/` - Elsewhere and reviews functionality
-- `Jellyfin.Plugin.JellyfinEnhanced/js/extras/` - Other Scripts
-- `Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/` - Seerr integration (UI, More Info modal, discovery, recommendations)
-- `Jellyfin.Plugin.JellyfinEnhanced/js/arr/` - *arr integration including calendar and requests
-- `Jellyfin.Plugin.JellyfinEnhanced/js/tags/` - Tag scripts (genre, language, people, quality, rating, user review)
-- `Jellyfin.Plugin.JellyfinEnhanced/js/others/` - Miscellaneous scripts (letterboxd, splashscreen)
-- `Jellyfin.Plugin.JellyfinEnhanced/js/locales/` - Translation files
+1. Use the owning feature's `api/` directory. Keep route binding, authorization, status codes and response envelopes explicit. Host configuration/assets endpoints belong in `src/host/api/`.
+2. Put application behavior and feature-owned state in `server/`. Use `integrations/` for an adapter that connects this feature to another feature or provider. Share mechanisms through `src/shared/` only when they have multiple real consumers.
+3. Register injected services with host composition. Preserve lifetime, cache scope, cancellation and disposal ownership. Pure helpers can share their owner's lifetime instead of getting a new global registration.
+4. Add behavior coverage beside the feature. Intentional HTTP changes also require a deliberate update to `tests/compatibility/api/controller-contract-baseline.json`; do not regenerate the whole fixture to hide unexpected differences.
+5. Run `npm run check:backend` and update `docs/advanced/api.md` for public contract changes. Both Jellyfin targets must build.
 
-Adding a client module:
+`src/shared/identity/UserControllerBase.cs` contains common identity/auth helpers. Seerr owns its proxy base in `src/features/seerr/api/`. Public helper methods can become MVC actions: keep non-action helpers private/protected or explicitly excluded.
 
-1. Create the file in the directory for its feature, **following the naming already used in that directory**. The recently split page-style directories use concern suffixes (`-styles`, `-data`, `-render`, `-actions`, `-init`, `-custom-tab`); others use bare names or a different prefix.
-2. Register it in the `allComponentScripts` array in `js/plugin.js`, **after** every module whose exports it reads at load time — scripts execute in array order, and nothing validates it.
-3. Avoid hyphens in new directory names. Embedded-resource names are derived from the file path and a hyphen in a *directory* segment is rewritten to an underscore, which makes the module unreachable at runtime.
-4. No `.csproj` change is needed — `js\**` is embedded by a glob — but the plugin must be rebuilt and redeployed for a new file to be served.
+## Add or change browser behavior
 
-## 📝 Code Contribution Guidelines
+1. Work in the feature's `client/` directory. Keep transport, rendering, state and lifecycle responsibilities clear. Preserve existing public `JE.*` entry points when extracting helpers.
+2. Register a new ordinary script in the feature's `feature.json` under `modules`: the key is its feature-relative source, and the value lists named prerequisites. For example, `"client/policy.js": ["spoiler-guard/ids"]` gives the new module the ID `spoiler-guard/policy`. Add that ID to each consumer's dependencies. Editing an already registered script needs no descriptor change.
+3. New modules receive a public path such as `/JellyfinEnhanced/js/features/spoiler-guard/policy.js`. `src/host/compatibility/asset-aliases.json` retains historical delivery names, and `src/host/bootstrap/module-order.json` retains historical component order. Ordinary additions need no entry in either file. A dedicated early/lazy script instead belongs in `standalone`, with a loading reason; its caller must still load it.
+4. If initialization needs a new call, define a named function in the feature's private `client/startup.js` and call it explicitly from `src/host/bootstrap/feature-startup.js`. Declare the private source through `startup` in the feature descriptor if absent. Keep feature conditions in that initializer. These sources are composed into the bootstrap, not fetched as components; existing startup functions can be edited without adding registrations.
+5. Use `src/shared/browser` infrastructure for SPA navigation, request coordination and cleanup. A feature coordinator owns listeners, timers, observers and abortable work. Register synchronous user-data resets with `JE.session.onUserChange`, and check a captured session epoch before applying asynchronous user-scoped results.
+6. Add tests under the feature's `tests/client/`, run `npm run generate` and `npm run check:static`, and rebuild the DLL to serve changed embedded assets.
 
-### Code Style
+Non-script embedded files are listed in the descriptor's `assets` array. Embedding a new HTML, CSS or other file does not automatically add an HTTP endpoint: page registration and asset-serving routes remain explicit host/feature responsibilities. Generated resource/module manifests are outputs, not authoring locations. See the [Spoiler Guard walkthrough](docs/advanced/spoiler-guard-development.md) for a concrete dependency change and browser test.
 
-1. **Comments are Essential**
+## Add or change a setting
 
-   - Use JSDoc comments for functions and classes
-   - Add inline comments to explain complex logic
-   - Document parameters, return values, and side effects
+Start in the feature's `settings/` and the [dashboard composition guide](src/host/dashboard/README.md). Feature-owned `PluginConfiguration.<Feature>.cs` and `UserSettings.<Feature>.cs` parts preserve the existing flat public models. Keep names, types, namespace and defaults compatible; a move does not require a data migration. Defaults are property initializers beside their declarations, with no defaults-helper registration.
 
-   Example:
-   ```javascript
-   /**
-    * Creates a bookmark at the specified timestamp
-    * @param {string} itemId - The Jellyfin item ID
-    * @param {number} timestamp - The video timestamp in seconds
-    * @param {string} label - User-provided label for the bookmark
-    * @returns {Promise<Object>} The created bookmark object
-    */
-   async function createBookmark(itemId, timestamp, label) {
-       // Validate timestamp is within video duration
-       if (timestamp > videoDuration) {
-           throw new Error('Timestamp exceeds video duration');
-       }
+Put the control in a feature settings section and its `load`, `read` and `getDependencies` behavior in `settings/settings.js`. An existing module needs no new host entry when adding another control. For a new module, register its source in `src/host/dashboard/scripts.json`, construct its factory and add the instance to `featureSettings` in `initialize.js`, and include its markup in the appropriate host tab. See the dashboard guide for editor lifecycle and injected operations. Host dashboard code owns the form shell, save/reset lifecycle, fresh-config merge and cross-feature editor coordination. Preserve failed-load guards so a failed editor load cannot erase saved data.
 
-       // Create bookmark object with metadata
-       const bookmark = {
-           id: generateId(),
-           itemId,
-           timestamp,
-           label,
-           createdAt: new Date().toISOString()
-       };
+A setting consumed by ordinary browser features also needs an explicit, safe projection in `src/host/api/ConfigurationController.cs` (`GetPublicConfig`). Server-only settings do not. That endpoint is a security boundary; do not expose credentials merely because a control exists.
 
-       return await saveBookmark(bookmark);
-   }
-   ```
+Add focused tests beside the feature and retain the whole-form/control contract checks under `tests/compatibility/configuration/`. Register CSS composition in the dashboard style list and preserve cascade order. Run `npm run generate` and `npm run check:static`. The host dashboard's `whats-new-seed.json` is a historical release baseline and should not be edited for new settings.
 
-2. **Code Understanding**
+## Translations
 
-   - Ensure you understand what your changes do
-   - Be prepared to answer questions about your implementation
-   - Test your changes thoroughly
+Contribute translations through [Weblate](https://hosted.weblate.org/projects/jellyfinenhanced/); see the [translation guide](docs/faq-support/contributing-translations.md). Code-facing strings live in `locales/en.json`. Maintain locale key sets and interpolation/icon placeholders when adding keys. `src/shared/localization/resources.json` registers locale resources independently of their historical public URLs. When adding a language file, add its source to the `assets` list there and run `npm run generate`; keep `locales/` limited to translation JSON files.
 
-3. **AI-Assisted Code (VibeCoded PRs)**
+```sh
+node tools/checks/validate-translations.js validate
+node tools/checks/validate-translations.js validate de
+node tools/checks/validate-translations.js find-unused
+```
 
-   - AI-assisted contributions are welcome! However:
-     - You must understand what the code does
-     - Be able to explain your implementation
-     - Respond to code review comments
-     - Clearly indicate in your PR description that AI tools were used
+Unused-key reports need investigation because code can build keys dynamically. Remove a key only after checking its consumers.
 
-   Example PR description:
-   ```markdown
-   ## Description
-   Adds feature X to improve Y
+## Tests and runtime checks
 
-   ## Implementation Notes
-   This PR was developed with AI assistance (Claude/GPT/etc.). I have reviewed
-   and tested all changes and understand the implementation.
+Feature tests belong in `src/features/<feature>/tests/`; host/shared behavior tests live beside those owners. Node uses its native test runner for `.test.js`, `.test.cjs` and `.test.mjs`. Common adapters live in `tools/testing/`. Exercise observable behavior and compatibility boundaries with controlled responses and temporary data rather than reproducing implementation details.
 
-   ## Testing
-   - [ ] Tested on Jellyfin 10.11
-   - [ ] Verified no basic errors
-   ```
+Backend regression projects are executable programs run with `dotnet run --project <project.csproj>`, not `dotnet test`. The check runner discovers these projects separately from the plugin build. Whole-plugin routes, resources, configuration schemas and page-integration contracts remain under `tests/compatibility/`.
 
-### Pull Request Process
+For real server/browser checks, use the optional [disposable Docker runtime harness](tests/runtime/README.md). It creates isolated Jellyfin servers and users, tests API and persisted configuration, and can exercise Chromium login/bootstrap/admin forms. It requires Python and Docker; browser dependencies live in an isolated virtual environment. It does not replace playback or live Seerr/ARR/TMDB validation.
 
-1. **Fork and Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or
-   git checkout -b fix/bug-description
-   ```
+For browser changes, test repeated SPA navigation, user switching, relevant themes/layouts and keyboard/TV interactions. For Shoko calendar changes, test standalone and mixed providers, missing Shokofin matches, restricted content, episode-type filters, partial failures and deliberately separate Shoko/Sonarr entries. Report the checks actually performed.
 
-2. **Make Your Changes**
+## Submit a pull request
 
-   - Write clean, commented code
-   - Follow existing code patterns
-   - Test thoroughly
+Use a focused branch and describe the concrete problem, resulting behavior and validation. Include screenshots for UI changes. Explain non-obvious contracts, state ownership, cancellation and failure policy in comments where needed.
 
-3. **Commit Messages**
-
-   - Use clear, descriptive commit messages
-   - Reference issues when applicable
-
-   Example:
-   ```
-   feat: add bookmark sync across duplicate items
-
-   - Implements automatic bookmark syncing based on TMDB/TVDB IDs
-   - Adds UI option to manage sync preferences
-   - Fixes #123
-   ```
-
-4. **Submit PR**
-
-   - Provide a clear description of changes
-   - Include screenshots/videos for UI changes as applicable
-   - List any breaking changes
-   - Mention if you used AI assistance
-
-5. **Code Review**
-
-   - Be responsive to feedback
-   - Be prepared to make requested changes
-   - If you want me to make any further changes, let me know
-
-## ✅ CI Checks
-
-Every PR runs a few automated checks (GitHub Actions, `.github/workflows/`). There are no automated tests to run locally - these are all static checks:
-
-| Check | What it does | Reproduce locally |
-|---|---|---|
-| **CodeQL Advanced** | Static analysis for both the C# backend and the JS frontend, looking for common security/correctness bug patterns | Not practical to run locally; check the PR's "Files changed" annotations if it flags something |
-| **Dependency Review** | Flags newly-introduced dependencies with known vulnerabilities or incompatible licenses | Only relevant if your PR changes `.csproj` package references |
-| **Security Scan** | Scans the diff for accidentally-committed secrets (API keys, tokens, credentials) with TruffleHog | `git diff` your changes yourself before pushing if you're unsure |
-| **Translation Checks** | For any locale file you touched under `js/locales/`, verifies it has valid JSON and the same key set as `en.json` (no missing/extra keys) | Diff your changed locale file's keys against `js/locales/en.json` by hand, or just keep the two in sync as you edit |
-
-Two more workflows exist but aren't part of the PR gate: **Check Unused Translation Keys** and **OpenSSF Scorecard** are both maintainer-triggered/scheduled, not run against your PR - a scorecard badge or unused-key report you might see elsewhere in the repo isn't something your PR needs to pass.
-
-## 🧪 Testing
-
-Before submitting a PR, ensure you've tested:
-
-- [ ] Feature works as expected
-- [ ] No console errors
-- [ ] Compatible with Jellyfin 10.11.x
-- [ ] Works on different browsers (Chrome, Firefox, Edge)
-- [ ] Doesn't break existing functionality
-- [ ] Mobile compatibility (if applicable)
-
-If your PR touches the Shoko calendar integration, also verify:
-
-- [ ] Shoko configured alone, and alongside Sonarr/Radarr instances — merged calendar renders anime, TV, and movie entries together without errors
-- [ ] An anime whose Jellyfin item was populated via Shokofin — card navigates to the correct series page
-- [ ] An anime with no Shokofin-matched Jellyfin item — card renders as an informational, non-clickable placeholder (no broken image, no dead link)
-- [ ] Restricted (H) anime is absent from the results
-- [ ] Episode type checkboxes in Shoko settings (Episodes, Specials, Credits, Trailers, Parodies, Other) correctly include/exclude matching calendar entries
-- [ ] Misconfigured Shoko (bad URL or API key) surfaces an error in the `errors` array without breaking Sonarr/Radarr results in the same response
-- [ ] The Anime sidebar toggle hides/shows Shoko-source cards independently of Sonarr/Radarr toggles
-- [ ] A title tracked in both Shoko and Sonarr shows as two separate calendar entries (confirms no accidental cross-source dedup)
-
-## 📋 Feature Request Guidelines
-
-When proposing new features:
-
-1. **Check Discussions First**: Your idea might already be there!
-2. **Provide Context**: Explain the use case and benefit
-3. **Be Specific**: Clear descriptions help implementation
-4. **Consider Scope**: Is this a core feature or niche use case?
-
-## 🐛 Bug Reports
-
-When reporting bugs:
-
-1. **Check Existing Issues**: Avoid duplicates
-2. **Check FAQs**
-3. **Provide Details** as per the Bug report template
-
-## 💬 Getting Help
-
-If you have questions or need help:
-
-- **Discord**: Reach out on the [Jellyfin Community Discord](https://discord.gg/EYNFf7y4CG)
-- **Discussions**: Start a discussion on GitHub
-- **Issues**: For bug-related questions
-
-## 🎨 UI/UX Contributions
-
-For UI changes:
-
-- Test with different Jellyfin themes
-- Provide before/after screenshots
-
----
-
-**Thank you for contributing to Jellyfin Enhanced! Your efforts help make Jellyfin better for everyone.** 💜
+AI-assisted contributions are welcome. Understand and review the submitted code, disclose assistance in the PR description, and be ready to explain and revise the implementation. For help, use [GitHub Discussions](https://github.com/n00bcodr/Jellyfin-Enhanced/discussions) or the [Jellyfin Community Discord](https://discord.gg/EYNFf7y4CG).

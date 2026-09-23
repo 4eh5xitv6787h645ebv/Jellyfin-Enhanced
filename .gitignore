@@ -159,8 +159,6 @@ dllssigned/
 
 # Node modules
 node_modules/
-package-lock.json
-package.json
 TRANSLATION_GUIDE.md
 
 # Windows Azure Build Output
@@ -323,3 +321,17 @@ auth.json
 /site
 /.kiro
 scripts/deploy*
+
+# Isolated runtime validation environments
+.venv/
+tests/runtime/results/
+artifacts/bin/
+artifacts/obj/
+
+# Build tooling is source; generic IDE build-directory ignores must not hide it.
+!/tools/build/
+!/tools/build/**
+
+# Keep Python caches excluded after the build-source exceptions above.
+__pycache__/
+*.py[cod]

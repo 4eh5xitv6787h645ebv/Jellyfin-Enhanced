@@ -162,6 +162,21 @@ For detailed installation instructions and troubleshooting, see the [Installatio
 
 ## 🌍 Contributing
 
+### Development
+
+Start in [`src/features/`](src/features/): each feature keeps its API, server logic,
+client code, settings and focused tests together. Jellyfin integration lives in
+[`src/host/`](src/host/), reusable infrastructure in [`src/shared/`](src/shared/),
+and generated delivery assets in [`artifacts/generated/`](artifacts/generated/).
+
+Use .NET SDK 10 and Node.js 22 or later; no npm dependency installation is needed.
+Run `npm run generate` after changing generated-asset sources, then `npm run check`
+to validate both Jellyfin targets and the regression suites. See
+[CONTRIBUTING](CONTRIBUTING.md) for setup and extension recipes and the
+[feature ownership map](docs/advanced/feature-layout.md) to find the right directory.
+The [Spoiler Guard development walkthrough](docs/advanced/spoiler-guard-development.md)
+traces a setting, endpoint and browser test with concrete registration steps.
+
 ### Translations
 
 Help translate Jellyfin Enhanced into your language!

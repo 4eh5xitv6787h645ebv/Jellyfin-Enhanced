@@ -1,0 +1,122 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Calendar Page</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline-center" style="margin-bottom: 15px;">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">calendar_today</i>
+                                    <div>
+                                        <strong>Calendar Page</strong> adds a Calendar Button in sidebar with a dedicated view that displays upcoming releases from Sonarr and Radarr in a calendar view.<br/><br/>
+                                        <strong>Requirements:</strong> Configure Sonarr and/or Radarr URLs and API keys.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer je-main-feature"><label><input id="calendarPageEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Calendar Page</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarPageEnabled">
+                                <div class="fieldDescription je-field-desc-xl">Adds a "Calendar" link to the navigation showing upcoming releases from Sonarr/Radarr.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="calendarUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Calendar as a native Home tab</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarUseNativeTab">
+                                <div class="fieldDescription je-field-desc-xl">Adds Calendar as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="calendarUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarUsePluginPages">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Replaces the default Calendar page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/>
+                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
+                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="calendarUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs</span></label></div>
+                            <div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-calendar" style="display:none;">
+                                <i class="material-icons je-note-icon">info</i>
+                                <div>On Jellyfin 12, <strong>"Add Calendar as a native Home tab"</strong> is more reliable than Custom Tabs. Consider enabling it too.</div>
+                            </div>
+
+                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="calendarUseCustomTabs,calendarPageEnabled">
+                                <label><input id="calendarAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
+                            </div>
+                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="calendarAutoCreateCustomTab" data-gated-by="calendarUseCustomTabs,calendarPageEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
+                                </div>
+                            </div>
+
+                            <div class="je-setting-description" data-desc-for="calendarUseCustomTabs">
+                                <div class="je-info-banner-inline">
+                                    <div class="je-info-banner-row">
+                                        <i class="material-icons je-info-icon">info</i>
+                                        <div>
+                                            <h4 class="je-custom-tabs-h4">
+                                                Embed Calendar in Custom Tabs:
+                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
+                                            </h4>
+                                            <p class="fieldDescription je-custom-tabs-p">Display the Calendar page in a Custom Tabs tab instead of the sidebar link.</p>
+                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
+                                            <ol class="fieldDescription je-custom-tabs-ol">
+                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
+                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Calendar").</li>
+                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                            </ol>
+                                            <div class="je-copy-code-wrapper">
+                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced calendar"&gt;&lt;/div&gt;' type="button">
+                                                    <i class="material-icons je-copy-icon">content_copy</i>
+                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                                </button>
+                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced calendar"&gt;&lt;/div&gt;</code></pre>
+                                            </div>
+                                            <div class="fieldDescription je-field-desc-mt">
+                                                Already have Custom Tabs installed?
+                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="calendarFirstDayOfWeek">First Day of Week</label>
+                                <select id="calendarFirstDayOfWeek" name="calendarFirstDayOfWeek" is="emby-select" class="emby-select">
+                                    <option value="Sunday">Sunday</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="calendarFirstDayOfWeek">
+                                <div class="fieldDescription">Which day appears as the first column of the calendar grid.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="calendarTimeFormat">Time Format</label>
+                                <select id="calendarTimeFormat" name="calendarTimeFormat" is="emby-select" class="emby-select">
+                                    <option value="5pm/5:30pm">5pm/5:30pm</option><option value="17:00/17:30">17:00/17:30</option>
+                                </select>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="calendarTimeFormat">
+                                <div class="fieldDescription">Whether release times display in 12-hour (5pm) or 24-hour (17:00) format.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="calendarHighlightFavorites" is="emby-checkbox" type="checkbox"/><span>Highlight Favorites/Watchlist</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarHighlightFavorites">
+                                <div class="fieldDescription je-field-desc-md">Show a golden border on calendar entries for items in your Jellyfin favorites.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="calendarHighlightWatchedSeries" is="emby-checkbox" type="checkbox"/><span>Highlight Watched Series</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarHighlightWatchedSeries">
+                                <div class="fieldDescription">Show a border on calendar entries for series you have watched episodes from.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="calendarFilterByLibraryAccess" is="emby-checkbox" type="checkbox"/><span>Filter by Library Access</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarFilterByLibraryAccess">
+                                <div class="fieldDescription">When enabled, the calendar only shows items from libraries the user has access to. Upcoming items not yet in Jellyfin are filtered based on their Sonarr/Radarr root folder.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="calendarShowOnlyRequested" is="emby-checkbox" type="checkbox"/><span>Show Requested Only (Default)</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarShowOnlyRequested">
+                                <div class="fieldDescription">When enabled, the calendar will load showing only Requested items by default, but users can still change filters.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="calendarForceOnlyRequested" is="emby-checkbox" type="checkbox"/><span>Force Only Requested Items</span></label></div>
+                            <div class="je-setting-description" data-desc-for="calendarForceOnlyRequested">
+                                <div class="fieldDescription">When enabled, the calendar always shows only your requested items and the Requests filter is hidden.</div>
+                            </div>
+                        </div>
+                    </fieldset>
+

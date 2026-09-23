@@ -1,0 +1,44 @@
+{
+  "id": "spoiler-guard",
+  "modules": {
+    "client/ids.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/state.js": [
+      "spoiler-guard/ids"
+    ],
+    "client/image-refresh.js": [
+      "spoiler-guard/state"
+    ],
+    "client/snooze.js": [
+      "spoiler-guard/image-refresh"
+    ],
+    "client/dialog.js": [
+      "spoiler-guard/snooze"
+    ],
+    "client/identity.js": [
+      "spoiler-guard/dialog"
+    ],
+    "client/styles.js": [
+      "spoiler-guard/identity"
+    ],
+    "client/settings-tab.js": [
+      "spoiler-guard/styles"
+    ],
+    "client/seerr-toggle.js": [
+      "spoiler-guard/settings-tab"
+    ],
+    "client/detail-button.js": [
+      "spoiler-guard/seerr-toggle"
+    ],
+    "client/watched-refresh.js": [
+      "spoiler-guard/detail-button"
+    ],
+    "client/index.js": [
+      "spoiler-guard/watched-refresh"
+    ]
+  },
+  "startup": "client/startup.js"
+}

@@ -1,0 +1,2825 @@
+[
+  {
+    "source": "src/features/active-streams/client/model.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.model.js",
+    "owner": "active-streams",
+    "module": {
+      "path": "extras/activestreams/model.js",
+      "dependsOn": [],
+      "order": 192
+    }
+  },
+  {
+    "source": "src/features/active-streams/client/styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.styles.js",
+    "owner": "active-streams",
+    "module": {
+      "path": "extras/activestreams/styles.js",
+      "dependsOn": [
+        "extras/activestreams/model.js"
+      ],
+      "order": 193
+    }
+  },
+  {
+    "source": "src/features/active-streams/client/view.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.view.js",
+    "owner": "active-streams",
+    "module": {
+      "path": "extras/activestreams/view.js",
+      "dependsOn": [
+        "extras/activestreams/styles.js"
+      ],
+      "order": 194
+    }
+  },
+  {
+    "source": "src/features/active-streams/client/broadcast.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.broadcast.js",
+    "owner": "active-streams",
+    "module": {
+      "path": "extras/activestreams/broadcast.js",
+      "dependsOn": [
+        "extras/activestreams/view.js"
+      ],
+      "order": 195
+    }
+  },
+  {
+    "source": "src/features/active-streams/client/active-streams.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.active-streams.js",
+    "owner": "active-streams",
+    "module": {
+      "path": "extras/active-streams.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "extras/activestreams/broadcast.js"
+      ],
+      "order": 196
+    }
+  },
+  {
+    "source": "src/features/active-streams/client/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activestreams.README.md",
+    "owner": "active-streams"
+  },
+  {
+    "source": "src/features/activity/client/colored-activity-icons.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.colored-activity-icons.js",
+    "owner": "activity",
+    "module": {
+      "path": "extras/colored-activity-icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 187
+    }
+  },
+  {
+    "source": "src/features/activity/client/activity-page.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activity-page.js",
+    "owner": "activity",
+    "module": {
+      "path": "extras/activity-page.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 197
+    }
+  },
+  {
+    "source": "src/features/activity/client/activity-custom-tab.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.activity-custom-tab.js",
+    "owner": "activity",
+    "module": {
+      "path": "extras/activity-custom-tab.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 198
+    }
+  },
+  {
+    "source": "src/features/activity/client/ActivityPage.html",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.PluginPages.ActivityPage.html",
+    "owner": "activity"
+  },
+  {
+    "source": "src/features/appearance/client/themer.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.themer.js",
+    "owner": "appearance",
+    "module": {
+      "path": "enhanced/themer.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 59
+    }
+  },
+  {
+    "source": "src/features/appearance/client/plugin-icons.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.plugin-icons.js",
+    "owner": "appearance",
+    "module": {
+      "path": "extras/plugin-icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 189
+    }
+  },
+  {
+    "source": "src/features/appearance/client/plugin-revisions.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.plugin-revisions.js",
+    "owner": "appearance",
+    "module": {
+      "path": "extras/plugin-revisions.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 190
+    }
+  },
+  {
+    "source": "src/features/appearance/client/theme-selector.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.theme-selector.js",
+    "owner": "appearance",
+    "module": {
+      "path": "extras/theme-selector.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 191
+    }
+  },
+  {
+    "source": "src/features/appearance/client/login-image.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.login-image.js",
+    "owner": "appearance",
+    "standalone": {
+      "path": "extras/login-image.js",
+      "reason": "Loaded before authentication when public config enables the login image."
+    }
+  },
+  {
+    "source": "src/features/appearance/client/splashscreen.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.others.splashscreen.js",
+    "owner": "appearance",
+    "standalone": {
+      "path": "others/splashscreen.js",
+      "reason": "Loaded before authentication by prelogin."
+    }
+  },
+  {
+    "source": "src/features/appearance/client/standalone-integrations.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.others.README.md",
+    "owner": "appearance"
+  },
+  {
+    "source": "src/features/arr/client/arr-links-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-links-data.js",
+    "owner": "arr",
+    "module": {
+      "path": "arr/arr-links-data.js",
+      "dependsOn": [],
+      "order": 168
+    }
+  },
+  {
+    "source": "src/features/arr/client/arr-links-view.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-links-view.js",
+    "owner": "arr",
+    "module": {
+      "path": "arr/arr-links-view.js",
+      "dependsOn": [
+        "arr/arr-links-data.js"
+      ],
+      "order": 169
+    }
+  },
+  {
+    "source": "src/features/arr/client/arr-links.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-links.js",
+    "owner": "arr",
+    "module": {
+      "path": "arr/arr-links.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "arr/arr-links-view.js"
+      ],
+      "order": 170
+    }
+  },
+  {
+    "source": "src/features/arr/client/arr-tag-links.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.arr-tag-links.js",
+    "owner": "arr",
+    "module": {
+      "path": "arr/arr-tag-links.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 171
+    }
+  },
+  {
+    "source": "src/features/arr/client/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.README.md",
+    "owner": "arr"
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-model.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-model.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-model.js",
+      "dependsOn": [],
+      "order": 69
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-items.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-items.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-items.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-model.js"
+      ],
+      "order": 70
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-store.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-store.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-store.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-items.js"
+      ],
+      "order": 71
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-markers.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-markers.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-markers.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-store.js"
+      ],
+      "order": 72
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-modal-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-modal-styles.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-modal-styles.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-markers.js"
+      ],
+      "order": 73
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-modal.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-modal.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-modal.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-modal-styles.js"
+      ],
+      "order": 74
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "enhanced/bookmarks/bookmarks-modal.js"
+      ],
+      "order": 75
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-library-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-styles.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-library-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 76
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-library-page.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-page.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-library-page.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-styles.js"
+      ],
+      "order": 77
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-library-render.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-render.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-library-render.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-page.js",
+        "enhanced/bookmarks/bookmarks-model.js"
+      ],
+      "order": 78
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-library-items.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-items.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-library-items.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-render.js"
+      ],
+      "order": 79
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-library-modals.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-modals.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-library-modals.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-items.js"
+      ],
+      "order": 80
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-library-replacements.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-replacements.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-library-replacements.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-modals.js"
+      ],
+      "order": 81
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/bookmarks-library-init.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.bookmarks-library-init.js",
+    "owner": "bookmarks",
+    "module": {
+      "path": "enhanced/bookmarks/bookmarks-library-init.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-replacements.js"
+      ],
+      "order": 82
+    }
+  },
+  {
+    "source": "src/features/bookmarks/client/BookmarksPage.html",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.PluginPages.BookmarksPage.html",
+    "owner": "bookmarks"
+  },
+  {
+    "source": "src/features/bookmarks/client/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.bookmarks.README.md",
+    "owner": "bookmarks"
+  },
+  {
+    "source": "src/features/calendar/client/calendar-page-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-styles.js",
+    "owner": "calendar",
+    "module": {
+      "path": "arr/calendar/calendar-page-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 179
+    }
+  },
+  {
+    "source": "src/features/calendar/client/calendar-page-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-data.js",
+    "owner": "calendar",
+    "module": {
+      "path": "arr/calendar/calendar-page-data.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-styles.js"
+      ],
+      "order": 180
+    }
+  },
+  {
+    "source": "src/features/calendar/client/calendar-page-render-events.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-render-events.js",
+    "owner": "calendar",
+    "module": {
+      "path": "arr/calendar/calendar-page-render-events.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-data.js"
+      ],
+      "order": 181
+    }
+  },
+  {
+    "source": "src/features/calendar/client/calendar-page-render-views.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-render-views.js",
+    "owner": "calendar",
+    "module": {
+      "path": "arr/calendar/calendar-page-render-views.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-render-events.js"
+      ],
+      "order": 182
+    }
+  },
+  {
+    "source": "src/features/calendar/client/calendar-page-actions.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-actions.js",
+    "owner": "calendar",
+    "module": {
+      "path": "arr/calendar/calendar-page-actions.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-render-views.js"
+      ],
+      "order": 183
+    }
+  },
+  {
+    "source": "src/features/calendar/client/calendar-page-init.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-page-init.js",
+    "owner": "calendar",
+    "module": {
+      "path": "arr/calendar/calendar-page-init.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-actions.js"
+      ],
+      "order": 184
+    }
+  },
+  {
+    "source": "src/features/calendar/client/calendar-custom-tab.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.calendar.calendar-custom-tab.js",
+    "owner": "calendar",
+    "module": {
+      "path": "arr/calendar/calendar-custom-tab.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 186
+    }
+  },
+  {
+    "source": "src/features/calendar/client/CalendarPage.html",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.PluginPages.CalendarPage.html",
+    "owner": "calendar"
+  },
+  {
+    "source": "src/features/downloads/client/requests-page-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-page-styles.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-page-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 172
+    }
+  },
+  {
+    "source": "src/features/downloads/client/requests-page-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-page-data.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-page-data.js",
+      "dependsOn": [
+        "arr/requests/requests-page-styles.js"
+      ],
+      "order": 173
+    }
+  },
+  {
+    "source": "src/features/downloads/client/requests-page-render-helpers.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-page-render-helpers.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-page-render-helpers.js",
+      "dependsOn": [
+        "arr/requests/requests-page-data.js"
+      ],
+      "order": 174
+    }
+  },
+  {
+    "source": "src/features/downloads/client/requests-page-render-cards.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-page-render-cards.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-page-render-cards.js",
+      "dependsOn": [
+        "arr/requests/requests-page-render-helpers.js"
+      ],
+      "order": 175
+    }
+  },
+  {
+    "source": "src/features/downloads/client/requests-page-render.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-page-render.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-page-render.js",
+      "dependsOn": [
+        "arr/requests/requests-page-render-cards.js"
+      ],
+      "order": 176
+    }
+  },
+  {
+    "source": "src/features/downloads/client/requests-page-actions.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-page-actions.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-page-actions.js",
+      "dependsOn": [
+        "arr/requests/requests-page-render.js"
+      ],
+      "order": 177
+    }
+  },
+  {
+    "source": "src/features/downloads/client/requests-page-init.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-page-init.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-page-init.js",
+      "dependsOn": [
+        "arr/requests/requests-page-actions.js"
+      ],
+      "order": 178
+    }
+  },
+  {
+    "source": "src/features/downloads/client/requests-custom-tab.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.arr.requests.requests-custom-tab.js",
+    "owner": "downloads",
+    "module": {
+      "path": "arr/requests/requests-custom-tab.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 185
+    }
+  },
+  {
+    "source": "src/features/downloads/client/DownloadsPage.html",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.PluginPages.DownloadsPage.html",
+    "owner": "downloads"
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-data.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-data.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 42
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-save.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-save.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-save.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-data.js"
+      ],
+      "order": 43
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-styles.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-styles.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-save.js"
+      ],
+      "order": 44
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-dialogs.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-dialogs.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-dialogs.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-styles.js"
+      ],
+      "order": 45
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-panel.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-panel.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-panel.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-dialogs.js"
+      ],
+      "order": 46
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-filter.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-filter.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-filter.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-panel.js"
+      ],
+      "order": 47
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-buttons.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-buttons.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-buttons.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-filter.js"
+      ],
+      "order": 48
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-init.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-init.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-init.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-buttons.js"
+      ],
+      "order": 49
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-page-state.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-page-state.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-page-state.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-init.js"
+      ],
+      "order": 50
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-page-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-page-styles.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-page-styles.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-state.js"
+      ],
+      "order": 51
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-page-admin.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-page-admin.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-page-admin.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-styles.js"
+      ],
+      "order": 52
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-page-cards.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-page-cards.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-page-cards.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-admin.js"
+      ],
+      "order": 53
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-page-render.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-page-render.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-page-render.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-cards.js"
+      ],
+      "order": 54
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-page-nav.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-page-nav.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-page-nav.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-render.js"
+      ],
+      "order": 55
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-page-init.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-page-init.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-page-init.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-nav.js"
+      ],
+      "order": 56
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/hidden-content-custom-tab.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.hiddencontent.hidden-content-custom-tab.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/hiddencontent/hidden-content-custom-tab.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-init.js"
+      ],
+      "order": 57
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/ui-panel-hidden-content.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-panel-hidden-content.js",
+    "owner": "hidden-content",
+    "module": {
+      "path": "enhanced/settingspanel/ui-panel-hidden-content.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-settings.js"
+      ],
+      "order": 66
+    }
+  },
+  {
+    "source": "src/features/hidden-content/client/HiddenContentPage.html",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.PluginPages.HiddenContentPage.html",
+    "owner": "hidden-content"
+  },
+  {
+    "source": "src/features/item-details/client/features-details-media-info.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.itemdetails.features-details-media-info.js",
+    "owner": "item-details",
+    "module": {
+      "path": "enhanced/itemdetails/features-details-media-info.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 27
+    }
+  },
+  {
+    "source": "src/features/item-details/client/features-release-dates.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.itemdetails.features-release-dates.js",
+    "owner": "item-details",
+    "module": {
+      "path": "enhanced/itemdetails/features-release-dates.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 28
+    }
+  },
+  {
+    "source": "src/features/item-details/client/features-details-page.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.itemdetails.features-details-page.js",
+    "owner": "item-details",
+    "module": {
+      "path": "enhanced/itemdetails/features-details-page.js",
+      "dependsOn": [
+        "enhanced/itemdetails/features-details-media-info.js",
+        "enhanced/itemdetails/features-release-dates.js"
+      ],
+      "order": 29
+    }
+  },
+  {
+    "source": "src/features/item-details/client/letterboxd-links.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.others.letterboxd-links.js",
+    "owner": "item-details",
+    "module": {
+      "path": "others/letterboxd-links.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 199
+    }
+  },
+  {
+    "source": "src/features/navigation/client/header-actions.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.header-actions.js",
+    "owner": "navigation",
+    "module": {
+      "path": "enhanced/header-actions.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 10
+    }
+  },
+  {
+    "source": "src/features/navigation/client/native-tabs.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.native-tabs.js",
+    "owner": "navigation",
+    "module": {
+      "path": "enhanced/native-tabs.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 11
+    }
+  },
+  {
+    "source": "src/features/navigation/client/features-random-button.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.features-random-button.js",
+    "owner": "navigation",
+    "module": {
+      "path": "enhanced/features-random-button.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 26
+    }
+  },
+  {
+    "source": "src/features/navigation/client/features-remove-home.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.homeremoval.features-remove-home.js",
+    "owner": "navigation",
+    "module": {
+      "path": "enhanced/homeremoval/features-remove-home.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 30
+    }
+  },
+  {
+    "source": "src/features/navigation/client/features-remove-multiselect.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.homeremoval.features-remove-multiselect.js",
+    "owner": "navigation",
+    "module": {
+      "path": "enhanced/homeremoval/features-remove-multiselect.js",
+      "dependsOn": [
+        "enhanced/homeremoval/features-remove-home.js"
+      ],
+      "order": 31
+    }
+  },
+  {
+    "source": "src/features/navigation/client/events.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.events.js",
+    "owner": "navigation",
+    "module": {
+      "path": "enhanced/events.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 32
+    }
+  },
+  {
+    "source": "src/features/playback/client/playback.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.playback.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/playback.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 33
+    }
+  },
+  {
+    "source": "src/features/playback/client/frame-step.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.frame-step.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/frame-step.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 34
+    }
+  },
+  {
+    "source": "src/features/playback/client/seek-history.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.seek-history.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/seek-history.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 35
+    }
+  },
+  {
+    "source": "src/features/playback/client/segment-skip.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.segment-skip.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/segment-skip.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 36
+    }
+  },
+  {
+    "source": "src/features/playback/client/track-menu.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.track-menu.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/track-menu.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 37
+    }
+  },
+  {
+    "source": "src/features/playback/client/track-cycle.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.track-cycle.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/track-cycle.js",
+      "dependsOn": [
+        "enhanced/player/track-menu.js"
+      ],
+      "order": 38
+    }
+  },
+  {
+    "source": "src/features/playback/client/playback-info.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.playback-info.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/playback-info.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 39
+    }
+  },
+  {
+    "source": "src/features/playback/client/long-press.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.long-press.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/long-press.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 40
+    }
+  },
+  {
+    "source": "src/features/playback/client/auto-skip.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.auto-skip.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/auto-skip.js",
+      "dependsOn": [
+        "enhanced/player/frame-step.js",
+        "enhanced/player/seek-history.js",
+        "enhanced/player/segment-skip.js",
+        "enhanced/player/track-cycle.js",
+        "enhanced/player/playback-info.js",
+        "enhanced/player/long-press.js"
+      ],
+      "order": 41
+    }
+  },
+  {
+    "source": "src/features/playback/client/subtitles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.subtitles.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/subtitles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 58
+    }
+  },
+  {
+    "source": "src/features/playback/client/osd-rating.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.osd-rating.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/osd-rating.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 83
+    }
+  },
+  {
+    "source": "src/features/playback/client/pause-screen-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.pause-screen-data.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/pause-screen-data.js",
+      "dependsOn": [],
+      "order": 84
+    }
+  },
+  {
+    "source": "src/features/playback/client/pause-screen-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.pause-screen-styles.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/pause-screen-styles.js",
+      "dependsOn": [],
+      "order": 85
+    }
+  },
+  {
+    "source": "src/features/playback/client/pausescreen.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.pausescreen.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/pausescreen.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "enhanced/player/pause-screen-data.js",
+        "enhanced/player/pause-screen-styles.js"
+      ],
+      "order": 86
+    }
+  },
+  {
+    "source": "src/features/playback/client/playback-rating-badge.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.playback-rating-badge.js",
+    "owner": "playback",
+    "module": {
+      "path": "enhanced/player/playback-rating-badge.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 87
+    }
+  },
+  {
+    "source": "src/features/playback/client/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.player.README.md",
+    "owner": "playback"
+  },
+  {
+    "source": "src/features/ratings/client/awards.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.awards.awards.js",
+    "owner": "ratings",
+    "module": {
+      "path": "awards/awards.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 96
+    }
+  },
+  {
+    "source": "src/features/ratings/client/mdblist-ratings.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.others.mdblist-ratings.js",
+    "owner": "ratings",
+    "module": {
+      "path": "others/mdblist-ratings.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 97
+    }
+  },
+  {
+    "source": "src/features/ratings/client/colored-ratings.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.extras.colored-ratings.js",
+    "owner": "ratings",
+    "module": {
+      "path": "extras/colored-ratings.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 188
+    }
+  },
+  {
+    "source": "src/features/reviews/client/reviews-api.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.reviews-api.js",
+    "owner": "reviews",
+    "module": {
+      "path": "elsewhere/reviews-api.js",
+      "dependsOn": [],
+      "order": 92
+    }
+  },
+  {
+    "source": "src/features/reviews/client/reviews-rendering.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.reviews-rendering.js",
+    "owner": "reviews",
+    "module": {
+      "path": "elsewhere/reviews-rendering.js",
+      "dependsOn": [],
+      "order": 93
+    }
+  },
+  {
+    "source": "src/features/reviews/client/reviews-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.reviews-styles.js",
+    "owner": "reviews",
+    "module": {
+      "path": "elsewhere/reviews-styles.js",
+      "dependsOn": [],
+      "order": 94
+    }
+  },
+  {
+    "source": "src/features/reviews/client/reviews.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.reviews.js",
+    "owner": "reviews",
+    "module": {
+      "path": "elsewhere/reviews.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "elsewhere/reviews-api.js",
+        "elsewhere/reviews-rendering.js",
+        "elsewhere/reviews-styles.js"
+      ],
+      "order": 95
+    }
+  },
+  {
+    "source": "src/features/seerr/client/seerr-status.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.seerr-status.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/seerr-status.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 98
+    }
+  },
+  {
+    "source": "src/features/seerr/client/request-manager.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.request-manager.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/request-manager.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 99
+    }
+  },
+  {
+    "source": "src/features/seerr/client/api/status.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.status.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/api/status.js",
+      "dependsOn": [],
+      "order": 100
+    }
+  },
+  {
+    "source": "src/features/seerr/client/api/catalog.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.catalog.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/api/catalog.js",
+      "dependsOn": [
+        "jellyseerr/api/status.js"
+      ],
+      "order": 101
+    }
+  },
+  {
+    "source": "src/features/seerr/client/api/requests.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.requests.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/api/requests.js",
+      "dependsOn": [
+        "jellyseerr/api/catalog.js"
+      ],
+      "order": 102
+    }
+  },
+  {
+    "source": "src/features/seerr/client/api/issues.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.issues.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/api/issues.js",
+      "dependsOn": [
+        "jellyseerr/api/requests.js"
+      ],
+      "order": 103
+    }
+  },
+  {
+    "source": "src/features/seerr/client/api/overrides.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.overrides.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/api/overrides.js",
+      "dependsOn": [],
+      "order": 104
+    }
+  },
+  {
+    "source": "src/features/seerr/client/api.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/api.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "jellyseerr/api/issues.js",
+        "jellyseerr/api/overrides.js"
+      ],
+      "order": 105
+    }
+  },
+  {
+    "source": "src/features/seerr/client/search/collections.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.search.collections.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/search/collections.js",
+      "dependsOn": [],
+      "order": 106
+    }
+  },
+  {
+    "source": "src/features/seerr/client/search/results.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.search.results.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/search/results.js",
+      "dependsOn": [],
+      "order": 107
+    }
+  },
+  {
+    "source": "src/features/seerr/client/search/page.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.search.page.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/search/page.js",
+      "dependsOn": [],
+      "order": 108
+    }
+  },
+  {
+    "source": "src/features/seerr/client/search/interactions.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.search.interactions.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/search/interactions.js",
+      "dependsOn": [],
+      "order": 109
+    }
+  },
+  {
+    "source": "src/features/seerr/client/jellyseerr.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.jellyseerr.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/jellyseerr.js",
+      "dependsOn": [
+        "jellyseerr/api.js",
+        "jellyseerr/seerr-status.js",
+        "jellyseerr/request-manager.js",
+        "jellyseerr/search/collections.js",
+        "jellyseerr/search/results.js",
+        "jellyseerr/search/page.js",
+        "jellyseerr/search/interactions.js"
+      ],
+      "order": 110
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-icons.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-icons.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 111
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-styles.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-styles.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-icons.js"
+      ],
+      "order": 112
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-popover.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-popover.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-popover.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-styles.js"
+      ],
+      "order": 113
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-badges.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-badges.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-badges.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-popover.js"
+      ],
+      "order": 114
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-cards.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-cards.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-cards.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-badges.js"
+      ],
+      "order": 115
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-buttons.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-buttons.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-buttons.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-cards.js"
+      ],
+      "order": 116
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-quota.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-quota.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-quota.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-buttons.js"
+      ],
+      "order": 117
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-results.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-results.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-results.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-quota.js"
+      ],
+      "order": 118
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-request-modals.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-request-modals.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-request-modals.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-results.js"
+      ],
+      "order": 119
+    }
+  },
+  {
+    "source": "src/features/seerr/client/ui/ui-season-modal.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.ui.ui-season-modal.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/ui/ui-season-modal.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-request-modals.js"
+      ],
+      "order": 120
+    }
+  },
+  {
+    "source": "src/features/seerr/client/modal.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.modal.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/modal.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-season-modal.js"
+      ],
+      "order": 121
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-styles.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 122
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-data.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-data.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-styles.js"
+      ],
+      "order": 123
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-seasons.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-seasons.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-seasons.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-data.js"
+      ],
+      "order": 124
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-badges.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-badges.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-badges.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-seasons.js"
+      ],
+      "order": 125
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-render.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-render.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-render.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-badges.js"
+      ],
+      "order": 126
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-actions-tv.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-actions-tv.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-actions-tv.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-render.js"
+      ],
+      "order": 127
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-actions.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-actions.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-actions.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-actions-tv.js"
+      ],
+      "order": 128
+    }
+  },
+  {
+    "source": "src/features/seerr/client/moreinfo/more-info-modal-init.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.moreinfo.more-info-modal-init.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/moreinfo/more-info-modal-init.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-actions.js"
+      ],
+      "order": 129
+    }
+  },
+  {
+    "source": "src/features/seerr/client/seerr-detail-link.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.seerr-detail-link.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/seerr-detail-link.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 130
+    }
+  },
+  {
+    "source": "src/features/seerr/client/hss-discovery-handler.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.hss-discovery-handler.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/hss-discovery-handler.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 131
+    }
+  },
+  {
+    "source": "src/features/seerr/client/item-details-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.item-details-data.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/item-details-data.js",
+      "dependsOn": [],
+      "order": 132
+    }
+  },
+  {
+    "source": "src/features/seerr/client/item-details-recommendations.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.item-details-recommendations.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/item-details-recommendations.js",
+      "dependsOn": [
+        "jellyseerr/item-details-data.js"
+      ],
+      "order": 133
+    }
+  },
+  {
+    "source": "src/features/seerr/client/item-details-request-more.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.item-details-request-more.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/item-details-request-more.js",
+      "dependsOn": [
+        "jellyseerr/item-details-data.js"
+      ],
+      "order": 134
+    }
+  },
+  {
+    "source": "src/features/seerr/client/item-details.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.item-details.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/item-details.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "jellyseerr/item-details-recommendations.js",
+        "jellyseerr/item-details-request-more.js"
+      ],
+      "order": 135
+    }
+  },
+  {
+    "source": "src/features/seerr/client/issue-reporter-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.issue-reporter-data.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/issue-reporter-data.js",
+      "dependsOn": [],
+      "order": 136
+    }
+  },
+  {
+    "source": "src/features/seerr/client/issue-reporter-view.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.issue-reporter-view.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/issue-reporter-view.js",
+      "dependsOn": [
+        "jellyseerr/issue-reporter-data.js"
+      ],
+      "order": 137
+    }
+  },
+  {
+    "source": "src/features/seerr/client/issue-reporter-tv-controls.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.issue-reporter-tv-controls.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/issue-reporter-tv-controls.js",
+      "dependsOn": [
+        "jellyseerr/issue-reporter-view.js"
+      ],
+      "order": 138
+    }
+  },
+  {
+    "source": "src/features/seerr/client/issue-reporter-modal.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.issue-reporter-modal.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/issue-reporter-modal.js",
+      "dependsOn": [
+        "jellyseerr/issue-reporter-tv-controls.js"
+      ],
+      "order": 139
+    }
+  },
+  {
+    "source": "src/features/seerr/client/issue-reporter.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.issue-reporter.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/issue-reporter.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "jellyseerr/issue-reporter-modal.js"
+      ],
+      "order": 140
+    }
+  },
+  {
+    "source": "src/features/seerr/client/seamless-scroll.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.seamless-scroll.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/seamless-scroll.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 141
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/discovery-filter-utils.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.discovery-filter-utils.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/discovery-filter-utils.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 142
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/discovery-page-host.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.discovery-page-host.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/discovery-page-host.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-filter-utils.js"
+      ],
+      "order": 143
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/discovery-client-pager.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.discovery-client-pager.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/discovery-client-pager.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-filter-utils.js"
+      ],
+      "order": 144
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/discovery-dual-feed.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.discovery-dual-feed.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/discovery-dual-feed.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-filter-utils.js"
+      ],
+      "order": 145
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/discovery-base.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.discovery-base.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/discovery-base.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-page-host.js",
+        "jellyseerr/discovery/discovery-client-pager.js",
+        "jellyseerr/discovery/discovery-dual-feed.js"
+      ],
+      "order": 146
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/network-discovery.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.network-discovery.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/network-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 147
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/person-discovery.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.person-discovery.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/person-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 148
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/genre-discovery.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.genre-discovery.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/genre-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 149
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/tag-discovery.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.tag-discovery.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/tag-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 150
+    }
+  },
+  {
+    "source": "src/features/seerr/client/discovery/collection-discovery.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.collection-discovery.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/discovery/collection-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 151
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-styles.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 152
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-catalog.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-catalog.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-catalog.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-styles.js"
+      ],
+      "order": 153
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-data.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-data.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-data.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-catalog.js"
+      ],
+      "order": 154
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-render.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-render.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-render.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-data.js"
+      ],
+      "order": 155
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-page.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-page.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-page.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-render.js"
+      ],
+      "order": 156
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-category.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-category.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-category.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-page.js"
+      ],
+      "order": 157
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-init.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-init.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-init.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-category.js"
+      ],
+      "order": 158
+    }
+  },
+  {
+    "source": "src/features/seerr/client/recommendations/recommendations-custom-tab.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.recommendations.recommendations-custom-tab.js",
+    "owner": "seerr",
+    "module": {
+      "path": "jellyseerr/recommendations/recommendations-custom-tab.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-init.js"
+      ],
+      "order": 159
+    }
+  },
+  {
+    "source": "src/features/seerr/client/RecommendationsPage.html",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.PluginPages.RecommendationsPage.html",
+    "owner": "seerr"
+  },
+  {
+    "source": "src/features/seerr/client/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.README.md",
+    "owner": "seerr"
+  },
+  {
+    "source": "src/features/seerr/client/api/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.api.README.md",
+    "owner": "seerr"
+  },
+  {
+    "source": "src/features/seerr/client/discovery/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.jellyseerr.discovery.README.md",
+    "owner": "seerr"
+  },
+  {
+    "source": "src/features/spoiler-guard/client/ids.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.ids.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/ids.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 14
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/state.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.state.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/state.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/ids.js"
+      ],
+      "order": 15
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/image-refresh.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.image-refresh.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/image-refresh.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/state.js"
+      ],
+      "order": 16
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/snooze.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.snooze.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/snooze.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/image-refresh.js"
+      ],
+      "order": 17
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/dialog.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.dialog.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/dialog.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/snooze.js"
+      ],
+      "order": 18
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/identity.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.identity.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/identity.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/dialog.js"
+      ],
+      "order": 19
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.styles.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/styles.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/identity.js"
+      ],
+      "order": 20
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/settings-tab.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.settings-tab.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/settings-tab.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/styles.js"
+      ],
+      "order": 21
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/seerr-toggle.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.seerr-toggle.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/seerr-toggle.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/settings-tab.js"
+      ],
+      "order": 22
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/detail-button.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.detail-button.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/detail-button.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/seerr-toggle.js"
+      ],
+      "order": 23
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/watched-refresh.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.watched-refresh.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/watched-refresh.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/detail-button.js"
+      ],
+      "order": 24
+    }
+  },
+  {
+    "source": "src/features/spoiler-guard/client/index.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.spoilerguard.index.js",
+    "owner": "spoiler-guard",
+    "module": {
+      "path": "enhanced/spoilerguard/index.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/watched-refresh.js"
+      ],
+      "order": 25
+    }
+  },
+  {
+    "source": "src/features/streaming-availability/client/elsewhere-settings.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.elsewhere-settings.js",
+    "owner": "streaming-availability",
+    "module": {
+      "path": "elsewhere/elsewhere-settings.js",
+      "dependsOn": [],
+      "order": 88
+    }
+  },
+  {
+    "source": "src/features/streaming-availability/client/elsewhere-api.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.elsewhere-api.js",
+    "owner": "streaming-availability",
+    "module": {
+      "path": "elsewhere/elsewhere-api.js",
+      "dependsOn": [],
+      "order": 89
+    }
+  },
+  {
+    "source": "src/features/streaming-availability/client/elsewhere-panel.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.elsewhere-panel.js",
+    "owner": "streaming-availability",
+    "module": {
+      "path": "elsewhere/elsewhere-panel.js",
+      "dependsOn": [],
+      "order": 90
+    }
+  },
+  {
+    "source": "src/features/streaming-availability/client/elsewhere.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.elsewhere.js",
+    "owner": "streaming-availability",
+    "module": {
+      "path": "elsewhere/elsewhere.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "elsewhere/elsewhere-settings.js",
+        "elsewhere/elsewhere-api.js",
+        "elsewhere/elsewhere-panel.js"
+      ],
+      "order": 91
+    }
+  },
+  {
+    "source": "src/features/streaming-availability/client/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.elsewhere.README.md",
+    "owner": "streaming-availability"
+  },
+  {
+    "source": "src/features/tags/client/tag-pipeline.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.tag-pipeline.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/tag-pipeline.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 12
+    }
+  },
+  {
+    "source": "src/features/tags/client/genretags.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.genretags.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/genretags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 160
+    }
+  },
+  {
+    "source": "src/features/tags/client/languagetags.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.languagetags.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/languagetags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 161
+    }
+  },
+  {
+    "source": "src/features/tags/client/peopletags.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.peopletags.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/peopletags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 162
+    }
+  },
+  {
+    "source": "src/features/tags/client/quality-analysis.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.quality-analysis.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/quality-analysis.js",
+      "dependsOn": [],
+      "order": 163
+    }
+  },
+  {
+    "source": "src/features/tags/client/quality-policy.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.quality-policy.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/quality-policy.js",
+      "dependsOn": [
+        "tags/quality-analysis.js"
+      ],
+      "order": 164
+    }
+  },
+  {
+    "source": "src/features/tags/client/qualitytags.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.qualitytags.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/qualitytags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "tags/quality-policy.js"
+      ],
+      "order": 165
+    }
+  },
+  {
+    "source": "src/features/tags/client/ratingtags.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.ratingtags.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/ratingtags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 166
+    }
+  },
+  {
+    "source": "src/features/tags/client/userreviewtags.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.userreviewtags.js",
+    "owner": "tags",
+    "module": {
+      "path": "tags/userreviewtags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 167
+    }
+  },
+  {
+    "source": "src/features/tags/client/README.md",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.tags.README.md",
+    "owner": "tags"
+  },
+  {
+    "source": "src/features/user-settings/client/config.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.config.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/config.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 8
+    }
+  },
+  {
+    "source": "src/features/user-settings/client/ui-entry-points.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-entry-points.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/settingspanel/ui-entry-points.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 61
+    }
+  },
+  {
+    "source": "src/features/user-settings/client/ui-release-notes.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-release-notes.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/settingspanel/ui-release-notes.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-entry-points.js"
+      ],
+      "order": 62
+    }
+  },
+  {
+    "source": "src/features/user-settings/client/ui-panel-template.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-panel-template.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/settingspanel/ui-panel-template.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-release-notes.js"
+      ],
+      "order": 63
+    }
+  },
+  {
+    "source": "src/features/user-settings/client/ui-panel-shortcut-editor.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-panel-shortcut-editor.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/settingspanel/ui-panel-shortcut-editor.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-template.js"
+      ],
+      "order": 64
+    }
+  },
+  {
+    "source": "src/features/user-settings/client/ui-panel-settings.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-panel-settings.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/settingspanel/ui-panel-settings.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-shortcut-editor.js"
+      ],
+      "order": 65
+    }
+  },
+  {
+    "source": "src/features/user-settings/client/ui-panel-language.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-panel-language.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/settingspanel/ui-panel-language.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-hidden-content.js"
+      ],
+      "order": 67
+    }
+  },
+  {
+    "source": "src/features/user-settings/client/ui-panel.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.settingspanel.ui-panel.js",
+    "owner": "user-settings",
+    "module": {
+      "path": "enhanced/settingspanel/ui-panel.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-language.js"
+      ],
+      "order": 68
+    }
+  },
+  {
+    "source": "artifacts/generated/plugin.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.plugin.js",
+    "owner": "host",
+    "standalone": {
+      "path": "plugin.js",
+      "reason": "Injected public entry point; generated from frontend/bootstrap."
+    }
+  },
+  {
+    "source": "artifacts/generated/configPage.css",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.Configuration.configPage.css",
+    "owner": "host"
+  },
+  {
+    "source": "artifacts/generated/configPage.html",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.Configuration.configPage.html",
+    "owner": "host"
+  },
+  {
+    "source": "src/host/dashboard/whats-new-seed.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.Configuration.whats-new-seed.json",
+    "owner": "host"
+  },
+  {
+    "source": "src/shared/browser/navigation.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.navigation.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/navigation.js",
+      "dependsOn": [],
+      "order": 0
+    }
+  },
+  {
+    "source": "src/shared/browser/session.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.session.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/session.js",
+      "dependsOn": [
+        "core/navigation.js"
+      ],
+      "order": 1
+    }
+  },
+  {
+    "source": "src/shared/browser/lifecycle.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.lifecycle.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/lifecycle.js",
+      "dependsOn": [
+        "core/navigation.js"
+      ],
+      "order": 2
+    }
+  },
+  {
+    "source": "src/shared/browser/dom-observer.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.dom-observer.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/dom-observer.js",
+      "dependsOn": [
+        "core/lifecycle.js"
+      ],
+      "order": 3
+    }
+  },
+  {
+    "source": "src/shared/browser/ui-kit.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.ui-kit.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/ui-kit.js",
+      "dependsOn": [],
+      "order": 4
+    }
+  },
+  {
+    "source": "src/shared/browser/media-language.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.media-language.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/media-language.js",
+      "dependsOn": [],
+      "order": 5
+    }
+  },
+  {
+    "source": "src/shared/browser/api-client.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.api-client.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/api-client.js",
+      "dependsOn": [
+        "core/session.js"
+      ],
+      "order": 6
+    }
+  },
+  {
+    "source": "src/shared/browser/tag-renderer-base.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.core.tag-renderer-base.js",
+    "owner": "shared",
+    "module": {
+      "path": "core/tag-renderer-base.js",
+      "dependsOn": [
+        "core/dom-observer.js",
+        "core/media-language.js"
+      ],
+      "order": 7
+    }
+  },
+  {
+    "source": "src/shared/browser/helpers.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.helpers.js",
+    "owner": "shared",
+    "module": {
+      "path": "enhanced/helpers.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 9
+    }
+  },
+  {
+    "source": "src/shared/browser/icons.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.icons.js",
+    "owner": "shared",
+    "module": {
+      "path": "enhanced/icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 13
+    }
+  },
+  {
+    "source": "src/shared/browser/ui-styles.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.ui-styles.js",
+    "owner": "shared",
+    "module": {
+      "path": "enhanced/ui-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 60
+    }
+  },
+  {
+    "source": "src/shared/browser/translations.js",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.enhanced.translations.js",
+    "owner": "shared",
+    "standalone": {
+      "path": "enhanced/translations.js",
+      "reason": "Loaded before initial configuration and component scripts."
+    }
+  },
+  {
+    "source": "src/shared/assets/fonts/materialsymbolsoutlined.woff2",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.fonts.materialsymbolsoutlined.woff2",
+    "owner": "shared"
+  },
+  {
+    "source": "src/shared/assets/fonts/materialsymbolsrounded.woff2",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.fonts.materialsymbolsrounded.woff2",
+    "owner": "shared"
+  },
+  {
+    "source": "locales/ar.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.ar.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/bg.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.bg.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/ca.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.ca.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/cs.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.cs.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/da.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.da.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/de.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.de.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/en-GB.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.en-GB.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/en-US.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.en-US.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/en.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.en.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/es.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.es.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/et.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.et.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/fa.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.fa.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/fi.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.fi.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/fr.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.fr.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/gsw.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.gsw.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/he.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.he.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/hu.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.hu.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/it.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.it.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/ko.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.ko.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/ml.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.ml.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/nl.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.nl.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/no.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.no.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/pl.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.pl.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/pr.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.pr.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/pt-BR.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.pt-BR.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/pt.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.pt.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/ru.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.ru.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/sk.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.sk.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/sv.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.sv.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/tr.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.tr.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/uk.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.uk.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/zh-CN.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.zh-CN.json",
+    "owner": "locales"
+  },
+  {
+    "source": "locales/zh-HK.json",
+    "resource": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.zh-HK.json",
+    "owner": "locales"
+  }
+]

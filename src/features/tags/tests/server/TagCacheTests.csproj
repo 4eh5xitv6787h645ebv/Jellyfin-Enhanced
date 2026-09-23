@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../server/TagCacheSnapshotStore.cs" Link="Production/TagCacheSnapshotStore.cs" />
+    <Compile Include="../../server/TagCachePendingChanges.cs" Link="Production/TagCachePendingChanges.cs" />
+    <Compile Include="../../server/TagCacheEntry.cs" Link="Production/TagCacheEntry.cs" />
+  </ItemGroup>
+</Project>

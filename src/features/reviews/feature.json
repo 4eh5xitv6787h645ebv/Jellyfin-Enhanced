@@ -1,0 +1,17 @@
+{
+  "id": "reviews",
+  "modules": {
+    "client/reviews-api.js": [],
+    "client/reviews-rendering.js": [],
+    "client/reviews-styles.js": [],
+    "client/reviews.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "reviews/reviews-api",
+      "reviews/reviews-rendering",
+      "reviews/reviews-styles"
+    ]
+  },
+  "startup": "client/startup.js"
+}

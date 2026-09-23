@@ -1,0 +1,189 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Hidden Content</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline-center" style="margin-bottom: 15px;">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">visibility</i>
+                                    <div>
+                                        <strong>Hidden Content</strong> lets users hide individual items from Home and Library views and browse them from a dedicated Hidden Content page. Per-user state with a server-wide enable/disable kill switch.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkboxContainer je-main-feature"><label><input id="hiddenContentEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Hidden Content</span></label></div>
+                            <div class="je-setting-description" data-desc-for="hiddenContentEnabled">
+                                <div class="fieldDescription je-field-desc-xl">Enable or disable the Hidden Content feature server-wide. When disabled, hide buttons, filtering, sidebar navigation, and settings panel options are all removed. User data is preserved and restored when re-enabled.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="hiddenContentUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Hidden Content as a native Home tab</span></label></div>
+                            <div class="je-setting-description" data-desc-for="hiddenContentUseNativeTab">
+                                <div class="fieldDescription je-field-desc-xl">Adds Hidden Content as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="hiddenContentUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Hidden Content</span></label></div>
+                            <div class="je-setting-description" data-desc-for="hiddenContentUsePluginPages">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Replaces the default Hidden Content page with a <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a> implementation.<br/>
+                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
+                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="hiddenContentUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs for Hidden Content</span></label></div>
+                            <div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-hiddenContent" style="display:none;">
+                                <i class="material-icons je-note-icon">info</i>
+                                <div>On Jellyfin 12, <strong>"Add Hidden Content as a native Home tab"</strong> is more reliable than Custom Tabs. Consider enabling it too.</div>
+                            </div>
+
+                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="hiddenContentUseCustomTabs,hiddenContentEnabled">
+                                <label><input id="hiddenContentAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
+                            </div>
+                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="hiddenContentAutoCreateCustomTab" data-gated-by="hiddenContentUseCustomTabs,hiddenContentEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs for Hidden Content" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
+                                </div>
+                            </div>
+
+                            <div class="je-setting-description" data-desc-for="hiddenContentUseCustomTabs">
+                                <div class="je-info-banner-inline">
+                                    <div class="je-info-banner-row">
+                                        <i class="material-icons je-info-icon">info</i>
+                                        <div>
+                                            <h4 class="je-custom-tabs-h4">
+                                                Embed Hidden Content in Custom Tabs:
+                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
+                                            </h4>
+                                            <p class="fieldDescription je-custom-tabs-p">Display the Hidden Content page in a Custom Tabs tab instead of the sidebar link.</p>
+                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
+                                            <ol class="fieldDescription je-custom-tabs-ol">
+                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
+                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Hidden Content").</li>
+                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                            </ol>
+                                            <div class="je-copy-code-wrapper">
+                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced hidden-content"&gt;&lt;/div&gt;' type="button">
+                                                    <i class="material-icons je-copy-icon">content_copy</i>
+                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                                </button>
+                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced hidden-content"&gt;&lt;/div&gt;</code></pre>
+                                            </div>
+                                            <div class="fieldDescription je-field-desc-mt">
+                                                Already have Custom Tabs installed?
+                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <details class="je-details-section" data-gated-by="hiddenContentEnabled">
+                                <summary>More Settings</summary>
+                                <div class="je-details-body">
+                                    <div class="je-info-banner-inline-center" style="margin-bottom: 15px;">
+                                        <div class="je-info-banner-row">
+                                            <i class="material-icons je-info-icon">tune</i>
+                                            <div>
+                                                <strong>Defaults for new users</strong> and the <em>Overwrite everyone's personal settings</em> button in Overview &gt; Quick Actions. Existing users keep their current settings unless you click that button.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultEnabled" is="emby-checkbox" type="checkbox"/><span>Hidden Content enabled by default</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultEnabled">
+                                        <div class="fieldDescription">When on, Hidden Content starts active for new users, so they can hide things straight away and the filtering takes effect immediately. When off, users have to turn it on themselves first.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultShowHideButtons" is="emby-checkbox" type="checkbox"/><span>Show "Hide" buttons by default</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultShowHideButtons">
+                                        <div class="fieldDescription">When on, the Hide button shows up across the apps so users can hide things they don't want to see. When off, no Hide button appears anywhere, but users can still bring back items they've already hidden from the Hidden Content page.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultShowHideConfirmation" is="emby-checkbox" type="checkbox"/><span>Show confirmation dialog before hiding</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultShowHideConfirmation">
+                                        <div class="fieldDescription">When on, clicking Hide asks "are you sure?" first. Turn off for one-click hiding. Items can always be brought back from the Hidden Content page.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultShowButtonJellyseerr" is="emby-checkbox" type="checkbox"/><span>Show "Hide" button on Seerr search results</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultShowButtonJellyseerr">
+                                        <div class="fieldDescription">Adds a Hide button to Seerr search and discover results, so users can hide a movie or show even before it's been added to their library.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultShowButtonDetails" is="emby-checkbox" type="checkbox"/><span>Show "Hide" button on item details pages</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultShowButtonDetails">
+                                        <div class="fieldDescription">Adds a Hide button to the row of action buttons on movie, show, and episode detail pages.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultShowButtonLibrary" is="emby-checkbox" type="checkbox"/><span>Show "Hide" button on library / home cards</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultShowButtonLibrary">
+                                        <div class="fieldDescription">Adds a small eye icon to every poster on the home and library pages, so users can hide an item without opening it first. Off by default because some people find the icon on every poster busy.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultShowButtonCast" is="emby-checkbox" type="checkbox"/><span>Show "Hide" button on cast / actor cards</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultShowButtonCast">
+                                        <div class="fieldDescription">Adds a Hide button to actor cards. Hiding an actor hides every movie or show they appear in until you bring them back.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterLibrary" is="emby-checkbox" type="checkbox"/><span>Filter Library &amp; details pages</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterLibrary">
+                                        <div class="fieldDescription">When on, hidden items don't appear when users browse a library (Movies, Shows, etc.) or in the suggestion rows on a details page. Turn off if users still want to see hidden items while browsing.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterSearch" is="emby-checkbox" type="checkbox"/><span>Filter Search results</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterSearch">
+                                        <div class="fieldDescription">When on, hidden items don't appear in search results. Off by default because most people still want to be able to search for something they hid in order to bring it back.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterContinueWatching" is="emby-checkbox" type="checkbox"/><span>Filter Continue Watching</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterContinueWatching">
+                                        <div class="fieldDescription">When on, hidden items don't appear in the Continue Watching row on the home page. Required for the "Remove from Continue Watching" button to actually do anything.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterNextUp" is="emby-checkbox" type="checkbox"/><span>Filter Next Up</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterNextUp">
+                                        <div class="fieldDescription">When on, hidden series don't appear in the Next Up row on the home page. Recommended on so a show users have hidden doesn't keep being suggested as the next thing to watch.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterUpcoming" is="emby-checkbox" type="checkbox"/><span>Filter Upcoming episodes</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterUpcoming">
+                                        <div class="fieldDescription">When on, hidden series don't appear on the Upcoming Episodes page.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterRecommendations" is="emby-checkbox" type="checkbox"/><span>Filter Suggestions / recommendations</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterRecommendations">
+                                        <div class="fieldDescription">When on, hidden items don't appear in the "Because you watched..." and "Suggested for you" rows on the home and details pages.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterDiscovery" is="emby-checkbox" type="checkbox"/><span>Filter Discovery</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterDiscovery">
+                                        <div class="fieldDescription">When on, hidden items don't appear on the Discovery page (genre, similar, and recommended sections).</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterCalendar" is="emby-checkbox" type="checkbox"/><span>Filter Calendar</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterCalendar">
+                                        <div class="fieldDescription">When on, hidden series don't show up on the Calendar page's list of upcoming episodes.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultFilterRequests" is="emby-checkbox" type="checkbox"/><span>Filter Requests page</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultFilterRequests">
+                                        <div class="fieldDescription">When on, hidden items don't appear on the Requests page (the combined view of Sonarr, Radarr, and Seerr requests).</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="hiddenContentDefaultExperimentalHideCollections" is="emby-checkbox" type="checkbox"/><span>Allow hiding collections, libraries, and playlists (experimental)</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentDefaultExperimentalHideCollections">
+                                        <div class="fieldDescription"><strong>Warning:</strong> Extremely not recommended for average users. Will break things. Only turn this on if you 100% know what you want to use it for. Lets users hide whole collections, libraries, or playlists in addition to individual movies and shows.</div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <details class="je-details-section" data-gated-by="hiddenContentEnabled">
+                                <summary>Admin Controls</summary>
+                                <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="hiddenContentAdmin" is="emby-checkbox" type="checkbox"/><span>Let admins view and manage other users' hidden content</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="hiddenContentAdmin">
+                                        <div class="fieldDescription">Adds a "user filter" dropdown on the Hidden Content page so an admin can see what any user has hidden, with an Edit toggle to unhide items or add new ones from the library or Seerr on that user's behalf. Turn this off if you don't want to edit/manage other users' hidden content.</div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </fieldset>
+

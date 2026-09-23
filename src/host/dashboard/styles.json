@@ -1,0 +1,22 @@
+[
+  "host/dashboard/styles/theme.css",
+  "host/dashboard/styles/base.css",
+  "host/dashboard/styles/header.css",
+  "host/dashboard/styles/overview.css",
+  "host/dashboard/styles/navigation.css",
+  "host/dashboard/styles/fields.css",
+  "host/dashboard/styles/accordions.css",
+  "features/arr/settings/styles/arr-instances.css",
+  "host/dashboard/styles/save-dock.css",
+  "host/dashboard/styles/banners.css",
+  "host/dashboard/styles/search.css",
+  "features/appearance/settings/styles/branding.css",
+  "host/dashboard/styles/utilities.css",
+  "host/dashboard/styles/docs.css",
+  "host/dashboard/styles/descriptions.css",
+  "host/dashboard/styles/collapsible-banners.css",
+  "host/dashboard/styles/dependencies.css",
+  "features/seerr/settings/styles/permission-audit.css",
+  "host/dashboard/styles/responsive.css",
+  "features/user-settings/settings/styles/timing-previews.css"
+]

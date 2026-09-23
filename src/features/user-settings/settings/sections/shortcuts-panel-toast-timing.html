@@ -1,0 +1,30 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Shortcuts Panel &amp; Toast Timing</legend>
+                        <div class="configSection">
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="HelpPanelAutocloseDelay">Shortcuts Panel Autoclose Delay (ms)</label>
+                                <input id="HelpPanelAutocloseDelay" is="emby-input" name="HelpPanelAutocloseDelay" type="number"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="HelpPanelAutocloseDelay">
+                                <div class="fieldDescription">How long the Jellyfin Enhanced shortcuts/settings panel (opened with the <kbd>?</kbd> key) stays open without interaction before auto-closing. Default: 15000 ms (15 seconds).</div>
+                            </div>
+                            <div class="je-timing-test-row">
+                                <button id="jeTestShortcutsPanel" type="button" class="emby-button raised raised-mini je-timing-test-btn" aria-label="Preview shortcuts panel autoclose">
+                                    <i class="material-icons" aria-hidden="true">visibility</i><span>Preview autoclose</span>
+                                </button>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="ToastDuration">Toast Notification Duration (ms)</label>
+                                <input id="ToastDuration" is="emby-input" name="ToastDuration" type="number"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="ToastDuration">
+                                <div class="fieldDescription">How long Jellyfin Enhanced's pop-up toast messages (e.g. &ldquo;Shuffle enabled&rdquo;, &ldquo;Bookmark saved&rdquo;) stay on-screen before fading out. Default: 3000 ms (3 seconds).</div>
+                            </div>
+                            <div class="je-timing-test-row">
+                                <button id="jeTestToast" type="button" class="emby-button raised raised-mini je-timing-test-btn" aria-label="Preview toast notification">
+                                    <i class="material-icons" aria-hidden="true">notifications_active</i><span>Preview toast</span>
+                                </button>
+                            </div>
+                        </div>
+                    </fieldset>

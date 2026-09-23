@@ -1,0 +1,22 @@
+                    <fieldset>
+                        <legend class="sectionTitle">User Reviews</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline je-banner-managed">
+                                <i class="material-icons je-info-icon" aria-hidden="true">info</i>
+                                <span class="fieldDescription">Completely independent of Elsewhere being enabled and TMDB Reviews being enabled</span>
+                            </div>
+                            <div class="checkboxContainer je-main-feature"><label><input id="showUserReviews" is="emby-checkbox" type="checkbox"/><span>Enable User Written Reviews</span></label></div>
+                            <div class="je-setting-description" data-desc-for="showUserReviews">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">Allows users to write reviews and rate items in the library.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="hideReviewsFromHiddenUsers" is="emby-checkbox" type="checkbox"/><span>Hide reviews from hidden users</span></label></div>
+                            <div class="je-setting-description" data-desc-for="hideReviewsFromHiddenUsers">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, reviews written by Jellyfin users marked as "Hide this user from login screens" are hidden from non-admin viewers. Admins always see all reviews.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="hideReviewsFromDisabledUsers" is="emby-checkbox" type="checkbox"/><span>Hide reviews from disabled users</span></label></div>
+                            <div class="je-setting-description" data-desc-for="hideReviewsFromDisabledUsers">
+                                <div class="fieldDescription je-field-desc-sm-font-lg">When enabled, reviews written by Jellyfin users marked as "Disable this user" are hidden from non-admin viewers. Admins always see all reviews.</div>
+                            </div>
+{{include:features/tags/settings/sections/user-review-ratings.html}}
+                        </div>
+                    </fieldset>

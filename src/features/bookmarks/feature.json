@@ -1,0 +1,56 @@
+{
+  "id": "bookmarks",
+  "modules": {
+    "client/bookmarks-model.js": [],
+    "client/bookmarks-items.js": [
+      "bookmarks/bookmarks-model"
+    ],
+    "client/bookmarks-store.js": [
+      "bookmarks/bookmarks-items"
+    ],
+    "client/bookmarks-markers.js": [
+      "bookmarks/bookmarks-store"
+    ],
+    "client/bookmarks-modal-styles.js": [
+      "bookmarks/bookmarks-markers"
+    ],
+    "client/bookmarks-modal.js": [
+      "bookmarks/bookmarks-modal-styles"
+    ],
+    "client/bookmarks.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "bookmarks/bookmarks-modal"
+    ],
+    "client/bookmarks-library-styles.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/bookmarks-library-page.js": [
+      "bookmarks/bookmarks-library-styles"
+    ],
+    "client/bookmarks-library-render.js": [
+      "bookmarks/bookmarks-library-page",
+      "bookmarks/bookmarks-model"
+    ],
+    "client/bookmarks-library-items.js": [
+      "bookmarks/bookmarks-library-render"
+    ],
+    "client/bookmarks-library-modals.js": [
+      "bookmarks/bookmarks-library-items"
+    ],
+    "client/bookmarks-library-replacements.js": [
+      "bookmarks/bookmarks-library-modals"
+    ],
+    "client/bookmarks-library-init.js": [
+      "bookmarks/bookmarks-library-replacements"
+    ]
+  },
+  "assets": [
+    "client/BookmarksPage.html",
+    "client/README.md"
+  ],
+  "startup": "client/startup.js"
+}

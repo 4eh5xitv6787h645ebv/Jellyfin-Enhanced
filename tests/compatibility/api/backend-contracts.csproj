@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <Compile Include="../../../src/features/seerr/server/SeerrStatusService.cs" Link="Production/SeerrStatusService.cs" />
+    <Compile Include="../../../src/features/seerr/server/SeerrCacheState.cs" Link="Production/SeerrCacheState.cs" />
+    <Compile Include="../../../src/features/seerr/integrations/SeerrHttpHelper.cs" Link="Production/SeerrHttpHelper.cs" />
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>$(MSBuildSDKsPath)/../Roslyn/bincore/Microsoft.CodeAnalysis.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>$(MSBuildSDKsPath)/../Roslyn/bincore/Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+    </Reference>
+    <None Include="controller-contract-baseline.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

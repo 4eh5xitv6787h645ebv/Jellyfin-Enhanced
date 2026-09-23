@@ -1,0 +1,33 @@
+{
+  "id": "appearance",
+  "modules": {
+    "client/themer.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/plugin-icons.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/plugin-revisions.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/theme-selector.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "standalone": {
+    "client/login-image.js": "Loaded before authentication when public config enables the login image.",
+    "client/splashscreen.js": "Loaded before authentication by prelogin."
+  },
+  "assets": [
+    "client/standalone-integrations.md"
+  ],
+  "startup": "client/startup.js"
+}

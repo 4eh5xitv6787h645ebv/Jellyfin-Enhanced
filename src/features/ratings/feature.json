@@ -1,0 +1,21 @@
+{
+  "id": "ratings",
+  "modules": {
+    "client/awards.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/mdblist-ratings.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/colored-ratings.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "startup": "client/startup.js"
+}

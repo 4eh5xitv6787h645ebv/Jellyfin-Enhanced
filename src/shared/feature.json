@@ -1,0 +1,46 @@
+{
+  "id": "shared",
+  "modules": {
+    "browser/navigation.js": [],
+    "browser/session.js": [
+      "shared/navigation"
+    ],
+    "browser/lifecycle.js": [
+      "shared/navigation"
+    ],
+    "browser/dom-observer.js": [
+      "shared/lifecycle"
+    ],
+    "browser/ui-kit.js": [],
+    "browser/media-language.js": [],
+    "browser/api-client.js": [
+      "shared/session"
+    ],
+    "browser/tag-renderer-base.js": [
+      "shared/dom-observer",
+      "shared/media-language"
+    ],
+    "browser/helpers.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "browser/icons.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "browser/ui-styles.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "standalone": {
+    "browser/translations.js": "Loaded before initial configuration and component scripts."
+  },
+  "assets": [
+    "assets/fonts/materialsymbolsoutlined.woff2",
+    "assets/fonts/materialsymbolsrounded.woff2"
+  ]
+}

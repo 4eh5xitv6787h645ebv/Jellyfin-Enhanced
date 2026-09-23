@@ -1,0 +1,60 @@
+                    <fieldset>
+                        <legend class="sectionTitle">UI Tweaks</legend>
+                        <div class="configSection">
+{{include:features/ratings/settings/sections/colored-ratings-enabled.html}}
+                            <div class="checkboxContainer"><label><input id="themeSelectorEnabled" is="emby-checkbox" type="checkbox"/><span>Theme Selector (Jellyfish)</span></label></div>
+                            <div class="je-setting-description" data-desc-for="themeSelectorEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Adds a theme selector to quickly switch between Jellyfish color themes.
+                                    <details class="je-screenshot-details">
+                                <summary class="je-screenshot-summary">View Screenshot</summary>
+                                <a href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/docs/images/theme-selector.png" target="_blank">
+                                <img alt="Theme Selector Example" class="je-screenshot-img" data-je-cdn="je-docs-img/theme-selector.png"/>
+                                </a>
+                                </details>
+                                </div>
+                                <div class="je-note-banner">
+                                <i class="material-icons je-note-icon">note</i>
+                                <div>
+                                    Only changes the color theme of Jellyfish when used natively, not through KefinTweaks.
+                                </div>
+                                </div>
+                            </div>
+{{include:features/activity/settings/sections/dashboard-icons.html}}
+                            <div class="checkboxContainer"><label><input id="loginImageEnabled" is="emby-checkbox" type="checkbox"/><span>Profile Picture on Login</span></label></div>
+                            <div class="je-setting-description" data-desc-for="loginImageEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Displays the user's profile picture on the manual login screen instead of the name. When a user is selected, their avatar appears above the password field.
+                                    <details class="je-screenshot-details">
+                                <summary class="je-screenshot-summary">View Screenshot</summary>
+                                <a href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/docs/images/login-image.png" target="_blank">
+                                <img alt="Login Image Example" class="je-screenshot-img" data-je-cdn="je-docs-img/login-image.png"/>
+                                </a>
+                                </details>
+                                </div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="pluginIconsEnabled" is="emby-checkbox" type="checkbox"/><span>Custom Plugin Menu Icons</span></label></div>
+                            <div class="je-setting-description" data-desc-for="pluginIconsEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Replaces default plugin folder icons with custom icons on the Dashboard sidebar.
+                                    <details class="je-screenshot-details">
+                                <summary class="je-screenshot-summary">View Screenshot</summary>
+                                <a href="https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/docs/images/plugin-icons.png" target="_blank">
+                                <img alt="Plugin Icons Example" class="je-screenshot-img-sm" data-je-cdn="je-docs-img/plugin-icons.png"/>
+                                </a>
+                                </details>
+                                </div>
+                                <div class="je-note-banner">
+                                <i class="material-icons je-note-icon">note</i>
+                                <div>
+                                    Currently replaces icons for (if installed): Jellyfin Enhanced, JavaScript Injector, Intro Skipper, Reports, JellySleep, Home Screen Sections, File Transformation, Jellyfin Helper and Moonbase.
+                                </div>
+                                </div>
+                            </div>
+
+                            <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.05); margin: 5px 0;">
+
+{{include:features/active-streams/settings/sections/active-streams-enabled.html}}
+                        </div>
+                    </fieldset>
+

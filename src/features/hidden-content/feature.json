@@ -1,0 +1,62 @@
+{
+  "id": "hidden-content",
+  "modules": {
+    "client/hidden-content-data.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/hidden-content-save.js": [
+      "hidden-content/hidden-content-data"
+    ],
+    "client/hidden-content-styles.js": [
+      "hidden-content/hidden-content-save"
+    ],
+    "client/hidden-content-dialogs.js": [
+      "hidden-content/hidden-content-styles"
+    ],
+    "client/hidden-content-panel.js": [
+      "hidden-content/hidden-content-dialogs"
+    ],
+    "client/hidden-content-filter.js": [
+      "hidden-content/hidden-content-panel"
+    ],
+    "client/hidden-content-buttons.js": [
+      "hidden-content/hidden-content-filter"
+    ],
+    "client/hidden-content-init.js": [
+      "hidden-content/hidden-content-buttons"
+    ],
+    "client/hidden-content-page-state.js": [
+      "hidden-content/hidden-content-init"
+    ],
+    "client/hidden-content-page-styles.js": [
+      "hidden-content/hidden-content-page-state"
+    ],
+    "client/hidden-content-page-admin.js": [
+      "hidden-content/hidden-content-page-styles"
+    ],
+    "client/hidden-content-page-cards.js": [
+      "hidden-content/hidden-content-page-admin"
+    ],
+    "client/hidden-content-page-render.js": [
+      "hidden-content/hidden-content-page-cards"
+    ],
+    "client/hidden-content-page-nav.js": [
+      "hidden-content/hidden-content-page-render"
+    ],
+    "client/hidden-content-page-init.js": [
+      "hidden-content/hidden-content-page-nav"
+    ],
+    "client/hidden-content-custom-tab.js": [
+      "hidden-content/hidden-content-page-init"
+    ],
+    "client/ui-panel-hidden-content.js": [
+      "user-settings/ui-panel-settings"
+    ]
+  },
+  "assets": [
+    "client/HiddenContentPage.html"
+  ],
+  "startup": "client/startup.js"
+}

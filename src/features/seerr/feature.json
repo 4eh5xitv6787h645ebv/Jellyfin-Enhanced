@@ -1,0 +1,229 @@
+{
+  "id": "seerr",
+  "modules": {
+    "client/seerr-status.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/request-manager.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/api/status.js": [],
+    "client/api/catalog.js": [
+      "seerr/api/status"
+    ],
+    "client/api/requests.js": [
+      "seerr/api/catalog"
+    ],
+    "client/api/issues.js": [
+      "seerr/api/requests"
+    ],
+    "client/api/overrides.js": [],
+    "client/api.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "seerr/api/issues",
+      "seerr/api/overrides"
+    ],
+    "client/search/collections.js": [],
+    "client/search/results.js": [],
+    "client/search/page.js": [],
+    "client/search/interactions.js": [],
+    "client/jellyseerr.js": [
+      "seerr/api",
+      "seerr/seerr-status",
+      "seerr/request-manager",
+      "seerr/search/collections",
+      "seerr/search/results",
+      "seerr/search/page",
+      "seerr/search/interactions"
+    ],
+    "client/ui/ui-icons.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/ui/ui-styles.js": [
+      "seerr/ui/ui-icons"
+    ],
+    "client/ui/ui-popover.js": [
+      "seerr/ui/ui-styles"
+    ],
+    "client/ui/ui-badges.js": [
+      "seerr/ui/ui-popover"
+    ],
+    "client/ui/ui-cards.js": [
+      "seerr/ui/ui-badges"
+    ],
+    "client/ui/ui-buttons.js": [
+      "seerr/ui/ui-cards"
+    ],
+    "client/ui/ui-quota.js": [
+      "seerr/ui/ui-buttons"
+    ],
+    "client/ui/ui-results.js": [
+      "seerr/ui/ui-quota"
+    ],
+    "client/ui/ui-request-modals.js": [
+      "seerr/ui/ui-results"
+    ],
+    "client/ui/ui-season-modal.js": [
+      "seerr/ui/ui-request-modals"
+    ],
+    "client/modal.js": [
+      "seerr/ui/ui-season-modal"
+    ],
+    "client/moreinfo/more-info-modal-styles.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/moreinfo/more-info-modal-data.js": [
+      "seerr/moreinfo/more-info-modal-styles"
+    ],
+    "client/moreinfo/more-info-modal-seasons.js": [
+      "seerr/moreinfo/more-info-modal-data"
+    ],
+    "client/moreinfo/more-info-modal-badges.js": [
+      "seerr/moreinfo/more-info-modal-seasons"
+    ],
+    "client/moreinfo/more-info-modal-render.js": [
+      "seerr/moreinfo/more-info-modal-badges"
+    ],
+    "client/moreinfo/more-info-modal-actions-tv.js": [
+      "seerr/moreinfo/more-info-modal-render"
+    ],
+    "client/moreinfo/more-info-modal-actions.js": [
+      "seerr/moreinfo/more-info-modal-actions-tv"
+    ],
+    "client/moreinfo/more-info-modal-init.js": [
+      "seerr/moreinfo/more-info-modal-actions"
+    ],
+    "client/seerr-detail-link.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/hss-discovery-handler.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/item-details-data.js": [],
+    "client/item-details-recommendations.js": [
+      "seerr/item-details-data"
+    ],
+    "client/item-details-request-more.js": [
+      "seerr/item-details-data"
+    ],
+    "client/item-details.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "seerr/item-details-recommendations",
+      "seerr/item-details-request-more"
+    ],
+    "client/issue-reporter-data.js": [],
+    "client/issue-reporter-view.js": [
+      "seerr/issue-reporter-data"
+    ],
+    "client/issue-reporter-tv-controls.js": [
+      "seerr/issue-reporter-view"
+    ],
+    "client/issue-reporter-modal.js": [
+      "seerr/issue-reporter-tv-controls"
+    ],
+    "client/issue-reporter.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit",
+      "seerr/issue-reporter-modal"
+    ],
+    "client/seamless-scroll.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/discovery/discovery-filter-utils.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/discovery/discovery-page-host.js": [
+      "seerr/discovery/discovery-filter-utils"
+    ],
+    "client/discovery/discovery-client-pager.js": [
+      "seerr/discovery/discovery-filter-utils"
+    ],
+    "client/discovery/discovery-dual-feed.js": [
+      "seerr/discovery/discovery-filter-utils"
+    ],
+    "client/discovery/discovery-base.js": [
+      "seerr/discovery/discovery-page-host",
+      "seerr/discovery/discovery-client-pager",
+      "seerr/discovery/discovery-dual-feed"
+    ],
+    "client/discovery/network-discovery.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/discovery/person-discovery.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/discovery/genre-discovery.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/discovery/tag-discovery.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/discovery/collection-discovery.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/recommendations/recommendations-styles.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/recommendations/recommendations-catalog.js": [
+      "seerr/recommendations/recommendations-styles"
+    ],
+    "client/recommendations/recommendations-data.js": [
+      "seerr/recommendations/recommendations-catalog"
+    ],
+    "client/recommendations/recommendations-render.js": [
+      "seerr/recommendations/recommendations-data"
+    ],
+    "client/recommendations/recommendations-page.js": [
+      "seerr/recommendations/recommendations-render"
+    ],
+    "client/recommendations/recommendations-category.js": [
+      "seerr/recommendations/recommendations-page"
+    ],
+    "client/recommendations/recommendations-init.js": [
+      "seerr/recommendations/recommendations-category"
+    ],
+    "client/recommendations/recommendations-custom-tab.js": [
+      "seerr/recommendations/recommendations-init"
+    ]
+  },
+  "assets": [
+    "client/RecommendationsPage.html",
+    "client/README.md",
+    "client/api/README.md",
+    "client/discovery/README.md"
+  ],
+  "startup": "client/startup.js"
+}

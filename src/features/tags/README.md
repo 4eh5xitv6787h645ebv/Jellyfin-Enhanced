@@ -1,0 +1,32 @@
+# Tags
+
+Owns poster tag renderers, quality analysis/policy, server tag projection/cache, ARR tag synchronization and tag settings.
+
+TagCacheService retains build/reconcile/publication locks. Renderers share the tag pipeline; ratings/reviews supply data while this feature owns poster placement and cache projection.
+
+## Find the implementation
+
+| Directory | Responsibility |
+| --- | --- |
+| [api/](api/) | HTTP routes, authorization, binding and payloads; start with [LibraryTagsController.cs](api/LibraryTagsController.cs) |
+| [server/](server/) | Application behavior, feature-owned state, transport and policy |
+| [client/](client/) | Browser entry points, rendering, interactions and lifecycle |
+| [settings/](settings/) | Persisted properties plus dashboard sections, scripts and styles |
+| [events/](events/) | Jellyfin event adapters |
+| [tasks/](tasks/) | Scheduled operations |
+| [integrations/](integrations/) | Adapters to other features/providers |
+| [tests/](tests/) | Focused regression and behavior checks |
+
+## Registration and validation
+
+[feature.json](feature.json) lists owned browser sources and named prerequisites, other embedded assets, and any private startup source. Existing delivery aliases and historical load order live in host compatibility files; ordinary module additions need only their source and dependencies here. Named startup functions are called explicitly by `src/host/bootstrap/feature-startup.js`. Do not edit generated global indexes.
+
+[TagsFeature.cs](TagsFeature.cs) owns backend registration phases; `src/host/FeatureRegistration.cs` invokes them in the established order.
+
+Tests live in [tests/](tests/). Run `npm test` for Node cases and `npm run check:backend` for executable C# projects and compiled contracts.
+
+Run `npm run generate` after asset/settings composition changes and `npm run check` before handing off. See [CONTRIBUTING](../../../CONTRIBUTING.md) and the [feature map](../../../docs/advanced/feature-layout.md).
+
+## Detailed ownership guides
+
+- [client/README.md](client/README.md)

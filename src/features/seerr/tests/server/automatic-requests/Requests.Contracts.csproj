@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <Compile Include="../../../server/auto-requests/MovieCollectionClient.cs" Link="Production/MovieCollectionClient.cs" />
+    <Compile Include="../../../server/auto-requests/AutoRequestUrls.cs" Link="Production/AutoRequestUrls.cs" />
+    <Compile Include="../../../server/auto-requests/AutoMovieRequestService.cs" Link="Production/AutoMovieRequestService.cs" />
+    <Compile Include="../../../server/auto-requests/MovieQualityProfileResolver.cs" Link="Production/MovieQualityProfileResolver.cs" />
+    <Compile Include="../../../server/auto-requests/AutoRequestClient.cs" Link="Production/AutoRequestClient.cs" />
+    <Compile Include="../../../server/auto-requests/AutoSeasonRequestService.cs" Link="Production/AutoSeasonRequestService.cs" />
+    <Compile Include="../../../server/auto-requests/SeasonDetailsClient.cs" Link="Production/SeasonDetailsClient.cs" />
+    <Compile Include="../../../integrations/SeerrHttpHelper.cs" Link="Production/SeerrHttpHelper.cs" />
+  </ItemGroup>
+</Project>

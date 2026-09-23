@@ -1,0 +1,34 @@
+{
+  "id": "calendar",
+  "modules": {
+    "client/calendar-page-styles.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/calendar-page-data.js": [
+      "calendar/calendar-page-styles"
+    ],
+    "client/calendar-page-render-events.js": [
+      "calendar/calendar-page-data"
+    ],
+    "client/calendar-page-render-views.js": [
+      "calendar/calendar-page-render-events"
+    ],
+    "client/calendar-page-actions.js": [
+      "calendar/calendar-page-render-views"
+    ],
+    "client/calendar-page-init.js": [
+      "calendar/calendar-page-actions"
+    ],
+    "client/calendar-custom-tab.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "assets": [
+    "client/CalendarPage.html"
+  ],
+  "startup": "client/startup.js"
+}

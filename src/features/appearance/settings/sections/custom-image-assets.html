@@ -1,0 +1,107 @@
+                    <fieldset class="je-fieldset-wide">
+                        <legend class="sectionTitle">Custom Image Assets</legend>
+                        <div class="configSection">
+                            <div class="je-setting-description">
+                                <div class="je-info-banner-compact">
+                                    <i class="material-icons je-info-icon-sm">info</i>
+                                    <div>
+                                        Uploaded icon / favicon / logo images are applied automatically at request time. Changes apply on next page load (a hard refresh may be needed if your browser cached the old image).
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer je-main-feature"><label><input id="enableCustomSplashScreen" is="emby-checkbox" type="checkbox"/><span>Enable Splash Screen Override</span></label></div>
+                            <div class="je-setting-description" data-desc-for="enableCustomSplashScreen">
+                                <div class="fieldDescription">Replace Jellyfin's login splash background with a custom image URL specified below.</div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="splashScreenImageUrl">Splash Screen Image URL</label>
+                                <input id="splashScreenImageUrl" is="emby-input" type="text" placeholder="/web/assets/banner.png"/>
+                            </div>
+                                <div class="je-setting-description" data-desc-for="splashScreenImageUrl">
+                                    <div class="fieldDescription">URL for the splash screen image. Defaults to Jellyfin banner.</div>
+                                    <div class="je-splash-info-banner">
+                                    <i class="material-icons je-info-icon-sm">info</i>
+                                    <div>
+                                        Might cause strange behaviour if <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-media-bar" target="_blank">jellyfin-plugin-media-bar</a> is installed.
+                                    </div>
+                                    </div>
+                                    <div class="je-info-banner-inline-center">
+                                    <i class="material-icons je-bottom-info-icon">info</i>
+                                    <div>
+                                        All changes require a page refresh to take effect. <br>
+                                        If old settings persist, please force clear browser cache.
+                                                        </br></div>
+                                    </div>
+                                </div>
+
+                            <div class="je-branding-grid">
+                                <div class="je-branding-card">
+                                    <label class="je-branding-label-bold">Icon Transparent</label>
+                                    <label class="je-branding-label">The icon in the top-left beside the server version</label>
+                                    <div class="je-branding-size-hint">536×536px &nbsp;·&nbsp; PNG with transparency</div>
+                                    <div class="je-branding-dropzone" id="iconTransparentDropZone">
+                                        <input type="file" id="iconTransparentInput" accept="image/*" class="je-branding-file-input" />
+                                        <div id="iconTransparentPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
+                                        <img id="iconTransparentPreview" class="je-branding-preview" style="display:none;" />
+                                        <div id="iconTransparentDimensions" class="je-branding-dimensions" style="display:none;"></div>
+                                        <div id="iconTransparentStatus" class="je-branding-status"></div>
+                                        <button type="button" class="je-branding-delete" id="iconTransparentDelete" style="display:none;"><i class="material-icons">delete</i></button>
+                                    </div>
+                                </div>
+                                <div class="je-branding-card">
+                                    <label class="je-branding-label-bold">Favicon</label>
+                                    <label class="je-branding-label">Favicon in the browser tab</label>
+                                    <div class="je-branding-size-hint">256×256px (.png) &nbsp;·&nbsp; ICO, PNG, or SVG</div>
+                                    <div class="je-branding-dropzone" id="faviconDropZone">
+                                        <input type="file" id="faviconInput" accept="image/*" class="je-branding-file-input" />
+                                        <div id="faviconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
+                                        <img id="faviconPreview" class="je-branding-preview" style="display:none;" />
+                                        <div id="faviconDimensions" class="je-branding-dimensions" style="display:none;"></div>
+                                        <div id="faviconStatus" class="je-branding-status"></div>
+                                        <button type="button" class="je-branding-delete" id="faviconDelete" style="display:none;"><i class="material-icons">delete</i></button>
+                                    </div>
+                                </div>
+                                <div class="je-branding-card">
+                                    <label class="je-branding-label-bold">Banner Dark</label>
+                                    <label class="je-branding-label">Splash Screen Banner for Light Mode</label>
+                                    <div class="je-branding-size-hint">1302×378px &nbsp;·&nbsp; PNG, JPG, or WebP</div>
+                                    <div class="je-branding-dropzone" id="bannerDarkDropZone">
+                                        <input type="file" id="bannerDarkInput" accept="image/*" class="je-branding-file-input" />
+                                        <div id="bannerDarkPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
+                                        <img id="bannerDarkPreview" class="je-branding-preview" style="display:none;" />
+                                        <div id="bannerDarkDimensions" class="je-branding-dimensions" style="display:none;"></div>
+                                        <div id="bannerDarkStatus" class="je-branding-status"></div>
+                                        <button type="button" class="je-branding-delete" id="bannerDarkDelete" style="display:none;"><i class="material-icons">delete</i></button>
+                                    </div>
+                                </div>
+                                <div class="je-branding-card">
+                                    <label class="je-branding-label-bold">Banner Light</label>
+                                    <label class="je-branding-label">Splash Screen Banner for Dark Mode</label>
+                                    <div class="je-branding-size-hint">1302×378px &nbsp;·&nbsp; PNG, JPG, or WebP</div>
+                                    <div class="je-branding-dropzone" id="bannerLightDropZone">
+                                        <input type="file" id="bannerLightInput" accept="image/*" class="je-branding-file-input" />
+                                        <div id="bannerLightPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
+                                        <img id="bannerLightPreview" class="je-branding-preview" style="display:none;" />
+                                        <div id="bannerLightDimensions" class="je-branding-dimensions" style="display:none;"></div>
+                                        <div id="bannerLightStatus" class="je-branding-status"></div>
+                                        <button type="button" class="je-branding-delete" id="bannerLightDelete" style="display:none;"><i class="material-icons">delete</i></button>
+                                    </div>
+                                </div>
+                                <div class="je-branding-card">
+                                    <label class="je-branding-label-bold">Apple Touch Icon</label>
+                                    <label class="je-branding-label">Icon shown when adding to iOS Home Screen</label>
+                                    <div class="je-branding-size-hint">180×180px &nbsp;·&nbsp; PNG</div>
+                                    <div class="je-branding-dropzone" id="touchiconDropZone">
+                                        <input type="file" id="touchiconInput" accept="image/*" class="je-branding-file-input" />
+                                        <div id="touchiconPlaceholder" class="je-branding-placeholder"><i class="material-icons je-branding-placeholder-icon">image</i></div>
+                                        <img id="touchiconPreview" class="je-branding-preview" style="display:none;" />
+                                        <div id="touchiconDimensions" class="je-branding-dimensions" style="display:none;"></div>
+                                        <div id="touchiconStatus" class="je-branding-status"></div>
+                                        <button type="button" class="je-branding-delete" id="touchiconDelete" style="display:none;"><i class="material-icons">delete</i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>

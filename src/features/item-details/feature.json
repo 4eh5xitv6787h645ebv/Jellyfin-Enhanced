@@ -1,0 +1,25 @@
+{
+  "id": "item-details",
+  "modules": {
+    "client/features-details-media-info.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/features-release-dates.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ],
+    "client/features-details-page.js": [
+      "item-details/features-details-media-info",
+      "item-details/features-release-dates"
+    ],
+    "client/letterboxd-links.js": [
+      "shared/session",
+      "shared/lifecycle",
+      "shared/ui-kit"
+    ]
+  },
+  "startup": "client/startup.js"
+}

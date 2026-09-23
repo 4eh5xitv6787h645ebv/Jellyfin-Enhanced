@@ -1,0 +1,1743 @@
+{
+  "components": [
+    {
+      "path": "core/navigation.js",
+      "dependsOn": [],
+      "order": 0,
+      "source": "src/shared/browser/navigation.js"
+    },
+    {
+      "path": "core/session.js",
+      "dependsOn": [
+        "core/navigation.js"
+      ],
+      "order": 1,
+      "source": "src/shared/browser/session.js"
+    },
+    {
+      "path": "core/lifecycle.js",
+      "dependsOn": [
+        "core/navigation.js"
+      ],
+      "order": 2,
+      "source": "src/shared/browser/lifecycle.js"
+    },
+    {
+      "path": "core/dom-observer.js",
+      "dependsOn": [
+        "core/lifecycle.js"
+      ],
+      "order": 3,
+      "source": "src/shared/browser/dom-observer.js"
+    },
+    {
+      "path": "core/ui-kit.js",
+      "dependsOn": [],
+      "order": 4,
+      "source": "src/shared/browser/ui-kit.js"
+    },
+    {
+      "path": "core/media-language.js",
+      "dependsOn": [],
+      "order": 5,
+      "source": "src/shared/browser/media-language.js"
+    },
+    {
+      "path": "core/api-client.js",
+      "dependsOn": [
+        "core/session.js"
+      ],
+      "order": 6,
+      "source": "src/shared/browser/api-client.js"
+    },
+    {
+      "path": "core/tag-renderer-base.js",
+      "dependsOn": [
+        "core/dom-observer.js",
+        "core/media-language.js"
+      ],
+      "order": 7,
+      "source": "src/shared/browser/tag-renderer-base.js"
+    },
+    {
+      "path": "enhanced/config.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 8,
+      "source": "src/features/user-settings/client/config.js"
+    },
+    {
+      "path": "enhanced/helpers.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 9,
+      "source": "src/shared/browser/helpers.js"
+    },
+    {
+      "path": "enhanced/header-actions.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 10,
+      "source": "src/features/navigation/client/header-actions.js"
+    },
+    {
+      "path": "enhanced/native-tabs.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 11,
+      "source": "src/features/navigation/client/native-tabs.js"
+    },
+    {
+      "path": "tags/tag-pipeline.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 12,
+      "source": "src/features/tags/client/tag-pipeline.js"
+    },
+    {
+      "path": "enhanced/icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 13,
+      "source": "src/shared/browser/icons.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/ids.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 14,
+      "source": "src/features/spoiler-guard/client/ids.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/state.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/ids.js"
+      ],
+      "order": 15,
+      "source": "src/features/spoiler-guard/client/state.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/image-refresh.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/state.js"
+      ],
+      "order": 16,
+      "source": "src/features/spoiler-guard/client/image-refresh.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/snooze.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/image-refresh.js"
+      ],
+      "order": 17,
+      "source": "src/features/spoiler-guard/client/snooze.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/dialog.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/snooze.js"
+      ],
+      "order": 18,
+      "source": "src/features/spoiler-guard/client/dialog.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/identity.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/dialog.js"
+      ],
+      "order": 19,
+      "source": "src/features/spoiler-guard/client/identity.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/styles.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/identity.js"
+      ],
+      "order": 20,
+      "source": "src/features/spoiler-guard/client/styles.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/settings-tab.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/styles.js"
+      ],
+      "order": 21,
+      "source": "src/features/spoiler-guard/client/settings-tab.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/seerr-toggle.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/settings-tab.js"
+      ],
+      "order": 22,
+      "source": "src/features/spoiler-guard/client/seerr-toggle.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/detail-button.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/seerr-toggle.js"
+      ],
+      "order": 23,
+      "source": "src/features/spoiler-guard/client/detail-button.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/watched-refresh.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/detail-button.js"
+      ],
+      "order": 24,
+      "source": "src/features/spoiler-guard/client/watched-refresh.js"
+    },
+    {
+      "path": "enhanced/spoilerguard/index.js",
+      "dependsOn": [
+        "enhanced/spoilerguard/watched-refresh.js"
+      ],
+      "order": 25,
+      "source": "src/features/spoiler-guard/client/index.js"
+    },
+    {
+      "path": "enhanced/features-random-button.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 26,
+      "source": "src/features/navigation/client/features-random-button.js"
+    },
+    {
+      "path": "enhanced/itemdetails/features-details-media-info.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 27,
+      "source": "src/features/item-details/client/features-details-media-info.js"
+    },
+    {
+      "path": "enhanced/itemdetails/features-release-dates.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 28,
+      "source": "src/features/item-details/client/features-release-dates.js"
+    },
+    {
+      "path": "enhanced/itemdetails/features-details-page.js",
+      "dependsOn": [
+        "enhanced/itemdetails/features-details-media-info.js",
+        "enhanced/itemdetails/features-release-dates.js"
+      ],
+      "order": 29,
+      "source": "src/features/item-details/client/features-details-page.js"
+    },
+    {
+      "path": "enhanced/homeremoval/features-remove-home.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 30,
+      "source": "src/features/navigation/client/features-remove-home.js"
+    },
+    {
+      "path": "enhanced/homeremoval/features-remove-multiselect.js",
+      "dependsOn": [
+        "enhanced/homeremoval/features-remove-home.js"
+      ],
+      "order": 31,
+      "source": "src/features/navigation/client/features-remove-multiselect.js"
+    },
+    {
+      "path": "enhanced/events.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 32,
+      "source": "src/features/navigation/client/events.js"
+    },
+    {
+      "path": "enhanced/player/playback.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 33,
+      "source": "src/features/playback/client/playback.js"
+    },
+    {
+      "path": "enhanced/player/frame-step.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 34,
+      "source": "src/features/playback/client/frame-step.js"
+    },
+    {
+      "path": "enhanced/player/seek-history.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 35,
+      "source": "src/features/playback/client/seek-history.js"
+    },
+    {
+      "path": "enhanced/player/segment-skip.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 36,
+      "source": "src/features/playback/client/segment-skip.js"
+    },
+    {
+      "path": "enhanced/player/track-menu.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 37,
+      "source": "src/features/playback/client/track-menu.js"
+    },
+    {
+      "path": "enhanced/player/track-cycle.js",
+      "dependsOn": [
+        "enhanced/player/track-menu.js"
+      ],
+      "order": 38,
+      "source": "src/features/playback/client/track-cycle.js"
+    },
+    {
+      "path": "enhanced/player/playback-info.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 39,
+      "source": "src/features/playback/client/playback-info.js"
+    },
+    {
+      "path": "enhanced/player/long-press.js",
+      "dependsOn": [
+        "enhanced/player/playback.js"
+      ],
+      "order": 40,
+      "source": "src/features/playback/client/long-press.js"
+    },
+    {
+      "path": "enhanced/player/auto-skip.js",
+      "dependsOn": [
+        "enhanced/player/frame-step.js",
+        "enhanced/player/seek-history.js",
+        "enhanced/player/segment-skip.js",
+        "enhanced/player/track-cycle.js",
+        "enhanced/player/playback-info.js",
+        "enhanced/player/long-press.js"
+      ],
+      "order": 41,
+      "source": "src/features/playback/client/auto-skip.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-data.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 42,
+      "source": "src/features/hidden-content/client/hidden-content-data.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-save.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-data.js"
+      ],
+      "order": 43,
+      "source": "src/features/hidden-content/client/hidden-content-save.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-styles.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-save.js"
+      ],
+      "order": 44,
+      "source": "src/features/hidden-content/client/hidden-content-styles.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-dialogs.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-styles.js"
+      ],
+      "order": 45,
+      "source": "src/features/hidden-content/client/hidden-content-dialogs.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-panel.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-dialogs.js"
+      ],
+      "order": 46,
+      "source": "src/features/hidden-content/client/hidden-content-panel.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-filter.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-panel.js"
+      ],
+      "order": 47,
+      "source": "src/features/hidden-content/client/hidden-content-filter.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-buttons.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-filter.js"
+      ],
+      "order": 48,
+      "source": "src/features/hidden-content/client/hidden-content-buttons.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-init.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-buttons.js"
+      ],
+      "order": 49,
+      "source": "src/features/hidden-content/client/hidden-content-init.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-page-state.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-init.js"
+      ],
+      "order": 50,
+      "source": "src/features/hidden-content/client/hidden-content-page-state.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-page-styles.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-state.js"
+      ],
+      "order": 51,
+      "source": "src/features/hidden-content/client/hidden-content-page-styles.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-page-admin.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-styles.js"
+      ],
+      "order": 52,
+      "source": "src/features/hidden-content/client/hidden-content-page-admin.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-page-cards.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-admin.js"
+      ],
+      "order": 53,
+      "source": "src/features/hidden-content/client/hidden-content-page-cards.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-page-render.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-cards.js"
+      ],
+      "order": 54,
+      "source": "src/features/hidden-content/client/hidden-content-page-render.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-page-nav.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-render.js"
+      ],
+      "order": 55,
+      "source": "src/features/hidden-content/client/hidden-content-page-nav.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-page-init.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-nav.js"
+      ],
+      "order": 56,
+      "source": "src/features/hidden-content/client/hidden-content-page-init.js"
+    },
+    {
+      "path": "enhanced/hiddencontent/hidden-content-custom-tab.js",
+      "dependsOn": [
+        "enhanced/hiddencontent/hidden-content-page-init.js"
+      ],
+      "order": 57,
+      "source": "src/features/hidden-content/client/hidden-content-custom-tab.js"
+    },
+    {
+      "path": "enhanced/player/subtitles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 58,
+      "source": "src/features/playback/client/subtitles.js"
+    },
+    {
+      "path": "enhanced/themer.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 59,
+      "source": "src/features/appearance/client/themer.js"
+    },
+    {
+      "path": "enhanced/ui-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 60,
+      "source": "src/shared/browser/ui-styles.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-entry-points.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 61,
+      "source": "src/features/user-settings/client/ui-entry-points.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-release-notes.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-entry-points.js"
+      ],
+      "order": 62,
+      "source": "src/features/user-settings/client/ui-release-notes.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-panel-template.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-release-notes.js"
+      ],
+      "order": 63,
+      "source": "src/features/user-settings/client/ui-panel-template.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-panel-shortcut-editor.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-template.js"
+      ],
+      "order": 64,
+      "source": "src/features/user-settings/client/ui-panel-shortcut-editor.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-panel-settings.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-shortcut-editor.js"
+      ],
+      "order": 65,
+      "source": "src/features/user-settings/client/ui-panel-settings.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-panel-hidden-content.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-settings.js"
+      ],
+      "order": 66,
+      "source": "src/features/hidden-content/client/ui-panel-hidden-content.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-panel-language.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-hidden-content.js"
+      ],
+      "order": 67,
+      "source": "src/features/user-settings/client/ui-panel-language.js"
+    },
+    {
+      "path": "enhanced/settingspanel/ui-panel.js",
+      "dependsOn": [
+        "enhanced/settingspanel/ui-panel-language.js"
+      ],
+      "order": 68,
+      "source": "src/features/user-settings/client/ui-panel.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-model.js",
+      "dependsOn": [],
+      "order": 69,
+      "source": "src/features/bookmarks/client/bookmarks-model.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-items.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-model.js"
+      ],
+      "order": 70,
+      "source": "src/features/bookmarks/client/bookmarks-items.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-store.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-items.js"
+      ],
+      "order": 71,
+      "source": "src/features/bookmarks/client/bookmarks-store.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-markers.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-store.js"
+      ],
+      "order": 72,
+      "source": "src/features/bookmarks/client/bookmarks-markers.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-modal-styles.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-markers.js"
+      ],
+      "order": 73,
+      "source": "src/features/bookmarks/client/bookmarks-modal-styles.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-modal.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-modal-styles.js"
+      ],
+      "order": 74,
+      "source": "src/features/bookmarks/client/bookmarks-modal.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "enhanced/bookmarks/bookmarks-modal.js"
+      ],
+      "order": 75,
+      "source": "src/features/bookmarks/client/bookmarks.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-library-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 76,
+      "source": "src/features/bookmarks/client/bookmarks-library-styles.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-library-page.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-styles.js"
+      ],
+      "order": 77,
+      "source": "src/features/bookmarks/client/bookmarks-library-page.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-library-render.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-page.js",
+        "enhanced/bookmarks/bookmarks-model.js"
+      ],
+      "order": 78,
+      "source": "src/features/bookmarks/client/bookmarks-library-render.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-library-items.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-render.js"
+      ],
+      "order": 79,
+      "source": "src/features/bookmarks/client/bookmarks-library-items.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-library-modals.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-items.js"
+      ],
+      "order": 80,
+      "source": "src/features/bookmarks/client/bookmarks-library-modals.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-library-replacements.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-modals.js"
+      ],
+      "order": 81,
+      "source": "src/features/bookmarks/client/bookmarks-library-replacements.js"
+    },
+    {
+      "path": "enhanced/bookmarks/bookmarks-library-init.js",
+      "dependsOn": [
+        "enhanced/bookmarks/bookmarks-library-replacements.js"
+      ],
+      "order": 82,
+      "source": "src/features/bookmarks/client/bookmarks-library-init.js"
+    },
+    {
+      "path": "enhanced/player/osd-rating.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 83,
+      "source": "src/features/playback/client/osd-rating.js"
+    },
+    {
+      "path": "enhanced/player/pause-screen-data.js",
+      "dependsOn": [],
+      "order": 84,
+      "source": "src/features/playback/client/pause-screen-data.js"
+    },
+    {
+      "path": "enhanced/player/pause-screen-styles.js",
+      "dependsOn": [],
+      "order": 85,
+      "source": "src/features/playback/client/pause-screen-styles.js"
+    },
+    {
+      "path": "enhanced/player/pausescreen.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "enhanced/player/pause-screen-data.js",
+        "enhanced/player/pause-screen-styles.js"
+      ],
+      "order": 86,
+      "source": "src/features/playback/client/pausescreen.js"
+    },
+    {
+      "path": "enhanced/player/playback-rating-badge.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 87,
+      "source": "src/features/playback/client/playback-rating-badge.js"
+    },
+    {
+      "path": "elsewhere/elsewhere-settings.js",
+      "dependsOn": [],
+      "order": 88,
+      "source": "src/features/streaming-availability/client/elsewhere-settings.js"
+    },
+    {
+      "path": "elsewhere/elsewhere-api.js",
+      "dependsOn": [],
+      "order": 89,
+      "source": "src/features/streaming-availability/client/elsewhere-api.js"
+    },
+    {
+      "path": "elsewhere/elsewhere-panel.js",
+      "dependsOn": [],
+      "order": 90,
+      "source": "src/features/streaming-availability/client/elsewhere-panel.js"
+    },
+    {
+      "path": "elsewhere/elsewhere.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "elsewhere/elsewhere-settings.js",
+        "elsewhere/elsewhere-api.js",
+        "elsewhere/elsewhere-panel.js"
+      ],
+      "order": 91,
+      "source": "src/features/streaming-availability/client/elsewhere.js"
+    },
+    {
+      "path": "elsewhere/reviews-api.js",
+      "dependsOn": [],
+      "order": 92,
+      "source": "src/features/reviews/client/reviews-api.js"
+    },
+    {
+      "path": "elsewhere/reviews-rendering.js",
+      "dependsOn": [],
+      "order": 93,
+      "source": "src/features/reviews/client/reviews-rendering.js"
+    },
+    {
+      "path": "elsewhere/reviews-styles.js",
+      "dependsOn": [],
+      "order": 94,
+      "source": "src/features/reviews/client/reviews-styles.js"
+    },
+    {
+      "path": "elsewhere/reviews.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "elsewhere/reviews-api.js",
+        "elsewhere/reviews-rendering.js",
+        "elsewhere/reviews-styles.js"
+      ],
+      "order": 95,
+      "source": "src/features/reviews/client/reviews.js"
+    },
+    {
+      "path": "awards/awards.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 96,
+      "source": "src/features/ratings/client/awards.js"
+    },
+    {
+      "path": "others/mdblist-ratings.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 97,
+      "source": "src/features/ratings/client/mdblist-ratings.js"
+    },
+    {
+      "path": "jellyseerr/seerr-status.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 98,
+      "source": "src/features/seerr/client/seerr-status.js"
+    },
+    {
+      "path": "jellyseerr/request-manager.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 99,
+      "source": "src/features/seerr/client/request-manager.js"
+    },
+    {
+      "path": "jellyseerr/api/status.js",
+      "dependsOn": [],
+      "order": 100,
+      "source": "src/features/seerr/client/api/status.js"
+    },
+    {
+      "path": "jellyseerr/api/catalog.js",
+      "dependsOn": [
+        "jellyseerr/api/status.js"
+      ],
+      "order": 101,
+      "source": "src/features/seerr/client/api/catalog.js"
+    },
+    {
+      "path": "jellyseerr/api/requests.js",
+      "dependsOn": [
+        "jellyseerr/api/catalog.js"
+      ],
+      "order": 102,
+      "source": "src/features/seerr/client/api/requests.js"
+    },
+    {
+      "path": "jellyseerr/api/issues.js",
+      "dependsOn": [
+        "jellyseerr/api/requests.js"
+      ],
+      "order": 103,
+      "source": "src/features/seerr/client/api/issues.js"
+    },
+    {
+      "path": "jellyseerr/api/overrides.js",
+      "dependsOn": [],
+      "order": 104,
+      "source": "src/features/seerr/client/api/overrides.js"
+    },
+    {
+      "path": "jellyseerr/api.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "jellyseerr/api/issues.js",
+        "jellyseerr/api/overrides.js"
+      ],
+      "order": 105,
+      "source": "src/features/seerr/client/api.js"
+    },
+    {
+      "path": "jellyseerr/search/collections.js",
+      "dependsOn": [],
+      "order": 106,
+      "source": "src/features/seerr/client/search/collections.js"
+    },
+    {
+      "path": "jellyseerr/search/results.js",
+      "dependsOn": [],
+      "order": 107,
+      "source": "src/features/seerr/client/search/results.js"
+    },
+    {
+      "path": "jellyseerr/search/page.js",
+      "dependsOn": [],
+      "order": 108,
+      "source": "src/features/seerr/client/search/page.js"
+    },
+    {
+      "path": "jellyseerr/search/interactions.js",
+      "dependsOn": [],
+      "order": 109,
+      "source": "src/features/seerr/client/search/interactions.js"
+    },
+    {
+      "path": "jellyseerr/jellyseerr.js",
+      "dependsOn": [
+        "jellyseerr/api.js",
+        "jellyseerr/seerr-status.js",
+        "jellyseerr/request-manager.js",
+        "jellyseerr/search/collections.js",
+        "jellyseerr/search/results.js",
+        "jellyseerr/search/page.js",
+        "jellyseerr/search/interactions.js"
+      ],
+      "order": 110,
+      "source": "src/features/seerr/client/jellyseerr.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 111,
+      "source": "src/features/seerr/client/ui/ui-icons.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-styles.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-icons.js"
+      ],
+      "order": 112,
+      "source": "src/features/seerr/client/ui/ui-styles.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-popover.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-styles.js"
+      ],
+      "order": 113,
+      "source": "src/features/seerr/client/ui/ui-popover.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-badges.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-popover.js"
+      ],
+      "order": 114,
+      "source": "src/features/seerr/client/ui/ui-badges.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-cards.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-badges.js"
+      ],
+      "order": 115,
+      "source": "src/features/seerr/client/ui/ui-cards.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-buttons.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-cards.js"
+      ],
+      "order": 116,
+      "source": "src/features/seerr/client/ui/ui-buttons.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-quota.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-buttons.js"
+      ],
+      "order": 117,
+      "source": "src/features/seerr/client/ui/ui-quota.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-results.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-quota.js"
+      ],
+      "order": 118,
+      "source": "src/features/seerr/client/ui/ui-results.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-request-modals.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-results.js"
+      ],
+      "order": 119,
+      "source": "src/features/seerr/client/ui/ui-request-modals.js"
+    },
+    {
+      "path": "jellyseerr/ui/ui-season-modal.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-request-modals.js"
+      ],
+      "order": 120,
+      "source": "src/features/seerr/client/ui/ui-season-modal.js"
+    },
+    {
+      "path": "jellyseerr/modal.js",
+      "dependsOn": [
+        "jellyseerr/ui/ui-season-modal.js"
+      ],
+      "order": 121,
+      "source": "src/features/seerr/client/modal.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 122,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-styles.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-data.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-styles.js"
+      ],
+      "order": 123,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-data.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-seasons.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-data.js"
+      ],
+      "order": 124,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-seasons.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-badges.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-seasons.js"
+      ],
+      "order": 125,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-badges.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-render.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-badges.js"
+      ],
+      "order": 126,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-render.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-actions-tv.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-render.js"
+      ],
+      "order": 127,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-actions-tv.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-actions.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-actions-tv.js"
+      ],
+      "order": 128,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-actions.js"
+    },
+    {
+      "path": "jellyseerr/moreinfo/more-info-modal-init.js",
+      "dependsOn": [
+        "jellyseerr/moreinfo/more-info-modal-actions.js"
+      ],
+      "order": 129,
+      "source": "src/features/seerr/client/moreinfo/more-info-modal-init.js"
+    },
+    {
+      "path": "jellyseerr/seerr-detail-link.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 130,
+      "source": "src/features/seerr/client/seerr-detail-link.js"
+    },
+    {
+      "path": "jellyseerr/hss-discovery-handler.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 131,
+      "source": "src/features/seerr/client/hss-discovery-handler.js"
+    },
+    {
+      "path": "jellyseerr/item-details-data.js",
+      "dependsOn": [],
+      "order": 132,
+      "source": "src/features/seerr/client/item-details-data.js"
+    },
+    {
+      "path": "jellyseerr/item-details-recommendations.js",
+      "dependsOn": [
+        "jellyseerr/item-details-data.js"
+      ],
+      "order": 133,
+      "source": "src/features/seerr/client/item-details-recommendations.js"
+    },
+    {
+      "path": "jellyseerr/item-details-request-more.js",
+      "dependsOn": [
+        "jellyseerr/item-details-data.js"
+      ],
+      "order": 134,
+      "source": "src/features/seerr/client/item-details-request-more.js"
+    },
+    {
+      "path": "jellyseerr/item-details.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "jellyseerr/item-details-recommendations.js",
+        "jellyseerr/item-details-request-more.js"
+      ],
+      "order": 135,
+      "source": "src/features/seerr/client/item-details.js"
+    },
+    {
+      "path": "jellyseerr/issue-reporter-data.js",
+      "dependsOn": [],
+      "order": 136,
+      "source": "src/features/seerr/client/issue-reporter-data.js"
+    },
+    {
+      "path": "jellyseerr/issue-reporter-view.js",
+      "dependsOn": [
+        "jellyseerr/issue-reporter-data.js"
+      ],
+      "order": 137,
+      "source": "src/features/seerr/client/issue-reporter-view.js"
+    },
+    {
+      "path": "jellyseerr/issue-reporter-tv-controls.js",
+      "dependsOn": [
+        "jellyseerr/issue-reporter-view.js"
+      ],
+      "order": 138,
+      "source": "src/features/seerr/client/issue-reporter-tv-controls.js"
+    },
+    {
+      "path": "jellyseerr/issue-reporter-modal.js",
+      "dependsOn": [
+        "jellyseerr/issue-reporter-tv-controls.js"
+      ],
+      "order": 139,
+      "source": "src/features/seerr/client/issue-reporter-modal.js"
+    },
+    {
+      "path": "jellyseerr/issue-reporter.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "jellyseerr/issue-reporter-modal.js"
+      ],
+      "order": 140,
+      "source": "src/features/seerr/client/issue-reporter.js"
+    },
+    {
+      "path": "jellyseerr/seamless-scroll.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 141,
+      "source": "src/features/seerr/client/seamless-scroll.js"
+    },
+    {
+      "path": "jellyseerr/discovery/discovery-filter-utils.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 142,
+      "source": "src/features/seerr/client/discovery/discovery-filter-utils.js"
+    },
+    {
+      "path": "jellyseerr/discovery/discovery-page-host.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-filter-utils.js"
+      ],
+      "order": 143,
+      "source": "src/features/seerr/client/discovery/discovery-page-host.js"
+    },
+    {
+      "path": "jellyseerr/discovery/discovery-client-pager.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-filter-utils.js"
+      ],
+      "order": 144,
+      "source": "src/features/seerr/client/discovery/discovery-client-pager.js"
+    },
+    {
+      "path": "jellyseerr/discovery/discovery-dual-feed.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-filter-utils.js"
+      ],
+      "order": 145,
+      "source": "src/features/seerr/client/discovery/discovery-dual-feed.js"
+    },
+    {
+      "path": "jellyseerr/discovery/discovery-base.js",
+      "dependsOn": [
+        "jellyseerr/discovery/discovery-page-host.js",
+        "jellyseerr/discovery/discovery-client-pager.js",
+        "jellyseerr/discovery/discovery-dual-feed.js"
+      ],
+      "order": 146,
+      "source": "src/features/seerr/client/discovery/discovery-base.js"
+    },
+    {
+      "path": "jellyseerr/discovery/network-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 147,
+      "source": "src/features/seerr/client/discovery/network-discovery.js"
+    },
+    {
+      "path": "jellyseerr/discovery/person-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 148,
+      "source": "src/features/seerr/client/discovery/person-discovery.js"
+    },
+    {
+      "path": "jellyseerr/discovery/genre-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 149,
+      "source": "src/features/seerr/client/discovery/genre-discovery.js"
+    },
+    {
+      "path": "jellyseerr/discovery/tag-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 150,
+      "source": "src/features/seerr/client/discovery/tag-discovery.js"
+    },
+    {
+      "path": "jellyseerr/discovery/collection-discovery.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 151,
+      "source": "src/features/seerr/client/discovery/collection-discovery.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 152,
+      "source": "src/features/seerr/client/recommendations/recommendations-styles.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-catalog.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-styles.js"
+      ],
+      "order": 153,
+      "source": "src/features/seerr/client/recommendations/recommendations-catalog.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-data.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-catalog.js"
+      ],
+      "order": 154,
+      "source": "src/features/seerr/client/recommendations/recommendations-data.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-render.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-data.js"
+      ],
+      "order": 155,
+      "source": "src/features/seerr/client/recommendations/recommendations-render.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-page.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-render.js"
+      ],
+      "order": 156,
+      "source": "src/features/seerr/client/recommendations/recommendations-page.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-category.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-page.js"
+      ],
+      "order": 157,
+      "source": "src/features/seerr/client/recommendations/recommendations-category.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-init.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-category.js"
+      ],
+      "order": 158,
+      "source": "src/features/seerr/client/recommendations/recommendations-init.js"
+    },
+    {
+      "path": "jellyseerr/recommendations/recommendations-custom-tab.js",
+      "dependsOn": [
+        "jellyseerr/recommendations/recommendations-init.js"
+      ],
+      "order": 159,
+      "source": "src/features/seerr/client/recommendations/recommendations-custom-tab.js"
+    },
+    {
+      "path": "tags/genretags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 160,
+      "source": "src/features/tags/client/genretags.js"
+    },
+    {
+      "path": "tags/languagetags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 161,
+      "source": "src/features/tags/client/languagetags.js"
+    },
+    {
+      "path": "tags/peopletags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 162,
+      "source": "src/features/tags/client/peopletags.js"
+    },
+    {
+      "path": "tags/quality-analysis.js",
+      "dependsOn": [],
+      "order": 163,
+      "source": "src/features/tags/client/quality-analysis.js"
+    },
+    {
+      "path": "tags/quality-policy.js",
+      "dependsOn": [
+        "tags/quality-analysis.js"
+      ],
+      "order": 164,
+      "source": "src/features/tags/client/quality-policy.js"
+    },
+    {
+      "path": "tags/qualitytags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "tags/quality-policy.js"
+      ],
+      "order": 165,
+      "source": "src/features/tags/client/qualitytags.js"
+    },
+    {
+      "path": "tags/ratingtags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 166,
+      "source": "src/features/tags/client/ratingtags.js"
+    },
+    {
+      "path": "tags/userreviewtags.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 167,
+      "source": "src/features/tags/client/userreviewtags.js"
+    },
+    {
+      "path": "arr/arr-links-data.js",
+      "dependsOn": [],
+      "order": 168,
+      "source": "src/features/arr/client/arr-links-data.js"
+    },
+    {
+      "path": "arr/arr-links-view.js",
+      "dependsOn": [
+        "arr/arr-links-data.js"
+      ],
+      "order": 169,
+      "source": "src/features/arr/client/arr-links-view.js"
+    },
+    {
+      "path": "arr/arr-links.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "arr/arr-links-view.js"
+      ],
+      "order": 170,
+      "source": "src/features/arr/client/arr-links.js"
+    },
+    {
+      "path": "arr/arr-tag-links.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 171,
+      "source": "src/features/arr/client/arr-tag-links.js"
+    },
+    {
+      "path": "arr/requests/requests-page-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 172,
+      "source": "src/features/downloads/client/requests-page-styles.js"
+    },
+    {
+      "path": "arr/requests/requests-page-data.js",
+      "dependsOn": [
+        "arr/requests/requests-page-styles.js"
+      ],
+      "order": 173,
+      "source": "src/features/downloads/client/requests-page-data.js"
+    },
+    {
+      "path": "arr/requests/requests-page-render-helpers.js",
+      "dependsOn": [
+        "arr/requests/requests-page-data.js"
+      ],
+      "order": 174,
+      "source": "src/features/downloads/client/requests-page-render-helpers.js"
+    },
+    {
+      "path": "arr/requests/requests-page-render-cards.js",
+      "dependsOn": [
+        "arr/requests/requests-page-render-helpers.js"
+      ],
+      "order": 175,
+      "source": "src/features/downloads/client/requests-page-render-cards.js"
+    },
+    {
+      "path": "arr/requests/requests-page-render.js",
+      "dependsOn": [
+        "arr/requests/requests-page-render-cards.js"
+      ],
+      "order": 176,
+      "source": "src/features/downloads/client/requests-page-render.js"
+    },
+    {
+      "path": "arr/requests/requests-page-actions.js",
+      "dependsOn": [
+        "arr/requests/requests-page-render.js"
+      ],
+      "order": 177,
+      "source": "src/features/downloads/client/requests-page-actions.js"
+    },
+    {
+      "path": "arr/requests/requests-page-init.js",
+      "dependsOn": [
+        "arr/requests/requests-page-actions.js"
+      ],
+      "order": 178,
+      "source": "src/features/downloads/client/requests-page-init.js"
+    },
+    {
+      "path": "arr/calendar/calendar-page-styles.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 179,
+      "source": "src/features/calendar/client/calendar-page-styles.js"
+    },
+    {
+      "path": "arr/calendar/calendar-page-data.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-styles.js"
+      ],
+      "order": 180,
+      "source": "src/features/calendar/client/calendar-page-data.js"
+    },
+    {
+      "path": "arr/calendar/calendar-page-render-events.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-data.js"
+      ],
+      "order": 181,
+      "source": "src/features/calendar/client/calendar-page-render-events.js"
+    },
+    {
+      "path": "arr/calendar/calendar-page-render-views.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-render-events.js"
+      ],
+      "order": 182,
+      "source": "src/features/calendar/client/calendar-page-render-views.js"
+    },
+    {
+      "path": "arr/calendar/calendar-page-actions.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-render-views.js"
+      ],
+      "order": 183,
+      "source": "src/features/calendar/client/calendar-page-actions.js"
+    },
+    {
+      "path": "arr/calendar/calendar-page-init.js",
+      "dependsOn": [
+        "arr/calendar/calendar-page-actions.js"
+      ],
+      "order": 184,
+      "source": "src/features/calendar/client/calendar-page-init.js"
+    },
+    {
+      "path": "arr/requests/requests-custom-tab.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 185,
+      "source": "src/features/downloads/client/requests-custom-tab.js"
+    },
+    {
+      "path": "arr/calendar/calendar-custom-tab.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 186,
+      "source": "src/features/calendar/client/calendar-custom-tab.js"
+    },
+    {
+      "path": "extras/colored-activity-icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 187,
+      "source": "src/features/activity/client/colored-activity-icons.js"
+    },
+    {
+      "path": "extras/colored-ratings.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 188,
+      "source": "src/features/ratings/client/colored-ratings.js"
+    },
+    {
+      "path": "extras/plugin-icons.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 189,
+      "source": "src/features/appearance/client/plugin-icons.js"
+    },
+    {
+      "path": "extras/plugin-revisions.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 190,
+      "source": "src/features/appearance/client/plugin-revisions.js"
+    },
+    {
+      "path": "extras/theme-selector.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 191,
+      "source": "src/features/appearance/client/theme-selector.js"
+    },
+    {
+      "path": "extras/activestreams/model.js",
+      "dependsOn": [],
+      "order": 192,
+      "source": "src/features/active-streams/client/model.js"
+    },
+    {
+      "path": "extras/activestreams/styles.js",
+      "dependsOn": [
+        "extras/activestreams/model.js"
+      ],
+      "order": 193,
+      "source": "src/features/active-streams/client/styles.js"
+    },
+    {
+      "path": "extras/activestreams/view.js",
+      "dependsOn": [
+        "extras/activestreams/styles.js"
+      ],
+      "order": 194,
+      "source": "src/features/active-streams/client/view.js"
+    },
+    {
+      "path": "extras/activestreams/broadcast.js",
+      "dependsOn": [
+        "extras/activestreams/view.js"
+      ],
+      "order": 195,
+      "source": "src/features/active-streams/client/broadcast.js"
+    },
+    {
+      "path": "extras/active-streams.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js",
+        "extras/activestreams/broadcast.js"
+      ],
+      "order": 196,
+      "source": "src/features/active-streams/client/active-streams.js"
+    },
+    {
+      "path": "extras/activity-page.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 197,
+      "source": "src/features/activity/client/activity-page.js"
+    },
+    {
+      "path": "extras/activity-custom-tab.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 198,
+      "source": "src/features/activity/client/activity-custom-tab.js"
+    },
+    {
+      "path": "others/letterboxd-links.js",
+      "dependsOn": [
+        "core/session.js",
+        "core/lifecycle.js",
+        "core/ui-kit.js"
+      ],
+      "order": 199,
+      "source": "src/features/item-details/client/letterboxd-links.js"
+    }
+  ],
+  "standalone": [
+    {
+      "path": "extras/login-image.js",
+      "reason": "Loaded before authentication when public config enables the login image.",
+      "source": "src/features/appearance/client/login-image.js"
+    },
+    {
+      "path": "others/splashscreen.js",
+      "reason": "Loaded before authentication by prelogin.",
+      "source": "src/features/appearance/client/splashscreen.js"
+    },
+    {
+      "path": "plugin.js",
+      "reason": "Injected public entry point; generated from frontend/bootstrap.",
+      "source": "artifacts/generated/plugin.js"
+    },
+    {
+      "path": "enhanced/translations.js",
+      "reason": "Loaded before initial configuration and component scripts.",
+      "source": "src/shared/browser/translations.js"
+    }
+  ]
+}

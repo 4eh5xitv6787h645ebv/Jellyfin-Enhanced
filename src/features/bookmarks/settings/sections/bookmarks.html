@@ -1,0 +1,85 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Bookmarks</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">bookmark_add</i>
+                                    <div>
+                                        <h4 class="je-custom-tabs-h4">How to Use Bookmarks:</h4>
+                                        <ul class="fieldDescription je-howto-list">
+                                            <li class="je-custom-tabs-li"><strong>During Playback:</strong> Press <kbd class="je-kbd">B</kbd> or click the bookmark icon <i class="material-icons je-icon-inline">bookmark_add</i> in the video player controls to save a bookmark at the current time.</li>
+                                            <li class="je-custom-tabs-li"><strong>Visual Markers:</strong> Bookmarks appear as location pins <i class="material-icons je-icon-inline-colored">location_pin</i> on the video progress bar. Click a marker to jump to that timestamp.</li>
+                                            <li class="je-custom-tabs-li"><strong>Multi-Version Support:</strong> Bookmarks track by TMDB/TVDB IDs, so they work across different file versions of the same content.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkboxContainer je-main-feature"><label><input id="bookmarksEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Bookmarks Feature</span></label></div>
+                            <div class="je-setting-description" data-desc-for="bookmarksEnabled">
+                                <div class="fieldDescription je-field-desc-lg">Save custom bookmarks/timestamps while watching videos to quickly jump back to your favorite scenes or moments.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="bookmarksUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Bookmarks as a native Home tab</span></label></div>
+                            <div class="je-setting-description" data-desc-for="bookmarksUseNativeTab">
+                                <div class="fieldDescription je-field-desc-xl">Adds Bookmarks as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="bookmarksUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages for Bookmarks Library</span></label></div>
+                            <div class="je-setting-description" data-desc-for="bookmarksUsePluginPages">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Adds a "Bookmarks" link via <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a>.<br/>
+                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
+                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="bookmarksUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs for Bookmarks</span></label></div>
+                            <div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-bookmarks" style="display:none;">
+                                <i class="material-icons je-note-icon">info</i>
+                                <div>On Jellyfin 12, <strong>"Add Bookmarks as a native Home tab"</strong> is more reliable than Custom Tabs. Consider enabling it too.</div>
+                            </div>
+
+                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="bookmarksUseCustomTabs,bookmarksEnabled">
+                                <label><input id="bookmarksAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
+                            </div>
+                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="bookmarksAutoCreateCustomTab" data-gated-by="bookmarksUseCustomTabs,bookmarksEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs for Bookmarks" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
+                                </div>
+                            </div>
+
+                            <div class="je-setting-description" data-desc-for="bookmarksUseCustomTabs">
+                                <div class="je-info-banner-inline">
+                                    <div class="je-info-banner-row">
+                                        <i class="material-icons je-info-icon">info</i>
+                                        <div>
+                                            <h4 class="je-custom-tabs-h4">
+                                                Embed Bookmarks in Custom Tabs:
+                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
+                                            </h4>
+                                            <p class="fieldDescription je-custom-tabs-p">Display the Bookmarks library in a Custom Tabs tab instead of the sidebar link.</p>
+                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
+                                            <ol class="fieldDescription je-custom-tabs-ol">
+                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
+                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Bookmarks").</li>
+                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                            </ol>
+                                            <div class="je-copy-code-wrapper">
+                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="sections bookmarks"&gt;&lt;/div&gt;' type="button">
+                                                    <i class="material-icons je-copy-icon">content_copy</i>
+                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                                </button>
+                                                <pre class="je-code-pre"><code>&lt;div class="sections bookmarks"&gt;&lt;/div&gt;</code></pre>
+                                            </div>
+                                            <div class="fieldDescription je-field-desc-mt">
+                                                Already have Custom Tabs installed?
+                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+

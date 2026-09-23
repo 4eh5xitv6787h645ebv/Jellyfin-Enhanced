@@ -1,0 +1,48 @@
+/* ---------------------------------------------------------------------------
+   Search Highlight Utilities
+   --------------------------------------------------------------------------- */
+.je-search-hidden { display: none !important; }
+
+/* In search mode the form becomes a flex column so tab-contents
+   whose tab name itself matches the query can hoist to the top via
+   order: -1 — searching "elsewhere" should surface the Elsewhere
+   tab above other tabs that merely mention "Elsewhere" in service-
+   status labels. Outside search mode, only a single tab-content is
+   active and the form's default block flow is fine. */
+#JellyfinEnhancedForm.je-search-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+#JellyfinEnhancedForm.je-search-mode > .jellyfin-tab-content.je-tab-name-match {
+    order: -1;
+}
+.je-search-match {
+    background-color: rgba(255,200,0,0.35);
+    color: #fff;
+    border-radius: 4px;
+    padding: 0 3px;
+    box-shadow: 0 0 0 1px rgba(255,200,0,0.25);
+    /* box-decoration-break: clone keeps the highlight inline with surrounding
+       text across line wraps, so the rest of the description doesn't get
+       pushed to a new line when a short match lands at line start. */
+    display: inline;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+.je-search-match-active {
+    background-color: rgba(255,165,0,0.85);
+    box-shadow: 0 0 0 2px rgba(255,165,0,0.5);
+    color: #000;
+    font-weight: bold;
+}
+.je-search-tab-label {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--primary-accent-color, #00a4dc);
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid var(--je-border);
+    grid-column: 1 / -1;
+}
+

@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------------------------
+   Custom Branding Dropzones
+   --------------------------------------------------------------------------- */
+.je-branding-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 15px 0;
+}
+.je-branding-card {
+    background: var(--je-overlay-soft);
+    border: 1px solid var(--je-border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.je-branding-label-bold { font-weight: bold; color: #fff; font-size: 1.05em; }
+.je-branding-size-hint { font-size: 0.75em; color: #888; margin-bottom: 6px; }
+.je-branding-label { color: #aaa; font-size: 0.85em; }
+.je-branding-meta { font-size: 0.8em; color: #aaa; margin-bottom: 10px; }
+.je-branding-dropzone {
+    background: var(--je-surface-1);
+    border: 2px dashed color-mix(in srgb, var(--primary-accent-color, #00a4dc) 50%, transparent);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    position: relative;
+}
+.je-branding-dropzone:hover {
+    background: color-mix(in srgb, var(--primary-accent-color, #00a4dc) 5%, transparent);
+    border-color: var(--primary-accent-color, #00a4dc);
+}
+.je-branding-file-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+.je-branding-preview { max-height: 100px; border-radius: 4px; margin-bottom: 10px; }
+.je-branding-placeholder { color: var(--je-text-dim); font-size: 2em; }
+.je-branding-placeholder-icon { font-size: 2.5em; }
+.je-branding-status { font-size: 0.85em; margin-top: 5px; min-height: 1em; }
+.je-branding-dimensions { font-size: 0.75em; opacity: 0.5; margin-top: 3px; }
+.je-branding-hint { font-size: 0.85em; opacity: 0.7; margin-top: 5px; }
+.je-branding-maxsize { font-size: 0.7em; opacity: 0.4; margin-top: 2px; }
+.je-branding-delete {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--je-overlay-hard) !important;
+    border: none;
+    color: #fff !important;
+    padding: 6px !important;
+    border-radius: 50% !important;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+}
+.je-branding-delete:hover { background: #e53935 !important; }
+

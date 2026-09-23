@@ -1,0 +1,87 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Activity Feed</legend>
+                        <div class="configSection">
+                            <div class="je-info-banner-inline-center" style="margin-bottom: 15px;">
+                                <div class="je-info-banner-row">
+                                    <i class="material-icons je-info-icon">history</i>
+                                    <div>
+                                        <strong>Activity Feed</strong> shows recently watched, favorited, and reviewed titles across the server. Each viewer only sees activity for items they themselves have library access to.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer je-main-feature"><label><input id="activityFeedEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Activity Feed</span></label></div>
+                            <div class="je-setting-description" data-desc-for="activityFeedEnabled">
+                                <div class="fieldDescription je-field-desc-md">Turns the feature on. While it's off, no activity is recorded or shown.</div>
+                            </div>
+                            <div class="checkboxContainer"><label><input id="activityFeedShowWatched" is="emby-checkbox" type="checkbox"/><span>Show recently watched</span></label></div>
+                            <div class="checkboxContainer"><label><input id="activityFeedShowFavorited" is="emby-checkbox" type="checkbox"/><span>Show recently favorited</span></label></div>
+                            <div class="checkboxContainer"><label><input id="activityFeedShowReviewed" is="emby-checkbox" type="checkbox"/><span>Show recently reviewed</span></label></div>
+                            <div class="checkboxContainer"><label><input id="activityFeedShowActiveStreams" is="emby-checkbox" type="checkbox"/><span>Show Active Streams section</span></label></div>
+                            <div class="je-setting-description" data-desc-for="activityFeedShowActiveStreams">
+                                <div class="fieldDescription je-field-desc-xl">Adds a live "who's watching now" section to this page, independent of whether the Active Streams header widget (Extras tab) is shown. Still requires that feature's data collection to be enabled there.</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="activityFeedUseNativeTab" is="emby-checkbox" type="checkbox"/><span>Add Activity as a native Home tab</span></label></div>
+                            <div class="je-setting-description" data-desc-for="activityFeedUseNativeTab">
+                                <div class="fieldDescription je-field-desc-xl">Adds Activity as its own tab on the Home page, no external plugin needed.<br/><strong>Recommended on Jellyfin 12's experimental layout</strong> (the default).</div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="activityFeedUsePluginPages" is="emby-checkbox" type="checkbox"/><span>Use Plugin Pages</span></label></div>
+                            <div class="je-setting-description" data-desc-for="activityFeedUsePluginPages">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    Adds an "Activity" link via <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-pages" target="_blank">Plugin Pages</a>.<br/>
+                                    <strong>Note:</strong> Jellyfin must be restarted after enabling this option for the first time for changes to take effect.
+                                    <span class="je-installed-badge" data-plugin="pluginpages"><i class="material-icons" aria-hidden="true">check_circle</i>Plugin Pages detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="activityFeedUseCustomTabs" is="emby-checkbox" type="checkbox"/><span>Use Custom Tabs</span></label></div>
+                            <div class="je-note-banner je-v12-tab-hint-banner" id="je-v12-hint-activityFeed" style="display:none;">
+                                <i class="material-icons je-note-icon">info</i>
+                                <div>On Jellyfin 12, <strong>"Add Activity as a native Home tab"</strong> is more reliable than Custom Tabs. Consider enabling it too.</div>
+                            </div>
+
+                            <div class="checkboxContainer je-customtabs-automanage" data-gated-by="activityFeedUseCustomTabs,activityFeedEnabled">
+                                <label><input id="activityFeedAutoCreateCustomTab" is="emby-checkbox" type="checkbox"/><span>Add the Custom Tabs entry for me</span></label>
+                            </div>
+                            <div class="je-setting-description je-customtabs-automanage" data-desc-for="activityFeedAutoCreateCustomTab" data-gated-by="activityFeedUseCustomTabs,activityFeedEnabled">
+                                <div class="fieldDescription je-field-desc-md">
+                                    Jellyfin Enhanced will create the matching Custom Tabs entry on save. Turning off "Use Custom Tabs" removes the entry; turning it back on re-creates it. Leave unchecked to manage the Custom Tabs entry yourself.
+                                </div>
+                            </div>
+
+                            <div class="je-setting-description" data-desc-for="activityFeedUseCustomTabs">
+                                <div class="je-info-banner-inline">
+                                    <div class="je-info-banner-row">
+                                        <i class="material-icons je-info-icon">info</i>
+                                        <div>
+                                            <h4 class="je-custom-tabs-h4">
+                                                Embed Activity in Custom Tabs:
+                                                <span class="je-installed-badge" data-plugin="customtabs"><i class="material-icons" aria-hidden="true">check_circle</i>Custom Tabs detected</span>
+                                            </h4>
+                                            <p class="fieldDescription je-custom-tabs-p">Display the Activity page in a Custom Tabs tab instead of the sidebar link.</p>
+                                            <p class="fieldDescription je-custom-tabs-p-mt je-needs-customtabs">You need the <a class="sectionTitle" href="https://github.com/IAmParadox27/jellyfin-plugin-custom-tabs" target="_blank">Custom Tabs</a> plugin.</p>
+                                            <ol class="fieldDescription je-custom-tabs-ol">
+                                                <li class="je-custom-tabs-li je-needs-customtabs">Install the <strong>Custom Tabs</strong> plugin and all its prerequisites.</li>
+                                                <li class="je-custom-tabs-li">Navigate to Dashboard &gt; Plugins &gt; Custom Tabs and add a new tab.</li>
+                                                <li class="je-custom-tabs-li">Add "Display Text" according to your preference (e.g., "Activity").</li>
+                                                <li class="je-custom-tabs-li">Copy the code below and paste it into the 'HTML Content' field.</li>
+                                            </ol>
+                                            <div class="je-copy-code-wrapper">
+                                                <button class="je-copy-html-btn raised raised-mini emby-button" data-copy-text='&lt;div class="jellyfinenhanced activity"&gt;&lt;/div&gt;' type="button">
+                                                    <i class="material-icons je-copy-icon">content_copy</i>
+                                                    <span class="copy-btn-text je-copy-btn-text">Copy</span>
+                                                </button>
+                                                <pre class="je-code-pre"><code>&lt;div class="jellyfinenhanced activity"&gt;&lt;/div&gt;</code></pre>
+                                            </div>
+                                            <div class="fieldDescription je-field-desc-mt">
+                                                Already have Custom Tabs installed?
+                                                <a class="sectionTitle je-custom-tabs-link" href="/web/#/configurationpage?name=Custom%20Tabs">Click here to configure it.</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>

@@ -26,4 +26,4 @@ jobs:
       - name: Check for unused translation keys
         run: |
           echo "Scanning for unused translation keys..."
-          node scripts/validate-translations.js find-unused
+          node tools/checks/validate-translations.js find-unused

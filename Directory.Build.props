@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'JellyfinEnhanced'">
+    <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts/bin/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts/obj/plugin/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

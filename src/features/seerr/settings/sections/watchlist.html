@@ -1,0 +1,57 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Watchlist</legend>
+                        <div class="configSection">
+                            <div class="checkboxContainer"><label><input id="addRequestedMediaToWatchlist" is="emby-checkbox" type="checkbox"/><span>Add requested media to Watchlist</span></label></div>
+                            <div class="je-setting-description" data-desc-for="addRequestedMediaToWatchlist">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    When enabled, any media requested through Seerr Search via Jellyfin Enhanced will automatically be added to the requesting user's Watchlist.<br/><br/>
+                                    <strong>Note:</strong> Requires <a class="je-bold-link" href="https://github.com/ranaldsgift/KefinTweaks" target="_blank">KefinTweaks</a> to be installed to actually view the watchlisted items.
+                                    <span class="je-installed-badge" data-plugin="kefintweaks"><i class="material-icons" aria-hidden="true">check_circle</i>KefinTweaks detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="syncJellyseerrWatchlist" is="emby-checkbox" type="checkbox"/><span>Sync Seerr Watchlist → Jellyfin</span></label></div>
+                            <div class="je-setting-description" data-desc-for="syncJellyseerrWatchlist">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    When enabled, items from each user's Seerr watchlist will be automatically synced to their Jellyfin watchlist.<br/><br/>
+                                    Configure how often the sync should run in Jellyfin Dashboard &gt; Scheduled Tasks &gt; "Sync Watchlist from Seerr to Jellyfin".<br/><br/>
+                                    <strong>Note:</strong> Requires <a class="je-bold-link" href="https://github.com/ranaldsgift/KefinTweaks" target="_blank">KefinTweaks</a> to actually render the watchlist UI.
+                                    <span class="je-installed-badge" data-plugin="kefintweaks"><i class="material-icons" aria-hidden="true">check_circle</i>KefinTweaks detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="syncJellyfinWatchlistToSeerr" is="emby-checkbox" type="checkbox"/><span>Sync Jellyfin Watchlist → Seerr</span></label></div>
+                            <div class="je-setting-description" data-desc-for="syncJellyfinWatchlistToSeerr">
+                                <div class="fieldDescription je-field-desc-xl">
+                                    When enabled, items from a user's Jellyfin watchlist (from <a class="je-bold-link" href="https://github.com/ranaldsgift/KefinTweaks" target="_blank">KefinTweaks</a>) will be automatically synced to their Seerr watchlist.<br/><br/>
+                                    Configure how often the sync should run in Jellyfin Dashboard &gt; Scheduled Tasks &gt; "Sync Watchlist from Jellyfin to Seerr".
+                                    <span class="je-installed-badge" data-plugin="kefintweaks"><i class="material-icons" aria-hidden="true">check_circle</i>KefinTweaks detected</span>
+                                </div>
+                            </div>
+
+                            <div class="checkboxContainer"><label><input id="preventWatchlistReAddition" is="emby-checkbox" type="checkbox"/><span>Prevent re-adding removed items</span></label></div>
+                            <div class="je-setting-description" data-desc-for="preventWatchlistReAddition">
+                                <div class="fieldDescription je-field-desc-md">
+                                    When enabled, items will only be added to a user's watchlist once. If a user manually removes an item from their watchlist, it won't be automatically re-added during future sync runs.
+                                </div>
+                            </div>
+
+                            <div class="inputContainer">
+                                <label class="inputLabel" for="watchlistMemoryRetentionDays">Memory retention (days):</label>
+                                <input id="watchlistMemoryRetentionDays" is="emby-input" type="number" min="1" max="3650" step="1"/>
+                            </div>
+                            <div class="je-setting-description" data-desc-for="watchlistMemoryRetentionDays">
+                                <div class="fieldDescription je-field-desc-mt-sm je-field-desc-md">
+                                    How long to remember that an item was processed before allowing it to be re-added.<br/>After this period, manually removed items (if unwatched) will be automatically re-added to watchlist if they're still in Seerr requests or Seerr watchlist.<br/><br/>
+                                    <strong>Examples:</strong>
+                                    <ul class="je-retention-list">
+                                        <li><strong>30 days:</strong> Short memory, items can be re-added after 1 month</li>
+                                        <li><strong>365 days:</strong> Remember for 1 year (recommended)</li>
+                                        <li><strong>3650 days:</strong> Remember for 10 years (nearly permanent)</li>
+                                    </ul>
+                                    <strong>Note:</strong> This setting only applies when "Prevent re-adding removed items" is enabled.
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+

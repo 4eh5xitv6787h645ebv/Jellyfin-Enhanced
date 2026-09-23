@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../server/AnalyticsConfigurationProjection.cs" Link="Production/AnalyticsConfigurationProjection.cs" />
+    <Compile Include="../../server/AnalyticsData.cs" Link="Production/AnalyticsData.cs" />
+    <Compile Include="../../../arr/server/ArrInstance.cs" Link="Production/ArrInstance.cs" />
+    <Compile Include="../../../../host/configuration/PluginConfiguration.cs" Link="Production/PluginConfiguration.cs" />
+    <Compile Include="../../../maintenance/settings/PluginConfiguration.Maintenance.cs" Link="Production/PluginConfiguration.Maintenance.cs" />
+    <Compile Include="../../../user-settings/settings/PluginConfiguration.UserSettings.cs" Link="Production/PluginConfiguration.UserSettings.cs" />
+    <Compile Include="../../../appearance/settings/PluginConfiguration.Appearance.cs" Link="Production/PluginConfiguration.Appearance.cs" />
+    <Compile Include="../../../../host/configuration/PluginConfiguration.Host.cs" Link="Production/PluginConfiguration.Host.cs" />
+    <Compile Include="../../../streaming-availability/settings/PluginConfiguration.StreamingAvailability.cs" Link="Production/PluginConfiguration.StreamingAvailability.cs" />
+    <Compile Include="../../../playback/settings/PluginConfiguration.Playback.cs" Link="Production/PluginConfiguration.Playback.cs" />
+    <Compile Include="../../../navigation/settings/PluginConfiguration.Navigation.cs" Link="Production/PluginConfiguration.Navigation.cs" />
+    <Compile Include="../../../item-details/settings/PluginConfiguration.ItemDetails.cs" Link="Production/PluginConfiguration.ItemDetails.cs" />
+    <Compile Include="../../../hidden-content/settings/PluginConfiguration.HiddenContent.cs" Link="Production/PluginConfiguration.HiddenContent.cs" />
+    <Compile Include="../../../reviews/settings/PluginConfiguration.Reviews.cs" Link="Production/PluginConfiguration.Reviews.cs" />
+    <Compile Include="../../../ratings/settings/PluginConfiguration.Ratings.cs" Link="Production/PluginConfiguration.Ratings.cs" />
+    <Compile Include="../../../tags/settings/PluginConfiguration.Tags.cs" Link="Production/PluginConfiguration.Tags.cs" />
+    <Compile Include="../../../seerr/settings/PluginConfiguration.Seerr.cs" Link="Production/PluginConfiguration.Seerr.cs" />
+    <Compile Include="../../../arr/settings/PluginConfiguration.Arr.cs" Link="Production/PluginConfiguration.Arr.cs" />
+    <Compile Include="../../../calendar/settings/PluginConfiguration.Calendar.cs" Link="Production/PluginConfiguration.Calendar.cs" />
+    <Compile Include="../../../bookmarks/settings/PluginConfiguration.Bookmarks.cs" Link="Production/PluginConfiguration.Bookmarks.cs" />
+    <Compile Include="../../../active-streams/settings/PluginConfiguration.ActiveStreams.cs" Link="Production/PluginConfiguration.ActiveStreams.cs" />
+    <Compile Include="../../../activity/settings/PluginConfiguration.Activity.cs" Link="Production/PluginConfiguration.Activity.cs" />
+    <Compile Include="../../../downloads/settings/PluginConfiguration.Downloads.cs" Link="Production/PluginConfiguration.Downloads.cs" />
+    <Compile Include="../../../spoiler-guard/settings/PluginConfiguration.SpoilerGuard.cs" Link="Production/PluginConfiguration.SpoilerGuard.cs" />
+    <Compile Include="../../settings/PluginConfiguration.Analytics.cs" Link="Production/PluginConfiguration.Analytics.cs" />
+    <Compile Include="../../../user-settings/settings/Shortcut.cs" Link="Production/Shortcut.cs" />
+  </ItemGroup>
+</Project>

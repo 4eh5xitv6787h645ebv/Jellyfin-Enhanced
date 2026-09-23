@@ -1,0 +1,124 @@
+/* ---------------------------------------------------------------------------
+   Tab Navigation (sits inside .je-sticky-header which handles pinning)
+   --------------------------------------------------------------------------- */
+.je-tab-bar {
+    display: flex;
+    gap: 10px;
+    padding: 12px 0;
+    margin: 0;
+    border-bottom: 1px solid var(--je-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+    cursor: grab;
+    user-select: none;
+}
+.je-tab-bar::-webkit-scrollbar { display: none; }
+/* Signals more tabs exist off-screen since the scrollbar is hidden; toggled via JS scroll-position classes. */
+.je-tab-bar.je-scroll-fade-left {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 28px);
+    mask-image: linear-gradient(to right, transparent 0, black 28px);
+}
+.je-tab-bar.je-scroll-fade-right {
+    -webkit-mask-image: linear-gradient(to left, transparent 0, black 28px);
+    mask-image: linear-gradient(to left, transparent 0, black 28px);
+}
+.je-tab-bar.je-scroll-fade-left.je-scroll-fade-right {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
+}
+.je-tab-bar.je-dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
+}
+#JellyfinEnhancedPage .je-tab-bar.je-dragging .jellyfin-tab-button {
+    pointer-events: none;
+}
+
+#JellyfinEnhancedPage .jellyfin-tab-button {
+    background: var(--je-surface-2);
+    border: 1px solid var(--je-border);
+    border-radius: 30px;
+    padding: 10px 20px;
+    color: #ccc;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+#JellyfinEnhancedPage .jellyfin-tab-button h3 {
+    margin: 0;
+    font-size: 1em;
+    font-weight: inherit;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+#JellyfinEnhancedPage .jellyfin-tab-button img,
+#JellyfinEnhancedPage .jellyfin-tab-button .je-tab-icon-img {
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+    /* Black plate hides transparent SVG regions from the active-tab
+       accent bg. */
+    background: #000;
+    border-radius: 50%;
+    padding: 0;
+    box-sizing: content-box;
+}
+.jellyfin-tab-button .je-tab-icon {
+    font-size: 20px !important;
+    line-height: 1;
+    opacity: 0.85;
+    pointer-events: none;
+}
+#JellyfinEnhancedPage .jellyfin-tab-button.active .je-tab-icon { opacity: 1; }
+#JellyfinEnhancedPage .jellyfin-tab-button:hover { background: var(--je-surface-3); }
+#JellyfinEnhancedPage .jellyfin-tab-button.active {
+    background: var(--primary-accent-color, #00a4dc);
+    border-color: var(--primary-accent-color, #00a4dc);
+    color: #fff !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-accent-color, #00a4dc) 30%, transparent);
+}
+
+/* In-tab section quick-nav (built in JS for tabs with 4+ fieldsets) */
+.je-section-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px;
+}
+.je-section-nav-chip {
+    background: var(--je-surface-2);
+    border: 1px solid var(--je-border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    color: var(--je-text-subtle, #aaa);
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+.je-section-nav-chip:hover {
+    background: var(--je-surface-3);
+    color: #fff;
+    border-color: var(--primary-accent-color, #00a4dc);
+}
+/* Search mode already surfaces matching sections directly. */
+#JellyfinEnhancedForm.je-search-mode .je-section-nav { display: none; }
+
+#JellyfinEnhancedPage .jellyfin-tab-content {
+    display: none;
+    animation: slideUpFade 0.3s ease forwards;
+}
+#JellyfinEnhancedPage .jellyfin-tab-content.active {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+

@@ -1,0 +1,350 @@
+/* ---------------------------------------------------------------------------
+   Overview Tab — Service Status, Quick Actions
+   --------------------------------------------------------------------------- */
+.je-overview-section {
+    margin-bottom: 20px;
+}
+.je-overview-section > .configSection {
+    padding: 14px 18px;
+}
+.je-legend-icon {
+    font-size: 20px !important;
+    line-height: 1;
+    vertical-align: middle;
+    margin-right: 8px;
+    opacity: 0.75;
+    color: var(--primary-accent-color, #00a4dc);
+}
+#JellyfinEnhancedPage .sectionTitle .je-legend-icon { vertical-align: -4px; }
+#JellyfinEnhancedPage a.sectionTitle {
+    color: var(--je-link-color);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+#JellyfinEnhancedPage a.sectionTitle:hover {
+    color: #fff;
+}
+.je-legend-icon-img {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: -5px;
+    /* No plate: the Sonarr/Radarr/Bazarr brand SVGs already carry
+       their own solid backgrounds in-file (rounded squircle for
+       Sonarr, circle for Radarr, circle for Bazarr) so an extra
+       plate reads as a double-backing. */
+}
+
+/* Quick Actions grid */
+.je-quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+}
+.je-quick-action {
+    background: var(--je-card-gradient);
+    border: 1px solid var(--je-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    color: inherit;
+    text-align: left;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    font: inherit;
+    width: 100%;
+}
+.je-quick-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: var(--je-text-dim);
+    background: var(--je-card-gradient-lift);
+}
+.je-quick-action:focus-visible {
+    outline: 2px solid var(--primary-accent-color, #00a4dc);
+    outline-offset: 2px;
+}
+.je-quick-action-icon {
+    font-size: 26px !important;
+    color: var(--primary-accent-color, #00a4dc);
+    flex-shrink: 0;
+}
+.je-quick-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.je-quick-action-title {
+    font-size: 0.95em;
+    font-weight: 600;
+}
+.je-quick-action-detail {
+    font-size: 0.8em;
+    opacity: 0.65;
+    line-height: 1.3;
+}
+/* Brief highlight so a jump target stands out among similar siblings.
+   The glow lives on ::after, not the target's own box-shadow/background,
+   since Jellyfin's own button/fieldset styles use !important there and
+   !important is stripped from @keyframes. Amber = What's New target,
+   accent color = plain section quick-nav jump. */
+.je-jump-flash, .je-jump-flash-nav {
+    --je-flash-color: #ffc107;
+    animation: jeJumpFlashScale 3s ease-out;
+    position: relative;
+    overflow: visible !important;
+}
+.je-jump-flash-nav {
+    --je-flash-color: var(--primary-accent-color, #00a4dc);
+}
+.je-jump-flash::after, .je-jump-flash-nav::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 5;
+    animation: jeJumpFlashGlow 3s ease-out;
+}
+@keyframes jeJumpFlashScale {
+    0%   { transform: scale(1.015); }
+    70%  { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+@keyframes jeJumpFlashGlow {
+    0%   {
+        box-shadow: 0 0 0 2px var(--je-flash-color), 0 0 8px 1px var(--je-flash-color);
+        background-color: color-mix(in srgb, var(--je-flash-color) 10%, transparent);
+    }
+    50%  {
+        box-shadow: 0 0 0 2px var(--je-flash-color), 0 0 8px 1px var(--je-flash-color);
+        background-color: color-mix(in srgb, var(--je-flash-color) 10%, transparent);
+    }
+    100% {
+        box-shadow: 0 0 0 2px transparent, 0 0 8px 1px transparent;
+        background-color: transparent;
+    }
+}
+
+/* Empty-state hint shared by Service Status, Features, and Optional
+   Dependencies renderers when they have nothing to show. */
+.je-checklist-empty {
+    padding: 14px 16px;
+    border: 1px dashed var(--je-border);
+    border-radius: 10px;
+    color: #888;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Overview Tab — Service Status (merged from legacy status cards + checklist)
+   Mirrors the Optional Dependencies / Features look: card grid with a
+   left-border accent per state, icon + name + detail. Clickable rows jump
+   to the owning tab.
+   --------------------------------------------------------------------------- */
+.je-service-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+.je-service-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--je-surface-1);
+    border: 1px solid var(--je-border);
+    border-left-width: 3px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.je-service-card:hover { background: var(--je-surface-2); transform: translateY(-1px); }
+.je-service-card.je-state-ok       { border-left-color: #4caf50; }
+.je-service-card.je-state-warn     { border-left-color: #ff9800; }
+.je-service-card.je-state-error    { border-left-color: #f44336; }
+.je-service-card.je-state-pending  { border-left-color: var(--je-text-dim); }
+.je-service-card.je-state-off      { border-left-color: var(--je-border-strong); opacity: 0.55; }
+.je-service-icon {
+    font-size: 20px !important;
+    color: var(--je-text-muted);
+    flex-shrink: 0;
+}
+.je-service-card.je-state-ok    .je-service-icon { color: #4caf50; }
+.je-service-card.je-state-warn  .je-service-icon { color: #ff9800; }
+.je-service-card.je-state-error .je-service-icon { color: #f44336; }
+.je-service-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.je-service-name {
+    font-size: 0.92em;
+    font-weight: 600;
+}
+.je-service-detail {
+    font-size: 0.78em;
+    color: var(--je-text-muted);
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+@media (max-width: 540px) {
+    .je-service-dashboard { grid-template-columns: 1fr; }
+    .je-service-card { padding: 10px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Overview Tab — Optional Dependencies grid
+   --------------------------------------------------------------------------- */
+.je-optional-plugins-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+.je-optional-plugin-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: var(--je-surface-1);
+    border: 1px solid var(--je-border);
+    border-left-width: 3px;
+    border-left-color: var(--je-border-strong);
+    border-radius: 10px;
+    position: relative;
+}
+.je-optional-plugin-link {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    color: var(--je-text-subtle);
+    opacity: 0.7;
+    text-decoration: none;
+    transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.je-optional-plugin-link:hover,
+.je-optional-plugin-link:focus-visible {
+    opacity: 1;
+    color: var(--primary-accent-color, #00a4dc);
+    background: var(--je-accent-tint-10);
+    outline: none;
+}
+.je-optional-plugin-link .material-icons {
+    font-size: 16px !important;
+    line-height: 1;
+}
+.je-optional-plugin-body {
+    padding-right: 28px;
+}
+.je-optional-plugin-card.je-state-installed  { border-left-color: #4caf50; }
+.je-optional-plugin-card.je-state-missing    { border-left-color: var(--je-border-strong); opacity: 0.75; }
+.je-optional-plugin-card.je-state-unknown    { border-left-color: var(--je-text-dim); }
+.je-optional-plugin-card.je-state-warn       { border-left-color: #ff9800; }
+.je-optional-plugin-icon {
+    font-size: 20px !important;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--je-text-muted);
+}
+.je-optional-plugin-card.je-state-installed .je-optional-plugin-icon { color: #4caf50; }
+.je-optional-plugin-card.je-state-warn      .je-optional-plugin-icon { color: #ff9800; }
+.je-optional-plugin-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.je-optional-plugin-name {
+    font-weight: 600;
+    font-size: 0.92em;
+}
+.je-optional-plugin-status {
+    font-size: 0.8em;
+    color: var(--je-text-muted);
+    line-height: 1.35;
+}
+.je-optional-plugin-purpose {
+    font-size: 0.78em;
+    color: var(--je-text-subtle);
+    line-height: 1.4;
+    margin-top: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Overview Tab — Features dashboard
+   --------------------------------------------------------------------------- */
+.je-features-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 8px;
+}
+.je-feature-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--je-surface-1);
+    border: 1px solid var(--je-border);
+    border-left-width: 3px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.je-feature-row:hover {
+    background: var(--je-surface-2);
+    transform: translateY(-1px);
+}
+.je-feature-row.je-state-on         { border-left-color: #4caf50; }
+.je-feature-row.je-state-warn       { border-left-color: #ff9800; }
+.je-feature-row.je-state-off        { border-left-color: var(--je-border-strong); opacity: 0.55; }
+.je-feature-icon {
+    font-size: 18px !important;
+    color: var(--je-text-muted);
+    flex-shrink: 0;
+}
+.je-feature-row.je-state-on   .je-feature-icon { color: #4caf50; }
+.je-feature-row.je-state-warn .je-feature-icon { color: #ff9800; }
+.je-feature-body {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.je-feature-name {
+    font-size: 0.9em;
+    font-weight: 500;
+}
+.je-feature-detail {
+    font-size: 0.78em;
+    color: var(--je-text-muted);
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+@media (max-width: 540px) {
+    .je-optional-plugins-dashboard,
+    .je-features-dashboard { grid-template-columns: 1fr; }
+    .je-optional-plugin-card, .je-feature-row { padding: 10px; }
+}
+

@@ -1,0 +1,124 @@
+                    <fieldset>
+                        <legend class="sectionTitle">Automatic Requests</legend>
+                        <div class="configSection">
+                            <details class="je-details-section">
+                                <summary>Auto Season Requests</summary>
+                                <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="autoSeasonRequestEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Automatic Advance Season Requests</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="autoSeasonRequestEnabled">
+                                        <div class="fieldDescription je-field-desc-xl">
+                                            Automatically request the next season in Seerr when a user about to finish the current season.
+                                            <br/><br/>
+                                        </div>
+                                    </div>
+                                    <div class="checkboxContainer"><label><input id="autoSeasonRequestRequireAllWatched" is="emby-checkbox" type="checkbox"/><span>Require All Prior Episodes Watched</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="autoSeasonRequestRequireAllWatched">
+                                        <div class="fieldDescription je-field-desc-xl">
+                                            Require all episodes before the threshold to be watched. For example, if threshold is 2 and there are 10 episodes, when watching episode 8, all episodes 1-7 must be watched or marked as watched. This prevents accidentally triggering requests by jumping to later episodes. <br/> This might cause requests to not be triggered if users skip episodes.
+                                        </div>
+                                    </div>
+                                    <div class="inputContainer">
+                                        <label class="inputLabel" for="autoSeasonRequestThresholdValue">Episodes Remaining Threshold</label>
+                                        <input id="autoSeasonRequestThresholdValue" is="emby-input" name="autoSeasonRequestThresholdValue" type="number" min="1" max="20" value="2"/>
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="autoSeasonRequestThresholdValue">
+                                            <div class="fieldDescription">Request the next season when the number of unwatched episodes is at or below this number. Default: 2 episodes.</div>
+                                            <div class="je-info-banner-inline">
+                                            <i class="material-icons je-info-icon-sm">info</i>
+                                            <div>
+                                                • Requests are triggered when users start or complete watching episodes<br/>
+                                                • Set threshold to 2-3 episodes to give time for downloading before users finish watching<br/>
+                                                • Example: With threshold set to 2, when user starts episode 8 of 10 of season 1, season 2 will be requested<br/>
+                                                • If a user has already triggered a request for the season, it will not be requested again even if another user reaches the threshold<br/>
+                                            </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </details>
+
+                            <details class="je-details-section">
+                                <summary>Auto Movie Requests</summary>
+                                <div class="je-details-body">
+                                    <div class="checkboxContainer"><label><input id="autoMovieRequestEnabled" is="emby-checkbox" type="checkbox"/><span>Enable Auto Movie Requests</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="autoMovieRequestEnabled">
+                                        <div class="fieldDescription je-field-desc-xl">
+                                            Automatically request the next movie in a collection based on configured triggers.
+                                            <br/><br/>
+                                        <strong>Requirements:</strong> TMDB API key must be configured.
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top:10px;"><strong>Request Triggers:</strong></div>
+                                    <div class="checkboxContainer"><label><input id="autoMovieRequestTriggerOnStart" is="emby-checkbox" type="checkbox"/><span>When movie starts</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="autoMovieRequestTriggerOnStart">
+                                        <div class="fieldDescription je-field-desc-mt-sm">Trigger an auto-request for the next movie in the collection as soon as a user starts a movie.</div>
+                                    </div>
+
+                                    <div class="checkboxContainer"><label><input id="autoMovieRequestTriggerOnMinutesWatched" is="emby-checkbox" type="checkbox"/><span>After X minutes watched</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="autoMovieRequestTriggerOnMinutesWatched">
+                                        <div class="fieldDescription je-field-desc-mt-sm">
+                                            Select one or both triggers. If both are selected, the request will be triggered if either condition is met.
+                                        </div>
+                                    </div>
+
+                                    <div class="inputContainer">
+                                        <label for="autoMovieRequestMinutesWatched" class="inputLabel">Minutes Watched Threshold:</label>
+                                        <input id="autoMovieRequestMinutesWatched" is="emby-input" type="number" min="1" max="180" value="20" />
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="autoMovieRequestMinutesWatched">
+                                            <div class="fieldDescription je-field-desc-mt-sm">
+                                                How many minutes a user should watch before triggering a request? Must be between 1 and 180 minutes.
+                                            </div>
+                                        </div>
+
+                                    <div class="checkboxContainer"><label><input id="autoMovieRequestCheckReleaseDate" is="emby-checkbox" type="checkbox"/><span>Only request if released</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="autoMovieRequestCheckReleaseDate">
+                                        <div class="fieldDescription je-field-desc-mt-sm">
+                                            When enabled, future releases will be skipped. Only movies that have already been released will be requested.
+                                        </div>
+                                    </div>
+
+                                    <div class="inputContainer">
+                                        <label for="autoMovieRequestQualityMode" class="inputLabel">Quality Profile Mode:</label>
+                                        <select id="autoMovieRequestQualityMode" is="emby-select" class="emby-select">
+                                            <option value="default">Default</option><option value="original">Original</option><option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                        <div class="je-setting-description" data-desc-for="autoMovieRequestQualityMode">
+                                            <div class="fieldDescription je-field-desc-mt-sm">
+                                            <strong>Default:</strong> Seerr uses its default Radarr server and quality profile.<br/>
+                                            <strong>Original:</strong> Uses the same quality profile as the movie being watched (falls back to default if not found).<br/>
+                                            <strong>Custom:</strong> Always uses the specific Radarr server, quality profile, and root folder selected below.
+                                            </div>
+                                        </div>
+
+                                    <div class="checkboxContainer"><label><input id="autoMovieRequestFallbackOn4k" is="emby-checkbox" type="checkbox"/><span>Use default instead of 4K fallback</span></label></div>
+                                    <div class="je-setting-description" data-desc-for="autoMovieRequestFallbackOn4k">
+                                        <div class="fieldDescription je-field-desc-lg">
+                                            Only applies when Quality Profile Mode is set to "Original". If the watched movie was requested with a 4K profile, the auto-request will use Seerr's default profile instead. This prevents requests from failing or requiring manual approval for users who don't have 4K request permissions in Seerr. Disable this if all your users have 4K request access and you want to preserve the original 4K profile.
+                                        </div>
+                                    </div>
+
+                                    <div id="autoMovieRequestCustomSettings" style="display:none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                                        <div class="inputContainer"><label class="inputLabel" for="autoMovieRequestServer">Radarr Server:</label><select id="autoMovieRequestServer" name="autoMovieRequestServer" is="emby-select" class="emby-select"></select></div>
+                                        <div class="inputContainer"><label class="inputLabel" for="autoMovieRequestProfile">Quality Profile:</label><select id="autoMovieRequestProfile" name="autoMovieRequestProfile" is="emby-select" class="emby-select"></select></div>
+                                        <div class="inputContainer"><label class="inputLabel" for="autoMovieRequestRootFolder">Root Folder:</label><select id="autoMovieRequestRootFolder" name="autoMovieRequestRootFolder" is="emby-select" class="emby-select"></select></div>
+                                        <div class="je-setting-description" data-desc-for="autoMovieRequestRootFolder">
+                                            <div class="fieldDescription je-field-desc-mt-sm">
+                                                These settings are only used when Quality Profile Mode is set to "Custom".
+                                            </div>
+                                            <div class="je-info-banner-inline">
+                                            <i class="material-icons je-info-icon-sm">info</i>
+                                            <div>
+                                                • Only works for movies that are part of a TMDB collection (e.g., <a class="je-bold-link" href="https://www.themoviedb.org/collection/86311" target="_blank">The Avengers Collection</a>, <a class="je-bold-link" href="https://www.themoviedb.org/collection/10" target="_blank">Star Wars Collection</a>, etc.)<br/>
+                                                • Automatically requests the next movie in the collection based on release order<br/>
+                                                • Movies already available or requested will be skipped<br/>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </fieldset>
+
