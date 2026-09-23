@@ -1,8 +1,22 @@
 version: 2
 updates:
-  # Enable version updates for NuGet packages
+  # Enable version updates for NuGet packages. The root solution resolves to
+  # src/JellyfinEnhanced.csproj; the backend test programs are listed explicitly.
   - package-ecosystem: "nuget"
-    directory: "/"
+    directories:
+      - "/"
+      - "/src/features/analytics/tests/server"
+      - "/src/features/hidden-content/tests/server"
+      - "/src/features/ratings/tests/server"
+      - "/src/features/seerr/tests/server/automatic-requests"
+      - "/src/features/seerr/tests/server/parental-filter"
+      - "/src/features/spoiler-guard/tests/server"
+      - "/src/features/tags/tests/server"
+      - "/src/host/assets/tests/server"
+      - "/tests/compatibility/api"
+      - "/tests/compatibility/configuration/storage"
+      - "/tests/compatibility/integration/plugin-pages"
+      - "/tests/compatibility/resources"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -57,11 +71,3 @@ updates:
         update-types:
           - "minor"
           - "patch"
-
-  - package-ecosystem: nuget
-    directories:
-      - /src
-      - /src/**/tests/**
-      - /tests/**
-    schedule:
-      interval: daily
