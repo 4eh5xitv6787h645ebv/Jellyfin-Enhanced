@@ -1,6 +1,6 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.Api
+namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
     internal static class HiddenContentDefaults
     {

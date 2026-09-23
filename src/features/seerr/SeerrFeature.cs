@@ -16,12 +16,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddTransient<Services.Api.SeerrIdentityService>();
             serviceCollection.AddTransient<Services.Api.SeerrStatusService>();
             serviceCollection.AddTransient<Services.Api.SeerrWatchlistService>();
+            serviceCollection.AddTransient<Services.Api.TmdbEnrichmentService>();
         }
 
         internal static void RegisterHttp(IServiceCollection serviceCollection)
         {
-            serviceCollection.AddTransient<Services.Api.TmdbEnrichmentService>();
-
             // a named HttpClient with AllowAutoRedirect=false so
             // forward-auth proxies (Authelia / Pangolin / Authentik) returning
             // 302 to a login URL are detected as `UpstreamRedirect` instead of

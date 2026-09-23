@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.Api;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers

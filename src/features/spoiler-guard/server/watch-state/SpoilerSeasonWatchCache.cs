@@ -176,9 +176,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         // Owned by the singleton filter and subscribed to
         // IUserDataManager.UserDataSaved. Without an unsubscribe path,
         // hot-reload / plugin disable+re-enable leaks the event handler
-        // delegate (memory leak + double-fire on next event). DI containers
-        // dispose Singletons at host shutdown; the plugin's OnUninstalling
-        // also calls Dispose via the service provider.
+        // delegate (memory leak + double-fire on next event). The DI container
+        // disposes singletons at host shutdown, which is the only Dispose path.
         private bool _disposed;
         public void Dispose()
         {
@@ -190,7 +189,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
             catch (Exception ex)
             {
-                _logger.Warning($"SpoilerBlurImageFilter: unsubscribe on Dispose threw: {ex.Message}");
+                _logger.Warning($"SpoilerSeasonWatchCache: unsubscribe on Dispose threw: {ex.Message}");
             }
         }
 

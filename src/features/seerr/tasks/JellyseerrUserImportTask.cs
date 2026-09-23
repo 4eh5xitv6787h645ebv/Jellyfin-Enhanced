@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using MediaBrowser.Controller.Library;
@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 // Only flush caches when at least one user was actually
                 // imported, otherwise a 0-imported partial-failure run wipes
                 // every healthy cache entry.
-                JellyfinEnhancedController.ClearUserCaches();
+                SeerrCacheInvalidation.ClearUserCaches();
             }
 
             if (importResult.Reached)

@@ -3,6 +3,7 @@ using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.Api;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
