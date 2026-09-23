@@ -122,28 +122,28 @@ static HttpResponseMessage Response(string type, string value)
 
 static async Task CheckLocaleLayouts(Logger logger, string root)
 {
+    const string rootBase = "https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/locales/";
     const string legacyBase = "https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/Jellyfin.Plugin.JellyfinEnhanced/js/locales/";
-    const string featureBase = "https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/locales/";
     var handler = new StubHandler();
     var service = new CdnAssetService(logger, handler, new TestPaths(root));
     string NewLocale() => "locale-" + Guid.NewGuid().ToString("N") + ".json";
 
     var legacy = NewLocale();
-    handler.Respond = _ => Response("application/json", "{\"layout\":\"legacy\"}");
+    handler.Respond = _ => Response("application/json", "{\"layout\":\"root\"}");
     var asset = await service.GetAsync("locales", legacy, false, default);
-    Check(asset != null && handler.Requests.SequenceEqual(new[] { legacyBase + legacy }), "Legacy locale layout succeeds without a fallback request");
-    Check(await service.GetAsync("locales", legacy, false, default) == asset && handler.Calls == 1, "Legacy locale caches under its public key");
+    Check(asset != null && handler.Requests.SequenceEqual(new[] { rootBase + legacy }), "Root locale layout succeeds without a fallback request");
+    Check(await service.GetAsync("locales", legacy, false, default) == asset && handler.Calls == 1, "Root-layout locale caches under its public key");
 
     var relocated = NewLocale();
     handler.Requests.Clear();
-    handler.Respond = request => request.RequestUri!.AbsoluteUri.StartsWith(legacyBase, StringComparison.Ordinal)
+    handler.Respond = request => request.RequestUri!.AbsoluteUri.StartsWith(rootBase, StringComparison.Ordinal)
         ? new HttpResponseMessage(HttpStatusCode.NotFound)
-        : Response("application/json", "{\"layout\":\"features\"}");
+        : Response("application/json", "{\"layout\":\"legacy\"}");
     asset = await service.GetAsync("locales", relocated, false, default);
-    Check(asset != null && Encoding.UTF8.GetString(asset.Content) == "{\"layout\":\"features\"}", "Relocated locale is served after legacy path returns 404");
-    Check(handler.Requests.SequenceEqual(new[] { legacyBase + relocated, featureBase + relocated }), "Locale fallback uses only the two fixed repository layouts in order");
+    Check(asset != null && Encoding.UTF8.GetString(asset.Content) == "{\"layout\":\"legacy\"}", "Pre-layout locale is served after the root path returns 404");
+    Check(handler.Requests.SequenceEqual(new[] { rootBase + relocated, legacyBase + relocated }), "Locale fallback uses only the two fixed repository layouts in order");
     var fetchedCalls = handler.Calls;
-    Check(await service.GetAsync("locales", relocated, false, default) == asset && handler.Calls == fetchedCalls, "Relocated locale shares the existing public cache key and hot-cache policy");
+    Check(await service.GetAsync("locales", relocated, false, default) == asset && handler.Calls == fetchedCalls, "Fallback locale shares the existing public cache key and hot-cache policy");
 
     foreach (var failure in new[] { HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden, HttpStatusCode.TooManyRequests, HttpStatusCode.ServiceUnavailable })
     {
@@ -162,13 +162,13 @@ static async Task CheckLocaleLayouts(Logger logger, string root)
     handler.Respond = _ => Response("text/html", "challenge");
     Check(await service.GetAsync("locales", NewLocale(), false, default) == null && handler.Requests.Count == 1, "Unexpected locale content does not trigger layout fallback");
     handler.Requests.Clear();
-    handler.Respond = request => request.RequestUri!.AbsoluteUri.StartsWith(legacyBase, StringComparison.Ordinal)
+    handler.Respond = request => request.RequestUri!.AbsoluteUri.StartsWith(rootBase, StringComparison.Ordinal)
         ? new HttpResponseMessage(HttpStatusCode.NotFound) : Response("text/html", "challenge");
     Check(await service.GetAsync("locales", NewLocale(), false, default) == null && handler.Requests.Count == 2, "Fallback locale must satisfy the same content-type allowlist");
     handler.Requests.Clear();
     handler.Respond = request =>
     {
-        if (request.RequestUri!.AbsoluteUri.StartsWith(legacyBase, StringComparison.Ordinal)) return new HttpResponseMessage(HttpStatusCode.NotFound);
+        if (request.RequestUri!.AbsoluteUri.StartsWith(rootBase, StringComparison.Ordinal)) return new HttpResponseMessage(HttpStatusCode.NotFound);
         var response = Response("application/json", "{}");
         response.Content.Headers.ContentLength = 8L * 1024 * 1024 + 1;
         return response;
@@ -179,7 +179,7 @@ static async Task CheckLocaleLayouts(Logger logger, string root)
     Check(await service.GetAsync("locales", NewLocale(), false, default) == null && handler.Requests.Count == 1, "Locale timeout must not probe an alternate layout");
     handler.Requests.Clear();
     Check(await service.GetAsync("locales", "../outside.json", false, default) == null && handler.Requests.Count == 0, "Locale fallback cannot bypass path validation");
-    Console.WriteLine("Locale layout contracts passed: legacy and relocated upstreams, 404-only fallback, unchanged cache and response guards.");
+    Console.WriteLine("Locale layout contracts passed: root and pre-layout upstreams, 404-only fallback, unchanged cache and response guards.");
 }
 
 sealed record TestPaths(string PluginsPath) : IApplicationPaths;

@@ -14,8 +14,13 @@ for (const file of walk(path.join(root, 'src'))) {
         failures.push(`Unregistered browser source: ${relative}`);
     }
 }
-for (const legacy of ['Jellyfin.Plugin.JellyfinEnhanced', 'frontend', 'scripts', 'css']) {
+for (const legacy of ['Jellyfin.Plugin.JellyfinEnhanced', 'frontend', 'scripts']) {
     if (walk(path.join(root, legacy)).length) failures.push(`Authoritative source remains in legacy directory: ${legacy}`);
+}
+// css/ holds only the generated delivery copy that released plugins fetch from jsDelivr.
+for (const file of walk(path.join(root, 'css'))) {
+    const relative = path.relative(root, file).split(path.sep).join('/');
+    if (relative !== 'css/ratings.css') failures.push(`Only the generated css/ratings.css delivery copy may live in css/: ${relative}`);
 }
 for (const entry of fs.readdirSync(path.join(root, 'src/features'), { withFileTypes: true })) {
     if (entry.name === 'README.md') continue;

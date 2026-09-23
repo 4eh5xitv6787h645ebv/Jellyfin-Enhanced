@@ -60,13 +60,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     ["fdbkXQdP/jellyseerr-poster-not-found.png"] = "https://i.ibb.co/fdbkXQdP/jellyseerr-poster-not-found.png"
                 }),
-            // Remote (newer-than-bundled) locale JSON from the upstream repo's main branch
-            ["locales"] = new("https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/Jellyfin.Plugin.JellyfinEnhanced/js/locales", Types("application/json", "text/plain"),
-                NotFoundFallbackBaseUrl: "https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/locales"),
+            // Remote (newer-than-bundled) locale JSON from the upstream repo's main branch.
+            // The repository layout keeps locales at the root; the pre-layout path remains a
+            // 404-only fallback while an upstream branch still uses it.
+            ["locales"] = new("https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/locales", Types("application/json", "text/plain"),
+                NotFoundFallbackBaseUrl: "https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/Jellyfin.Plugin.JellyfinEnhanced/js/locales"),
             // Documentation screenshots shown on the admin config page
             ["je-docs-img"] = new("https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/docs/images", Types("image/png", "image/jpeg")),
-            // The plugin's own bundled-on-CDN stylesheets (e.g. colored-ratings CSS)
-            ["je-css"] = new("https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/css", Types("text/css")),
+            // The plugin's own bundled-on-CDN stylesheets (e.g. colored-ratings CSS). Every
+            // released plugin requests css/ratings.css, so `npm run generate` keeps a copy at
+            // that path; the feature-owned source is the 404-only fallback.
+            ["je-css"] = new("https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/css", Types("text/css"),
+                NotFoundFallbackBaseUrl: "https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/src/features/ratings/client"),
             // Druidblack metadata-provider icon stylesheet (attribute-selector icons; no external url() assets)
             ["icon-metadata"] = new("https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata", Types("text/css")),
             // Jellyfin-Elsewhere region/provider reference lists (fetched as text)

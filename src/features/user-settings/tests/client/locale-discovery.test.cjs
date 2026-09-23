@@ -5,8 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const featureRoot = path.resolve(__dirname, '../..');
+const rootUrl = 'https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/locales';
 const legacyUrl = 'https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales';
-const migratedUrl = 'https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/locales';
 const response = (status, files = [{ name: 'fr.json' }, { name: 'en.json' }, { name: 'README.md' }, { name: 'DE.json' }]) => ({
     status, ok: status >= 200 && status < 300,
     json: async () => files
@@ -79,22 +79,22 @@ async function discover(surface, responses) {
 }
 
 for (const surface of ['runtime', 'admin']) {
-    test(`${surface}: existing upstream path needs only one request and preserves option formatting`, async () => {
+    test(`${surface}: root locale directory needs only one request and preserves option formatting`, async () => {
         const result = await discover(surface, [response(200)]);
-        assert.deepEqual(result.calls, [legacyUrl]);
+        assert.deepEqual(result.calls, [rootUrl]);
         assert.deepEqual(result.options, [{ value: 'fr', text: 'French' }, { value: 'de', text: 'German' }]);
     });
 
-    test(`${surface}: only a missing legacy directory falls back to the root locale directory`, async () => {
+    test(`${surface}: only a missing root directory falls back to the pre-layout locale path`, async () => {
         const result = await discover(surface, [response(404), response(200)]);
-        assert.deepEqual(result.calls, [legacyUrl, migratedUrl]);
+        assert.deepEqual(result.calls, [rootUrl, legacyUrl]);
         assert.deepEqual(result.options.map(option => option.value), ['fr', 'de']);
     });
 
     test(`${surface}: rate limits, authorization, server and network failures retain server locales`, async () => {
         for (const failure of [response(403), response(401), response(429), response(500), new Error('offline')]) {
             const result = await discover(surface, [failure]);
-            assert.deepEqual(result.calls, [legacyUrl]);
+            assert.deepEqual(result.calls, [rootUrl]);
             assert.deepEqual(result.options, [{ value: 'de', text: 'German' }]);
         }
     });
@@ -102,13 +102,13 @@ for (const surface of ['runtime', 'admin']) {
     test(`${surface}: fallback failures and malformed successful JSON never trigger a third request`, async () => {
         for (const failure of [response(404), response(500), new Error('offline')]) {
             const result = await discover(surface, [response(404), failure]);
-            assert.deepEqual(result.calls, [legacyUrl, migratedUrl]);
+            assert.deepEqual(result.calls, [rootUrl, legacyUrl]);
             assert.deepEqual(result.options, [{ value: 'de', text: 'German' }]);
         }
         const malformed = response(200);
         malformed.json = async () => { throw new SyntaxError('bad JSON'); };
         const result = await discover(surface, [malformed]);
-        assert.deepEqual(result.calls, [legacyUrl]);
+        assert.deepEqual(result.calls, [rootUrl]);
         assert.deepEqual(result.options, [{ value: 'de', text: 'German' }]);
     });
 }
@@ -126,16 +126,16 @@ test('admin: disposing while locale APIs are pending skips upstream discovery an
     assert.deepEqual(h.inventory(), [{ value: '', text: 'System Default' }]);
 });
 
-test('admin: disposing a pending legacy fetch prevents fallback requests and option mutations', async () => {
+test('admin: disposing a pending discovery fetch prevents fallback requests and option mutations', async () => {
     const pending = deferred();
     const h = harness('admin', [pending.promise], { options: [{ value: '', textContent: 'System Default' }] });
     const module = h.start();
     await flush();
-    assert.deepEqual(h.calls, [legacyUrl]);
+    assert.deepEqual(h.calls, [rootUrl]);
     module.dispose();
     pending.resolve(response(404));
     await flush();
-    assert.deepEqual(h.calls, [legacyUrl]);
+    assert.deepEqual(h.calls, [rootUrl]);
     assert.deepEqual(h.inventory(), [{ value: '', text: 'System Default' }]);
 });
 

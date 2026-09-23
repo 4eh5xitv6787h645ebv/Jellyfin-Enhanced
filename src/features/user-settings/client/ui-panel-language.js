@@ -50,13 +50,13 @@
                         ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/Localization/Cultures'), dataType: 'json' })
                     ]);
 
-                    // Check upstream locales, retaining the legacy path while upstream still uses it.
+                    // Check upstream locales at the repository's root locale directory. A missing
+                    // directory means that upstream branch still uses the pre-layout path; other
+                    // failures (including rate limits) keep the bundled server list without another request.
                     try {
-                        let ghResp = await fetch('https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales');
-                        // A missing directory signals the feature-layout migration. Other failures
-                        // (including rate limits) keep the bundled server list without another request.
+                        let ghResp = await fetch('https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/locales');
                         if (ghResp.status === 404) {
-                            ghResp = await fetch('https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/locales');
+                            ghResp = await fetch('https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales');
                         }
                         if (ghResp.ok) {
                             const files = await ghResp.json();

@@ -38,6 +38,8 @@ If Weblate is temporarily unavailable, maintainers can still update locale files
 
 Repository locale sources now live in `locales/`. When configuring or migrating Weblate, use the root locale path and `locales/en.json` template; verify the external project file mask before publishing a repository layout change. Keep resource-registration metadata outside the locale directory.
 
+Rollout order for the layout change: update the Weblate component's file mask to `locales/*.json` first, then merge the repository layout; otherwise Weblate commits to a path that no longer exists. Plugin releases built before the move still look up remote translations under the old path; they fall back to their bundled locales until they are updated, and current builds try the root path first and the old path only after a 404.
+
 ### Translation Updates
 
 - Synced from repository updates (including Weblate commits)
