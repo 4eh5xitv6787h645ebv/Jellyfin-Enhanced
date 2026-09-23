@@ -18,6 +18,10 @@ function createDashboardPersistence({
     let loadGeneration = 0;
     let savedSnapshotTimer;
     let mutationInFlight = false;
+    let snapshotGeneration = 0;
+    // Set once feature controls reflect a saved configuration. Until then the form
+    // holds markup defaults, and persisting it would overwrite every saved setting.
+    let hydrated = false;
     let loadingVisible = false;
     let saveButtonStates;
 
@@ -31,8 +35,27 @@ function createDashboardPersistence({
 
     function invalidateLoads() {
         loadGeneration++;
+        snapshotGeneration++;
+        clearSavedSnapshotTimer();
+    }
+
+    function clearSavedSnapshotTimer() {
         lifecycle.clearTimeout(savedSnapshotTimer);
         savedSnapshotTimer = undefined;
+    }
+
+    // Late feature populations retain their existing settling interval. A newer
+    // load or disposal discards the delayed clean snapshot; a save in progress only
+    // defers it, so a failed save still leaves a usable dirty baseline.
+    function scheduleSavedSnapshot() {
+        clearSavedSnapshotTimer();
+        const generation = snapshotGeneration;
+        savedSnapshotTimer = lifecycle.setTimeout(() => {
+            savedSnapshotTimer = undefined;
+            if (lifecycle.disposed || generation !== snapshotGeneration) return;
+            if (mutationInFlight) scheduleSavedSnapshot();
+            else jeMarkSaved();
+        }, 500);
     }
 
     function showLoading() {
@@ -56,6 +79,9 @@ function createDashboardPersistence({
     }
 
     async function loadConfig() {
+        // A pageshow during a write is not reloaded: on success the form already
+        // matches the server, and on failure a reload would discard the edits the
+        // administrator is about to retry.
         if (lifecycle.disposed || mutationInFlight) return false;
         invalidateLoads();
         const generation = loadGeneration;
@@ -70,14 +96,10 @@ function createDashboardPersistence({
             restoreCustomTabOwnership(config);
             loadFeatureSettings(config);
             normalizeLoadedSettings(config);
+            hydrated = true;
             updateAllDependencies();
             updateRequestsRequirementsBanner();
-
-            // Late feature populations retain their existing settling interval. A
-            // newer load, save, or disposal invalidates this delayed dirty snapshot.
-            savedSnapshotTimer = lifecycle.setTimeout(() => {
-                if (isCurrent() && !mutationInFlight) jeMarkSaved();
-            }, 500);
+            scheduleSavedSnapshot();
             return true;
         } catch (error) {
             if (isCurrent()) {
@@ -107,8 +129,19 @@ function createDashboardPersistence({
 
     async function persistConfiguration(applyToAllUsers) {
         if (lifecycle.disposed || mutationInFlight) return false;
+        if (!hydrated) {
+            alert({
+                title: 'Settings not loaded',
+                message:
+                    'Jellyfin Enhanced settings have not finished loading, so saving now would replace your saved configuration with defaults. Wait for the page to load, or reopen it, then try again.',
+            });
+            return false;
+        }
         mutationInFlight = true;
-        invalidateLoads();
+        // A pending load must not repopulate the form mid-write. The delayed clean
+        // snapshot is only deferred (see scheduleSavedSnapshot), so a failed save
+        // still leaves a dirty-indicator baseline.
+        loadGeneration++;
         const saveButtons = document.querySelectorAll('.je-save-dock-btn');
         saveButtonStates = Array.from(saveButtons, (button) => ({ button, disabled: button.disabled }));
         try {
@@ -116,8 +149,10 @@ function createDashboardPersistence({
                 button.disabled = true;
             });
             showLoading();
+            // buildConfigFromForm refuses if the page was replaced during its fetch, since
+            // the form would belong to another instance. Once the form has been read the
+            // write proceeds regardless of disposal; only completion UI is page-scoped.
             const config = await buildConfigFromForm();
-            if (lifecycle.disposed) return false;
             const result = await ApiClient.updatePluginConfiguration(pluginId, config);
             if (applyToAllUsers && !lifecycle.disposed) jeMarkSaved();
 

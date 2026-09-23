@@ -49,6 +49,61 @@ function productionHarness(saved = {}) {
     };
 }
 
+// Saving requires a hydrated form. Load first, then discard load-side traces so
+// each test observes only its own save.
+async function hydratedHarness(saved = {}) {
+    const h = productionHarness(saved);
+    assert.equal(await h.load(), true);
+    h.calls.length = 0;
+    h.loaded.length = 0;
+    h.trace.reads = 0;
+    h.trace.show = 0;
+    h.trace.hide = 0;
+    return h;
+}
+
+test('production save is refused with an explanation until a load has hydrated the form', async () => {
+    const h = productionHarness({ Feature: 'saved' });
+    h.element('featureValue').value = 'markup default';
+    assert.equal(await h.save(), false);
+    assert.equal(await h.persistence.saveBeforeImport(), false);
+    assert.equal(await h.applyToAll(), false);
+    assert.equal(h.trace.writes.length, 0);
+    assert.equal(h.trace.alerts.length, 3);
+    assert.ok(h.trace.alerts.every(alert => alert.title === 'Settings not loaded'));
+    assert.ok(h.saveButtons.every(button => !button.disabled));
+    assert.equal(await h.load(), true);
+    h.element('featureValue').value = 'edited';
+    await h.save();
+    assert.deepEqual(h.trace.writes, [{ Feature: 'edited', ManagedOwned: false }]);
+});
+
+test('production failed load keeps saving refused so markup defaults cannot replace saved settings', async () => {
+    const h = productionHarness({ Feature: 'saved' });
+    h.context.ApiClient.getPluginConfiguration = async () => { throw new Error('offline'); };
+    assert.equal(await h.load(), false);
+    h.context.ApiClient.getPluginConfiguration = async () => ({ Feature: 'saved' });
+    assert.equal(await h.save(), false);
+    assert.equal(h.trace.writes.length, 0);
+    assert.deepEqual(h.trace.alerts.map(alert => alert.title), ['Load failed', 'Settings not loaded']);
+    assert.equal(await h.load(), true);
+    await h.save();
+    assert.equal(h.trace.writes.length, 1);
+});
+
+test('production failed save keeps the delayed clean snapshot so the dirty indicator has a baseline', async () => {
+    const h = await hydratedHarness({ Feature: 'saved' });
+    h.context.ApiClient.updatePluginConfiguration = async () => { throw new Error('write failed'); };
+    await h.save();
+    assert.equal(h.trace.saved, 0);
+    assert.equal(h.trace.alerts[0].title, 'Save failed');
+    h.runTimers();
+    assert.equal(h.trace.saved, 1, "the load's delayed snapshot survives a failed save");
+    h.persistence.dispose();
+    h.runTimers();
+    assert.equal(h.trace.saved, 1, 'disposal drops pending snapshots');
+});
+
 test('production load restores fields and ownership before dependency refresh and delayed clean snapshot', async () => {
     const h = productionHarness({ Feature: 'saved value', ManagedOwned: true });
     assert.equal(await h.load(), true);
@@ -123,7 +178,7 @@ test('production load resolving after disposal cannot touch a replacement form',
 });
 
 test('production save reads current server state, preserves unknown settings and applies final normalization', async () => {
-    const h = productionHarness({ FutureSetting: { preserved: true }, ManagedOwned: true });
+    const h = await hydratedHarness({ FutureSetting: { preserved: true }, ManagedOwned: true });
     h.ownership.ManagedOwned = true;
     h.element('featureValue').value = 'edited';
     h.hooks.normalizeReadSettings = config => { config.Normalized = true; };
@@ -136,7 +191,7 @@ test('production save reads current server state, preserves unknown settings and
 
 test('production read/write failures preserve dirty state and release the shared mutation guard for retry', async () => {
     for (const stage of ['read', 'write']) {
-        const h = productionHarness();
+        const h = await hydratedHarness();
         if (stage === 'read') h.context.ApiClient.getPluginConfiguration = async () => { throw new Error('read failed'); };
         else h.context.ApiClient.updatePluginConfiguration = async () => { throw new Error('write failed'); };
         await h.save();
@@ -152,7 +207,7 @@ test('production read/write failures preserve dirty state and release the shared
 
 test('production normal save and apply-to-all share one guard through Custom Tabs synchronization', async () => {
     for (const firstKind of ['save', 'applyToAll']) {
-        const h = productionHarness();
+        const h = await hydratedHarness();
         const syncing = deferred();
         h.hooks.runCustomTabsSync = () => syncing.promise;
         const first = h[firstKind]();
@@ -171,7 +226,7 @@ test('production normal save and apply-to-all share one guard through Custom Tab
 });
 
 test('production apply-to-all preserves operation order and partial Custom Tabs reporting', async () => {
-    const h = productionHarness();
+    const h = await hydratedHarness();
     h.hooks.runCustomTabsSync = async () => { h.calls.push('sync'); return { ok: false, detail: 'external update failed' }; };
     h.context.ApiClient.ajax = async options => { h.calls.push('reset'); h.trace.posts.push(clone(options)); };
     await h.applyToAll();
@@ -182,7 +237,7 @@ test('production apply-to-all preserves operation order and partial Custom Tabs 
     assert.equal(h.calls.includes('maintenance'), false, 'apply-to-all retains its own side-effect contract');
 });
 
-test('production save starts invalidate pending page loads and their delayed clean snapshots', async () => {
+test('production save starts invalidate pending page loads and defer delayed clean snapshots', async () => {
     const h = productionHarness({ Feature: 'original' });
     await h.load();
     const obsoleteSnapshot = h.scheduled[0];
@@ -209,7 +264,7 @@ test('production save starts invalidate pending page loads and their delayed cle
 });
 
 test('production committed save completes server side effects after disposal without touching completion UI', async () => {
-    const h = productionHarness();
+    const h = await hydratedHarness();
     const write = deferred();
     h.context.ApiClient.updatePluginConfiguration = () => write.promise;
     const saving = h.save();
@@ -226,7 +281,7 @@ test('production committed save completes server side effects after disposal wit
 });
 
 test('production disposal before a save read finishes prevents a new server mutation', async () => {
-    const h = productionHarness();
+    const h = await hydratedHarness();
     const read = deferred();
     h.context.ApiClient.getPluginConfiguration = () => read.promise;
     const saving = h.save();
@@ -239,7 +294,7 @@ test('production disposal before a save read finishes prevents a new server muta
 });
 
 test('production successful config save remains clean while optional tab synchronization reports a partial failure', async () => {
-    const h = productionHarness();
+    const h = await hydratedHarness();
     h.hooks.runCustomTabsSync = async () => ({ ok: false, detail: 'ownership failure' });
     await h.save();
     assert.equal(h.trace.saved, 1);
@@ -248,7 +303,7 @@ test('production successful config save remains clean while optional tab synchro
 });
 
 test('production save-before-import reports success while submit and apply-to-all retain their false event contract', async () => {
-    const h = productionHarness({ Feature: 'saved' });
+    const h = await hydratedHarness({ Feature: 'saved' });
     assert.equal(await h.persistence.saveBeforeImport(), true);
     assert.equal(await h.save(), false);
     assert.equal(await h.applyToAll(), false);
@@ -257,11 +312,11 @@ test('production save-before-import reports success while submit and apply-to-al
 
 test('production save-before-import returns false on read/write failure, busy save or disposed page', async () => {
     for (const stage of ['read', 'write']) {
-        const h = productionHarness();
+        const h = await hydratedHarness();
         h.context.ApiClient[stage === 'read' ? 'getPluginConfiguration' : 'updatePluginConfiguration'] = async () => { throw new Error(stage); };
         assert.equal(await h.persistence.saveBeforeImport(), false);
     }
-    const h = productionHarness(), write = deferred();
+    const h = await hydratedHarness(), write = deferred();
     h.context.ApiClient.updatePluginConfiguration = () => write.promise;
     const saving = h.save();
     await flush();
@@ -273,7 +328,7 @@ test('production save-before-import returns false on read/write failure, busy sa
 });
 
 test('production save-before-import preserves successful committed transaction result after disposal', async () => {
-    const h = productionHarness(), write = deferred();
+    const h = await hydratedHarness(), write = deferred();
     h.context.ApiClient.updatePluginConfiguration = () => write.promise;
     const saving = h.persistence.saveBeforeImport();
     await flush();
@@ -286,7 +341,7 @@ test('production save-before-import preserves successful committed transaction r
 });
 
 test('production save-before-import considers an optional Custom Tabs warning a successful JE save', async () => {
-    const h = productionHarness();
+    const h = await hydratedHarness();
     h.hooks.runCustomTabsSync = async () => ({ ok: false, detail: 'ownership unavailable' });
     assert.equal(await h.persistence.saveBeforeImport(), true);
     assert.equal(h.trace.writes.length, 1);

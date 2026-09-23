@@ -63,6 +63,8 @@ test('composition runs every feature in the agreed order, then normalizes before
 
 test('composition gives Seerr imports a transaction result and shell submits the false event result', async () => {
     const h = harness();
+    await h.host.load();
+    h.trace.writes.length = 0;
     assert.equal(await h.dependencies.createSeerrUsers.saveBeforeImport(), true);
     assert.equal(await h.dependencies.createDashboardShell.saveConfig(h.event), false);
     h.context.ApiClient.updatePluginConfiguration = async () => { throw new Error('write failed'); };
@@ -105,12 +107,14 @@ test('pending save reentry restores owned button state and old completion cannot
     h.saveButtons[1].disabled = true; // Disabled by a separate prerequisite before either save.
     let writes = 0;
     h.context.ApiClient.updatePluginConfiguration = () => ++writes === 1 ? older.promise : newer.promise;
+    await h.host.load();
     const oldSave = h.host.save(h.event);
     await flush();
     assert.ok(h.saveButtons.every(button => button.disabled));
     const replacement = h.context.initializeEnhancedDashboard();
     assert.equal(h.saveButtons[0].disabled, false);
     assert.equal(h.saveButtons[1].disabled, true, 'preexisting disabled state survives disposal');
+    await replacement.load();
     const newSave = replacement.save(h.event);
     await flush();
     assert.ok(h.saveButtons.every(button => button.disabled));

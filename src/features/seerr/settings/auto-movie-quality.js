@@ -117,6 +117,9 @@ function createSeerrAutoMovieQuality({ lifecycle }) {
         var folderSelect = document.querySelector('#autoMovieRequestRootFolder');
         var qualityModeSelect = document.querySelector('#autoMovieRequestQualityMode');
         var qualityMode = qualityModeSelect?.value;
+        // A saved server that Seerr no longer lists leaves the select at ''. Track the
+        // select's own value so the response still replaces the "Loading..." placeholders.
+        var selectedServer = serverSelect?.value;
         var generation = ++detailsGeneration;
         var serverGeneration = serversGeneration;
         if (!profileSelect || !folderSelect) return;
@@ -128,7 +131,7 @@ function createSeerrAutoMovieQuality({ lifecycle }) {
             document.querySelector('#autoMovieRequestProfile') === profileSelect &&
             document.querySelector('#autoMovieRequestRootFolder') === folderSelect &&
             document.querySelector('#autoMovieRequestQualityMode') === qualityModeSelect &&
-            String(serverSelect?.value) === String(serverId) &&
+            serverSelect?.value === selectedServer &&
             qualityModeSelect?.value === qualityMode;
 
         resetSelectWithMessage(profileSelect, '0', 'Loading...');

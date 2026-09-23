@@ -8788,6 +8788,9 @@ function createSeerrAutoMovieQuality({ lifecycle }) {
         var folderSelect = document.querySelector('#autoMovieRequestRootFolder');
         var qualityModeSelect = document.querySelector('#autoMovieRequestQualityMode');
         var qualityMode = qualityModeSelect?.value;
+        // A saved server that Seerr no longer lists leaves the select at ''. Track the
+        // select's own value so the response still replaces the "Loading..." placeholders.
+        var selectedServer = serverSelect?.value;
         var generation = ++detailsGeneration;
         var serverGeneration = serversGeneration;
         if (!profileSelect || !folderSelect) return;
@@ -8799,7 +8802,7 @@ function createSeerrAutoMovieQuality({ lifecycle }) {
             document.querySelector('#autoMovieRequestProfile') === profileSelect &&
             document.querySelector('#autoMovieRequestRootFolder') === folderSelect &&
             document.querySelector('#autoMovieRequestQualityMode') === qualityModeSelect &&
-            String(serverSelect?.value) === String(serverId) &&
+            serverSelect?.value === selectedServer &&
             qualityModeSelect?.value === qualityMode;
 
         resetSelectWithMessage(profileSelect, '0', 'Loading...');
@@ -9794,6 +9797,10 @@ function createDashboardPersistence({
     let loadGeneration = 0;
     let savedSnapshotTimer;
     let mutationInFlight = false;
+    let snapshotGeneration = 0;
+    // Set once feature controls reflect a saved configuration. Until then the form
+    // holds markup defaults, and persisting it would overwrite every saved setting.
+    let hydrated = false;
     let loadingVisible = false;
     let saveButtonStates;
 
@@ -9807,8 +9814,27 @@ function createDashboardPersistence({
 
     function invalidateLoads() {
         loadGeneration++;
+        snapshotGeneration++;
+        clearSavedSnapshotTimer();
+    }
+
+    function clearSavedSnapshotTimer() {
         lifecycle.clearTimeout(savedSnapshotTimer);
         savedSnapshotTimer = undefined;
+    }
+
+    // Late feature populations retain their existing settling interval. A newer
+    // load or disposal discards the delayed clean snapshot; a save in progress only
+    // defers it, so a failed save still leaves a usable dirty baseline.
+    function scheduleSavedSnapshot() {
+        clearSavedSnapshotTimer();
+        const generation = snapshotGeneration;
+        savedSnapshotTimer = lifecycle.setTimeout(() => {
+            savedSnapshotTimer = undefined;
+            if (lifecycle.disposed || generation !== snapshotGeneration) return;
+            if (mutationInFlight) scheduleSavedSnapshot();
+            else jeMarkSaved();
+        }, 500);
     }
 
     function showLoading() {
@@ -9832,6 +9858,9 @@ function createDashboardPersistence({
     }
 
     async function loadConfig() {
+        // A pageshow during a write is not reloaded: on success the form already
+        // matches the server, and on failure a reload would discard the edits the
+        // administrator is about to retry.
         if (lifecycle.disposed || mutationInFlight) return false;
         invalidateLoads();
         const generation = loadGeneration;
@@ -9846,14 +9875,10 @@ function createDashboardPersistence({
             restoreCustomTabOwnership(config);
             loadFeatureSettings(config);
             normalizeLoadedSettings(config);
+            hydrated = true;
             updateAllDependencies();
             updateRequestsRequirementsBanner();
-
-            // Late feature populations retain their existing settling interval. A
-            // newer load, save, or disposal invalidates this delayed dirty snapshot.
-            savedSnapshotTimer = lifecycle.setTimeout(() => {
-                if (isCurrent() && !mutationInFlight) jeMarkSaved();
-            }, 500);
+            scheduleSavedSnapshot();
             return true;
         } catch (error) {
             if (isCurrent()) {
@@ -9883,8 +9908,19 @@ function createDashboardPersistence({
 
     async function persistConfiguration(applyToAllUsers) {
         if (lifecycle.disposed || mutationInFlight) return false;
+        if (!hydrated) {
+            alert({
+                title: 'Settings not loaded',
+                message:
+                    'Jellyfin Enhanced settings have not finished loading, so saving now would replace your saved configuration with defaults. Wait for the page to load, or reopen it, then try again.',
+            });
+            return false;
+        }
         mutationInFlight = true;
-        invalidateLoads();
+        // A pending load must not repopulate the form mid-write. The delayed clean
+        // snapshot is only deferred (see scheduleSavedSnapshot), so a failed save
+        // still leaves a dirty-indicator baseline.
+        loadGeneration++;
         const saveButtons = document.querySelectorAll('.je-save-dock-btn');
         saveButtonStates = Array.from(saveButtons, (button) => ({ button, disabled: button.disabled }));
         try {
@@ -9892,8 +9928,10 @@ function createDashboardPersistence({
                 button.disabled = true;
             });
             showLoading();
+            // buildConfigFromForm refuses if the page was replaced during its fetch, since
+            // the form would belong to another instance. Once the form has been read the
+            // write proceeds regardless of disposal; only completion UI is page-scoped.
             const config = await buildConfigFromForm();
-            if (lifecycle.disposed) return false;
             const result = await ApiClient.updatePluginConfiguration(pluginId, config);
             if (applyToAllUsers && !lifecycle.disposed) jeMarkSaved();
 
@@ -10335,17 +10373,15 @@ function createUserSettingsLanguages({ lifecycle }) {
 
                 if (!isCurrent()) return;
 
-                // Check upstream locales, retaining the legacy path while upstream still uses it.
+                // Check upstream locales at the repository's root locale directory. A missing
+                // directory means that upstream branch still uses the pre-layout path; other
+                // failures (including rate limits) keep the bundled server list without another request.
                 try {
-                    let ghResp = await fetch(
-                        'https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales',
-                    );
-                    // A missing directory signals the feature-layout migration. Other failures
-                    // (including rate limits) keep the bundled server list without another request.
+                    let ghResp = await fetch('https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/locales');
                     if (!isCurrent()) return;
                     if (ghResp.status === 404) {
                         ghResp = await fetch(
-                            'https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/locales',
+                            'https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales',
                         );
                     }
                     if (!isCurrent()) return;
