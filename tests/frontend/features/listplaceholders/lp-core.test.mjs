@@ -161,7 +161,7 @@ test('season modal says every season is requested when partial requests are off'
 
 function cardHarness(t, { enabled = true } = {}) {
   const h = setup(t, { config: { ListPlaceholdersEnabled: enabled }, load: false, extraJE: {
-    core: { ui: { addTouchTapListener: () => {} }, api: { plugin: async () => ({}) } },
+    core: { ui: { addTouchTapListener: () => {}, addDelegatedTouchTapListener: () => {} }, api: { plugin: async () => ({}) } },
     hiddenContent: { getSettings: () => ({ enabled: true }), isHiddenByTmdbId: () => false }
   } });
   h.JE.cdn.selfhst = path => `http://cdn.test/${path}`;
@@ -191,6 +191,36 @@ test('Seerr cards are unchanged while the feature is off', t => {
   const h = cardHarness(t, { enabled: false });
   const card = h.JE.jellyseerrUI.createJellyseerrCard({ id: 862, mediaType: 'movie', title: 'Toy Story' }, true, true);
   assert.equal(card.querySelector('.je-lp-card-add'), null);
+  h.JE.jellyseerrUI.releasePosters();
+});
+
+test('the card inputs key covers the add action, so a card prebuilt with another setting is not reused', t => {
+  const items = [{ id: 862, mediaType: 'movie', title: 'Toy Story' }];
+  const on = cardHarness(t).JE.jellyseerrUI.cardInputsKey(items);
+  const off = cardHarness(t, { enabled: false }).JE.jellyseerrUI.cardInputsKey(items);
+  assert.notEqual(on, off);
+});
+
+test('every fresh overview request button goes through the item\'s onConfigureButton', t => {
+  const h = cardHarness(t);
+  h.JE.internals.jellyseerrUi.configureRequestButton = button => { button.textContent = 'Request'; };
+  const configured = [];
+  const item = { id: 862, mediaType: 'movie', title: 'Toy Story', __jeLp: true, onConfigureButton: button => configured.push(button) };
+  const card = h.JE.jellyseerrUI.createJellyseerrCard(item, true, true);
+  const container = h.document.createElement('div');
+  h.document.body.appendChild(container);
+  container.appendChild(card);
+  const poster = card.querySelector('.jellyseerr-poster-image');
+  const press = () => poster.dispatchEvent(new h.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  press(); // opens the overview (builds the request button)
+  assert.equal(configured.length, 1);
+  assert.equal(configured[0], card.querySelector('.jellyseerr-overview .jellyseerr-request-button'));
+  press(); // closes it
+  assert.equal(card.querySelector('.jellyseerr-overview'), null);
+  press(); // a new overview, a new button
+  assert.equal(configured.length, 2);
+  assert.notEqual(configured[1], configured[0]);
+  assert.equal(configured[1], card.querySelector('.jellyseerr-overview .jellyseerr-request-button'));
   h.JE.jellyseerrUI.releasePosters();
 });
 
