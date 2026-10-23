@@ -362,7 +362,7 @@ test('library and player delete buttons are disabled while their delete is in fl
 test('the bookmarks page takes over when Jellyfin answers its own #/bookmarks route with another page',async t=>{
   let ready;const wired=new Promise(resolve=>{ready=resolve;});
   const h=createHarness({html:'<div class="mainAnimatedPages"><div id="home" class="mainAnimatedPage">home</div></div>',JE:{t:key=>key,pluginConfig:{BookmarksEnabled:true},userConfig:{},bookmarks:{},
-    helpers:{onSidebarRebuilt:()=>()=>{},observeTabContainers:()=>()=>{}},
+    helpers:{onSidebarRebuilt:()=>()=>{},observeTabContainers:()=>()=>{},markBackdropPage:()=>{}},
     core:{lifecycle:{register:()=>({addListener:(target,type,fn,capture)=>target.addEventListener(type,fn,capture)})},
       // The real onViewPage hands each viewshow's raw event to the handler.
       navigation:{onNavigate:()=>()=>{},onViewPage:fn=>{h.document.addEventListener('viewshow',e=>fn(null,e.target,h.window.location.hash,null,e));ready();}}}}});

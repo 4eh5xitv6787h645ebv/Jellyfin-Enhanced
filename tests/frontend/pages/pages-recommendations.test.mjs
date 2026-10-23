@@ -98,7 +98,7 @@ test('recommendations disabled standalone page leaves current host untouched',t=
 });
 test('the recommendations page takes over when Jellyfin answers its own #/recommendations route with another page',t=>{
   const h=setup(t,async()=>({}));h.JE.pluginConfig={RecommendationsPageEnabled:true};h.JE.t=key=>key;
-  h.JE.helpers={onSidebarRebuilt:()=>()=>{},onNavigate:()=>()=>{}};
+  h.JE.helpers={onSidebarRebuilt:()=>()=>{},onNavigate:()=>()=>{},markBackdropPage:()=>{}};
   h.document.body.innerHTML='<div class="mainAnimatedPages"><div id="home" class="mainAnimatedPage">home</div></div>';
   h.P.renderInto=()=>{};h.P.hideCategoryPage=()=>{};
   h.load('jellyseerr/recommendations/recommendations-page.js');h.load('jellyseerr/recommendations/recommendations-init.js');

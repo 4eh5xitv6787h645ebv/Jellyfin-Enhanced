@@ -216,6 +216,29 @@ test('administrators get Manage on rows and the Downloads/Calendar tabs; an embe
   assert.equal(polling, 2);
 });
 
+test('the Requests page keeps the backdrop: a backdrop page that fires pageshow, again after the router\'s fallback page', async t => {
+  const h = setup(t, { hash: '#/requests', html: '<div id="fallbackPage" class="page"></div>', responses: path => (path === '/acquire/hub' ? hubAnswer() : null) });
+  for (const m of ['core/dom-observer.js', 'core/ui-kit.js', 'enhanced/helpers.js']) h.load(m);
+  const shows = [];
+  h.document.addEventListener('pageshow', e => shows.push(e.target.id));
+  h.JE.initializeArrStatus();
+  await wait(10);
+  const page = h.document.getElementById('je-requests-hub-page');
+  assert.ok(page.classList.contains('backdropPage') && page.classList.contains('globalBackdropPage'));
+  assert.deepEqual(shows, ['je-requests-hub-page']);
+  // Jellyfin's "Page not found" page for #/requests shows after it and clears the backdrop
+  // (with Backdrops off it would also have unmarked the page).
+  page.classList.remove('backdropPage');
+  h.document.getElementById('fallbackPage').dispatchEvent(new h.window.CustomEvent('pageshow', { bubbles: true }));
+  assert.deepEqual(shows, ['je-requests-hub-page', 'fallbackPage', 'je-requests-hub-page']);
+  assert.ok(page.classList.contains('backdropPage'));
+  // Once the page is left, the fallback page is left alone.
+  h.window.location.hash = '#/home';
+  h.navigation.forEach(fn => fn());
+  h.document.getElementById('fallbackPage').dispatchEvent(new h.window.CustomEvent('pageshow', { bubbles: true }));
+  assert.deepEqual(shows, ['je-requests-hub-page', 'fallbackPage', 'je-requests-hub-page', 'fallbackPage']);
+});
+
 test('nothing happens with the Requests page switched off', async t => {
   const h = setup(t, { hash: '#/requests', config: { ArrRequestsHubEnabled: false } });
   h.JE.initializeArrStatus();

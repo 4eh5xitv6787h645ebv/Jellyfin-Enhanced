@@ -83,7 +83,7 @@ test('titles that are not in the library (native details synthetic ids) never be
  assert.deepEqual(Object.keys(api.getHiddenData().items),[REAL]);
 });
 test('the hidden content page takes over when Jellyfin answers its own #/hidden-content route with another page',t=>{
- const h=createHarness({html:'<div class="mainAnimatedPages"><div id="home" class="mainAnimatedPage">home</div></div>',JE:{t:k=>k,pluginConfig:{HiddenContentEnabled:true},hiddenContent:{},helpers:{onSidebarRebuilt:()=>()=>{}}}});
+ const h=createHarness({html:'<div class="mainAnimatedPages"><div id="home" class="mainAnimatedPage">home</div></div>',JE:{t:k=>k,pluginConfig:{HiddenContentEnabled:true},hiddenContent:{},helpers:{onSidebarRebuilt:()=>()=>{},markBackdropPage:()=>{}}}});
  t.after(()=>h.close());
  h.load('enhanced/hiddencontent/hidden-content-page-state.js');
  Object.assign(h.JE.internals.hiddenContentPage,{injectStyles:()=>{},renderPage:()=>{}});

@@ -196,12 +196,27 @@
             }
             page.classList.remove('hide');
             page.dispatchEvent(new CustomEvent('viewshow', { bubbles: true, detail: { type: 'custom', isRestored: false, options: {} } }));
+            showBackdrop();
             claimChrome();
             render();
             load();
         } else {
             render();
         }
+    }
+
+    /**
+     * Marks this page as a backdrop page (again each time: with Backdrops off Jellyfin unmarks it)
+     * and fires `pageshow` on it, which Jellyfin's backdrop handler answers by showing the backdrop.
+     * When the router's "Page not found" page for #/requests clears it afterwards,
+     * JE.helpers.markBackdropPage's guard fires `pageshow` here again.
+     * @returns {void}
+     */
+    function showBackdrop() {
+        const page = document.getElementById(PAGE_ID);
+        if (!page) return;
+        JE.helpers?.markBackdropPage?.(page);
+        page.dispatchEvent(new CustomEvent('pageshow', { bubbles: true, detail: {} }));
     }
 
     /**

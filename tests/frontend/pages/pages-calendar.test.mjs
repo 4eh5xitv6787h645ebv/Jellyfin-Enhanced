@@ -375,7 +375,7 @@ test('the calendar takes over when Jellyfin answers its own #/calendar route wit
   const h = createHarness({
     html: '<div class="mainAnimatedPage" id="homePage">home</div>',
     url: 'http://jellyfin.test/web/index.html#/home',
-    JE: { pluginConfig: { CalendarPageEnabled: true }, t: key => key, helpers: { onSidebarRebuilt: () => () => {} }, core: { lifecycle: { register: () => ({ track: f => f, untrack: () => {} }) }, navigation: { onNavigate: () => () => {} } } },
+    JE: { pluginConfig: { CalendarPageEnabled: true }, t: key => key, helpers: { onSidebarRebuilt: () => () => {}, markBackdropPage: () => {} }, core: { lifecycle: { register: () => ({ track: f => f, untrack: () => {} }) }, navigation: { onNavigate: () => () => {} } } },
   });
   t.after(() => h.close());
   h.JE.internals = h.JE.internals || {};
@@ -408,4 +408,43 @@ test('the calendar takes over when Jellyfin answers its own #/calendar route wit
   home.classList.remove('hide');
   home.dispatchEvent(new h.window.CustomEvent('viewshow', { bubbles: true }));
   assert.ok(calendar.classList.contains('hide'));
+});
+
+test('the calendar keeps the backdrop when Jellyfin\'s Page not found page for #/calendar shows after it took over', t => {
+  const h = createHarness({
+    html: '<div class="page mainAnimatedPage" id="homePage">home</div>',
+    url: 'http://jellyfin.test/web/index.html#/home',
+    JE: { pluginConfig: { CalendarPageEnabled: true }, t: key => key, core: { lifecycle: { register: () => ({ track: f => f, untrack: () => {} }) }, navigation: { onNavigate: () => () => {} } } },
+  });
+  t.after(() => h.close());
+  for (const m of ['core/dom-observer.js', 'core/ui-kit.js', 'enhanced/helpers.js']) h.load(m);
+  h.JE.internals = h.JE.internals || {};
+  const P = h.JE.internals.calendarPage = { state: { pageVisible: false, isLoading: true } };
+  Object.assign(P, {
+    injectStyles: () => {}, loadSettings: () => {}, renderPage: () => {}, loadAllData: () => {}, handleEventClick: () => {},
+    createPageContainer: () => {
+      let page = h.document.getElementById('je-calendar-page');
+      if (!page) { page = h.document.createElement('div'); page.id = 'je-calendar-page'; page.className = 'page mainAnimatedPage hide'; h.document.body.appendChild(page); }
+      return page;
+    },
+  });
+  h.load('arr/calendar/calendar-page-init.js');
+  h.JE.calendarPage.initialize?.();
+  const shows = [];
+  h.document.addEventListener('pageshow', e => shows.push(e.target.id));
+  h.window.history.replaceState(null, '', '#/calendar');
+  const notFound = h.document.createElement('div');
+  notFound.id = 'fallbackPage';
+  notFound.className = 'page mainAnimatedPage';
+  h.document.body.appendChild(notFound);
+  h.document.getElementById('homePage').classList.add('hide');
+  notFound.dispatchEvent(new h.window.CustomEvent('viewshow', { bubbles: true }));
+  const calendar = h.document.getElementById('je-calendar-page');
+  assert.ok(!calendar.classList.contains('hide') && calendar.classList.contains('backdropPage'));
+  // The router's page fires pageshow only now, which clears the backdrop: the calendar fires it again.
+  calendar.classList.remove('backdropPage');
+  shows.length = 0;
+  notFound.dispatchEvent(new h.window.CustomEvent('pageshow', { bubbles: true }));
+  assert.deepEqual(shows, ['fallbackPage', 'je-calendar-page']);
+  assert.ok(calendar.classList.contains('backdropPage'));
 });
