@@ -1,0 +1,18 @@
+# Evidence pack, round 13
+
+State: commit e8a4f166 on `feat/media-tags-features` (forty-five commits on top of dd6572be, the base of this work). Commits since d03fc1b3 (the last reviewed state):
+
+1. **0e241c2e perf(tags): send removed items as delta ids instead of forcing a full reload** — a removal (deleted item, item moved into an excluded library, reconcile sweep) is stamped like an update and named in the delta's `removed` array; the cache version no longer changes for it, so browsers keep their copy and drop only those ids (memory and IndexedDB). Ids stored again after their removal arrive as updates, never as removals. Removal stamps persist with the on-disk snapshot, so a removal before a restart still reaches a client whose cursor predates it. Bounded at 20,000 removals between rebuilds, after which one version change makes clients reload. api.md shows a delta with `removed`; the tags.md sizing paragraph now gives the decoded size (≈190 MB of JSON at 50k entries) as well as the wire size and lists exactly when a full download still happens.
+2. **8cbdaf79 fix(tags): keep version picks per account and correct five detection edges** — the remembered version pick is stored per server and user (another account on the same browser starts from the first version; the earlier browser-wide key is retired, not inherited); a bare WEB word yields to any other source word (`Show.S01E01.The.Web.720p.HDTV` with a generic item title is HDTV); a combined episode file (S01E09-E10) carries `EpisodeIndex.EpisodeEnd` and shows Series/Season Finale on its own card when it holds the final episode (web and native, full build, on-demand and batch); a video title naming `Dolby Vision HDR10` keeps both in All mode; `mul`, `mis` and `qaa`–`qtz` are not languages (no chips, no Dual/Multi). Duplicate naming fixture row removed. Cache schema 41, resolver 31, naming 19.
+3. **6d2e19ae docs(tags): correct stale group lists, counts and detector descriptions** — api.md order/cap fields name all nine groups; 88 portable user fields; native exclusions list Jellyfin iOS and iPadOS; FLAC/PCM keep their names in the sound table; forced-only subtitles are left out (not merged); parity README counts current.
+4. **e8a4f166 fix(tags): never hold tag-data behind a slow MDBList fetch** — `tag-data` waits at most two seconds for missing named-source scores, then answers with every other fact and the scores cached by then; the fetch completes in the background. Titles whose scores are fresh return at once instead of queueing behind another caller's fetch (held-transport test).
+
+Earlier work on this branch is summarised in `feature-inventory.md` section 8.
+
+## Verification at e8a4f166 (this machine, niced and capped)
+- Frontend 2277/2277; backend 2374/2374; parity `--offline` 0 differences, 296 profiles, Status 240 web fixtures passed and 240 native/web identical (`parity-summary.txt`); browser `tag-cache-migration.spec.cjs` 6/6 (Chromium, mobile Chromium, Firefox); jf12 Release build 0 warnings; test inventory current. The full browser set last ran at d03fc1b3 (399/399) and runs again in round 15.
+- `translation-coverage.md`: 46/867 Media Tags strings per locale (unchanged; new strings English-only until Weblate translators reach them).
+
+## Lab
+- Deploy of e8a4f166 (schema 41, so the lab cache rebuilt from scratch), legacy viewer (settings saved before layouts): Movies AE = 0 against the dd6572be deploy and Home AE = 0 against the round-6 Home capture (1400×660+0+90 crop).
+- Removals were not exercised on the lab (no lab library changes are allowed); the tombstone path is covered by backend tests (live removal, overflow, restart persistence) and a frontend test over a stub IndexedDB store.
