@@ -1,0 +1,18 @@
+{
+  "save": 200,
+  "reveal-movie": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "true",
+      "x-je-poster-tags-look": "rule:1"
+    }
+  },
+  "reveal-series-hidden": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "false",
+      "x-je-poster-tags-look": "default"
+    }
+  },
+  "restore": 200
+}
