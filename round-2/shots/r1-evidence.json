@@ -1,0 +1,110 @@
+{
+  "hlg-series": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "true",
+      "x-je-poster-tags-artwork": "original",
+      "x-je-poster-tags-look": "default",
+      "x-je-poster-tags-master-enabled": "false",
+      "x-je-poster-tags-settings-digest": "18e2841da9da6b5c",
+      "x-je-poster-tags-spoiler-stripped": "false",
+      "x-je-poster-tags-status": "rendered",
+      "x-je-poster-tags-user-enabled": "false"
+    }
+  },
+  "dv-p7-hdr10plus-movie": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "true",
+      "x-je-poster-tags-artwork": "original",
+      "x-je-poster-tags-look": "default",
+      "x-je-poster-tags-master-enabled": "false",
+      "x-je-poster-tags-settings-digest": "18e2841da9da6b5c",
+      "x-je-poster-tags-spoiler-stripped": "false",
+      "x-je-poster-tags-status": "rendered",
+      "x-je-poster-tags-user-enabled": "false"
+    }
+  },
+  "dv-hdr10-series": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "true",
+      "x-je-poster-tags-artwork": "original",
+      "x-je-poster-tags-look": "default",
+      "x-je-poster-tags-master-enabled": "false",
+      "x-je-poster-tags-settings-digest": "18e2841da9da6b5c",
+      "x-je-poster-tags-spoiler-stripped": "false",
+      "x-je-poster-tags-status": "rendered",
+      "x-je-poster-tags-user-enabled": "false"
+    }
+  },
+  "ruleSave": 200,
+  "rule-movie": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "true",
+      "x-je-poster-tags-artwork": "original",
+      "x-je-poster-tags-look": "rule:1",
+      "x-je-poster-tags-master-enabled": "false",
+      "x-je-poster-tags-settings-digest": "98bbc5d12bf2403b",
+      "x-je-poster-tags-spoiler-stripped": "false",
+      "x-je-poster-tags-status": "rendered",
+      "x-je-poster-tags-user-enabled": "false"
+    }
+  },
+  "rule-series-unmatched": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "true",
+      "x-je-poster-tags-artwork": "original",
+      "x-je-poster-tags-look": "default",
+      "x-je-poster-tags-master-enabled": "false",
+      "x-je-poster-tags-settings-digest": "18e2841da9da6b5c",
+      "x-je-poster-tags-spoiler-stripped": "false",
+      "x-je-poster-tags-status": "rendered",
+      "x-je-poster-tags-user-enabled": "false"
+    }
+  },
+  "restoreSave": 200,
+  "after-restore-movie": {
+    "status": 200,
+    "headers": {
+      "x-je-poster-tags-any-group": "true",
+      "x-je-poster-tags-artwork": "original",
+      "x-je-poster-tags-look": "default",
+      "x-je-poster-tags-master-enabled": "false",
+      "x-je-poster-tags-settings-digest": "18e2841da9da6b5c",
+      "x-je-poster-tags-spoiler-stripped": "false",
+      "x-je-poster-tags-status": "rendered",
+      "x-je-poster-tags-user-enabled": "false"
+    }
+  },
+  "web-hlg": [
+    "4K",
+    "WEB",
+    "HLG",
+    "HEVC",
+    "4K",
+    "WEB",
+    "HLG",
+    "HEVC",
+    "4K",
+    "WEB",
+    "HLG",
+    "HEVC"
+  ],
+  "web-dv": [
+    "4K",
+    "WEB",
+    "Dolby Vision",
+    "HDR10",
+    "HEVC",
+    "ATMOS 5.1",
+    "4K",
+    "WEB",
+    "Dolby Vision",
+    "HDR10",
+    "HEVC",
+    "ATMOS 5.1"
+  ]
+}

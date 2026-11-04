@@ -1,0 +1,14 @@
+frontend rc=0 171s
+translations rc=0 0s
+inventory rc=0 1s
+assets rc=1 0s
+parity rc=0 108s
+build-jf12 rc=0 2s
+build-jf10 rc=0 10s
+backend rc=1 72s
+browser rc=1 2s
+diffcheck rc=0 0s
+attribution lines: 0
+    0 Warning(s)
+    0 Warning(s)
+DONE
