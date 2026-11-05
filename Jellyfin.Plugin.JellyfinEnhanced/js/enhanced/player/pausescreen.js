@@ -271,6 +271,13 @@
             }
             .pause-screen-main.has-logo #pause-screen-title,
             .pause-screen-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+            /* a dark logo (Spider-Verse's red and navy) is hard to read over a dark scrim: the plain title follows it */
+            .pause-screen-main.has-logo.logo-needs-title #pause-screen-title {
+              position: static; width: auto; height: auto; overflow: hidden; clip: auto; white-space: normal;
+              font-size: clamp(16px, 1.25vw, 24px); font-weight: 600; line-height: 1.3; color: #f0f0f0;
+              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 0;
+              display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+            }
             #pause-screen-subtitle {
               font-size: clamp(18px, 1.75vw, 34px);
               font-weight: 600; line-height: 1.25;
@@ -373,7 +380,7 @@
               #pause-screen-progress-meta { gap: .6em; justify-content: flex-start; }
               #pause-screen-progress-meta .pause-screen-meta-group { display: contents; }
               #pause-screen-progress-meta .progress-left:not(:empty)::before { content: '·'; opacity: .5; margin-right: .6em; font-weight: 400; color: rgba(255,255,255,.88); }
-              #pause-screen-progress-meta .progress-ends-at { margin-left: auto; color: #c2c2c2; }
+              #pause-screen-progress-meta .progress-ends-at { margin-left: auto; color: #c2c2c2; font-size: .875em; }
               #pause-screen-progress-meta .progress-ends-at::before { content: none !important; }
             }
             #pause-screen-progress-meta .progress-time:not(:empty)::before,
@@ -609,7 +616,9 @@
               #pause-screen-details .pause-screen-date-short { display: inline; }
               /* an episode's height goes to its story: the series genres step aside here */
               #pause-screen-overlay.has-still #pause-screen-genres,
-              #pause-screen-overlay.plot-over-genres #pause-screen-genres { display: none; }
+              #pause-screen-overlay.plot-over-genres #pause-screen-genres,
+              .pause-screen-main.logo-needs-title #pause-screen-genres { display: none; }
+              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: 14px; margin-top: -4px; }
               #pause-screen-progress-meta { margin-top: .2em; }
               .pause-screen-actions { margin-top: calc(var(--pause-screen-meta-size) * .7); }
             }
@@ -1230,7 +1239,7 @@
           this.overlayTitle.textContent = "";
           this.overlaySubtitle.textContent = "";
           this.overlayGenres.textContent = "";
-          this.overlayMain.classList.remove('has-logo');
+          this.overlayMain.classList.remove('has-logo', 'logo-needs-title');
           this.overlayMain.style.removeProperty('--pause-screen-logo-scale');
           this.overlayLogo.removeAttribute('src');
           this.overlayDisc.removeAttribute('src');
@@ -1324,6 +1333,7 @@
             this.overlayLogo.src = trimmedLogoURL;
             this.overlayMain.classList.add('has-logo');
             this.overlayMain.style.setProperty('--pause-screen-logo-scale', this.logoScale(this.logoInk.get(logoURL)));
+            this.overlayMain.classList.toggle('logo-needs-title', (this.logoInk.get(logoURL)?.luma ?? 1) < 0.3);
           }
           if (discURL) this.overlayDisc.src = discURL;
           this.overlayPoster.classList.toggle('is-still', !!stillURL);
@@ -1630,12 +1640,16 @@
             if (!ctx) return keep();
             ctx.drawImage(img, 0, 0, aw, ah);
             const data = ctx.getImageData(0, 0, aw, ah).data;
-            let top = ah, left = aw, right = -1, bottom = -1, ink = 0;
+            let top = ah, left = aw, right = -1, bottom = -1, ink = 0, luma = 0;
             for (let y = 0; y < ah; y++) {
               for (let x = 0; x < aw; x++) {
                 const a = data[(y * aw + x) * 4 + 3];
                 if (a > 8) {
-                  if (a > 128) ink++;
+                  if (a > 128) {
+                    ink++;
+                    const i = (y * aw + x) * 4;
+                    luma += (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255;
+                  }
                   if (y < top) top = y;
                   if (y > bottom) bottom = y;
                   if (x < left) left = x;
@@ -1645,7 +1659,7 @@
             }
             if (right < 0) return keep();
             // share of the trimmed box that is painted: a boxed logo is near 1, an airy wordmark nearer .3
-            this.logoInk.set(blobURL, { coverage: ink / ((right - left + 1) * (bottom - top + 1)), aspect: (right - left + 1) / (bottom - top + 1) });
+            this.logoInk.set(blobURL, { coverage: ink / ((right - left + 1) * (bottom - top + 1)), aspect: (right - left + 1) / (bottom - top + 1), luma: ink ? luma / ink : 1 });
             // back to source pixels, with a 2 px margin
             const sl = Math.max(0, Math.floor(left / k) - 2), st = Math.max(0, Math.floor(top / k) - 2);
             const sr = Math.min(w - 1, Math.ceil((right + 1) / k) + 1), sb = Math.min(h - 1, Math.ceil((bottom + 1) / k) + 1);
