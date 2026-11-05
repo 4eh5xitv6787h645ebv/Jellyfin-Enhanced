@@ -1,0 +1,2 @@
+pseudo-locale Colours editor: interface text without ⟦⟧ (chip samples and genre/label names excluded): ["title: #ffd166","title: #ffffff"]
+admin preview Sample Movie rating chips (RatingTagsSources unset on the lab): ["★8.1","92%"]

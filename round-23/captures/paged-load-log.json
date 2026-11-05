@@ -1,0 +1,52 @@
+{
+  "requests": [
+    {
+      "limit": "2000",
+      "after": null,
+      "since": null,
+      "status": 200,
+      "bytes": 7741958,
+      "encoding": "br"
+    },
+    {
+      "limit": "2000",
+      "after": "858539e1…",
+      "since": null,
+      "status": 200,
+      "bytes": 7107848,
+      "encoding": "br"
+    },
+    {
+      "limit": null,
+      "after": null,
+      "since": "1793853209082",
+      "status": 200,
+      "bytes": 5076,
+      "encoding": "br"
+    },
+    {
+      "limit": null,
+      "after": null,
+      "since": null,
+      "status": 200,
+      "bytes": 14844686,
+      "encoding": "br"
+    }
+  ],
+  "logs": [
+    "🪼 Jellyfin Enhanced [TagPipeline]: Module loaded",
+    "🪼 Jellyfin Enhanced [TagPipeline]: Renderer registered: quality (total: 1)",
+    "🪼 Jellyfin Enhanced [TagPipeline]: Renderer registered: genre (total: 2)",
+    "🪼 Jellyfin Enhanced [TagPipeline]: Renderer registered: rating (total: 3)",
+    "🪼 Jellyfin Enhanced [TagPipeline]: Renderer registered: language (total: 4)",
+    "🪼 Jellyfin Enhanced [TagPipeline]: Initialized",
+    "🪼 Jellyfin Enhanced [TagPipeline]: Server cache loaded: 3882 items (v1, 2 pages)",
+    "🪼 Jellyfin Enhanced [TagPipeline]: Server cache persisted: 3882 items"
+  ],
+  "single": {
+    "jsonBytes": 14844686,
+    "parseMs": 50,
+    "fetchMs": 177
+  },
+  "heapMb": 117
+}
