@@ -144,7 +144,7 @@
           style.textContent = `
             :root {
               --pause-screen-overlay-bg: rgba(10, 10, 14, .6);
-              --pause-screen-blur: 8px;
+              --pause-screen-blur: 5px;
               --pause-screen-accent: var(--theme-primary-color, var(--primary-accent-color, #00a4dc));
               --pause-screen-gutter-base: clamp(24px, 6vw, 110px);
               --pause-screen-gutter-x: max(var(--pause-screen-gutter-base), calc(env(safe-area-inset-left, 0px) + 16px), calc(env(safe-area-inset-right, 0px) + 16px));
@@ -225,8 +225,8 @@
               pointer-events: none;
             }
             #pause-screen-backdrop.is-still {
-              inset: -10%;
-              filter: blur(clamp(24px, 2.2vw, 44px)) saturate(1.2);
+              inset: -6%;
+              filter: blur(clamp(14px, 1.3vw, 26px)) saturate(1.1);
               opacity: .72;
             }
             .pause-screen-scrim {
@@ -314,9 +314,9 @@
               height: auto; display: block;
               border-radius: 50%;
               animation: pause-screen-spin var(--pause-screen-disc-rot-sec) linear infinite;
-              filter: drop-shadow(0 18px 40px rgba(0,0,0,.55));
+              box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 18px 40px rgba(0,0,0,.45);
             }
-            #pause-screen-poster.is-still { width: var(--pause-screen-still-w); aspect-ratio: 16 / 9; }
+            #pause-screen-poster.is-still { width: var(--pause-screen-still-w); aspect-ratio: auto; height: auto; }
             #pause-screen-poster {
               width: var(--pause-screen-poster-w);
               aspect-ratio: 2 / 3;
@@ -424,6 +424,10 @@
             .pause-screen-close-caption > span { display: block; }
             .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
+            @media (hover: hover) {
+              #pause-screen-content:has(#pause-screen-close-btn:hover) .pause-screen-close-caption { display: block; }
+              #pause-screen-overlay:not(.close-focused) #pause-screen-content:has(#pause-screen-close-btn:hover) .pause-screen-close-caption > span + span { display: none; }
+            }
             /* the way back is written under the ×; the footer keeps its space so nothing jumps */
             #pause-screen-overlay.close-focused .pause-screen-hint { visibility: hidden; }
             @media (min-width: 1600px) { .pause-screen-resume:focus-visible { outline-width: 3px; } }
@@ -504,6 +508,7 @@
             @media (max-width: 1000px) {
               .pause-screen-layout { grid-template-columns: minmax(0, 1fr); }
               .pause-screen-art { display: none; }
+              #pause-screen-plot { text-wrap: wrap; }
               .pause-screen-main { max-width: 100%; }
               :root { --pause-screen-logo-max-w: min(60vw, 520px); }
               .pause-screen-scrim {
@@ -532,8 +537,8 @@
                 .pause-screen-layout {
                   grid-template-columns: auto minmax(0, 1fr);
                   grid-template-areas: "logo logo" "title title" "sub sub" "art facts" "plot plot";
-                  /* the block hangs from the footer so the synopsis ends 36 px above the track on every title; "safe" keeps a tall block top-aligned */
-                  align-content: safe end; align-items: start; row-gap: 0; column-gap: 16px;
+                  /* the block sits in the middle of the room between the header and the footer; "safe" keeps a tall block top-aligned */
+                  align-content: safe center; align-items: start; row-gap: 0; column-gap: 16px;
                 }
                 .pause-screen-main { display: contents; }
                 .pause-screen-main > * { margin-bottom: 12px; }
@@ -552,6 +557,10 @@
                 /* a definite width: the grid sized the row from a 4:3 still's natural size and let it overflow the facts */
                 #pause-screen-poster.is-still { width: calc(100vw - 2 * var(--pause-screen-gutter-x)); height: auto; }
                 #pause-screen-overlay.has-still #pause-screen-logo { max-height: min(16vh, 120px); }
+                /* the action spans the column like the track above it: a thumb-sized target with its hint as a footnote */
+                .pause-screen-actions { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
+                .pause-screen-resume { justify-content: center; min-height: 48px; font-size: 17px; padding: 0 16px; }
+                .pause-screen-hint { text-align: center; font-size: 14px; color: rgba(255,255,255,.75); }
               }
               #pause-screen-title { font-size: clamp(28px, 8vw, 40px); }
               #pause-screen-subtitle { font-size: 18px; }
@@ -655,7 +664,8 @@
           this.overlayLogo.id = "pause-screen-logo";
           this.overlayLogo.alt = "";
           // the trimmed logo lands after the overlay is laid out: measure the footer gap and the overview again once it has a size
-          this.overlayLogo.addEventListener('load', () => { if (this.overlay?.getAttribute('aria-hidden') === 'false') { this.reserveFooter(); this.fitOverview(); } });
+          const refit = () => { if (this.overlay?.getAttribute('aria-hidden') === 'false') { this.reserveFooter(); this.fitOverview(); } };
+          this.overlayLogo.addEventListener('load', refit);
 
           // Text title, shown only when no logo image is available
           this.overlayTitle = document.createElement("div");
@@ -681,6 +691,7 @@
           this.overlayDisc.alt = "";
 
           this.overlayPoster = document.createElement("img");
+          this.overlayPoster.addEventListener('load', refit);
           this.overlayPoster.id = "pause-screen-poster";
           this.overlayPoster.alt = "";
 
@@ -739,7 +750,6 @@
           closeButton.id = "pause-screen-close-btn";
           closeButton.type = "button";
           closeButton.setAttribute("aria-label", JE.t('pausescreen_hide'));
-          closeButton.title = JE.t('pausescreen_hide');
           closeButton.innerHTML = `<span class="material-icons" aria-hidden="true">close</span><span class="pause-screen-close-label" aria-hidden="true">${JE.core.ui.escapeHtml(JE.t('pausescreen_hide'))}</span>`;
           closeButton.onclick = () => {
               this.hideOverlay(true);
@@ -1161,12 +1171,14 @@
             const half = this.closeButton.offsetHeight / 2 || 22;
             this.closeButton.style.top = `max(${Math.max(0, Math.round(rect.top + rect.height / 2 - half))}px, env(safe-area-inset-top, 0px))`;
             this.closeButton.style.right = `calc(${Math.max(8, Math.round(rect.left))}px + env(safe-area-inset-right, 0px))`;
-            this.closeCaption.style.right = this.closeButton.style.right;
           } else {
-            this.closeCaption.style.right = '';
             this.closeButton.style.top = 'max(2px, env(safe-area-inset-top, 0px))';
             this.closeButton.style.right = '';
           }
+          // the caption ends under the label's last letter, not under the chip's outer edge
+          const pad = window.innerWidth >= 1600 ? 22 : 18;
+          const btnRight = parseFloat(getComputedStyle(this.closeButton).right);
+          this.closeCaption.style.right = Number.isFinite(btnRight) ? `${Math.round(btnRight + pad)}px` : '';
           this.reserveFooter();
         }
 
@@ -1320,9 +1332,7 @@
           if (!full || !el) return;
           el.style.removeProperty('-webkit-line-clamp');
           if (el.clientHeight === 0) return;
-          this.fitOverviewText(full);
-          // Short viewports: when the text block spills past the layout's top edge or into the footer's
-          // reserve, give up overview lines (down to one) before letting anything hide.
+          const status = this.fitOverviewText(full);
           const layout = el.closest('.pause-screen-layout');
           const footerTop = this.progressWrap?.getBoundingClientRect?.().top;
           if (!layout || !footerTop) return;
@@ -1341,6 +1351,18 @@
             return top >= topEdge - 1 && bottom <= footerTop - 30;
           };
           let lines = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 0;
+          // Roomy screens: when only a mid-sentence cut fits the budget, one more line may let a sentence finish.
+          if (status === 'cut' && lines > 0 && window.matchMedia?.('(min-width: 1200px) and (min-height: 800px)').matches) {
+            el.style.setProperty('-webkit-line-clamp', String(lines + 1));
+            if (this.fitOverviewText(full) !== 'cut' && fits()) {
+              lines += 1;
+            } else {
+              el.style.setProperty('-webkit-line-clamp', String(lines));
+              this.fitOverviewText(full);
+            }
+          }
+          // Short viewports: when the text block spills past the layout's top edge or into the footer's
+          // reserve, give up overview lines (down to one) before letting anything hide.
           while (lines > 1 && !fits()) {
             lines -= 1;
             el.style.setProperty('-webkit-line-clamp', String(lines));
@@ -1351,12 +1373,13 @@
         /**
          * Fits the overview text into the current clamp box (see `fitOverview`).
          * @param {string} full - The complete overview.
+         * @returns {'full'|'sentence'|'cut'} How the text ended up: whole, on a sentence end, or on a word cut.
          */
         fitOverviewText(full) {
           const el = this.overlayPlot;
           el.textContent = full;
           const overflows = () => el.scrollHeight > el.clientHeight + 2;
-          if (!overflows()) return;
+          if (!overflows()) return 'full';
           const ends = [];
           const re = /[.!?…]["'”’)\]]*\s+/g;
           let m;
@@ -1365,7 +1388,7 @@
             const cut = full.slice(0, ends[i]).trim();
             if (cut.length < full.length * 0.35 && i > 0) continue;
             el.textContent = cut;
-            if (!overflows()) return;
+            if (!overflows()) return 'sentence';
           }
           // No sentence boundary fits: cut on a word boundary (not after a function word) and end with an ellipsis.
           const words = full.split(/\s+/);
@@ -1383,6 +1406,7 @@
           }
           el.textContent = cutAt(lo);
           if (overflows()) el.textContent = full;
+          return 'cut';
         }
 
         /**
