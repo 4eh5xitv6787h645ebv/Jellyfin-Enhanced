@@ -1352,8 +1352,9 @@
           const el = this.overlayPlot;
           if (!full || !el) return;
           el.style.removeProperty('-webkit-line-clamp');
+          el.style.removeProperty('max-width');
           if (el.clientHeight === 0) return;
-          const status = this.fitOverviewText(full);
+          let status = this.fitOverviewText(full);
           const layout = el.closest('.pause-screen-layout');
           const footerTop = this.progressWrap?.getBoundingClientRect?.().top;
           if (!layout || !footerTop) return;
@@ -1373,8 +1374,18 @@
           };
           let lines = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 0;
           // When only a mid-sentence cut fits the budget, one more line may let a sentence finish
-          // (roomy screens and short landscape). The fit check decides.
-          const extra = window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
+          // (roomy screens, short landscape and tall portrait phones). The fit check decides.
+          // Phones held sideways read a 56ch measure; when that leaves a word cut, a slightly wider
+          // measure (60, 64, then 68ch, within the column) may let the text finish on the same lines.
+          if (status === 'cut' && window.matchMedia?.('(max-height: 500px) and (orientation: landscape)').matches) {
+            for (const w of ['60ch', '64ch', '68ch']) {
+              el.style.setProperty('max-width', `min(100%, ${w})`);
+              const st = this.fitOverviewText(full);
+              if (st !== 'cut' && fits()) { status = st; break; }
+            }
+            if (status === 'cut') { el.style.removeProperty('max-width'); this.fitOverviewText(full); }
+          }
+          const extra = window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape), (max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 1 : 0;
           if (status === 'cut' && lines > 0 && extra > 0) {
             let grown = false;
             for (let more = 1; more <= extra && !grown; more++) {

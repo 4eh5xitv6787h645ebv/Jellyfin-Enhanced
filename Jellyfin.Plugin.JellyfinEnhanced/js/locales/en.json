@@ -358,7 +358,7 @@
     "pausescreen_episode_spoken": "Season {season}, episode {episode}",
     "pausescreen_resume_hint": "Press Space or click anywhere to resume",
     "pausescreen_resume_hint_touch": "Tap anywhere to resume",
-    "pausescreen_resume_hint_tv": "Press OK to resume · Press Up for Hide details",
+    "pausescreen_resume_hint_tv": "Press OK to resume · Press Up to hide details",
     "pausescreen_dismiss": "Hide details; keep playback paused",
     "pausescreen_hide": "Hide details",
     "pausescreen_hide_caption_stays": "Keeps playback paused",
