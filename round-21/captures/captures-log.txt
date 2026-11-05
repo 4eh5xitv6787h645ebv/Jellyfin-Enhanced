@@ -1,0 +1,17 @@
+CONSOLE error WebSocket connection to 'ws://127.0.0.1:18537/socket' failed: Error during WebSocket handshake: Unexpected response code: 403
+CONSOLE warning Not initializing chromecast: chrome object is missing
+CONSOLE warning [FallbackRoute] You are using a deprecated URL format. This will stop working in a future Jellyfin update.
+CAPTURES
+caption 900px ageRating: on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] → off [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | ] → on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] (same as before)
+caption 900px language: on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] → off [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA] → on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] (same as before)
+caption 900px quality: on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] → off [97% | 8.7 | TV-MA | ] → on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] (same as before)
+caption 900px rating: on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] → off [4K | HDR10 | Dolby Digital+ 5.1 | TV-MA | ] → on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] (same as before)
+caption 900px genre: on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] → off [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] → on [4K | HDR10 | Dolby Digital+ 5.1 | 97% | 8.7 | TV-MA | ] (same as before)
+scope 900px genre/episodes: sample episode genre chips 2 → 0 → 2
+caption 1400px ageRating: on [4K | HDR10 | Dolby Digital+ 5.1] → off [4K | HDR10 | Dolby Digital+ 5.1] → on [4K | HDR10 | Dolby Digital+ 5.1] (same as before)
+caption 1400px language: on [4K | HDR10 | Dolby Digital+ 5.1] → off [4K | HDR10 | Dolby Digital+ 5.1] → on [4K | HDR10 | Dolby Digital+ 5.1] (same as before)
+caption 1400px quality: on [4K | HDR10 | Dolby Digital+ 5.1] → off [97% | 8.7 | TV-MA | ] → on [4K | HDR10 | Dolby Digital+ 5.1] (same as before)
+caption 1400px rating: on [4K | HDR10 | Dolby Digital+ 5.1] → off [4K | HDR10 | Dolby Digital+ 5.1] → on [4K | HDR10 | Dolby Digital+ 5.1] (same as before)
+caption 1400px genre: on [4K | HDR10 | Dolby Digital+ 5.1] → off [4K | HDR10 | Dolby Digital+ 5.1] → on [4K | HDR10 | Dolby Digital+ 5.1] (same as before)
+scope 1400px genre/episodes: sample episode genre chips 2 → 0 → 2
+URL http://127.0.0.1:18537/web/index.html#/configurationpage?name=JellyfinEnhancedMediaTags

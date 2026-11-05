@@ -1,0 +1,25 @@
+native-corners-compact           386    382     1826    2092    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-compact             386    382     1460    1711    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-custom              386    380     1459    1659    0      Movie 361/361, Series 10/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 0/1
+native-bands-admin               386    380     1092    1670    0      Movie 361/361, Series 9/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-integrated-smaller  386    383     1462    2072    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-integrated-largest  386    383     1462    2072    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+logos-custom-corners-tight-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-corners-flush-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-tight-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-flush-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-corners-tight-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-corners-flush-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-tight-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-flush-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+technical-full-flags             386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-full-flags     386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-full-codes             386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-full-codes     386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-compact-flags          386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-compact-flags  386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-compact-codes          386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-compact-codes  386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-reordered              386    368     368     612     0      Movie 354/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+
+Total differences: 0
