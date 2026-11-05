@@ -271,13 +271,6 @@
             }
             .pause-screen-main.has-logo #pause-screen-title,
             .pause-screen-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-            /* a dark logo (Spider-Verse's red and navy) is hard to read over a dark scrim: the plain title follows it */
-            .pause-screen-main.has-logo.logo-needs-title #pause-screen-title {
-              position: static; width: auto; height: auto; overflow: hidden; clip: auto; white-space: normal;
-              font-size: clamp(22px, 2.3vw, 44px); font-weight: 600; line-height: 1.2; color: #fff;
-              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 12px;
-              display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
-            }
             #pause-screen-subtitle {
               font-size: clamp(18px, 1.75vw, 34px);
               font-weight: 600; line-height: 1.25;
@@ -588,9 +581,6 @@
                 .pause-screen-hint { font-size: 14px; color: rgba(255,255,255,.75); }
               }
               #pause-screen-title { font-size: clamp(28px, 8vw, 40px); }
-              /* phones: a dark logo is hidden and its plain title is the title, as for a title without a logo */
-              .pause-screen-main.logo-needs-title #pause-screen-logo { display: none; }
-              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: clamp(28px, 8vw, 40px); font-weight: 700; line-height: 1.04; margin: 0 0 16px; display: block; }
               #pause-screen-subtitle { font-size: 18px; }
               #pause-screen-details .pause-screen-date-long { display: none; }
               #pause-screen-details .pause-screen-date-short { display: inline; }
@@ -620,10 +610,7 @@
               #pause-screen-details .pause-screen-date-short { display: inline; }
               /* an episode's height goes to its story: the series genres step aside here */
               #pause-screen-overlay.has-still #pause-screen-genres,
-              #pause-screen-overlay.plot-over-genres #pause-screen-genres,
-              .pause-screen-main.logo-needs-title #pause-screen-genres { display: none; }
-              .pause-screen-main.logo-needs-title #pause-screen-logo { display: none; }
-              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: clamp(26px, 7vh, 32px); font-weight: 700; line-height: 1.04; margin: 0; }
+              #pause-screen-overlay.plot-over-genres #pause-screen-genres { display: none; }
               #pause-screen-progress-meta { margin-top: .2em; }
               .pause-screen-actions { margin-top: calc(var(--pause-screen-meta-size) * .7); }
             }
@@ -1244,7 +1231,7 @@
           this.overlayTitle.textContent = "";
           this.overlaySubtitle.textContent = "";
           this.overlayGenres.textContent = "";
-          this.overlayMain.classList.remove('has-logo', 'logo-needs-title');
+          this.overlayMain.classList.remove('has-logo');
           this.overlayMain.style.removeProperty('--pause-screen-logo-scale');
           this.overlayLogo.removeAttribute('src');
           this.overlayDisc.removeAttribute('src');
@@ -1334,13 +1321,13 @@
           const trimmedLogoURL = logoURL ? await this.trimTransparentEdges(logoURL) : null;
 
           if (this.destroyed || generation !== this.generation) return;
-          if (trimmedLogoURL) {
+          // A dark logo (Spider-Verse's red and navy) is hard to read over the scrim: the plain title is
+          // the headline instead, exactly as for a title without a logo.
+          const darkLogo = trimmedLogoURL && (this.logoInk.get(logoURL)?.luma ?? 1) < 0.3;
+          if (trimmedLogoURL && !darkLogo) {
             this.overlayLogo.src = trimmedLogoURL;
             this.overlayMain.classList.add('has-logo');
-            // a dark logo is hard to read: its plain title leads and the logo steps down to .6
-            const darkLogo = (this.logoInk.get(logoURL)?.luma ?? 1) < 0.3;
-            this.overlayMain.style.setProperty('--pause-screen-logo-scale', darkLogo ? '0.6' : this.logoScale(this.logoInk.get(logoURL)));
-            this.overlayMain.classList.toggle('logo-needs-title', darkLogo);
+            this.overlayMain.style.setProperty('--pause-screen-logo-scale', this.logoScale(this.logoInk.get(logoURL)));
           }
           if (discURL) this.overlayDisc.src = discURL;
           this.overlayPoster.classList.toggle('is-still', !!stillURL);
@@ -1422,18 +1409,22 @@
             }
           }
           // One or two more lines only when they let the text finish on a sentence (fit check decides).
-          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 2
-            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
-          if (status === 'cut' && lines > 0 && extra > 0) {
-            let grown = false;
-            for (let more = 1; more <= extra && !grown; more++) {
+          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 3
+            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 2 : 0;
+          // More lines only when they show more whole text: after a word cut any sentence end, after a
+          // sentence cut a longer whole-sentence prefix or the whole text. The fit check decides.
+          if (status !== 'full' && lines > 0 && extra > 0) {
+            const baseLen = el.textContent.length;
+            let best = 0;
+            for (let more = 1; more <= extra; more++) {
               el.style.setProperty('-webkit-line-clamp', String(lines + more));
-              if (this.fitOverviewText(full) !== 'cut' && fits()) { lines += more; grown = true; }
+              const st = this.fitOverviewText(full);
+              const longer = status === 'cut' ? st !== 'cut' : (st === 'full' || (st === 'sentence' && el.textContent.length > baseLen));
+              if (longer && fits()) { best = more; if (st === 'full') break; }
             }
-            if (!grown) {
-              el.style.setProperty('-webkit-line-clamp', String(lines));
-              this.fitOverviewText(full);
-            }
+            el.style.setProperty('-webkit-line-clamp', String(lines + best));
+            lines += best;
+            this.fitOverviewText(full);
           }
           // Short viewports: when the text block spills past the layout's top edge or into the footer's
           // reserve, give up overview lines (down to one) before letting anything hide.
