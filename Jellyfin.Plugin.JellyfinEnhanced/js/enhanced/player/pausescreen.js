@@ -161,7 +161,7 @@
               --pause-screen-progress-radius: 999px;
               --pause-screen-disc-w: clamp(220px, 20vw, 360px);
               --pause-screen-disc-rot-sec: 0s;
-              --pause-screen-poster-w: clamp(170px, 16vw, 300px);
+              --pause-screen-poster-w: clamp(170px, 14vw, 260px);
               --pause-screen-still-w: clamp(240px, 26vw, 500px);
             }
 
@@ -225,15 +225,15 @@
               pointer-events: none;
             }
             #pause-screen-backdrop.is-still {
-              inset: -6%;
-              filter: blur(clamp(14px, 1.3vw, 26px)) saturate(1.1);
+              inset: -8%;
+              filter: blur(clamp(28px, 2.4vw, 48px)) saturate(1.1);
               opacity: .72;
             }
             .pause-screen-scrim {
               position: absolute; inset: 0;
               pointer-events: none;
               background:
-                linear-gradient(90deg, rgba(8,9,13,.88) 0%, rgba(8,9,13,.66) 36%, rgba(8,9,13,.28) 64%, rgba(8,9,13,.18) 100%),
+                linear-gradient(90deg, rgba(8,9,13,.92) 0%, rgba(8,9,13,.78) 36%, rgba(8,9,13,.60) 55%, rgba(8,9,13,.24) 72%, rgba(8,9,13,.18) 100%),
                 linear-gradient(180deg, rgba(8,9,13,.42) 0%, rgba(8,9,13,0) 26%, rgba(8,9,13,0) 60%, rgba(8,9,13,.84) 100%);
             }
 
@@ -322,7 +322,7 @@
               aspect-ratio: 2 / 3;
               object-fit: cover; display: block;
               border-radius: 12px;
-              box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.08);
+              box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.14);
             }
             #pause-screen-poster:not(.is-still) { filter: brightness(.9); }
             @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.84); } }
@@ -366,6 +366,8 @@
             .pause-screen-status { display: inline-flex; align-items: center; gap: .25em; font-weight: 600; color: #fff; }
             .pause-screen-status .material-icons { font-size: 1.5em; margin-left: -.18em; }
             #pause-screen-progress-meta .progress-percentage { display: none; }
+            #pause-screen-progress-meta .progress-left { font-weight: 600; color: #fff; }
+            #pause-screen-progress-meta .progress-time, #pause-screen-progress-meta .progress-ends-at { color: rgba(255,255,255,.8); }
             #pause-screen-progress-meta .progress-time:not(:empty)::before,
             #pause-screen-progress-meta .progress-percentage:not(:empty)::before,
             #pause-screen-progress-meta .progress-ends-at:not(:empty)::before { content: '·'; opacity: .5; margin-right: .6em; }
@@ -424,6 +426,11 @@
             .pause-screen-close-caption > span { display: block; }
             .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
+            /* touch phones have no hover: the first caption line stays up so a tap on × is never a guess */
+            @media (hover: none) and (pointer: coarse) and (max-width: 1000px) and (orientation: portrait) {
+              .pause-screen-close-caption { display: block; font-size: 13px; line-height: 18px; top: calc(var(--pause-screen-close-bottom, 46px) + 2px); }
+              #pause-screen-overlay:not(.close-focused) .pause-screen-close-caption > span + span { display: none; }
+            }
             @media (hover: hover) {
               #pause-screen-content:has(#pause-screen-close-btn:hover) .pause-screen-close-caption { display: block; }
               #pause-screen-overlay:not(.close-focused) #pause-screen-content:has(#pause-screen-close-btn:hover) .pause-screen-close-caption > span + span { display: none; }
@@ -545,7 +552,7 @@
                 #pause-screen-logo { grid-area: logo; margin-bottom: 16px; }
                 #pause-screen-title { grid-area: title; margin: 0 0 16px; }
                 #pause-screen-subtitle { grid-area: sub; }
-                .pause-screen-art { display: flex; grid-area: art; align-self: start; justify-content: flex-start; min-height: 0; margin-bottom: 12px; }
+                .pause-screen-art { display: flex; grid-area: art; align-self: start; justify-content: flex-start; margin-bottom: 12px; }
                 .pause-screen-facts { grid-area: facts; align-self: start; margin-top: 6px; gap: 8px; }
                 #pause-screen-plot { grid-area: plot; margin-top: 4px; margin-bottom: 0; }
                 #pause-screen-poster { width: 96px; border-radius: 4px; }
@@ -555,12 +562,13 @@
                 #pause-screen-overlay.has-still .pause-screen-facts { margin-top: 0; }
                 #pause-screen-overlay.has-still .pause-screen-art { align-self: start; }
                 /* a definite width: the grid sized the row from a 4:3 still's natural size and let it overflow the facts */
-                #pause-screen-poster.is-still { width: calc(100vw - 2 * var(--pause-screen-gutter-x)); height: auto; }
+                /* a 16:9 still spans the column; a 4:3 one keeps its frame at 200 px tall instead of pushing the facts away */
+                #pause-screen-poster.is-still { width: auto; height: auto; max-width: calc(100vw - 2 * var(--pause-screen-gutter-x)); max-height: 200px; }
                 #pause-screen-overlay.has-still #pause-screen-logo { max-height: min(16vh, 120px); }
                 /* the action spans the column like the track above it: a thumb-sized target with its hint as a footnote */
                 .pause-screen-actions { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
                 .pause-screen-resume { justify-content: center; min-height: 48px; font-size: 17px; padding: 0 16px; }
-                .pause-screen-hint { text-align: center; font-size: 14px; color: rgba(255,255,255,.75); }
+                .pause-screen-hint { font-size: 14px; color: rgba(255,255,255,.75); }
               }
               #pause-screen-title { font-size: clamp(28px, 8vw, 40px); }
               #pause-screen-subtitle { font-size: 18px; }
@@ -1343,7 +1351,7 @@
             const m = /matrix\((?:[^,]+,){5}\s*([-\d.]+)\)/.exec(getComputedStyle(this.overlayMain).transform);
             const shift = m ? parseFloat(m[1]) || 0 : 0;
             let top = Infinity, bottom = -Infinity;
-            for (const child of this.overlayMain.querySelectorAll(':scope > *')) {
+            for (const child of [...this.overlayMain.querySelectorAll(':scope > *'), this.overlayMain.parentElement?.querySelector(':scope > .pause-screen-art')].filter(Boolean)) {
               const r = child.getBoundingClientRect();
               if (!r.height || getComputedStyle(child).display === 'none') continue;
               top = Math.min(top, r.top - shift); bottom = Math.max(bottom, r.bottom - shift);
@@ -1352,7 +1360,7 @@
           };
           let lines = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 0;
           // Roomy screens: when only a mid-sentence cut fits the budget, one more line may let a sentence finish.
-          if (status === 'cut' && lines > 0 && window.matchMedia?.('(min-width: 1200px) and (min-height: 800px)').matches) {
+          if (status === 'cut' && lines > 0 && window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches) {
             el.style.setProperty('-webkit-line-clamp', String(lines + 1));
             if (this.fitOverviewText(full) !== 'cut' && fits()) {
               lines += 1;
