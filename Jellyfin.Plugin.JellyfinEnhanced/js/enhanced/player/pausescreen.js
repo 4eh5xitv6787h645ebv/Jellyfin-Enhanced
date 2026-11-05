@@ -161,8 +161,8 @@
               --pause-screen-progress-radius: 999px;
               --pause-screen-disc-w: clamp(220px, 20vw, 360px);
               --pause-screen-disc-rot-sec: 0s;
-              --pause-screen-poster-w: clamp(170px, 14vw, 260px);
-              --pause-screen-still-w: clamp(240px, 26vw, 500px);
+              --pause-screen-poster-w: clamp(170px, 12vw, 230px);
+              --pause-screen-still-w: clamp(220px, 22vw, 424px);
             }
 
             #pause-screen-overlay {
@@ -316,7 +316,8 @@
               animation: pause-screen-spin var(--pause-screen-disc-rot-sec) linear infinite;
               box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 18px 40px rgba(0,0,0,.45);
             }
-            #pause-screen-poster.is-still { width: var(--pause-screen-still-w); aspect-ratio: auto; height: auto; }
+            /* a still fills a 16:9 box at most: a 4:3 one gets narrower, not taller */
+            #pause-screen-poster.is-still { width: auto; height: auto; aspect-ratio: auto; max-width: var(--pause-screen-still-w); max-height: calc(var(--pause-screen-still-w) * 9 / 16); }
             #pause-screen-poster {
               width: var(--pause-screen-poster-w);
               aspect-ratio: 2 / 3;
@@ -325,7 +326,7 @@
               box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.14);
             }
             #pause-screen-poster:not(.is-still) { filter: brightness(.9); }
-            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.84); } }
+            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.8); } #pause-screen-poster.is-still { filter: brightness(.88); } }
             @media (min-width: 1001px) and (max-width: 1599px) { #pause-screen-poster { border-radius: 9px; } }
 
             @keyframes pause-screen-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -555,8 +556,9 @@
                 .pause-screen-layout {
                   grid-template-columns: auto minmax(0, 1fr);
                   grid-template-areas: "logo logo" "title title" "sub sub" "art facts" "plot plot";
-                  /* the block sits in the middle of the room between the header and the footer; "safe" keeps a tall block top-aligned */
-                  align-content: safe center; align-items: start; row-gap: 0; column-gap: 16px;
+                  /* the block sits on the footer, 68 px above the track on every title; "safe" keeps a tall block top-aligned */
+                  align-content: safe end; align-items: start; row-gap: 0; column-gap: 16px;
+                  padding-bottom: calc(var(--pause-screen-footer-h, 152px) + 68px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px));
                 }
                 .pause-screen-main { display: contents; }
                 .pause-screen-main > * { margin-bottom: 12px; }
@@ -1386,13 +1388,13 @@
               if (better(st) && fits()) { status = st; found = true; break; }
             }
             if (!found) { el.style.removeProperty('max-width'); this.fitOverviewText(full); }
-            // Last resort for a word cut: a movie's genre row steps aside for a fourth line.
-            if (status === 'cut' && !this.overlay.classList.contains('has-still')) {
+            // Last resort: a movie's genre row steps aside for a fourth line (same acceptance rule as above).
+            if (status !== 'full' && !this.overlay.classList.contains('has-still')) {
               const base = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 3;
               this.overlay.classList.add('plot-over-genres');
               el.style.setProperty('-webkit-line-clamp', String(base + 1));
               const st = this.fitOverviewText(full);
-              if (st !== 'cut' && fits()) { status = st; lines = base + 1; } else {
+              if (better(st) && fits()) { status = st; lines = base + 1; } else {
                 this.overlay.classList.remove('plot-over-genres');
                 el.style.removeProperty('-webkit-line-clamp');
                 this.fitOverviewText(full);
