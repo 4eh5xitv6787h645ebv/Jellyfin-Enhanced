@@ -367,6 +367,13 @@
             .pause-screen-status .material-icons { font-size: 1.5em; margin-left: -.18em; }
             #pause-screen-progress-meta .progress-percentage { display: none; }
             #pause-screen-progress-meta .progress-left { font-weight: 600; color: #fff; }
+            @media (min-width: 1001px) {
+              #pause-screen-progress-meta { gap: .6em; justify-content: flex-start; }
+              #pause-screen-progress-meta .pause-screen-meta-group { display: contents; }
+              #pause-screen-progress-meta .progress-left:not(:empty)::before { content: '·'; opacity: .5; margin-right: .6em; font-weight: 400; color: rgba(255,255,255,.88); }
+              #pause-screen-progress-meta .progress-ends-at { margin-left: auto; color: rgba(255,255,255,.7); }
+              #pause-screen-progress-meta .progress-ends-at::before { content: none !important; }
+            }
             #pause-screen-progress-meta .progress-time, #pause-screen-progress-meta .progress-ends-at { color: rgba(255,255,255,.8); }
             #pause-screen-progress-meta .progress-time:not(:empty)::before,
             #pause-screen-progress-meta .progress-percentage:not(:empty)::before,
@@ -424,11 +431,12 @@
               z-index: 2;
             }
             .pause-screen-close-caption > span { display: block; }
+            .pause-screen-close-caption { pointer-events: none; }
             .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
             /* touch phones have no hover: the first caption line stays up so a tap on × is never a guess */
             @media (hover: none) and (pointer: coarse) and (max-width: 1000px) {
-              .pause-screen-close-caption { display: block; font-size: 14px; line-height: 18px; top: calc(var(--pause-screen-close-bottom, 46px) + 2px); }
+              .pause-screen-close-caption { display: block; font-size: 14px; line-height: 18px; top: calc(var(--pause-screen-close-bottom, 46px) - 8px); }
               #pause-screen-overlay:not(.close-focused) .pause-screen-close-caption > span + span { display: none; }
             }
             @media (hover: hover) {
@@ -481,6 +489,8 @@
               #pause-screen-close-btn:focus-visible { outline-width: 3px; outline-offset: -3px; }
               .pause-screen-active .skinHeader.osdHeader { top: 12px !important; }
             }
+            /* Jellyfin's TV layout (remote, couch): keep the header row inside the 5 % action-safe area, clear of overscan */
+            .layout-tv.pause-screen-active .skinHeader.osdHeader { top: calc(5vh - 16px) !important; left: calc(5vw - 16px) !important; }
             /* Accessibility helpers */
             #pause-screen-focus-start, #pause-screen-focus-end {
               position: fixed; width:1px; height:1px; overflow:hidden; clip: rect(0 0 0 0);
@@ -1360,12 +1370,17 @@
             return top >= topEdge - 1 && bottom <= footerTop - 30;
           };
           let lines = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 0;
-          // Roomy screens: when only a mid-sentence cut fits the budget, one more line may let a sentence finish.
-          if (status === 'cut' && lines > 0 && window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches) {
-            el.style.setProperty('-webkit-line-clamp', String(lines + 1));
-            if (this.fitOverviewText(full) !== 'cut' && fits()) {
-              lines += 1;
-            } else {
+          // When only a mid-sentence cut fits the budget, a line or two more may let a sentence finish
+          // (roomy screens and short landscape: one; tall portrait phones: up to two). The fit check decides.
+          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 2
+            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
+          if (status === 'cut' && lines > 0 && extra > 0) {
+            let grown = false;
+            for (let more = 1; more <= extra && !grown; more++) {
+              el.style.setProperty('-webkit-line-clamp', String(lines + more));
+              if (this.fitOverviewText(full) !== 'cut' && fits()) { lines += more; grown = true; }
+            }
+            if (!grown) {
               el.style.setProperty('-webkit-line-clamp', String(lines));
               this.fitOverviewText(full);
             }
