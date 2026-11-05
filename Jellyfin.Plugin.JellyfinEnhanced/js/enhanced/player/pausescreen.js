@@ -274,8 +274,8 @@
             /* a dark logo (Spider-Verse's red and navy) is hard to read over a dark scrim: the plain title follows it */
             .pause-screen-main.has-logo.logo-needs-title #pause-screen-title {
               position: static; width: auto; height: auto; overflow: hidden; clip: auto; white-space: normal;
-              font-size: clamp(16px, 1.25vw, 24px); font-weight: 600; line-height: 1.3; color: #f0f0f0;
-              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 0;
+              font-size: clamp(18px, 1.45vw, 28px); font-weight: 600; line-height: 1.3; color: #f0f0f0;
+              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 12px;
               display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
             }
             #pause-screen-subtitle {
@@ -380,7 +380,7 @@
               #pause-screen-progress-meta { gap: .6em; justify-content: flex-start; }
               #pause-screen-progress-meta .pause-screen-meta-group { display: contents; }
               #pause-screen-progress-meta .progress-left:not(:empty)::before { content: '·'; opacity: .5; margin-right: .6em; font-weight: 400; color: rgba(255,255,255,.88); }
-              #pause-screen-progress-meta .progress-ends-at { margin-left: auto; color: #c2c2c2; font-size: .875em; }
+              #pause-screen-progress-meta .progress-ends-at { margin-left: auto; color: #c2c2c2; font-size: max(14px, .875em); }
               #pause-screen-progress-meta .progress-ends-at::before { content: none !important; }
             }
             #pause-screen-progress-meta .progress-time:not(:empty)::before,
@@ -592,6 +592,7 @@
               #pause-screen-details .pause-screen-date-long { display: none; }
               #pause-screen-details .pause-screen-date-short { display: inline; }
               #pause-screen-progress-meta { flex-direction: column; align-items: flex-start; gap: .35em; }
+              #pause-screen-progress-meta .progress-ends-at { font-size: 14px; }
               #pause-screen-close-btn { right: calc(8px + env(safe-area-inset-right, 0px)); }
             }
 
@@ -618,7 +619,7 @@
               #pause-screen-overlay.has-still #pause-screen-genres,
               #pause-screen-overlay.plot-over-genres #pause-screen-genres,
               .pause-screen-main.logo-needs-title #pause-screen-genres { display: none; }
-              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: 14px; margin-top: -4px; }
+              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: 16px; margin-top: -4px; margin-bottom: 0; }
               #pause-screen-progress-meta { margin-top: .2em; }
               .pause-screen-actions { margin-top: calc(var(--pause-screen-meta-size) * .7); }
             }
@@ -1338,6 +1339,8 @@
           if (discURL) this.overlayDisc.src = discURL;
           this.overlayPoster.classList.toggle('is-still', !!stillURL);
           if (stillURL || posterURL) this.overlayPoster.src = stillURL || posterURL;
+          // An episode's own still goes behind it: series backdrops often carry the printed series title,
+          // which would sit right behind the logo (Ted Lasso's does).
           const backdropChoice = stillURL || backdropURL;
           this.overlayBackdrop.classList.toggle('is-still', !!stillURL);
           this.overlay.classList.toggle('has-still', !!stillURL);
