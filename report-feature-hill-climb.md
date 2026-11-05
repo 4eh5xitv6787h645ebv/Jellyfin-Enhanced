@@ -20,7 +20,11 @@
   | Translations, inventory, poster assets, `git diff --check` | pass |
   | Attribution grep | only the two known upstream merge commits (a8f8f666, bd62b215) |
 - **Lab je-lab-centres** (http://127.0.0.1:18537): legacy viewer Home AE = 0 against the round-6 capture. On Movies the tags are identical; the only differing pixels are the header's random dice icon, which varies per load.
-- **Lab restore:** every lab user's settings file and the plugin XML were restored byte for byte from `.notes/lab-snapshot/centres-before.tar`. The checksums matched after Jellyfin restarted. The lab is left running the deploy of 589047d2.
+- **Lab restore** from `.notes/lab-snapshot/centres-before.tar` (container stopped, files replaced, container started):
+  - **User files:** all four (two users' `settings.json` and `hidden-content.json`) match the snapshot byte for byte.
+  - **Plugin XML:** restored byte for byte, but every start of this branch's plugin runs its startup task, which re-saves the configuration. That adds the 55 settings this branch introduced, at their defaults, and moves `ClearTranslationCacheTimestamp`. Every value the snapshot holds is otherwise unchanged (`diff`: 1 line changed, 56 added).
+  - **Byte-identical XML:** not achievable while the lab runs HEAD. The snapshot's copy is still in the tar, if the lab goes back to the base plugin.
+  - The lab is left running the deploy of 589047d2.
 - **Ledger:** `.notes/council/ledger.md` holds every round's findings in full, with each seat's reports in `.notes/council/round-<n>-<seat>.md`. The evidence packs are on fork branch `evidence/features` (`round-1` … `round-23`).
 
 ## Overall score per round (seat by seat)
