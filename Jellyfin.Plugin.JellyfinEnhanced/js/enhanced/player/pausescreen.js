@@ -366,15 +366,15 @@
             .pause-screen-status { display: inline-flex; align-items: center; gap: .25em; font-weight: 600; color: #fff; }
             .pause-screen-status .material-icons { font-size: 1.5em; margin-left: -.18em; }
             #pause-screen-progress-meta .progress-percentage { display: none; }
+            #pause-screen-progress-meta .progress-time, #pause-screen-progress-meta .progress-ends-at { color: rgba(255,255,255,.8); }
             #pause-screen-progress-meta .progress-left { font-weight: 600; color: #fff; }
-            @media (min-width: 1001px) {
+            @media (min-width: 1001px), (max-height: 500px) and (orientation: landscape) and (min-width: 700px) {
               #pause-screen-progress-meta { gap: .6em; justify-content: flex-start; }
               #pause-screen-progress-meta .pause-screen-meta-group { display: contents; }
               #pause-screen-progress-meta .progress-left:not(:empty)::before { content: '·'; opacity: .5; margin-right: .6em; font-weight: 400; color: rgba(255,255,255,.88); }
-              #pause-screen-progress-meta .progress-ends-at { margin-left: auto; color: rgba(255,255,255,.7); }
+              #pause-screen-progress-meta .progress-ends-at { margin-left: auto; color: #c2c2c2; }
               #pause-screen-progress-meta .progress-ends-at::before { content: none !important; }
             }
-            #pause-screen-progress-meta .progress-time, #pause-screen-progress-meta .progress-ends-at { color: rgba(255,255,255,.8); }
             #pause-screen-progress-meta .progress-time:not(:empty)::before,
             #pause-screen-progress-meta .progress-percentage:not(:empty)::before,
             #pause-screen-progress-meta .progress-ends-at:not(:empty)::before { content: '·'; opacity: .5; margin-right: .6em; }
@@ -431,7 +431,8 @@
               z-index: 2;
             }
             .pause-screen-close-caption > span { display: block; }
-            .pause-screen-close-caption { pointer-events: none; }
+            /* the caption is part of the × target: a tap on it hides the details, it never resumes */
+            .pause-screen-close-caption { cursor: pointer; }
             .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
             /* touch phones have no hover: the first caption line stays up so a tap on × is never a guess */
@@ -548,7 +549,7 @@
               }
               .pause-screen-layout { padding-top: calc(76px + env(safe-area-inset-top, 0px)); padding-bottom: calc(var(--pause-screen-footer-h, 152px) + 36px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px)); align-items: end; }
               @media (min-height: 800px) and (orientation: portrait) {
-                :root { --pause-screen-plot-lines: 4; --pause-screen-plot-font: clamp(16px, 2.2vw, 20px); --pause-screen-meta-size: clamp(16px, 2vw, 18px); --pause-screen-hint-size: clamp(15px, 2vw, 18px); }
+                :root { --pause-screen-plot-lines: 6; --pause-screen-plot-font: clamp(16px, 2.2vw, 20px); --pause-screen-meta-size: clamp(16px, 2vw, 18px); --pause-screen-hint-size: clamp(15px, 2vw, 18px); }
               }
               @media (min-height: 740px) and (orientation: portrait) {
                 .pause-screen-layout {
@@ -596,7 +597,7 @@
                 --pause-screen-logo-max-w: min(38vw, 320px);
                 --pause-screen-logo-max-h: clamp(56px, 20vh, 80px);
                 --pause-screen-plot-lines: 3;
-                --pause-screen-plot-max-w: min(100%, 68ch);
+                --pause-screen-plot-max-w: min(100%, 56ch);
                 --pause-screen-text-size: 14px;
                 --pause-screen-meta-size: 14px;
                 --pause-screen-hint-size: 14px;
@@ -778,6 +779,7 @@
           this.closeCaption.id = "pause-screen-close-caption";
           this.closeCaption.className = "pause-screen-close-caption";
           closeButton.setAttribute("aria-describedby", "pause-screen-close-caption");
+          this.closeCaption.addEventListener('click', (e) => { e.stopPropagation(); this.hideOverlay(true); });
           for (const el of [closeButton, this.resumeButton]) {
             el.addEventListener('focus', () => this.refreshHint());
             el.addEventListener('blur', () => setTimeout(() => this.refreshHint(), 0));
@@ -813,7 +815,7 @@
 
           // Pointer/touch anywhere but the close button resumes
           const tryResume = (event) => {
-            if (event.target?.closest?.('#pause-screen-close-btn, #pause-screen-resume')) return;
+            if (event.target?.closest?.('#pause-screen-close-btn, #pause-screen-close-caption, #pause-screen-resume')) return;
             // Introduce a delay to allow for long-press detection; fade right away so the tap reads as taken
             this.overlay.classList.add('is-resuming');
             JE.state.pauseScreenClickTimer = setTimeout(() => this.resume(), 500);
@@ -1370,10 +1372,9 @@
             return top >= topEdge - 1 && bottom <= footerTop - 30;
           };
           let lines = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 0;
-          // When only a mid-sentence cut fits the budget, a line or two more may let a sentence finish
-          // (roomy screens and short landscape: one; tall portrait phones: up to two). The fit check decides.
-          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 2
-            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
+          // When only a mid-sentence cut fits the budget, one more line may let a sentence finish
+          // (roomy screens and short landscape). The fit check decides.
+          const extra = window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
           if (status === 'cut' && lines > 0 && extra > 0) {
             let grown = false;
             for (let more = 1; more <= extra && !grown; more++) {

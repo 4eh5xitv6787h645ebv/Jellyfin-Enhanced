@@ -130,3 +130,10 @@ test('the spoken clock drops a zero seconds part and logos scale by ink coverage
  assert.equal(p.spokenClock(0),'0 seconds');
  assert.equal(p.logoScale(undefined),'1');assert.equal(p.logoScale({coverage:0.3,aspect:2}),'1.000');assert.equal(p.logoScale({coverage:1,aspect:2}),'0.850');assert.equal(p.logoScale({coverage:0.45,aspect:2}),'0.882');assert.equal(p.logoScale({coverage:1,aspect:4.5}),'1');
 });
+test('a tap on the caption under the close button hides the details and never resumes',t=>{
+ const h=setup(t);h.JE.initializePauseScreen();const p=h.JE.pauseScreenInstance;let played=0;p.currentVideo={paused:true,play:()=>{played++;return Promise.resolve();}};
+ p.showOverlay();
+ p.closeCaption.dispatchEvent(new h.window.Event('touchstart',{bubbles:true}));
+ p.closeCaption.dispatchEvent(new h.window.MouseEvent('click',{bubbles:true}));
+ assert.equal(p.overlay.getAttribute('aria-hidden'),'true');assert.equal(p._dismissedThisPause,true);assert.equal(p.overlay.classList.contains('is-resuming'),false);assert.equal(played,0);
+});
