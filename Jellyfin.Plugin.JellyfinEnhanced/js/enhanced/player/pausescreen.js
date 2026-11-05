@@ -150,7 +150,7 @@
               --pause-screen-gutter-x: max(var(--pause-screen-gutter-base), calc(env(safe-area-inset-left, 0px) + 16px), calc(env(safe-area-inset-right, 0px) + 16px));
               --pause-screen-gutter-y: clamp(20px, 5vh, 64px);
               --pause-screen-logo-max-w: min(46vw, 640px);
-              --pause-screen-logo-max-h: 22vh;
+              --pause-screen-logo-max-h: 18vh;
               --pause-screen-text-size: clamp(14px, 1.2vw, 24px);
               --pause-screen-meta-size: clamp(14px, 1.2vw, 24px);
               --pause-screen-hint-size: clamp(14px, 1.1vw, 21px);
@@ -422,7 +422,10 @@
               z-index: 2;
             }
             .pause-screen-close-caption > span { display: block; }
+            .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
+            /* the way back is written under the ×; the footer keeps its space so nothing jumps */
+            #pause-screen-overlay.close-focused .pause-screen-hint { visibility: hidden; }
             @media (min-width: 1600px) { .pause-screen-resume:focus-visible { outline-width: 3px; } }
             #pause-screen-close-btn {
               position: absolute;
@@ -483,6 +486,7 @@
             /* Large screens: thicker track and bigger playback facts for distance viewing */
             @media (min-width: 1200px) and (max-width: 1599px) {
               :root { --pause-screen-logo-max-w: min(42vw, 540px); --pause-screen-text-size: 18px; --pause-screen-plot-font: 20px; --pause-screen-hint-size: 17px; }
+              #pause-screen-close-btn { font-size: 17px; }
               .pause-screen-main { gap: 14px; }
             }
             @media (min-width: 1200px) {
@@ -520,7 +524,7 @@
                 --pause-screen-plot-font: clamp(15px, 2.2vw, 20px);
                 --pause-screen-plot-lines: 4;
               }
-              .pause-screen-layout { padding-top: calc(76px + env(safe-area-inset-top, 0px)); padding-bottom: calc(var(--pause-screen-footer-h, 152px) + 24px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px)); align-items: end; }
+              .pause-screen-layout { padding-top: calc(76px + env(safe-area-inset-top, 0px)); padding-bottom: calc(var(--pause-screen-footer-h, 152px) + 36px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px)); align-items: end; }
               @media (min-height: 800px) and (orientation: portrait) {
                 :root { --pause-screen-plot-lines: 7; --pause-screen-plot-font: clamp(16px, 2.2vw, 20px); --pause-screen-meta-size: clamp(16px, 2vw, 18px); --pause-screen-hint-size: clamp(15px, 2vw, 18px); }
               }
@@ -528,7 +532,8 @@
                 .pause-screen-layout {
                   grid-template-columns: auto minmax(0, 1fr);
                   grid-template-areas: "logo logo" "title title" "sub sub" "art facts" "plot plot";
-                  align-content: start; align-items: start; row-gap: 0; column-gap: 16px;
+                  /* the block hangs from the footer so the synopsis ends 36 px above the track on every title; "safe" keeps a tall block top-aligned */
+                  align-content: safe end; align-items: start; row-gap: 0; column-gap: 16px;
                 }
                 .pause-screen-main { display: contents; }
                 .pause-screen-main > * { margin-bottom: 12px; }
@@ -537,15 +542,15 @@
                 #pause-screen-subtitle { grid-area: sub; }
                 .pause-screen-art { display: flex; grid-area: art; align-self: start; justify-content: flex-start; min-height: 0; margin-bottom: 12px; }
                 .pause-screen-facts { grid-area: facts; align-self: start; margin-top: 6px; gap: 8px; }
-                #pause-screen-plot { grid-area: plot; margin-top: 4px; }
+                #pause-screen-plot { grid-area: plot; margin-top: 4px; margin-bottom: 0; }
                 #pause-screen-poster { width: 96px; border-radius: 4px; }
-                #pause-screen-disc { width: 112px; animation: none; }
+                #pause-screen-disc { width: 96px; animation: none; }
                 /* an episode still goes under the episode line, full width */
                 #pause-screen-overlay.has-still .pause-screen-layout { grid-template-areas: "logo logo" "title title" "sub sub" "art art" "facts facts" "plot plot"; }
                 #pause-screen-overlay.has-still .pause-screen-facts { margin-top: 0; }
                 #pause-screen-overlay.has-still .pause-screen-art { align-self: start; }
                 /* a definite width: the grid sized the row from a 4:3 still's natural size and let it overflow the facts */
-                #pause-screen-poster.is-still { width: min(calc(100vw - 2 * var(--pause-screen-gutter-x)), 320px); height: auto; }
+                #pause-screen-poster.is-still { width: calc(100vw - 2 * var(--pause-screen-gutter-x)); height: auto; }
                 #pause-screen-overlay.has-still #pause-screen-logo { max-height: min(16vh, 120px); }
               }
               #pause-screen-title { font-size: clamp(28px, 8vw, 40px); }
@@ -567,12 +572,16 @@
                 --pause-screen-text-size: 14px;
                 --pause-screen-meta-size: 14px;
                 --pause-screen-hint-size: 14px;
-                --pause-screen-plot-font: 14px;
+                --pause-screen-plot-font: 15px;
               }
               .pause-screen-layout { padding-top: calc(56px + env(safe-area-inset-top, 0px)); padding-bottom: calc(var(--pause-screen-footer-h, 84px) + 32px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px)); }
               .pause-screen-main { gap: 8px; }
               #pause-screen-subtitle { font-size: 16px; }
               #pause-screen-overlay.has-still #pause-screen-logo { max-height: clamp(44px, 16vh, 60px); }
+              #pause-screen-details .pause-screen-date-long { display: none; }
+              #pause-screen-details .pause-screen-date-short { display: inline; }
+              /* an episode's height goes to its story: the series genres step aside here */
+              #pause-screen-overlay.has-still #pause-screen-genres { display: none; }
               #pause-screen-progress-meta { margin-top: .2em; }
               .pause-screen-actions { margin-top: calc(var(--pause-screen-meta-size) * .7); }
             }
@@ -1100,19 +1109,16 @@
           if (!this.progressHint) return;
           const tv = !!JE.core?.ui?.isTvLayout?.();
           const closeFocused = document.activeElement === this.closeButton;
-          // the caption under the × says only what the button does not: playback stays paused
-          // (the button's own name is "Hide details"; the footer names the selection once)
-          this.closeCaption.textContent = JE.t('pausescreen_hide_caption_stays');
-          this.overlay.classList.toggle('close-focused', closeFocused);
-          this.progressHint.replaceChildren();
-          if (closeFocused) {
-            const name = document.createElement('strong');
-            name.textContent = JE.t('pausescreen_hide_selected');
-            this.progressHint.appendChild(name);
-            this.progressHint.appendChild(document.createTextNode(' · ' + (tv ? JE.t('pausescreen_hide_way_back_tv') : JE.t('pausescreen_hide_way_back'))));
-          } else {
-            this.progressHint.textContent = this.resumeHint();
+          // the caption under the × says what the button does not (playback stays paused) and the way back
+          // to Resume; it shows while the × has focus, and the footer hint steps aside for it
+          this.closeCaption.replaceChildren();
+          for (const line of [JE.t('pausescreen_hide_caption_stays'), tv ? JE.t('pausescreen_hide_way_back_tv') : JE.t('pausescreen_hide_way_back')]) {
+            const row = document.createElement('span');
+            row.textContent = line;
+            this.closeCaption.appendChild(row);
           }
+          this.overlay.classList.toggle('close-focused', closeFocused);
+          this.progressHint.textContent = this.resumeHint();
           this.reserveFooter();
         }
 
@@ -1361,15 +1367,21 @@
             el.textContent = cut;
             if (!overflows()) return;
           }
-          // No sentence boundary fits: cut on a word boundary and end with an ellipsis.
+          // No sentence boundary fits: cut on a word boundary (not after a function word) and end with an ellipsis.
           const words = full.split(/\s+/);
+          const cutAt = (n) => {
+            const weak = /^(a|an|the|and|or|but|of|to|in|on|at|by|for|with|from|as|is|are|was|were|be|his|her|its|their|that|which|who|into|than)$/i;
+            let end = n;
+            while (end > 1 && weak.test(words[end - 1].replace(/[^\p{L}']/gu, ''))) end -= 1;
+            return words.slice(0, end).join(' ').replace(/[,;:(]$/, '') + '…';
+          };
           let lo = 1, hi = words.length;
           while (lo < hi) {
             const mid = Math.ceil((lo + hi) / 2);
-            el.textContent = words.slice(0, mid).join(' ').replace(/[,;:]$/, '') + '…';
+            el.textContent = cutAt(mid);
             if (overflows()) hi = mid - 1; else lo = mid;
           }
-          el.textContent = words.slice(0, lo).join(' ').replace(/[,;:]$/, '') + '…';
+          el.textContent = cutAt(lo);
           if (overflows()) el.textContent = full;
         }
 
@@ -1513,13 +1525,15 @@
         /**
          * Scale factor for a logo from its ink coverage, so a boxed logo and an airy wordmark carry a
          * similar visual mass at the same cap: coverage .35 and below keep the full size, a solid box
-         * (coverage near 1) drops to .75.
-         * @param {number|undefined} coverage - Painted share of the trimmed logo box, 0–1.
+         * (coverage near 1) drops to .85.
+         * @param {{coverage: number, aspect: number}|undefined} ink - Painted share of the trimmed logo box (0–1) and its width:height ratio.
          * @returns {string} A unitless CSS number.
          */
-        logoScale(coverage) {
-          if (!Number.isFinite(coverage) || coverage <= 0) return '1';
-          return Math.min(1, Math.max(0.75, Math.sqrt(0.35 / coverage))).toFixed(3);
+        logoScale(ink) {
+          if (!ink || !Number.isFinite(ink.coverage) || ink.coverage <= 0) return '1';
+          // a wide wordmark (4:1 and beyond) is already the smallest thing at the cap: never shrink it
+          if (ink.aspect >= 4) return '1';
+          return Math.min(1, Math.max(0.85, Math.sqrt(0.35 / ink.coverage))).toFixed(3);
         }
 
         async trimTransparentEdges(blobURL) {
@@ -1554,7 +1568,7 @@
             }
             if (right < 0) return keep();
             // share of the trimmed box that is painted: a boxed logo is near 1, an airy wordmark nearer .3
-            this.logoInk.set(blobURL, ink / ((right - left + 1) * (bottom - top + 1)));
+            this.logoInk.set(blobURL, { coverage: ink / ((right - left + 1) * (bottom - top + 1)), aspect: (right - left + 1) / (bottom - top + 1) });
             // back to source pixels, with a 2 px margin
             const sl = Math.max(0, Math.floor(left / k) - 2), st = Math.max(0, Math.floor(top / k) - 2);
             const sr = Math.min(w - 1, Math.ceil((right + 1) / k) + 1), sb = Math.min(h - 1, Math.ceil((bottom + 1) / k) + 1);
@@ -1670,11 +1684,14 @@
         spokenClock(sec) {
           if (!isFinite(sec) || sec < 0) sec = 0;
           const h = Math.floor(sec / 3600), m = Math.floor((sec / 60) % 60), sc = Math.floor(sec % 60);
+          const unit = (n, name, key) => {
+            try { return new Intl.NumberFormat(this.locale(), { style: 'unit', unit: name, unitDisplay: 'long' }).format(n); } catch { return JE.t(key, { n }); }
+          };
           const parts = [];
-          if (h > 0) parts.push(JE.t('pausescreen_unit_hours', { n: h }));
-          if (m > 0 || h > 0) parts.push(JE.t('pausescreen_unit_minutes', { n: m }));
-          if (sc > 0 || parts.length === 0) parts.push(JE.t('pausescreen_unit_seconds', { n: sc }));
-          return parts.join(' ');
+          if (h > 0) parts.push(unit(h, 'hour', 'pausescreen_unit_hours'));
+          if (m > 0 || h > 0) parts.push(unit(m, 'minute', 'pausescreen_unit_minutes'));
+          if (sc > 0 || parts.length === 0) parts.push(unit(sc, 'second', 'pausescreen_unit_seconds'));
+          try { return new Intl.ListFormat(this.locale(), { style: 'long', type: 'unit' }).format(parts); } catch { return parts.join(' '); }
         }
 
         formatClock(sec) {

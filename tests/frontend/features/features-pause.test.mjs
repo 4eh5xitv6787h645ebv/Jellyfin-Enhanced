@@ -68,8 +68,8 @@ test('Space or Enter on the focused close button hides the overlay without resum
 test('the hint describes the focused control',t=>{
  const h=setup(t);h.JE.initializePauseScreen();const p=h.JE.pauseScreenInstance;p.showOverlay();
  assert.equal(h.document.activeElement,p.resumeButton);assert.equal(p.progressHint.textContent,'pausescreen_resume_hint');
- p.closeButton.focus();assert.match(p.progressHint.textContent,/^pausescreen_hide_selected/);assert.equal(p.overlay.classList.contains('close-focused'),true);
- h.document.documentElement.classList.add('layout-tv');p.refreshHint();assert.match(p.progressHint.textContent,/pausescreen_hide_way_back_tv/);assert.equal(p.closeCaption.textContent,'pausescreen_hide_caption_stays');assert.equal(p.closeButton.getAttribute('aria-label'),'pausescreen_hide');
+ p.closeButton.focus();assert.equal(p.progressHint.textContent,'pausescreen_resume_hint');assert.equal(p.overlay.classList.contains('close-focused'),true);assert.equal(p.closeCaption.textContent,'pausescreen_hide_caption_stayspausescreen_hide_way_back');
+ h.document.documentElement.classList.add('layout-tv');p.refreshHint();assert.equal(p.progressHint.textContent,'pausescreen_resume_hint_tv');assert.equal(p.closeCaption.textContent,'pausescreen_hide_caption_stayspausescreen_hide_way_back_tv');assert.equal(p.closeButton.getAttribute('aria-label'),'pausescreen_hide');
  p.resumeButton.focus();assert.equal(p.progressHint.textContent,'pausescreen_resume_hint_tv');
 });
 test('pause overlay leaves arrow keys alone outside the TV layout',t=>{
@@ -125,8 +125,8 @@ test('a late response for the previous item cannot fill the overlay after a sour
 });
 test('the spoken clock drops a zero seconds part and logos scale by ink coverage',t=>{
  const h=setup(t);h.JE.initializePauseScreen();const p=h.JE.pauseScreenInstance;
- assert.equal(p.spokenClock(4620),'pausescreen_unit_hours pausescreen_unit_minutes');
- assert.equal(p.spokenClock(65),'pausescreen_unit_minutes pausescreen_unit_seconds');
- assert.equal(p.spokenClock(0),'pausescreen_unit_seconds');
- assert.equal(p.logoScale(undefined),'1');assert.equal(p.logoScale(0.3),'1.000');assert.equal(p.logoScale(1),'0.750');assert.equal(p.logoScale(0.56),'0.791');
+ assert.equal(p.spokenClock(4620),'1 hour, 17 minutes');
+ assert.equal(p.spokenClock(65),'1 minute, 5 seconds');
+ assert.equal(p.spokenClock(0),'0 seconds');
+ assert.equal(p.logoScale(undefined),'1');assert.equal(p.logoScale({coverage:0.3,aspect:2}),'1.000');assert.equal(p.logoScale({coverage:1,aspect:2}),'0.850');assert.equal(p.logoScale({coverage:0.45,aspect:2}),'0.882');assert.equal(p.logoScale({coverage:1,aspect:4.5}),'1');
 });
