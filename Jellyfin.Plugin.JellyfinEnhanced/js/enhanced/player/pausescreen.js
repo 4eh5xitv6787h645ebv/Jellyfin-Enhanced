@@ -225,9 +225,9 @@
               pointer-events: none;
             }
             #pause-screen-backdrop.is-still {
-              inset: -6%;
-              filter: blur(clamp(14px, 1.25vw, 26px)) saturate(1.1);
-              opacity: .72;
+              inset: -4%;
+              filter: blur(clamp(8px, .65vw, 12px)) saturate(1);
+              opacity: .6;
             }
             .pause-screen-scrim {
               position: absolute; inset: 0;
@@ -274,8 +274,8 @@
             /* a dark logo (Spider-Verse's red and navy) is hard to read over a dark scrim: the plain title follows it */
             .pause-screen-main.has-logo.logo-needs-title #pause-screen-title {
               position: static; width: auto; height: auto; overflow: hidden; clip: auto; white-space: normal;
-              font-size: clamp(18px, 1.45vw, 28px); font-weight: 600; line-height: 1.3; color: #f0f0f0;
-              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 12px;
+              font-size: clamp(20px, 1.7vw, 32px); font-weight: 600; line-height: 1.25; color: #fff;
+              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 16px;
               display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
             }
             #pause-screen-subtitle {
@@ -1333,8 +1333,10 @@
           if (trimmedLogoURL) {
             this.overlayLogo.src = trimmedLogoURL;
             this.overlayMain.classList.add('has-logo');
-            this.overlayMain.style.setProperty('--pause-screen-logo-scale', this.logoScale(this.logoInk.get(logoURL)));
-            this.overlayMain.classList.toggle('logo-needs-title', (this.logoInk.get(logoURL)?.luma ?? 1) < 0.3);
+            // a dark logo is hard to read: its plain title leads and the logo steps down to .75
+            const darkLogo = (this.logoInk.get(logoURL)?.luma ?? 1) < 0.3;
+            this.overlayMain.style.setProperty('--pause-screen-logo-scale', darkLogo ? '0.75' : this.logoScale(this.logoInk.get(logoURL)));
+            this.overlayMain.classList.toggle('logo-needs-title', darkLogo);
           }
           if (discURL) this.overlayDisc.src = discURL;
           this.overlayPoster.classList.toggle('is-still', !!stillURL);
