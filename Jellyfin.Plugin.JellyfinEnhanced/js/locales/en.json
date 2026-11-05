@@ -361,7 +361,7 @@
     "pausescreen_resume_hint_tv": "Press OK to resume · Press Up to select Hide details",
     "pausescreen_dismiss": "Hide details; keep playback paused",
     "pausescreen_hide": "Hide details",
-    "pausescreen_hide_caption_stays": "Keeps playback paused",
+    "pausescreen_hide_caption_stays": "Stays paused",
     "pausescreen_hide_way_back": "Press Tab to go back to Resume",
     "pausescreen_hide_way_back_tv": "Press Down to go back to Resume",
     "pausescreen_spoken_left": "{time} remaining",

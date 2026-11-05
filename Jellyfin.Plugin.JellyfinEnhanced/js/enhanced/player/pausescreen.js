@@ -605,6 +605,7 @@
               .pause-screen-layout { padding-top: calc(56px + env(safe-area-inset-top, 0px)); padding-bottom: calc(var(--pause-screen-footer-h, 84px) + 32px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px)); }
               .pause-screen-main { gap: 8px; }
               #pause-screen-subtitle { font-size: 16px; }
+              .pause-screen-main:not(.has-logo) #pause-screen-title { font-size: 28px; line-height: 1.12; }
               #pause-screen-overlay.has-still #pause-screen-logo { max-height: clamp(44px, 16vh, 60px); }
               #pause-screen-details .pause-screen-date-long { display: none; }
               #pause-screen-details .pause-screen-date-short { display: inline; }
@@ -1236,6 +1237,7 @@
           this.overlayLogo.removeAttribute('src');
           this.overlayDisc.removeAttribute('src');
           this.overlayPoster.removeAttribute('src');
+          this.overlayPoster.style.removeProperty('filter');
           this.overlayBackdrop.style.backgroundImage = '';
           this.overlayBackdrop.classList.remove('is-still');
           this.overlay.classList.remove('has-still');
@@ -1331,6 +1333,13 @@
           }
           if (discURL) this.overlayDisc.src = discURL;
           this.overlayPoster.classList.toggle('is-still', !!stillURL);
+          // A very dark still (Buffy's night scenes) reads as a black box: lift its exposure.
+          this.overlayPoster.style.removeProperty('filter');
+          if (stillURL) {
+            const lift = this.stillExposure(await this.imageLuma(stillURL));
+            if (this.destroyed || generation !== this.generation) return;
+            if (lift > 1) this.overlayPoster.style.filter = `brightness(${lift}) contrast(1.05)`;
+          }
           if (stillURL || posterURL) this.overlayPoster.src = stillURL || posterURL;
           // An episode's own still goes behind it: series backdrops often carry the printed series title,
           // which would sit right behind the logo (Ted Lasso's does).
@@ -1623,6 +1632,37 @@
           // a wide wordmark (4:1 and beyond) is already the smallest thing at the cap: never shrink it
           if (ink.aspect >= 4) return '1';
           return Math.min(1, Math.max(0.85, Math.sqrt(0.35 / ink.coverage))).toFixed(3);
+        }
+
+        /**
+         * Mean luminance (0–1) of an image, from a 32×32 copy; 1 when it cannot be read.
+         * @param {string} url - A blob URL.
+         * @returns {Promise<number>}
+         */
+        async imageLuma(url) {
+          try {
+            if (typeof HTMLCanvasElement === 'undefined') return 1;
+            const img = await new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = url; });
+            const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+            const ctx = c.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return 1;
+            ctx.drawImage(img, 0, 0, 32, 32);
+            const d = ctx.getImageData(0, 0, 32, 32).data;
+            let sum = 0;
+            for (let i = 0; i < d.length; i += 4) sum += (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+            return sum / (d.length / 4);
+          } catch { return 1; }
+        }
+
+        /**
+         * Brightness factor for an episode still: 1 for ordinary stills, up to 1.6 for very dark ones
+         * (mean luminance below .18 is lifted toward .22).
+         * @param {number} luma - Mean luminance, 0–1.
+         * @returns {number}
+         */
+        stillExposure(luma) {
+          if (!Number.isFinite(luma) || luma >= 0.18 || luma <= 0) return 1;
+          return Math.round(Math.min(1.6, 0.22 / luma) * 100) / 100;
         }
 
         async trimTransparentEdges(blobURL) {

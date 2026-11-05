@@ -137,3 +137,7 @@ test('a tap on the caption under the close button hides the details and never re
  p.closeCaption.dispatchEvent(new h.window.MouseEvent('click',{bubbles:true}));
  assert.equal(p.overlay.getAttribute('aria-hidden'),'true');assert.equal(p._dismissedThisPause,true);assert.equal(p.overlay.classList.contains('is-resuming'),false);assert.equal(played,0);
 });
+test('very dark episode stills get their exposure lifted, ordinary ones stay as they are',t=>{
+ const h=setup(t);h.JE.initializePauseScreen();const p=h.JE.pauseScreenInstance;
+ assert.equal(p.stillExposure(0.4),1);assert.equal(p.stillExposure(0.18),1);assert.equal(p.stillExposure(0.11),1.6);assert.equal(p.stillExposure(0.16),1.38);assert.equal(p.stillExposure(NaN),1);
+});
