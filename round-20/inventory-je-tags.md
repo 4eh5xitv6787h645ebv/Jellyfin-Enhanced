@@ -1,0 +1,6 @@
+# JE Media Tags inventory (agent output, 2026-10-30)
+Groups: Quality (resolution/source/dynamic range/special format/video codec/sound; one resolution, one source), Genre (icons, max 3, names on hover), Language (flags only, max 3, partial-dub marker, no codes), Rating (community star /10 + critic % with tomato; user-review chip), Age rating (board-coloured), Status (one badge: #N Today/#N This Week/New Movie/New Series/New Episode/Just Added), People (cast cards only).
+No library group. Seerr badges (status, media type, collection, up to 4 provider logos) and *arr badges are separate systems on their own cards/detail pages.
+Rating sources on posters: only Jellyfin Community + Critic fields (MDBList sync can fill them from TMDB/RT/IMDb/Trakt/Metacritic/Letterboxd/MAL/AniList), plus JE review average. No multi-source rating logos on posters.
+Global: container-query sizing (no size threshold), Hide on Hover (whole host), Disable on search page, Spoiler Guard suppression rules, hidden content skip, server tag cache, Tag Styles (admin; quality/age/rating/genre tabs; colours only), Native Poster Tags (5 groups, corners, no status/people).
+Known limits: no personal language priority; no hover tooltips on flags; chip colours fixed (no score gradient); status web only; native has no hover; CSS transforms break stacking.
