@@ -225,8 +225,8 @@
               pointer-events: none;
             }
             #pause-screen-backdrop.is-still {
-              inset: -8%;
-              filter: blur(clamp(28px, 2.4vw, 48px)) saturate(1.1);
+              inset: -6%;
+              filter: blur(clamp(14px, 1.25vw, 26px)) saturate(1.1);
               opacity: .72;
             }
             .pause-screen-scrim {
@@ -569,13 +569,9 @@
                 #pause-screen-plot { grid-area: plot; margin-top: 4px; margin-bottom: 0; }
                 #pause-screen-poster { width: 96px; border-radius: 4px; }
                 #pause-screen-disc { width: 96px; animation: none; }
-                /* an episode still goes under the episode line, full width */
-                #pause-screen-overlay.has-still .pause-screen-layout { grid-template-areas: "logo logo" "title title" "sub sub" "art art" "facts facts" "plot plot"; }
                 #pause-screen-overlay.has-still .pause-screen-facts { margin-top: 0; }
-                #pause-screen-overlay.has-still .pause-screen-art { align-self: start; }
-                /* a definite width: the grid sized the row from a 4:3 still's natural size and let it overflow the facts */
-                /* a 16:9 still spans the column; a 4:3 one keeps its frame at 200 px tall instead of pushing the facts away */
-                #pause-screen-poster.is-still { width: auto; height: auto; max-width: calc(100vw - 2 * var(--pause-screen-gutter-x)); max-height: 200px; }
+                /* an episode still sits beside the facts like a poster: 144 px wide, its own frame kept (4:3 ≤ 108 px tall) */
+                #pause-screen-poster.is-still { width: 144px; height: auto; max-height: 108px; object-fit: contain; }
                 #pause-screen-overlay.has-still #pause-screen-logo { max-height: min(16vh, 120px); }
                 /* the action spans the column like the track above it: a thumb-sized target with its hint as a footnote */
                 .pause-screen-actions { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
@@ -610,7 +606,8 @@
               #pause-screen-details .pause-screen-date-long { display: none; }
               #pause-screen-details .pause-screen-date-short { display: inline; }
               /* an episode's height goes to its story: the series genres step aside here */
-              #pause-screen-overlay.has-still #pause-screen-genres { display: none; }
+              #pause-screen-overlay.has-still #pause-screen-genres,
+              #pause-screen-overlay.plot-over-genres #pause-screen-genres { display: none; }
               #pause-screen-progress-meta { margin-top: .2em; }
               .pause-screen-actions { margin-top: calc(var(--pause-screen-meta-size) * .7); }
             }
@@ -1377,13 +1374,30 @@
           // (roomy screens, short landscape and tall portrait phones). The fit check decides.
           // Phones held sideways read a 56ch measure; when that leaves a word cut, a slightly wider
           // measure (60, 64, then 68ch, within the column) may let the text finish on the same lines.
-          if (status === 'cut' && window.matchMedia?.('(max-height: 500px) and (orientation: landscape)').matches) {
+          // After a word cut any sentence end will do; after a sentence cut only the whole text is worth it.
+          this.overlay.classList.remove('plot-over-genres');
+          const landscape = window.matchMedia?.('(max-height: 500px) and (orientation: landscape)').matches;
+          if (status !== 'full' && landscape) {
+            const better = (st) => (status === 'cut' ? st !== 'cut' : st === 'full');
+            let found = false;
             for (const w of ['60ch', '64ch', '68ch']) {
               el.style.setProperty('max-width', `min(100%, ${w})`);
               const st = this.fitOverviewText(full);
-              if (st !== 'cut' && fits()) { status = st; break; }
+              if (better(st) && fits()) { status = st; found = true; break; }
             }
-            if (status === 'cut') { el.style.removeProperty('max-width'); this.fitOverviewText(full); }
+            if (!found) { el.style.removeProperty('max-width'); this.fitOverviewText(full); }
+            // Last resort for a word cut: a movie's genre row steps aside for a fourth line.
+            if (status === 'cut' && !this.overlay.classList.contains('has-still')) {
+              const base = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 3;
+              this.overlay.classList.add('plot-over-genres');
+              el.style.setProperty('-webkit-line-clamp', String(base + 1));
+              const st = this.fitOverviewText(full);
+              if (st !== 'cut' && fits()) { status = st; lines = base + 1; } else {
+                this.overlay.classList.remove('plot-over-genres');
+                el.style.removeProperty('-webkit-line-clamp');
+                this.fitOverviewText(full);
+              }
+            }
           }
           const extra = window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape), (max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 1 : 0;
           if (status === 'cut' && lines > 0 && extra > 0) {
