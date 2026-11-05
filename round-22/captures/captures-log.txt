@@ -1,0 +1,14 @@
+hub rating 1 following: {"own":"movies:null series:null seasons:null episodes:null continueWatching:null nextUp:null","episodes":true,"follow":true}
+hub rating 2 personal episodes off: {"own":"movies:null series:null seasons:null episodes:false continueWatching:null nextUp:null","episodes":false,"follow":false}
+hub rating 3 follow server: {"own":"movies:null series:null seasons:null episodes:null continueWatching:null nextUp:null","episodes":true,"follow":true}
+hub rating 4 administrator turns episodes off afterwards: user allows episodes = false (follows)
+hub status limit note: "Show up to
+                        Always one tag: this group shows a single badge."
+hub badge windows: ["within 1 day of being added","within 14 days of release"]
+item editor limit notes: ["status: Always one tag: this group shows a single badge.","ageRating: Always one tag: this group shows a single badge.","logos: Always one tag: this group shows a single badge."]
+caption 900px episodes: 1 on {"strip":0,"card":0,"groups":"quality,rating,language"}
+caption 900px episodes: 2 every group off for episodes (jeTaScope-quality-episodes jeTaScope-genre-episodes jeTaScope-language-episodes ratingTagsOnEpisodes jeTaScope-ageRating-episodes jeTaScope-status-episodes jeTaScope-awards-episodes jeTaScope-logos-episodes jeTaScope-custom-episodes) {"strip":0,"card":98,"groups":""}
+caption 900px episodes: 3 on again {"strip":43,"card":147,"groups":"quality,rating,language"}
+caption 1400px episodes: 1 on {"strip":43,"card":147,"groups":"quality,rating,language"}
+caption 1400px episodes: 2 every group off for episodes (jeTaScope-quality-episodes jeTaScope-genre-episodes jeTaScope-language-episodes ratingTagsOnEpisodes jeTaScope-ageRating-episodes jeTaScope-status-episodes jeTaScope-awards-episodes jeTaScope-logos-episodes jeTaScope-custom-episodes) {"strip":0,"card":98,"groups":""}
+caption 1400px episodes: 3 on again {"strip":43,"card":147,"groups":"quality,rating,language"}

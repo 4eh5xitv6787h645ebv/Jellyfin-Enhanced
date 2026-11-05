@@ -1,0 +1,959 @@
+
+$ node offline-inputs.mjs
+Prepared disposable synthetic parity inputs; no Jellyfin server or credentials required.
+
+$ node profiles.mjs
+299 profiles (1 real users), 386 synthetic entries, 14 synthetic review keys
+
+$ python3 ../../../scripts/generate_status_vocabulary.py --check
+Status dates: 8742 locales, 46 distinct formats
+
+$ python3 ../../../scripts/generate_quality_compact.py --check
+
+$ python3 ../../../scripts/generate_genre_labels.py --check
+
+$ dotnet build PosterTagParity/PosterTagParity.csproj -c Release -nologo -v q
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.07
+
+$ dotnet /home/jake/je-wt/features/tests/poster/parity/PosterTagParity/bin/Release/net10.0/PosterTagParity.dll prepare /home/jake/je-wt/features/tests/poster/parity/data
+prepared 299 profiles, 386 synthetic entries
+
+$ node web-expected.mjs
+web user-synthetic-admin: 0 items
+web item-looks: 386 items
+web item-looks-bands-default: 386 items
+web item-looks-legacy: 386 items
+web item-looks-flush-single-0: 386 items
+web item-looks-flush-single-1: 386 items
+web item-look-fallback-caption: 386 items
+web item-look-fallback-summary: 386 items
+web item-look-fallback-minimal: 386 items
+web look-rules: 386 items
+web look-rules-admin: 386 items
+web look-rules-empty-personal: 386 items
+web look-rules-legacy-admin: 386 items
+web look-rules-legacy-own: 386 items
+web rating-locale-de: 386 items
+web rating-locale-fa: 386 items
+web rating-locale-ar-SA: 386 items
+web quality-versions: 386 items
+web quality-versions-compact: 386 items
+web all-on-defaults: 386 items
+web tag-scale-smaller: 386 items
+web tag-scale-larger: 386 items
+web tag-scale-largest: 386 items
+web tag-gap-tight: 386 items
+web tag-gap-roomy: 386 items
+web where-to-show: 386 items
+web where-to-show-admin: 386 items
+web where-to-show-rating-legacy-off: 386 items
+web tag-size-invalid-personal: 386 items
+web tag-size-admin-inherit: 386 items
+web tag-size-legacy: 386 items
+web naming-low-source-opt-in: 386 items
+web naming-categories-off: 386 items
+web naming-imax-edition-only: 386 items
+web naming-admin-defaults: 386 items
+web naming-user-overrides: 386 items
+web rating-sources-all: 386 items
+web rating-sources-minimum-cap: 386 items
+web rating-sources-empty: 386 items
+web rating-sources-unknown: 386 items
+web text-logo-side-ml-default: 386 items
+web text-logo-side-ml-smaller: 386 items
+web text-logo-side-mr-default: 386 items
+web text-logo-side-mr-smaller: 386 items
+web logos-defaults: 386 items
+web logos-with-groups: 386 items
+web logos-capped-ordered: 386 items
+web logos-hidden: 386 items
+web logos-admin-position: 386 items
+web aggregate-representative: 386 items
+web aggregate-representative-de: 386 items
+web aggregate-latest: 386 items
+web aggregate-latest-de: 386 items
+web aggregate-best: 386 items
+web aggregate-best-de: 386 items
+web aggregate-shared: 386 items
+web aggregate-shared-de: 386 items
+web aggregate-mixed: 386 items
+web aggregate-mixed-de: 386 items
+web audio-aggregate-v0-highest-best-none: 386 items
+web audio-aggregate-v0-highest-best-eng: 386 items
+web audio-aggregate-v0-highest-best-en-US: 386 items
+web audio-aggregate-v0-highest-best-en-GB: 386 items
+web audio-aggregate-v0-highest-best-de: 386 items
+web audio-aggregate-v0-highest-best-fra: 386 items
+web audio-aggregate-v0-highest-latest-none: 386 items
+web audio-aggregate-v0-highest-latest-eng: 386 items
+web audio-aggregate-v0-highest-latest-en-US: 386 items
+web audio-aggregate-v0-highest-latest-en-GB: 386 items
+web audio-aggregate-v0-highest-latest-de: 386 items
+web audio-aggregate-v0-highest-latest-fra: 386 items
+web audio-aggregate-v0-highest-shared-none: 386 items
+web audio-aggregate-v0-highest-shared-eng: 386 items
+web audio-aggregate-v0-highest-shared-en-US: 386 items
+web audio-aggregate-v0-highest-shared-en-GB: 386 items
+web audio-aggregate-v0-highest-shared-de: 386 items
+web audio-aggregate-v0-highest-shared-fra: 386 items
+web audio-aggregate-v0-highest-mixed-none: 386 items
+web audio-aggregate-v0-highest-mixed-eng: 386 items
+web audio-aggregate-v0-highest-mixed-en-US: 386 items
+web audio-aggregate-v0-highest-mixed-en-GB: 386 items
+web audio-aggregate-v0-highest-mixed-de: 386 items
+web audio-aggregate-v0-highest-mixed-fra: 386 items
+web audio-aggregate-v0-all-best-none: 386 items
+web audio-aggregate-v0-all-best-eng: 386 items
+web audio-aggregate-v0-all-best-en-US: 386 items
+web audio-aggregate-v0-all-best-en-GB: 386 items
+web audio-aggregate-v0-all-best-de: 386 items
+web audio-aggregate-v0-all-best-fra: 386 items
+web audio-aggregate-v0-all-latest-none: 386 items
+web audio-aggregate-v0-all-latest-eng: 386 items
+web audio-aggregate-v0-all-latest-en-US: 386 items
+web audio-aggregate-v0-all-latest-en-GB: 386 items
+web audio-aggregate-v0-all-latest-de: 386 items
+web audio-aggregate-v0-all-latest-fra: 386 items
+web audio-aggregate-v0-all-shared-none: 386 items
+web audio-aggregate-v0-all-shared-eng: 386 items
+web audio-aggregate-v0-all-shared-en-US: 386 items
+web audio-aggregate-v0-all-shared-en-GB: 386 items
+web audio-aggregate-v0-all-shared-de: 386 items
+web audio-aggregate-v0-all-shared-fra: 386 items
+web audio-aggregate-v0-all-mixed-none: 386 items
+web audio-aggregate-v0-all-mixed-eng: 386 items
+web audio-aggregate-v0-all-mixed-en-US: 386 items
+web audio-aggregate-v0-all-mixed-en-GB: 386 items
+web audio-aggregate-v0-all-mixed-de: 386 items
+web audio-aggregate-v0-all-mixed-fra: 386 items
+web audio-aggregate-v1-highest-best-none: 386 items
+web audio-aggregate-v1-highest-best-eng: 386 items
+web audio-aggregate-v1-highest-best-en-US: 386 items
+web audio-aggregate-v1-highest-best-en-GB: 386 items
+web audio-aggregate-v1-highest-best-de: 386 items
+web audio-aggregate-v1-highest-best-fra: 386 items
+web audio-aggregate-v1-highest-latest-none: 386 items
+web audio-aggregate-v1-highest-latest-eng: 386 items
+web audio-aggregate-v1-highest-latest-en-US: 386 items
+web audio-aggregate-v1-highest-latest-en-GB: 386 items
+web audio-aggregate-v1-highest-latest-de: 386 items
+web audio-aggregate-v1-highest-latest-fra: 386 items
+web audio-aggregate-v1-highest-shared-none: 386 items
+web audio-aggregate-v1-highest-shared-eng: 386 items
+web audio-aggregate-v1-highest-shared-en-US: 386 items
+web audio-aggregate-v1-highest-shared-en-GB: 386 items
+web audio-aggregate-v1-highest-shared-de: 386 items
+web audio-aggregate-v1-highest-shared-fra: 386 items
+web audio-aggregate-v1-highest-mixed-none: 386 items
+web audio-aggregate-v1-highest-mixed-eng: 386 items
+web audio-aggregate-v1-highest-mixed-en-US: 386 items
+web audio-aggregate-v1-highest-mixed-en-GB: 386 items
+web audio-aggregate-v1-highest-mixed-de: 386 items
+web audio-aggregate-v1-highest-mixed-fra: 386 items
+web audio-aggregate-v1-all-best-none: 386 items
+web audio-aggregate-v1-all-best-eng: 386 items
+web audio-aggregate-v1-all-best-en-US: 386 items
+web audio-aggregate-v1-all-best-en-GB: 386 items
+web audio-aggregate-v1-all-best-de: 386 items
+web audio-aggregate-v1-all-best-fra: 386 items
+web audio-aggregate-v1-all-latest-none: 386 items
+web audio-aggregate-v1-all-latest-eng: 386 items
+web audio-aggregate-v1-all-latest-en-US: 386 items
+web audio-aggregate-v1-all-latest-en-GB: 386 items
+web audio-aggregate-v1-all-latest-de: 386 items
+web audio-aggregate-v1-all-latest-fra: 386 items
+web audio-aggregate-v1-all-shared-none: 386 items
+web audio-aggregate-v1-all-shared-eng: 386 items
+web audio-aggregate-v1-all-shared-en-US: 386 items
+web audio-aggregate-v1-all-shared-en-GB: 386 items
+web audio-aggregate-v1-all-shared-de: 386 items
+web audio-aggregate-v1-all-shared-fra: 386 items
+web audio-aggregate-v1-all-mixed-none: 386 items
+web audio-aggregate-v1-all-mixed-eng: 386 items
+web audio-aggregate-v1-all-mixed-en-US: 386 items
+web audio-aggregate-v1-all-mixed-en-GB: 386 items
+web audio-aggregate-v1-all-mixed-de: 386 items
+web audio-aggregate-v1-all-mixed-fra: 386 items
+web audio-gate-missing-version-density: 386 items
+web audio-gate-v0-missing-density: 386 items
+web audio-gate-v0-full: 386 items
+web audio-gate-v0-compact: 386 items
+web audio-gate-v1-full: 386 items
+web audio-gate-v1-compact: 386 items
+web display-QualityAudioDisplayMode: 386 items
+web display-QualityVideoCodecDisplayMode: 386 items
+web display-QualityHdrDisplayMode: 386 items
+web display-all-representative: 386 items
+web display-all-latest: 386 items
+web display-all-best: 386 items
+web display-all-shared: 386 items
+web display-all-mixed: 386 items
+web display-all-language: 386 items
+web display-all-admin: 386 items
+web display-user-highest: 386 items
+web display-minimum-off: 386 items
+web display-minimum-720p: 386 items
+web display-minimum-1080p: 386 items
+web display-minimum-4k: 386 items
+web single-chip-caps-1: 386 items
+web single-chip-caps-2: 386 items
+web display-compact-cap: 386 items
+web aggregate-admin-default: 386 items
+web tier1-combined-latest: 386 items
+web tier1-combined-mixed: 386 items
+web positions-centres-legacy: 386 items
+web positions-centres-profile: 386 items
+web edge-tight-corners: 386 items
+web edge-tight-centres: 386 items
+web edge-flush-corners: 386 items
+web edge-flush-centres: 386 items
+web edge-tight-smaller-tight-corners: 386 items
+web edge-tight-smaller-tight-centres: 386 items
+web edge-tight-largest-roomy-corners: 386 items
+web edge-tight-largest-roomy-centres: 386 items
+web edge-flush-smaller-tight-corners: 386 items
+web edge-flush-smaller-tight-centres: 386 items
+web edge-flush-largest-roomy-corners: 386 items
+web edge-flush-largest-roomy-centres: 386 items
+web edge-admin-flush-inherited: 386 items
+web edge-admin-flush-user-default: 386 items
+web edge-legacy-ignores-admin: 386 items
+web positions-mirror: 386 items
+web all-top-right: 386 items
+web all-bottom-left: 386 items
+web quality-toggles-orders: 386 items
+web quality-orders-from-admin: 386 items
+web audio-user-de: 386 items
+web audio-user-ptbr: 386 items
+web audio-user-none-admin-fixed: 386 items
+web audio-auto-late-quality: 386 items
+web audio-auto-no-pref: 386 items
+web audio-admin-from-user: 386 items
+web audio-admin-from-user-no-pref: 386 items
+web audio-admin-fixed: 386 items
+web language-priority: 386 items
+web language-priority-strict: 386 items
+web personal-language-flags-strict-null: 386 items
+web personal-language-flags-strict-true: 386 items
+web personal-language-flags-strict-false: 386 items
+web personal-language-codes-strict-null: 386 items
+web personal-language-codes-strict-true: 386 items
+web personal-language-codes-strict-false: 386 items
+web personal-language-empty: 386 items
+web personal-language-aliases: 386 items
+web personal-language-follow-strict-override: 386 items
+web personal-language-badge-only: 386 items
+web personal-language-invalid: 386 items
+web rating-scopes: 386 items
+web rating-scopes-2: 386 items
+web reviews-off: 386 items
+web reviews-disabled: 386 items
+web no-settings-file: 386 items
+web no-settings-file-defaults: 386 items
+web empty-settings-object: 386 items
+web camel-case-and-nulls: 386 items
+web corrupt-settings: 386 items
+web weird-positions: 386 items
+web native-user-off: 386 items
+web native-user-on: 386 items
+web native-admin-off: 386 items
+web native-unset: 386 items
+web native-missing: 386 items
+web language-priority-strict-casing: 386 items
+web layout-order-caps: 386 items
+web layout-corners-profile-off: 386 items
+web layout-admin-caps-not-order: 386 items
+web layout-legacy-ignores-order: 386 items
+web layout-all-off: 386 items
+web rating-include-community-off: 386 items
+web rating-include-critic-off-admin: 386 items
+web rating-include-none: 386 items
+web settings-text-empty: 386 items
+web settings-text-whitespace: 386 items
+web settings-text-null: 386 items
+web settings-text-array: 386 items
+web settings-text-garbage: 386 items
+web settings-text-json5: 386 items
+web settings-text-duplicates: 386 items
+web language-flags-off: 386 items
+web language-flags-only: 386 items
+web language-flags-both: 386 items
+web language-codes-off: 386 items
+web language-codes-only: 386 items
+web language-codes-both: 386 items
+web custom-defaults: 386 items
+web custom-shared-corner: 386 items
+web custom-order-cap-position: 386 items
+web custom-off-in-corners: 386 items
+web custom-rules-group-off: 386 items
+web custom-admin-default-on: 386 items
+web custom-reordered-cap: 386 items
+web language-subs-only: 386 items
+web language-subs-strict-merge: 386 items
+web awards-all: 386 items
+web awards-cap: 386 items
+web awards-disabled: 386 items
+web awards-combined: 386 items
+web native-bands-full: 386 items
+web native-corners-compact: 386 items
+web native-bands-compact: 386 items
+web native-bands-custom: 386 items
+web native-bands-admin: 386 items
+web native-bands-integrated-smaller: 386 items
+web native-bands-integrated-largest: 386 items
+web logos-custom-corners-tight-smaller: 386 items
+web logos-custom-corners-flush-smaller: 386 items
+web logos-custom-bands-tight-smaller: 386 items
+web logos-custom-bands-flush-smaller: 386 items
+web logos-custom-corners-tight-largest: 386 items
+web logos-custom-corners-flush-largest: 386 items
+web logos-custom-bands-tight-largest: 386 items
+web logos-custom-bands-flush-largest: 386 items
+web technical-full-flags: 386 items
+web technical-corners-full-flags: 386 items
+web technical-full-codes: 386 items
+web technical-corners-full-codes: 386 items
+web technical-compact-flags: 386 items
+web technical-corners-compact-flags: 386 items
+web technical-compact-codes: 386 items
+web technical-corners-compact-codes: 386 items
+web technical-reordered: 386 items
+
+$ node compact-expected.mjs
+
+$ dotnet /home/jake/je-wt/features/tests/poster/parity/PosterTagParity/bin/Release/net10.0/PosterTagParity.dll compact /home/jake/je-wt/features/tests/poster/parity/data
+Compact vocabulary: 18 web/native fixtures match.
+
+$ node status-expected.mjs
+Status web fixtures: 240 passed
+
+$ dotnet /home/jake/je-wt/features/tests/poster/parity/PosterTagParity/bin/Release/net10.0/PosterTagParity.dll status /home/jake/je-wt/features/tests/poster/parity/data
+Status native/web parity: 240 fixtures, 0 differences
+
+$ dotnet /home/jake/je-wt/features/tests/poster/parity/PosterTagParity/bin/Release/net10.0/PosterTagParity.dll resolve /home/jake/je-wt/features/tests/poster/parity/data
+cs user-synthetic-admin: 0 items, digest 8952def18f77b753
+cs item-looks: 386 items, digest 4c5b8f1ef4032041
+cs item-looks-bands-default: 386 items, digest c8c1a107c9bf4095
+cs item-looks-legacy: 386 items, digest 54ef20e7d2a34b6b
+cs item-looks-flush-single-0: 386 items, digest 64975220fc1e578b
+cs item-looks-flush-single-1: 386 items, digest 43bfc5fb8e10bccb
+cs item-look-fallback-caption: 386 items, digest 4c5b8f1ef4032041
+cs item-look-fallback-summary: 386 items, digest 4c5b8f1ef4032041
+cs item-look-fallback-minimal: 386 items, digest 4c5b8f1ef4032041
+cs look-rules: 386 items, digest 4c5b8f1ef4032041
+cs look-rules-admin: 386 items, digest 9a5ab147747b6c7f
+cs look-rules-empty-personal: 386 items, digest 4c5b8f1ef4032041
+cs look-rules-legacy-admin: 386 items, digest ada0507bd62bc40b
+cs look-rules-legacy-own: 386 items, digest ada0507bd62bc40b
+cs rating-locale-de: 386 items, digest f95f2b850830d8ce
+cs rating-locale-fa: 386 items, digest a957f4113c5d3106
+cs rating-locale-ar-SA: 386 items, digest a12b05cdbe5d7792
+cs quality-versions: 386 items, digest 85febf2e5e823c6e
+cs quality-versions-compact: 386 items, digest 9b499f12d1d9c285
+cs all-on-defaults: 386 items, digest ada0507bd62bc40b
+cs tag-scale-smaller: 386 items, digest 70c631fb42977452
+cs tag-scale-larger: 386 items, digest 129f88c16c2a7ffe
+cs tag-scale-largest: 386 items, digest 1c08f2e076d55d04
+cs tag-gap-tight: 386 items, digest 8cde5390f353d6c3
+cs tag-gap-roomy: 386 items, digest a43589592efd81ea
+cs where-to-show: 386 items, digest 4eb32d30587a680a
+cs where-to-show-admin: 386 items, digest a405911cfac36cc7
+cs where-to-show-rating-legacy-off: 386 items, digest 2f32ef4b6712a778
+cs tag-size-invalid-personal: 386 items, digest 4c5b8f1ef4032041
+cs tag-size-admin-inherit: 386 items, digest 0640b70c916e09ce
+cs tag-size-legacy: 386 items, digest ada0507bd62bc40b
+cs naming-low-source-opt-in: 386 items, digest acf7fb871ee49079
+cs naming-categories-off: 386 items, digest 99134014abba5225
+cs naming-imax-edition-only: 386 items, digest 557d3b099f382008
+cs naming-admin-defaults: 386 items, digest f548c6b1fac99f2f
+cs naming-user-overrides: 386 items, digest 76c4a2f2951898d0
+cs rating-sources-all: 386 items, digest 91c661ffaedf22da
+cs rating-sources-minimum-cap: 386 items, digest 90c30b1a4cdf1883
+cs rating-sources-empty: 386 items, digest ad7784deece2fce7
+cs rating-sources-unknown: 386 items, digest fe3d56797b8fe642
+cs text-logo-side-ml-default: 386 items, digest 853a87a236afc05e
+cs text-logo-side-ml-smaller: 386 items, digest 6803935bfcdbdd7a
+cs text-logo-side-mr-default: 386 items, digest 284aa4ee9df61bcf
+cs text-logo-side-mr-smaller: 386 items, digest 61a744b097de1c21
+cs logos-defaults: 386 items, digest 2322c4bf1dd5f772
+cs logos-with-groups: 386 items, digest fa50c40d5ef394dc
+cs logos-capped-ordered: 386 items, digest d18f4f6b261950ca
+cs logos-hidden: 386 items, digest 81ae0597bc0c2614
+cs logos-admin-position: 386 items, digest 2322c4bf1dd5f772
+cs aggregate-representative: 386 items, digest 76c4a2f2951898d0
+cs aggregate-representative-de: 386 items, digest d6100945a56e84e3
+cs aggregate-latest: 386 items, digest 3b8a73b75ecd36be
+cs aggregate-latest-de: 386 items, digest 07f5258ad6ab4780
+cs aggregate-best: 386 items, digest 62281aabf9ea378d
+cs aggregate-best-de: 386 items, digest 2227c90b8665d691
+cs aggregate-shared: 386 items, digest a668a726516daeb8
+cs aggregate-shared-de: 386 items, digest 5b6dc332e20b16b6
+cs aggregate-mixed: 386 items, digest 7734ee3559e47182
+cs aggregate-mixed-de: 386 items, digest c96604f8d1135122
+cs audio-aggregate-v0-highest-best-none: 386 items, digest 62281aabf9ea378d
+cs audio-aggregate-v0-highest-best-eng: 386 items, digest 8606c5ee1eb745be
+cs audio-aggregate-v0-highest-best-en-US: 386 items, digest a682613c36c7dc47
+cs audio-aggregate-v0-highest-best-en-GB: 386 items, digest 392170df8895648e
+cs audio-aggregate-v0-highest-best-de: 386 items, digest 2227c90b8665d691
+cs audio-aggregate-v0-highest-best-fra: 386 items, digest be72a2b7e59c84e2
+cs audio-aggregate-v0-highest-latest-none: 386 items, digest 3b8a73b75ecd36be
+cs audio-aggregate-v0-highest-latest-eng: 386 items, digest 70768e3ef99b0ac9
+cs audio-aggregate-v0-highest-latest-en-US: 386 items, digest c3f42966890dadbb
+cs audio-aggregate-v0-highest-latest-en-GB: 386 items, digest 0e9861a7a88775f9
+cs audio-aggregate-v0-highest-latest-de: 386 items, digest 07f5258ad6ab4780
+cs audio-aggregate-v0-highest-latest-fra: 386 items, digest 768646773fd132af
+cs audio-aggregate-v0-highest-shared-none: 386 items, digest a668a726516daeb8
+cs audio-aggregate-v0-highest-shared-eng: 386 items, digest 9a301171b51872d1
+cs audio-aggregate-v0-highest-shared-en-US: 386 items, digest a719105ab6f11830
+cs audio-aggregate-v0-highest-shared-en-GB: 386 items, digest a6ccc7f449ba7a6b
+cs audio-aggregate-v0-highest-shared-de: 386 items, digest 5b6dc332e20b16b6
+cs audio-aggregate-v0-highest-shared-fra: 386 items, digest f205b3f0395e76c8
+cs audio-aggregate-v0-highest-mixed-none: 386 items, digest 7734ee3559e47182
+cs audio-aggregate-v0-highest-mixed-eng: 386 items, digest 68a3d0bc9a1418a0
+cs audio-aggregate-v0-highest-mixed-en-US: 386 items, digest 2745c6bc350bb666
+cs audio-aggregate-v0-highest-mixed-en-GB: 386 items, digest 5cfad3e70b2cfd34
+cs audio-aggregate-v0-highest-mixed-de: 386 items, digest c96604f8d1135122
+cs audio-aggregate-v0-highest-mixed-fra: 386 items, digest 5f832d72771fa7c7
+cs audio-aggregate-v0-all-best-none: 386 items, digest ba1a726921cfa57c
+cs audio-aggregate-v0-all-best-eng: 386 items, digest 2fe280c0344264ef
+cs audio-aggregate-v0-all-best-en-US: 386 items, digest ec911ca42ac5c77d
+cs audio-aggregate-v0-all-best-en-GB: 386 items, digest 7790afb74e7f41b5
+cs audio-aggregate-v0-all-best-de: 386 items, digest 082f261968ddaa19
+cs audio-aggregate-v0-all-best-fra: 386 items, digest b250bd1d787dc261
+cs audio-aggregate-v0-all-latest-none: 386 items, digest 81eb911080033a62
+cs audio-aggregate-v0-all-latest-eng: 386 items, digest 99113c638d872e5a
+cs audio-aggregate-v0-all-latest-en-US: 386 items, digest 75c6d0eb017edce7
+cs audio-aggregate-v0-all-latest-en-GB: 386 items, digest 73e25dc73d81e4fe
+cs audio-aggregate-v0-all-latest-de: 386 items, digest 2f99d4e7d512f581
+cs audio-aggregate-v0-all-latest-fra: 386 items, digest 48ba5b6ce614d636
+cs audio-aggregate-v0-all-shared-none: 386 items, digest 0618bab2f768d1fd
+cs audio-aggregate-v0-all-shared-eng: 386 items, digest 84526d83484795ec
+cs audio-aggregate-v0-all-shared-en-US: 386 items, digest 508c986119f2f048
+cs audio-aggregate-v0-all-shared-en-GB: 386 items, digest aca7230fa84e6c37
+cs audio-aggregate-v0-all-shared-de: 386 items, digest 5d2da444927a13b8
+cs audio-aggregate-v0-all-shared-fra: 386 items, digest c000480848b16e6a
+cs audio-aggregate-v0-all-mixed-none: 386 items, digest c8c1992e76e899d5
+cs audio-aggregate-v0-all-mixed-eng: 386 items, digest 8782e20bfd8ab149
+cs audio-aggregate-v0-all-mixed-en-US: 386 items, digest da705af2f3021450
+cs audio-aggregate-v0-all-mixed-en-GB: 386 items, digest 1a232a27ead7331d
+cs audio-aggregate-v0-all-mixed-de: 386 items, digest 8ff37049636266f7
+cs audio-aggregate-v0-all-mixed-fra: 386 items, digest d3bb2e9d85161ad7
+cs audio-aggregate-v1-highest-best-none: 386 items, digest b93a4947f326d8c2
+cs audio-aggregate-v1-highest-best-eng: 386 items, digest 6a028d907cacecdc
+cs audio-aggregate-v1-highest-best-en-US: 386 items, digest 47155e87fa40b6b0
+cs audio-aggregate-v1-highest-best-en-GB: 386 items, digest 81e48832ef40e795
+cs audio-aggregate-v1-highest-best-de: 386 items, digest 83aa5be1cc5cbdd6
+cs audio-aggregate-v1-highest-best-fra: 386 items, digest 76676bec7ba113b2
+cs audio-aggregate-v1-highest-latest-none: 386 items, digest 0c55ea1a1b77f015
+cs audio-aggregate-v1-highest-latest-eng: 386 items, digest be6846b0132d85db
+cs audio-aggregate-v1-highest-latest-en-US: 386 items, digest c1dcf63daf61b25e
+cs audio-aggregate-v1-highest-latest-en-GB: 386 items, digest 970b58b7c26155a9
+cs audio-aggregate-v1-highest-latest-de: 386 items, digest a71ec1b5b7c5fa7b
+cs audio-aggregate-v1-highest-latest-fra: 386 items, digest 67ac05bf0b6211c1
+cs audio-aggregate-v1-highest-shared-none: 386 items, digest e97b5927d765a953
+cs audio-aggregate-v1-highest-shared-eng: 386 items, digest 0330ecf99aa17c88
+cs audio-aggregate-v1-highest-shared-en-US: 386 items, digest 460e2227b0a72a57
+cs audio-aggregate-v1-highest-shared-en-GB: 386 items, digest 0a6b25633106ab9f
+cs audio-aggregate-v1-highest-shared-de: 386 items, digest c11185474d68506b
+cs audio-aggregate-v1-highest-shared-fra: 386 items, digest be9c512958cf8b2c
+cs audio-aggregate-v1-highest-mixed-none: 386 items, digest a2620afb2a58ea85
+cs audio-aggregate-v1-highest-mixed-eng: 386 items, digest b6db7bbba0ad8be6
+cs audio-aggregate-v1-highest-mixed-en-US: 386 items, digest c1777a137f3b12d7
+cs audio-aggregate-v1-highest-mixed-en-GB: 386 items, digest 47b5f8860a57c76d
+cs audio-aggregate-v1-highest-mixed-de: 386 items, digest 34b0c2f2e0f7c4e8
+cs audio-aggregate-v1-highest-mixed-fra: 386 items, digest 984cea97367078e1
+cs audio-aggregate-v1-all-best-none: 386 items, digest 32f177ae35613578
+cs audio-aggregate-v1-all-best-eng: 386 items, digest 09f6f2cb279c8eb9
+cs audio-aggregate-v1-all-best-en-US: 386 items, digest 2c7f589425df6a84
+cs audio-aggregate-v1-all-best-en-GB: 386 items, digest 4f108b72a800a9cd
+cs audio-aggregate-v1-all-best-de: 386 items, digest 053c1fb40fa7bd31
+cs audio-aggregate-v1-all-best-fra: 386 items, digest f1f524da5c83073e
+cs audio-aggregate-v1-all-latest-none: 386 items, digest 52718b66b4585dbd
+cs audio-aggregate-v1-all-latest-eng: 386 items, digest 705eba3069928eed
+cs audio-aggregate-v1-all-latest-en-US: 386 items, digest 35a9972ddeee6f51
+cs audio-aggregate-v1-all-latest-en-GB: 386 items, digest 1c6db812ddcc12f9
+cs audio-aggregate-v1-all-latest-de: 386 items, digest 2fdb996a64c8977b
+cs audio-aggregate-v1-all-latest-fra: 386 items, digest 1339fc50c3f932cc
+cs audio-aggregate-v1-all-shared-none: 386 items, digest 9740be69c0c7c21c
+cs audio-aggregate-v1-all-shared-eng: 386 items, digest b3c64b66b52ccc01
+cs audio-aggregate-v1-all-shared-en-US: 386 items, digest 30bf72a51ced3d3a
+cs audio-aggregate-v1-all-shared-en-GB: 386 items, digest 9934570ece33dfbc
+cs audio-aggregate-v1-all-shared-de: 386 items, digest ddbf4073dc30c07e
+cs audio-aggregate-v1-all-shared-fra: 386 items, digest 6bf2906067bc5495
+cs audio-aggregate-v1-all-mixed-none: 386 items, digest 5c541b0359cc187f
+cs audio-aggregate-v1-all-mixed-eng: 386 items, digest 06b202adea5ec1ab
+cs audio-aggregate-v1-all-mixed-en-US: 386 items, digest c36d6b82053219e0
+cs audio-aggregate-v1-all-mixed-en-GB: 386 items, digest ded9d61d8d7fb737
+cs audio-aggregate-v1-all-mixed-de: 386 items, digest 6e1ba40ecbfa29f9
+cs audio-aggregate-v1-all-mixed-fra: 386 items, digest 8b4774815d23f614
+cs audio-gate-missing-version-density: 386 items, digest 76c4a2f2951898d0
+cs audio-gate-v0-missing-density: 386 items, digest 76c4a2f2951898d0
+cs audio-gate-v0-full: 386 items, digest 76c4a2f2951898d0
+cs audio-gate-v0-compact: 386 items, digest 76c4a2f2951898d0
+cs audio-gate-v1-full: 386 items, digest a69d33daf5942de7
+cs audio-gate-v1-compact: 386 items, digest 189c4ac0b427918e
+cs display-QualityAudioDisplayMode: 386 items, digest 3bcb812af7028fc6
+cs display-QualityVideoCodecDisplayMode: 386 items, digest 7fd9b284fa8bc5ff
+cs display-QualityHdrDisplayMode: 386 items, digest 568737f0bda035c8
+cs display-all-representative: 386 items, digest 3ecdad5d4434494d
+cs display-all-latest: 386 items, digest a77cb29e84248ea6
+cs display-all-best: 386 items, digest 4da97eae5bd7288c
+cs display-all-shared: 386 items, digest 9cff2faa53112d20
+cs display-all-mixed: 386 items, digest f1f81881f163a99a
+cs display-all-language: 386 items, digest eea7843667f36de5
+cs display-all-admin: 386 items, digest 3ecdad5d4434494d
+cs display-user-highest: 386 items, digest 76c4a2f2951898d0
+cs display-minimum-off: 386 items, digest c64658b6bf2db1a1
+cs display-minimum-720p: 386 items, digest 488fbd0ef0ed461d
+cs display-minimum-1080p: 386 items, digest 7445bffcd51d027d
+cs display-minimum-4k: 386 items, digest 206ae00ffeb97c21
+cs single-chip-caps-1: 386 items, digest 377069471b0ce697
+cs single-chip-caps-2: 386 items, digest 1b83b2cd4bf2d38d
+cs display-compact-cap: 386 items, digest 26a955b8471b14cd
+cs aggregate-admin-default: 386 items, digest 62281aabf9ea378d
+cs tier1-combined-latest: 386 items, digest 90cfd1cd80a2d2ae
+cs tier1-combined-mixed: 386 items, digest 07f704dafd448224
+cs positions-centres-legacy: 386 items, digest ee0e29fb3407f546
+cs positions-centres-profile: 386 items, digest f85efb1c8d762e8e
+cs edge-tight-corners: 386 items, digest 0f2087b0d9c9e6e1
+cs edge-tight-centres: 386 items, digest 4ab9794b21cb4228
+cs edge-flush-corners: 386 items, digest 3888d065a236f199
+cs edge-flush-centres: 386 items, digest 6f5126b888268817
+cs edge-tight-smaller-tight-corners: 386 items, digest 5e4ad6a3bb03b5c1
+cs edge-tight-smaller-tight-centres: 386 items, digest 8741bc9d3d910707
+cs edge-tight-largest-roomy-corners: 386 items, digest cd65346056320454
+cs edge-tight-largest-roomy-centres: 386 items, digest 9b9d6dfab9ce1a47
+cs edge-flush-smaller-tight-corners: 386 items, digest e8d1e1b51c91daca
+cs edge-flush-smaller-tight-centres: 386 items, digest 0d437b9a4dd2c13e
+cs edge-flush-largest-roomy-corners: 386 items, digest b19a3f8afdfca1e2
+cs edge-flush-largest-roomy-centres: 386 items, digest 4f9e2263cbc1186d
+cs edge-admin-flush-inherited: 386 items, digest 3888d065a236f199
+cs edge-admin-flush-user-default: 386 items, digest 4c5b8f1ef4032041
+cs edge-legacy-ignores-admin: 386 items, digest ada0507bd62bc40b
+cs positions-mirror: 386 items, digest 4f4119d3b308adec
+cs all-top-right: 386 items, digest 1d683ef4e8c380f0
+cs all-bottom-left: 386 items, digest 69b35490d95bf988
+cs quality-toggles-orders: 386 items, digest c585912ce65ba727
+cs quality-orders-from-admin: 386 items, digest 6a68c6854f9070c8
+cs audio-user-de: 386 items, digest d6100945a56e84e3
+cs audio-user-ptbr: 386 items, digest 0ed3f22d4d6b8066
+cs audio-user-none-admin-fixed: 386 items, digest 76c4a2f2951898d0
+cs audio-auto-late-quality: 386 items, digest 4ac0f04b95af839c
+cs audio-auto-no-pref: 386 items, digest a9eaa08be4ee415a
+cs audio-admin-from-user: 386 items, digest 090600b7a8496238
+cs audio-admin-from-user-no-pref: 386 items, digest 98f935018bb90df8
+cs audio-admin-fixed: 386 items, digest 57a86bef7c0c0a99
+cs language-priority: 386 items, digest 6fb7b636713199fe
+cs language-priority-strict: 386 items, digest 26f423b8117693a4
+cs personal-language-flags-strict-null: 386 items, digest 619db18c38b04c48
+cs personal-language-flags-strict-true: 386 items, digest 619db18c38b04c48
+cs personal-language-flags-strict-false: 386 items, digest 1562353e3abef257
+cs personal-language-codes-strict-null: 386 items, digest 99c6c854526603e1
+cs personal-language-codes-strict-true: 386 items, digest 99c6c854526603e1
+cs personal-language-codes-strict-false: 386 items, digest 8d7735560c51b511
+cs personal-language-empty: 386 items, digest ae95c0395cc7644c
+cs personal-language-aliases: 386 items, digest a1efc3a31a8b5a10
+cs personal-language-follow-strict-override: 386 items, digest 3837b0ea0cc09117
+cs personal-language-badge-only: 386 items, digest de8f585d63331500
+cs personal-language-invalid: 386 items, digest 360ea37209da93da
+cs rating-scopes: 386 items, digest 6e50658b327df115
+cs rating-scopes-2: 386 items, digest cbf47c35c76bc974
+cs reviews-off: 386 items, digest 8a36bf644c7bae8b
+cs reviews-disabled: 386 items, digest 0730a734d1e38226
+cs no-settings-file: 386 items, digest 57593afa2c922785
+cs no-settings-file-defaults: 386 items, digest 8952def18f77b753
+cs empty-settings-object: 386 items, digest 8952def18f77b753
+cs camel-case-and-nulls: 386 items, digest 5885a00a3436251e
+cs corrupt-settings: 386 items, digest 8952def18f77b753
+cs weird-positions: 386 items, digest f03c2061192592c1
+cs native-user-off: 386 items, digest ada0507bd62bc40b
+cs native-user-on: 386 items, digest ada0507bd62bc40b
+cs native-admin-off: 386 items, digest ada0507bd62bc40b
+cs native-unset: 386 items, digest ada0507bd62bc40b
+cs native-missing: 386 items, digest ada0507bd62bc40b
+cs language-priority-strict-casing: 386 items, digest 005e4619d9ffa9e8
+cs layout-order-caps: 386 items, digest e79bf48965f5de9b
+cs layout-corners-profile-off: 386 items, digest 9a5ab147747b6c7f
+cs layout-admin-caps-not-order: 386 items, digest bd3560e67fc67f70
+cs layout-legacy-ignores-order: 386 items, digest 69b35490d95bf988
+cs layout-all-off: 386 items, digest 9cab7157b8a48788
+cs rating-include-community-off: 386 items, digest 072d716e43a9fc29
+cs rating-include-critic-off-admin: 386 items, digest 8a36bf644c7bae8b
+cs rating-include-none: 386 items, digest dc08ee553decae52
+cs settings-text-empty: 386 items, digest 8952def18f77b753
+cs settings-text-whitespace: 386 items, digest 8952def18f77b753
+cs settings-text-null: 386 items, digest 8952def18f77b753
+cs settings-text-array: 386 items, digest 8952def18f77b753
+cs settings-text-garbage: 386 items, digest 8952def18f77b753
+cs settings-text-json5: 386 items, digest 58cc7882313adbe5
+cs settings-text-duplicates: 386 items, digest f06dd17d91bb3d54
+cs language-flags-off: 386 items, digest c7b8713e61bda660
+cs language-flags-only: 386 items, digest f1fdaac920d0ba03
+cs language-flags-both: 386 items, digest 91d4073d0a3d3cf0
+cs language-codes-off: 386 items, digest 1b77c799a786d8e0
+cs language-codes-only: 386 items, digest 05c7ec971444569e
+cs language-codes-both: 386 items, digest f918fc51120f58e4
+cs custom-defaults: 386 items, digest 52f7fb30f70c7ca2
+cs custom-shared-corner: 386 items, digest 122eb477fcafb792
+cs custom-order-cap-position: 386 items, digest 8a0450ef48246231
+cs custom-off-in-corners: 386 items, digest 9e1b33772aa8434d
+cs custom-rules-group-off: 386 items, digest 76c4a2f2951898d0
+cs custom-admin-default-on: 386 items, digest fbd6b9da3aa0bcce
+cs custom-reordered-cap: 386 items, digest 0393008039502a49
+cs language-subs-only: 386 items, digest ab479e0488bf5365
+cs language-subs-strict-merge: 386 items, digest cffc828af63abc44
+cs awards-all: 386 items, digest 406ff7f2a63b4659
+cs awards-cap: 386 items, digest d3a495ccadffe182
+cs awards-disabled: 386 items, digest 8952def18f77b753
+cs awards-combined: 386 items, digest 2820b71d2fcf9c30
+cs native-bands-full: 386 items, digest 9a5ab147747b6c7f
+cs native-corners-compact: 386 items, digest 1993a493d72bae5c
+cs native-bands-compact: 386 items, digest 943b69891730852c
+cs native-bands-custom: 386 items, digest 712e0dd6847d2d3d
+cs native-bands-admin: 386 items, digest b2d811cd16794d35
+cs native-bands-integrated-smaller: 386 items, digest 563bb486282ebb3e
+cs native-bands-integrated-largest: 386 items, digest b1ad41cdab6da98c
+cs logos-custom-corners-tight-smaller: 386 items, digest 800b3b4ef3bca46c
+cs logos-custom-corners-flush-smaller: 386 items, digest c99a614b9a5e9a3b
+cs logos-custom-bands-tight-smaller: 386 items, digest 6051aff002952ad8
+cs logos-custom-bands-flush-smaller: 386 items, digest 6a774f09081942ff
+cs logos-custom-corners-tight-largest: 386 items, digest ff42fa3175e2e58c
+cs logos-custom-corners-flush-largest: 386 items, digest 487a304fbe8d478d
+cs logos-custom-bands-tight-largest: 386 items, digest b5532df1602b22dc
+cs logos-custom-bands-flush-largest: 386 items, digest 507d5ca366f37807
+cs technical-full-flags: 386 items, digest 04052ca929243f39
+cs technical-corners-full-flags: 386 items, digest bf740f5addb4a4cb
+cs technical-full-codes: 386 items, digest 429ce3ea34022952
+cs technical-corners-full-codes: 386 items, digest f120cc974c8c519c
+cs technical-compact-flags: 386 items, digest 3ccb12be411ba919
+cs technical-corners-compact-flags: 386 items, digest 85cdd4ff42fc27c3
+cs technical-compact-codes: 386 items, digest 22ce7d50bd3fae85
+cs technical-corners-compact-codes: 386 items, digest a99696443d16f5cd
+cs technical-reordered: 386 items, digest 3551670a3565d1f2
+
+$ node names-expected.mjs
+names: 115960 codes
+
+$ dotnet /home/jake/je-wt/features/tests/poster/parity/PosterTagParity/bin/Release/net10.0/PosterTagParity.dll names /home/jake/je-wt/features/tests/poster/parity/data
+names: 115960 codes, 0 mismatches
+
+$ node casing-expected.mjs
+casing: 30794 strings (1784 checks skipped: characters newer than Unicode 15.1)
+
+$ dotnet /home/jake/je-wt/features/tests/poster/parity/PosterTagParity/bin/Release/net10.0/PosterTagParity.dll casing /home/jake/je-wt/features/tests/poster/parity/data
+casing: 30794 strings, 0 mismatches
+
+$ node colours-expected.mjs
+colours: 17 synthetic posters
+
+$ dotnet /home/jake/je-wt/features/tests/poster/parity/PosterTagParity/bin/Release/net10.0/PosterTagParity.dll colours /home/jake/je-wt/features/tests/poster/parity/data
+colours: 17 posters, 0 mismatches
+
+$ node diff.mjs
+profile                          items  tagged  groups  tags    diffs  types (tagged/items)
+user-synthetic-admin             0      0       0       0       0      
+item-looks                       386    382     1822    2440    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+item-looks-bands-default         386    382     1461    1712    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+item-looks-legacy                386    382     1822    2438    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+item-looks-flush-single-0        386    384     1835    2455    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 4/4, Video 1/1
+item-looks-flush-single-1        386    384     1835    2457    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 4/4, Video 1/1
+item-look-fallback-caption       386    382     1820    2434    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+item-look-fallback-summary       386    382     1820    2434    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+item-look-fallback-minimal       386    382     1820    2434    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+look-rules                       386    382     1125    1173    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+look-rules-admin                 386    382     1119    1167    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+look-rules-empty-personal        386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+look-rules-legacy-admin          386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+look-rules-legacy-own            386    382     1122    1169    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+rating-locale-de                 386    370     370     733     0      Movie 355/361, Series 7/13, Season 3/6, BoxSet 1/1, Episode 3/4, Video 1/1
+rating-locale-fa                 386    370     370     733     0      Movie 355/361, Series 7/13, Season 3/6, BoxSet 1/1, Episode 3/4, Video 1/1
+rating-locale-ar-SA              386    370     370     733     0      Movie 355/361, Series 7/13, Season 3/6, BoxSet 1/1, Episode 3/4, Video 1/1
+quality-versions                 386    355     355     576     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+quality-versions-compact         386    355     355     576     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+all-on-defaults                  386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-scale-smaller                386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-scale-larger                 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-scale-largest                386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-gap-tight                    386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-gap-roomy                    386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+where-to-show                    386    380     1462    1729    0      Movie 361/361, Series 11/13, Season 3/6, BoxSet 1/1, Episode 3/4, Video 1/1
+where-to-show-admin              386    379     1810    2428    0      Movie 361/361, Series 8/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+where-to-show-rating-legacy-off  386    382     1468    1738    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-size-invalid-personal        386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-size-admin-inherit           386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+tag-size-legacy                  386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+naming-low-source-opt-in         386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+naming-categories-off            386    348     348     533     0      Movie 334/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+naming-imax-edition-only         386    355     355     568     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+naming-admin-defaults            386    355     355     559     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+naming-user-overrides            386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+rating-sources-all               386    5       5       18      0      Movie 2/361, Series 1/13, Season 2/6, BoxSet 0/1, Episode 0/4, Video 0/1
+rating-sources-minimum-cap       386    4       4       8       0      Movie 1/361, Series 1/13, Season 2/6, BoxSet 0/1, Episode 0/4, Video 0/1
+rating-sources-empty             386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+rating-sources-unknown           386    5       5       6       0      Movie 2/361, Series 1/13, Season 2/6, BoxSet 0/1, Episode 0/4, Video 0/1
+text-logo-side-ml-default        386    9       13      13      0      Movie 7/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+text-logo-side-ml-smaller        386    9       13      13      0      Movie 7/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+text-logo-side-mr-default        386    9       13      13      0      Movie 7/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+text-logo-side-mr-smaller        386    9       13      13      0      Movie 7/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-defaults                   386    9       9       9       0      Movie 7/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-with-groups                386    384     1835    2457    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 4/4, Video 1/1
+logos-capped-ordered             386    384     1835    2459    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 4/4, Video 1/1
+logos-hidden                     386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+logos-admin-position             386    9       9       9       0      Movie 7/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+aggregate-representative         386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-representative-de      386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-latest                 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-latest-de              386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-best                   386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-best-de                386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-shared                 386    353     353     567     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-shared-de              386    353     353     569     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-mixed                  386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-mixed-de               386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-best-none 386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-best-eng 386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-best-en-US 386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-best-en-GB 386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-best-de 386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-best-fra 386    355     355     574     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-latest-none 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-latest-eng 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-latest-en-US 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-latest-en-GB 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-latest-de 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-latest-fra 386    355     355     576     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-shared-none 386    353     353     567     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-shared-eng 386    355     355     569     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-shared-en-US 386    353     353     567     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-shared-en-GB 386    353     353     567     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-shared-de 386    353     353     569     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-shared-fra 386    353     353     566     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-mixed-none 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-mixed-eng 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-mixed-en-US 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-mixed-en-GB 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-mixed-de 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-highest-mixed-fra 386    355     355     578     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-best-none 386    355     355     594     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-best-eng  386    355     355     585     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-best-en-US 386    355     355     583     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-best-en-GB 386    355     355     584     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-best-de   386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-best-fra  386    355     355     592     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-latest-none 386    355     355     592     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-latest-eng 386    355     355     585     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-latest-en-US 386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-latest-en-GB 386    355     355     582     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-latest-de 386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-latest-fra 386    355     355     590     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-shared-none 386    355     355     582     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-shared-eng 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-shared-en-US 386    353     353     571     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-shared-en-GB 386    353     353     572     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-shared-de 386    353     353     573     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-shared-fra 386    355     355     580     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-mixed-none 386    355     355     598     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-mixed-eng 386    355     355     587     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-mixed-en-US 386    355     355     587     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-mixed-en-GB 386    355     355     588     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-mixed-de  386    355     355     585     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v0-all-mixed-fra 386    355     355     596     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-best-none 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-best-eng 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-best-en-US 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-best-en-GB 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-best-de 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-best-fra 386    355     355     577     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-latest-none 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-latest-eng 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-latest-en-US 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-latest-en-GB 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-latest-de 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-latest-fra 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-shared-none 386    353     353     569     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-shared-eng 386    355     355     571     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-shared-en-US 386    353     353     569     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-shared-en-GB 386    353     353     569     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-shared-de 386    353     353     571     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-shared-fra 386    353     353     569     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-mixed-none 386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-mixed-eng 386    355     355     579     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-mixed-en-US 386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-mixed-en-GB 386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-mixed-de 386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-highest-mixed-fra 386    355     355     581     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-best-none 386    355     355     601     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-best-eng  386    355     355     588     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-best-en-US 386    355     355     586     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-best-en-GB 386    355     355     588     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-best-de   386    355     355     586     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-best-fra  386    355     355     596     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-latest-none 386    355     355     599     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-latest-eng 386    355     355     588     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-latest-en-US 386    355     355     584     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-latest-en-GB 386    355     355     586     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-latest-de 386    355     355     586     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-latest-fra 386    355     355     594     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-shared-none 386    355     355     589     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-shared-eng 386    355     355     580     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-shared-en-US 386    353     353     574     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-shared-en-GB 386    353     353     576     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-shared-de 386    353     353     578     0      Movie 341/361, Series 7/13, Season 3/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-shared-fra 386    355     355     584     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-mixed-none 386    355     355     605     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-mixed-eng 386    355     355     590     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-mixed-en-US 386    355     355     590     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-mixed-en-GB 386    355     355     592     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-mixed-de  386    355     355     590     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-aggregate-v1-all-mixed-fra 386    355     355     600     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-gate-missing-version-density 386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-gate-v0-missing-density    386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-gate-v0-full               386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-gate-v0-compact            386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-gate-v1-full               386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-gate-v1-compact            386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-QualityAudioDisplayMode  386    355     355     588     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-QualityVideoCodecDisplayMode 386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-QualityHdrDisplayMode    386    355     355     722     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-all-representative       386    355     355     739     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-all-latest               386    355     355     741     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-all-best                 386    355     355     743     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-all-shared               386    355     355     731     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-all-mixed                386    355     355     747     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-all-language             386    355     355     728     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-all-admin                386    355     355     739     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-user-highest             386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-minimum-off              386    355     355     593     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-minimum-720p             386    355     355     586     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-minimum-1080p            386    355     355     584     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+display-minimum-4k               386    352     352     445     0      Movie 338/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+single-chip-caps-1               386    384     1835    2452    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 4/4, Video 1/1
+single-chip-caps-2               386    384     1835    2454    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 4/4, Video 1/1
+display-compact-cap              386    355     355     668     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+aggregate-admin-default          386    355     355     575     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+tier1-combined-latest            386    379     730     1025    0      Movie 361/361, Series 10/13, Season 5/6, BoxSet 1/1, Episode 2/4, Video 0/1
+tier1-combined-mixed             386    379     730     1027    0      Movie 361/361, Series 10/13, Season 5/6, BoxSet 1/1, Episode 2/4, Video 0/1
+positions-centres-legacy         386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+positions-centres-profile        386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-tight-corners               386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-tight-centres               386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-flush-corners               386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-flush-centres               386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-tight-smaller-tight-corners 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-tight-smaller-tight-centres 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-tight-largest-roomy-corners 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-tight-largest-roomy-centres 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-flush-smaller-tight-corners 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-flush-smaller-tight-centres 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-flush-largest-roomy-corners 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-flush-largest-roomy-centres 386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-admin-flush-inherited       386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-admin-flush-user-default    386    382     1826    2450    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+edge-legacy-ignores-admin        386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+positions-mirror                 386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+all-top-right                    386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+all-bottom-left                  386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+quality-toggles-orders           386    248     248     268     0      Movie 242/361, Series 3/13, Season 3/6, BoxSet 0/1, Episode 0/4, Video 0/1
+quality-orders-from-admin        386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-user-de                    386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-user-ptbr                  386    378     723     972     0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+audio-user-none-admin-fixed      386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-auto-late-quality          386    382     1826    2447    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+audio-auto-no-pref               386    376     721     954     0      Movie 361/361, Series 8/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+audio-admin-from-user            386    378     725     942     0      Movie 361/361, Series 8/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 0/1
+audio-admin-from-user-no-pref    386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+audio-admin-fixed                386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+language-priority                386    368     368     399     0      Movie 357/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+language-priority-strict         386    368     380     396     0      Movie 359/361, Series 6/13, Season 2/6, BoxSet 1/1, Episode 0/4, Video 0/1
+personal-language-flags-strict-null 386    360     360     396     0      Movie 349/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-flags-strict-true 386    360     360     396     0      Movie 349/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-flags-strict-false 386    369     369     436     0      Movie 358/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-codes-strict-null 386    360     360     396     0      Movie 349/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-codes-strict-true 386    360     360     396     0      Movie 349/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-codes-strict-false 386    370     370     438     0      Movie 359/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-empty          386    368     368     399     0      Movie 357/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-aliases        386    10      10      11      0      Movie 9/361, Series 0/13, Season 1/6, BoxSet 0/1, Episode 0/4, Video 0/1
+personal-language-follow-strict-override 386    368     368     399     0      Movie 357/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-badge-only     386    355     355     376     0      Movie 346/361, Series 6/13, Season 1/6, BoxSet 1/1, Episode 1/4, Video 0/1
+personal-language-invalid        386    368     368     399     0      Movie 357/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+rating-scopes                    386    8       8       12      0      Movie 0/361, Series 6/13, Season 0/6, BoxSet 1/1, Episode 0/4, Video 1/1
+rating-scopes-2                  386    373     731     1086    0      Movie 361/361, Series 5/13, Season 2/6, BoxSet 1/1, Episode 3/4, Video 1/1
+reviews-off                      386    367     367     725     0      Movie 355/361, Series 6/13, Season 1/6, BoxSet 1/1, Episode 3/4, Video 1/1
+reviews-disabled                 386    377     735     1124    0      Movie 361/361, Series 9/13, Season 2/6, BoxSet 1/1, Episode 3/4, Video 1/1
+no-settings-file                 386    381     1456    2080    0      Movie 361/361, Series 11/13, Season 4/6, BoxSet 1/1, Episode 3/4, Video 1/1
+no-settings-file-defaults        386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+empty-settings-object            386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+camel-case-and-nulls             386    380     1452    2027    0      Movie 361/361, Series 9/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+corrupt-settings                 386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+weird-positions                  386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-user-off                  386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-user-on                   386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-admin-off                 386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-unset                     386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-missing                   386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+language-priority-strict-casing  386    357     357     376     0      Movie 347/361, Series 6/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+layout-order-caps                386    382     1825    2022    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+layout-corners-profile-off       386    382     1460    2069    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+layout-admin-caps-not-order      386    382     1825    2454    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+layout-legacy-ignores-order      386    382     1826    2448    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+layout-all-off                   386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+rating-include-community-off     386    374     729     729     0      Movie 361/361, Series 6/13, Season 2/6, BoxSet 1/1, Episode 3/4, Video 1/1
+rating-include-critic-off-admin  386    367     367     725     0      Movie 355/361, Series 6/13, Season 1/6, BoxSet 1/1, Episode 3/4, Video 1/1
+rating-include-none              386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+settings-text-empty              386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+settings-text-whitespace         386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+settings-text-null               386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+settings-text-array              386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+settings-text-garbage            386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+settings-text-json5              386    379     1088    1679    0      Movie 361/361, Series 9/13, Season 4/6, BoxSet 1/1, Episode 3/4, Video 1/1
+settings-text-duplicates         386    373     734     780     0      Movie 361/361, Series 8/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+language-flags-off               386    369     369     433     0      Movie 358/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+language-flags-only              386    369     369     407     0      Movie 358/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+language-flags-both              386    369     369     436     0      Movie 358/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+language-codes-off               386    370     370     436     0      Movie 359/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+language-codes-only              386    370     370     408     0      Movie 359/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+language-codes-both              386    370     370     438     0      Movie 359/361, Series 7/13, Season 2/6, BoxSet 1/1, Episode 1/4, Video 0/1
+custom-defaults                  386    4       4       7       0      Movie 3/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+custom-shared-corner             386    378     729     950     0      Movie 361/361, Series 8/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 0/1
+custom-order-cap-position        386    382     1830    2454    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+custom-off-in-corners            386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+custom-rules-group-off           386    355     355     573     0      Movie 341/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+custom-admin-default-on          386    4       4       7       0      Movie 3/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+custom-reordered-cap             386    4       4       4       0      Movie 3/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+language-subs-only               386    32      32      41      0      Movie 29/361, Series 2/13, Season 1/6, BoxSet 0/1, Episode 0/4, Video 0/1
+language-subs-strict-merge       386    352     352     382     0      Movie 342/361, Series 7/13, Season 1/6, BoxSet 1/1, Episode 1/4, Video 0/1
+awards-all                       386    2       2       5       0      Movie 1/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+awards-cap                       386    2       2       3       0      Movie 1/361, Series 1/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+awards-disabled                  386    0       0       0       0      Movie 0/361, Series 0/13, Season 0/6, BoxSet 0/1, Episode 0/4, Video 0/1
+awards-combined                  386    383     1828    2453    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-full                386    382     1460    2069    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-corners-compact           386    382     1826    2092    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-compact             386    382     1460    1711    0      Movie 361/361, Series 11/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-custom              386    380     1459    1659    0      Movie 361/361, Series 10/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 0/1
+native-bands-admin               386    380     1092    1670    0      Movie 361/361, Series 9/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-integrated-smaller  386    383     1462    2072    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+native-bands-integrated-largest  386    383     1462    2072    0      Movie 361/361, Series 12/13, Season 5/6, BoxSet 1/1, Episode 3/4, Video 1/1
+logos-custom-corners-tight-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-corners-flush-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-tight-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-flush-smaller 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-corners-tight-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-corners-flush-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-tight-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+logos-custom-bands-flush-largest 386    13      13      16      0      Movie 10/361, Series 2/13, Season 0/6, BoxSet 0/1, Episode 1/4, Video 0/1
+technical-full-flags             386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-full-flags     386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-full-codes             386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-full-codes     386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-compact-flags          386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-compact-flags  386    378     737     1045    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-compact-codes          386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-corners-compact-codes  386    378     738     1048    0      Movie 361/361, Series 10/13, Season 4/6, BoxSet 1/1, Episode 2/4, Video 0/1
+technical-reordered              386    368     368     612     0      Movie 354/361, Series 8/13, Season 4/6, BoxSet 0/1, Episode 2/4, Video 0/1
+
+Total differences: 0
