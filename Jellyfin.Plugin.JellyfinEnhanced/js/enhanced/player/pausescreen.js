@@ -155,7 +155,7 @@
               --pause-screen-meta-size: clamp(14px, 1.2vw, 24px);
               --pause-screen-hint-size: clamp(14px, 1.1vw, 21px);
               --pause-screen-plot-font: clamp(15px, 1.3vw, 26px);
-              --pause-screen-plot-lines: 4;
+              --pause-screen-plot-lines: 3;
               --pause-screen-plot-max-w: 56ch;
               --pause-screen-progress-height: 4px;
               --pause-screen-progress-radius: 999px;
@@ -333,7 +333,7 @@
               box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.14);
             }
             #pause-screen-poster:not(.is-still) { filter: brightness(.9); }
-            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.8); } #pause-screen-poster.is-still { filter: brightness(.88); } }
+            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.8); } #pause-screen-poster.is-still { filter: none; } }
             @media (min-width: 1001px) and (max-width: 1599px) { #pause-screen-poster { border-radius: 9px; } }
 
             @keyframes pause-screen-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -558,7 +558,7 @@
               }
               .pause-screen-layout { padding-top: calc(76px + env(safe-area-inset-top, 0px)); padding-bottom: calc(var(--pause-screen-footer-h, 152px) + 36px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px)); align-items: end; }
               @media (min-height: 800px) and (orientation: portrait) {
-                :root { --pause-screen-plot-lines: 6; --pause-screen-plot-font: clamp(16px, 2.2vw, 20px); --pause-screen-meta-size: clamp(16px, 2vw, 18px); --pause-screen-hint-size: clamp(15px, 2vw, 18px); }
+                :root { --pause-screen-plot-lines: 4; --pause-screen-plot-font: clamp(16px, 2.2vw, 20px); --pause-screen-meta-size: clamp(16px, 2vw, 18px); --pause-screen-hint-size: clamp(15px, 2vw, 18px); }
               }
               @media (min-height: 740px) and (orientation: portrait) {
                 .pause-screen-layout {
@@ -1415,7 +1415,8 @@
               }
             }
           }
-          const extra = window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape), (max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 1 : 0;
+          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 2
+            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
           if (status === 'cut' && lines > 0 && extra > 0) {
             let grown = false;
             for (let more = 1; more <= extra && !grown; more++) {
