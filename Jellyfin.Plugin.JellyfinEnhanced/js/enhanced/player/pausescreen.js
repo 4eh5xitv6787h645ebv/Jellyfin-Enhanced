@@ -588,6 +588,9 @@
                 .pause-screen-hint { font-size: 14px; color: rgba(255,255,255,.75); }
               }
               #pause-screen-title { font-size: clamp(28px, 8vw, 40px); }
+              /* phones: a dark logo is hidden and its plain title is the title, as for a title without a logo */
+              .pause-screen-main.logo-needs-title #pause-screen-logo { display: none; }
+              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: clamp(28px, 8vw, 40px); font-weight: 700; line-height: 1.04; margin: 0 0 16px; display: block; }
               #pause-screen-subtitle { font-size: 18px; }
               #pause-screen-details .pause-screen-date-long { display: none; }
               #pause-screen-details .pause-screen-date-short { display: inline; }
@@ -619,7 +622,8 @@
               #pause-screen-overlay.has-still #pause-screen-genres,
               #pause-screen-overlay.plot-over-genres #pause-screen-genres,
               .pause-screen-main.logo-needs-title #pause-screen-genres { display: none; }
-              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: 18px; margin-top: -4px; margin-bottom: 0; }
+              .pause-screen-main.logo-needs-title #pause-screen-logo { display: none; }
+              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: clamp(26px, 7vh, 32px); font-weight: 700; line-height: 1.04; margin: 0; }
               #pause-screen-progress-meta { margin-top: .2em; }
               .pause-screen-actions { margin-top: calc(var(--pause-screen-meta-size) * .7); }
             }
@@ -1405,7 +1409,7 @@
             }
             if (!found) { el.style.removeProperty('max-width'); this.fitOverviewText(full); }
             // Last resort: a movie's genre row steps aside for a fourth line (same acceptance rule as above).
-            if (false) { // genre-row fallback retired with the hard line budget
+            if (status !== 'full' && !this.overlay.classList.contains('has-still')) {
               const base = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 3;
               this.overlay.classList.add('plot-over-genres');
               el.style.setProperty('-webkit-line-clamp', String(base + 1));
@@ -1417,8 +1421,9 @@
               }
             }
           }
-          // The line budget is a hard cap (3 wide and landscape, 4 tall portrait): no growth step.
-          const extra = 0;
+          // One or two more lines only when they let the text finish on a sentence (fit check decides).
+          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 2
+            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
           if (status === 'cut' && lines > 0 && extra > 0) {
             let grown = false;
             for (let more = 1; more <= extra && !grown; more++) {
