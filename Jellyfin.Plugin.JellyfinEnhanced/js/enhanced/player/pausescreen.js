@@ -492,7 +492,8 @@
               .pause-screen-active .skinHeader.osdHeader { top: 12px !important; }
             }
             /* Jellyfin's TV layout (remote, couch): keep the header row inside the 5 % action-safe area, clear of overscan */
-            .layout-tv.pause-screen-active .skinHeader.osdHeader { top: calc(5vh - 16px) !important; left: calc(5vw - 16px) !important; }
+            .layout-tv.pause-screen-active .skinHeader.osdHeader { top: calc(5vh + 4px) !important; left: calc(5vw - 16px) !important; }
+            .layout-tv .pause-screen-footer { bottom: calc(var(--pause-screen-gutter-y) + 8px + env(safe-area-inset-bottom, 0px)); }
             /* Accessibility helpers */
             #pause-screen-focus-start, #pause-screen-focus-end {
               position: fixed; width:1px; height:1px; overflow:hidden; clip: rect(0 0 0 0);
@@ -556,9 +557,8 @@
                 .pause-screen-layout {
                   grid-template-columns: auto minmax(0, 1fr);
                   grid-template-areas: "logo logo" "title title" "sub sub" "art facts" "plot plot";
-                  /* the block sits on the footer, 68 px above the track on every title; "safe" keeps a tall block top-aligned */
-                  align-content: safe end; align-items: start; row-gap: 0; column-gap: 16px;
-                  padding-bottom: calc(var(--pause-screen-footer-h, 152px) + 68px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px));
+                  /* the block sits in the middle of the room between the header and the footer (36 px reserve above the track); "safe" keeps a tall block top-aligned */
+                  align-content: safe center; align-items: start; row-gap: 0; column-gap: 16px;
                 }
                 .pause-screen-main { display: contents; }
                 .pause-screen-main > * { margin-bottom: 12px; }
@@ -617,7 +617,8 @@
               .pause-screen-layout { grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; }
               .pause-screen-art { display: flex; }
               #pause-screen-poster { width: 112px; border-radius: 5px; }
-              #pause-screen-poster.is-still { width: 240px; }
+              /* a still keeps its own frame inside a 240×135 box (Buffy's 4:3 → 180×135, never cropped) */
+              #pause-screen-poster.is-still { width: auto; max-width: 240px; max-height: 135px; }
               #pause-screen-disc { width: 150px; }
             }
 
