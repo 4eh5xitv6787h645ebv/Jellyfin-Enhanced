@@ -274,8 +274,8 @@
             /* a dark logo (Spider-Verse's red and navy) is hard to read over a dark scrim: the plain title follows it */
             .pause-screen-main.has-logo.logo-needs-title #pause-screen-title {
               position: static; width: auto; height: auto; overflow: hidden; clip: auto; white-space: normal;
-              font-size: clamp(20px, 1.7vw, 32px); font-weight: 600; line-height: 1.25; color: #fff;
-              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 16px;
+              font-size: clamp(22px, 2.3vw, 44px); font-weight: 600; line-height: 1.2; color: #fff;
+              margin: calc(-1 * clamp(2px, .8vh, 10px) + 8px) 0 12px;
               display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
             }
             #pause-screen-subtitle {
@@ -619,7 +619,7 @@
               #pause-screen-overlay.has-still #pause-screen-genres,
               #pause-screen-overlay.plot-over-genres #pause-screen-genres,
               .pause-screen-main.logo-needs-title #pause-screen-genres { display: none; }
-              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: 16px; margin-top: -4px; margin-bottom: 0; }
+              .pause-screen-main.has-logo.logo-needs-title #pause-screen-title { font-size: 18px; margin-top: -4px; margin-bottom: 0; }
               #pause-screen-progress-meta { margin-top: .2em; }
               .pause-screen-actions { margin-top: calc(var(--pause-screen-meta-size) * .7); }
             }
@@ -1333,9 +1333,9 @@
           if (trimmedLogoURL) {
             this.overlayLogo.src = trimmedLogoURL;
             this.overlayMain.classList.add('has-logo');
-            // a dark logo is hard to read: its plain title leads and the logo steps down to .75
+            // a dark logo is hard to read: its plain title leads and the logo steps down to .6
             const darkLogo = (this.logoInk.get(logoURL)?.luma ?? 1) < 0.3;
-            this.overlayMain.style.setProperty('--pause-screen-logo-scale', darkLogo ? '0.75' : this.logoScale(this.logoInk.get(logoURL)));
+            this.overlayMain.style.setProperty('--pause-screen-logo-scale', darkLogo ? '0.6' : this.logoScale(this.logoInk.get(logoURL)));
             this.overlayMain.classList.toggle('logo-needs-title', darkLogo);
           }
           if (discURL) this.overlayDisc.src = discURL;
@@ -1405,7 +1405,7 @@
             }
             if (!found) { el.style.removeProperty('max-width'); this.fitOverviewText(full); }
             // Last resort: a movie's genre row steps aside for a fourth line (same acceptance rule as above).
-            if (status !== 'full' && !this.overlay.classList.contains('has-still')) {
+            if (false) { // genre-row fallback retired with the hard line budget
               const base = parseInt(getComputedStyle(el).getPropertyValue('-webkit-line-clamp'), 10) || 3;
               this.overlay.classList.add('plot-over-genres');
               el.style.setProperty('-webkit-line-clamp', String(base + 1));
@@ -1417,8 +1417,8 @@
               }
             }
           }
-          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 2
-            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
+          // The line budget is a hard cap (3 wide and landscape, 4 tall portrait): no growth step.
+          const extra = 0;
           if (status === 'cut' && lines > 0 && extra > 0) {
             let grown = false;
             for (let more = 1; more <= extra && !grown; more++) {
