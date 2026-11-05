@@ -427,8 +427,8 @@
             .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
             /* touch phones have no hover: the first caption line stays up so a tap on × is never a guess */
-            @media (hover: none) and (pointer: coarse) and (max-width: 1000px) and (orientation: portrait) {
-              .pause-screen-close-caption { display: block; font-size: 13px; line-height: 18px; top: calc(var(--pause-screen-close-bottom, 46px) + 2px); }
+            @media (hover: none) and (pointer: coarse) and (max-width: 1000px) {
+              .pause-screen-close-caption { display: block; font-size: 14px; line-height: 18px; top: calc(var(--pause-screen-close-bottom, 46px) + 2px); }
               #pause-screen-overlay:not(.close-focused) .pause-screen-close-caption > span + span { display: none; }
             }
             @media (hover: hover) {
@@ -538,7 +538,7 @@
               }
               .pause-screen-layout { padding-top: calc(76px + env(safe-area-inset-top, 0px)); padding-bottom: calc(var(--pause-screen-footer-h, 152px) + 36px + var(--pause-screen-gutter-y) + env(safe-area-inset-bottom, 0px)); align-items: end; }
               @media (min-height: 800px) and (orientation: portrait) {
-                :root { --pause-screen-plot-lines: 7; --pause-screen-plot-font: clamp(16px, 2.2vw, 20px); --pause-screen-meta-size: clamp(16px, 2vw, 18px); --pause-screen-hint-size: clamp(15px, 2vw, 18px); }
+                :root { --pause-screen-plot-lines: 4; --pause-screen-plot-font: clamp(16px, 2.2vw, 20px); --pause-screen-meta-size: clamp(16px, 2vw, 18px); --pause-screen-hint-size: clamp(15px, 2vw, 18px); }
               }
               @media (min-height: 740px) and (orientation: portrait) {
                 .pause-screen-layout {
@@ -553,7 +553,8 @@
                 #pause-screen-title { grid-area: title; margin: 0 0 16px; }
                 #pause-screen-subtitle { grid-area: sub; }
                 .pause-screen-art { display: flex; grid-area: art; align-self: start; justify-content: flex-start; margin-bottom: 12px; }
-                .pause-screen-facts { grid-area: facts; align-self: start; margin-top: 6px; gap: 8px; }
+                /* beside a poster or disc the facts sit on its middle, not its top edge */
+                .pause-screen-facts { grid-area: facts; align-self: center; margin-top: 0; gap: 8px; }
                 #pause-screen-plot { grid-area: plot; margin-top: 4px; margin-bottom: 0; }
                 #pause-screen-poster { width: 96px; border-radius: 4px; }
                 #pause-screen-disc { width: 96px; animation: none; }
