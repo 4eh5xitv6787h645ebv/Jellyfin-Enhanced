@@ -161,7 +161,7 @@
               --pause-screen-progress-radius: 999px;
               --pause-screen-disc-w: clamp(220px, 20vw, 360px);
               --pause-screen-disc-rot-sec: 0s;
-              --pause-screen-poster-w: clamp(170px, 12vw, 230px);
+              --pause-screen-poster-w: clamp(170px, 14.6vw, 280px);
               --pause-screen-still-w: clamp(220px, 22vw, 424px);
             }
 
@@ -226,7 +226,7 @@
             }
             #pause-screen-backdrop.is-still {
               inset: -4%;
-              filter: blur(clamp(8px, .65vw, 12px)) saturate(1);
+              filter: blur(clamp(4px, .3vw, 6px)) saturate(1);
               opacity: .6;
             }
             .pause-screen-scrim {
@@ -1343,7 +1343,7 @@
             if (lift > 1) {
               this.overlayPoster.style.filter = `brightness(${lift}) contrast(.92) saturate(1.08)`;
               // the same scene behind the card, capped so the text scrims keep their contrast
-              this.overlayBackdrop.style.filter = `blur(clamp(8px, .65vw, 12px)) brightness(${Math.min(lift, 2)})`;
+              this.overlayBackdrop.style.filter = `blur(clamp(4px, .3vw, 6px)) brightness(${Math.min(lift, 2)})`;
             }
           }
           if (stillURL || posterURL) this.overlayPoster.src = stillURL || posterURL;
@@ -1424,10 +1424,14 @@
             }
           }
           // One or two more lines only when they let the text finish on a sentence (fit check decides).
-          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait), (min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
-          // Budget 3 lines wide and landscape, 4 tall portrait; one more line only when it shows more whole
-          // text (the whole overview, a longer run of sentences, or a first sentence that now finishes).
-          // That is the ceiling: what still does not fit ends with an ellipsis.
+          const tallPortrait = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches;
+          const roomy = window.matchMedia?.('(min-width: 1200px) and (min-height: 800px)').matches;
+          const shortLandscape = window.matchMedia?.('(max-height: 500px) and (orientation: landscape)').matches;
+          // After a word cut a long first sentence may take what it needs to finish; after a sentence cut one more line.
+          const extra = status === 'cut' ? (tallPortrait ? 3 : roomy ? 2 : shortLandscape ? 1 : 0) : (tallPortrait || roomy || shortLandscape ? 1 : 0);
+          // Budget 3 lines wide and landscape, 4 tall portrait. Extra lines only when they show more whole
+          // text: the whole overview, a longer run of sentences, or a first sentence that now finishes.
+          // A first sentence that still does not fit ends with an ellipsis.
           if (status !== 'full' && lines > 0 && extra > 0) {
             const baseLen = el.textContent.length;
             let best = 0;
