@@ -234,7 +234,7 @@
               pointer-events: none;
               background:
                 linear-gradient(90deg, rgba(8,9,13,.94) 0%, rgba(8,9,13,.84) 36%, rgba(8,9,13,.68) 55%, rgba(8,9,13,.26) 74%, rgba(8,9,13,.18) 100%),
-                linear-gradient(180deg, rgba(8,9,13,.42) 0%, rgba(8,9,13,0) 26%, rgba(8,9,13,0) 60%, rgba(8,9,13,.84) 100%);
+                linear-gradient(180deg, rgba(8,9,13,.42) 0%, rgba(8,9,13,0) 26%, rgba(8,9,13,0) 60%, rgba(8,9,13,.60) 80%, rgba(8,9,13,.90) 100%);
             }
 
             .pause-screen-layout {
@@ -288,7 +288,6 @@
             #pause-screen-details .pause-screen-score,
             #pause-screen-details .pause-screen-score > span[aria-hidden] { display: inline-flex; align-items: center; gap: .2em; }
             #pause-screen-details .pause-screen-score .material-icons { font-size: 1.15em; color: #f2b01e; }
-            #pause-screen-details .pause-screen-date-short { display: none; }
             #pause-screen-overlay.has-duration #pause-screen-details .pause-screen-runtime { display: none; }
             .pause-screen-facts { display: flex; flex-direction: column; gap: clamp(6px, .8vh, 10px); min-width: 0; }
             #pause-screen-genres {
@@ -509,6 +508,10 @@
                 text-align: left !important;
             }
 
+            /* Small laptops: bridge the base sizes to the 1200 px values below */
+            @media (min-width: 1001px) and (max-width: 1199px) {
+              :root { --pause-screen-text-size: calc(2.01vw - 6.1px); --pause-screen-plot-font: calc(2.51vw - 10.1px); --pause-screen-hint-size: calc(1.51vw - 1.1px); --pause-screen-meta-size: calc(3.52vw - 21.2px); }
+            }
             /* Large screens: thicker track and bigger playback facts for distance viewing */
             @media (min-width: 1200px) and (max-width: 1599px) {
               :root { --pause-screen-logo-max-w: min(42vw, 540px); }
@@ -591,8 +594,6 @@
               }
               #pause-screen-title { font-size: clamp(28px, 8vw, 40px); }
               #pause-screen-subtitle { font-size: 18px; }
-              #pause-screen-details .pause-screen-date-long { display: none; }
-              #pause-screen-details .pause-screen-date-short { display: inline; }
               #pause-screen-progress-meta { flex-direction: column; align-items: flex-start; gap: .35em; }
               #pause-screen-progress-meta .progress-ends-at { font-size: 14px; }
               #pause-screen-close-btn { right: calc(8px + env(safe-area-inset-right, 0px)); }
@@ -616,8 +617,6 @@
               #pause-screen-subtitle { font-size: 16px; }
               .pause-screen-main:not(.has-logo) #pause-screen-title { font-size: 28px; line-height: 1.12; }
               #pause-screen-overlay.has-still #pause-screen-logo { max-height: clamp(44px, 16vh, 60px); }
-              #pause-screen-details .pause-screen-date-long { display: none; }
-              #pause-screen-details .pause-screen-date-short { display: inline; }
               /* an episode's height goes to its story: the series genres step aside here */
               #pause-screen-overlay.has-still #pause-screen-genres,
               #pause-screen-overlay.plot-over-genres #pause-screen-genres { display: none; }
@@ -639,6 +638,7 @@
               /* scrims vanish in forced colours while the artwork stays: text sits on opaque system surfaces */
               #pause-screen-title, #pause-screen-subtitle, .pause-screen-facts, #pause-screen-plot, .pause-screen-footer, .pause-screen-close-caption { background: Canvas; color: CanvasText; forced-color-adjust: none; }
               #pause-screen-title, #pause-screen-subtitle, #pause-screen-plot { text-shadow: none; }
+              #pause-screen-logo { background: #000; padding: 8px; forced-color-adjust: none; }
               #pause-screen-details > *:not(.mediaInfoOfficialRating), #pause-screen-genres, #pause-screen-subtitle *, #pause-screen-progress-meta, #pause-screen-progress-meta *, .pause-screen-hint, .pause-screen-hint *, .pause-screen-close-caption * { color: CanvasText !important; }
               .pause-screen-resume, #pause-screen-close-btn { background: ButtonFace !important; color: ButtonText !important; border: 1px solid ButtonText !important; forced-color-adjust: none; }
               .pause-screen-resume:focus-visible, #pause-screen-close-btn:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
@@ -1581,14 +1581,17 @@
               span.appendChild(sr);
             } else if (kind === 'text' && value === when && whenShort && whenShort !== when) {
               // Phones get the year only; the full date is more than they can spend on it.
-              const long = document.createElement('span'); long.className = 'pause-screen-date-long'; long.textContent = String(value);
-              const short = document.createElement('span'); short.className = 'pause-screen-date-short'; short.textContent = whenShort;
+              const long = document.createElement('span'); long.className = 'pause-screen-date-long pause-screen-sr'; long.textContent = String(value);
+              const short = document.createElement('span'); short.className = 'pause-screen-date-short'; short.textContent = whenShort; short.setAttribute('aria-hidden', 'true');
               span.className = 'pause-screen-date';
               span.appendChild(long); span.appendChild(short);
             } else if (kind === 'rating') {
               span.className = 'mediaInfoOfficialRating';
               span.setAttribute('rating', String(value));
+              // the badge keeps its plain text (rating colours key off it); the spoken name goes on the element
               span.textContent = String(value);
+              span.setAttribute('role', 'img');
+              span.setAttribute('aria-label', JE.t('pausescreen_content_rating', { rating: String(value) }));
             } else {
               span.textContent = String(value);
               if (value === runtime) span.className = 'pause-screen-runtime';
