@@ -403,9 +403,9 @@
             .pause-screen-resume:hover { background: #fff; border-color: #fff; }
             .pause-screen-resume:focus-visible { outline: 2px solid #fff; outline-offset: 4px; background: #fff; border-color: #fff; color: #111; }
             @media (min-width: 1200px) {
-              .pause-screen-resume { min-height: 48px; font-size: 18px; }
+              .pause-screen-resume { min-height: clamp(48px, calc(1.538vw + 26.46px), 56px); font-size: clamp(18px, calc(1.154vw + 1.85px), 24px); }
             }
-            @media (min-width: 1600px) { .pause-screen-resume { min-height: 56px; font-size: 24px; padding: 0 22px 0 12px; gap: 10px; } .pause-screen-actions { column-gap: 24px; } }
+            @media (min-width: 1600px) { .pause-screen-resume { padding: 0 22px 0 12px; gap: 10px; } .pause-screen-actions { column-gap: 24px; } }
             /* Older TV browsers (webOS 5/6, Tizen ≤ 6.5) have no :focus-visible; give the remote a focus style anyway */
             .layout-tv .pause-screen-resume:focus { outline: 3px solid #fff; outline-offset: 4px; background: #fff; border-color: #fff; color: #111; }
             .layout-tv #pause-screen-close-btn:focus { outline: 3px solid #fff; outline-offset: -3px; background-color: #fff; background-clip: padding-box; border-color: transparent; color: #111; opacity: 1; }
@@ -510,19 +510,25 @@
 
             /* Large screens: thicker track and bigger playback facts for distance viewing */
             @media (min-width: 1200px) and (max-width: 1599px) {
-              :root { --pause-screen-logo-max-w: min(42vw, 540px); --pause-screen-text-size: 18px; --pause-screen-plot-font: 20px; --pause-screen-hint-size: 17px; }
+              :root { --pause-screen-logo-max-w: min(42vw, 540px); }
               #pause-screen-close-btn { font-size: 17px; }
               .pause-screen-main { gap: 14px; }
             }
             @media (min-width: 1200px) {
-              :root { --pause-screen-progress-height: 6px; --pause-screen-meta-size: max(21px, min(28px, 1.46vw)); }
+              /* one ramp per size between the laptop (1400 px) and TV (1920 px) values, no jump at a breakpoint */
+              :root {
+                --pause-screen-progress-height: 6px; --pause-screen-meta-size: max(21px, min(28px, 1.46vw));
+                --pause-screen-text-size: clamp(18px, calc(1.538vw - 3.54px), 26px);
+                --pause-screen-plot-font: clamp(20px, calc(1.538vw - 1.54px), 28px);
+                --pause-screen-hint-size: clamp(17px, calc(1.346vw - 1.85px), 24px);
+              }
+              #pause-screen-genres { font-size: clamp(18px, calc(1.154vw + 1.85px), 24px); }
               .pause-screen-main:not(.has-logo) #pause-screen-title { font-size: clamp(56px, 4.4vw, 88px); line-height: 1.08; max-width: 18ch; }
             }
             @media (min-width: 1600px) {
-              :root { --pause-screen-progress-height: 8px; --pause-screen-text-size: 24px; --pause-screen-hint-size: 24px; --pause-screen-plot-font: 28px; }
+              :root { --pause-screen-progress-height: 8px; }
               #pause-screen-details .mediaInfoOfficialRating { font-size: .92em; }
               #pause-screen-plot { line-height: 1.45; }
-              #pause-screen-genres { font-size: 22px; }
             }
 
             /* Narrow landscape (tablets, phones on their side): no room for the art column, text spans the width */
