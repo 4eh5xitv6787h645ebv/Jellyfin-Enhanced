@@ -1239,6 +1239,7 @@
           this.overlayPoster.removeAttribute('src');
           this.overlayPoster.style.removeProperty('filter');
           this.overlayBackdrop.style.backgroundImage = '';
+          this.overlayBackdrop.style.removeProperty('filter');
           this.overlayBackdrop.classList.remove('is-still');
           this.overlay.classList.remove('has-still');
           this.overlay.setAttribute('aria-label', JE.t('pausescreen_paused'));
@@ -1335,10 +1336,15 @@
           this.overlayPoster.classList.toggle('is-still', !!stillURL);
           // A very dark still (Buffy's night scenes) reads as a black box: lift its exposure.
           this.overlayPoster.style.removeProperty('filter');
+          this.overlayBackdrop.style.removeProperty('filter');
           if (stillURL) {
             const lift = this.stillExposure(await this.imageLuma(stillURL));
             if (this.destroyed || generation !== this.generation) return;
-            if (lift > 1) this.overlayPoster.style.filter = `brightness(${lift}) contrast(.92) saturate(1.08)`;
+            if (lift > 1) {
+              this.overlayPoster.style.filter = `brightness(${lift}) contrast(.92) saturate(1.08)`;
+              // the same scene behind the card, capped so the text scrims keep their contrast
+              this.overlayBackdrop.style.filter = `blur(clamp(8px, .65vw, 12px)) brightness(${Math.min(lift, 2)})`;
+            }
           }
           if (stillURL || posterURL) this.overlayPoster.src = stillURL || posterURL;
           // An episode's own still goes behind it: series backdrops often carry the printed series title,
@@ -1418,16 +1424,18 @@
             }
           }
           // One or two more lines only when they let the text finish on a sentence (fit check decides).
-          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 3
-            : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 2 : 0;
-          // The line budget holds (3 wide and landscape, 4 tall portrait) and the text stops on a sentence
-          // inside it; only a first sentence too long for the budget may take extra lines to finish.
-          if (status === 'cut' && lines > 0 && extra > 0) {
+          const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait), (min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 1 : 0;
+          // Budget 3 lines wide and landscape, 4 tall portrait; one more line only when it shows more whole
+          // text (the whole overview, a longer run of sentences, or a first sentence that now finishes).
+          // That is the ceiling: what still does not fit ends with an ellipsis.
+          if (status !== 'full' && lines > 0 && extra > 0) {
+            const baseLen = el.textContent.length;
             let best = 0;
             for (let more = 1; more <= extra; more++) {
               el.style.setProperty('-webkit-line-clamp', String(lines + more));
               const st = this.fitOverviewText(full);
-              if (st !== 'cut' && fits()) { best = more; break; }
+              const longer = status === 'cut' ? st !== 'cut' : (st === 'full' || (st === 'sentence' && el.textContent.length > baseLen));
+              if (longer && fits()) { best = more; break; }
             }
             el.style.setProperty('-webkit-line-clamp', String(lines + best));
             lines += best;
