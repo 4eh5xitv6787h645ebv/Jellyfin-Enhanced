@@ -161,7 +161,7 @@
               --pause-screen-progress-radius: 999px;
               --pause-screen-disc-w: clamp(220px, 17vw, 320px);
               --pause-screen-disc-rot-sec: 0s;
-              --pause-screen-poster-w: clamp(170px, 13vw, 248px);
+              --pause-screen-poster-w: clamp(170px, 13.75vw, 264px);
               --pause-screen-still-w: clamp(220px, 22vw, 424px);
             }
 
@@ -403,14 +403,15 @@
             .pause-screen-resume:hover { background: #fff; border-color: #fff; }
             .pause-screen-resume:focus-visible { outline: 2px solid #fff; outline-offset: 4px; background: #fff; border-color: #fff; color: #111; }
             @media (min-width: 1200px) {
-              .pause-screen-resume { min-height: clamp(48px, calc(1.538vw + 26.46px), 56px); font-size: clamp(18px, calc(1.154vw + 1.85px), 24px); }
+              .pause-screen-resume { min-height: clamp(48px, calc(3.077vw + 4.92px), 64px); font-size: clamp(18px, calc(1.923vw - 8.92px), 28px); }
             }
             @media (min-width: 1600px) { .pause-screen-resume { padding: 0 22px 0 12px; gap: 10px; } .pause-screen-actions { column-gap: 24px; } }
             /* Older TV browsers (webOS 5/6, Tizen ≤ 6.5) have no :focus-visible; give the remote a focus style anyway */
             .layout-tv .pause-screen-resume:focus { outline: 3px solid #fff; outline-offset: 4px; background: #fff; border-color: #fff; color: #111; }
             .layout-tv #pause-screen-close-btn:focus { outline: 3px solid #fff; outline-offset: -3px; background-color: #fff; background-clip: padding-box; border-color: transparent; color: #111; opacity: 1; }
             /* while the × has focus, the resume button steps back so the remote's selection is unambiguous */
-            .layout-tv .pause-screen-resume:not(:focus),
+            /* two rules on purpose: a browser without :has() (older TVs) drops a whole selector list that names it */
+            .layout-tv .pause-screen-resume:not(:focus) { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.35); color: #fff; }
             #pause-screen-content:has(#pause-screen-close-btn:focus-visible) .pause-screen-resume { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.35); color: #fff; }
             #pause-screen-content:has(#pause-screen-close-btn:focus-visible) #pause-screen-close-btn { background-color: #fff; background-clip: padding-box; border-color: transparent; color: #111; opacity: 1; }
             .pause-screen-hint {
