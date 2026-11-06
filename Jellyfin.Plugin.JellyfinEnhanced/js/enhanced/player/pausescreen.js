@@ -161,7 +161,7 @@
               --pause-screen-progress-radius: 999px;
               --pause-screen-disc-w: clamp(220px, 20vw, 360px);
               --pause-screen-disc-rot-sec: 0s;
-              --pause-screen-poster-w: clamp(170px, 14.6vw, 280px);
+              --pause-screen-poster-w: clamp(170px, 13vw, 248px);
               --pause-screen-still-w: clamp(220px, 22vw, 424px);
             }
 
@@ -435,6 +435,7 @@
             /* the caption is part of the × target: a tap on it hides the details, it never resumes */
             .pause-screen-close-caption { cursor: pointer; }
             .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
+            @media (min-width: 1600px) { .pause-screen-close-caption > span + span { font-size: 21px; margin-top: 4px; } }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
             /* touch phones have no hover: the first caption line stays up so a tap on × is never a guess */
             @media (hover: none) and (pointer: coarse) and (max-width: 1000px) {
@@ -528,7 +529,6 @@
             @media (max-width: 1000px) {
               .pause-screen-layout { grid-template-columns: minmax(0, 1fr); }
               .pause-screen-art { display: none; }
-              #pause-screen-plot { text-wrap: wrap; }
               .pause-screen-main { max-width: 100%; }
               :root { --pause-screen-logo-max-w: min(60vw, 520px); }
               .pause-screen-scrim {
@@ -567,7 +567,8 @@
                 #pause-screen-subtitle { grid-area: sub; }
                 .pause-screen-art { display: flex; grid-area: art; align-self: start; justify-content: flex-start; margin-bottom: 12px; }
                 /* beside a poster or disc the facts sit on its middle, not its top edge */
-                .pause-screen-facts { grid-area: facts; align-self: center; margin-top: 0; gap: 8px; }
+                .pause-screen-facts { grid-area: facts; align-self: center; margin-top: 0; gap: 8px; font-size: 15px; }
+                #pause-screen-details { font-size: 15px; }
                 #pause-screen-plot { grid-area: plot; margin-top: 4px; margin-bottom: 0; }
                 #pause-screen-poster { width: 96px; border-radius: 4px; }
                 #pause-screen-disc { width: 96px; animation: none; }
