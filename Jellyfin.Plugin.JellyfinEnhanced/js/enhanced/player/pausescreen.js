@@ -159,7 +159,7 @@
               --pause-screen-plot-max-w: 56ch;
               --pause-screen-progress-height: 4px;
               --pause-screen-progress-radius: 999px;
-              --pause-screen-disc-w: clamp(220px, 20vw, 360px);
+              --pause-screen-disc-w: clamp(220px, 17vw, 320px);
               --pause-screen-disc-rot-sec: 0s;
               --pause-screen-poster-w: clamp(170px, 13vw, 248px);
               --pause-screen-still-w: clamp(220px, 22vw, 424px);
@@ -326,7 +326,7 @@
               box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.14);
             }
             #pause-screen-poster:not(.is-still) { filter: brightness(.9); }
-            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.88); } #pause-screen-poster.is-still { filter: none; } }
+            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still), #pause-screen-disc { filter: brightness(.88); } #pause-screen-poster.is-still { filter: none; } }
             @media (min-width: 1001px) and (max-width: 1599px) { #pause-screen-poster { border-radius: 9px; } }
 
             @keyframes pause-screen-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -435,7 +435,7 @@
             /* the caption is part of the × target: a tap on it hides the details, it never resumes */
             .pause-screen-close-caption { cursor: pointer; }
             .pause-screen-close-caption > span + span { color: rgba(255,255,255,.75); }
-            @media (min-width: 1600px) { .pause-screen-close-caption > span + span { font-size: 21px; margin-top: 4px; } }
+            @media (min-width: 1600px) { .pause-screen-close-caption > span + span { margin-top: 4px; } }
             #pause-screen-overlay.close-focused .pause-screen-close-caption { display: block; }
             /* touch phones have no hover: the first caption line stays up so a tap on × is never a guess */
             @media (hover: none) and (pointer: coarse) and (max-width: 1000px) {
@@ -569,6 +569,7 @@
                 /* beside a poster or disc the facts sit on its middle, not its top edge */
                 .pause-screen-facts { grid-area: facts; align-self: center; margin-top: 0; gap: 8px; font-size: 15px; }
                 #pause-screen-details { font-size: 15px; }
+                #pause-screen-details .mediaInfoOfficialRating { font-size: 14px; }
                 #pause-screen-plot { grid-area: plot; margin-top: 4px; margin-bottom: 0; }
                 #pause-screen-poster { width: 96px; border-radius: 4px; }
                 #pause-screen-disc { width: 96px; animation: none; }
@@ -620,14 +621,20 @@
               .pause-screen-layout { grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; }
               .pause-screen-art { display: flex; }
               #pause-screen-poster { width: 112px; border-radius: 5px; }
-              /* a still keeps its own frame inside a 240×135 box (Buffy's 4:3 → 180×135, never cropped) */
-              #pause-screen-poster.is-still { width: auto; max-width: 240px; max-height: 135px; }
+              /* a still keeps its own frame inside a 208×117 box (a 4:3 one → 156×117, never cropped) */
+              #pause-screen-poster.is-still { width: auto; max-width: 208px; max-height: 117px; }
               #pause-screen-disc { width: 150px; }
             }
 
             @media (forced-colors: active) {
               #pause-screen-progress-bar { border: 1px solid CanvasText; }
               #pause-screen-progress-bar > span { background: Highlight; forced-color-adjust: none; }
+              /* scrims vanish in forced colours while the artwork stays: text sits on opaque system surfaces */
+              #pause-screen-title, #pause-screen-subtitle, .pause-screen-facts, #pause-screen-plot, .pause-screen-footer, .pause-screen-close-caption { background: Canvas; color: CanvasText; forced-color-adjust: none; }
+              #pause-screen-title, #pause-screen-subtitle, #pause-screen-plot { text-shadow: none; }
+              #pause-screen-details > *:not(.mediaInfoOfficialRating), #pause-screen-genres, #pause-screen-subtitle *, #pause-screen-progress-meta, #pause-screen-progress-meta *, .pause-screen-hint, .pause-screen-hint *, .pause-screen-close-caption * { color: CanvasText !important; }
+              .pause-screen-resume, #pause-screen-close-btn { background: ButtonFace !important; color: ButtonText !important; border: 1px solid ButtonText !important; forced-color-adjust: none; }
+              .pause-screen-resume:focus-visible, #pause-screen-close-btn:focus-visible { outline: 3px solid Highlight; outline-offset: 2px; }
             }
 
             /* Reduced motion: no spin, no fade */
