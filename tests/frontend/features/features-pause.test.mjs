@@ -139,5 +139,5 @@ test('a tap on the caption under the close button hides the details and never re
 });
 test('very dark episode stills get their exposure lifted, ordinary ones stay as they are',t=>{
  const h=setup(t);h.JE.initializePauseScreen();const p=h.JE.pauseScreenInstance;
- assert.equal(p.stillExposure(0.4),1);assert.equal(p.stillExposure(0.18),1);assert.equal(p.stillExposure(0.11),1.6);assert.equal(p.stillExposure(0.16),1.38);assert.equal(p.stillExposure(NaN),1);
+ assert.equal(p.stillExposure(0.4),1);assert.equal(p.stillExposure(0.18),1);assert.equal(p.stillExposure(0.11),2.4);assert.equal(p.stillExposure(0.16),1.88);assert.equal(p.stillExposure(NaN),1);
 });

@@ -1338,7 +1338,7 @@
           if (stillURL) {
             const lift = this.stillExposure(await this.imageLuma(stillURL));
             if (this.destroyed || generation !== this.generation) return;
-            if (lift > 1) this.overlayPoster.style.filter = `brightness(${lift}) contrast(1.05)`;
+            if (lift > 1) this.overlayPoster.style.filter = `brightness(${lift}) contrast(.92) saturate(1.08)`;
           }
           if (stillURL || posterURL) this.overlayPoster.src = stillURL || posterURL;
           // An episode's own still goes behind it: series backdrops often carry the printed series title,
@@ -1420,16 +1420,14 @@
           // One or two more lines only when they let the text finish on a sentence (fit check decides).
           const extra = window.matchMedia?.('(max-width: 1000px) and (min-height: 800px) and (orientation: portrait)').matches ? 3
             : window.matchMedia?.('(min-width: 1200px) and (min-height: 800px), (max-height: 500px) and (orientation: landscape)').matches ? 2 : 0;
-          // More lines only when they show more whole text: after a word cut any sentence end, after a
-          // sentence cut a longer whole-sentence prefix or the whole text. The fit check decides.
-          if (status !== 'full' && lines > 0 && extra > 0) {
-            const baseLen = el.textContent.length;
+          // The line budget holds (3 wide and landscape, 4 tall portrait) and the text stops on a sentence
+          // inside it; only a first sentence too long for the budget may take extra lines to finish.
+          if (status === 'cut' && lines > 0 && extra > 0) {
             let best = 0;
             for (let more = 1; more <= extra; more++) {
               el.style.setProperty('-webkit-line-clamp', String(lines + more));
               const st = this.fitOverviewText(full);
-              const longer = status === 'cut' ? st !== 'cut' : (st === 'full' || (st === 'sentence' && el.textContent.length > baseLen));
-              if (longer && fits()) { best = more; if (st === 'full') break; }
+              if (st !== 'cut' && fits()) { best = more; break; }
             }
             el.style.setProperty('-webkit-line-clamp', String(lines + best));
             lines += best;
@@ -1655,14 +1653,14 @@
         }
 
         /**
-         * Brightness factor for an episode still: 1 for ordinary stills, up to 1.6 for very dark ones
-         * (mean luminance below .18 is lifted toward .22).
+         * Brightness factor for an episode still: 1 for ordinary stills, up to 2.4 for very dark ones
+         * (mean luminance below .18 is lifted toward .30).
          * @param {number} luma - Mean luminance, 0–1.
          * @returns {number}
          */
         stillExposure(luma) {
           if (!Number.isFinite(luma) || luma >= 0.18 || luma <= 0) return 1;
-          return Math.round(Math.min(1.6, 0.22 / luma) * 100) / 100;
+          return Math.round(Math.min(2.4, 0.3 / luma) * 100) / 100;
         }
 
         async trimTransparentEdges(blobURL) {
