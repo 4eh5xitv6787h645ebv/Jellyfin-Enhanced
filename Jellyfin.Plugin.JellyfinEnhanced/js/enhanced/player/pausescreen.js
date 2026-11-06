@@ -233,7 +233,7 @@
               position: absolute; inset: 0;
               pointer-events: none;
               background:
-                linear-gradient(90deg, rgba(8,9,13,.92) 0%, rgba(8,9,13,.78) 36%, rgba(8,9,13,.60) 55%, rgba(8,9,13,.24) 72%, rgba(8,9,13,.18) 100%),
+                linear-gradient(90deg, rgba(8,9,13,.94) 0%, rgba(8,9,13,.84) 36%, rgba(8,9,13,.68) 55%, rgba(8,9,13,.26) 74%, rgba(8,9,13,.18) 100%),
                 linear-gradient(180deg, rgba(8,9,13,.42) 0%, rgba(8,9,13,0) 26%, rgba(8,9,13,0) 60%, rgba(8,9,13,.84) 100%);
             }
 
@@ -326,7 +326,7 @@
               box-shadow: 0 12px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.14);
             }
             #pause-screen-poster:not(.is-still) { filter: brightness(.9); }
-            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.8); } #pause-screen-poster.is-still { filter: none; } }
+            @media (min-width: 1001px) { #pause-screen-poster:not(.is-still) { filter: brightness(.88); } #pause-screen-poster.is-still { filter: none; } }
             @media (min-width: 1001px) and (max-width: 1599px) { #pause-screen-poster { border-radius: 9px; } }
 
             @keyframes pause-screen-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
