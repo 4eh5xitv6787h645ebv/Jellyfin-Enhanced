@@ -52,11 +52,14 @@ def inventory():
         text = path.read_text(encoding='utf-8-sig')
         category = path.relative_to(PRODUCTION).parts[0]
         result['files'].append({'path': relative, 'category': category})
-        if category == 'Controllers' and path.suffix == '.cs':
+        # Routes come from any plugin .cs file, wherever it lives (Controllers/ or Features/<F>/), that declares a
+        # public class named *Controller: a partial without a base list and a class deriving from a shared base
+        # (JeControllerBase) count too. A base class whose name does not end in Controller contributes nothing.
+        controllers = [(declaration.start(), next(iter(re.findall(r'\[Route\("([^"\n]*)"\)\]', declaration[1])), 'JellyfinEnhanced'))
+                       for declaration in re.finditer(r'((?:\[[^\n]+\]\s*)*)public\s+(?:sealed\s+|partial\s+)*class\s+\w+Controller\b', text)] if path.suffix == '.cs' else []
+        if controllers:
             # Each action's template is relative to its controller's class-level [Route];
             # a controller without one falls back to JellyfinEnhanced.
-            controllers = [(declaration.start(), next(iter(re.findall(r'\[Route\("([^"\n]*)"\)\]', declaration[1])), 'JellyfinEnhanced'))
-                           for declaration in re.finditer(r'((?:\[[^\n]+\]\s*)*)public\s+(?:sealed\s+|partial\s+)*class\s+\w+\s*:\s*(?:ControllerBase|Controller)\b', text)]
             for match in re.finditer(r'\[Http(Get|Post|Put|Delete|Patch|Head|Options)\("([^"\n]*)"\)\]', text):
                 tail = text[match.end():]
                 method = re.search(r'\bpublic\s+(?:async\s+)?[^\n]+?\s+(\w+)\s*\(', tail)
