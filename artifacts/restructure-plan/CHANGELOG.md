@@ -1,0 +1,80 @@
+# Restructure plan changelog
+
+## Round 1 (2026-11-08): response to review-r1.md
+
+All MATERIAL findings were checked against the working tree before being applied.
+
+| ID | Severity | Outcome | Notes |
+|---|---|---|---|
+| F1 | MATERIAL | Applied | No `Features/AdminTags`. The 7 admin routes move with MediaTags in S2.11 into partial `JeMediaTagsController.Admin.cs`; `MediaTagsPageFields.cs` → `Features/MediaTags/Admin/`; S2.4 retired (number kept); `AdminTags→MediaTags` allow-list edge deleted; `PreviewBody` stays a private MediaTags controller method. P1-f runs after frontend A3. |
+| F2 | MATERIAL | Partially applied | Verified: `LoadRevisionedSettings` (L5738–5739) and `CreateReviewVisibilityContext` (L8301, reads `User` and `IsAdminUser()`) are controller-bound. Applied: helpers that read `User`/`IsAdminUser()` never move into services; Gate B is transitive through controller/base methods; new `ServicesDoNotReadUserTests`. Deviation: `LoadRevisionedSettings` goes on `JeControllerBase`, **not** private on `JeSettingsController`, because the Platform bootstrap also calls it (L4322 vs Settings L5615/L5748), so a private Settings method would break Platform until S2.15. |
+| F3 | MATERIAL | Applied | Combined order in PLAN.md (12 steps + 1 optional). Cross-plan caveats added to backend Phase 1, frontend B2/A3/F1. |
+| F4 | MATERIAL | Applied | Verified Playwright (`~/.cache/ms-playwright/chromium-1208`) is installed. `npm run test:browser` is mandatory for B3, B4, C2, C3, D2; PLAN.md gate HOST runs at steps 1, 5–9, 12 with a pinned jf12 digest. One correction: the bundle comparison across frontend moves strips `// client/src/` comment lines, because moves change those comments in the built output (frontend §0), so strict byte-identity holds only across backend-only spans. |
+| F5 | MINOR | Applied | Registration snapshot also records `"factory"` and the resolved `MvcOptions.Filters` order. |
+| F6 | MINOR | Applied | Gate A entries add `apiBehavior` and per-parameter binding source. |
+| F7 | MINOR | Applied | Gate B matches by method name over controller-derived types + `UserHelper`/`RequestIdentityService`. |
+| F8 | MINOR | Applied | Output-key check replaced with the `jq -S keys` diff against `restructure-base`. |
+| F9 | MINOR | Applied | 186 `[Authorize]`; 73 real `IsAdminUser` calls; 6 `typeof(...).Assembly` sites listed (plus the 5 method-lookup sites the review missed: ApiAssetTests:15, ApiMediaTagsPageTests:382, BootstrapContractTests:171, ElsewhereDocumentTests:701–702); Platform client paths fixed; 24 manifests; 14 admin-tags files. |
+| F10 | MINOR | Applied | `tests/client-build/tag-data.test.mjs:12` added to frontend §0.1 and the B2 brief. |
+| F11 | MINOR | Applied | Canonical table in PLAN.md, checked in as `docs/feature-map.json` at step 12; parity tests read it (no kebab→Pascal rule); frontend S2 now depends on A3. |
+| F12 | MINOR | Applied | Per-step tags, revert and bisect procedure in PLAN.md; CONTRIBUTING, skill notes and entries README moved into the combined final step. |
+| F13 | MINOR | Applied | S2.0 split into S2.0a (base class) and S2.0b (helper extractions); C3 scope limited; D1/D2 made optional and last; `npm run verify:restructure` added in step 12. |
+
+## Round 2 (2026-11-08): response to review-r2.md
+
+MATERIAL findings were verified against the working tree first (`PluginServiceRegistrator.cs`, the two scraping tests, `CreateSettingsDefaults` L5618–5736).
+
+| ID | Severity | Outcome | Notes |
+|---|---|---|---|
+| F1 | MATERIAL | Applied | Verified: there are 3× `IEventConsumer<PlaybackStartEventArgs>` (L131/133/165), plus 3× UserDeleted, 2× UserUpdated, 2× `IStartupFilter` and 5 hosted services. The registration snapshot is now a sorted multiset plus per-ServiceType order for every multi-registered type, computed from the collection rather than listed by hand. All `IEventConsumer<…>` registrations move in S2.0b to one ordered `Infrastructure/Hosting/EventConsumerRegistration.cs` (4th order-sensitive place). The gate stays strict on every order that has behaviour. |
+| F2 | MATERIAL | Applied | The HOST bundle check is split into (a) served == in-process bundle on the same commit (always) and (b) drift versus the previous checkpoint. For (b), backend-only spans must be byte-identical and pure-move spans identical modulo comment lines. Spans containing B3/B4/C2/C3 need BROWSER on each such step, and every backend merge in the span must leave `js/` and `client/` untouched. The applied rule is recorded in the merge message. |
+| F3 | MATERIAL | Applied | Verified: `CreateSettingsDefaults` reads only `JellyfinEnhanced.Instance` and static `*.ApplyDefaults`, with no `User` and no instance fields. S2.0a now unconditionally moves it to static `Features/Settings/Services/SettingsDefaults.Create()`, repoints overview-layout test L230, and adds not-found guards there and in the admin-config-schema test. The Python generator needs no guard. |
+| F4 | MINOR | Applied | `ParentalBlockedResult` goes to `JeControllerBase` as `protected` in S2.10. |
+| F5 | MINOR | Applied | The base-class sketch now has a three-parameter constructor and `protected readonly` fields with the same names. The derived controller deletes its own copies of those fields. |
+| F6 | MINOR | Applied | `ServicesDoNotReadUserTests` and `ControllerActivationTests` are scheduled in S0 (row and brief). They live under `Architecture/`, so Gate G picks them up. |
+| F7 | MINOR | Applied | FE G uses `git diff --exit-code restructure-base`. There is no `exit` in G, R or H. `scripts/restructure-gates.sh` is added in step 1, and `verify:restructure` calls it. |
+| F8 | MINOR | Applied | The P1-g `UserTopologyEvents.cs` split is exempt from the renames-only check and is checked by a body-concatenation diff instead. |
+| F9 | MINOR | Applied | S2.1 renames `CatchUpController` only and keeps `[Route("JellyfinEnhanced/catchup")]`. |
+| F10 | MINOR | Applied | Baseline files and commands are now in PLAN.md (`artifacts/restructure-plan/baselines/`). |
+| F11 | MINOR | Applied | Abandon now handles the checked-out worktree, and revert commits regenerated output. |
+
+## Round 3 (review-r3.md)
+
+Finding #1 was checked against the working tree first: `tests/inventory/generate.py:55` reads routes only when `category == 'Controllers'`, and `.github/workflows/regression.yml:34-36` and `tests/run.py:82` run `generate.py --check`. Its controller regex (`:\s*(?:ControllerBase|Controller)\b`) would also miss classes deriving from `JeControllerBase`, and partials that have no base list.
+
+| ID | Severity | Outcome | Notes |
+|---|---|---|---|
+| 1 | MATERIAL | Applied | Backend S0, before any move, changes the generator to read routes from every `.cs` file that declares a `*Controller` class. This covers `Features/`, partials and `JeControllerBase` subclasses. S0 also extends the `test_regression.py:121-160` fixture and regenerates once with an unchanged route list, saved as `baselines/inventory-routes.txt`. The new PLAN gate **INV** runs on every BE and FE step: regenerate, then `python3 tests/inventory/generate.py --check`, then diff the route list against the baseline. It is in backend gate block F, frontend gate G, the briefs, the conflict list and the Definition of done. In P1-g the "tests/docs/*" reader becomes regenerate-only. |
+| 2 | MINOR | Applied | S2.8 names only `generate_per_user_props.py` and `features-admin-config-schema.test.mjs`. The overview-layout entry is removed from S2.11, and the brief now says "one frontend test". |
+| 3 | MINOR | Applied | `restructure-gates.sh bundle <out.js>` writes raw bytes and prints nothing else. Each HOST checkpoint appends its raw and comment-stripped sha256 to `baselines/bundle-checkpoints.txt`, and rule (b) compares against the previous line. |
+| 4 | MINOR | Applied | Rule (b)'s second bullet now also covers types-only and doc-only steps (S2, A4). |
+| 5 | MINOR | Applied | S2.8 updates the `Services.` qualifier in `JeControllerBase.LoadRevisionedSettings`. S2.15 updates `JellyfinEnhanced.cs:399` (`Controllers.JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange`). |
+
+## Round 4 (review-r4.md)
+
+All four findings were checked against the working tree first. `tests/run.py:83-84` runs `unittest discover -s tests/runner/tests` and no plan gate ran it. `test_regression.py:82` opens `Services/PosterTags/NativeClientPolicy.cs`. `tests/history/backend-mutations.json` names 4 moving files. `mutations.py` defaults `test_file` to `features-hidden.test.mjs` and raises on a non-unique anchor. `regression.yml:215` filters on `Services/|Model/|Helpers/…`. The old INV regenerated before it ran `--check`.
+
+| ID | Severity | Outcome | Notes |
+|---|---|---|---|
+| 1 | MATERIAL | Applied | New PLAN gate **TOOL** (`scripts/restructure-gates.sh tool`) runs `python3 tests/run.py tooling`. It runs on the baseline, before and after S0, and on every BE and FE step. In effect it is mandatory for S0, P1-c, P1-e, P1-g, S2.14 and F1. `baselines/tooling-tests.txt` was added. The Definition of done and the briefs were updated. |
+| 2 | MATERIAL | Applied | `tests/history/backend-mutations.json` rows were added to P1-e (NativeClientPolicy), P1-g (CdnAssetService, ArrUrlGuard) and S2.14 (the `StripAdvancedRequestOptions` anchor goes to the partial that holds it). F1 updates the `mutations.py` default `test_file` (L87/L120), adds an explicit `test_file` to the frontend case and updates `recent-mutations.json`. **Decision: rewrite the entries in place, with no path map.** They are live CI inputs. `sources` and `evidence` stay unchanged. Gate TOOL includes a stdlib path check (backend.md §4). Run on today's tree, it found **9 frontend anchors that already match 0 times**. This is pre-existing, caused by the rewrite's regenerated `js/**`, and is reported here, not fixed. The gate therefore fails on any missing path or any **new** anchor failure compared with `baselines/mutation-check.txt`. |
+| 3 | MINOR | Applied | P1-e extends the `regression.yml:215` regex with `Features/MediaTags/\|Shared/\|Infrastructure/` and lists the workflow as a path reader. |
+| 4 | MINOR | Applied | Regenerating is now a step action. Gate `inv` only runs `generate.py --check` on the committed tree, followed by the route diff, so it can fail on a stale inventory. backend.md §4 calls only `restructure-gates.sh inv`, and the usage line lists `inv\|tool`. |
+| sweep | — | Added | Grep of `.github/ tests/ scripts/ tools/`. Uncovered: F1 moves tests one folder deeper, which breaks 19 `new URL('../../../…', import.meta.url)` repo-root reads and the sibling fixture `features-admin-tags-page.old-form-fields.json` (read by the isolation test and `helpers/admin-tags-page.mjs:161`). F1 now fixes these. Also noted: the `PosterTagParity/Program.cs:1` comment (P1-e). The `enhanced/admintags/admin-tags.{js,css}` references are built-output paths that never change, so they need no update. S0 also keeps capture group 1 and uses a required `public\s+`, as the review noted. |
+
+## Round 5 (review-r5.md, 1 MATERIAL / 3 MINOR), applied by the coordinator
+| # | Severity | Outcome | Change |
+|---|---|---|---|
+| 1 | MATERIAL | Applied | The PLAN Prerequisite now regenerates `tests/docs/production-inventory.json` (200 → 202 routes, `bookmark-document`), runs `generate.py --check` and the api-routes-docs test, documents any undocumented route, and commits all of this **before** `git tag restructure-base`. It is labelled as base preparation. backend.md S0 now uses the count recorded at step 1 (202) in place of "200 today". |
+| 2 | MINOR | Applied | F1 widens the `rg` pattern to `new URL(`/`from `/`import(`/`join(here,`, adds only one `../` to file specifiers, and lists the literal test data that must not be touched. |
+| 3 | MINOR | Applied | The TOOL row now says how to update an anchor in B3/B4/C2/C3: edit `before`/`after` in place, and never add the line to the baseline. |
+| 4 | MINOR | Applied | The baseline and the gate both use `LC_ALL=C sort` and `LC_ALL=C comm`. |
+
+## Round 6 (review-r6.md): 0 MATERIAL / 3 MINOR. The plan was judged ready. All three were applied by the coordinator.
+| # | Outcome | Change |
+|---|---|---|
+| 1 | Applied | F1 `rg` gains `join\([^)]*..` for the `..`-segment form. |
+| 2 | Applied | The Prerequisite comment now names the 2 bookmark-document rows and both totals (200 → 202) in `docs/advanced/api.md`. |
+| 3 | Applied | `inventory-routes.txt` is recorded right after base-prep. S0 diffs against it and never re-saves it. |
+
+**Loop stopped:** round 6 found no material issues.
