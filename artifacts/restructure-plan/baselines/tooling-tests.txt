@@ -1,2 +1,2 @@
-Ran 16 tests in 0.671s
-FAILED (errors=3)
+Ran 16 tests in 0.627s
+OK

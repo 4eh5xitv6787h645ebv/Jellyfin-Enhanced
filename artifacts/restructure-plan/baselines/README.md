@@ -1,19 +1,25 @@
-# Step-1 baselines (recorded on restructure-base + the plan commit, 2026-11-09)
+# Step-1 baselines
 
-Recorded on the untouched tree, before `scripts/restructure-gates.sh` and `tests/backend/Api/BundleDump.cs` were added (except `bundle-checkpoints.txt`, which needs the harness).
+First recorded 2026-11-09 on restructure-base + the plan commit (25da61c7). Re-recorded on 2026-11-09 by the step 1 base prep (CHANGELOG.md), after the base-prep commit fixed the tooling import and the stale rewrite inventory. Commands: PLAN.md baselines block. Functions (`trx_results`, `build_warnings`, `mutation_check`) live in `scripts/restructure-gates.sh`.
 
-| File | Command | Notes |
+| File | Contents | Used by |
 |---|---|---|
-| dotnet-tests.txt | PLAN.md baselines block | 2979 tests, 1 pre-existing failure (below). With BundleDump added the total is 2980. |
-| npm-tests.txt | `npm test 2>&1 \| grep -E '^(# \|ℹ )(tests\|pass)'` | The plan's `^# (tests\|pass)` matches nothing: node's default reporter prints `ℹ tests N`. |
-| jf12-digest.txt | `docker image inspect` of `jellyfin/jellyfin:12` | The tag `tests/host/run.py` uses (12.4 on this date). The local `jellyfin/jellyfin:12.4` tag, which the skill's `je up` picks, has a different digest (b45218a4…). |
-| bundle-checkpoints.txt | PLAN.md baselines block, literally | Both hashes are equal: `^// client/src/` matches no line, because the 763 such comments are indented. The last line, `//# sourceMappingURL=bundle.js.map?v=<version>-<plugin DLL mtime ticks>`, changes on every plugin rebuild. |
-| inventory-routes.txt | PLAN.md baselines block | 202 routes. |
-| tooling-tests.txt | PLAN.md baselines block | 16 tests, 3 pre-existing errors (below). |
-| mutation-check.txt | `mutation_check \| LC_ALL=C sort` | 9 stale frontend anchors, as the plan predicted. |
+| dotnet-tests.txt | `dotnet test` summary line: 2980 total, 2979 passed, 1 failed (2979 before `tests/backend/Api/BundleDump.cs` was added). | T ratchet: total and passed must be ≥ these. |
+| dotnet-failures.txt | Sorted TRX `testName` of each failing dotnet test (1). | T ratchet: every failure must be listed. |
+| npm-tests.txt | `ℹ tests 3745` / `ℹ pass 3736` from `npm test` (node's spec reporter; there is no `# tests` line). | `npm test` / `npm run test:frontend` ratchet (FE G, BE F). |
+| npm-failures.txt | Sorted `<file> :: <test name>` of each failing node test (9), from `scripts/restructure-gates-reporter.mjs`. 5 data-driven test names repeat within a file; identities are a set, so duplicates are harmless. | same |
+| build-warnings.txt | Sorted, unique `<code> <repo-relative file>` from a clean Release `-p:JellyfinTarget=jf12` plugin build (1 warning, no line numbers). | Gate B: no new pair. A step that moves a listed file updates its path in the same commit. |
+| jf12-digest.txt | `<tag> <RepoDigest>`: `jellyfin/jellyfin:12.4`, the local tag the skill's `je up` picks, `sha256:b45218a4…`. HOST runs `je up <name> <port> --image jellyfin/jellyfin:12.4`. (`jellyfin/jellyfin:12`, which `tests/host/run.py` uses, is a different image: `sha256:fea863d0…`.) | `restructure-gates.sh image` (fails if the tag's current RepoDigest differs). |
+| bundle-checkpoints.txt | `<step> <stable sha256> <comment-stripped sha256>` from `restructure-gates.sh bundle-hash`. Stable = without the bundle's last line `//# sourceMappingURL=bundle.js.map?v=<version>-<DLL mtime ticks>`, which changes on every rebuild; the 183 per-module `//# sourceMappingURL=<module>.js.map` lines stay. Stripped = also without the 763 indented `// client/src/` comments. Two dumps around a `dotnet clean` gave the same stable hash. | HOST bundle check (a) and (b). |
+| inventory-routes.txt | 202 `(verb, path)` routes. Not re-recorded. | INV. |
+| tooling-tests.txt | `Ran 16 tests` / `OK`. | TOOL; DoD count floor. |
+| mutation-check.txt | 9 stale frontend anchors, as the plan predicted. Not re-recorded. | TOOL path check. |
 
-## Pre-existing failures on this tree (not fixed)
-- **Tooling (gate TOOL fails here):** 3 errors in `tests/runner/tests` (`test_host_network_scan_tolerates_a_network_removed_after_listing`, `test_direct_host_runner_rejects_unsupported_target_before_creating_artifacts`, `test_host_default_all_and_explicit_dispatch_only_jf12`): `tests/host/run.py:18` does `from bookmarks import …`, which fails when the tests load it by path (`ModuleNotFoundError: No module named 'bookmarks'`). Came in with the rewrite snapshot (35c79281 added `tests/host/bookmarks.py`).
+## Pre-existing failures (ratcheted, not fixed)
 - **Backend (gate T):** `ApiAssetTests.BundleSourceMapPreservesTypedMappingsAndLegacyModuleLinesInManifestOrder` (`v=next-version` not in the source map).
-- **Frontend (`npm test`, 9):** `bootstrap-media-tags-portable.test.mjs:520` ×3 (null `.hidden`), `bootstrap-native-tabs.test.mjs:58,83,111` (tab index assertions), `core-translate-plural.test.mjs:19,31,50` (`tr is not a function`). Deterministic when run alone.
-- **Rewrite inventory:** the committed `docs/rewrite/migration-inventory.json` is stale (3 admin-config HTML script hashes), so `npm run inventory:rewrite:check` and `npm run verify:rewrite` fail on the committed tree; `npm run inventory:rewrite` rewrites it.
+- **Frontend (`npm test`, 9):** `bootstrap-media-tags-portable.test.mjs` ×3 (null `.hidden`), `bootstrap-native-tabs.test.mjs` ×3 (tab index assertions), `core-translate-plural.test.mjs` ×3 (`tr is not a function`). Deterministic when run alone.
+- **`npm run verify:rewrite`** therefore fails at its `test:frontend` step (its dotnet step never runs). `restructure-gates.sh be` runs its parts with the ratchet instead.
+
+## Fixed by the base-prep commit
+- `tests/host/run.py:18` `from bookmarks import …` failed when `tests/runner/tests` loaded the file by path (3 TOOL errors).
+- `docs/rewrite/migration-inventory.json` was stale (3 admin-config HTML script hashes).

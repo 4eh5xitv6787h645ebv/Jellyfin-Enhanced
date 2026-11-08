@@ -78,3 +78,17 @@ All four findings were checked against the working tree first. `tests/run.py:83-
 | 3 | Applied | `inventory-routes.txt` is recorded right after base-prep. S0 diffs against it and never re-saves it. |
 
 **Loop stopped:** round 6 found no material issues.
+
+## Step 1 base prep (2026-11-09)
+Follow-up to the step-1 gate commit (25da61c7), before backend S0 / frontend S0 edit anything.
+
+| # | Change |
+|---|---|
+| A | Pre-existing drift fixed in its own commit: `tests/host/run.py` puts its own directory on `sys.path` before `from bookmarks import …` (the 3 TOOL errors), and `docs/rewrite/migration-inventory.json` is regenerated (the 3 stale admin-config HTML script hashes only). `verify:rewrite` still fails at `test:frontend` on the 9 known failures; those and the 1 dotnet failure are not fixed. |
+| B1 | Failure ratchet: `baselines/dotnet-failures.txt` (1) and `baselines/npm-failures.txt` (9). T and `npm test` / `npm run test:frontend` (one suite: `node tests/frontend/run.mjs`) pass when every failure is listed and total and passed counts are ≥ baseline; new failures fail by name, listed tests that pass are a note. Identities come from TRX (dotnet) and `scripts/restructure-gates-reporter.mjs` (node). `be` runs `verify:rewrite`'s parts itself (coverage floors on T's results, `client:check`), because `verify:rewrite` stops at the first pre-existing failure. `dotnet-tests.txt` re-recorded at 2980 (includes BundleDump). |
+| B2 | npm counts grep `^ℹ (tests|pass) ` (PLAN.md baselines block, frontend.md F1). |
+| B3 | `restructure-gates.sh bundle-hash <file>` prints `<stable> <comment-stripped>`: stable drops only the bundle's own `//# sourceMappingURL=bundle.js.map?v=…` line (not the 183 per-module `sourceMappingURL` lines); stripped also drops `^\s*// client/src/`. PLAN.md HOST bundle rules (a), (b) and the baselines block use them. Two builds around a `dotnet clean` gave the same stable hash. |
+| B4 | `baselines/build-warnings.txt` (`<code> <file>`, clean Release jf12 build: 1 warning). Gate B builds `--no-incremental -tl:off` and fails on a new pair. |
+| B5 | `baselines/jf12-digest.txt` is now `<tag> <RepoDigest>` for the image `je up` runs (`jellyfin/jellyfin:12.4`, `b45218a4…`); `restructure-gates.sh image` checks it; HOST row says to pass `--image`. |
+| B6 | Per-step tag is `restructure/<step>-done` (merge, rollback and bisect text in PLAN.md). backend.md and frontend.md name only the `restructure/<step>` branch, which is unchanged. |
+| B7 | TOOL and INV pass; `baselines/tooling-tests.txt` re-recorded (16 tests, OK). |
