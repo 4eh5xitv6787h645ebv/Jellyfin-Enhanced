@@ -4,7 +4,7 @@ Use Jellyfin Enhanced (JE)'s API to manage bookmarks, reviews, and personal sett
 
 To use these APIs from a custom Jellyfin client, you need an HTTP client and a Jellyfin credential. You do not need the injected JE scripts.
 
-This reference covers the 200 method/path entries in plugin version **12.14.0.0**. Use the endpoint tables to check access requirements, inputs, responses, and limits.
+This reference covers the 202 method/path entries in plugin version **12.14.0.0**. Use the endpoint tables to check access requirements, inputs, responses, and limits.
 
 Paths in endpoint tables are relative to `/JellyfinEnhanced/`. Braces mark path parameters; replace them before making a request. The catch-all routes serve only the resources described below.
 
@@ -198,6 +198,8 @@ Use add/remove for individual bookmarks. Use the document routes to read or repl
 | POST | `user-settings/{userId}/bookmark.json` | Own/admin | Complete document → `{"success":true,"file":"bookmark.json"}`. |
 | POST | `user-settings/{userId}/bookmark.json/add` | Own/admin | One entry, excluding timestamps → `{"success":true,"id":"Bm_…"}`. |
 | DELETE | `user-settings/{userId}/bookmark.json/{bookmarkId}` | Own/admin | Bookmark dictionary key → `{"success":true,"removed":true}`. |
+| GET | `user-settings/{userId}/bookmark-document` | Own/admin | No body → `{Revision, Document}`, where `Document` is the bookmark document as a JSON string. `no-store`. An unreadable stored document returns `500` and is preserved. |
+| POST | `user-settings/{userId}/bookmark-document` | Own/admin | `{Revision, Operations:[{Kind, Id?, SourceId?, ExpectedItemId?, Offset?, Fields?}]}` → `{Revision}`. `Kind` is `create`, `copy`, `replace`, `edit`, `backfill`, `offset`, `delete` or `delete-all`; operations apply in order in one write. Missing revision or an invalid operation returns `400`; a stale revision returns `409` without writing; an unreadable stored document returns `500` and is preserved. |
 
 Add accepts all entry fields except `CreatedAt` and `UpdatedAt`; lowercased equivalents such as `itemId`, `seasonNumber`, and `episodeNumber` also bind. Only a nonblank `ItemId` is required at action level.
 
@@ -1975,7 +1977,7 @@ These are resource URLs, separate from Jellyfin web hash navigation or placement
 
 ## Full Endpoint Index
 
-The endpoint tables above enumerate all 200 controller method/path entries, including the three catch-all templates. Each group documents effective access, inputs, response shape, and limits; shared proxy rows intentionally retain the configured upstream service's JSON contract.
+The endpoint tables above enumerate all 202 controller method/path entries, including the three catch-all templates. Each group documents effective access, inputs, response shape, and limits; shared proxy rows intentionally retain the configured upstream service's JSON contract.
 
 For implementation details, [JellyfinEnhancedController.cs](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs) implements all indexed routes except `catchup/*`, which is in [CatchUpController.cs](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/Jellyfin.Plugin.JellyfinEnhanced/Controllers/CatchUpController.cs). These upstream source links may advance beyond this versioned reference.
 

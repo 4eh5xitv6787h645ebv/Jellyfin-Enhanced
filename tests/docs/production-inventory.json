@@ -174,6 +174,10 @@
       "category": "Extensions"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/BookmarkDocumentService.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/ArrUrlGuard.cs",
       "category": "Helpers"
     },
@@ -211,6 +215,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrHttpHelper.cs",
+      "category": "Helpers"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrRequestOutcome.cs",
       "category": "Helpers"
     },
     {
@@ -498,6 +506,10 @@
       "category": "Services"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ElsewhereDocumentService.cs",
+      "category": "Services"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/HiddenContentResponseFilter.cs",
       "category": "Services"
     },
@@ -730,6 +742,10 @@
       "category": "Services"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentPatch.cs",
+      "category": "Services"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentService.cs",
       "category": "Services"
     },
@@ -896,6 +912,10 @@
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/WikidataAwardsService.cs",
       "category": "Services"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Transport/BookmarkDocument.cs",
+      "category": "Transport"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Transport/BootstrapConfig.cs",
@@ -2892,6 +2912,25 @@
       "following_attributes": [
         "Authorize",
         "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark-document",
+      "method": "GetBookmarkDocument",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark-document",
+      "method": "MutateBookmarkDocument",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+      "following_attributes": [
+        "Authorize"
       ]
     },
     {
@@ -9791,6 +9830,10 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/ContinueWatchingPlaybackEvents.cs"
     },
     {
+      "literal": "bookmark.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/BookmarkDocumentService.cs"
+    },
+    {
       "literal": "matroska-languages.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MatroskaLanguageCache.cs"
     },
@@ -9829,6 +9872,10 @@
     {
       "literal": "ddd-cache.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/DoesTheDogDieService.cs"
+    },
+    {
+      "literal": "elsewhere.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/ElsewhereDocumentService.cs"
     },
     {
       "literal": "hidden-content.json",
@@ -9965,10 +10012,6 @@
     {
       "literal": "settings.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js"
-    },
-    {
-      "literal": "bookmark.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks.js"
     },
     {
       "literal": "bookmark.json",
@@ -10223,10 +10266,10 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 473,
-    "routes": 200,
+    "files": 478,
+    "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 87,
+    "storage_references": 88,
     "scheduled_tasks": 15,
     "locales": 33
   }
