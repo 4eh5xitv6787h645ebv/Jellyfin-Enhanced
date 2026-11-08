@@ -1,127 +1,226 @@
-/**
- * Bookmarks Library View — initialization / boot.
- * Split from bookmarks-library.js (code motion; bodies verbatim).
- * Loads last: wires navigation, lifecycle listeners, the CustomTabs body
- * observer, and the optional native tab, then triggers the first render.
- */
-(function (JE) {
-  'use strict';
-
-  JE.internals = JE.internals || {};
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
-
-  if (!JE?.pluginConfig?.BookmarksEnabled) return;
-
-  // All earlier-loaded module exports (this file loads last).
-  const {
-    isPluginPagesActive,
-    injectNavigation,
-    setupNavigationWatcher,
-    handleNavigation,
-    interceptNavigation,
-    handleViewShow,
-    handleNavClick,
-    renderIfSectionExists,
-    hookViewEvents,
-  } = internal;
-
-  const logPrefix = '🪼 Jellyfin Enhanced: Bookmarks Library:';
-
-  function getJE() {
-    // Try common globals first
-    if (window.JE) return window.JE;
-    if (window.JellyfinEnhanced) return window.JellyfinEnhanced;
-
-    // Then parent/top frames (CustomTabs may run in a child frame)
-    if (window.parent?.JE) return window.parent.JE;
-    if (window.parent?.JellyfinEnhanced) return window.parent.JellyfinEnhanced;
-    if (window.top?.JE) return window.top.JE;
-    if (window.top?.JellyfinEnhanced) return window.top.JellyfinEnhanced;
-
-    return null;
+(() => {
+"use strict";
+(() => {
+  // client/src/host/bookmarks-host.ts
+  function bookmarksHost() {
+    const host2 = window;
+    const JE2 = host2.JellyfinEnhanced;
+    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const getApi2 = () => {
+      const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
+      if (!api) throw new Error("API client not available");
+      return api;
+    };
+    return { JE: JE2, host: host2, getApi: getApi2 };
+  }
+  function lease(JE2) {
+    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
+    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
   }
 
-  /**
-   * Initialize
-   */
-  function init() {
-    console.log(`${logPrefix} Initializing (build id: ${Date.now()})...`);
-
-    let attempts = 0;
-    const checkReady = setInterval(() => {
-      attempts += 1;
-      const je = getJE();
-      const ready = !!(je && je.userConfig && je.bookmarks);
-
-      if (attempts % 10 === 0 || attempts <= 5) {
-        console.log(`${logPrefix} ready check #${attempts} (JE=${!!je}, userConfig=${!!(je && je.userConfig)}, bookmarks=${!!(je && je.bookmarks)})`);
+  // client/src/features/bookmarks/lifetime.ts
+  function createLifetime(JE2, name) {
+    var _a;
+    JE2.internals ?? (JE2.internals = {});
+    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
+    JE2.internals.bookmarkLifetimes[name]?.dispose();
+    const cleanup = /* @__PURE__ */ new Set();
+    const dialogs = /* @__PURE__ */ new Set();
+    let disposed = false;
+    let generation = 0;
+    const pending = /* @__PURE__ */ new Set();
+    const keep = (value) => {
+      if (typeof value === "function") cleanup.add(() => value());
+      else if (typeof value === "object" && value !== null && "unsubscribe" in value && typeof value.unsubscribe === "function") {
+        const unsubscribe = value.unsubscribe.bind(value);
+        cleanup.add(() => unsubscribe());
       }
-
-      if (ready) {
-        clearInterval(checkReady);
-        // If JE is available only on parent/top, make it accessible locally for this script
-        if (!window.JE && je) {
-          window.JE = je;
+    };
+    const keepTeardown = (value) => {
+      if (typeof value === "object" && value !== null && "teardown" in value && typeof value.teardown === "function") {
+        const teardown = value.teardown.bind(value);
+        cleanup.add(() => teardown());
+      } else keep(value);
+    };
+    const listen = (target, event, callback, capture = false) => {
+      target.addEventListener(event, callback, capture);
+      cleanup.add(() => target.removeEventListener(event, callback, capture));
+    };
+    const timeout = (callback, delay) => {
+      const current = lease(JE2), version = generation;
+      const cancel = () => {
+        window.clearTimeout(id);
+        cleanup.delete(cancel);
+        pending.delete(cancel);
+      };
+      const id = window.setTimeout(() => {
+        cleanup.delete(cancel);
+        pending.delete(cancel);
+        if (!disposed && generation === version && current()) callback();
+      }, delay);
+      cleanup.add(cancel);
+      pending.add(cancel);
+      return id;
+    };
+    const interval = (callback, delay) => {
+      const id = window.setInterval(() => {
+        if (!disposed) callback();
+      }, delay);
+      cleanup.add(() => window.clearInterval(id));
+      return id;
+    };
+    const modal = (element) => {
+      const previousFocus = document.activeElement;
+      element.setAttribute("role", "dialog");
+      element.setAttribute("aria-modal", "true");
+      element.tabIndex = -1;
+      const close = () => {
+        element.remove();
+        cleanup.delete(close);
+        dialogs.delete(close);
+        document.removeEventListener("viewshow", close);
+        if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+      };
+      cleanup.add(close);
+      dialogs.add(close);
+      document.addEventListener("viewshow", close);
+      element.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          close();
         }
-        hookViewEvents();
-
-        // Sidebar navigation (when neither Plugin Pages, Custom Tabs, nor the
-        // native tab is handling it)
-        if (!isPluginPagesActive() && !JE.pluginConfig?.BookmarksUseCustomTabs && !JE.pluginConfig?.BookmarksUseNativeTab) {
-          injectNavigation();
-          setupNavigationWatcher();
-          const lifecycle = JE.core.lifecycle.register('bookmarks-standalone-page');
-          // The capture-phase intercepts need the raw events (they call
-          // stopImmediatePropagation before Jellyfin's router reacts), so they
-          // stay real listeners — added via the lifecycle handle so they are
-          // tracked and removable.
-          lifecycle.addListener(window, 'hashchange', interceptNavigation, true);
-          lifecycle.addListener(window, 'popstate', interceptNavigation, true);
-          lifecycle.addListener(document, 'click', handleNavClick);
-          // handleViewShow inspects the raw viewshow event's target; rawEvent
-          // is null for router-internal notifications, matching the old
-          // document-level listener which only fired on real events.
-          JE.core.navigation.onViewPage((view, element, hash, itemPromise, rawEvent) => {
-            if (rawEvent) handleViewShow(rawEvent);
-          });
-          // Show/hide the standalone page on every nav path — hashchange,
-          // popstate AND pushState transitions the raw listeners missed.
-          JE.core.navigation.onNavigate(handleNavigation);
-          handleNavigation();
+        if (event.key !== "Tab") return;
+        const controls = Array.from(element.querySelectorAll('button:not(:disabled), input:not(:disabled), [tabindex="0"]'));
+        const first = controls[0], last = controls[controls.length - 1];
+        if (!first || !last) {
+          event.preventDefault();
+          element.focus();
+          return;
         }
-
-        // Native tab (self-contained, no external Custom Tabs plugin needed -
-        // see enhanced/native-tabs.js). The existing Custom Tabs watcher below
-        // (findActiveBookmarksContainer / renderIfSectionExists) already treats
-        // any ".sections.bookmarks" wrapped in an ".is-active" tabContent as
-        // valid, so it picks up our own panel unmodified.
-        if (JE.pluginConfig?.BookmarksUseNativeTab) {
-          JE.nativeTabs.register('bookmarks', 'Bookmarks', (panel) => {
-            const marker = document.createElement('div');
-            marker.className = 'sections bookmarks';
-            panel.appendChild(marker);
-          }, 'location_on');
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === element)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
         }
+      });
+      timeout(() => {
+        if (element.isConnected) (element.querySelector("input") || element.querySelector("button") || element).focus();
+      }, 0);
+      return close;
+    };
+    const cancelPending = () => {
+      generation++;
+      for (const cancel of pending) cancel();
+      for (const close of dialogs) close();
+    };
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      cancelPending();
+      for (const release of cleanup) release();
+      cleanup.clear();
+    };
+    const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
+      const current = lease(JE2), version = generation;
+      return () => !disposed && generation === version && current();
+    } };
+    JE2.internals.bookmarkLifetimes[name] = result;
+    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+      for (const close of dialogs) close();
+      document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
+      document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
+    }));
+    listen(window, "pagehide", dispose);
+    return result;
+  }
 
-        // Watch for section being injected by CustomTabs. Observe document.body
-        // (not .mainAnimatedPages) because Jellyfin replaces .mainAnimatedPages
-        // when navigating to the admin dashboard — an observer bound to the old
-        // element would become orphaned after returning to home (issue 536).
-        // Routes to the shared multiplexed body observer.
-        JE.helpers.observeTabContainers('bookmarks-library-custom-tab', '.sections.bookmarks', renderIfSectionExists);
-
-        // Try immediate render in case tab is already visible
-        renderIfSectionExists();
-        console.log(`${logPrefix} ✓ Ready`);
+  // client/src/features/bookmarks/library-init.ts
+  var { JE, host, getApi } = bookmarksHost();
+  function install(JE2) {
+    const lifetime = createLifetime(JE2, "library-init");
+    const setInterval = lifetime.interval;
+    const internal = JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
+    if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+    const {
+      isPluginPagesActive,
+      injectNavigation,
+      setupNavigationWatcher,
+      handleNavigation,
+      interceptNavigation,
+      handleViewShow,
+      handleNavClick,
+      renderIfSectionExists,
+      hookViewEvents
+    } = internal;
+    if (!isPluginPagesActive || !injectNavigation || !setupNavigationWatcher || !handleNavigation || !interceptNavigation || !handleViewShow || !handleNavClick || !renderIfSectionExists || !hookViewEvents) throw new Error("Bookmarks library entry order invalid");
+    const logPrefix = "🪼 Jellyfin Enhanced: Bookmarks Library:";
+    function getJE() {
+      if (host.JE) return host.JE;
+      if (host.JellyfinEnhanced) return host.JellyfinEnhanced;
+      for (const frame of [window.parent, window.top]) {
+        try {
+          const parent = frame;
+          const candidate = parent?.JE || parent?.JellyfinEnhanced;
+          if (candidate) return candidate;
+        } catch {
+        }
       }
-    }, 100);
+      return null;
+    }
+    const init = () => {
+      console.log(`${logPrefix} Initializing (build id: ${Date.now()})...`);
+      let attempts = 0;
+      const checkReady = setInterval(() => {
+        attempts += 1;
+        if (attempts > 300) {
+          clearInterval(checkReady);
+          return;
+        }
+        const je = getJE();
+        const ready = !!(je && je.userConfig && je.bookmarks);
+        if (attempts % 10 === 0 || attempts <= 5) {
+          console.log(`${logPrefix} ready check #${attempts} (JE=${!!je}, userConfig=${!!(je && je.userConfig)}, bookmarks=${!!(je && je.bookmarks)})`);
+        }
+        if (ready) {
+          clearInterval(checkReady);
+          if (!host.JE && je) {
+            host.JE = je;
+          }
+          hookViewEvents();
+          if (!isPluginPagesActive() && !JE2.pluginConfig?.BookmarksUseCustomTabs && !JE2.pluginConfig?.BookmarksUseNativeTab) {
+            injectNavigation();
+            setupNavigationWatcher();
+            lifetime.listen(window, "hashchange", interceptNavigation, true);
+            lifetime.listen(window, "popstate", interceptNavigation, true);
+            lifetime.listen(document, "click", handleNavClick);
+            lifetime.keep(JE2.core.navigation.onViewPage((view, element, hash, itemPromise, rawEvent) => {
+              if (rawEvent) handleViewShow(rawEvent);
+            }));
+            lifetime.keep(JE2.core.navigation.onNavigate(handleNavigation));
+            handleNavigation();
+          }
+          if (JE2.pluginConfig?.BookmarksUseNativeTab) {
+            JE2.nativeTabs.register("bookmarks", "Bookmarks", (panel) => {
+              const marker = document.createElement("div");
+              marker.className = "sections bookmarks";
+              panel.appendChild(marker);
+            }, "location_on");
+          }
+          lifetime.keep(JE2.helpers.observeTabContainers("bookmarks-library-custom-tab", ".sections.bookmarks", renderIfSectionExists));
+          renderIfSectionExists();
+          console.log(`${logPrefix} ✓ Ready`);
+        }
+      }, 100);
+    };
+    if (document.readyState === "loading") {
+      lifetime.listen(document, "DOMContentLoaded", init);
+    } else {
+      init();
+    }
   }
-
-  // Initialize
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-})(window.JellyfinEnhanced);
+  install(JE);
+})();
+})();
+//# sourceMappingURL=bookmarks-library-init.js.map

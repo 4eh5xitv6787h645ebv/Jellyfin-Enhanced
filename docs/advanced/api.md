@@ -4,7 +4,7 @@ Use Jellyfin Enhanced (JE)'s API to manage bookmarks, reviews, and personal sett
 
 To use these APIs from a custom Jellyfin client, you need an HTTP client and a Jellyfin credential. You do not need the injected JE scripts.
 
-This reference covers the 198 method/path entries in plugin version **12.14.0.0**. Use the endpoint tables to check access requirements, inputs, responses, and limits.
+This reference covers the 200 method/path entries in plugin version **12.14.0.0**. Use the endpoint tables to check access requirements, inputs, responses, and limits.
 
 Paths in endpoint tables are relative to `/JellyfinEnhanced/`. Braces mark path parameters; replace them before making a request. The catch-all routes serve only the resources described below.
 
@@ -61,7 +61,7 @@ curl -H "Authorization: MediaBrowser Token=\"$TOKEN\"" "$JE_URL/version"
 
 !!! note "Jellyfin 12 and legacy authorization headers"
 
-    Use `Authorization: MediaBrowser Token="…"` on both Jellyfin 12 and 10.11. Acceptance of legacy headers such as `X-Emby-Token` and `X-Emby-Authorization` is controlled by Jellyfin Server. Jellyfin 12 disables legacy authorization by default. JE does not require different header names for different features.
+    Use `Authorization: MediaBrowser Token="…"` on Jellyfin 12. Acceptance of legacy headers such as `X-Emby-Token` and `X-Emby-Authorization` is controlled by Jellyfin Server. Jellyfin 12 disables legacy authorization by default. JE does not require different header names for different features.
 
     Install the JE artifact built for your Jellyfin version; shared controller source does not guarantee identical host serialization.
 
@@ -390,12 +390,16 @@ Reads are lenient and may return an empty store after corruption/I/O failure. Mu
 
 ## Per-User Settings Files
 
-Use these routes to read or replace a user's saved preferences and state. They provide six explicit typed document pairs; unknown properties do not become arbitrary stored data.
+Use these routes to read or change a user's saved preferences and state. The Enhanced panel uses the revisioned settings pair. Six legacy typed document pairs remain available; unknown request properties do not become arbitrary stored data.
 
-All use own/admin authorization. GETs are `no-store`; POST replaces the complete document and normally returns `{"success":true,"file":"<filename>"}`. These routes are not an arbitrary file service.
+All use own/admin authorization and GETs are `no-store`. For `settings-document`, GET returns `{Revision, Settings}` from one locked snapshot. POST accepts `{Revision, Settings}` and returns `{Revision}`. Send the revision loaded with the edited settings: a stale revision returns `409` without writing. Missing request fields return `400`; an unreadable stored document returns `500` and is preserved. Reload and resolve the conflict before submitting again. Unknown fields already on disk are retained, and `IsAdmin` is computed from the caller.
+
+Legacy `.json` POSTs replace the typed document and normally return `{"success":true,"file":"<filename>"}`. Such writes also invalidate earlier content revisions. These routes are not an arbitrary file service.
 
 | Method | Path | Document |
 |---|---|---|
+| GET | `user-settings/{userId}/settings-document` | Read Enhanced settings and their revision |
+| POST | `user-settings/{userId}/settings-document` | Save Enhanced settings only if the loaded revision still matches |
 | GET | `user-settings/{userId}/settings.json` | Enhanced settings |
 | POST | `user-settings/{userId}/settings.json` | Replace Enhanced settings |
 | GET | `user-settings/{userId}/shortcuts.json` | Shortcut list |
@@ -557,14 +561,14 @@ A user's Media Tags settings travel as a versioned document with the same Pascal
 | Method | Path | Access | Request → response |
 |---|---|---|---|
 | GET | `user-settings/{userId}/media-tags/export` | Own/admin | No body → the user document above, every field in `UserFields` order. |
-| POST | `user-settings/{userId}/media-tags/preview` | Own/admin | A user document or a preset (64 KB limit) → `{kind, v, name, description, imported:{Field:value}, changes:[{field, from, to}], skipped:[{field, reason, detail}]}`. Nothing is saved; the client writes the changed fields through `POST settings.json`. `400 {error}` refuses the document as a whole: `not-object`, `kind`, `version` (missing or not a positive integer), `newer` (`v` above the server's), `settings` (not an object). |
+| POST | `user-settings/{userId}/media-tags/preview` | Own/admin | A user document or a preset (64 KB limit) → `{kind, v, name, description, imported:{Field:value}, changes:[{field, from, to}], skipped:[{field, reason, detail}]}`. Nothing is saved; the client saves the changed settings and loaded revision through `POST settings-document`. `400 {error}` refuses the document as a whole: `not-object`, `kind`, `version` (missing or not a positive integer), `newer` (`v` above the server's), `settings` (not an object). |
 | GET | `user-settings/{userId}/media-tags/presets` | Own/admin | No body → `{max:10, builtIn:[preset], offered:[preset], mine:[preset]}`: the shipped presets (`Assets/TagPresets/*.json`), the administrator's `TagOfferedPresets` and the user's own. |
 | POST | `user-settings/{userId}/media-tags/presets` | Own/admin | A preset, or a user document with a `name` (64 KB limit) → `{preset, skipped}`; the stored preset gets a new id and keeps only the accepted settings. `400 {error}`: a document error above, `name`, `description`, `empty` (no usable setting) or `full` with `max` (10 per user). |
 | DELETE | `user-settings/{userId}/media-tags/presets/{presetId}` | Own/admin | No body → `{success:true}`; `404 {error:"missing"}` for an unknown id. |
 | GET | `admin/media-tags/export` | Administrator | No body → `{v:1, kind:"je-media-tags-admin", settings:{…}}`: every field of the Media Tags tab's allowlist (`MediaTagsPageFields.Allowed`) in the configuration API's shape, sorted, except `ClearLocalStorageTimestamp`. Secrets (`CustomTagRuleKey`, API keys, tokens, passwords) are never included. |
 | POST | `admin/media-tags/preview` | Administrator | An administrator document, or a personal export (`kind: "je-media-tags-user"`) to make the administrator's own settings the server defaults; fields the page does not own come back in `skipped` (8 MiB limit, the configuration patch limit) → `{kind, v, imported, changes, skipped}`. Each field is read and checked exactly as `POST admin/configuration` reads it (`PluginConfigurationPatch.TryRead`); the page then applies the changes through that patch, with the values it read as `Expected`. |
 
-Each user field is checked on its own: it must be one of `UserFields`, have the property's JSON type, pass the administrator field contract where the configuration has a field of that name and type (positions, orders 1–99, known values, minimum score 0–10, text limits), and come out of the settings save path's normalisation (`MediaTagsPortable.TryNormalizeUser`, the same call `POST settings.json` makes) exactly as given. Anything else is reported in `skipped` and never applied: `reason` is `unknown`, `invalid` (with the validator's `detail`), `secret`, or for administrator documents `signal`. `secret` covers every credential field of the plugin configuration as spelled (`MediaTagsPortable.Secrets`: `TMDB_API_KEY`, the other `*ApiKey` fields, `SonarrInstances`/`RadarrInstances`, `CustomTagRuleKey`, `AnalyticsInstallSecret`) and any other name ending in an API key or token or containing password or secret, ignoring case, `_` and `-`. `null` keeps its meaning (follow the administrator). Saved presets live in `media-tag-presets.json` in the user's directory, read-modify-written under the user's file lock.
+Each user field is checked on its own: it must be one of `UserFields`, have the property's JSON type, pass the administrator field contract where the configuration has a field of that name and type (positions, orders 1–99, known values, minimum score 0–10, text limits), and come out of the settings save path's normalisation (`MediaTagsPortable.TryNormalizeUser`, the same call both settings save routes make) exactly as given. Anything else is reported in `skipped` and never applied: `reason` is `unknown`, `invalid` (with the validator's `detail`), `secret`, or for administrator documents `signal`. `secret` covers every credential field of the plugin configuration as spelled (`MediaTagsPortable.Secrets`: `TMDB_API_KEY`, the other `*ApiKey` fields, `SonarrInstances`/`RadarrInstances`, `CustomTagRuleKey`, `AnalyticsInstallSecret`) and any other name ending in an API key or token or containing password or secret, ignoring case, `_` and `-`. `null` keeps its meaning (follow the administrator). Saved presets live in `media-tag-presets.json` in the user's directory, read-modify-written under the user's file lock.
 
 The administrator's offered presets are the page field `TagOfferedPresets`: a JSON array text of at most 20 presets with distinct ids, each valid as a whole (no unknown or invalid setting); `""` offers none. The cap is 80 KiB (81,920 UTF-8 bytes, `MediaTagsPortable.MaxOfferedPresetsBytes`) for the text as sent and for its canonical stored form: the presets normalised and serialised the way the server stores them, with non-ASCII and HTML-sensitive characters escaped (`<` becomes `\u003C`), which can be several times longer than the text sent. A value over the cap once normalised is refused (`larger than 81920 bytes once normalised (N bytes)`), so every stored value exports and imports again unchanged. `POST admin/configuration` (and the import preview) reads up to 8 MiB (`PluginConfigurationPatch.MaxRequestBytes`) for the entire JSON body, including both `Changes` and `Expected`, outer string escaping and any Tag Styles data. Individually valid fields can exceed that aggregate limit together. Such a request is refused before any write; reduce the document and retry. Imports use the existing page conflict handling: each request is atomic, but resolving conflicts can retry the non-conflicting fields separately. There is no guarantee that every maximal old/new document fits one request.
 
@@ -1971,7 +1975,7 @@ These are resource URLs, separate from Jellyfin web hash navigation or placement
 
 ## Full Endpoint Index
 
-The endpoint tables above enumerate all 198 controller method/path entries, including the three catch-all templates. Each group documents effective access, inputs, response shape, and limits; shared proxy rows intentionally retain the configured upstream service's JSON contract.
+The endpoint tables above enumerate all 200 controller method/path entries, including the three catch-all templates. Each group documents effective access, inputs, response shape, and limits; shared proxy rows intentionally retain the configured upstream service's JSON contract.
 
 For implementation details, [JellyfinEnhancedController.cs](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs) implements all indexed routes except `catchup/*`, which is in [CatchUpController.cs](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/Jellyfin.Plugin.JellyfinEnhanced/Controllers/CatchUpController.cs). These upstream source links may advance beyond this versioned reference.
 

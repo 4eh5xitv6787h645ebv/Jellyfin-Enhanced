@@ -1,0 +1,11 @@
+import { settingsHost } from '../../host/settings-host';
+import { installState } from './state';
+import { installInheritance } from './inheritance';
+import { loadSettings } from './defaults';
+import { installSave } from './save';
+const host = settingsHost();
+const je = host.JellyfinEnhanced;
+installState(je);
+installInheritance(je);
+je.loadSettings = () => loadSettings(je);
+installSave(je, () => host.ApiClient);

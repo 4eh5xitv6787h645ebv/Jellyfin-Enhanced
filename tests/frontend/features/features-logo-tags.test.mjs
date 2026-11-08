@@ -1,3 +1,4 @@
+import { spoilerState as stateFixture } from '../helpers/spoiler-state.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHarness, plain } from '../helpers/harness.mjs';
@@ -149,7 +150,7 @@ async function guardedBatch(t, { stored, guarded = false } = {}) {
       helpers: { onBodyMutation() {}, onNavigate() {}, addCSS() {} },
       session: { getUserId: () => 'user-a', getServerId: () => 'server-a', getEpoch: () => 0, isCurrent: () => true, onUserChange() {} },
       core: { api: { plugin: async (path, options) => {
-        if (path === '/spoiler-blur/series') return { Movies: Object.fromEntries([...guard.movies].map(id => [id, {}])), Prefs: {} };
+        if (path === '/spoiler-blur/series') return stateFixture({ Movies: Object.fromEntries([...guard.movies].map(id => [id, {}])), Prefs: {} });
         const movie = path.match(/^\/spoiler-blur\/movies\/(\w+)$/)?.[1];
         if (movie && options?.method === 'POST') guard.movies.add(movie);
         if (movie && options?.method === 'DELETE') guard.movies.delete(movie);
@@ -164,7 +165,7 @@ async function guardedBatch(t, { stored, guarded = false } = {}) {
   }
   h.load('enhanced/spoilerguard/ids.js');
   h.load('enhanced/spoilerguard/state.js');
-  Object.assign(h.JE.internals.spoilerGuard, { setIdentityCookie() {}, injectStyles() {}, installWatchedRefresh() {} });
+  Object.assign(h.JE.internals.spoilerGuard, { setIdentityCookie() {}, injectStyles() {}, installWatchedRefresh() {}, addSpoilerBlurButton() {}, confirmDisableSpoiler: async () => true });
   h.load('enhanced/spoilerguard/index.js');
   await h.JE.spoilerBlur.whenLoaded();
   for (const file of ['core/ui-kit.js', 'core/tag-renderer-base.js', 'core/tag-layout.js', 'tags/tag-layout-styles.js', 'tags/tag-pipeline.js', 'tags/logotags.js']) h.load(file);

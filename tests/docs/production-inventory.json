@@ -6,11 +6,6 @@
       "selector": "jf12",
       "framework": "net10.0",
       "jellyfin_reference": "12.0.0"
-    },
-    {
-      "selector": "jf10",
-      "framework": "net9.0",
-      "jellyfin_reference": "10.11.0"
     }
   ],
   "files": [
@@ -273,6 +268,10 @@
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/UserHelper.cs",
       "category": "Helpers"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Persistence/UserConfigurationDocument.cs",
+      "category": "Infrastructure"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.cs",
@@ -731,6 +730,10 @@
       "category": "Services"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentService.cs",
+      "category": "Services"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SonarrService.cs",
       "category": "Services"
     },
@@ -895,6 +898,18 @@
       "category": "Services"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Transport/BootstrapConfig.cs",
+      "category": "Transport"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Transport/BootstrapResponse.cs",
+      "category": "Transport"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Transport/TransportJson.cs",
+      "category": "Transport"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-links.js",
       "category": "js"
     },
@@ -968,6 +983,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json",
+      "category": "js"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/js/contracts/bootstrap.js",
       "category": "js"
     },
     {
@@ -1879,10 +1898,6 @@
       "category": "js"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/packages.jf10.lock.json",
-      "category": "packages.jf10.lock.json"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/packages.jf12.lock.json",
       "category": "packages.jf12.lock.json"
     }
@@ -2764,6 +2779,25 @@
       "following_attributes": [
         "Authorize",
         "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
+      "method": "GetRevisionedSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
+      "method": "SaveRevisionedSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+      "following_attributes": [
+        "Authorize"
       ]
     },
     {
@@ -9865,6 +9899,10 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/TagStyles.cs"
     },
     {
+      "literal": "settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentService.cs"
+    },
+    {
       "literal": "spoilerblur.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerBlurImageFilter.cs"
     },
@@ -10184,11 +10222,11 @@
     }
   ],
   "counts": {
-    "build_targets": 2,
-    "files": 468,
-    "routes": 198,
+    "build_targets": 1,
+    "files": 473,
+    "routes": 200,
     "configuration_properties": 741,
-    "storage_references": 86,
+    "storage_references": 87,
     "scheduled_tasks": 15,
     "locales": 33
   }

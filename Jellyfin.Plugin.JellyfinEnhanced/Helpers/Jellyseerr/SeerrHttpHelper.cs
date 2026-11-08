@@ -56,6 +56,33 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
             url = Url,
         };
 
+        /// <summary>
+        /// The typed proxy envelope: the same fields as <see cref="ToAdminResponseShape"/> for
+        /// administrators and <see cref="ToResponseShape"/> for everyone else, plus the write outcome.
+        /// </summary>
+        /// <param name="admin">Whether the caller is a Jellyfin administrator (may see the URL and cf-ray).</param>
+        /// <param name="outcome">The write outcome, or null for a read.</param>
+        /// <returns>The envelope.</returns>
+        public SeerrProxyErrorResponse ToProxyErrorResponse(bool admin, SeerrRequestOutcome? outcome) => admin
+            ? new SeerrProxyErrorResponse
+            {
+                Error = true,
+                Code = Code.ToString(),
+                HttpStatus = HttpStatus,
+                Message = Message,
+                CfRay = CfRay,
+                Url = Url,
+                RequestOutcome = outcome,
+            }
+            : new SeerrProxyErrorResponse
+            {
+                Error = true,
+                Code = Code.ToString(),
+                HttpStatus = HttpStatus,
+                Message = !string.IsNullOrEmpty(UserMessage) ? UserMessage : DefaultUserMessage(Code),
+                RequestOutcome = outcome,
+            };
+
         private static string DefaultUserMessage(SeerrErrorCode code) => code switch
         {
             SeerrErrorCode.Unreachable       => "Can't reach Seerr right now. Please try again in a moment.",

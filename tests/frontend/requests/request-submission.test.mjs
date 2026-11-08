@@ -120,7 +120,7 @@ for (const split of [false, true]) test(`rapid repeated clicks submit one movie 
 
 for (const split of [false, true]) test(`request failure escapes message and permits explicit retry (split=${split})`, async t => {
   let tries = 0;
-  const h = uiSetup(t, { config: { JellyseerrEnable4KRequests: split }, post: async () => { if (++tries === 1) throw { status: 500, responseJSON: { message: '<img src=x onerror=evil()>' } }; return { id: 7 }; } });
+  const h = uiSetup(t, { config: { JellyseerrEnable4KRequests: split }, post: async () => { if (++tries === 1) throw { status: 400, responseJSON: { message: '<img src=x onerror=evil()>' } }; return { id: 7 }; } });
   h.configure(); const button = split ? h.document.querySelector('.jellyseerr-split-main') : h.button;
   button.click(); await flush(); assert.equal(button.disabled, false); assert.equal(button.querySelector('img'), null); assert.ok(button.textContent.includes('<img'));
   button.click(); await flush(); assert.equal(h.calls.length, 2); assert.equal(button.disabled, true);
@@ -140,7 +140,7 @@ test('quota detection distinguishes permission errors and honors feature toggle'
   const h = uiSetup(t); const ui = h.JE.jellyseerrUI;
   assert.equal(ui.isQuotaError({ status: 403, responseJSON: { message: 'TV Quota exceeded.' } }), true);
   assert.equal(ui.isQuotaError({ status: 403, responseJSON: { message: 'Forbidden' } }), false);
-  assert.equal(ui.isQuotaError({ status: 500, responseJSON: { message: 'Quota exceeded' } }), false);
+  assert.equal(ui.isQuotaError({ status: 400, responseJSON: { message: 'Quota exceeded' } }), false);
   h.JE.pluginConfig.JellyseerrShowQuotaInfo = false;
   assert.equal(ui.isQuotaError({ status: 403, responseJSON: { message: 'Quota exceeded' } }), false);
 });
@@ -227,7 +227,7 @@ for (const split of [false, true]) for (const succeeds of [true, false]) test(`l
   if (split) h.button = h.document.querySelector('.jellyseerr-split-main');
   h.button.click(); await flush(); h.configure(false, true);
   const offlineLabel = h.button.textContent;
-  if (succeeds) pending.resolve({ id: 7 }); else pending.reject({ status: 500, responseJSON: { message: 'old failure' } });
+  if (succeeds) pending.resolve({ id: 7 }); else pending.reject({ status: 400, responseJSON: { message: 'old failure' } });
   await flush(); assert.equal(h.button.disabled, true); assert.equal(h.button.textContent, offlineLabel);
 });
 
@@ -383,7 +383,7 @@ test('season modal disables requested seasons but re-offers one Seerr still call
 });
 
 test('season modal failure toast escapes the upstream message and re-enables the request button', async t => {
-  const h = await seasonModal(t, { tvDetails: { seasons: tvSeasons, externalIds: { tvdbId: 1 } }, post: async () => { throw { status: 500, responseJSON: { message: '<img src=x>' } }; } });
+  const h = await seasonModal(t, { tvDetails: { seasons: tvSeasons, externalIds: { tvdbId: 1 } }, post: async () => { throw { status: 400, responseJSON: { message: '<img src=x>' } }; } });
   seasonCheckbox(h, 1).checked = true; await h.save();
   assert.equal(h.toasts.at(-1)[0], '&lt;img src=x&gt;'); assert.equal(h.requestBtn.disabled, false);
   assert.equal(h.requestBtn.textContent, 'jellyseerr_modal_request_selected');

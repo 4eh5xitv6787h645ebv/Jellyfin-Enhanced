@@ -25,6 +25,8 @@ See the [Contributing Translations](https://n00bcodr.github.io/Jellyfin-Enhanced
 
 ## 🚀 Getting Started
 
+This rewrite supports Jellyfin 12.x on .NET 10 only. `-p:JellyfinTarget=jf12` remains accepted for tooling compatibility; `jf10`, other targets, and non-.NET 10 builds fail explicitly. Older and future major hosts are unsupported.
+
 
 ### Project Structure
 
@@ -111,7 +113,7 @@ Adding a client module:
    and tested all changes and understand the implementation.
 
    ## Testing
-   - [ ] Tested on Jellyfin 10.11
+   - [ ] Tested on Jellyfin 12.x
    - [ ] Verified no basic errors
    ```
 
@@ -159,7 +161,7 @@ Adding a client module:
 
 ## ✅ CI Checks
 
-Pull requests run automated backend regressions for both Jellyfin targets, JavaScript behavioral tests with coverage, and browser tests, alongside the static checks below. See [Regression testing](tests/README.md) for setup, commands, reports, and current coverage gaps.
+Pull requests run automated backend regressions for the Jellyfin 12 target, JavaScript behavioral tests with coverage, and browser tests, alongside the static checks below. See [Regression testing](tests/README.md) for setup, commands, reports, and current coverage gaps.
 
 | Check | What it does | Reproduce locally |
 |---|---|---|
@@ -167,7 +169,7 @@ Pull requests run automated backend regressions for both Jellyfin targets, JavaS
 | **Dependency Review** | Flags newly-introduced dependencies with known vulnerabilities or incompatible licenses | Only relevant if your PR changes `.csproj` package references |
 | **Security Scan** | Scans the diff for accidentally-committed secrets (API keys, tokens, credentials) with TruffleHog | `git diff` your changes yourself before pushing if you're unsure |
 | **Translation Checks** | For any locale file you touched under `js/locales/`, verifies it has valid JSON and the same key set as `en.json` (no missing/extra keys) | Diff your changed locale file's keys against `js/locales/en.json` by hand, or just keep the two in sync as you edit |
-| **NuGet lock files** | The backend regression jobs restore in locked mode from per-target lock files (`packages.jf12.lock.json`, `packages.jf10.lock.json`) beside the plugin and test projects, so a changed package reference fails with NU1004 until they are regenerated. Dependabot can't update these files, so its NuGet PRs fail a dedicated check with this fix | For each `JellyfinTarget` (`jf12`, `jf10`), run `dotnet restore Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj -p:JellyfinTarget=<target> --force-evaluate` and the same for `tests/backend/JE.Tests.csproj`, then commit the four lock files |
+| **NuGet lock files** | The backend regression jobs restore in locked mode from lock files (`packages.jf12.lock.json`) beside the plugin and test projects, so a changed package reference fails with NU1004 until they are regenerated. Dependabot can't update these files, so its NuGet PRs fail a dedicated check with this fix | For the sole `JellyfinTarget` (`jf12`), run `dotnet restore Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj -p:JellyfinTarget=<target> --force-evaluate` and the same for `tests/backend/JE.Tests.csproj`, then commit the two lock files |
 | **Production inventory** | Part of the regression workflow: fails when `tests/docs/production-inventory.json` no longer matches the plugin. Ordinary edits and translation updates don't change it. It does change when you add, remove or rename a production file, locale, HTTP route (or its method), configuration property, scheduled task (any class implementing `IScheduledTask`) or storage literal; when a route's following attributes such as `[Authorize]` change; when a configuration property's type, default value or constructor assignment changes; or when a build target's `TargetFramework` or `JellyfinVersion` changes. On a pull request it only warns when the base branch is already stale and the PR adds no drift of its own; after a push to `main` the workflow commits the regenerated file itself | Run `python3 tests/inventory/generate.py` and commit the regenerated file (`--check` only verifies it) |
 
 Two more workflows exist but aren't part of the PR gate: **Check Unused Translation Keys** and **OpenSSF Scorecard** are both maintainer-triggered/scheduled, not run against your PR - a scorecard badge or unused-key report you might see elsewhere in the repo isn't something your PR needs to pass.
@@ -180,7 +182,7 @@ For behavior outside automated coverage, also verify:
 
 - [ ] Feature works as expected
 - [ ] No console errors
-- [ ] Compatible with Jellyfin 10.11.x
+- [ ] Compatible with Jellyfin 12.x
 - [ ] Works on different browsers (Chrome, Firefox, Edge)
 - [ ] Doesn't break existing functionality
 - [ ] Mobile compatibility (if applicable)

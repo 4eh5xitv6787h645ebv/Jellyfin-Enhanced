@@ -1,300 +1,370 @@
-/** @file Details-page release/air-date chips resolved from TMDB via the plugin proxy. */
-(function(JE) {
-    'use strict';
+(() => {
+"use strict";
+(() => {
+  // client/src/host/details-providers-host.ts
+  function hostWindow() {
+    return window;
+  }
+  function bridge(feature) {
+    const host = window;
+    const JE2 = host.JellyfinEnhanced;
+    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
+    return JE2;
+  }
+  function api() {
+    const client = hostWindow().ApiClient;
+    if (!client) throw new Error("Jellyfin ApiClient unavailable");
+    return client;
+  }
+  function hasApi() {
+    return hostWindow().ApiClient !== void 0;
+  }
+  function currentUserId() {
+    const id = hostWindow().ApiClient?.getCurrentUserId();
+    return typeof id === "string" && id ? id : null;
+  }
 
-    JE.internals = JE.internals || {};
-    const internal = JE.internals.features = JE.internals.features || {};
-
-    const RELEASEDATE_CACHE_TTL = 60 * 60 * 1000; // 1 hour
-    // With guards on, an answer also depends on what this user has played, and nothing
-    // announces a change to that. Long enough to dedupe the page's repeat calls.
-    const RELEASEDATE_GUARDED_CACHE_TTL = 30 * 1000;
-    const cacheTtl = () => (JE.spoilerBlur?.hasAnyState?.() ? RELEASEDATE_GUARDED_CACHE_TTL : RELEASEDATE_CACHE_TTL);
-    const releaseDateCache = new Map(); // Map<itemId, { infos, ts }>
-    // Lookups in flight, so a chip takes one over instead of starting another:
-    // Map<itemId, { promise, visit, claimed, ctl }>. A details visit's prefetch
-    // (see prefetchReleaseDate) has `visit` set and `claimed` once a chip has
-    // taken it over; a chip's own lookup has no visit. A chip removes the entry
-    // once it has cached the answer, and a visit's unclaimed ones go with it.
-    const releaseLookups = new Map();
-
-    // Spoiler Guard shapes these answers per user and per title, so neither a
-    // switch of user nor a guard change may reuse them. A lookup started before a
-    // guard change compares this before it caches or draws anything.
-    let guardRevision = 0;
-
-    window.addEventListener('je:spoiler-state-changed', () => {
-        guardRevision++;
-        releaseDateCache.clear();
-        for (const entry of releaseLookups.values()) {
-            if (entry.visit && !entry.claimed) entry.ctl?.abort();
-        }
-        releaseLookups.clear();
-        document.querySelectorAll('.mediaInfoItem-releaseDate').forEach(chip => chip.remove());
+  // client/src/features/details-providers/wire.ts
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  function field(value, key) {
+    return isRecord(value) ? value[key] : void 0;
+  }
+  function str(value) {
+    return typeof value === "string" ? value : void 0;
+  }
+  function num(value) {
+    return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+  }
+  function int(value) {
+    return typeof value === "number" && Number.isInteger(value) ? value : void 0;
+  }
+  function bool(value) {
+    return typeof value === "boolean" ? value : void 0;
+  }
+  function list(value) {
+    return Array.isArray(value) ? value : [];
+  }
+  function stringList(value) {
+    return list(value).filter((entry) => typeof entry === "string");
+  }
+  function providerId(value) {
+    if (typeof value === "string") return value || void 0;
+    if (typeof value === "number" && Number.isFinite(value) && value !== 0) return String(value);
+    return void 0;
+  }
+  function decodeProviderIds(value) {
+    const ids = {};
+    if (!isRecord(value)) return ids;
+    const tmdb = providerId(value.Tmdb), imdb = providerId(value.Imdb), tvdb = providerId(value.Tvdb);
+    const aniList = providerId(value.AniList), anilist = providerId(value.Anilist);
+    if (tmdb !== void 0) ids.Tmdb = tmdb;
+    if (imdb !== void 0) ids.Imdb = imdb;
+    if (tvdb !== void 0) ids.Tvdb = tvdb;
+    if (aniList !== void 0) ids.AniList = aniList;
+    if (anilist !== void 0) ids.Anilist = anilist;
+    return ids;
+  }
+  function decodeStreams(value) {
+    if (!Array.isArray(value)) return void 0;
+    return value.filter(isRecord).map((stream) => {
+      const result = {};
+      const type = str(stream.Type), language = str(stream.Language);
+      if (type !== void 0) result.Type = type;
+      if (language !== void 0) result.Language = language;
+      return result;
     });
-
-    // Prefetches no chip has taken over are aborted with their visit's.
-    JE.session?.onUserChange('release-dates', () => {
-        releaseDateCache.clear();
-        for (const entry of releaseLookups.values()) {
-            if (entry.visit && !entry.claimed) entry.ctl?.abort();
-        }
-        releaseLookups.clear();
+  }
+  function decodeSources(value) {
+    if (!Array.isArray(value)) return void 0;
+    return value.map((source) => {
+      const result = {};
+      const id = str(field(source, "Id")), streams = decodeStreams(field(source, "MediaStreams"));
+      if (id !== void 0) result.Id = id;
+      if (streams !== void 0) result.MediaStreams = streams;
+      return result;
     });
+  }
+  function set(item, key, value) {
+    if (value !== void 0) item[key] = value;
+  }
+  function decodeDetailsItem(value) {
+    if (!isRecord(value)) return null;
+    const item = { ProviderIds: decodeProviderIds(value.ProviderIds), SeriesProviderIds: decodeProviderIds(value.SeriesProviderIds) };
+    set(item, "Id", str(value.Id));
+    set(item, "Type", str(value.Type));
+    set(item, "Name", str(value.Name));
+    set(item, "SeriesId", str(value.SeriesId));
+    set(item, "SeriesName", str(value.SeriesName));
+    set(item, "IndexNumber", num(value.IndexNumber));
+    set(item, "ParentIndexNumber", num(value.ParentIndexNumber));
+    set(item, "PremiereDate", str(value.PremiereDate));
+    set(item, "DisplayOrder", str(value.DisplayOrder));
+    set(item, "MediaSources", decodeSources(value.MediaSources));
+    set(item, "MediaStreams", decodeStreams(value.MediaStreams));
+    set(item, "FirstEpisodeId", str(field(value.FirstEpisode, "Id")));
+    if (Array.isArray(value.Tags)) item.Tags = stringList(value.Tags);
+    const userData = value.UserData;
+    set(item, "Played", bool(field(userData, "Played")));
+    set(item, "UnplayedItemCount", num(field(userData, "UnplayedItemCount")));
+    return item;
+  }
 
-    function tmdbGet(path) {
-        const url = ApiClient.getUrl(`/JellyfinEnhanced/tmdb${path}`);
-        return fetch(url, { headers: { "Authorization": `MediaBrowser Token="${ApiClient.accessToken()}"`, "X-Emby-Token": ApiClient.accessToken() } })
-            .then(r => r.ok ? r.json() : Promise.reject(`API Error: ${r.status}`))
-            .catch(error => {
-                console.error(`🪼 Jellyfin Enhanced: Release Date: TMDB request failed for ${path}`, error);
-                return null;
-            });
+  // client/src/features/details-providers/page.ts
+  function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
+    if (helpers?.getItemCached) {
+      return withUser ? helpers.getItemCached(itemId, { userId }) : helpers.getItemCached(itemId);
     }
+    return api().getItem(userId, itemId);
+  }
+  async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
+    return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
+  }
+  function sessionLease(session) {
+    const epoch = session?.getEpoch();
+    const userId = currentUserId();
+    const client = api();
+    const root = client.getUrl("/");
+    const token = client.accessToken();
+    return () => hasApi() && api() === client && client.getUrl("/") === root && client.accessToken() === token && (!session || epoch === void 0 || session.isCurrent(epoch)) && currentUserId() === userId;
+  }
 
-    /**
-     * Today's local calendar date as "YYYY-MM-DD", to compare with TMDB air dates (also
-     * calendar dates). The UTC date would already be tomorrow on a US evening.
-     * @returns {string} The local date.
-     */
-    function todayIso() {
-        const now = new Date();
-        const pad = (value) => String(value).padStart(2, '0');
-        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  // client/src/features/details-providers/links.ts
+  function pathSegment(id) {
+    return encodeURIComponent(id);
+  }
+
+  // client/src/features/details-providers/release-domain.ts
+  function todayIso(now) {
+    const pad = (value) => String(value).padStart(2, "0");
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  }
+  function formatReleaseDate(dateStr) {
+    const parts = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(String(dateStr));
+    let d;
+    if (parts) {
+      const year = Number(parts[1]), month = Number(parts[2]) - 1, day = Number(parts[3]);
+      d = new Date(year, month, day);
+      if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return dateStr;
+    } else {
+      d = new Date(dateStr);
     }
-
-    /**
-     * Formats a release or air date in the user's locale. These are calendar dates, not instants:
-     * TMDB sends "YYYY-MM-DD" (air dates) or "YYYY-MM-DDT00:00:00.000Z" (movie release dates) and
-     * episode premieres arrive trimmed to "YYYY-MM-DD". Read as UTC midnight, any of them would show
-     * the previous day west of UTC, so the leading date is formatted as that local calendar day.
-     * @param {string} dateStr The date as received.
-     * @returns {string} The formatted date, or the input unchanged when it is not a valid date.
-     */
-    function formatReleaseDate(dateStr) {
-        const parts = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(String(dateStr));
-        let d;
-        if (parts) {
-            const [year, month, day] = [Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])];
-            d = new Date(year, month, day);
-            // Out-of-range parts would otherwise roll over into another date.
-            if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return dateStr;
-        } else {
-            d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString(void 0, { year: "numeric", month: "short", day: "numeric" });
+  }
+  var MOVIE_RELEASE_BUCKETS = [
+    { types: [1, 2, 3], icon: "local_movies", titleKey: "calendar_cinema_release", type: "cinema" },
+    { types: [4], icon: "ondemand_video", titleKey: "calendar_digital_release", type: "digital" },
+    { types: [5], icon: "album", titleKey: "calendar_physical_release", type: "physical" }
+  ];
+  function decodeCountries(value) {
+    return list(field(value, "results")).map((entry) => ({
+      iso: str(field(entry, "iso_3166_1")),
+      dates: list(field(entry, "release_dates")).flatMap((date) => {
+        const type = int(field(date, "type")), releaseDate = str(field(date, "release_date"));
+        return type !== void 0 && releaseDate ? [{ type, release_date: releaseDate }] : [];
+      })
+    }));
+  }
+  function earliestOfBucket(dates, bucket) {
+    const matches = dates.filter((date) => bucket.types.includes(date.type) && date.release_date);
+    if (matches.length === 0) return null;
+    return matches.reduce((a, b) => a.release_date < b.release_date ? a : b);
+  }
+  function movieReleaseInfo(data, configuredRegion) {
+    const results = decodeCountries(data);
+    if (results.length === 0) return [];
+    const region = (configuredRegion || "US").toUpperCase();
+    const preferredOrder = [region, "US"].filter((iso, i, arr) => iso && arr.indexOf(iso) === i);
+    const infos = [];
+    for (const bucket of MOVIE_RELEASE_BUCKETS) {
+      let earliest = null;
+      for (const iso of preferredOrder) {
+        const entry = results.find((result) => result.iso === iso);
+        earliest = entry ? earliestOfBucket(entry.dates, bucket) : null;
+        if (earliest) break;
+      }
+      if (!earliest) {
+        for (const entry of results) {
+          earliest = earliestOfBucket(entry.dates, bucket);
+          if (earliest) break;
         }
-        if (isNaN(d.getTime())) return dateStr;
-        return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+      if (earliest) infos.push({ date: earliest.release_date, icon: bucket.icon, titleKey: bucket.titleKey, type: bucket.type });
     }
+    return infos;
+  }
+  function episodeInfo(date) {
+    return { date, icon: "tv_guide", titleKey: "calendar_episode", type: "episode" };
+  }
+  function seriesReleaseInfo(data) {
+    const date = str(field(field(data, "next_episode_to_air"), "air_date")) || str(field(field(data, "last_episode_to_air"), "air_date"));
+    return date ? [episodeInfo(date)] : [];
+  }
+  function seasonReleaseInfo(data, today) {
+    const episodes = field(data, "episodes");
+    if (!Array.isArray(episodes) || episodes.length === 0) return [];
+    const withDates = episodes.map((episode) => str(field(episode, "air_date"))).filter((date2) => !!date2);
+    if (withDates.length === 0) return [];
+    const upcoming = withDates.find((date2) => date2 >= today);
+    const date = upcoming ?? withDates[withDates.length - 1];
+    return date ? [episodeInfo(date)] : [];
+  }
+  function episodeReleaseInfo(data) {
+    const date = str(field(data, "air_date"));
+    return date ? [episodeInfo(date)] : [];
+  }
+  function premiereDate(value) {
+    const premiere = typeof value === "string" ? value.slice(0, 10) : "";
+    return /^\d{4}-\d{2}-\d{2}$/.test(premiere) ? premiere : null;
+  }
 
-    // TMDB release_dates `type` values bucketed into the three release
-    // moments we show; theatrical premiere/limited/wide (1-3) collapse into
-    // one "cinema" bucket, digital(4) and physical(5) stay separate.
-    const MOVIE_RELEASE_BUCKETS = [
-        { types: [1, 2, 3], icon: 'local_movies', titleKey: 'calendar_cinema_release', type: 'cinema' },
-        { types: [4], icon: 'ondemand_video', titleKey: 'calendar_digital_release', type: 'digital' },
-        { types: [5], icon: 'album', titleKey: 'calendar_physical_release', type: 'physical' },
-    ];
-
-    /** Returns the earliest `release_date` among entries of the given bucket's types, or null. */
-    function earliestOfBucket(releaseDates, bucket) {
-        const matches = (releaseDates || []).filter(d => bucket.types.includes(d.type) && d.release_date);
-        if (matches.length === 0) return null;
-        return matches.reduce((a, b) => (a.release_date < b.release_date ? a : b));
+  // client/src/features/details-providers/release-dates.ts
+  var JE = bridge("Release dates");
+  var internals = JE.internals ?? (JE.internals = {});
+  var internal = internals.features ?? (internals.features = {});
+  var RELEASEDATE_CACHE_TTL = 60 * 60 * 1e3;
+  var RELEASEDATE_GUARDED_CACHE_TTL = 30 * 1e3;
+  var cacheTtl = () => JE.spoilerBlur?.hasAnyState?.() ? RELEASEDATE_GUARDED_CACHE_TTL : RELEASEDATE_CACHE_TTL;
+  var releaseDateCache = /* @__PURE__ */ new Map();
+  var releaseLookups = /* @__PURE__ */ new Map();
+  var guardRevision = 0;
+  var releaseOwner = null;
+  function resetReleaseOwner() {
+    guardRevision++;
+    releaseOwner = null;
+    releaseDateCache.clear();
+    dropUnclaimedLookups();
+    document.querySelectorAll(".mediaInfoItem-releaseDate").forEach((chip) => chip.remove());
+  }
+  function currentReleaseOwner() {
+    if (!releaseOwner || !releaseOwner()) {
+      resetReleaseOwner();
+      releaseOwner = sessionLease(JE.session);
     }
-
-    // Each bucket cascades through the configured region, then US, then any
-    // region at all, since most countries only record one release type.
-    async function getMovieReleaseInfo(tmdbId) {
-        const data = await tmdbGet(`/movie/${tmdbId}/release_dates`);
-        const results = data?.results;
-        if (!Array.isArray(results) || results.length === 0) return [];
-
-        const region = (JE.pluginConfig?.DEFAULT_REGION || 'US').toUpperCase();
-        const preferredOrder = [region, 'US'].filter((iso, i, arr) => iso && arr.indexOf(iso) === i);
-
-        const infos = [];
-        for (const bucket of MOVIE_RELEASE_BUCKETS) {
-            let earliest = null;
-            for (const iso of preferredOrder) {
-                const entry = results.find(r => r.iso_3166_1 === iso);
-                earliest = entry && earliestOfBucket(entry.release_dates, bucket);
-                if (earliest) break;
-            }
-            if (!earliest) {
-                for (const entry of results) {
-                    earliest = earliestOfBucket(entry.release_dates, bucket);
-                    if (earliest) break;
-                }
-            }
-            if (earliest) infos.push({ date: earliest.release_date, icon: bucket.icon, titleKey: bucket.titleKey, type: bucket.type });
+    return releaseOwner;
+  }
+  function dropUnclaimedLookups() {
+    for (const entry of releaseLookups.values()) {
+      if (entry.visit && !entry.claimed) entry.ctl?.abort();
+    }
+    releaseLookups.clear();
+  }
+  window.addEventListener("je:spoiler-state-changed", () => {
+    guardRevision++;
+    releaseDateCache.clear();
+    dropUnclaimedLookups();
+    document.querySelectorAll(".mediaInfoItem-releaseDate").forEach((chip) => chip.remove());
+  });
+  JE.session?.onUserChange("release-dates", resetReleaseOwner);
+  function tmdbGet(path) {
+    const client = api();
+    const url = client.getUrl(`/JellyfinEnhanced/tmdb${path}`);
+    return fetch(url, { headers: { Authorization: `MediaBrowser Token="${client.accessToken()}"`, "X-Emby-Token": client.accessToken() } }).then((response) => response.ok ? response.json() : Promise.reject(`API Error: ${response.status}`)).catch((error) => {
+      console.error(`🪼 Jellyfin Enhanced: Release Date: TMDB request failed for ${path}`, error);
+      return null;
+    });
+  }
+  async function resolveReleaseInfo(item, userId) {
+    const mediaType = item?.Type;
+    if (!item) return [];
+    if (mediaType === "Movie") {
+      const tmdbId = item.ProviderIds.Tmdb;
+      return tmdbId ? movieReleaseInfo(await tmdbGet(`/movie/${pathSegment(tmdbId)}/release_dates`), JE.pluginConfig?.DEFAULT_REGION) : [];
+    }
+    if (mediaType === "Series") {
+      const tmdbId = item.ProviderIds.Tmdb;
+      return tmdbId ? seriesReleaseInfo(await tmdbGet(`/tv/${pathSegment(tmdbId)}`)) : [];
+    }
+    if (mediaType === "Season" || mediaType === "Episode") {
+      let seriesTmdbId;
+      if (item.SeriesId) {
+        try {
+          const series = await lookupDetailsItem(JE.helpers, item.SeriesId, true, userId);
+          seriesTmdbId = series?.ProviderIds.Tmdb;
+        } catch {
         }
-        return infos;
+      }
+      if (!seriesTmdbId) return [];
+      const show = pathSegment(seriesTmdbId);
+      if (mediaType === "Season") {
+        return item.IndexNumber != null ? seasonReleaseInfo(await tmdbGet(`/tv/${show}/season/${item.IndexNumber}`), todayIso(/* @__PURE__ */ new Date())) : [];
+      }
+      const premiere = premiereDate(item.PremiereDate);
+      if (premiere) return [episodeInfo(premiere)];
+      return item.ParentIndexNumber != null && item.IndexNumber != null ? episodeReleaseInfo(await tmdbGet(`/tv/${show}/season/${item.ParentIndexNumber}/episode/${item.IndexNumber}`)) : [];
     }
-
-    async function getSeriesReleaseInfo(tmdbId) {
-        const data = await tmdbGet(`/tv/${tmdbId}`);
-        const date = data?.next_episode_to_air?.air_date || data?.last_episode_to_air?.air_date;
-        return date ? [{ date, icon: 'tv_guide', titleKey: 'calendar_episode', type: 'episode' }] : [];
+    return [];
+  }
+  async function displayReleaseDate(itemId, container) {
+    const owner = currentReleaseOwner();
+    const existing = container.querySelectorAll(".mediaInfoItem-releaseDate");
+    if (existing.length > 0) {
+      if (existing[0]?.dataset.itemId === itemId) return;
+      existing.forEach((element) => element.remove());
     }
-
-    async function getSeasonReleaseInfo(tmdbId, seasonNumber) {
-        const data = await tmdbGet(`/tv/${tmdbId}/season/${seasonNumber}`);
-        const episodes = data?.episodes;
-        if (!Array.isArray(episodes) || episodes.length === 0) return [];
-
-        const withDates = episodes.filter(e => e.air_date);
-        if (withDates.length === 0) return [];
-
-        const today = todayIso();
-        const upcoming = withDates.find(e => e.air_date >= today);
-        const date = (upcoming || withDates[withDates.length - 1]).air_date;
-        return [{ date, icon: 'tv_guide', titleKey: 'calendar_episode', type: 'episode' }];
+    const now = Date.now();
+    const cached = releaseDateCache.get(itemId);
+    if (cached && now - cached.ts < cacheTtl()) {
+      if (cached.infos.length > 0) renderReleaseDateChips(container, itemId, cached.infos);
+      return;
     }
-
-    async function getEpisodeReleaseInfo(tmdbId, seasonNumber, episodeNumber) {
-        const data = await tmdbGet(`/tv/${tmdbId}/season/${seasonNumber}/episode/${episodeNumber}`);
-        return data?.air_date ? [{ date: data.air_date, icon: 'tv_guide', titleKey: 'calendar_episode', type: 'episode' }] : [];
-    }
-
-    async function resolveReleaseInfo(item, userId) {
-        const mediaType = item?.Type;
-
-        if (mediaType === 'Movie') {
-            const tmdbId = item?.ProviderIds?.Tmdb;
-            return tmdbId ? getMovieReleaseInfo(tmdbId) : [];
+    const placeholder = document.createElement("div");
+    placeholder.className = "mediaInfoItem mediaInfoItem-releaseDate";
+    placeholder.dataset.itemId = itemId;
+    placeholder.style.display = "none";
+    container.appendChild(placeholder);
+    const performFetch = async () => {
+      let entry;
+      const epoch = JE.session ? JE.session.getEpoch() : 0;
+      const revision = guardRevision;
+      let cutShort = false;
+      try {
+        const userId = currentUserId();
+        const lookupNow = async () => resolveReleaseInfo(await lookupDetailsItem(JE.helpers, itemId, true, userId), userId);
+        entry = releaseLookups.get(itemId);
+        if (entry) entry.claimed = true;
+        else releaseLookups.set(itemId, entry = { promise: lookupNow(), visit: null, claimed: true, ctl: null });
+        const claimed = entry;
+        const infos = claimed.visit ? await claimed.promise.catch((error) => {
+          if (!owner() || JE.session && !JE.session.isCurrent(epoch)) {
+            cutShort = true;
+            throw error;
+          }
+          return lookupNow();
+        }) : await claimed.promise;
+        if (releaseLookups.get(itemId) === claimed) releaseLookups.delete(itemId);
+        const superseded = !owner() || revision !== guardRevision || JE.session && !JE.session.isCurrent(epoch);
+        if (superseded) {
+          placeholder.remove();
+          return;
         }
-
-        if (mediaType === 'Series') {
-            const tmdbId = item?.ProviderIds?.Tmdb;
-            return tmdbId ? getSeriesReleaseInfo(tmdbId) : [];
+        releaseDateCache.set(itemId, { infos, ts: now });
+        await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+        if (!owner() || revision !== guardRevision || !placeholder.isConnected) {
+          placeholder.remove();
+          return;
         }
-
-        if (mediaType === 'Season' || mediaType === 'Episode') {
-            // The show's TMDB id lives on the parent Series (the DTO has no
-            // SeriesProviderIds); the shared item cache hands every module on
-            // the page the same fetch.
-            let seriesTmdbId = null;
-            if (item?.SeriesId) {
-                try {
-                    const series = JE.helpers?.getItemCached
-                        ? await JE.helpers.getItemCached(item.SeriesId, { userId })
-                        : await ApiClient.getItem(userId, item.SeriesId);
-                    seriesTmdbId = series?.ProviderIds?.Tmdb;
-                } catch (_) { /* fall through to empty below */ }
-            }
-            if (!seriesTmdbId) return [];
-
-            if (mediaType === 'Season') {
-                return item?.IndexNumber != null ? getSeasonReleaseInfo(seriesTmdbId, item.IndexNumber) : [];
-            }
-            // Resolve Epiosde release info from the episode's own PremiereDate if present, fallback to TMDB if not.
-            const premiere = typeof item?.PremiereDate === 'string' ? item.PremiereDate.slice(0, 10) : '';
-            if (/^\d{4}-\d{2}-\d{2}$/.test(premiere)) {
-                return [{ date: premiere, icon: 'tv_guide', titleKey: 'calendar_episode', type: 'episode' }];
-            }
-            return (item?.ParentIndexNumber != null && item?.IndexNumber != null)
-                ? getEpisodeReleaseInfo(seriesTmdbId, item.ParentIndexNumber, item.IndexNumber)
-                : [];
-        }
-
-        return [];
-    }
-
-    // No dates found is a valid outcome (most back-catalog items lack a
-    // digital/physical date on TMDB), so no chip is rendered rather than a
-    // placeholder dash. The placeholder below is inserted synchronously so
-    // repeated calls from the debounced MutationObserver dedupe against it
-    // instead of each firing their own TMDB fetch.
-    async function displayReleaseDate(itemId, container) {
-        const existing = container.querySelectorAll('.mediaInfoItem-releaseDate');
-        if (existing.length > 0) {
-            if (existing[0].dataset.itemId === itemId) return;
-            existing.forEach(el => el.remove());
-        }
-
-        const now = Date.now();
-        const cached = releaseDateCache.get(itemId);
-        if (cached && (now - cached.ts) < cacheTtl()) {
-            if (cached.infos.length > 0) renderReleaseDateChips(container, itemId, cached.infos);
-            return;
-        }
-
-        const placeholder = document.createElement('div');
-        placeholder.className = 'mediaInfoItem mediaInfoItem-releaseDate';
-        placeholder.dataset.itemId = itemId;
-        placeholder.style.display = 'none';
-        container.appendChild(placeholder);
-
-        const performFetch = async () => {
-            let entry = null;
-            // A taken-over prefetch that fails after a user switch (the switch
-            // cancels the limiter's queued work) is neither retried as the
-            // previous user nor cached as "no dates" for the next one. Any
-            // other failure is logged and cached as it always was.
-            const epoch = JE.session ? JE.session.getEpoch() : 0;
-            const revision = guardRevision;
-            let cutShort = false;
-            try {
-                const userId = ApiClient.getCurrentUserId();
-                const lookupNow = async () => {
-                    const item = JE.helpers?.getItemCached
-                        ? await JE.helpers.getItemCached(itemId, { userId })
-                        : await ApiClient.getItem(userId, itemId);
-                    return resolveReleaseInfo(item, userId);
-                };
-                // Take over the details visit's prefetch (or a lookup already
-                // in flight) instead of starting another; register this one
-                // so a prefetch that comes later joins it.
-                entry = releaseLookups.get(itemId);
-                if (entry) entry.claimed = true;
-                else releaseLookups.set(itemId, entry = { promise: lookupNow(), visit: null, claimed: true, ctl: null });
-                // A failed prefetch is never shown: look it up now instead, as
-                // without the prefetch.
-                const infos = entry.visit
-                    ? await entry.promise.catch((error) => {
-                        if (JE.session && !JE.session.isCurrent(epoch)) {
-                            cutShort = true;
-                            throw error;
-                        }
-                        return lookupNow();
-                    })
-                    : await entry.promise;
-                if (releaseLookups.get(itemId) === entry) releaseLookups.delete(itemId);
-                const superseded = revision !== guardRevision || (JE.session && !JE.session.isCurrent(epoch));
-                if (superseded) {
-                    placeholder.remove();
-                    return;
-                }
-                releaseDateCache.set(itemId, { infos, ts: now });
-                // The chips' small DOM write lands with the next frame's own
-                // layout pass instead of forcing an extra one.
-                await new Promise((resolve) => requestAnimationFrame(() => resolve()));
-                if (!placeholder.isConnected) return; // navigated away while fetching
-                if (infos.length > 0) {
-                    fillReleaseDateChips(placeholder, infos);
-                } else {
-                    placeholder.remove();
-                }
-            } catch (error) {
-                if (entry && releaseLookups.get(itemId) === entry) releaseLookups.delete(itemId);
-                placeholder.remove();
-                if (cutShort || revision !== guardRevision) return;
-                console.error(`🪼 Jellyfin Enhanced: Release Date: Error fetching release info for ${itemId}:`, error);
-                releaseDateCache.set(itemId, { infos: [], ts: now });
-            }
-        };
-
-        // The lookups start right away (they cost the main thread nothing
-        // while in flight); waiting for an idle period first only delayed the
-        // chip on a busy details page.
-        performFetch();
-    }
-
-    let releaseDateIconFontInjected = false;
-    function ensureReleaseDateIconFont() {
-        if (releaseDateIconFontInjected) return;
-        releaseDateIconFontInjected = true;
-        JE.helpers.addCSS('je-release-date-symbols', `
+        if (infos.length > 0) fillReleaseDateChips(placeholder, infos);
+        else placeholder.remove();
+      } catch (error) {
+        if (entry && releaseLookups.get(itemId) === entry) releaseLookups.delete(itemId);
+        placeholder.remove();
+        if (cutShort || !owner() || revision !== guardRevision || JE.session && !JE.session.isCurrent(epoch)) return;
+        console.error(`🪼 Jellyfin Enhanced: Release Date: Error fetching release info for ${itemId}:`, error);
+        releaseDateCache.set(itemId, { infos: [], ts: now });
+      }
+    };
+    void performFetch();
+  }
+  var releaseDateIconFontInjected = false;
+  function ensureReleaseDateIconFont() {
+    if (releaseDateIconFontInjected) return;
+    const addCSS = JE.helpers?.addCSS;
+    if (!addCSS) throw new Error("Jellyfin Enhanced helpers unavailable");
+    releaseDateIconFontInjected = true;
+    addCSS("je-release-date-symbols", `
             .je-release-date-icon {
                 font-family: 'JE Material Symbols Rounded';
                 font-weight: normal;
@@ -312,94 +382,71 @@
                 -webkit-font-smoothing: antialiased;
             }
         `);
+  }
+  function fillReleaseDateChip(chip, info) {
+    ensureReleaseDateIconFont();
+    chip.classList.add(`je-release-date-${info.type}`);
+    chip.title = JE.t(info.titleKey);
+    chip.style.display = "inline-flex";
+    chip.style.alignItems = "center";
+    chip.style.gap = "0.3em";
+    chip.style.whiteSpace = "nowrap";
+    chip.style.margin = "0 1em 0 0 !important";
+    const icon = document.createElement("span");
+    icon.className = "je-release-date-icon";
+    icon.style.fontSize = "inherit";
+    icon.textContent = info.icon;
+    const date = document.createElement("span");
+    date.textContent = formatReleaseDate(info.date);
+    chip.replaceChildren(icon, date);
+  }
+  function fillReleaseDateChips(placeholder, infos) {
+    const [first, ...rest] = infos;
+    if (!first) return;
+    fillReleaseDateChip(placeholder, first);
+    let anchor = placeholder;
+    for (const info of rest) {
+      const chip = document.createElement("div");
+      chip.className = "mediaInfoItem mediaInfoItem-releaseDate";
+      chip.dataset.itemId = placeholder.dataset.itemId ?? "";
+      fillReleaseDateChip(chip, info);
+      anchor.after(chip);
+      anchor = chip;
     }
-
-    function fillReleaseDateChip(chip, info) {
-        ensureReleaseDateIconFont();
-        chip.classList.add(`je-release-date-${info.type}`);
-        chip.title = JE.t(info.titleKey);
-        chip.style.display = 'inline-flex';
-        chip.style.alignItems = 'center';
-        chip.style.gap = '0.3em';
-        chip.style.whiteSpace = 'nowrap';
-        chip.style.margin = '0 1em 0 0 !important';
-        const icon = document.createElement('span');
-        icon.className = 'je-release-date-icon';
-        icon.style.fontSize = 'inherit';
-        icon.textContent = info.icon;
-        const date = document.createElement('span');
-        date.textContent = formatReleaseDate(info.date);
-        chip.replaceChildren(icon, date);
+  }
+  function renderReleaseDateChips(container, itemId, infos) {
+    for (const info of infos) {
+      const chip = document.createElement("div");
+      chip.className = "mediaInfoItem mediaInfoItem-releaseDate";
+      chip.dataset.itemId = itemId;
+      fillReleaseDateChip(chip, info);
+      container.appendChild(chip);
     }
-
-    // Each date is its own flex sibling (like every other stat chip in this
-    // row) rather than one chip bundling all of them, so the row's own
-    // flex-wrap breaks lines between whole chips instead of wrapping inside
-    // a single nested chip.
-    function fillReleaseDateChips(placeholder, infos) {
-        fillReleaseDateChip(placeholder, infos[0]);
-        let anchor = placeholder;
-        for (let i = 1; i < infos.length; i++) {
-            const chip = document.createElement('div');
-            chip.className = 'mediaInfoItem mediaInfoItem-releaseDate';
-            chip.dataset.itemId = placeholder.dataset.itemId;
-            fillReleaseDateChip(chip, infos[i]);
-            anchor.after(chip);
-            anchor = chip;
-        }
+  }
+  function prefetchReleaseDate(itemId, rawItem, visit) {
+    currentReleaseOwner();
+    const cached = releaseDateCache.get(itemId);
+    if (cached && Date.now() - cached.ts < cacheTtl() || releaseLookups.has(itemId)) return;
+    const ctl = new AbortController();
+    const userId = currentUserId();
+    const item = decodeDetailsItem(rawItem);
+    const lookup = () => resolveReleaseInfo(item, userId);
+    const manager = JE.core?.api?.manager;
+    const promise = typeof manager?.withConcurrencyLimit === "function" ? manager.withConcurrencyLimit(lookup, { signal: ctl.signal }) : lookup();
+    promise.catch(() => {
+    });
+    releaseLookups.set(itemId, { promise, visit, claimed: false, ctl });
+  }
+  function discardReleasePrefetch(visit) {
+    for (const [itemId, entry] of releaseLookups) {
+      if (entry.visit !== visit || entry.claimed) continue;
+      entry.ctl?.abort();
+      releaseLookups.delete(itemId);
     }
-
-    /** Cache-hit path, where there's no placeholder to fill. */
-    function renderReleaseDateChips(container, itemId, infos) {
-        infos.forEach(info => {
-            const chip = document.createElement('div');
-            chip.className = 'mediaInfoItem mediaInfoItem-releaseDate';
-            chip.dataset.itemId = itemId;
-            fillReleaseDateChip(chip, info);
-            container.appendChild(chip);
-        });
-    }
-
-    /**
-     * Starts a details visit's release lookup before the chip is placed (the
-     * chip takes it over in displayReleaseDate). Nothing when the chip would
-     * not look up either (fresh answer cached) or a lookup is already running.
-     * Through JE's request limiter, as it starts while the page is loading.
-     * @param {string} itemId The ID of the item.
-     * @param {object} item The item (from the shared item cache).
-     * @param {object} visit The details visit (see discardReleasePrefetch).
-     */
-    function prefetchReleaseDate(itemId, item, visit) {
-        const cached = releaseDateCache.get(itemId);
-        if ((cached && (Date.now() - cached.ts) < cacheTtl()) || releaseLookups.has(itemId)) return;
-        const ctl = new AbortController();
-        const userId = ApiClient.getCurrentUserId();
-        const lookup = () => resolveReleaseInfo(item, userId);
-        const manager = JE.core?.api?.manager;
-        const promise = typeof manager?.withConcurrencyLimit === 'function'
-            ? manager.withConcurrencyLimit(lookup, { signal: ctl.signal })
-            : lookup();
-        // A chip that takes it over handles a failure itself.
-        promise.catch(() => {});
-        releaseLookups.set(itemId, { promise, visit, claimed: false, ctl });
-    }
-
-    /**
-     * Drops a visit's prefetches no chip took over, so a later visit looks up
-     * again exactly as it would have without them; one still queued in the
-     * limiter is aborted and never sent.
-     * @param {object} visit The details visit that ended.
-     */
-    function discardReleasePrefetch(visit) {
-        for (const [itemId, entry] of releaseLookups) {
-            if (entry.visit !== visit || entry.claimed) continue;
-            entry.ctl?.abort();
-            releaseLookups.delete(itemId);
-        }
-    }
-
-    internal.displayReleaseDate = displayReleaseDate;
-    internal.prefetchReleaseDate = prefetchReleaseDate;
-    internal.discardReleasePrefetch = discardReleasePrefetch;
-
-})(window.JellyfinEnhanced);
+  }
+  internal.displayReleaseDate = displayReleaseDate;
+  internal.prefetchReleaseDate = prefetchReleaseDate;
+  internal.discardReleasePrefetch = discardReleasePrefetch;
+})();
+})();
+//# sourceMappingURL=features-release-dates.js.map

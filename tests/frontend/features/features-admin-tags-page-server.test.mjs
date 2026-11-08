@@ -340,9 +340,13 @@ test('each section module is a self-contained file the page loads, and every dec
     assert.deepEqual(plain(listed), readdirSync(dir).filter((f) => f.endsWith('.js')).sort(), 'SECTION_FILES lists every section module');
   } finally { h.close(); }
   // The generators (scripts/generate_config_flag_groups.py, WhatsNewService) read field declarations lexically.
-  for (const file of readdirSync(dir)) {
+  // The modules are generated from TypeScript: they read them from each module's lexical index (a kept /*! */
+  // comment; admin-tags-rewrite.test.mjs holds it equal to what the module registers).
+  for (const file of readdirSync(dir).filter((f) => f.endsWith('.js'))) {
     const text = readFileSync(resolve(dir, file), 'utf8');
-    for (const line of text.split('\n')) {
+    const index = /\/\*! Lexical index[\s\S]*?\*\//.exec(text);
+    assert.ok(index, `${file} has its lexical index`);
+    for (const line of index[0].split('\n')) {
       if (/^\s*\{ id: '/.test(line)) assert.match(line, /^\s*\{ id: '\w+', key: '\w+', type: '\w+'.*label: '.+'/, `${file}: ${line.trim().slice(0, 60)}`);
       // Helpers/MediaTagsPageFields.cs reads a section's own writes from one line too.
       if (/^\s*writes:/.test(line)) assert.match(line, /^\s*writes: \['\w+'(, '\w+')*\],$/, `${file}: ${line.trim()}`);

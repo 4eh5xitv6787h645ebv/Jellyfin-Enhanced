@@ -133,21 +133,21 @@ test('a taken-over prefetch a user switch cut short is not retried as the previo
  signedOut=false;h.api.displayReleaseDate('movie',h.container);await h.settle();
  assert.equal(h.container.querySelectorAll('.mediaInfoItem-releaseDate').length,2,'the next user gets the dates');assert.deepEqual(h.counts(),{itemCalls:1,fetchCalls:1});
 });
-test('the chip\'s own lookup failing after a user switch is logged and cached as no dates, as before',async t=>{
+test('the chip\'s own lookup failing after a user switch leaves the incoming session uncached',async t=>{
  // No prefetch (a restored view, or an item the details page already knew): the chip looks up itself.
  const item=deferred();const own=sessionStub();let lookup=()=>item.promise;
- const chip=setup(t,{data:releases,getItem:()=>lookup(),JE:{session:own.session}});chip.expectConsoleError(/Error fetching release info for movie/);
+ const chip=setup(t,{data:releases,getItem:()=>lookup(),JE:{session:own.session}});
  chip.api.displayReleaseDate('movie',chip.container);await chip.settle();own.switchUser();item.reject(new Error('401 Unauthorized'));await chip.settle();
  assert.equal(chip.container.children.length,0);
  lookup=async()=>movie;chip.api.displayReleaseDate('movie',chip.container);await chip.settle();
- assert.equal(chip.container.children.length,0,'the empty answer was cached');assert.deepEqual(chip.counts(),{itemCalls:1,fetchCalls:0});
- // A prefetch that failed before the switch is looked up again; that lookup failing after it is cached too.
+ assert.equal(chip.container.querySelectorAll('.mediaInfoItem-releaseDate').length,2,'the incoming account gets a fresh lookup');assert.deepEqual(chip.counts(),{itemCalls:2,fetchCalls:1});
+ // A retry that started before the switch also cannot poison the incoming account's cache.
  const queued=deferred(),retry=deferred(),{session,switchUser}=sessionStub();
- const h=setup(t,{data:releases,getItem:()=>retry.promise,JE:{core:{api:{manager:{withConcurrencyLimit:()=>queued.promise}}},session}});
- h.expectConsoleError(/Error fetching release info for movie/);
+ let retryLookup=()=>retry.promise;
+ const h=setup(t,{data:releases,getItem:()=>retryLookup(),JE:{core:{api:{manager:{withConcurrencyLimit:()=>queued.promise}}},session}});
  h.api.prefetchReleaseDate('movie',movie,{});h.api.displayReleaseDate('movie',h.container);queued.reject(new Error('Request queue full - too many pending requests'));await h.settle();
  assert.equal(h.counts().itemCalls,1,'looked up again under the same session');
- switchUser();retry.reject(new Error('401 Unauthorized'));await h.settle();
+ switchUser();retry.reject(new Error('401 Unauthorized'));await h.settle();retryLookup=async()=>movie;
  h.api.displayReleaseDate('movie',h.container);await h.settle();
- assert.equal(h.container.children.length,0);assert.deepEqual(h.counts(),{itemCalls:1,fetchCalls:0},'cached: no new lookup');
+ assert.equal(h.container.querySelectorAll('.mediaInfoItem-releaseDate').length,2);assert.deepEqual(h.counts(),{itemCalls:2,fetchCalls:1},'stale failures leave no negative cache');
 });

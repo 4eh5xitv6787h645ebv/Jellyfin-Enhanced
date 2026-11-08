@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
@@ -16,7 +17,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     /// plugin.js used to insert one &lt;script async=false&gt; per component module
     /// (150+ tags); even from the HTTP cache that costs hundreds of milliseconds
     /// of per-tag overhead. The bundle concatenates the same embedded files, in the
-    /// same order, into one script. There is no build toolchain: the ordered list
+    /// same order, into one script. Typed entries are built before packaging; the ordered list
     /// lives in the embedded js/component-scripts.json manifest (entries starting
     /// with "//" are notes), which is also what plugin.js uses for dev mode and
     /// for its per-file fallback loader.
@@ -32,11 +33,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
     /// everything after it. Wrapping is semantics-preserving because every
     /// component module is a single IIFE expression statement (no top-level
     /// declarations, directives, `this` or `arguments`); the file content keeps
-    /// its own lines, so the line-identity source map still applies.
+    /// its own lines, so each embedded source map retains its generated offsets.
     ///
-    /// The source map is an index map ("sections"), one line-identity section per
-    /// file pointing at the original /JellyfinEnhanced/js/&lt;path&gt; URL, so stack
-    /// traces and DevTools keep showing the original file names and line numbers.
+    /// The source map is an index map ("sections"). Typed entries retain their
+    /// embedded TypeScript mappings and source content; legacy entries use a
+    /// line-identity map to their original /JellyfinEnhanced/js/&lt;path&gt; URL.
     ///
     /// Built once per process and cached: the URL carries the plugin's cache key
     /// (version + DLL timestamp), which changes on every deploy. Dev mode
@@ -105,6 +106,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             public string Path { get; init; } = string.Empty;
             public int Line { get; init; }
             public int LineCount { get; init; }
+            public JsonObject? SourceMap { get; init; }
         }
 
         private static (byte[] Script, byte[] SourceMap) Build(string cacheKey, Logger logger)
@@ -161,7 +163,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     Append("\n");
                 }
-                sections.Add(new Section { Path = path, Line = start, LineCount = line - start });
+                sections.Add(new Section { Path = path, Line = start, LineCount = line - start,
+                    SourceMap = ReadEmbeddedSourceMap(assembly, path) });
                 Append("},\n");
             }
 
@@ -175,7 +178,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 sections = sections.Select(s => new
                 {
                     offset = new { line = s.Line, column = 0 },
-                    map = new
+                    map = (object?)s.SourceMap ?? new
                     {
                         version = 3,
                         file = s.Path,
@@ -189,6 +192,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             };
 
             return (Encoding.UTF8.GetBytes(sb.ToString()), JsonSerializer.SerializeToUtf8Bytes(map));
+        }
+
+        private static JsonObject? ReadEmbeddedSourceMap(Assembly assembly, string path)
+        {
+            using var stream = assembly.GetManifestResourceStream(ResourcePrefix + path.Replace('/', '.') + ".map");
+            if (stream == null) return null;
+            var map = JsonNode.Parse(stream) as JsonObject
+                ?? throw new InvalidDataException($"Invalid embedded source map for {path}.");
+            if (map["version"]?.GetValue<int>() != 3 || map["sources"] is not JsonArray sources
+                || map["mappings"] is not JsonValue)
+                throw new InvalidDataException($"Unsupported embedded source map for {path}.");
+
+            // Maps move from js/<entry>.map into bundle.js.map. Resolve source paths
+            // against their repository location, retaining embedded TypeScript text.
+            var mapUri = new Uri("https://jellyfin-enhanced.invalid/Jellyfin.Plugin.JellyfinEnhanced/js/" + path + ".map");
+            var sourceRoot = map["sourceRoot"]?.GetValue<string>() ?? "";
+            var sourceBase = sourceRoot.Length == 0 ? mapUri : new Uri(mapUri, sourceRoot.TrimEnd('/') + "/");
+            var rebased = new JsonArray();
+            foreach (var source in sources)
+            {
+                var resolved = new Uri(sourceBase, source?.GetValue<string>()
+                    ?? throw new InvalidDataException($"Missing source path in {path}.map."));
+                if (resolved.Scheme != mapUri.Scheme || resolved.Host != mapUri.Host)
+                    throw new InvalidDataException($"External source path in embedded map for {path}.");
+                rebased.Add(Uri.UnescapeDataString(resolved.AbsolutePath.TrimStart('/')));
+            }
+            map["sources"] = rebased;
+            map.Remove("sourceRoot");
+            map["file"] = path;
+            return map;
         }
 
         /// <summary>

@@ -1,19 +1,56 @@
-/**
- * @file Hidden Content Page — page CSS and its injector.
- * Split from hidden-content-page.js (code motion; CSS verbatim).
- */
-(function () {
-  "use strict";
+(() => {
+"use strict";
+(() => {
+  // client/src/host/hidden-content-host.ts
+  var browser = window;
+  if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
+  var host = { JellyfinEnhanced: browser.JellyfinEnhanced, Dashboard: browser.Dashboard, Emby: browser.Emby };
+  function registry(JE, name) {
+    const internals = JE.internals ?? (JE.internals = {});
+    if (name === "features") return internals.features ?? (internals.features = {});
+    if (name === "hiddenContentPage") return internals.hiddenContentPage ?? (internals.hiddenContentPage = {});
+    const surface = internals.hiddenContent ?? (internals.hiddenContent = {});
+    return new Proxy(surface, { get(target, key) {
+      if (typeof key !== "string") return Reflect.get(target, key);
+      const value = Reflect.get(target, key);
+      if (value === void 0) throw new Error(`Missing hidden-content loader dependency: ${key}`);
+      return value;
+    } });
+  }
+  function runtime(JE) {
+    const internals = JE.internals ?? (JE.internals = {});
+    if (internals.hiddenContentRuntime) return internals.hiddenContentRuntime;
+    const state = { modules: /* @__PURE__ */ new Set(), view: 0, policy: 0, queues: /* @__PURE__ */ new Map(), cleanups: /* @__PURE__ */ new Set(), identityCleanups: /* @__PURE__ */ new Set() };
+    internals.hiddenContentRuntime = state;
+    const invalidate = () => {
+      state.view++;
+      for (const cleanup of [...state.cleanups]) cleanup();
+    };
+    window.addEventListener("hashchange", invalidate);
+    window.addEventListener("popstate", invalidate);
+    document.addEventListener("viewhide", invalidate);
+    const invalidateIdentity = () => {
+      invalidate();
+      for (const cleanup of [...state.identityCleanups]) cleanup();
+    };
+    window.addEventListener("pagehide", invalidateIdentity);
+    JE.session?.onUserChange("hidden-content-runtime", invalidateIdentity);
+    return state;
+  }
+  function installOnce(JE, name) {
+    const modules = runtime(JE).modules;
+    if (modules.has(name)) return false;
+    modules.add(name);
+    return true;
+  }
 
-  const JE = window.JellyfinEnhanced;
-  JE.internals = JE.internals || {};
-  const internal = JE.internals.hiddenContentPage = JE.internals.hiddenContentPage || {};
-
-  // ============================================================
-  // CSS Styles
-  // ============================================================
-
-  const CSS_STYLES = `
+  // client/src/features/hidden-content/hidden-content-page-styles.ts
+  (function() {
+    if (!installOnce(host.JellyfinEnhanced, "hidden-content-page-styles")) return;
+    "use strict";
+    const JE = host.JellyfinEnhanced;
+    const internal = registry(JE, "hiddenContentPage");
+    const CSS_STYLES = `
     .je-hidden-content-page {
       padding: 2em;
       max-width: 95vw;
@@ -524,19 +561,15 @@
       .je-hidden-admin-add-overlay .je-hidden-item-unhide { font-size: 11px; padding: 5px; }
     }
   `;
-
-  /**
-   * Injects the page CSS styles into the document head.
-   * No-ops if already injected.
-   */
-  function injectStyles() {
-    if (document.getElementById("je-hidden-content-page-styles")) return;
-    const style = document.createElement("style");
-    style.id = "je-hidden-content-page-styles";
-    style.textContent = CSS_STYLES;
-    document.head.appendChild(style);
-  }
-
-  Object.assign(internal, { injectStyles });
-
+    function injectStyles() {
+      if (document.getElementById("je-hidden-content-page-styles")) return;
+      const style = document.createElement("style");
+      style.id = "je-hidden-content-page-styles";
+      style.textContent = CSS_STYLES;
+      document.head.appendChild(style);
+    }
+    Object.assign(internal, { injectStyles });
+  })();
 })();
+})();
+//# sourceMappingURL=hidden-content-page-styles.js.map

@@ -501,6 +501,7 @@ test('export: a failed read offers Retry in the same dialog, which exports', asy
 test('offer my settings stops when my own settings fail to save, offers nothing, and Retry offers what the panel shows', async t => {
   const h = setup(t);
   await h.settle(8);
+  h.JE.userConfig ||= {}; h.JE.userConfig.settingsRevision = 'fixture-loaded';
   h.load('enhanced/config.js');
   // The panel shows Minimal; the stored settings still say Bands.
   const stored = { TagLayout: 'bands', TagScale: 'larger' };
@@ -510,13 +511,13 @@ test('offer my settings stops when my own settings fail to save, offers nothing,
   const posted = [];
   h.window.ApiClient.ajax = async (request) => {
     const path = new URL(request.url).pathname;
-    if (request.type === 'POST' && path.endsWith('/settings.json')) {
+    if (request.type === 'POST' && path.endsWith('/settings-document')) {
       if (refuse) throw { status: 500 };
       // This page has no key converter loaded: the document is posted as the panel holds it.
-      const body = JSON.parse(request.data);
+      const body = JSON.parse(request.data).Settings;
       posted.push(body);
       stored.TagLayout = body.TagLayout ?? body.tagLayout;
-      return { success: true };
+      return { Revision: 'fixture-saved' };
     }
     if (path.endsWith('/user-settings/user-a/media-tags/export')) return { v: 1, kind: 'je-media-tags-user', settings: { ...stored } };
     return ajax(request);

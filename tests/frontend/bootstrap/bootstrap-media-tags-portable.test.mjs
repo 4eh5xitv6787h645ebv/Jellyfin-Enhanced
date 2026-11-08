@@ -73,15 +73,16 @@ function setup(t, { stored = {}, plugin = {}, mine = [], offered = [], preview }
       ajax: async (request) => {
         const url = new URL(request.url);
         const path = url.pathname;
-        const body = request.data ? JSON.parse(request.data) : null;
+        const wire = request.data ? JSON.parse(request.data) : null;
+        const body = path.endsWith('/settings-document') ? wire.Settings : wire;
         requests.push({ type: request.type, path, body, server: identity.server });
         const account = accountOf(path);
-        if (path.endsWith('/settings.json')) {
+        if (path.endsWith('/settings-document')) {
           if (request.type === 'POST') {
             if (flags.saveGate) await flags.saveGate;
             if (flags.failSave) throw { status: 500 };
             account.settings = body;
-            return { success: true };
+            return { Revision: 'fixture-saved' };
           }
           return structuredClone(account.settings);
         }
@@ -103,7 +104,7 @@ function setup(t, { stored = {}, plugin = {}, mine = [], offered = [], preview }
         }
         if (request.type === 'DELETE' && path.includes('/media-tags/presets/')) {
           account.mine = account.mine.filter(p => p.id !== decodeURIComponent(path.split('/').pop()));
-          return { success: true };
+          return { Revision: 'fixture-saved' };
         }
         if (path.endsWith('/tag-styles')) return {};
         return null;
@@ -270,7 +271,7 @@ test('a document the server refuses as a whole says why and applies nothing', as
   assert.equal(h.status(), 'tag_portable_error_newer');
   assert.equal(h.action('apply'), null);
   // The panel's own settings are saved before the check (as for Export); nothing of the document is.
-  assert.ok(!h.requests.some(r => r.type === 'POST' && r.path.endsWith('/settings.json') && r.body.TagLayout !== 'corners'));
+  assert.ok(!h.requests.some(r => r.type === 'POST' && r.path.endsWith('/settings-document') && r.body.TagLayout !== 'corners'));
   assert.equal(h.server.settings.TagLayout, 'corners');
 });
 
@@ -733,7 +734,7 @@ test('a failed import rolls back only its own fields: a layout chosen while its 
   const ajax = h.window.ApiClient.ajax;
   let failNext = true;
   h.window.ApiClient.ajax = async (request) => {
-    if (request.type === 'POST' && new URL(request.url).pathname.endsWith('/settings.json') && failNext) {
+    if (request.type === 'POST' && new URL(request.url).pathname.endsWith('/settings-document') && failNext) {
       failNext = false;
       await gate;
       throw { status: 500 };
@@ -1004,7 +1005,7 @@ function refuseNextSave(h) {
   const ajax = h.window.ApiClient.ajax;
   let failNext = true;
   h.window.ApiClient.ajax = async (request) => {
-    if (request.type === 'POST' && new URL(request.url).pathname.endsWith('/settings.json') && failNext) {
+    if (request.type === 'POST' && new URL(request.url).pathname.endsWith('/settings-document') && failNext) {
       failNext = false;
       await gate;
       throw { status: 500 };
@@ -1061,12 +1062,12 @@ test('a failed personal lock save is rolled back before a layout save queued beh
 test('a language-priority save queued behind a held save posts nothing once the session moved to another server with the same user id', async t => {
   const h = setup(t, { stored: { LanguageTagsEnabled: true } });
   await h.open();
-  h.expectConsoleError(/Failed to save settings.json/);
+  // Stale failures are discarded by the transport before they can affect the incoming account.
   const release = refuseNextSave(h);
   const attempted = [];
   const held = h.window.ApiClient.ajax;
   h.window.ApiClient.ajax = (request) => {
-    if (request.type === 'POST' && new URL(request.url).pathname.endsWith('/settings.json')) attempted.push(JSON.parse(request.data).TagLayout);
+    if (request.type === 'POST' && new URL(request.url).pathname.endsWith('/settings-document')) attempted.push(JSON.parse(request.data).Settings.TagLayout);
     return held(request);
   };
   await chooseLayout(h, 'bands');
@@ -1076,7 +1077,7 @@ test('a language-priority save queued behind a held save posts nothing once the 
   strict.value = 'true';
   strict.dispatchEvent(new h.window.Event('change', { bubbles: true }));
   await h.settle(4);
-  const posts = () => h.requests.filter(r => r.type === 'POST' && r.path.endsWith('/settings.json'));
+  const posts = () => h.requests.filter(r => r.type === 'POST' && r.path.endsWith('/settings-document'));
   assert.deepEqual(attempted, ['bands'], 'the priority save waits behind the held one');
   h.switchUser('user-a', { TagLayoutSettingsVersion: 1, TagLayout: 'minimal', LanguageTagsEnabled: true }, { server: 'server-b', closePanel: true });
   await h.open();

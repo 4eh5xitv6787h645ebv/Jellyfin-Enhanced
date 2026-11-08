@@ -1,3 +1,4 @@
+import { spoilerState as stateFixture } from '../helpers/spoiler-state.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHarness, jsonResponse } from '../helpers/harness.mjs';
@@ -188,7 +189,7 @@ test('More Info always asks the server, whose answer depends on the current guar
   assert.deepEqual(calls.map(args => args[1]?.skipCache), [true, true]);
 });
 
-function spoilerState(t, plugin = async () => ({}), JE = {}) {
+function spoilerState(t, plugin = async () => stateFixture(), JE = {}) {
   const cleared = [], events = [];
   const h = createHarness({ JE: {
     pluginConfig: { SpoilerBlurEnabled: true },
@@ -221,7 +222,7 @@ test('a guard change drops every response the server shapes per title', async t 
 test('reading guard state or a failed change leaves those responses alone', async t => {
   const h = spoilerState(t, async (_path, options) => {
     if (options?.method) throw new Error('offline');
-    return {};
+    return stateFixture();
   });
   await h.state.loadState();
   await assert.rejects(h.state.enableForSeries('AA-BB'));
@@ -229,7 +230,7 @@ test('reading guard state or a failed change leaves those responses alone', asyn
   assert.equal(h.events.length, 0);
 });
 
-function seerrToggle(t, { plugin = async () => ({ promoted: 'pending', removed: true }), data = { id: 42 }, translate = key => key, mediaType = 'tv' } = {}) {
+function seerrToggle(t, { plugin = async (path) => path === '/spoiler-blur/series' ? stateFixture() : ({ promoted: 'pending', removed: true }), data = { id: 42 }, translate = key => key, mediaType = 'tv' } = {}) {
   const opened = [];
   const toasts = [];
   let epoch = 0;
@@ -253,7 +254,7 @@ test('the Seerr toggle trusts the server over ids that do not match this library
 test('the Seerr toggle only says pending for a title that has not arrived', async t => {
   const inLibrary = seerrToggle(t, { data: { id: 42, jeSpoilerGuard: true } });
   assert.match(inLibrary.button.textContent, /spoiler_blur_button_on/);
-  const waiting = seerrToggle(t, { plugin: async path => (path === '/spoiler-blur/series' ? { PendingTmdb: { 'tv:42': {} } } : {}) });
+  const waiting = seerrToggle(t, { plugin: async path => (path === '/spoiler-blur/series' ? stateFixture({ PendingTmdb: { 'tv:42': {} } }) : {}) });
   await waiting.state.loadState();
   await waiting.settle();
   assert.match(waiting.button.textContent, /spoiler_blur_pending_button_on/);
@@ -272,7 +273,7 @@ test('the toast only promises a later arrival for a title that has not arrived',
   waiting.button.click();
   await waiting.settle();
   assert.deepEqual(waiting.toasts, ['spoiler_blur_pending_enabled_toast']);
-  const inLibrary = seerrToggle(t, { plugin: async () => ({ promoted: 'series', jellyfinId: 'AA-BB' }) });
+  const inLibrary = seerrToggle(t, { plugin: async (_path, options) => options?.method ? { promoted: 'series', jellyfinId: 'AA-BB' } : stateFixture() });
   inLibrary.button.click();
   await inLibrary.settle();
   assert.deepEqual(inLibrary.toasts, ['spoiler_blur_enabled_toast']);
@@ -297,7 +298,7 @@ test('a locale that has the collection hint shows it', async t => {
 });
 
 test('a disable the server could not carry out is not reported as done', async t => {
-  const h = seerrToggle(t, { data: { id: 42, jeSpoilerGuard: true }, plugin: async (_path, options) => (options?.method ? { success: true, removed: false } : {}) });
+  const h = seerrToggle(t, { data: { id: 42, jeSpoilerGuard: true }, plugin: async (_path, options) => (options?.method ? { success: true, removed: false } : stateFixture()) });
   h.button.click();
   await h.settle();
   assert.deepEqual(h.toasts, ['spoiler_blur_pending_error_toast']);
@@ -310,7 +311,7 @@ test('a guard the TMDB id cannot reach comes off through the items the server na
     const h = seerrToggle(t, {
       mediaType, data: { id: 42, jeSpoilerGuard: true, jeSpoilerGuardItems: ['aabb', 'ccdd'] },
       plugin: async (path, options) => {
-        if (!options?.method) return {};
+        if (!options?.method) return stateFixture();
         sent.push(path);
         return { success: true, removed: false };
       },
@@ -331,7 +332,7 @@ test('a user change during a disable stops it touching the new user\'s guards', 
     const h = seerrToggle(t, {
       data: { id: 42, jeSpoilerGuard: true, jeSpoilerGuardItems: ['aabb'] },
       plugin: async (path, options) => {
-        if (!options?.method) return {};
+        if (!options?.method) return stateFixture();
         sent.push(path);
         const held = moment === 'first request' || (moment === 'item request' && path.startsWith('/spoiler-blur/series'));
         return held ? hold({ success: true, removed: true }) : { success: true, removed: true };
@@ -354,7 +355,7 @@ test('a disable that partly fails says so, and the modal still shows what went t
   const h = seerrToggle(t, {
     data: { id: 42, jeSpoilerGuard: true, jeSpoilerGuardItems: ['aabb'] },
     plugin: async (path, options) => {
-      if (!options?.method) return {};
+      if (!options?.method) return stateFixture();
       if (path.startsWith('/spoiler-blur/pending')) return { success: true, removed: true };
       throw new Error('offline');
     },
@@ -369,7 +370,7 @@ test('a disable where nothing went through leaves the modal alone', async t => {
   const h = seerrToggle(t, {
     data: { id: 42, jeSpoilerGuard: true, jeSpoilerGuardItems: ['aabb'] },
     plugin: async (path, options) => {
-      if (!options?.method) return {};
+      if (!options?.method) return stateFixture();
       if (path.startsWith('/spoiler-blur/pending')) return { success: true, removed: false };
       throw new Error('offline');
     },
@@ -383,8 +384,9 @@ test('a disable where nothing went through leaves the modal alone', async t => {
 test('a guard change that lands after the modal is gone does not bring it back', async t => {
   for (const leave of [h => h.modal.remove(), h => { h.modal._isClosing = true; }, h => h.switchUser()]) {
     let finish;
-    const h = seerrToggle(t, { plugin: () => new Promise(resolve => { finish = resolve; }) });
+    const h = seerrToggle(t, { plugin: (_path, options) => options?.method ? new Promise(resolve => { finish = resolve; }) : Promise.resolve(stateFixture()) });
     h.button.click();
+    await h.settle();
     leave(h);
     finish({ promoted: 'pending' });
     await h.settle();
@@ -395,7 +397,7 @@ test('a guard change that lands after the modal is gone does not bring it back',
 test('a failed guard change keeps the open modal', async t => {
   const h = seerrToggle(t, { plugin: async (_path, options) => {
     if (options?.method) throw new Error('offline');
-    return {};
+    return stateFixture();
   } });
   h.button.click();
   await h.settle();
@@ -520,7 +522,7 @@ test('a movie on the list is in scope without asking the server', async t => {
   let calls = 0;
   const h = spoilerState(t, async path => {
     if (path.includes('in-scope')) calls++;
-    return { Movies: { ccdd: {} }, Collections: { eeff: {} } };
+    return stateFixture({ Movies: { ccdd: {} }, Collections: { eeff: {} } });
   });
   await h.state.loadState();
   assert.equal(await h.state.isMovieInScope('CC-DD'), true);
@@ -531,7 +533,7 @@ test('with no guarded collections nothing can be in scope that way, so nothing i
   let calls = 0;
   const h = spoilerState(t, async path => {
     if (path.includes('in-scope')) calls++;
-    return {};
+    return stateFixture();
   });
   await h.state.loadState();
   assert.equal(await h.state.isMovieInScope('CC-DD'), false);
@@ -542,7 +544,7 @@ test('a movie only in a guarded collection is in scope on the server\'s word', a
   const paths = [];
   const h = spoilerState(t, async path => {
     paths.push(path);
-    return path.includes('in-scope') ? { inScope: true } : { Collections: { eeff: {} } };
+    return path.includes('in-scope') ? { inScope: true } : stateFixture({ Collections: { eeff: {} } });
   });
   await h.state.loadState();
   assert.equal(await h.state.isMovieInScope('CC-DD'), true);
@@ -554,7 +556,7 @@ test('a movie only in a guarded collection is in scope on the server\'s word', a
 test('a failed collection lookup rejects, so Reviews falls to its fail-closed path', async t => {
   const h = spoilerState(t, async path => {
     if (path.includes('in-scope')) throw new Error('offline');
-    return { Collections: { eeff: {} } };
+    return stateFixture({ Collections: { eeff: {} } });
   });
   await h.state.loadState();
   await assert.rejects(h.state.isMovieInScope('CC-DD'));

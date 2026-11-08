@@ -73,7 +73,7 @@ function localeStrings(settings) {
 const qualitySource = sources['tags/qualitytags.js'];
 const qualityArrays = {};
 for (const name of ['resolutionOrder', 'sourceOrder', 'dynamicRangeOrder', 'specialFormatOrder', 'codecOrder', 'audioOrder']) {
-    const m = qualitySource.match(new RegExp(`const ${name} = (\\[[^\\]]*\\]);`));
+    const m = qualitySource.match(new RegExp(`(?:const|var) ${name} = (\\[[^\\]]*\\]);`));
     qualityArrays[name] = JSON.parse(m[1].replace(/'/g, '"'));
 }
 const CATEGORY_OF_ARRAY = { resolutionOrder: 'resolution', sourceOrder: 'source', dynamicRangeOrder: 'dynamicRange', specialFormatOrder: 'specialFormat', codecOrder: 'videoCodec', audioOrder: 'audioInfo' };
@@ -252,6 +252,8 @@ function createSandbox(profile, pluginConfig, webSettings, reviews) {
     };
     context.window = context;
     context.globalThis = context;
+    // Compiled modules narrow with instanceof; this stub DOM has one element class.
+    context.HTMLElement = Element;
     vm.createContext(context);
     for (const script of SCRIPTS) vm.runInContext(sources[script], context, { filename: script });
     return { context, JE, css };

@@ -235,12 +235,12 @@ test('the Media Tags hub preset tiles save the choice and re-apply the styles', 
   };
   pick('mono');
   await new Promise(resolve => setImmediate(resolve));
-  assert.equal(JSON.parse(writes.at(-1).data).tagStylePreset, 'mono');
+  assert.equal(JSON.parse(writes.at(-1).data).Settings.tagStylePreset, 'mono');
   assert.equal(applied, 1);
   assert.equal(toasts.at(-1), 'toast_tag_style_preset_updated');
   pick('');
   await new Promise(resolve => setImmediate(resolve));
-  assert.equal(JSON.parse(writes.at(-1).data).tagStylePreset, null, 'back to the admin\'s preset');
+  assert.equal(JSON.parse(writes.at(-1).data).Settings.tagStylePreset, null, 'back to the admin\'s preset');
   assert.equal(applied, 2);
 });
 

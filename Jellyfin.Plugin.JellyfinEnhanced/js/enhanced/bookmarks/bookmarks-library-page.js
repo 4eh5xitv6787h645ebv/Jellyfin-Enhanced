@@ -1,329 +1,376 @@
-/**
- * Bookmarks Library View — standalone page + sidebar navigation.
- * Split from bookmarks-library.js (code motion; bodies verbatim).
- */
-(function (JE) {
-  'use strict';
-
-  JE.internals = JE.internals || {};
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
-
-  if (!JE?.pluginConfig?.BookmarksEnabled) return;
-
-  // Late-bound cross-module reference (defined in bookmarks-library-render.js).
-  const renderIfSectionExists = (...args) => internal.renderIfSectionExists(...args);
-
-  const logPrefix = '🪼 Jellyfin Enhanced: Bookmarks Library:';
-
-  // Sidebar navigation state
-  /** Polling interval for detecting pushState navigations. */
-  const LOCATION_WATCH_INTERVAL_MS = 150;
-
-  const pageState = {
-    pageVisible: false,
-    previousPage: null,
-    locationSignature: null,
-    locationTimer: null,
-  };
-
-  /** Re-evaluated each call so it stays correct even when the sidebar renders late. */
-  function isPluginPagesActive() {
-    const config = JE?.pluginConfig || {};
-    if (!config.BookmarksUsePluginPages) return false;
-    const sb = document.querySelector('.mainDrawer-scrollContainer');
-    return !!sb?.querySelector('a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]');
+(() => {
+"use strict";
+(() => {
+  // client/src/host/bookmarks-host.ts
+  function bookmarksHost() {
+    const host2 = window;
+    const JE2 = host2.JellyfinEnhanced;
+    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const getApi2 = () => {
+      const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
+      if (!api) throw new Error("API client not available");
+      return api;
+    };
+    return { JE: JE2, host: host2, getApi: getApi2 };
+  }
+  function lease(JE2) {
+    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
+    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
   }
 
-  // ============================================================
-  // Standalone page (sidebar navigation, no Plugin Pages / Custom Tabs)
-  // ============================================================
-
-  /**
-   * Creates or retrieves the bookmarks standalone page container.
-   * @returns {HTMLElement}
-   */
-  function createPageContainer() {
-    let page = document.getElementById('je-bookmarks-standalone-page');
-    if (!page) {
-      page = document.createElement('div');
-      page.id = 'je-bookmarks-standalone-page';
-      page.className = 'page type-interior mainAnimatedPage hide';
-      page.setAttribute('data-title', 'Bookmarks');
-      page.setAttribute('data-backbutton', 'true');
-      page.setAttribute('data-url', '#/bookmarks');
-      page.setAttribute('data-type', 'custom');
-
-      const contentWrapper = document.createElement('div');
-      contentWrapper.setAttribute('data-role', 'content');
-
-      const contentPrimary = document.createElement('div');
-      contentPrimary.className = 'content-primary je-bookmarks-page';
-
-      const container = document.createElement('div');
-      container.className = 'sections bookmarks';
-
-      contentPrimary.appendChild(container);
-      contentWrapper.appendChild(contentPrimary);
-      page.appendChild(contentWrapper);
-
-      const mainContent = document.querySelector('.mainAnimatedPages');
-      if (mainContent) {
-        mainContent.appendChild(page);
-      } else {
-        document.body.appendChild(page);
+  // client/src/features/bookmarks/lifetime.ts
+  function createLifetime(JE2, name) {
+    var _a;
+    JE2.internals ?? (JE2.internals = {});
+    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
+    JE2.internals.bookmarkLifetimes[name]?.dispose();
+    const cleanup = /* @__PURE__ */ new Set();
+    const dialogs = /* @__PURE__ */ new Set();
+    let disposed = false;
+    let generation = 0;
+    const pending = /* @__PURE__ */ new Set();
+    const keep = (value) => {
+      if (typeof value === "function") cleanup.add(() => value());
+      else if (typeof value === "object" && value !== null && "unsubscribe" in value && typeof value.unsubscribe === "function") {
+        const unsubscribe = value.unsubscribe.bind(value);
+        cleanup.add(() => unsubscribe());
       }
-    }
-    return page;
-  }
-
-  /**
-   * Shows the standalone bookmarks page, hiding the currently active Jellyfin page.
-   */
-  function showPage() {
-    if (pageState.pageVisible) return;
-    if (isPluginPagesActive()) return;
-    if (JE?.pluginConfig?.BookmarksUseCustomTabs) return;
-    if (JE?.pluginConfig?.BookmarksUseNativeTab) return;
-
-    pageState.pageVisible = true;
-    startLocationWatcher();
-    const page = createPageContainer();
-
-    const expectedHash = '#/bookmarks';
-    if (window.location.hash !== expectedHash) {
-      history.pushState({ page: 'bookmarks' }, 'Bookmarks', expectedHash);
-    }
-
-    const activePage = document.querySelector('.mainAnimatedPage:not(.hide):not(#je-bookmarks-standalone-page)');
-    if (activePage) {
-      pageState.previousPage = activePage;
-      activePage.classList.add('hide');
-      activePage.dispatchEvent(
-        new CustomEvent('viewhide', {
-          bubbles: true,
-          detail: { type: 'interior' },
-        }),
-      );
-    }
-
-    page.classList.remove('hide');
-
-    page.dispatchEvent(
-      new CustomEvent('viewshow', {
-        bubbles: true,
-        detail: {
-          type: 'custom',
-          isRestored: false,
-          options: {},
-        },
-      }),
-    );
-
-    page.dispatchEvent(
-      new CustomEvent('pageshow', {
-        bubbles: true,
-        detail: {},
-      }),
-    );
-
-    // Trigger render into the standalone page's container
-    renderIfSectionExists();
-  }
-
-  /**
-   * Hides the standalone bookmarks page and restores the previous view.
-   */
-  function hidePage() {
-    if (!pageState.pageVisible) return;
-
-    const page = document.getElementById('je-bookmarks-standalone-page');
-    if (page) {
-      page.classList.add('hide');
-      page.dispatchEvent(
-        new CustomEvent('viewhide', {
-          bubbles: true,
-          detail: { type: 'custom' },
-        }),
-      );
-    }
-
-    if (pageState.previousPage && !document.querySelector('.mainAnimatedPage:not(.hide):not(#je-bookmarks-standalone-page)')) {
-      pageState.previousPage.classList.remove('hide');
-      pageState.previousPage.dispatchEvent(
-        new CustomEvent('viewshow', {
-          bubbles: true,
-          detail: { type: 'interior', isRestored: true },
-        }),
-      );
-    }
-
-    pageState.pageVisible = false;
-    pageState.previousPage = null;
-    stopLocationWatcher();
-  }
-
-  /**
-   * Starts polling for pushState-based navigation changes.
-   * Jellyfin's router uses pushState which doesn't fire popstate/hashchange.
-   */
-  function startLocationWatcher() {
-    if (pageState.locationTimer) return;
-    pageState.locationSignature = `${window.location.pathname}${window.location.hash}`;
-    pageState.locationTimer = setInterval(() => {
-      const signature = `${window.location.pathname}${window.location.hash}`;
-      if (signature !== pageState.locationSignature) {
-        pageState.locationSignature = signature;
-        handleNavigation();
-      }
-    }, LOCATION_WATCH_INTERVAL_MS);
-  }
-
-  /**
-   * Stops the location polling interval.
-   */
-  function stopLocationWatcher() {
-    if (pageState.locationTimer) {
-      clearInterval(pageState.locationTimer);
-      pageState.locationTimer = null;
-    }
-  }
-
-  /**
-   * Handles navigation events -- shows or hides the page based on the URL.
-   */
-  function handleNavigation() {
-    const hash = window.location.hash;
-    const path = window.location.pathname;
-    if (hash.startsWith('#/bookmarks') || path === '/bookmarks') {
-      showPage();
-    } else if (pageState.pageVisible) {
-      hidePage();
-    }
-  }
-
-  /**
-   * Intercepts hash/popstate changes for the bookmarks route before
-   * Jellyfin's native router can handle them.
-   * @param {HashChangeEvent|PopStateEvent} e The navigation event.
-   */
-  function interceptNavigation(e) {
-    const url = e?.newURL ? new URL(e.newURL) : window.location;
-    const hash = url.hash;
-    const path = url.pathname;
-    if (hash.startsWith('#/bookmarks') || path === '/bookmarks') {
-      if (e?.stopImmediatePropagation) e.stopImmediatePropagation();
-      if (e?.preventDefault) e.preventDefault();
-      showPage();
-    }
-  }
-
-  /**
-   * Handles viewshow events from Jellyfin's page system.
-   * Hides our page when Jellyfin shows a different page.
-   * @param {CustomEvent} e The viewshow event.
-   */
-  function handleViewShow(e) {
-    const targetPage = e.target;
-    if (pageState.pageVisible && targetPage && targetPage.id !== 'je-bookmarks-standalone-page') {
-      hidePage();
-    }
-  }
-
-  /**
-   * Handles clicks on Jellyfin navigation elements.
-   * Hides our page when the user clicks a nav button that isn't ours.
-   * @param {MouseEvent} e The click event.
-   */
-  function handleNavClick(e) {
-    if (!pageState.pageVisible) return;
-    const btn = e.target.closest('.headerTabs button, .navMenuOption, .headerButton');
-    if (btn && !btn.classList.contains('je-nav-bookmarks-item')) {
-      hidePage();
-    }
-  }
-
-  /**
-   * Injects the Bookmarks navigation item into the sidebar.
-   */
-  function injectNavigation() {
-    if (!JE?.pluginConfig?.BookmarksEnabled) return;
-    if (isPluginPagesActive()) return;
-    if (JE?.pluginConfig?.BookmarksUseCustomTabs) return;
-    if (JE?.pluginConfig?.BookmarksUseNativeTab) return;
-
-    // Hide plugin page link if it exists
-    const sb = document.querySelector('.mainDrawer-scrollContainer');
-    const pluginPageItem = sb?.querySelector(
-      'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]'
-    );
-    if (pluginPageItem) {
-      pluginPageItem.style.setProperty('display', 'none', 'important');
-    }
-
-    if (document.querySelector('.je-nav-bookmarks-item')) return;
-
-    const jellyfinEnhancedSection = document.querySelector('.jellyfinEnhancedSection');
-    if (jellyfinEnhancedSection) {
-      const navItem = document.createElement('a');
-      navItem.setAttribute('is', 'emby-linkbutton');
-      navItem.className = 'navMenuOption lnkMediaFolder emby-button je-nav-bookmarks-item';
-      navItem.href = '#';
-
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'navMenuOptionIcon material-icons';
-      iconSpan.textContent = 'bookmarks';
-      navItem.appendChild(iconSpan);
-
-      const textSpan = document.createElement('span');
-      textSpan.className = 'sectionName navMenuOptionText';
-      textSpan.textContent = JE.t('bookmarks_library_title') !== 'bookmarks_library_title'
-        ? JE.t('bookmarks_library_title') : 'Bookmarks';
-      navItem.appendChild(textSpan);
-
-      navItem.addEventListener('click', (e) => {
-        e.preventDefault();
-        showPage();
+    };
+    const keepTeardown = (value) => {
+      if (typeof value === "object" && value !== null && "teardown" in value && typeof value.teardown === "function") {
+        const teardown = value.teardown.bind(value);
+        cleanup.add(() => teardown());
+      } else keep(value);
+    };
+    const listen = (target, event, callback, capture = false) => {
+      target.addEventListener(event, callback, capture);
+      cleanup.add(() => target.removeEventListener(event, callback, capture));
+    };
+    const timeout = (callback, delay) => {
+      const current = lease(JE2), version = generation;
+      const cancel = () => {
+        window.clearTimeout(id);
+        cleanup.delete(cancel);
+        pending.delete(cancel);
+      };
+      const id = window.setTimeout(() => {
+        cleanup.delete(cancel);
+        pending.delete(cancel);
+        if (!disposed && generation === version && current()) callback();
+      }, delay);
+      cleanup.add(cancel);
+      pending.add(cancel);
+      return id;
+    };
+    const interval = (callback, delay) => {
+      const id = window.setInterval(() => {
+        if (!disposed) callback();
+      }, delay);
+      cleanup.add(() => window.clearInterval(id));
+      return id;
+    };
+    const modal = (element) => {
+      const previousFocus = document.activeElement;
+      element.setAttribute("role", "dialog");
+      element.setAttribute("aria-modal", "true");
+      element.tabIndex = -1;
+      const close = () => {
+        element.remove();
+        cleanup.delete(close);
+        dialogs.delete(close);
+        document.removeEventListener("viewshow", close);
+        if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+      };
+      cleanup.add(close);
+      dialogs.add(close);
+      document.addEventListener("viewshow", close);
+      element.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          close();
+        }
+        if (event.key !== "Tab") return;
+        const controls = Array.from(element.querySelectorAll('button:not(:disabled), input:not(:disabled), [tabindex="0"]'));
+        const first = controls[0], last = controls[controls.length - 1];
+        if (!first || !last) {
+          event.preventDefault();
+          element.focus();
+          return;
+        }
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === element)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       });
-
-      // Insert after hidden-content, or after calendar, or at end
-      const hiddenNav = jellyfinEnhancedSection.querySelector('.je-nav-hidden-content-item');
-      const calendarNav = jellyfinEnhancedSection.querySelector('.je-nav-calendar-item');
-      const insertAfter = hiddenNav || calendarNav;
-      if (insertAfter && insertAfter.nextSibling) {
-        jellyfinEnhancedSection.insertBefore(navItem, insertAfter.nextSibling);
-      } else {
-        jellyfinEnhancedSection.appendChild(navItem);
-      }
-      console.log(`${logPrefix} Navigation item injected`);
-    }
+      timeout(() => {
+        if (element.isConnected) (element.querySelector("input") || element.querySelector("button") || element).focus();
+      }, 0);
+      return close;
+    };
+    const cancelPending = () => {
+      generation++;
+      for (const cancel of pending) cancel();
+      for (const close of dialogs) close();
+    };
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      cancelPending();
+      for (const release of cleanup) release();
+      cleanup.clear();
+    };
+    const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
+      const current = lease(JE2), version = generation;
+      return () => !disposed && generation === version && current();
+    } };
+    JE2.internals.bookmarkLifetimes[name] = result;
+    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+      for (const close of dialogs) close();
+      document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
+      document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
+    }));
+    listen(window, "pagehide", dispose);
+    return result;
   }
 
-  /**
-   * Re-injects the sidebar nav item when Jellyfin rebuilds the drawer.
-   */
-  function setupNavigationWatcher() {
-    if (!JE?.pluginConfig?.BookmarksEnabled) return;
-    if (isPluginPagesActive()) return;
-    if (JE?.pluginConfig?.BookmarksUseCustomTabs) return;
-    if (JE?.pluginConfig?.BookmarksUseNativeTab) return;
-
-    // Shared watcher (helpers.onSidebarRebuilt): runs only when the link is
-    // gone and the section exists, instead of a document-wide observer.
-    JE.helpers.onSidebarRebuilt('bookmarks', '.je-nav-bookmarks-item', () => {
+  // client/src/features/bookmarks/library-page.ts
+  var { JE, host, getApi } = bookmarksHost();
+  function install(JE2) {
+    const lifetime = createLifetime(JE2, "library-page");
+    const setInterval = lifetime.interval;
+    const internal = JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
+    if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+    const renderIfSectionExists = (...args) => {
+      const fn = internal.renderIfSectionExists;
+      if (!fn) throw new Error("Missing bookmark module: renderIfSectionExists");
+      return fn(...args);
+    };
+    const logPrefix = "🪼 Jellyfin Enhanced: Bookmarks Library:";
+    const LOCATION_WATCH_INTERVAL_MS = 150;
+    const pageState = {
+      pageVisible: false,
+      previousPage: null,
+      locationSignature: null,
+      locationTimer: null
+    };
+    function isPluginPagesActive() {
+      const config = JE2?.pluginConfig || {};
+      if (!config.BookmarksUsePluginPages) return false;
+      const sb = document.querySelector(".mainDrawer-scrollContainer");
+      return !!sb?.querySelector('a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]');
+    }
+    function createPageContainer() {
+      let page = document.getElementById("je-bookmarks-standalone-page");
+      if (!page) {
+        page = document.createElement("div");
+        page.id = "je-bookmarks-standalone-page";
+        page.className = "page type-interior mainAnimatedPage hide";
+        page.setAttribute("data-title", "Bookmarks");
+        page.setAttribute("data-backbutton", "true");
+        page.setAttribute("data-url", "#/bookmarks");
+        page.setAttribute("data-type", "custom");
+        const contentWrapper = document.createElement("div");
+        contentWrapper.setAttribute("data-role", "content");
+        const contentPrimary = document.createElement("div");
+        contentPrimary.className = "content-primary je-bookmarks-page";
+        const container = document.createElement("div");
+        container.className = "sections bookmarks";
+        contentPrimary.appendChild(container);
+        contentWrapper.appendChild(contentPrimary);
+        page.appendChild(contentWrapper);
+        const mainContent = document.querySelector(".mainAnimatedPages");
+        if (mainContent) {
+          mainContent.appendChild(page);
+        } else {
+          document.body.appendChild(page);
+        }
+      }
+      return page;
+    }
+    function showPage() {
+      if (pageState.pageVisible) return;
       if (isPluginPagesActive()) return;
-      injectNavigation();
+      if (JE2?.pluginConfig?.BookmarksUseCustomTabs) return;
+      if (JE2?.pluginConfig?.BookmarksUseNativeTab) return;
+      pageState.pageVisible = true;
+      startLocationWatcher();
+      const page = createPageContainer();
+      const expectedHash = "#/bookmarks";
+      if (window.location.hash !== expectedHash) {
+        history.pushState({ page: "bookmarks" }, "Bookmarks", expectedHash);
+      }
+      const activePage = document.querySelector(".mainAnimatedPage:not(.hide):not(#je-bookmarks-standalone-page)");
+      if (activePage) {
+        pageState.previousPage = activePage;
+        activePage.classList.add("hide");
+        activePage.dispatchEvent(
+          new CustomEvent("viewhide", {
+            bubbles: true,
+            detail: { type: "interior" }
+          })
+        );
+      }
+      page.classList.remove("hide");
+      page.dispatchEvent(
+        new CustomEvent("viewshow", {
+          bubbles: true,
+          detail: {
+            type: "custom",
+            isRestored: false,
+            options: {}
+          }
+        })
+      );
+      page.dispatchEvent(
+        new CustomEvent("pageshow", {
+          bubbles: true,
+          detail: {}
+        })
+      );
+      renderIfSectionExists();
+    }
+    function hidePage() {
+      if (!pageState.pageVisible) return;
+      const page = document.getElementById("je-bookmarks-standalone-page");
+      if (page) {
+        page.classList.add("hide");
+        page.dispatchEvent(
+          new CustomEvent("viewhide", {
+            bubbles: true,
+            detail: { type: "custom" }
+          })
+        );
+      }
+      if (pageState.previousPage && !document.querySelector(".mainAnimatedPage:not(.hide):not(#je-bookmarks-standalone-page)")) {
+        pageState.previousPage.classList.remove("hide");
+        pageState.previousPage.dispatchEvent(
+          new CustomEvent("viewshow", {
+            bubbles: true,
+            detail: { type: "interior", isRestored: true }
+          })
+        );
+      }
+      pageState.pageVisible = false;
+      pageState.previousPage = null;
+      stopLocationWatcher();
+    }
+    function startLocationWatcher() {
+      if (pageState.locationTimer) return;
+      pageState.locationSignature = `${window.location.pathname}${window.location.hash}`;
+      pageState.locationTimer = setInterval(() => {
+        const signature = `${window.location.pathname}${window.location.hash}`;
+        if (signature !== pageState.locationSignature) {
+          pageState.locationSignature = signature;
+          handleNavigation();
+        }
+      }, LOCATION_WATCH_INTERVAL_MS);
+    }
+    function stopLocationWatcher() {
+      if (pageState.locationTimer) {
+        clearInterval(pageState.locationTimer);
+        pageState.locationTimer = null;
+      }
+    }
+    function handleNavigation() {
+      const hash = window.location.hash;
+      const path = window.location.pathname;
+      if (hash.startsWith("#/bookmarks") || path === "/bookmarks") {
+        showPage();
+      } else if (pageState.pageVisible) {
+        hidePage();
+      }
+    }
+    function interceptNavigation(e) {
+      const url = "newURL" in e && typeof e.newURL === "string" ? new URL(e.newURL) : window.location;
+      const hash = url.hash;
+      const path = url.pathname;
+      if (hash.startsWith("#/bookmarks") || path === "/bookmarks") {
+        if (e?.stopImmediatePropagation) e.stopImmediatePropagation();
+        if (e?.preventDefault) e.preventDefault();
+        showPage();
+      }
+    }
+    function handleViewShow(e) {
+      const targetPage = e.target;
+      if (pageState.pageVisible && targetPage instanceof Element && targetPage.id !== "je-bookmarks-standalone-page") {
+        hidePage();
+      }
+    }
+    function handleNavClick(e) {
+      if (!(e.target instanceof Element)) return;
+      if (!pageState.pageVisible) return;
+      const btn = e.target.closest(".headerTabs button, .navMenuOption, .headerButton");
+      if (btn && !btn.classList.contains("je-nav-bookmarks-item")) {
+        hidePage();
+      }
+    }
+    function injectNavigation() {
+      if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+      if (isPluginPagesActive()) return;
+      if (JE2?.pluginConfig?.BookmarksUseCustomTabs) return;
+      if (JE2?.pluginConfig?.BookmarksUseNativeTab) return;
+      const sb = document.querySelector(".mainDrawer-scrollContainer");
+      const pluginPageItem = sb?.querySelector(
+        'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]'
+      );
+      if (pluginPageItem) {
+        pluginPageItem.style.setProperty("display", "none", "important");
+      }
+      if (document.querySelector(".je-nav-bookmarks-item")) return;
+      const jellyfinEnhancedSection = document.querySelector(".jellyfinEnhancedSection");
+      if (jellyfinEnhancedSection) {
+        const navItem = document.createElement("a");
+        navItem.setAttribute("is", "emby-linkbutton");
+        navItem.className = "navMenuOption lnkMediaFolder emby-button je-nav-bookmarks-item";
+        navItem.href = "#";
+        const iconSpan = document.createElement("span");
+        iconSpan.className = "navMenuOptionIcon material-icons";
+        iconSpan.textContent = "bookmarks";
+        navItem.appendChild(iconSpan);
+        const textSpan = document.createElement("span");
+        textSpan.className = "sectionName navMenuOptionText";
+        textSpan.textContent = JE2.t("bookmarks_library_title") !== "bookmarks_library_title" ? JE2.t("bookmarks_library_title") : "Bookmarks";
+        navItem.appendChild(textSpan);
+        navItem.addEventListener("click", (e) => {
+          e.preventDefault();
+          showPage();
+        });
+        const hiddenNav = jellyfinEnhancedSection.querySelector(".je-nav-hidden-content-item");
+        const calendarNav = jellyfinEnhancedSection.querySelector(".je-nav-calendar-item");
+        const insertAfter = hiddenNav || calendarNav;
+        if (insertAfter && insertAfter.nextSibling) {
+          jellyfinEnhancedSection.insertBefore(navItem, insertAfter.nextSibling);
+        } else {
+          jellyfinEnhancedSection.appendChild(navItem);
+        }
+        console.log(`${logPrefix} Navigation item injected`);
+      }
+    }
+    function setupNavigationWatcher() {
+      if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+      if (isPluginPagesActive()) return;
+      if (JE2?.pluginConfig?.BookmarksUseCustomTabs) return;
+      if (JE2?.pluginConfig?.BookmarksUseNativeTab) return;
+      lifetime.keep(JE2.helpers.onSidebarRebuilt("bookmarks", ".je-nav-bookmarks-item", () => {
+        if (isPluginPagesActive()) return;
+        injectNavigation();
+      }));
+    }
+    Object.assign(internal, {
+      isPluginPagesActive,
+      showPage,
+      injectNavigation,
+      setupNavigationWatcher,
+      handleNavigation,
+      interceptNavigation,
+      handleViewShow,
+      handleNavClick
     });
   }
-
-  Object.assign(internal, {
-    isPluginPagesActive,
-    showPage,
-    injectNavigation,
-    setupNavigationWatcher,
-    handleNavigation,
-    interceptNavigation,
-    handleViewShow,
-    handleNavClick,
-  });
-
-})(window.JellyfinEnhanced);
+  install(JE);
+})();
+})();
+//# sourceMappingURL=bookmarks-library-page.js.map

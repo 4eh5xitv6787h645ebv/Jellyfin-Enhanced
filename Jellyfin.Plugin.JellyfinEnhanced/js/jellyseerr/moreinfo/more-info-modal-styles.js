@@ -1,12 +1,15 @@
-// @ts-check
-// /js/jellyseerr/moreinfo/more-info-modal-styles.js
-// CSS for the Jellyseerr more-info modal, injected once at load.
-(function(JE) {
-    'use strict';
+(() => {
+"use strict";
+(() => {
+  // client/src/host/seerr-details-host.ts
+  function bridge() {
+    const host = window;
+    if (!host.JellyfinEnhanced) throw new Error("Seerr details loaded before Jellyfin Enhanced");
+    return host.JellyfinEnhanced;
+  }
 
-
-// Add styles to the page (CSS text is verbatim from the pre-split module)
-const css = `
+  // client/src/features/seerr/details/moreinfo/styles-css.ts
+  var MORE_INFO_CSS = `
         .je-more-info-modal {
             position: fixed;
             top: 0;
@@ -1409,7 +1412,8 @@ const css = `
         }
     `;
 
-    // Inject styles when module loads
-    JE.core.ui.injectCss('je-more-info-modal-styles', css);
-
-})(window.JellyfinEnhanced);
+  // client/src/features/seerr/details/moreinfo/styles-entry.ts
+  bridge().core?.ui?.injectCss?.("je-more-info-modal-styles", MORE_INFO_CSS);
+})();
+})();
+//# sourceMappingURL=more-info-modal-styles.js.map

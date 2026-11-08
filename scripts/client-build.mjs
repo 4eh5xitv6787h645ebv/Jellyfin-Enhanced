@@ -1,0 +1,310 @@
+import { createHash } from 'node:crypto';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { checkTagData } from './tag-data.mjs';
+
+export const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
+const pluginDirectory = 'Jellyfin.Plugin.JellyfinEnhanced';
+const ledgerPath = 'client/generated-manifest.json';
+const versions = { typescript: '6.0.3', esbuild: '0.28.2' };
+const require = createRequire(import.meta.url);
+
+/** Fail locally, without ever downloading tools during a build. */
+function loadTools() {
+  try {
+    const [major, minor] = process.versions.node.split('.').map(Number);
+    if (major < 22 || (major === 22 && minor < 12)) throw new Error(`Node ${process.versions.node} is too old`);
+    for (const [name, version] of Object.entries(versions)) {
+      const installed = require(`${name}/package.json`).version;
+      if (installed !== version) throw new Error(`${name}: expected ${version}, found ${installed}`);
+    }
+    return { ts: require('typescript'), esbuild: require('esbuild') };
+  } catch (error) {
+    throw new Error(`Frontend prerequisites unavailable. Install Node >=22.12 and run npm ci at the repository root, then npm run client:build. ${error.message}`);
+  }
+}
+
+/** Require canonical portable paths, rejecting aliases before checking collisions. */
+function validatePath(value, suffix, label) {
+  if (typeof value !== 'string' || !value.endsWith(suffix)
+      || !value.split('/').every(part => /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(part))) {
+    throw new Error(`${label}: expected a relative /-separated ${suffix} path without traversal: ${JSON.stringify(value)}`);
+  }
+}
+
+/** Reject symlinks in existing ancestors as well as in the leaf being written. */
+function safePath(root, path) {
+  let current = root;
+  for (const segment of path.split('/')) {
+    current = join(current, segment);
+    try {
+      if (lstatSync(current).isSymbolicLink()) throw new Error(`Symlink paths are not allowed: ${path}`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+  return current;
+}
+
+/** JSON.parse validates JSON syntax; the TS JSON AST preserves duplicate keys. */
+function parseManifest(ts, path, raw) {
+  let value;
+  try { value = JSON.parse(raw); }
+  catch (error) { throw new Error(`Invalid entry manifest ${path}: ${error.message}`); }
+  if (!value || Array.isArray(value) || typeof value !== 'object' || !Object.keys(value).length) {
+    throw new Error(`Invalid entry manifest ${path}: expected a non-empty output-to-source object`);
+  }
+  const ast = ts.parseJsonText(path, raw);
+  const object = ast.statements[0]?.expression;
+  const seen = new Set();
+  for (const property of object?.properties ?? []) {
+    const key = property.name.text;
+    if (seen.has(key)) throw new Error(`Duplicate output ${key} in ${path}`);
+    seen.add(key);
+  }
+  return value;
+}
+
+/** Discover typed HTML pages without generating anything; empty when the tree has none. */
+export async function discoverHtmlEntries(root = repositoryRoot) {
+  const { ts } = loadTools();
+  return (await loadHtmlPages(realpathSync(root), ts)).pages;
+}
+
+/** Discover independent manifests deterministically; protect MSBuild's flattened names too. */
+export function discoverEntries(root = repositoryRoot) {
+  const { ts } = loadTools();
+  const folder = safePath(root, 'client/entries');
+  const entries = [];
+  const owners = new Map();
+  for (const file of readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)) {
+    if (file.isDirectory()) throw new Error(`Entry manifests must be directly under client/entries: ${file.name}`);
+    if (!file.name.endsWith('.json')) continue;
+    const path = `client/entries/${file.name}`;
+    const manifest = parseManifest(ts, path, readFileSync(safePath(root, path), 'utf8'));
+    for (const output of Object.keys(manifest).sort()) {
+      const source = manifest[output];
+      validatePath(output, '.js', path);
+      validatePath(source, '.ts', path);
+      if (!source.startsWith('client/src/') || source.endsWith('.d.ts')) {
+        throw new Error(`${path}: entry must be an executable .ts source under client/src: ${source}`);
+      }
+      const resourceName = output.split('/').map((part, i, parts) => i < parts.length - 1 ? part.replaceAll('-', '_') : part).join('.').toLowerCase();
+      if (owners.has(resourceName)) throw new Error(`Duplicate output/resource ${output}: ${path} conflicts with ${owners.get(resourceName)}`);
+      // Runtime resource lookup preserves path spelling, while SDK resource naming
+      // rewrites non-identifier directories and moves culture-suffixed files into
+      // satellites. Admit only names that round-trip through that embedding rule.
+      const parts = output.split('/');
+      if (parts.slice(0, -1).some(part => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(part))
+          || !/^[A-Za-z0-9_][A-Za-z0-9_-]*\.js$/.test(parts.at(-1))) {
+        throw new Error(`${path}: output cannot round-trip through embedded-resource lookup: ${output}. Use identifier directory names and a single .js extension.`);
+      }
+      owners.set(resourceName, path);
+      const input = safePath(root, source);
+      if (!existsSync(input) || !lstatSync(input).isFile()) throw new Error(`${path}: missing TypeScript entry ${source}`);
+      safePath(root, `${pluginDirectory}/${output}`);
+      safePath(root, `${pluginDirectory}/${output}.map`);
+      entries.push({ output, source, manifest: path });
+    }
+  }
+  return entries.sort((a, b) => a.output < b.output ? -1 : a.output > b.output ? 1 : 0);
+}
+
+/** Type-check all source, including modules not yet mapped to a production entry. */
+function checkTypes(ts, root, entries) {
+  const configPath = safePath(root, 'client/tsconfig.json');
+  const config = ts.readConfigFile(configPath, ts.sys.readFile);
+  if (config.error) throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, '\n'));
+  const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, dirname(configPath));
+  // TS18003 is only allowed during the initial, genuinely source-less migration.
+  const errors = parsed.errors.filter(diagnostic => !(diagnostic.code === 18003 && entries.length === 0));
+  const files = new Set(parsed.fileNames.map(file => resolve(file)));
+  for (const entry of entries) {
+    if (!files.has(resolve(root, entry.source))) throw new Error(`Entry is excluded from type checking: ${entry.source}`);
+  }
+  if (errors.length) throw new Error(formatDiagnostics(ts, errors, root));
+  if (files.size) {
+    const program = ts.createProgram(parsed.fileNames, { ...parsed.options, noEmit: true });
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    if (diagnostics.length) throw new Error(formatDiagnostics(ts, diagnostics, root));
+  }
+  return files.size;
+}
+
+function formatDiagnostics(ts, diagnostics, root) {
+  return ts.formatDiagnostics(diagnostics, { getCanonicalFileName: path => path, getCurrentDirectory: () => root, getNewLine: () => '\n' });
+}
+
+/** Enforce the narrow migration policy using TypeScript's own syntax/comment parser. */
+export function checkSourcePolicy(root = repositoryRoot) {
+  const { ts } = loadTools();
+  const failures = [];
+  for (const path of ts.sys.readDirectory(join(root, 'client/src'), ['.ts'], undefined, ['**/*']).sort()) {
+    const name = relative(root, path).split(sep).join('/');
+    const source = ts.createSourceFile(name, readFileSync(safePath(root, name), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const fail = (position, message) => {
+      const { line, character } = source.getLineAndCharacterOfPosition(position);
+      failures.push(`${name}:${line + 1}:${character + 1}: ${message}`);
+    };
+    const visit = node => {
+      if (node.kind === ts.SyntaxKind.AnyKeyword) fail(node.getStart(source), 'Explicit any types are prohibited; model the value or narrow unknown.');
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+    // The pinned TS parser records real directives, excluding strings, template
+    // text, regex literals and comments that merely discuss a directive.
+    for (const directive of source.commentDirectives ?? []) {
+      fail(directive.range.pos, 'TypeScript suppression directives (@ts-ignore / @ts-expect-error) are prohibited.');
+    }
+    const noCheck = source.pragmas.get('ts-nocheck');
+    for (const pragma of noCheck ? (Array.isArray(noCheck) ? noCheck : [noCheck]) : []) {
+      fail(pragma.range.pos, 'TypeScript suppression directive @ts-nocheck is prohibited.');
+    }
+  }
+  if (failures.length) throw new Error(`Client source policy failed:\n${failures.join('\n')}`);
+}
+
+/** Loads HTML support only for trees with HTML sources; JS-only builds never need it. */
+async function loadHtmlPages(root, ts) {
+  const present = ['client/html', 'client/html-entries'].some(path => lstatSync(join(root, path), { throwIfNoEntry: false }));
+  if (!present) return { support: null, pages: [] };
+  const support = await import('./client/html-entries.mjs');
+  return { support, pages: support.discoverHtmlPages({ root, ts, safePath, validatePath, pluginDirectory }) };
+}
+
+/** Every browser artifact shares one wrapper and one strict input policy. */
+async function bundle(esbuild, root, options) {
+  const result = await esbuild.build({
+    absWorkingDir: root,
+    tsconfig: 'client/tsconfig.json',
+    bundle: true,
+    format: 'iife',
+    // TypeScript strict mode emits a directive before esbuild's IIFE. Scope it
+    // inside one outer IIFE so concatenated legacy scripts retain their semantics.
+    // esbuild accounts for banner lines when producing the linked source map.
+    banner: { js: '(() => {' },
+    footer: { js: '})();' },
+    platform: 'browser',
+    target: 'es2020',
+    sourcesContent: true,
+    legalComments: 'inline',
+    write: false,
+    logLevel: 'silent',
+    metafile: true,
+    ...options,
+  });
+  // JS dependencies would evade strict checking; browser dependencies must be TS.
+  for (const input of Object.keys(result.metafile.inputs)) {
+    if (!input.startsWith('client/src/') || !input.endsWith('.ts') || input.endsWith('.d.ts')) {
+      throw new Error(`Bundle input must be checked TypeScript under client/src: ${input}`);
+    }
+    safePath(root, input);
+  }
+  return result;
+}
+
+/** Compile in memory first: invalid source never overwrites runnable legacy assets. */
+export async function buildClient({ root = repositoryRoot, check = false, typecheckOnly = false } = {}) {
+  root = realpathSync(root);
+  const { ts, esbuild } = loadTools();
+  const entries = discoverEntries(root);
+  const { support: htmlSupport, pages } = await loadHtmlPages(root, ts);
+  checkTagData(root, entries);
+  checkSourcePolicy(root);
+  const htmlSources = pages.flatMap(page => Object.values(page.scripts).map(source => ({ source })));
+  const sourceCount = checkTypes(ts, root, [...entries, ...htmlSources]);
+  if (typecheckOnly) return { entries: entries.length, sources: sourceCount, html: pages.length };
+  const artifacts = new Map();
+  for (const entry of entries) {
+    const result = await bundle(esbuild, root, {
+      entryPoints: [entry.source],
+      outfile: `${pluginDirectory}/${entry.output}`,
+      charset: 'utf8',
+      sourcemap: 'linked',
+    });
+    for (const output of result.outputFiles) {
+      const path = relative(root, output.path).split(sep).join('/');
+      const expected = `${pluginDirectory}/${entry.output}`;
+      if (path !== expected && path !== `${expected}.map`) throw new Error(`Unexpected generated artifact: ${path}`);
+      if (artifacts.has(path)) throw new Error(`Duplicate generated artifact: ${path}`);
+      artifacts.set(path, output.contents);
+    }
+  }
+  const htmlLedger = [];
+  for (const page of pages) {
+    const scripts = [];
+    for (const marker of page.markers) {
+      const source = page.scripts[marker.name];
+      const result = await bundle(esbuild, root, {
+        entryPoints: [source],
+        // Not written. At the root, esbuild's map sources are repository-relative.
+        outfile: 'je-inline-html.js',
+        // ServerContentPage rewrites every ${ in the fetched page, and ASCII makes the
+        // script independent of how the page's bytes are decoded.
+        supported: { 'template-literal': false },
+        charset: 'ascii',
+        sourcemap: 'external',
+      });
+      const code = result.outputFiles.find(output => output.path.endsWith('.js'));
+      const map = result.outputFiles.find(output => output.path.endsWith('.js.map'));
+      const inputs = Object.keys(result.metafile.inputs).sort();
+      scripts.push({
+        name: marker.name,
+        source,
+        text: htmlSupport.inlineScript({ ts, code: code.text, map: map.text, file: `${page.output}#${marker.name}` }),
+        inputs: Object.fromEntries(inputs.map(input => [input, htmlSupport.htmlHash(readFileSync(safePath(root, input)))])),
+      });
+    }
+    const { bytes, ledger } = htmlSupport.renderPage(page, scripts);
+    const path = `${pluginDirectory}/${page.output}`;
+    if (artifacts.has(path)) throw new Error(`Duplicate generated artifact: ${path}`);
+    artifacts.set(path, bytes);
+    htmlLedger.push(ledger);
+  }
+  const ledger = {
+    version: 1,
+    tools: versions,
+    entries,
+    ...(htmlLedger.length ? { html: htmlLedger } : {}),
+    outputs: Object.fromEntries([...artifacts].map(([path, bytes]) => [path, createHash('sha256').update(bytes).digest('hex')])),
+  };
+  const ledgerFile = safePath(root, ledgerPath);
+  if (existsSync(ledgerFile)) {
+    const previous = JSON.parse(readFileSync(ledgerFile, 'utf8'));
+    const orphans = Object.keys(previous.outputs ?? {}).filter(path => !artifacts.has(path));
+    // Never delete an old resource automatically: another feature may still depend on it.
+    if (orphans.some(path => existsSync(resolve(root, path)))) {
+      throw new Error(`Orphan generated outputs after removing an entry. Restore its mapping or explicitly remove the retired files before building:\n${orphans.join('\n')}`);
+    }
+  }
+  artifacts.set(ledgerPath, Buffer.from(`${JSON.stringify(ledger, null, 2)}\n`));
+  const stale = [...artifacts].filter(([path, bytes]) => {
+    const absolute = safePath(root, path);
+    return !existsSync(absolute) || !readFileSync(absolute).equals(Buffer.from(bytes));
+  });
+  if (check && stale.length) {
+    throw new Error(`Stale or missing generated client artifacts. Run npm run client:build and commit the outputs:\n${stale.map(([path]) => path).join('\n')}`);
+  }
+  if (!check) {
+    for (const [path, bytes] of stale) {
+      const absolute = safePath(root, path);
+      mkdirSync(dirname(absolute), { recursive: true });
+      writeFileSync(absolute, bytes);
+    }
+  }
+  return { entries: entries.length, sources: sourceCount, html: pages.length, changed: stale.length };
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    const args = process.argv.slice(2);
+    if (args.length > 1 || args.some(arg => !['--check', '--typecheck'].includes(arg))) throw new Error('Usage: node scripts/client-build.mjs [--check | --typecheck]');
+    const result = await buildClient({ check: args.includes('--check'), typecheckOnly: args.includes('--typecheck') });
+    console.log(`Client: ${result.sources} TypeScript sources checked; ${result.entries} mapped browser entries${result.entries ? '' : ' (temporary migration state; legacy JavaScript remains active)'}${result.html ? `; ${result.html} typed HTML pages` : ''}.`);
+  } catch (error) {
+    console.error(`Client build failed: ${error.message}`);
+    process.exitCode = 1;
+  }
+}

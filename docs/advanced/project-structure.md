@@ -64,7 +64,6 @@ Jellyfin.Plugin.JellyfinEnhanced/
 ├── JellyfinEnhanced.cs               # Plugin entry point; GetPages() and GetViews()
 ├── JellyfinEnhanced.csproj           # Targets, dependencies and embedded resources
 ├── packages.jf12.lock.json
-├── packages.jf10.lock.json
 ├── PluginServiceRegistrator.cs       # Dependency injection, hosted services, filters
 ├── Logger.cs
 ├── Configuration/
@@ -143,9 +142,8 @@ Jellyfin.Plugin.JellyfinEnhanced/
 | `JellyfinTarget` | Jellyfin references | Framework | Compilation symbol |
 |---|---|---|---|
 | `jf12` (default) | 12.0.0 | `net10.0` | `JF12` |
-| `jf10` | 10.11.0 | `net9.0` | `JF10` |
 
-Build separate artifacts for the two targets. Package-reference changes require refreshing both plugin lock files and both locks beside `tests/backend/JE.Tests.csproj`. See [CONTRIBUTING.md](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/CONTRIBUTING.md) for build and locked-restore instructions.
+Only Jellyfin 12.x is supported; requesting `jf10` or a framework other than `net10.0` fails explicitly. Package-reference changes require refreshing `packages.jf12.lock.json` beside both the plugin and `tests/backend/JE.Tests.csproj`. See [CONTRIBUTING.md](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/CONTRIBUTING.md) for build and locked-restore instructions.
 
 `Logger.cs` forwards messages to Jellyfin's main log and writes `JellyfinEnhanced_YYYY-MM-DD.log` under Jellyfin's log directory. `Services/HostCompatibilityService.cs` compares the assembly's build target with the running host and exposes mismatch diagnostics.
 
@@ -336,7 +334,7 @@ Administrator settings under **\*arr** → **Shoko**:
 | `ratingtags.js`, `rating-sources.js` | Ordered Community/Critic and MDBList source chips, bundled SVG logos, native formats, minimum score and score colours. The source helper also drives the hub preview. |
 | `ageratingtags.js` | Color-coded parental/age ratings, sharing the Colored Ratings color table. |
 | `genre-icons.json` | The genre → icon table (every language's names) and the Tag Styles genre labels (one canonical English genre per icon, plus Other). Native code (`Resolution/GenreIcons.cs`) embeds it; `scripts/generate_genre_labels.py` writes the table inside `genretags.js` from it (`--check` verifies it). |
-| `status-vocabulary.json`, `status-vocabulary.js` | Shared status badge keys, style ids, compact translation keys and date thresholds; the JSON is embedded by native code and `scripts/generate_status_vocabulary.py` generates/checks its IIFE web table. |
+| `status-vocabulary.json`, `status-vocabulary.js` | Shared status badge keys, style ids, compact translation keys and date thresholds; the JSON is embedded by native code and `scripts/generate_status_vocabulary.py` generates/checks its TypeScript table; the client builder owns its IIFE JS/map. |
 | `logotags.js` | Logo Tags: the streaming provider, network or studio logo chips (server-proxied images, name chips with initials as the fallback); also builds the hub preview's samples. |
 | `customtags.js` | Custom Tags: one chip per administrator rule the item matched (label, optional genre-set icon, with source tooltips for administrators only), from the cache entry's or `tag-data`'s `CustomTags`; Tag Styles hooks `data-je-custom`. |
 | `statustags.js` | Status Tags: first-match badge per card for added/release dates, season milestones, schedules, trending and optional series status. Batches visible series through `status-tags/series`, guards stale card/user answers and supplies compact labels and `data-je-status` styling hooks. |
@@ -699,7 +697,7 @@ Use this tree to find test suites, shared fixtures and supporting evidence.
 tests/
 ├── run.py
 ├── README.md
-├── backend/                          # JE.Tests.csproj + jf12/jf10 package locks
+├── backend/                          # JE.Tests.csproj + jf12 package lock
 │   ├── Api/
 │   ├── Core/
 │   ├── Integrations/
@@ -798,7 +796,7 @@ Per-genre Tag Styles labels come from `js/tags/genre-icons.json` (see above). `t
 
 The technical aspect-ratio tolerance table in `TechnicalQualityRules.cs` also generates the web table inside `js/tags/qualitytags.js` through `scripts/generate_technical_ratios.py` (`--check` verifies it). The shared `tests/fixtures/technical-quality.json` exercises full and compact native/web output and tolerance boundaries.
 
-Compact quality labels use `js/tags/quality-compact.json`, projected into the web layout table and `Services/PosterTags/Resolution/QualityCompactLabels.g.cs` by `scripts/generate_quality_compact.py`. Run its `--check` mode after editing the source.
+Compact quality labels use `js/tags/quality-compact.json`, projected into `client/src/features/media-tags/rules/compact-quality.ts` and `Services/PosterTags/Resolution/QualityCompactLabels.g.cs` by `scripts/generate_quality_compact.py`. Run its `--check` mode after editing the source.
 
 `tests/fixtures/audio-stream-labels.json` checks real audio stream facts through the web renderer and native resolver in Full and Compact; the parity profiles include the same streams. `tests/fixtures/quality-detection-truth.json` is an independent truth table of Jellyfin stream shapes (Dolby Vision range types and base layers, HLG, misleading titles, codec/channel provenance across tracks, lossless audio, VC-1/VVC/ProRes) with the expected Highest, All and version-0 labels; `features-quality-detection-truth.test.mjs` and `QualityDetectionTruthTests.cs` assert it on both sides, so a shared mistake cannot pass as parity.
 

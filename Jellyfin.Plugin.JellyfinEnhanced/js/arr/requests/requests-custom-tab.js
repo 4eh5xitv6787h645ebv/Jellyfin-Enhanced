@@ -1,185 +1,206 @@
-/**
- * Requests Custom Tab
- * Creates <div class="jellyfinenhanced requests"></div>, either inside a tab
- * panel managed by the external Custom Tabs plugin (DownloadsUseCustomTabs),
- * or inside a panel JE creates itself via the shared native-tabs registry
- * (DownloadsUseNativeTab, see enhanced/native-tabs.js) -- no external plugin
- * needed for the latter. The rest of this file (finding the active container,
- * rendering into it, polling) doesn't care which one created the wrapping
- * panel, since both end up as a `.tabContent` with `.is-active` toggled by
- * Jellyfin's own tab-switching logic.
- *
- * Uses a persistent observer to remount whenever the home page DOM is rebuilt
- * (e.g. after SPA navigation). Only runs when on the home page; suspends
- * when navigated away.
- */
-
-(function () {
-  'use strict';
-
-  if (!window.JellyfinEnhanced?.pluginConfig?.DownloadsPageEnabled) {
-    return;
+(() => {
+"use strict";
+(() => {
+  // client/src/host/downloads-host.ts
+  function downloadsHost() {
+    var _a;
+    const host = window;
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error("Downloads loaded before Jellyfin Enhanced");
+    JE.internals || (JE.internals = {});
+    const P = (_a = JE.internals).requestsPage || (_a.requestsPage = {});
+    return { JE, P, host, getApi: () => {
+      if (!host.ApiClient) throw new Error("API client unavailable");
+      return host.ApiClient;
+    } };
   }
 
-  var useCustomTabs = !!window.JellyfinEnhanced?.pluginConfig?.DownloadsUseCustomTabs;
-  var useNativeTab = !!window.JellyfinEnhanced?.pluginConfig?.DownloadsUseNativeTab;
-
-  if (!useCustomTabs && !useNativeTab) {
-    return;
+  // client/src/features/downloads/validation.ts
+  function record(v) {
+    return typeof v === "object" && v !== null && !Array.isArray(v);
   }
 
-  if (useNativeTab) {
-    window.JellyfinEnhanced.nativeTabs.register('requests', window.JellyfinEnhanced.t('requests_requests') || 'Requests', function (panel) {
-      var marker = document.createElement('div');
-      marker.className = 'jellyfinenhanced requests';
-      panel.appendChild(marker);
-    }, 'download');
-  }
-
-  var style = document.createElement('style');
-  style.textContent = [
-    '.jellyfinenhanced.requests {',
-    '  padding: 12px 3vw;',
-    '}',
-    '.backgroundContainer.withBackdrop:has(~ * #indexPage .tabContent.is-active .jellyfinenhanced.requests) {',
-    '  background: rgba(0, 0, 0, 0.7) !important;',
-    '  opacity: 1 !important;',
-    '}'
-  ].join('\n');
-  document.head.appendChild(style);
-
-  /** The last DOM node we mounted into. */
-  var lastMountedContainer = null;
-
-  /** @returns {boolean} Whether the current URL hash is the home page. */
-  function isOnHomePage() {
-    var hash = window.location.hash;
-    return hash === '' || hash === '#/home' || hash === '#/home.html'
-      || hash.indexOf('#/home?') !== -1 || hash.indexOf('#/home.html?') !== -1;
-  }
-
-  /** Wait for JE.downloadsPage to be ready before initializing (30s timeout). */
-  function waitForDownloads(callback) {
-    var attempts = 0;
-    var check = setInterval(function () {
-      if (++attempts > 300) { clearInterval(check); return; }
-      var JE = window.JE || window.JellyfinEnhanced;
-      if (JE?.downloadsPage) {
-        clearInterval(check);
-        callback(JE);
+  // client/src/features/downloads/runtime.ts
+  function runtime(deps) {
+    if (deps.P.runtime) return deps.P.runtime;
+    const { JE, P, host } = deps;
+    let generation = 0, disposed = false;
+    const lanes = /* @__PURE__ */ new Map();
+    const removers = [];
+    const identityLease = () => {
+      const api = host.ApiClient, epoch = JE.session?.getEpoch();
+      const serverId = () => typeof api?.serverId === "function" ? api.serverId() : api?.serverId;
+      const identity = api?.getCurrentUserId(), server = api?.serverAddress?.(), base = api?.getUrl("/"), token = api?.accessToken?.(), id = serverId();
+      return { current: () => !disposed && host.ApiClient === api && (epoch === void 0 || JE.session?.isCurrent(epoch) === true) && api?.getCurrentUserId() === identity && api?.serverAddress?.() === server && api?.getUrl("/") === base && api?.accessToken?.() === token && serverId() === id };
+    };
+    const owner = {
+      cleanup(callback) {
+        removers.push(callback);
+      },
+      installed: /* @__PURE__ */ new Set(),
+      mutations: /* @__PURE__ */ new Map(),
+      captureIdentity: identityLease,
+      capture(lane) {
+        const version = generation, identity = identityLease();
+        const route = host.location.pathname + host.location.hash;
+        const container = P.state?._customTabContainer || document.getElementById("je-downloads-container");
+        const serial = lane ? (lanes.get(lane) || 0) + 1 : 0;
+        if (lane) lanes.set(lane, serial);
+        return { current: () => !disposed && generation === version && (!lane || lanes.get(lane) === serial) && identity.current() && host.location.pathname + host.location.hash === route && (!container || container.isConnected && !container.closest(".hide, [hidden]") && (!container.closest(".tabContent") || container.closest(".tabContent")?.classList.contains("is-active") === true)) };
+      },
+      invalidate() {
+        generation++;
+        if (P.state) {
+          P.state.isLoading = false;
+          if (P.state.searchDebounceTimer !== null) {
+            clearTimeout(P.state.searchDebounceTimer);
+            P.state.searchDebounceTimer = null;
+          }
+        }
+      },
+      listen(target, event, callback, capture = false) {
+        target.addEventListener(event, callback, capture);
+        removers.push(() => target.removeEventListener(event, callback, capture));
+      },
+      dispose() {
+        disposed = true;
+        owner.invalidate();
+        removers.splice(0).forEach((remove) => remove());
+        if (P.state?.pollTimer) {
+          clearInterval(P.state.pollTimer);
+          P.state.pollTimer = null;
+        }
       }
-    }, 100);
+    };
+    P.runtime = owner;
+    owner.listen(host, "hashchange", () => owner.invalidate());
+    owner.listen(host, "popstate", () => owner.invalidate());
+    owner.listen(host, "je:navigate", () => owner.invalidate());
+    owner.listen(document, "viewhide", (event) => {
+      if (event.target instanceof Element && (event.target.id === "je-downloads-page" || event.target.contains(P.state?._customTabContainer || document.getElementById("je-downloads-container")))) owner.invalidate();
+    });
+    JE.core?.lifecycle?.register("arr-requests-page").track(() => owner.dispose());
+    return owner;
   }
 
-  /**
-   * Find the requests container inside the active (non-hidden) home page.
-   * Returns null if no visible container exists -- never falls back to a
-   * stale DOM-cached copy.
-   *
-   * Requires both the page and its enclosing tab to be active.
-   *
-   * @returns {HTMLElement|null}
-   */
-  function findActiveContainer() {
-    var all = document.querySelectorAll('.jellyfinenhanced.requests');
-    for (var i = all.length - 1; i >= 0; i--) {
-      var el = all[i];
-      if (window.JellyfinEnhanced.helpers.isActiveTabContainer(el)) return el;
+  // client/src/features/downloads/custom-tab.ts
+  function install(deps) {
+    const { JE, P, host, getApi } = deps;
+    const life = runtime(deps);
+    if (life.installed.has("custom-tab")) return;
+    life.installed.add("custom-tab");
+    if (!JE?.pluginConfig?.DownloadsPageEnabled) {
+      return;
     }
-    return null;
-  }
-
-  /**
-   * Render downloads into the given container using a scoped child element.
-   * @param {HTMLElement} container - The active .jellyfinenhanced.requests element.
-   * @param {Object} JE - The JellyfinEnhanced global object.
-   */
-  function renderDownloads(container, JE) {
-    container.classList.remove('hide');
-    container.style.display = '';
-
-    var child = document.createElement('div');
-    child.id = 'je-downloads-container-tab';
-    container.textContent = '';
-    container.appendChild(child);
-
-    JE.downloadsPage.renderForCustomTab?.(child);
-
-    lastMountedContainer = container;
-  }
-
-  /**
-   * Persistent watcher -- observes document.body (via shared observer) for
-   * DOM rebuilds and remounts the requests tab when a new active container
-   * appears. Suspends checks when not on the home page.
-   * @param {Object} JE - The JellyfinEnhanced global object.
-   */
-  function watchForContainer(JE) {
-    /** Whether we were on the home page on the last check. */
-    var wasOnHomePage = false;
-
-    function tryMount() {
-      var onHome = isOnHomePage();
-
-      // Navigated away — stop polling and clear custom tab mode so the
-      // timer's own visibility guard doesn't keep it alive.
-      if (!onHome) {
-        if (wasOnHomePage) {
-          JE.downloadsPage.stopPolling?.();
-          if (JE.downloadsPage._state) {
-            JE.downloadsPage._state._customTabMode = false;
+    var useCustomTabs = !!JE?.pluginConfig?.DownloadsUseCustomTabs;
+    var useNativeTab = !!JE?.pluginConfig?.DownloadsUseNativeTab;
+    if (!useCustomTabs && !useNativeTab) {
+      return;
+    }
+    if (useNativeTab) {
+      JE.nativeTabs.register("requests", JE.t("requests_requests") || "Requests", function(panel) {
+        var marker = document.createElement("div");
+        marker.className = "jellyfinenhanced requests";
+        panel.appendChild(marker);
+      }, "download");
+    }
+    var style = document.createElement("style");
+    style.textContent = [
+      ".jellyfinenhanced.requests {",
+      "  padding: 12px 3vw;",
+      "}",
+      ".backgroundContainer.withBackdrop:has(~ * #indexPage .tabContent.is-active .jellyfinenhanced.requests) {",
+      "  background: rgba(0, 0, 0, 0.7) !important;",
+      "  opacity: 1 !important;",
+      "}"
+    ].join("\n");
+    document.head.appendChild(style);
+    var lastMountedContainer = null;
+    function isOnHomePage() {
+      var hash = window.location.hash;
+      return hash === "" || hash === "#/home" || hash === "#/home.html" || hash.indexOf("#/home?") !== -1 || hash.indexOf("#/home.html?") !== -1;
+    }
+    function waitForDownloads(callback) {
+      var attempts = 0;
+      var check = setInterval(function() {
+        if (++attempts > 300) {
+          clearInterval(check);
+          return;
+        }
+        if (JE?.downloadsPage) {
+          clearInterval(check);
+          callback();
+        }
+      }, 100);
+      life.cleanup(() => clearInterval(check));
+    }
+    function findActiveContainer() {
+      var all = document.querySelectorAll(".jellyfinenhanced.requests");
+      for (var i = all.length - 1; i >= 0; i--) {
+        var el = all[i];
+        if (el && JE.helpers.isActiveTabContainer(el)) return el;
+      }
+      return null;
+    }
+    function renderDownloads(container) {
+      container.classList.remove("hide");
+      container.style.display = "";
+      var child = document.createElement("div");
+      child.id = "je-downloads-container-tab";
+      container.textContent = "";
+      container.appendChild(child);
+      JE.downloadsPage.renderForCustomTab?.(child);
+      lastMountedContainer = container;
+    }
+    function watchForContainer() {
+      var wasOnHomePage = false;
+      function tryMount() {
+        var onHome = isOnHomePage();
+        if (!onHome) {
+          if (wasOnHomePage) {
+            JE.downloadsPage.stopPolling?.();
+            if (JE.downloadsPage._state) {
+              JE.downloadsPage._state._customTabMode = false;
+            }
+            lastMountedContainer = null;
+          }
+          wasOnHomePage = false;
+          return;
+        }
+        var justReturned = !wasOnHomePage;
+        wasOnHomePage = true;
+        var container = findActiveContainer();
+        if (!container) {
+          if (lastMountedContainer) {
+            JE.downloadsPage.stopPolling?.();
+            if (JE.downloadsPage._state) {
+              JE.downloadsPage._state._customTabMode = false;
+            }
           }
           lastMountedContainer = null;
+          return;
         }
-        wasOnHomePage = false;
-        return;
-      }
-
-      // Returned to home page — force a remount so polling restarts even if
-      // the container DOM node was not rebuilt (Jellyfin reuses it).
-      var justReturned = !wasOnHomePage;
-      wasOnHomePage = true;
-
-      var container = findActiveContainer();
-      if (!container) {
-        // Still on the home page, but our tab panel isn't the active one
-        // (user switched to a sibling tab like Home/Favorites) -- stop
-        // polling so it doesn't keep running against a hidden tab.
-        if (lastMountedContainer) {
-          JE.downloadsPage.stopPolling?.();
-          if (JE.downloadsPage._state) {
-            JE.downloadsPage._state._customTabMode = false;
-          }
+        var shouldMount = justReturned || container !== lastMountedContainer || !container.hasChildNodes() || lastMountedContainer && !document.contains(lastMountedContainer);
+        if (shouldMount) {
+          renderDownloads(container);
         }
-        lastMountedContainer = null;
-        return;
       }
-
-      var shouldMount = justReturned
-        || container !== lastMountedContainer
-        || !container.hasChildNodes()
-        || (lastMountedContainer && !document.contains(lastMountedContainer));
-
-      if (shouldMount) {
-        renderDownloads(container, JE);
+      tryMount();
+      life.listen(window, "hashchange", tryMount);
+      const unsubscribe = JE.helpers.observeTabContainers("arr-requests-custom-tab", ".jellyfinenhanced.requests", tryMount);
+      if (typeof unsubscribe === "function") life.cleanup(() => unsubscribe());
+      else if (record(unsubscribe) && typeof unsubscribe.teardown === "function") {
+        const teardown = unsubscribe.teardown;
+        life.cleanup(() => teardown.call(unsubscribe));
       }
     }
-
-    tryMount();
-
-    // Also react immediately to hash changes so polling stops as soon as the
-    // user navigates away, without waiting for a DOM mutation to fire.
-    window.addEventListener('hashchange', tryMount);
-
-    // Observe document.body (not .mainAnimatedPages) because Jellyfin replaces
-    // .mainAnimatedPages when navigating to the admin dashboard — an observer
-    // bound to the old element would become orphaned after returning to home
-    // (issue 536). Routes to the shared multiplexed body observer.
-    JE.helpers.observeTabContainers('arr-requests-custom-tab', '.jellyfinenhanced.requests', tryMount);
+    waitForDownloads(function() {
+      watchForContainer();
+    });
   }
 
-  waitForDownloads(function (JE) {
-    watchForContainer(JE);
-  });
-
+  // client/src/features/downloads/custom-tab-entry.ts
+  install(downloadsHost());
 })();
+})();
+//# sourceMappingURL=requests-custom-tab.js.map

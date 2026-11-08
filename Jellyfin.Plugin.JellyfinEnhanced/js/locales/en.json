@@ -1356,5 +1356,16 @@
     "tag_looks_type_series": "Series",
     "status_tag_compact_finale": "Finale",
     "common_open": "Open",
-    "tag_layout_summary": "Summary"
+    "tag_layout_summary": "Summary",
+    "jellyseerr_request_outcome_unknown": "Request status unknown. Check Seerr before requesting again.",
+    "jellyseerr_toast_collection_uncertain_count": "{count} with unknown status (check Seerr before requesting again)",
+    "elsewhere_settings_save_failed": "Could not save your choices. Try again.",
+    "elsewhere_settings_loading": "Loading your settings…",
+    "elsewhere_settings_load_failed": "Your settings could not be loaded. No changes were saved.",
+    "elsewhere_settings_retry": "Retry",
+    "ddd_picker_save_failed": "Could not save your choices. Try again.",
+    "toast_settings_load_failed": "Settings could not be loaded. Please try opening the panel again.",
+    "active_streams_unavailable": "Sessions unavailable",
+    "active_streams_load_failed": "Could not load active streams. Try refreshing.",
+    "active_streams_last_success": "Last successful update: {time}"
 }

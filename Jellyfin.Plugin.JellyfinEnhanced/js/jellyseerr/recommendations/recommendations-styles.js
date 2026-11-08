@@ -1,13 +1,8 @@
-// /js/jellyseerr/recommendations/recommendations-styles.js
-// Recommendations Page — tile and category-page styles (split from recommendations.js).
-(function () {
-  "use strict";
-
-  function injectTileStyles() {
-    if (document.getElementById('je-recommendations-tile-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'je-recommendations-tile-styles';
-    style.textContent = `
+(() => {
+"use strict";
+(() => {
+  // client/src/features/seerr/recommendations/recommendations-styles.ts
+  var TILE_STYLES = `
       [dir="ltr"] .je-pad-left {
         padding-left: max(3.3vw, env(safe-area-inset-left)) !important;
       }
@@ -241,8 +236,14 @@
         margin: 0;
       }
     `;
+  (function() {
+    "use strict";
+    if (document.getElementById("je-recommendations-tile-styles")) return;
+    const style = document.createElement("style");
+    style.id = "je-recommendations-tile-styles";
+    style.textContent = TILE_STYLES;
     document.head.appendChild(style);
-  }
-
-  injectTileStyles();
+  })();
 })();
+})();
+//# sourceMappingURL=recommendations-styles.js.map

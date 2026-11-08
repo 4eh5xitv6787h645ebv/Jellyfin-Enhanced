@@ -1,416 +1,551 @@
-// /js/jellyseerr/ui/ui-badges.js
-// Card badge helpers: status badge, media-type/collection badges and
-// streaming-provider icons.
-(function(JE) {
-    'use strict';
+(() => {
+"use strict";
+(() => {
+  // client/src/host/seerr-core-host.ts
+  function seerrCoreHost() {
+    const host = window;
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error("Jellyfin Enhanced must be initialized before the Seerr core group");
+    return { JE, window: host, document, apiClient: () => host.ApiClient };
+  }
 
-    const ui = JE.jellyseerrUI = JE.jellyseerrUI || {};
-    JE.internals = JE.internals || {};
-    // Shared state is seeded by ui-icons.js, which plugin.js loads first
-    // in this group.
-    const internal = JE.internals.jellyseerrUi;
-    const escapeHtml = JE.escapeHtml;
-    const DisplayStatus = JE.seerrStatus.DISPLAY;
-    const logPrefix = '🪼 Jellyfin Enhanced: Seerr UI:';
+  // client/src/features/seerr/core/decode.ts
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
+  var isString = (value) => typeof value === "string";
+  var isSafeTmdbImagePath = (path) => typeof path === "string" && /^\/[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|avif)$/i.test(path);
+  var isBoolean = (value) => typeof value === "boolean";
+  var optional = (check) => (value) => value === void 0 || check(value);
+  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
+  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
+  var either = (...checks) => (value) => checks.some((check) => check(value));
+  function matches(value, checks) {
+    if (!isRecord(value)) return false;
+    const table = checks;
+    for (const [key, check] of Object.entries(table)) {
+      if (!check(value[key])) return false;
+    }
+    return true;
+  }
+  var seasonStatusChecks = {
+    seasonNumber: optional(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber)
+  };
+  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
+  var downloadChecks = {
+    title: nullable(isString),
+    status: nullable(isString),
+    size: nullable(isNumber),
+    sizeLeft: nullable(isNumber),
+    estimatedCompletionTime: nullable(isString),
+    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
+  };
+  var isDownload = (value) => matches(value, downloadChecks);
+  var requestSummaryChecks = {
+    is4k: nullable(isBoolean),
+    seasons: nullable(listOf((value) => matches(value, {
+      seasonNumber: optional(isNumber),
+      status: nullable(isNumber)
+    })))
+  };
+  var mediaInfoChecks = {
+    id: nullable(isNumber),
+    tvdbId: nullable(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber),
+    jellyfinMediaId: nullable(isString),
+    jellyfinMediaId4k: nullable(isString),
+    seasons: nullable(listOf(isSeasonStatus)),
+    downloadStatus: nullable(listOf(isDownload)),
+    downloadStatus4k: nullable(listOf(isDownload)),
+    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
+  };
+  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
+  var collectionChecks = {
+    id: nullable(isNumber),
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var isCollectionRef = (value) => matches(value, collectionChecks);
+  var mediaItemChecks = {
+    id: isNumber,
+    mediaType: isString,
+    title: nullable(isString),
+    name: nullable(isString),
+    originalTitle: nullable(isString),
+    originalName: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString),
+    overview: nullable(isString),
+    voteAverage: nullable(isNumber),
+    releaseDate: nullable(isString),
+    firstAirDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo),
+    collection: nullable(isCollectionRef)
+  };
+  var userStatusChecks = {
+    active: isBoolean,
+    userFound: isBoolean,
+    reason: optional(isString),
+    message: optional(isString),
+    jellyseerrUserId: optional(either(isString, isNumber)),
+    canRequestAdvanced: optional(isBoolean)
+  };
+  var quotaSideChecks = {
+    limit: nullable(isNumber),
+    used: nullable(isNumber),
+    remaining: nullable(isNumber),
+    days: nullable(isNumber),
+    restricted: nullable(isBoolean),
+    nextResetAt: nullable(isString)
+  };
+  var quotaChecks = {
+    movie: nullable((value) => matches(value, quotaSideChecks)),
+    tv: nullable((value) => matches(value, quotaSideChecks))
+  };
+  var overrideRuleChecks = {
+    id: nullable(either(isNumber, isString)),
+    radarrServiceId: nullable(isNumber),
+    sonarrServiceId: nullable(isNumber),
+    language: nullable(isString),
+    genre: nullable(isString),
+    keywords: nullable(isString),
+    users: nullable(isString),
+    profileId: nullable(isNumber),
+    rootFolder: nullable(isString),
+    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
+  };
+  var profileChecks = { id: isNumber, name: nullable(isString) };
+  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
+  var serviceChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    isDefault: nullable(isBoolean),
+    is4k: nullable(isBoolean),
+    activeProfileId: nullable(isNumber),
+    activeDirectory: nullable(isString)
+  };
+  var candidateChecks = {
+    tvdbId: isNumber,
+    title: nullable(isString),
+    year: nullable(either(isNumber, isString)),
+    overview: nullable(isString),
+    remotePoster: nullable(isString)
+  };
+  var movieCollectionChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var issueChecks = {
+    id: nullable(isNumber),
+    media: nullable((value) => matches(value, {
+      tmdbId: nullable(either(isNumber, isString)),
+      mediaType: nullable(isString)
+    }))
+  };
+  var tvSeasonChecks = {
+    seasonNumber: isNumber,
+    name: nullable(isString),
+    episodeCount: nullable(isNumber),
+    airDate: nullable(isString),
+    jeYear: nullable(isString)
+  };
+  var collectionPartChecks = {
+    id: isNumber,
+    title: nullable(isString),
+    posterPath: nullable(isString),
+    releaseDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo)
+  };
 
-    /**
-     * True for a TMDB image path safe to append to an image.tmdb.org URL (and to
-     * interpolate into a CSS url()): a leading-slash file name of a known image
-     * type, as TMDB always returns (e.g. "/abc.jpg").
-     * @param {*} p
-     * @returns {boolean}
-     */
-    const isSafeTmdbImagePath = (p) => typeof p === 'string'
-        && /^\/[A-Za-z0-9_\-\.]+\.(jpg|jpeg|png|webp|avif)$/i.test(p);
+  // client/src/features/seerr/core/status.ts
+  var MEDIA = Object.freeze({
+    UNKNOWN: 1,
+    PENDING: 2,
+    PROCESSING: 3,
+    PARTIALLY_AVAILABLE: 4,
+    AVAILABLE: 5,
+    BLOCKED: 6,
+    DELETED: 7
+  });
+  var REQUEST = Object.freeze({
+    PENDING: 1,
+    APPROVED: 2,
+    DECLINED: 3,
+    FAILED: 4,
+    COMPLETED: 5
+  });
+  var DISPLAY = Object.freeze({
+    AVAILABLE: "available",
+    AVAILABLE_UPDATING: "available-updating",
+    PENDING: "pending",
+    PROCESSING: "processing",
+    REQUESTED: "requested",
+    PARTIAL: "partial",
+    BLOCKED: "blocked",
+    DELETED: "deleted",
+    NONE: "none"
+  });
+  function resolveDisplayStatus(status, hasActiveDownloads = false) {
+    switch (status) {
+      case MEDIA.AVAILABLE:
+        return hasActiveDownloads ? DISPLAY.AVAILABLE_UPDATING : DISPLAY.AVAILABLE;
+      case MEDIA.PENDING:
+        return DISPLAY.PENDING;
+      case MEDIA.PROCESSING:
+        return hasActiveDownloads ? DISPLAY.PROCESSING : DISPLAY.REQUESTED;
+      case MEDIA.PARTIALLY_AVAILABLE:
+        return DISPLAY.PARTIAL;
+      case MEDIA.BLOCKED:
+        return DISPLAY.BLOCKED;
+      case MEDIA.DELETED:
+        return DISPLAY.DELETED;
+      default:
+        return DISPLAY.NONE;
+    }
+  }
+  var AVAILABLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>`;
+  var BADGE_ICONS = {
+    [DISPLAY.AVAILABLE]: AVAILABLE_ICON,
+    [DISPLAY.AVAILABLE_UPDATING]: AVAILABLE_ICON,
+    [DISPLAY.PENDING]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0113.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 01-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 11-7.48 0 24.585 24.585 0 01-4.831-1.244.75.75 0 01-.298-1.205A8.217 8.217 0 005.25 9.75V9zm4.502 8.9a2.25 2.25 0 104.496 0 25.057 25.057 0 01-4.496 0z" clip-rule="evenodd" /></svg>`,
+    [DISPLAY.PROCESSING]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>`,
+    [DISPLAY.REQUESTED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd"></path></svg>`,
+    [DISPLAY.PARTIAL]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clip-rule="evenodd" /></svg>`,
+    [DISPLAY.BLOCKED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>`,
+    [DISPLAY.DELETED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" /></svg>`
+  };
+  var BADGE_CSS = {
+    [DISPLAY.AVAILABLE]: "status-available",
+    [DISPLAY.AVAILABLE_UPDATING]: "status-available",
+    [DISPLAY.PENDING]: "status-pending",
+    [DISPLAY.PROCESSING]: "status-processing",
+    [DISPLAY.REQUESTED]: "status-requested",
+    [DISPLAY.PARTIAL]: "status-partially-available",
+    [DISPLAY.BLOCKED]: "status-blocklisted",
+    [DISPLAY.DELETED]: "status-deleted"
+  };
+  function getBadgeConfig(displayStatus) {
+    const icon = BADGE_ICONS[displayStatus];
+    const cssClass = BADGE_CSS[displayStatus];
+    if (!icon || !cssClass) return null;
+    return { icon, cssClass };
+  }
 
-    // Parsed copies of the status badge icons (SVG markup from
-    // JE.seerrStatus), cloned per card instead of re-parsing the same markup
-    // for every card in a batch.
-    const badgeIconTemplates = new Map();
+  // client/src/features/seerr/core/display.ts
+  function analyzeSeasonStatuses(seasons, t) {
+    if (!Array.isArray(seasons) || seasons.length === 0) return { overallStatus: MEDIA.UNKNOWN, statusSummary: null, total: 0 };
+    const entries = seasons.filter(isRecord);
+    const regular = entries.filter((s) => isNumber(s.seasonNumber) && s.seasonNumber > 0);
+    const total = regular.length;
+    if (total === 0) return { overallStatus: MEDIA.UNKNOWN, statusSummary: null, total: 0 };
+    const count = (status) => regular.filter((s) => s.status === status).length;
+    const available = count(MEDIA.AVAILABLE);
+    const pending = count(MEDIA.PENDING);
+    const processing = count(MEDIA.PROCESSING);
+    const partiallyAvailable = count(MEDIA.PARTIALLY_AVAILABLE);
+    const notRequested = count(MEDIA.UNKNOWN);
+    const requestedCount = pending + processing;
+    const availableCount = available + partiallyAvailable;
+    const accountedForCount = requestedCount + availableCount;
+    let overallStatus;
+    let statusSummary = null;
+    if (notRequested === 0) {
+      overallStatus = availableCount === total ? MEDIA.AVAILABLE : MEDIA.DELETED;
+      if (overallStatus === MEDIA.DELETED) statusSummary = t("jellyseerr_seasons_accounted_for", { count: accountedForCount, total });
+    } else if (accountedForCount > 0) {
+      overallStatus = availableCount > 0 ? MEDIA.PARTIALLY_AVAILABLE : MEDIA.PROCESSING;
+      statusSummary = availableCount > 0 ? t("jellyseerr_seasons_available_count", { count: availableCount, total }) : t("jellyseerr_seasons_requested_count", { count: requestedCount, total });
+    } else {
+      overallStatus = MEDIA.UNKNOWN;
+    }
+    if (overallStatus === MEDIA.AVAILABLE) {
+      const specials = entries.find((s) => s.seasonNumber === 0);
+      if (specials && specials.status === MEDIA.UNKNOWN) {
+        overallStatus = MEDIA.DELETED;
+        statusSummary = t("jellyseerr_seasons_accounted_for", { count: accountedForCount, total });
+      }
+    }
+    return { overallStatus, statusSummary, total, availableCount };
+  }
+  function hasDownloads(item) {
+    return (item.mediaInfo?.downloadStatus?.length ?? 0) > 0 || (item.mediaInfo?.downloadStatus4k?.length ?? 0) > 0;
+  }
 
-    /**
-     * Fills a status badge with a copy of an icon's markup.
-     * @param {HTMLElement} badge - The badge element (empty).
-     * @param {string} iconHtml - The icon markup.
-     */
+  // client/src/features/seerr/core/runtime.ts
+  var LOG_UI = "🪼 Jellyfin Enhanced: Seerr UI:";
+  function groupInternals(JE) {
+    const internals = JE.internals || (JE.internals = {});
+    return internals.jellyseerrUi || (internals.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
+  }
+  function firstInstall(JE, name) {
+    const internals = groupInternals(JE);
+    const installed = internals.installed || (internals.installed = /* @__PURE__ */ new Set());
+    if (installed.has(name)) return false;
+    installed.add(name);
+    return true;
+  }
+  var ENTITIES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+  function escapeWith(JE) {
+    return (value) => {
+      const escape = JE.escapeHtml;
+      if (typeof escape === "function") return escape(value);
+      return String(value ?? "").replace(/[&<>"']/g, (c) => ENTITIES[c] ?? c);
+    };
+  }
+  function thrownProperty(error, key) {
+    if (typeof error !== "object" || error === null) return void 0;
+    const value = Reflect.get(error, key);
+    return value;
+  }
+  function isAbortError(error) {
+    return thrownProperty(error, "name") === "AbortError";
+  }
+
+  // client/src/features/seerr/core/ui/badges.ts
+  function sanitizeProviders(list) {
+    if (!Array.isArray(list)) return null;
+    const providers = [];
+    for (const entry of list) {
+      if (isRecord(entry) && isString(entry.provider_name) && isSafeTmdbImagePath(entry.logo_path)) {
+        providers.push({ ...entry, provider_name: entry.provider_name, logo_path: entry.logo_path });
+      }
+    }
+    return providers;
+  }
+  var configList = (value) => value ? String(value).replace(/'/g, "").replace(/\n/g, ",").split(",").map((s) => s.trim()).filter(Boolean) : [];
+  var PROVIDER_BATCH_DELAY_MS = 50;
+  var PROVIDER_BATCH_MAX = 100;
+  function installBadges(host) {
+    const { JE, document: document2, window: window2 } = host;
+    if (!firstInstall(JE, "ui-badges")) return;
+    const internals = groupInternals(JE);
+    const escapeHtml = escapeWith(JE);
+    const badgeIconTemplates = /* @__PURE__ */ new Map();
     function appendBadgeIcon(badge, iconHtml) {
-        let template = badgeIconTemplates.get(iconHtml);
-        if (!template) {
-            template = document.createElement('template');
-            template.innerHTML = iconHtml;
-            badgeIconTemplates.set(iconHtml, template);
-        }
-        badge.appendChild(document.importNode(template.content, true));
+      let template = badgeIconTemplates.get(iconHtml);
+      if (!template) {
+        template = document2.createElement("template");
+        template.innerHTML = iconHtml;
+        badgeIconTemplates.set(iconHtml, template);
+      }
+      badge.appendChild(document2.importNode(template.content, true));
     }
-
-    /**
-     * Sets the status badge icon based on the item's media status.
-     * @param {HTMLElement} card - The card element.
-     * @param {Object} item - The search result item.
-     * @param {Object|null} [seasonAnalysis] - analyzeSeasonStatuses() of the
-     *   item's seasons when the caller already has it (TV items with a seasons
-     *   array); computed here otherwise.
-     */
     function setStatusBadge(card, item, seasonAnalysis) {
-        const badge = card.querySelector('.jellyseerr-status-badge');
-        if (!badge || !item.mediaInfo) {
-            if (badge) badge.style.display = 'none';
-            return;
-        }
-
-        // Determine status based on media type
-        let status;
-        if (item.mediaType === 'tv' && item.mediaInfo.seasons) {
-            const analysis = seasonAnalysis || internal.analyzeSeasonStatuses(item.mediaInfo.seasons);
-            status = analysis ? analysis.overallStatus : item.mediaInfo.status;
-        } else {
-            status = item.mediaInfo.status || 1;
-        }
-
-        const hasDownloads = (item.mediaInfo?.downloadStatus?.length > 0 || item.mediaInfo?.downloadStatus4k?.length > 0);
-        const displayStatus = JE.seerrStatus.resolveDisplayStatus(status, hasDownloads);
-        const badgeConfig = JE.seerrStatus.getBadgeConfig(displayStatus);
-
-        if (!badgeConfig) {
-            badge.style.display = 'none';
-            return;
-        }
-
-        if (typeof badgeConfig.icon === 'string' && !badge.firstChild) {
-            appendBadgeIcon(badge, badgeConfig.icon);
-        } else {
-            badge.innerHTML = badgeConfig.icon;
-        }
-        badge.className = `jellyseerr-status-badge ${badgeConfig.cssClass}`;
-        badge.style.display = 'flex';
-
-        if (displayStatus === DisplayStatus.PARTIAL && item.mediaType === 'tv' && hasDownloads) {
-            badge.style.cursor = 'pointer';
-            internal.addDownloadProgressHover(badge, item);
-        }
+      const badge = card.querySelector(".jellyseerr-status-badge");
+      const info = item.mediaInfo;
+      if (!badge || !info) {
+        if (badge) badge.style.display = "none";
+        return;
+      }
+      let status;
+      if (item.mediaType === "tv" && info.seasons) {
+        const analysis = seasonAnalysis || analyzeSeasonStatuses(info.seasons, JE.t);
+        status = analysis ? analysis.overallStatus : info.status;
+      } else {
+        status = info.status || 1;
+      }
+      const downloads = hasDownloads(item);
+      const displayStatus = resolveDisplayStatus(status, downloads);
+      const config = getBadgeConfig(displayStatus);
+      if (!config) {
+        badge.style.display = "none";
+        return;
+      }
+      if (!badge.firstChild) appendBadgeIcon(badge, config.icon);
+      else badge.innerHTML = config.icon;
+      badge.className = `jellyseerr-status-badge ${config.cssClass}`;
+      badge.style.display = "flex";
+      if (displayStatus === DISPLAY.PARTIAL && item.mediaType === "tv" && downloads) {
+        badge.style.cursor = "pointer";
+        internals.addDownloadProgressHover?.(badge, item);
+      }
     }
-
-    // ---- Batched watch-provider lookups ---------------------------------------
-    // Cards used to call /tmdb/{type}/{id}/watch/providers one by one, and each
-    // response carried every region's providers (~5-20 KB). Lookups that fire
-    // close together (a screenful of cards becoming visible) are instead queued
-    // for PROVIDER_BATCH_DELAY_MS and sent as one /watch-providers request that
-    // returns only the region's flat-rate list per title. Each title's list is
-    // kept in the core API cache (providers:{region}:{type}:{id}), so re-renders
-    // don't refetch. Every card waits on its own AbortSignal: a released card
-    // just stops waiting, and a batch request is aborted only once no card is
-    // waiting on any of its titles.
-    const PROVIDER_BATCH_DELAY_MS = 50;
-    const PROVIDER_BATCH_MAX = 100; // server limit per request
-    // "{region}:{type}:{id}" -> { lookupKey, region, key, cacheKey, waiters, batch }
-    const providerLookups = new Map();
+    const providerLookups = /* @__PURE__ */ new Map();
     let queuedLookups = [];
     let providerFlushTimer = null;
-
-    /**
-     * The admin's DEFAULT_REGION as a two-letter upper-case code (or 'US').
-     * @returns {string}
-     */
-    function providerRegion() {
-        const region = String(JE.pluginConfig?.DEFAULT_REGION || 'US').trim().toUpperCase();
-        return /^[A-Z]{2}$/.test(region) ? region : 'US';
-    }
-
-    /**
-     * @returns {Error} An AbortError, as fetch() would reject with.
-     */
-    function providerAbortError() {
-        const error = new Error('Request aborted');
-        error.name = 'AbortError';
-        return error;
-    }
-
-    /**
-     * Keeps only well-formed provider entries from a batch result.
-     * @param {*} list - One title's entry from the batch response.
-     * @returns {Array<Object>|null} The providers, or null when unavailable.
-     */
-    function sanitizeProviders(list) {
-        if (!Array.isArray(list)) return null;
-        return list.filter(p => p && typeof p.provider_name === 'string' && isSafeTmdbImagePath(p.logo_path));
-    }
-
-    /**
-     * Resolves or rejects every card still waiting on a lookup and forgets it.
-     * @param {Object} lookup
-     * @param {Function} settle - Called with each waiter.
-     */
+    const providerRegion = () => {
+      const region = String(JE.pluginConfig?.DEFAULT_REGION || "US").trim().toUpperCase();
+      return /^[A-Z]{2}$/.test(region) ? region : "US";
+    };
+    const abortError = () => {
+      const error = new Error("Request aborted");
+      error.name = "AbortError";
+      return error;
+    };
     function settleLookup(lookup, settle) {
-        if (providerLookups.get(lookup.lookupKey) === lookup) providerLookups.delete(lookup.lookupKey);
-        for (const waiter of [...lookup.waiters]) {
-            lookup.waiters.delete(waiter);
-            waiter.detach();
-            settle(waiter);
-        }
+      if (providerLookups.get(lookup.lookupKey) === lookup) providerLookups.delete(lookup.lookupKey);
+      for (const waiter of [...lookup.waiters]) {
+        lookup.waiters.delete(waiter);
+        waiter.detach();
+        settle(waiter);
+      }
     }
-
-    /**
-     * Called when a card stops waiting: drops a queued lookup nobody wants, and
-     * aborts a batch request once none of its titles has a waiting card.
-     * @param {Object} lookup
-     */
     function releaseLookup(lookup) {
-        if (lookup.waiters.size > 0) return;
-        const batch = lookup.batch;
-        if (!batch) {
-            providerLookups.delete(lookup.lookupKey);
-            queuedLookups = queuedLookups.filter(l => l !== lookup);
-            return;
-        }
-        if (batch.lookups.some(l => l.waiters.size > 0)) return;
-        batch.lookups.forEach(l => {
-            if (providerLookups.get(l.lookupKey) === l) providerLookups.delete(l.lookupKey);
-        });
-        batch.controller.abort();
+      if (lookup.waiters.size > 0) return;
+      const batch = lookup.batch;
+      if (!batch) {
+        providerLookups.delete(lookup.lookupKey);
+        queuedLookups = queuedLookups.filter((l) => l !== lookup);
+        return;
+      }
+      if (batch.lookups.some((l) => l.waiters.size > 0)) return;
+      for (const l of batch.lookups) if (providerLookups.get(l.lookupKey) === l) providerLookups.delete(l.lookupKey);
+      batch.controller.abort();
     }
-
-    /**
-     * Sends queued lookups (one region, at most PROVIDER_BATCH_MAX titles) as
-     * one request and fans the per-title results out to the waiting cards.
-     */
     function flushProviderBatch() {
-        clearTimeout(providerFlushTimer);
-        providerFlushTimer = null;
-        if (queuedLookups.length === 0) return;
-        const region = queuedLookups[0].region;
-        const lookups = [];
-        const rest = [];
-        for (const lookup of queuedLookups) {
-            (lookup.region === region && lookups.length < PROVIDER_BATCH_MAX ? lookups : rest).push(lookup);
+      if (providerFlushTimer !== null) window2.clearTimeout(providerFlushTimer);
+      providerFlushTimer = null;
+      const first = queuedLookups[0];
+      if (!first) return;
+      const region = first.region;
+      const lookups = [];
+      const rest = [];
+      for (const lookup of queuedLookups) (lookup.region === region && lookups.length < PROVIDER_BATCH_MAX ? lookups : rest).push(lookup);
+      queuedLookups = rest;
+      if (rest.length > 0) providerFlushTimer = window2.setTimeout(flushProviderBatch, PROVIDER_BATCH_DELAY_MS);
+      const batch = { controller: new AbortController(), lookups };
+      for (const lookup of lookups) lookup.batch = batch;
+      const epoch = JE.session?.getEpoch();
+      const items = lookups.map((l) => l.key).join(",");
+      const api = JE.core?.api;
+      const pending = api ? api.plugin(`/watch-providers?items=${items}&region=${region}`, { signal: batch.controller.signal, priority: "low" }) : Promise.reject(new Error("core API unavailable"));
+      pending.then((data) => {
+        const results = isRecord(data) && isRecord(data.results) ? data.results : {};
+        const cacheable = !JE.session || epoch === void 0 || JE.session.isCurrent(epoch);
+        for (const lookup of lookups) {
+          const providers = sanitizeProviders(results[lookup.key]);
+          if (providers && cacheable) {
+            try {
+              JE.core?.api?.manager?.setCache?.(lookup.cacheKey, providers);
+            } catch (error) {
+              console.debug(`${LOG_UI} Provider cache write skipped:`, error);
+            }
+          }
+          settleLookup(lookup, (waiter) => waiter.resolve(providers));
         }
-        queuedLookups = rest;
-        if (rest.length > 0) providerFlushTimer = setTimeout(flushProviderBatch, PROVIDER_BATCH_DELAY_MS);
-
-        const batch = { controller: new AbortController(), lookups };
-        lookups.forEach(l => { l.batch = batch; });
-        // Identity epoch at request start: a response that lands after a user
-        // switch is still handed to the cards that asked, but not cached.
-        const epoch = JE.session?.getEpoch?.();
-        const items = lookups.map(l => l.key).join(',');
-        JE.core.api.plugin(`/watch-providers?items=${items}&region=${region}`, { signal: batch.controller.signal, priority: 'low' })
-            .then((data) => {
-                const results = (data && typeof data.results === 'object' && data.results) || {};
-                const cacheable = !JE.session?.isCurrent || JE.session.isCurrent(epoch);
-                for (const lookup of lookups) {
-                    const providers = sanitizeProviders(results[lookup.key]);
-                    if (providers && cacheable) JE.core.api.manager?.setCache?.(lookup.cacheKey, providers);
-                    settleLookup(lookup, w => w.resolve(providers));
-                }
-            }, (error) => {
-                // Aborted because every card left: nobody is waiting, nothing to report.
-                if (batch.controller.signal.aborted) return;
-                // Dropped by the transport (user switch, low-priority queue full):
-                // expected, so no warning; the waiting cards just stay without icons.
-                // Anything else is a failure, logged once per batch.
-                if (error?.name !== 'AbortError') {
-                    console.warn(`${logPrefix} Could not fetch provider icons for ${lookups.length} title(s):`, error);
-                }
-                lookups.forEach(lookup => settleLookup(lookup, w => w.resolve(null)));
-            });
+      }, (error) => {
+        if (batch.controller.signal.aborted) return;
+        if (!isAbortError(error)) console.warn(`${LOG_UI} Could not fetch provider icons for ${lookups.length} title(s):`, error);
+        for (const lookup of lookups) settleLookup(lookup, (waiter) => waiter.resolve(null));
+      });
     }
-
-    /**
-     * One title's flat-rate providers for the admin's region, from the client
-     * cache or the next batch request.
-     * @param {string} mediaType - 'movie' or 'tv'
-     * @param {string|number} tmdbId
-     * @param {AbortSignal} [signal] - Stops this caller waiting (rejects with AbortError).
-     * @returns {Promise<Array<Object>|null>} Providers in TMDB order, or null when unavailable.
-     */
     function getFlatrateProviders(mediaType, tmdbId, signal) {
-        const region = providerRegion();
-        const key = `${mediaType}:${tmdbId}`;
-        const cacheKey = `providers:${region}:${key}`;
-        const cached = JE.core.api.manager?.getCached?.(cacheKey);
-        if (cached) return Promise.resolve(cached);
-        if (signal?.aborted) return Promise.reject(providerAbortError());
-
-        return new Promise((resolve, reject) => {
-            const lookupKey = `${region}:${key}`;
-            let lookup = providerLookups.get(lookupKey);
-            if (!lookup) {
-                lookup = { lookupKey, region, key, cacheKey, waiters: new Set(), batch: null };
-                providerLookups.set(lookupKey, lookup);
-                queuedLookups.push(lookup);
-                if (queuedLookups.length >= PROVIDER_BATCH_MAX) {
-                    flushProviderBatch();
-                } else if (!providerFlushTimer) {
-                    providerFlushTimer = setTimeout(flushProviderBatch, PROVIDER_BATCH_DELAY_MS);
-                }
-            }
-            const onAbort = () => {
-                lookup.waiters.delete(waiter);
-                reject(providerAbortError());
-                releaseLookup(lookup);
-            };
-            const waiter = {
-                resolve,
-                reject,
-                detach: () => { if (signal) signal.removeEventListener('abort', onAbort); }
-            };
-            lookup.waiters.add(waiter);
-            if (signal) signal.addEventListener('abort', onAbort, { once: true });
-        });
+      const region = providerRegion();
+      const key = `${mediaType}:${tmdbId}`;
+      const cacheKey = `providers:${region}:${key}`;
+      const cached = sanitizeProviders(JE.core?.api?.manager?.getCached?.(cacheKey));
+      if (cached) return Promise.resolve(cached);
+      if (signal?.aborted) return Promise.reject(abortError());
+      return new Promise((resolve, reject) => {
+        const lookupKey = `${region}:${key}`;
+        let lookup = providerLookups.get(lookupKey);
+        if (!lookup) {
+          lookup = { lookupKey, region, key, cacheKey, waiters: /* @__PURE__ */ new Set(), batch: null };
+          providerLookups.set(lookupKey, lookup);
+          queuedLookups.push(lookup);
+          if (queuedLookups.length >= PROVIDER_BATCH_MAX) flushProviderBatch();
+          else if (providerFlushTimer === null) providerFlushTimer = window2.setTimeout(flushProviderBatch, PROVIDER_BATCH_DELAY_MS);
+        }
+        const owner = lookup;
+        const onAbort = () => {
+          owner.waiters.delete(waiter);
+          reject(abortError());
+          releaseLookup(owner);
+        };
+        const waiter = { resolve, reject, detach: () => signal?.removeEventListener("abort", onAbort) };
+        owner.waiters.add(waiter);
+        signal?.addEventListener("abort", onAbort, { once: true });
+      });
     }
-
-    /**
-     * Shows or hides a card's provider-icon strip, and mirrors that on the
-     * card's image container (jellyseerr-has-provider-icons) so the collection
-     * badge can sit above the strip with a plain class rule instead of a
-     * page-wide :has() rule.
-     * @param {HTMLElement} container - The card's .jellyseerr-elsewhere-icons element
-     * @param {boolean} hasIcons
-     */
     function setHasIcons(container, hasIcons) {
-        container.classList.toggle('has-icons', hasIcons);
-        container.closest('.cardImageContainer')?.classList.toggle('jellyseerr-has-provider-icons', hasIcons);
+      container.classList.toggle("has-icons", hasIcons);
+      container.closest(".cardImageContainer")?.classList.toggle("jellyseerr-has-provider-icons", hasIcons);
     }
-
-    /**
-     * Fetches streaming provider icons from the TMDB API and adds them to a specified container element on a Seerr poster.
-     * This function is called only if the "Show Elsewhere on Seerr" setting is enabled and a TMDB API key is present.
-     * It retrieves the default region's flat-rate providers (batched across cards) and applies the filters configured in the Elsewhere plugin settings.
-     *
-     * @async
-     * @function fetchProviderIcons
-     * @param {HTMLElement} container - The DOM element where the provider icons will be appended.
-     * @param {string|number} tmdbId - The The Movie Database (TMDB) ID for the movie or TV show.
-     * @param {string} mediaType - The type of media, either 'movie' or 'tv'.
-     * @param {AbortSignal} [signal] - Cancels the lookup (e.g. when the card is torn down).
-     * @returns {Promise<void>} A promise that resolves when the icons have been fetched and added, or if the process fails.
-     */
     async function fetchProviderIcons(container, tmdbId, mediaType, signal) {
-        if (!container || !tmdbId || !mediaType) return;
-
-        // Early exit if TMDB is not configured - prevents slow/failing API calls
-        if (!JE.pluginConfig?.TmdbEnabled) {
-            return;
+      if (!container || !tmdbId || !mediaType) return;
+      const config = JE.pluginConfig;
+      if (!config?.TmdbEnabled) return;
+      const defaults = configList(config.DEFAULT_PROVIDERS);
+      const ignored = configList(config.IGNORE_PROVIDERS);
+      try {
+        let providers = await getFlatrateProviders(mediaType, tmdbId, signal);
+        if (signal && !container.isConnected) return;
+        if (!providers || providers.length === 0) return;
+        if (defaults.length > 0) providers = providers.filter((p) => defaults.includes(p.provider_name));
+        if (ignored.length > 0) {
+          try {
+            const patterns = ignored.map((pattern) => new RegExp(pattern, "i"));
+            providers = providers.filter((p) => !patterns.some((regex) => regex.test(p.provider_name)));
+          } catch (error) {
+            console.error(`${LOG_UI} Invalid regex in IGNORE_PROVIDERS setting.`, error);
+          }
         }
-
-        const DEFAULT_PROVIDERS = JE.pluginConfig.DEFAULT_PROVIDERS ? JE.pluginConfig.DEFAULT_PROVIDERS.replace(/'/g, '').replace(/\n/g, ',').split(',').map(s => s.trim()).filter(s => s) : [];
-        const IGNORE_PROVIDERS = JE.pluginConfig.IGNORE_PROVIDERS ? JE.pluginConfig.IGNORE_PROVIDERS.replace(/'/g, '').replace(/\n/g, ',').split(',').map(s => s.trim()).filter(s => s) : [];
-
-        try {
-            // Batched with other cards' lookups and cached per title (see
-            // getFlatrateProviders); a failed batch is logged there once and
-            // resolves to null here, so the card just stays without icons.
-            let providers = await getFlatrateProviders(mediaType, tmdbId, signal);
-            // A deferred (signalled) lookup only starts for an on-screen card, so a
-            // detached container means the card was torn down meanwhile. Unsignalled
-            // callers may fetch before the card is attached, so skip the check there.
-            if (signal && !container.isConnected) return;
-
-            if (providers && providers.length > 0) {
-
-                // 1. If a default provider list is set, only include providers from that list.
-                if (DEFAULT_PROVIDERS.length > 0) {
-                    providers = providers.filter(provider => DEFAULT_PROVIDERS.includes(provider.provider_name));
-                }
-
-                // 2. If an ignore list is set, exclude any providers that match.
-                if (IGNORE_PROVIDERS.length > 0) {
-                    try {
-                        const ignorePatterns = IGNORE_PROVIDERS.map(pattern => new RegExp(pattern, 'i'));
-                        providers = providers.filter(provider =>
-                            !ignorePatterns.some(regex => regex.test(provider.provider_name))
-                        );
-                    } catch (e) {
-                        console.error(`${logPrefix} Invalid regex in IGNORE_PROVIDERS setting.`, e);
-                    }
-                }
-
-                // Only build image URLs from well-formed logo paths.
-                providers = providers.filter(provider => isSafeTmdbImagePath(provider.logo_path));
-
-                if (providers.length > 0) {
-                    providers.slice(0, 4).forEach(provider => { // Limit to max 4 icons to avoid clutter
-                        const img = document.createElement('img');
-                        // Decorative, low-priority logos: never compete with posters.
-                        // width/height give the (square) w92 logo's aspect ratio so
-                        // space is reserved before it loads; CSS sets the rendered size.
-                        img.loading = 'lazy';
-                        img.decoding = 'async';
-                        if ('fetchPriority' in img) img.fetchPriority = 'low';
-                        img.width = 92;
-                        img.height = 92;
-                        img.alt = provider.provider_name || '';
-                        img.src = `https://image.tmdb.org/t/p/w92${provider.logo_path}`;
-                        img.title = provider.provider_name;
-                        // Drop logos that fail to load; hide the strip if none remain.
-                        img.onerror = () => {
-                            img.remove();
-                            if (container.childElementCount === 0) setHasIcons(container, false);
-                        };
-                        container.appendChild(img);
-                    });
-
-                    if (container.childElementCount > 0) {
-                        setHasIcons(container, true);
-                    }
-                }
-            }
-        } catch (error) {
-            // Cancelled by the caller (card released) or dropped from the queue on a
-            // user switch: expected, not a failure.
-            if ((signal && signal.aborted) || error?.name === 'AbortError') return;
-            console.warn(`${logPrefix} Could not fetch provider icons for TMDB ID ${tmdbId}:`, error);
+        providers = providers.filter((p) => isSafeTmdbImagePath(p.logo_path));
+        for (const provider of providers.slice(0, 4)) {
+          const img = document2.createElement("img");
+          img.loading = "lazy";
+          img.decoding = "async";
+          if ("fetchPriority" in img) img.fetchPriority = "low";
+          img.width = 92;
+          img.height = 92;
+          img.alt = provider.provider_name || "";
+          img.src = `https://image.tmdb.org/t/p/w92${provider.logo_path}`;
+          img.title = provider.provider_name;
+          img.onerror = () => {
+            img.remove();
+            if (container.childElementCount === 0) setHasIcons(container, false);
+          };
+          container.appendChild(img);
         }
+        if (container.childElementCount > 0) setHasIcons(container, true);
+      } catch (error) {
+        if (signal?.aborted || isAbortError(error)) return;
+        console.warn(`${LOG_UI} Could not fetch provider icons for TMDB ID ${tmdbId}:`, error);
+      }
     }
-
-    /**
-     * Adds media type badge to card.
-     * @param {HTMLElement} card - Card element.
-     * @param {Object} item - Media item data.
-     * @param {HTMLElement} [imageContainer] - The card's .cardImageContainer, when the caller has it.
-     * @param {string} [label] - The badge text, when the caller has already translated it.
-     */
     function addMediaTypeBadge(card, item, imageContainer, label) {
-        if (item.mediaType === 'movie' || item.mediaType === 'tv' || item.mediaType === 'collection') {
-            const container = imageContainer || card.querySelector('.cardImageContainer');
-            if (container) {
-                const badge = document.createElement('div');
-                if (item.mediaType === 'movie') {
-                    badge.className = 'jellyseerr-media-badge jellyseerr-media-badge-movie';
-                    badge.textContent = label ?? JE.t('jellyseerr_card_badge_movie');
-                } else if (item.mediaType === 'tv') {
-                    badge.className = 'jellyseerr-media-badge jellyseerr-media-badge-series';
-                    badge.textContent = label ?? JE.t('jellyseerr_card_badge_series');
-                } else {
-                    badge.className = 'jellyseerr-media-badge jellyseerr-media-badge-collection';
-                    badge.textContent = label ?? JE.t('jellyseerr_card_badge_collection');
-                }
-                container.appendChild(badge);
-            }
-        }
+      if (item.mediaType !== "movie" && item.mediaType !== "tv" && item.mediaType !== "collection") return;
+      const container = imageContainer || card.querySelector(".cardImageContainer");
+      if (!container) return;
+      const badge = document2.createElement("div");
+      if (item.mediaType === "movie") {
+        badge.className = "jellyseerr-media-badge jellyseerr-media-badge-movie";
+        badge.textContent = label ?? JE.t("jellyseerr_card_badge_movie");
+      } else if (item.mediaType === "tv") {
+        badge.className = "jellyseerr-media-badge jellyseerr-media-badge-series";
+        badge.textContent = label ?? JE.t("jellyseerr_card_badge_series");
+      } else {
+        badge.className = "jellyseerr-media-badge jellyseerr-media-badge-collection";
+        badge.textContent = label ?? JE.t("jellyseerr_card_badge_collection");
+      }
+      container.appendChild(badge);
     }
-
-    /**
-     * Adds a small badge indicating the movie belongs to a collection. Clicking
-     * it opens the collection request modal; that click is handled by the
-     * card's delegated listeners (ui-cards.js), not by the badge itself.
-     * @param {HTMLElement} card - Card element.
-     * @param {Object} item - Media item data.
-     * @param {HTMLElement} [imageContainer] - The card's .cardImageContainer, when the caller has it.
-     */
     function addCollectionMembershipBadge(card, item, imageContainer) {
-        if (!item.collection || item.mediaType !== 'movie') return;
-        const container = imageContainer || card.querySelector('.cardImageContainer');
-        if (!container) return;
-        const badge = document.createElement('div');
-        badge.className = 'jellyseerr-collection-badge';
-        badge.innerHTML = `<span class="material-icons">collections</span><span>${escapeHtml(item.collection.name) || JE.t('jellyseerr_card_badge_collection')}</span>`; // collection name escaped
-        badge.title = `Part of ${item.collection.name || 'collection'}`;
-        container.appendChild(badge);
+      if (!item.collection || item.mediaType !== "movie") return;
+      const container = imageContainer || card.querySelector(".cardImageContainer");
+      if (!container) return;
+      const badge = document2.createElement("div");
+      badge.className = "jellyseerr-collection-badge";
+      badge.innerHTML = `<span class="material-icons">collections</span><span>${escapeHtml(item.collection.name ?? "") || JE.t("jellyseerr_card_badge_collection")}</span>`;
+      badge.title = `Part of ${item.collection.name || "collection"}`;
+      container.appendChild(badge);
     }
-    internal.setStatusBadge = setStatusBadge;
-    internal.fetchProviderIcons = fetchProviderIcons;
-    internal.isSafeTmdbImagePath = isSafeTmdbImagePath;
-    internal.addMediaTypeBadge = addMediaTypeBadge;
-    internal.addCollectionMembershipBadge = addCollectionMembershipBadge;
+    internals.setStatusBadge = setStatusBadge;
+    internals.fetchProviderIcons = fetchProviderIcons;
+    internals.isSafeTmdbImagePath = isSafeTmdbImagePath;
+    internals.addMediaTypeBadge = addMediaTypeBadge;
+    internals.addCollectionMembershipBadge = addCollectionMembershipBadge;
+  }
 
-})(window.JellyfinEnhanced);
+  // client/src/features/seerr/core/ui/badges-entry.ts
+  installBadges(seerrCoreHost());
+})();
+})();
+//# sourceMappingURL=ui-badges.js.map

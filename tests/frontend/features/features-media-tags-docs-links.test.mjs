@@ -10,8 +10,9 @@ const slug = heading => heading.toLowerCase().replace(/[^\w\s-]/g, '').trim().re
 const anchors = new Set(read('docs/enhanced/tags.md').split('\n').filter(line => /^#{1,6} /.test(line)).map(line => slug(line.replace(/^#+ /, ''))));
 
 for (const [file, tabsSource] of [
-  ['Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js', /function tabsFor\(\) \{([\s\S]*?)\n {4}\}/],
-  ['Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js', /const TABS = \[([\s\S]*?)\];/],
+  // The hub is TypeScript now: its tab list is read from the source, not the generated bundle.
+  ['client/src/features/settings-panel/ui-panel-media-tags.ts', /function tabsFor\(\) \{([\s\S]*?)\n {4}\}/],
+  ['client/src/features/admin-tags/admin-tags.ts', /const TABS: readonly TabDef\[\] = \[([\s\S]*?)\];/],
 ]) {
   test(`every Media Tags tab in ${file.split('/').pop()} links to an existing user-guide heading`, () => {
     const source = read(file);

@@ -1,16 +1,22 @@
-/**
- * @file Catch Up styles. Everything sits under .je-catchup or the .je-catchup-modal overlay, so
- * nothing leaks into Jellyfin or other plugins. Flat surfaces, the theme accent and Jellyfin's
- * Material icons, like the Activity and Hidden Content pages.
- */
-(function () {
-  'use strict';
+(() => {
+"use strict";
+(() => {
+  // client/src/host/catchup-host.ts
+  function catchupHost() {
+    const host = window;
+    return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };
+  }
 
-  const JE = window.JellyfinEnhanced;
-  if (!JE?.pluginConfig?.CatchUpEnabled) return;
-  const internal = JE.internals.catchUp;
-
-  const CSS = `
+  // client/src/features/catchup/catchup-styles.ts
+  (function() {
+    "use strict";
+    const { JE: candidate } = catchupHost();
+    if (!candidate) return;
+    const JE = candidate;
+    if (!JE?.pluginConfig?.CatchUpEnabled) return;
+    const internal = JE.internals.catchUp;
+    if (!internal) return;
+    const CSS = `
 .je-catchup { --sw-accent:var(--je-catchup-accent,#00a4dc); --sw-text:#fff; --sw-panel-bg:linear-gradient(var(--je-catchup-panel,#202020),var(--je-catchup-panel,#202020)) #181818;
   --sw-surface:var(--je-catchup-secondary,rgba(255,255,255,0.05)); --sw-surface-hover:color-mix(in srgb,var(--sw-text) 10%,transparent);
   --sw-line:color-mix(in srgb,var(--sw-text) 12%,transparent); --sw-muted:color-mix(in srgb,var(--sw-text) 60%,transparent);
@@ -132,20 +138,24 @@
   .je-catchup-activity .arow { grid-template-columns:56px 1fr; }
   .je-catchup-activity .arow .u { grid-column:2; } .je-catchup-activity .arow .a { grid-column:1; grid-row:2; } .je-catchup-activity .arow .i { grid-column:2; grid-row:2; }
 }`;
-
-  /** Publishes the theme colors from the themer as CSS variables. */
-  function injectStyles() {
-    let t = {};
-    try { t = JE?.themer?.getThemeVariables?.() || {}; } catch (_) { /* fall back to CSS defaults */ }
-    const root = document.documentElement.style;
-    [['accent', t.primaryAccent], ['panel', t.panelBg], ['secondary', t.secondaryBg]]
-      .forEach(([k, v]) => { if (v && !/gradient/i.test(v)) root.setProperty(`--je-catchup-${k}`, v); });
-    if (document.getElementById('je-catchup-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'je-catchup-styles';
-    style.textContent = CSS;
-    document.head.appendChild(style);
-  }
-
-  internal.injectStyles = injectStyles;
+    function injectStyles() {
+      let t = {};
+      try {
+        t = JE?.themer?.getThemeVariables?.() || {};
+      } catch (_) {
+      }
+      const root = document.documentElement.style;
+      [["accent", t.primaryAccent], ["panel", t.panelBg], ["secondary", t.secondaryBg]].forEach(([k, v]) => {
+        if (v && !/gradient/i.test(v)) root.setProperty(`--je-catchup-${k}`, v);
+      });
+      if (document.getElementById("je-catchup-styles")) return;
+      const style = document.createElement("style");
+      style.id = "je-catchup-styles";
+      style.textContent = CSS;
+      document.head.appendChild(style);
+    }
+    internal.injectStyles = injectStyles;
+  })();
 })();
+})();
+//# sourceMappingURL=catchup-styles.js.map

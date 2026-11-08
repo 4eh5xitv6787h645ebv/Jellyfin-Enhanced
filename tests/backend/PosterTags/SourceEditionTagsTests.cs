@@ -426,8 +426,7 @@ public class StructuredSourceFactsTests
     // Every input Jellyfin's ConditionProcessor can test against a device profile, mapped to the change of
     // one media fact it reads. A new ProfileConditionValue in a Jellyfin update fails the inventory check until
     // it is mapped here (and hashed by MediaRevision if it reads a new fact). The enum differs by target:
-    // VideoRotation exists only in Jellyfin 12's (10.11 has MediaStream.Rotation but no profile condition on it,
-    // so MediaRevision still hashing Rotation there only adds an input, never misses one).
+    // Jellyfin 12's VideoRotation profile condition is covered alongside the stream rotation input.
     private static readonly Dictionary<string, Action<MediaSourceInfo, MediaBrowser.Model.Entities.MediaStream, MediaBrowser.Model.Entities.MediaStream>> ConditionInputs = new()
     {
         ["AudioChannels"] = (_, _, a) => a.Channels = 8,
@@ -455,9 +454,7 @@ public class StructuredSourceFactsTests
         ["AudioBitDepth"] = (_, _, a) => a.BitDepth = 24,
         ["VideoRangeType"] = (_, v, _) => { v.ColorTransfer = "smpte2084"; v.ColorPrimaries = "bt2020"; },
         ["NumStreams"] = (s, _, _) => s.MediaStreams = [.. s.MediaStreams, new MediaBrowser.Model.Entities.MediaStream { Index = 2, Type = MediaBrowser.Model.Entities.MediaStreamType.Subtitle, Codec = "srt" }],
-#if JF12
         ["VideoRotation"] = (_, v, _) => v.Rotation = 90,
-#endif
     };
 
     [Fact]

@@ -8,19 +8,20 @@ import { jsRoot } from '../helpers/harness.mjs';
 // user reads in their language. The administrator's configuration page (enhanced/admintags) is plain English like
 // the rest of that page, so it is not checked here.
 const files = [
-  ...readdirSync(`${jsRoot}/enhanced/settingspanel`).filter(f => /^ui-panel-(tag-|media-tags)/.test(f)).map(f => `enhanced/settingspanel/${f}`),
+  ...readdirSync(`${jsRoot}/enhanced/settingspanel`).filter(f => /^ui-panel-(tag-|media-tags).*\.js$/.test(f)).map(f => `enhanced/settingspanel/${f}`),
   'tags/tag-item-editor.js',
 ];
 // Where a literal reaches the page: text, tooltips, labels, placeholders, the editors' el(tag, class, text)
-// and table values such as { title: 'Quality' }.
+// and table values such as { title: 'Quality' }. The settings panel files are generated from TypeScript, which
+// writes double quotes: the fixed parts of the patterns accept either (their source maps are not code).
 const SINKS = [
   /\.(?:textContent|innerText|title|placeholder|alt)\s*=\s*(['"`])((?:\\.|(?!\1).)*?)\1/g,
-  /setAttribute\(\s*'(?:aria-label|title|placeholder|aria-description|alt)'\s*,\s*(['"`])((?:\\.|(?!\1).)*?)\1/g,
-  /\bel\(\s*'[a-z0-9]+'\s*,\s*[^,()]+,\s*(['"`])((?:\\.|(?!\1).)*?)\1/g,
+  /setAttribute\(\s*['"](?:aria-label|title|placeholder|aria-description|alt)['"]\s*,\s*(['"`])((?:\\.|(?!\1).)*?)\1/g,
+  /\bel\(\s*['"][a-z0-9]+['"]\s*,\s*[^,()]+,\s*(['"`])((?:\\.|(?!\1).)*?)\1/g,
   /createTextNode\(\s*(['"`])((?:\\.|(?!\1).)*?)\1/g,
   /\b(?:title|label|text|hint|note|description|placeholder)\s*:\s*(['"`])([A-Z][a-z]+(?: [^'"`]*)?)\1/g,
   // A section's sample chip that names its group ([['status', 'Awards']]).
-  /\[\s*'status'\s*,\s*(['"`])([A-Z][a-z][^'"`]*)\1\s*\]/g,
+  /\[\s*['"]status['"]\s*,\s*(['"`])([A-Z][a-z][^'"`]*)\1\s*\]/g,
 ];
 // Sample content, not interface text: fictional logo names and the English fallback of a flag's name.
 const SAMPLES = new Set(['Streamflix', 'Northwind Broadcasting', 'Harbor Kids Network', 'NWB']);

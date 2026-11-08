@@ -109,9 +109,6 @@ internal sealed class ActivityFeedBuilder(
         var items = new Dictionary<Guid, BaseItem?>();
         var summaries = new Dictionary<Guid, object>();
         var results = new List<ActivityFeedItem>(limit);
-#if !JF12
-        HashSet<Guid>? accessibleIds = null;
-#endif
 
         JUser? GetAuthor(Guid id)
         {
@@ -164,7 +161,6 @@ internal sealed class ActivityFeedBuilder(
             // Empty/invalid/hidden-author-only feeds never enumerate the library.
             if (page.Count == 0) continue;
             cancellationToken.ThrowIfCancellationRequested();
-#if JF12
             var query = new InternalItemsQuery(viewer) { Recursive = true };
             // Setting ItemIds first makes Jellyfin skip default library scoping.
             // Establish its supported user scope BEFORE narrowing to this page;
@@ -172,13 +168,6 @@ internal sealed class ActivityFeedBuilder(
             libraryManager.ConfigureUserAccess(query, viewer);
             query.ItemIds = page.Select(p => p.ItemId).Distinct().ToArray();
             var permitted = new HashSet<Guid>(libraryManager.GetItemIds(query));
-#else
-            // 10.11 has no ConfigureUserAccess API. Preserve its original safe
-            // recursive user query, lazily once per request; a naked ItemIds query
-            // would bypass allowed-library restrictions on that host.
-            accessibleIds ??= new HashSet<Guid>(libraryManager.GetItemIds(new InternalItemsQuery(viewer) { Recursive = true }));
-            var permitted = accessibleIds;
-#endif
             foreach (var (candidate, itemId, author) in page)
             {
                 cancellationToken.ThrowIfCancellationRequested();

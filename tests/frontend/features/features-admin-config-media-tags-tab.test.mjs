@@ -115,7 +115,7 @@ function boot(t, { url = PAGE_URL, config: extra = {}, patch, put, lazy = false,
   for (const name of readdirSync(join(config, 'admin')).filter((f) => f.endsWith('.js')).sort()) window.eval(readFileSync(join(config, 'admin', name), 'utf8'));
   window.JEAdmin.confirm = async () => true;
   window.JEAdmin.alert = async () => {};
-  const script = html.slice(html.indexOf('<script type="text/javascript">') + '<script type="text/javascript">'.length, html.lastIndexOf('</script>'));
+  const script = html.slice(html.lastIndexOf('<script>') + '<script>'.length, html.lastIndexOf('</script>'));
   window.eval(script);
   const page = document.getElementById('JellyfinEnhancedPage');
   const tab = document.getElementById('media-tags');
@@ -455,4 +455,22 @@ test('a tab that cannot be drawn says so, and its message and button name the sa
   button.click();
   await h.until();
   assert.equal(h.root.querySelector('[role="alert"]'), null, 'Retry draws the tab');
+});
+
+test('ATB-R2-001: through the real save store, a confirmation resumed after an account change writes nothing', async (t) => {
+  const h = boot(t);
+  const token = { value: 'token-a' };
+  h.window.ApiClient.accessToken = () => token.value;
+  h.tabButton('media-tags').click();
+  await h.until();
+  const answers = [];
+  h.window.JEAdmin.confirm = () => new Promise((resolve) => answers.push(resolve));
+  h.document.getElementById('resetAllUserSettingsBtn').click();
+  await h.until(() => answers.length === 1, 'the confirmation opened');
+  const before = h.calls.length;
+  token.value = 'token-b';
+  answers[0](true);
+  await h.settle();
+  assert.deepEqual(h.calls.slice(before), [], 'no read-modify-write and no reset as the next account');
+  assert.equal(h.document.querySelector('.jea-dialog'), null, 'no notice for the old account');
 });

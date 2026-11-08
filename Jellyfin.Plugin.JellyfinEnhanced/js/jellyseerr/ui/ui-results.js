@@ -1,484 +1,570 @@
-// /js/jellyseerr/ui/ui-results.js
-// Search-page result rendering: Seerr section, header icon, season
-// status analysis and in-place result updates.
-(function(JE) {
-    'use strict';
+(() => {
+"use strict";
+(() => {
+  // client/src/host/seerr-core-host.ts
+  function seerrCoreHost() {
+    const host = window;
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error("Jellyfin Enhanced must be initialized before the Seerr core group");
+    return { JE, window: host, document, apiClient: () => host.ApiClient };
+  }
 
-    const ui = JE.jellyseerrUI = JE.jellyseerrUI || {};
-    JE.internals = JE.internals || {};
-    // Shared state is seeded by ui-icons.js, which plugin.js loads first
-    // in this group.
-    const internal = JE.internals.jellyseerrUi;
-    const state = internal.state;
-    const logPrefix = '🪼 Jellyfin Enhanced: Seerr UI:';
-    const MediaStatus = JE.seerrStatus.MEDIA;
-    const icons = internal.icons; // requires ui-icons.js to be loaded first
-    const addTouchTapListener = JE.core.ui.addTouchTapListener;
+  // client/src/features/seerr/core/decode.ts
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
+  var isString = (value) => typeof value === "string";
+  var isBoolean = (value) => typeof value === "boolean";
+  var optional = (check) => (value) => value === void 0 || check(value);
+  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
+  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
+  var either = (...checks) => (value) => checks.some((check) => check(value));
+  function matches(value, checks) {
+    if (!isRecord(value)) return false;
+    const table = checks;
+    for (const [key, check] of Object.entries(table)) {
+      if (!check(value[key])) return false;
+    }
+    return true;
+  }
+  var seasonStatusChecks = {
+    seasonNumber: optional(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber)
+  };
+  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
+  var downloadChecks = {
+    title: nullable(isString),
+    status: nullable(isString),
+    size: nullable(isNumber),
+    sizeLeft: nullable(isNumber),
+    estimatedCompletionTime: nullable(isString),
+    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
+  };
+  var isDownload = (value) => matches(value, downloadChecks);
+  var requestSummaryChecks = {
+    is4k: nullable(isBoolean),
+    seasons: nullable(listOf((value) => matches(value, {
+      seasonNumber: optional(isNumber),
+      status: nullable(isNumber)
+    })))
+  };
+  var mediaInfoChecks = {
+    id: nullable(isNumber),
+    tvdbId: nullable(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber),
+    jellyfinMediaId: nullable(isString),
+    jellyfinMediaId4k: nullable(isString),
+    seasons: nullable(listOf(isSeasonStatus)),
+    downloadStatus: nullable(listOf(isDownload)),
+    downloadStatus4k: nullable(listOf(isDownload)),
+    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
+  };
+  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
+  var collectionChecks = {
+    id: nullable(isNumber),
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var isCollectionRef = (value) => matches(value, collectionChecks);
+  var mediaItemChecks = {
+    id: isNumber,
+    mediaType: isString,
+    title: nullable(isString),
+    name: nullable(isString),
+    originalTitle: nullable(isString),
+    originalName: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString),
+    overview: nullable(isString),
+    voteAverage: nullable(isNumber),
+    releaseDate: nullable(isString),
+    firstAirDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo),
+    collection: nullable(isCollectionRef)
+  };
+  var userStatusChecks = {
+    active: isBoolean,
+    userFound: isBoolean,
+    reason: optional(isString),
+    message: optional(isString),
+    jellyseerrUserId: optional(either(isString, isNumber)),
+    canRequestAdvanced: optional(isBoolean)
+  };
+  var quotaSideChecks = {
+    limit: nullable(isNumber),
+    used: nullable(isNumber),
+    remaining: nullable(isNumber),
+    days: nullable(isNumber),
+    restricted: nullable(isBoolean),
+    nextResetAt: nullable(isString)
+  };
+  var quotaChecks = {
+    movie: nullable((value) => matches(value, quotaSideChecks)),
+    tv: nullable((value) => matches(value, quotaSideChecks))
+  };
+  var overrideRuleChecks = {
+    id: nullable(either(isNumber, isString)),
+    radarrServiceId: nullable(isNumber),
+    sonarrServiceId: nullable(isNumber),
+    language: nullable(isString),
+    genre: nullable(isString),
+    keywords: nullable(isString),
+    users: nullable(isString),
+    profileId: nullable(isNumber),
+    rootFolder: nullable(isString),
+    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
+  };
+  var profileChecks = { id: isNumber, name: nullable(isString) };
+  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
+  var serviceChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    isDefault: nullable(isBoolean),
+    is4k: nullable(isBoolean),
+    activeProfileId: nullable(isNumber),
+    activeDirectory: nullable(isString)
+  };
+  var candidateChecks = {
+    tvdbId: isNumber,
+    title: nullable(isString),
+    year: nullable(either(isNumber, isString)),
+    overview: nullable(isString),
+    remotePoster: nullable(isString)
+  };
+  var movieCollectionChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var issueChecks = {
+    id: nullable(isNumber),
+    media: nullable((value) => matches(value, {
+      tmdbId: nullable(either(isNumber, isString)),
+      mediaType: nullable(isString)
+    }))
+  };
+  var tvSeasonChecks = {
+    seasonNumber: isNumber,
+    name: nullable(isString),
+    episodeCount: nullable(isNumber),
+    airDate: nullable(isString),
+    jeYear: nullable(isString)
+  };
+  var collectionPartChecks = {
+    id: isNumber,
+    title: nullable(isString),
+    posterPath: nullable(isString),
+    releaseDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo)
+  };
 
-    // Only one search-results reposition watcher may be live at a time; a newer
-    // render must cancel the previous one (see renderJellyseerrResults).
+  // client/src/features/seerr/core/status.ts
+  var MEDIA = Object.freeze({
+    UNKNOWN: 1,
+    PENDING: 2,
+    PROCESSING: 3,
+    PARTIALLY_AVAILABLE: 4,
+    AVAILABLE: 5,
+    BLOCKED: 6,
+    DELETED: 7
+  });
+  var REQUEST = Object.freeze({
+    PENDING: 1,
+    APPROVED: 2,
+    DECLINED: 3,
+    FAILED: 4,
+    COMPLETED: 5
+  });
+  var DISPLAY = Object.freeze({
+    AVAILABLE: "available",
+    AVAILABLE_UPDATING: "available-updating",
+    PENDING: "pending",
+    PROCESSING: "processing",
+    REQUESTED: "requested",
+    PARTIAL: "partial",
+    BLOCKED: "blocked",
+    DELETED: "deleted",
+    NONE: "none"
+  });
+  var AVAILABLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>`;
+  var BADGE_ICONS = {
+    [DISPLAY.AVAILABLE]: AVAILABLE_ICON,
+    [DISPLAY.AVAILABLE_UPDATING]: AVAILABLE_ICON,
+    [DISPLAY.PENDING]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0113.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 01-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 11-7.48 0 24.585 24.585 0 01-4.831-1.244.75.75 0 01-.298-1.205A8.217 8.217 0 005.25 9.75V9zm4.502 8.9a2.25 2.25 0 104.496 0 25.057 25.057 0 01-4.496 0z" clip-rule="evenodd" /></svg>`,
+    [DISPLAY.PROCESSING]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>`,
+    [DISPLAY.REQUESTED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd"></path></svg>`,
+    [DISPLAY.PARTIAL]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clip-rule="evenodd" /></svg>`,
+    [DISPLAY.BLOCKED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>`,
+    [DISPLAY.DELETED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" /></svg>`
+  };
+  var BADGE_CSS = {
+    [DISPLAY.AVAILABLE]: "status-available",
+    [DISPLAY.AVAILABLE_UPDATING]: "status-available",
+    [DISPLAY.PENDING]: "status-pending",
+    [DISPLAY.PROCESSING]: "status-processing",
+    [DISPLAY.REQUESTED]: "status-requested",
+    [DISPLAY.PARTIAL]: "status-partially-available",
+    [DISPLAY.BLOCKED]: "status-blocklisted",
+    [DISPLAY.DELETED]: "status-deleted"
+  };
+
+  // client/src/features/seerr/core/display.ts
+  function analyzeSeasonStatuses(seasons, t) {
+    if (!Array.isArray(seasons) || seasons.length === 0) return { overallStatus: MEDIA.UNKNOWN, statusSummary: null, total: 0 };
+    const entries = seasons.filter(isRecord);
+    const regular = entries.filter((s) => isNumber(s.seasonNumber) && s.seasonNumber > 0);
+    const total = regular.length;
+    if (total === 0) return { overallStatus: MEDIA.UNKNOWN, statusSummary: null, total: 0 };
+    const count = (status) => regular.filter((s) => s.status === status).length;
+    const available = count(MEDIA.AVAILABLE);
+    const pending = count(MEDIA.PENDING);
+    const processing = count(MEDIA.PROCESSING);
+    const partiallyAvailable = count(MEDIA.PARTIALLY_AVAILABLE);
+    const notRequested = count(MEDIA.UNKNOWN);
+    const requestedCount = pending + processing;
+    const availableCount = available + partiallyAvailable;
+    const accountedForCount = requestedCount + availableCount;
+    let overallStatus;
+    let statusSummary = null;
+    if (notRequested === 0) {
+      overallStatus = availableCount === total ? MEDIA.AVAILABLE : MEDIA.DELETED;
+      if (overallStatus === MEDIA.DELETED) statusSummary = t("jellyseerr_seasons_accounted_for", { count: accountedForCount, total });
+    } else if (accountedForCount > 0) {
+      overallStatus = availableCount > 0 ? MEDIA.PARTIALLY_AVAILABLE : MEDIA.PROCESSING;
+      statusSummary = availableCount > 0 ? t("jellyseerr_seasons_available_count", { count: availableCount, total }) : t("jellyseerr_seasons_requested_count", { count: requestedCount, total });
+    } else {
+      overallStatus = MEDIA.UNKNOWN;
+    }
+    if (overallStatus === MEDIA.AVAILABLE) {
+      const specials = entries.find((s) => s.seasonNumber === 0);
+      if (specials && specials.status === MEDIA.UNKNOWN) {
+        overallStatus = MEDIA.DELETED;
+        statusSummary = t("jellyseerr_seasons_accounted_for", { count: accountedForCount, total });
+      }
+    }
+    return { overallStatus, statusSummary, total, availableCount };
+  }
+
+  // client/src/features/seerr/core/runtime.ts
+  var LOG_UI = "🪼 Jellyfin Enhanced: Seerr UI:";
+  function groupInternals(JE) {
+    const internals = JE.internals || (JE.internals = {});
+    return internals.jellyseerrUi || (internals.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
+  }
+  function firstInstall(JE, name) {
+    const internals = groupInternals(JE);
+    const installed = internals.installed || (internals.installed = /* @__PURE__ */ new Set());
+    if (installed.has(name)) return false;
+    installed.add(name);
+    return true;
+  }
+
+  // client/src/features/seerr/core/ui/icon-markup.ts
+  var ICONS = Object.freeze({
+    star: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="color:#ffc107;"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>',
+    available: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-left:0.5em;"><polygon points="20.13,5.41 18.72,4 9.53,13.19 5.28,8.95 3.87,10.36 9.53,16.02"/><rect height="2" width="14" x="5" y="18"/></svg>',
+    error: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-left:0.5em;"><path d="M12 7c.55 0 1 .45 1 1v4c0 .55-.45 1-1 1s-1-.45-1-1V8c0-.55.45-1 1-1zm-.01-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm1-3h-2v-2h2v2z"/></svg>',
+    cloud_off: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-left:0.5em;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96zM3 5.27l2.75 2.74C2.56 8.15 0 10.77 0 14c0 3.31 2.69 6 6 6h11.73l2 2L21 20.73 4.27 4 3 5.27zM7.73 10l8 8H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h1.73z"></path></svg>',
+    person_off: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-left:0.5em;"><path d="M8.65,5.82C9.36,4.72,10.6,4,12,4c2.21,0,4,1.79,4,4c0,1.4-0.72,2.64-1.82,3.35L8.65,5.82z M20,17.17 c-0.02-1.1-0.63-2.11-1.61-2.62c-0.54-0.28-1.13-0.54-1.77-0.76L20,17.17z M20.49,20.49L3.51,3.51c-0.39-0.39-1.02-0.39-1.41,0l0,0 c-0.39,0.39-0.39,1.02,0,1.41l8.18,8.18c-1.82,0.23-3.41,0.8-4.7,1.46C4.6,15.08,4,16.11,4,17.22L4,20h13.17l1.9,1.9 c0.39,0.39,1.02,0.39,1.41,0l0,0C20.88,21.51,20.88,20.88,20.49,20.49z"/></svg>',
+    pending: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-left:0.5em;"><path d="M12,2C6.48,2,2,6.48,2,12c0,5.52,4.48,10,10,10s10-4.48,10-10C22,6.48,17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8 c0-4.42,3.58-8,8-8s8,3.58,8,8C20,16.42,16.42,20,12,20z"/><circle cx="7" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="17" cy="12" r="1.5"/></svg>',
+    requested: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd"></path></svg>',
+    partially_available: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-left:0.5em;"><path d="M9.71 11.29a1 1 0 0 0-1.42 1.42l3 3A1 1 0 0 0 12 16a1 1 0 0 0 .72-.34l7-8a1 1 0 0 0-1.5-1.32L12 13.54z"/><path d="M21 11a1 1 0 0 0-1 1 8 8 0 0 1-8 8A8 8 0 0 1 6.33 6.36 7.93 7.93 0 0 1 12 4a8.79 8.79 0 0 1 1.9.22 1 1 0 1 0 .47-1.94A10.54 10.54 0 0 0 12 2a10 10 0 0 0-7 17.09A9.93 9.93 0 0 0 12 22a10 10 0 0 0 10-10 1 1 0 0 0-1-1z"/></svg>',
+    cancel: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-left:0.5em;"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"></path></svg>',
+    request: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" role="img" style="margin-right:0.5em;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>'
+  });
+
+  // client/src/features/seerr/core/ui/results.ts
+  var PRIMARY_CARD_TYPES = ["movie", "series"];
+  var isTmdbId = (value) => /^\d+$/.test(value);
+  function installResults(host) {
+    const { JE, document: document2, window: window2 } = host;
+    if (!firstInstall(JE, "ui-results")) return;
+    const ui = JE.jellyseerrUI || (JE.jellyseerrUI = {});
+    const internals = groupInternals(JE);
+    const state = internals.state;
+    const icons = () => internals.icons ?? ICONS;
     let pendingRepositionObserver = null;
     let pendingRepositionTimeout = null;
-
-    // Keep card buttons in sync when a request is made from other surfaces (e.g., more info modal)
     function markCardRequested(tmdbId, mediaType, is4k = false) {
-        const button = document.querySelector(`.jellyseerr-request-button[data-tmdb-id="${tmdbId}"]`);
-        if (!button) return;
-
-        const requestedLabel = JE?.t ? JE.t('jellyseerr_btn_requested') : 'Requested';
-        const setPending = (target) => {
-            target.innerHTML = `${icons.requested}<span>${requestedLabel}</span>`;
-            target.classList.remove('jellyseerr-button-request');
-            if (!target.classList.contains('jellyseerr-button-pending')) {
-                target.classList.add('jellyseerr-button-pending');
-            }
-            target.disabled = true;
-        };
-
-        if (button.classList.contains('jellyseerr-split-main')) {
-            setPending(button);
-            const arrow = button.parentElement?.querySelector('.jellyseerr-split-arrow');
-            if (arrow && is4k) {
-                arrow.classList.add('jellyseerr-4k-pending');
-                arrow.disabled = true;
-            }
-        } else {
-            setPending(button);
+      if (!isTmdbId(tmdbId)) return;
+      const type = mediaType.toLowerCase();
+      const requestedLabel = JE.t("jellyseerr_btn_requested") || "Requested";
+      const buttons = [...document2.querySelectorAll(`.jellyseerr-request-button[data-tmdb-id="${tmdbId}"]`)].filter((button) => !button.dataset.mediaType || button.dataset.mediaType.toLowerCase() === type);
+      for (const button of buttons) {
+        if (is4k) {
+          const arrow = button.parentElement?.querySelector(".jellyseerr-split-arrow");
+          if (arrow) {
+            arrow.classList.add("jellyseerr-4k-pending");
+            arrow.disabled = true;
+          }
+          continue;
         }
-
-        const card = button.closest('.jellyseerr-card');
-        const badge = card?.querySelector('.jellyseerr-status-badge');
+        button.innerHTML = `${icons().requested}<span>${requestedLabel}</span>`;
+        button.classList.remove("jellyseerr-button-request");
+        button.classList.add("jellyseerr-button-pending");
+        button.disabled = true;
+        const badge = button.closest(".jellyseerr-card")?.querySelector(".jellyseerr-status-badge");
         if (badge) {
-            badge.innerHTML = icons.requested;
-            badge.className = 'jellyseerr-status-badge status-requested';
-            badge.style.display = 'flex';
+          badge.innerHTML = icons().requested;
+          badge.className = "jellyseerr-status-badge status-requested";
+          badge.style.display = "flex";
         }
+      }
     }
-
-    document.addEventListener('jellyseerr-media-requested', (e) => {
-        const { tmdbId, mediaType, is4k } = e.detail || {};
-        if (!tmdbId || !mediaType) return;
-        markCardRequested(String(tmdbId), mediaType, is4k);
+    document2.addEventListener("jellyseerr-media-requested", (event) => {
+      const detail = event instanceof CustomEvent ? event.detail : null;
+      if (!isRecord(detail)) return;
+      const tmdbId = detail.tmdbId;
+      const mediaType = detail.mediaType;
+      if (!isString(tmdbId) && typeof tmdbId !== "number" || !tmdbId || !isString(mediaType) || !mediaType) return;
+      markCardRequested(String(tmdbId), mediaType, detail.is4k === true);
     });
-
-    // ================================
-    // UI MANAGEMENT FUNCTIONS
-    // ================================
-
-    /**
-     * Updates the Seerr icon in the search field based on current state.
-     * @param {boolean} isJellyseerrActive - If the server is reachable.
-     * @param {boolean} jellyseerrUserFound - If the current user is linked.
-     * @param {boolean} isJellyseerrOnlyMode - If the results are filtered.
-     * @param {function} onToggleFilter - The function to call to toggle the filter.
-     */
-    ui.updateJellyseerrIcon = function(isJellyseerrActive, jellyseerrUserFound, isJellyseerrOnlyMode, onToggleFilter) {
-        const anchor = document.querySelector('.searchFields .inputContainer') ||
-                       document.querySelector('#searchPage .searchFields') ||
-                       document.querySelector('#searchPage');
-        if (!anchor) return;
-
-        let icon = document.getElementById('jellyseerr-search-icon');
-        if (!icon) {
-            icon = document.createElement('img');
-            icon.id = 'jellyseerr-search-icon';
-            icon.className = 'jellyseerr-icon';
-            icon.src = JE.cdn.selfhst('svg/seerr.svg');
-            icon.alt = 'Seerr';
-
-            let tapCount = 0;
-            let tapTimer = null;
-            const handleIconInteraction = () => {
-                if (!isJellyseerrActive || !jellyseerrUserFound || !onToggleFilter) return;
-                tapCount++;
-                if (tapCount === 1) {
-                    tapTimer = setTimeout(() => { tapCount = 0; }, 300);
-                } else if (tapCount === 2) {
-                    clearTimeout(tapTimer);
-                    tapCount = 0;
-                    onToggleFilter();
-                }
-            };
-
-            icon.addEventListener('click', handleIconInteraction);
-            // Tap detection (rather than a bare touchend) so a scroll gesture that
-            // happens to start on the icon is not miscounted toward the double-tap
-            // filter toggle; preventDefault() suppresses the synthetic click that
-            // would otherwise double-count the tap via the click listener above.
-            addTouchTapListener(icon, (e) => { e.preventDefault(); handleIconInteraction(); });
-            icon.setAttribute('tabindex', '0');
-            icon.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (!isJellyseerrActive || !jellyseerrUserFound || !onToggleFilter) return;
-                    onToggleFilter();
-                }
-            });
-            anchor.appendChild(icon);
-        }
-
-        icon.classList.remove('is-active', 'is-disabled', 'is-no-user', 'is-filter-active');
-        if (isJellyseerrActive && jellyseerrUserFound) {
-            icon.title = JE.t(isJellyseerrOnlyMode ? 'jellyseerr_icon_active_filter_tooltip' : 'jellyseerr_icon_active_tooltip');
-            icon.classList.add('is-active');
-            if (isJellyseerrOnlyMode) icon.classList.add('is-filter-active');
-        } else if (isJellyseerrActive && !jellyseerrUserFound) {
-            icon.title = JE.t('jellyseerr_icon_no_user_tooltip');
-            icon.classList.add('is-no-user');
-        } else {
-            icon.title = JE.t('jellyseerr_icon_disabled_tooltip');
-            icon.classList.add('is-disabled');
-        }
-    };
-
-    /**
-     * Analyzes season statuses to determine overall show status.
-     * @param {Array} seasons - Array of season objects with status information.
-     * @returns {object} - Analysis result with overall status and summary.
-     */
-    function analyzeSeasonStatuses(seasons) {
-        if (!seasons || seasons.length === 0) return { overallStatus: 1, statusSummary: null, total: 0 };
-        const regularSeasons = seasons.filter(s => s.seasonNumber > 0);
-        const total = regularSeasons.length;
-        if (total === 0) return { overallStatus: 1, statusSummary: null, total: 0 };
-
-        const statusCounts = {
-            available: regularSeasons.filter(s => s.status === MediaStatus.AVAILABLE).length,
-            pending: regularSeasons.filter(s => s.status === MediaStatus.PENDING).length,
-            processing: regularSeasons.filter(s => s.status === MediaStatus.PROCESSING).length,
-            partiallyAvailable: regularSeasons.filter(s => s.status === MediaStatus.PARTIALLY_AVAILABLE).length,
-            notRequested: regularSeasons.filter(s => s.status === MediaStatus.UNKNOWN).length
+    let iconState = { active: false, userFound: false, onToggle: null };
+    function updateJellyseerrIcon(isJellyseerrActive, jellyseerrUserFound, isJellyseerrOnlyMode, onToggleFilter) {
+      iconState = { active: isJellyseerrActive, userFound: jellyseerrUserFound, onToggle: onToggleFilter };
+      const anchor = document2.querySelector(".searchFields .inputContainer") || document2.querySelector("#searchPage .searchFields") || document2.querySelector("#searchPage");
+      if (!anchor) return;
+      let icon = document2.getElementById("jellyseerr-search-icon");
+      if (!(icon instanceof HTMLImageElement)) {
+        const img = document2.createElement("img");
+        img.id = "jellyseerr-search-icon";
+        img.className = "jellyseerr-icon";
+        img.src = JE.cdn?.selfhst?.("svg/seerr.svg") ?? "";
+        img.alt = "Seerr";
+        let tapCount = 0;
+        let tapTimer = null;
+        const toggle = () => iconState.active && iconState.userFound ? iconState.onToggle : null;
+        const handleIconInteraction = () => {
+          if (!toggle()) return;
+          tapCount++;
+          if (tapCount === 1) {
+            tapTimer = window2.setTimeout(() => {
+              tapCount = 0;
+            }, 300);
+          } else if (tapCount === 2) {
+            if (tapTimer !== null) window2.clearTimeout(tapTimer);
+            tapCount = 0;
+            toggle()?.();
+          }
         };
-        const requestedCount = statusCounts.pending + statusCounts.processing;
-        const availableCount = statusCounts.available + statusCounts.partiallyAvailable;
-        const accountedForCount = requestedCount + availableCount;
-        let overallStatus, statusSummary = null;
-
-        if (statusCounts.notRequested === 0) {
-            overallStatus = (availableCount === total) ? MediaStatus.AVAILABLE : MediaStatus.DELETED;
-            if (overallStatus === MediaStatus.DELETED) statusSummary = JE.t('jellyseerr_seasons_accounted_for', { count: accountedForCount, total });
-        } else if (accountedForCount > 0) {
-            overallStatus = (availableCount > 0) ? MediaStatus.PARTIALLY_AVAILABLE : MediaStatus.PROCESSING;
-            statusSummary = (availableCount > 0) ? JE.t('jellyseerr_seasons_available_count', { count: availableCount, total }) : JE.t('jellyseerr_seasons_requested_count', { count: requestedCount, total });
-        } else {
-            overallStatus = MediaStatus.UNKNOWN;
-        }
-
-        // If every regular season is accounted for but the specials season (0) was never
-        // requested, still surface a "Request More" affordance instead of marking the
-        // show fully Available, so specials-only seasons remain requestable.
-        if (overallStatus === MediaStatus.AVAILABLE) {
-            const specialsSeason = seasons.find(s => s.seasonNumber === 0);
-            if (specialsSeason && specialsSeason.status === MediaStatus.UNKNOWN) {
-                overallStatus = MediaStatus.DELETED;
-                statusSummary = JE.t('jellyseerr_seasons_accounted_for', { count: accountedForCount, total });
-            }
-        }
-
-        return { overallStatus, statusSummary, total, availableCount };
+        img.addEventListener("click", handleIconInteraction);
+        JE.core?.ui?.addTouchTapListener?.(img, (event) => {
+          event.preventDefault();
+          handleIconInteraction();
+        });
+        img.setAttribute("tabindex", "0");
+        img.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          toggle()?.();
+        });
+        anchor.appendChild(img);
+        icon = img;
+      }
+      icon.classList.remove("is-active", "is-disabled", "is-no-user", "is-filter-active");
+      if (isJellyseerrActive && jellyseerrUserFound) {
+        icon.title = JE.t(isJellyseerrOnlyMode ? "jellyseerr_icon_active_filter_tooltip" : "jellyseerr_icon_active_tooltip");
+        icon.classList.add("is-active");
+        if (isJellyseerrOnlyMode) icon.classList.add("is-filter-active");
+      } else if (isJellyseerrActive && !jellyseerrUserFound) {
+        icon.title = JE.t("jellyseerr_icon_no_user_tooltip");
+        icon.classList.add("is-no-user");
+      } else {
+        icon.title = JE.t("jellyseerr_icon_disabled_tooltip");
+        icon.classList.add("is-disabled");
+      }
     }
-
-    /**
-     * Removes every plugin-owned node injected into the search page (results
-     * section and no-results replacement message) and restores the native
-     * no-results message if positionSection hid it. React-safe: only removes
-     * plugin-owned nodes and toggles a class on native ones.
-     */
-    ui.clearInjectedSearchResults = function() {
-        document.querySelectorAll('.jellyseerr-section, .jellyseerr-no-results-message').forEach(el => el.remove());
-        ui.releasePosters?.();
-        document.querySelectorAll('.jellyseerr-native-message-hidden').forEach(el => el.classList.remove('jellyseerr-native-message-hidden'));
-    };
-
-    /**
-     * Renders Seerr search results into the search page with improved placement logic.
-     * @param {Array} results - Array of search result items.
-     * @param {string} query - The search query that generated these results.
-     * @param {boolean} isJellyseerrOnlyMode - Whether the filter is active.
-     * @param {boolean} isJellyseerrActive - If the server is reachable.
-     * @param {boolean} jellyseerrUserFound - If the current user is linked.
-     */
-    ui.renderJellyseerrResults = function(results, query, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound) {
-        console.log(`${logPrefix} Rendering results for query: "${query}"`);
-        const searchPage = document.querySelector('#searchPage');
-        if (!searchPage) {
-            console.warn(`${logPrefix} #searchPage not found. Cannot render results.`);
-            return;
-        }
-
-        if (pendingRepositionObserver) {
-            pendingRepositionObserver.disconnect();
-            pendingRepositionObserver = null;
-        }
-        if (pendingRepositionTimeout) {
-            clearTimeout(pendingRepositionTimeout);
-            pendingRepositionTimeout = null;
-        }
-
-        searchPage.querySelectorAll('.jellyseerr-section').forEach(section => section.remove());
-
-        const sectionToInject = createJellyseerrSection(results, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound);
-
-        const primaryCardTypes = ['movie', 'series'];
-
-        /**
-         * Finds the last Movies/Shows section in the search results, identified
-         * by each card's data-type attribute rather than the (locale-dependent)
-         * section title text.
-         * @returns {HTMLElement|null}
-         */
-        function findLastPrimarySection() {
-            const allSections = Array.from(searchPage.querySelectorAll('.verticalSection:not(.jellyseerr-section)'));
-            for (let i = allSections.length - 1; i >= 0; i--) {
-                const cardType = allSections[i].querySelector('[data-type]')?.dataset.type?.toLowerCase();
-                if (cardType && primaryCardTypes.includes(cardType)) {
-                    return allSections[i];
-                }
-            }
-            return null;
-        }
-
-        /**
-         * Whether an element already qualifies as a primary (Movies/Shows)
-         * section, regardless of DOM node identity (React can recreate an
-         * equivalent section on its own re-renders).
-         * @param {Element|null} el
-         * @returns {boolean}
-         */
-        function isPrimarySection(el) {
-            if (!el || !el.classList?.contains('verticalSection')) return false;
-            const cardType = el.querySelector('[data-type]')?.dataset.type?.toLowerCase();
-            return !!cardType && primaryCardTypes.includes(cardType);
-        }
-
-        /**
-         * Whether a no-results message is actually being shown. Other search
-         * scripts (KefinTweaks) keep a permanent .noItemsMessage on the page
-         * and only hide it while there are results, so its presence alone
-         * doesn't mean Jellyfin found nothing. Messages hidden by this plugin
-         * (jellyseerr-native-message-hidden, or section-hidden from the
-         * Seerr-only filter) still count unless their owner hid them inline.
-         * @param {HTMLElement} el
-         * @returns {boolean}
-         */
-        function isNoResultsMessageShown(el) {
-            if (el.style.display === 'none') return false;
-            if (el.classList.contains('jellyseerr-native-message-hidden') || el.classList.contains('section-hidden')) return true;
-            return getComputedStyle(el).display !== 'none';
-        }
-
-        /**
-         * Places the section after Movies/Shows if found, otherwise appends
-         * to the results container or search page.
-         * @returns {boolean} True if positioned after a primary section or
-         *   no-results message; false if using fallback placement.
-         */
-        function positionSection() {
-            const noResultsMessage = Array.from(searchPage.querySelectorAll('.noItemsMessage:not(.jellyseerr-no-results-message)'))
-                .find(isNoResultsMessageShown);
-            if (noResultsMessage) {
-                // The no-results message is React-owned, and React reuses the same
-                // DOM node for the results container on a later query (both render
-                // as plain keyless divs, and cached queries swap between them with
-                // no <Loading/> commit in between). Rewriting its textContent here
-                // would replace React's own text node, so the next reconciliation
-                // of that div throws NotFoundError ("Failed to execute
-                // 'removeChild' on 'Node'"). Never mutate its children — hide it
-                // with a class and show a plugin-owned message beside it instead.
-                noResultsMessage.classList.add('jellyseerr-native-message-hidden');
-
-                let message = searchPage.querySelector('.jellyseerr-no-results-message');
-                if (!message) {
-                    message = document.createElement('div');
-                    message.className = 'noItemsMessage centerMessage jellyseerr-no-results-message';
-                }
-                // Only write on change — this element is inside the subtree the
-                // reposition MutationObserver below watches, so an unconditional
-                // write re-triggers it every time, looping forever.
-                const desiredText = JE.t('jellyseerr_no_results_jellyfin', { query });
-                if (message.textContent !== desiredText) {
-                    message.textContent = desiredText;
-                }
-                if (message.previousElementSibling !== noResultsMessage) {
-                    noResultsMessage.parentElement.insertBefore(message, noResultsMessage.nextSibling);
-                }
-                if (sectionToInject.previousElementSibling !== message) {
-                    message.parentElement.insertBefore(sectionToInject, message.nextSibling);
-                }
-                return true;
-            }
-
-            // Not (or no longer) in the no-results state: drop the replacement
-            // message and restore the native one if a previous pass hid it.
-            searchPage.querySelectorAll('.jellyseerr-no-results-message').forEach(el => el.remove());
-            searchPage.querySelectorAll('.jellyseerr-native-message-hidden').forEach(el => el.classList.remove('jellyseerr-native-message-hidden'));
-
-            const lastPrimary = findLastPrimarySection();
-            if (lastPrimary) {
-                if (!isPrimarySection(sectionToInject.previousElementSibling)) {
-                    lastPrimary.after(sectionToInject);
-                }
-                return true;
-            }
-
-            const resultsContainer = searchPage.querySelector('.searchResults, [class*="searchResults"], .padded-top.padded-bottom-page');
-            if (resultsContainer) {
-                if (sectionToInject.parentElement !== resultsContainer || resultsContainer.lastElementChild !== sectionToInject) {
-                    resultsContainer.appendChild(sectionToInject);
-                }
-            } else if (searchPage.lastElementChild !== sectionToInject) {
-                searchPage.appendChild(sectionToInject);
-            }
-            return false;
-        }
-
-        positionSection();
-
-        const observer = new MutationObserver((records) => {
-            if (!sectionToInject.isConnected) {
-                observer.disconnect();
-                return;
-            }
-            // Only Jellyfin's own rendering can make the position wrong; the
-            // cards infinite scroll and the collection lookups add inside the
-            // section change nothing about where it sits.
-            if (records.every(record => sectionToInject.contains(record.target))) return;
-            positionSection();
-        });
-        observer.observe(searchPage, { childList: true, subtree: true });
-        pendingRepositionObserver = observer;
-        pendingRepositionTimeout = setTimeout(() => observer.disconnect(), 5000);
-    };
-
-    /**
-     * Creates the main Seerr results section.
-     * @param {Array} results - Array of search result items.
-     * @param {boolean} isJellyseerrOnlyMode - Whether the filter is active.
-     * @param {boolean} isJellyseerrActive - If the server is reachable.
-     * @param {boolean} jellyseerrUserFound - If the current user is linked.
-     * @returns {HTMLElement} - Section element.
-     */
-    function createJellyseerrSection(results = [], isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound) {
-        const section = document.createElement('div');
-        section.className = 'verticalSection emby-scroller-container jellyseerr-section';
-        section.setAttribute('data-jellyseerr-section', 'true');
-
-        const title = document.createElement('h2');
-        title.className = 'sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right';
-        title.textContent = isJellyseerrOnlyMode ? JE.t('jellyseerr_results_title') : JE.t('jellyseerr_discover_title');
-
-        // Add a refresh button beside the results heading
-        const refreshBtn = document.createElement('button');
-        refreshBtn.className = 'jellyseerr-refresh-btn';
-        refreshBtn.style.marginLeft = '0.5em';
-        refreshBtn.style.verticalAlign = 'middle';
-        refreshBtn.style.background = 'none';
-        refreshBtn.style.border = 'none';
-        refreshBtn.style.cursor = 'pointer';
-        refreshBtn.style.display = 'inline-flex';
-        refreshBtn.style.alignItems = 'center';
-        refreshBtn.style.justifyContent = 'center';
-        refreshBtn.style.padding = '0';
-        const icon = document.createElement('span');
-        icon.className = 'material-icons jellyseerr-refresh-icon';
-        icon.textContent = 'refresh';
-        icon.style.transition = 'transform 0.5s cubic-bezier(.4,2,.6,1)';
-        refreshBtn.appendChild(icon);
-        refreshBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            icon.style.transform = 'rotate(360deg)';
-            setTimeout(() => { icon.style.transform = ''; }, 500);
-            document.dispatchEvent(new CustomEvent('jellyseerr-manual-refresh'));
-        });
-        title.appendChild(refreshBtn);
-    if (!document.getElementById('jellyseerr-refresh-style')) {
-        const style = document.createElement('style');
-        style.id = 'jellyseerr-refresh-style';
+    function clearInjectedSearchResults() {
+      document2.querySelectorAll(".jellyseerr-section, .jellyseerr-no-results-message").forEach((el) => el.remove());
+      ui.releasePosters?.();
+      document2.querySelectorAll(".jellyseerr-native-message-hidden").forEach((el) => el.classList.remove("jellyseerr-native-message-hidden"));
+    }
+    function createJellyseerrSection(results, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound) {
+      const section = document2.createElement("div");
+      section.className = "verticalSection emby-scroller-container jellyseerr-section";
+      section.setAttribute("data-jellyseerr-section", "true");
+      const title = document2.createElement("h2");
+      title.className = "sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right";
+      title.textContent = isJellyseerrOnlyMode ? JE.t("jellyseerr_results_title") : JE.t("jellyseerr_discover_title");
+      const refreshBtn = document2.createElement("button");
+      refreshBtn.className = "jellyseerr-refresh-btn";
+      Object.assign(refreshBtn.style, {
+        marginLeft: "0.5em",
+        verticalAlign: "middle",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0"
+      });
+      const icon = document2.createElement("span");
+      icon.className = "material-icons jellyseerr-refresh-icon";
+      icon.textContent = "refresh";
+      icon.style.transition = "transform 0.5s cubic-bezier(.4,2,.6,1)";
+      refreshBtn.appendChild(icon);
+      refreshBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        icon.style.transform = "rotate(360deg)";
+        window2.setTimeout(() => {
+          icon.style.transform = "";
+        }, 500);
+        document2.dispatchEvent(new CustomEvent("jellyseerr-manual-refresh"));
+      });
+      title.appendChild(refreshBtn);
+      if (!document2.getElementById("jellyseerr-refresh-style")) {
+        const style = document2.createElement("style");
+        style.id = "jellyseerr-refresh-style";
         style.textContent = `
             .jellyseerr-refresh-btn:focus { outline: none; }
             .jellyseerr-refresh-icon { color: #fff; filter: opacity(0.6); }
             .jellyseerr-refresh-btn:hover .jellyseerr-refresh-icon { color: #fff; filter: opacity(0.9); }
         `;
-        document.head.appendChild(style);
+        document2.head.appendChild(style);
+      }
+      section.appendChild(title);
+      const scroller = document2.createElement("div");
+      scroller.setAttribute("is", "emby-scroller");
+      scroller.className = "padded-top-focusscale padded-bottom-focusscale emby-scroller";
+      scroller.dataset.horizontal = "true";
+      scroller.dataset.centerfocus = "card";
+      const items = document2.createElement("div");
+      items.setAttribute("is", "emby-itemscontainer");
+      items.className = "focuscontainer-x itemsContainer scrollSlider";
+      if (document2.querySelector(".alphaPicker-tv") !== null) items.classList.add("itemsContainer-tv", "animatedScrollX");
+      for (const item of results) {
+        const card = internals.createJellyseerrCard?.(item, isJellyseerrActive, jellyseerrUserFound);
+        if (card) items.appendChild(card);
+      }
+      scroller.appendChild(items);
+      section.appendChild(scroller);
+      return section;
     }
-        section.appendChild(title);
-
-        const scrollerContainer = document.createElement('div');
-        scrollerContainer.setAttribute('is', 'emby-scroller');
-        scrollerContainer.className = 'padded-top-focusscale padded-bottom-focusscale emby-scroller';
-        scrollerContainer.dataset.horizontal = "true";
-        scrollerContainer.dataset.centerfocus = "card";
-
-        const itemsContainer = document.createElement('div');
-        itemsContainer.setAttribute('is', 'emby-itemscontainer');
-        itemsContainer.className = 'focuscontainer-x itemsContainer scrollSlider';
-
-        const isTvMode = document.querySelector('.alphaPicker-tv') !== null;
-        if (isTvMode) {
-            itemsContainer.classList.add('itemsContainer-tv');
-            itemsContainer.classList.add('animatedScrollX');
+    function renderJellyseerrResults(results, query, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound) {
+      console.log(`${LOG_UI} Rendering results for query: "${query}"`);
+      const found = document2.querySelector("#searchPage");
+      if (!found) {
+        console.warn(`${LOG_UI} #searchPage not found. Cannot render results.`);
+        return;
+      }
+      const searchPage = found;
+      pendingRepositionObserver?.disconnect();
+      pendingRepositionObserver = null;
+      if (pendingRepositionTimeout !== null) window2.clearTimeout(pendingRepositionTimeout);
+      pendingRepositionTimeout = null;
+      searchPage.querySelectorAll(".jellyseerr-section").forEach((section) => section.remove());
+      const sectionToInject = createJellyseerrSection(results, isJellyseerrOnlyMode, isJellyseerrActive, jellyseerrUserFound);
+      const cardType = (el) => {
+        const typed = el?.querySelector("[data-type]");
+        return typed instanceof HTMLElement ? typed.dataset.type?.toLowerCase() : void 0;
+      };
+      const findLastPrimarySection = () => {
+        const sections = [...searchPage.querySelectorAll(".verticalSection:not(.jellyseerr-section)")];
+        for (let i = sections.length - 1; i >= 0; i--) {
+          const type = cardType(sections[i] ?? null);
+          if (type && PRIMARY_CARD_TYPES.includes(type)) return sections[i] ?? null;
         }
-
-        results.forEach(item => {
-            const card = internal.createJellyseerrCard(item, isJellyseerrActive, jellyseerrUserFound);
-            itemsContainer.appendChild(card);
-        });
-
-        scrollerContainer.appendChild(itemsContainer);
-        section.appendChild(scrollerContainer);
-        return section;
+        return null;
+      };
+      const isPrimarySection = (el) => {
+        if (!el || !el.classList.contains("verticalSection")) return false;
+        const type = cardType(el);
+        return !!type && PRIMARY_CARD_TYPES.includes(type);
+      };
+      const isNoResultsMessageShown = (el) => {
+        if (el.style.display === "none") return false;
+        if (el.classList.contains("jellyseerr-native-message-hidden") || el.classList.contains("section-hidden")) return true;
+        return getComputedStyle(el).display !== "none";
+      };
+      function positionSection() {
+        const noResultsMessage = [...searchPage.querySelectorAll(".noItemsMessage:not(.jellyseerr-no-results-message)")].find(isNoResultsMessageShown);
+        if (noResultsMessage) {
+          noResultsMessage.classList.add("jellyseerr-native-message-hidden");
+          let message = searchPage.querySelector(".jellyseerr-no-results-message");
+          if (!message) {
+            message = document2.createElement("div");
+            message.className = "noItemsMessage centerMessage jellyseerr-no-results-message";
+          }
+          const desiredText = JE.t("jellyseerr_no_results_jellyfin", { query });
+          if (message.textContent !== desiredText) message.textContent = desiredText;
+          if (message.previousElementSibling !== noResultsMessage) noResultsMessage.parentElement?.insertBefore(message, noResultsMessage.nextSibling);
+          if (sectionToInject.previousElementSibling !== message) message.parentElement?.insertBefore(sectionToInject, message.nextSibling);
+          return true;
+        }
+        searchPage.querySelectorAll(".jellyseerr-no-results-message").forEach((el) => el.remove());
+        searchPage.querySelectorAll(".jellyseerr-native-message-hidden").forEach((el) => el.classList.remove("jellyseerr-native-message-hidden"));
+        const lastPrimary = findLastPrimarySection();
+        if (lastPrimary) {
+          if (!isPrimarySection(sectionToInject.previousElementSibling)) lastPrimary.after(sectionToInject);
+          return true;
+        }
+        const resultsContainer = searchPage.querySelector('.searchResults, [class*="searchResults"], .padded-top.padded-bottom-page');
+        if (resultsContainer) {
+          if (sectionToInject.parentElement !== resultsContainer || resultsContainer.lastElementChild !== sectionToInject) resultsContainer.appendChild(sectionToInject);
+        } else if (searchPage.lastElementChild !== sectionToInject) {
+          searchPage.appendChild(sectionToInject);
+        }
+        return false;
+      }
+      positionSection();
+      const observer = new MutationObserver((records) => {
+        if (!sectionToInject.isConnected) {
+          observer.disconnect();
+          return;
+        }
+        if (records.every((record) => sectionToInject.contains(record.target))) return;
+        positionSection();
+      });
+      observer.observe(searchPage, { childList: true, subtree: true });
+      pendingRepositionObserver = observer;
+      pendingRepositionTimeout = window2.setTimeout(() => observer.disconnect(), 5e3);
     }
+    function updateJellyseerrResults(newResults, isJellyseerrActive, jellyseerrUserFound, container = document2) {
+      const buttons = container.querySelectorAll(".jellyseerr-request-button[data-tmdb-id]");
+      for (const button of buttons) {
+        const tmdbId = button.dataset.tmdbId;
+        const mediaType = button.dataset.mediaType;
+        const newItem = newResults.find((item) => String(item.id) === tmdbId && item.mediaType === mediaType);
+        if (!newItem || !tmdbId) continue;
+        const oldJson = button.dataset.searchResultItem;
+        if (!oldJson) continue;
+        let oldMediaInfo;
+        try {
+          const old = JSON.parse(oldJson);
+          oldMediaInfo = isRecord(old) ? old.mediaInfo : void 0;
+        } catch {
+          continue;
+        }
+        if (JSON.stringify(oldMediaInfo) === JSON.stringify(newItem.mediaInfo)) continue;
+        console.log(`${LOG_UI} Status change detected for TMDB ID ${tmdbId}. Updating button.`);
+        internals.configureRequestButton?.(button, newItem, isJellyseerrActive, jellyseerrUserFound);
+        const popover = state.jellyseerrHoverPopover;
+        if (popover?.classList.contains("show") && popover.dataset.tmdbId === tmdbId) {
+          console.log(`${LOG_UI} Active popover found for TMDB ID ${tmdbId}. Refreshing content.`);
+          const content = internals.fillHoverPopover?.(newItem);
+          if (content) internals.positionHoverPopover?.(content, parseFloat(popover.dataset.clientX || ""), parseFloat(popover.dataset.clientY || ""));
+          else ui.hideHoverPopover?.();
+        }
+      }
+    }
+    ui.updateJellyseerrIcon = updateJellyseerrIcon;
+    ui.clearInjectedSearchResults = clearInjectedSearchResults;
+    ui.renderJellyseerrResults = renderJellyseerrResults;
+    ui.updateJellyseerrResults = updateJellyseerrResults;
+    internals.markCardRequested = markCardRequested;
+    internals.analyzeSeasonStatuses = (seasons) => analyzeSeasonStatuses(seasons, JE.t);
+    internals.createJellyseerrSection = createJellyseerrSection;
+  }
 
-    /**
-     * Updates existing Seerr results in the DOM with fresh data.
-     * @param {Array} newResults - The new array of result items from the API.
-     * @param {boolean} isJellyseerrActive - If the server is reachable.
-     * @param {boolean} jellyseerrUserFound - If the current user is linked.
-     * @param {ParentNode} [container=document] - The refreshed section's container. Only
-     *   request buttons inside it are updated, so a button elsewhere on the page (such as
-     *   a retained item-details overview) is left alone.
-     */
-    ui.updateJellyseerrResults = function(newResults, isJellyseerrActive, jellyseerrUserFound, container = document) {
-        const existingButtons = container.querySelectorAll('.jellyseerr-request-button[data-tmdb-id]');
-        if (existingButtons.length === 0) return;
-
-        existingButtons.forEach(button => {
-            const tmdbId = button.dataset.tmdbId;
-            // A movie and a show can share a TMDB id, so the media type must match too.
-            const mediaType = button.dataset.mediaType;
-            const newItem = newResults.find(item => item.id.toString() === tmdbId && item.mediaType === mediaType);
-            if (!newItem) return;
-
-            const oldItemJSON = button.dataset.searchResultItem;
-            if (!oldItemJSON) return;
-
-            // Simple check: compare JSON strings of mediaInfo
-            const oldMediaInfo = JSON.parse(oldItemJSON).mediaInfo;
-            const newMediaInfo = newItem.mediaInfo;
-            if (JSON.stringify(oldMediaInfo) !== JSON.stringify(newMediaInfo)) {
-                console.log(`${logPrefix} Status change detected for TMDB ID ${tmdbId}. Updating button.`);
-                internal.configureRequestButton(button, newItem, isJellyseerrActive, jellyseerrUserFound);
-
-                // If the popover for this item is currently visible, update it
-                if (state.jellyseerrHoverPopover &&
-                    state.jellyseerrHoverPopover.classList.contains('show') &&
-                    state.jellyseerrHoverPopover.dataset.tmdbId === tmdbId) {
-
-                    console.log(`${logPrefix} Active popover found for TMDB ID ${tmdbId}. Refreshing content.`);
-                    const popoverContent = internal.fillHoverPopover(newItem);
-                    if (popoverContent) {
-                        const { clientX, clientY } = state.jellyseerrHoverPopover.dataset;
-                        internal.positionHoverPopover(popoverContent, parseFloat(clientX), parseFloat(clientY));
-                    } else {
-                        ui.hideHoverPopover(); // Hide if there's no longer valid download data
-                    }
-                }
-            }
-        });
-    };
-    internal.markCardRequested = markCardRequested;
-    internal.analyzeSeasonStatuses = analyzeSeasonStatuses;
-    internal.createJellyseerrSection = createJellyseerrSection;
-
-})(window.JellyfinEnhanced);
+  // client/src/features/seerr/core/ui/results-entry.ts
+  installResults(seerrCoreHost());
+})();
+})();
+//# sourceMappingURL=ui-results.js.map

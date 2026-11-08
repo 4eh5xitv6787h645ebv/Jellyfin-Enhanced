@@ -21,10 +21,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         {
             serviceCollection.AddSingleton<StartupService>();
             // Build-target vs host-version check; logged at startup and surfaced
-            // on the config page so a jf10 zip on a Jellyfin 12 host is not silent.
+            // on the config page so unsupported host majors are not silent.
             serviceCollection.AddSingleton<HostCompatibilityService>();
 
-            // Request-time injection middlewares (Jellyfin 10.11 & 12):
+            // Request-time injection middlewares (Jellyfin 12):
             //   - ScriptInjectionStartupFilter injects the client <script> into the
             //     web index.html;
             //   - BrandingAssetStartupFilter serves custom logo/banner/favicon images.

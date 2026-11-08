@@ -1,8 +1,9 @@
+import { spoilerState as stateFixture } from '../helpers/spoiler-state.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHarness } from '../helpers/harness.mjs';
 
-function setup(t, plugin = async () => ({})) {
+function setup(t, plugin = async () => stateFixture()) {
   let epoch = 0;
   const listeners = new Map();
   const calls = [];
@@ -24,7 +25,7 @@ for (const [input, expected] of [['AA-BB','aabb'], [null,''], [{},''], [42,'42']
   });
 }
 test('spoiler state coalesces loading, normalizes IDs, copies preferences and resets on user change', async t => {
-  const h = setup(t, async () => ({Series:{'AA-BB':{}},Movies:{'CC-DD':{}},Collections:{'EE-FF':{}},PendingTmdb:{'TV:42':{}},Prefs:{hideRatings:true}}));
+  const h = setup(t, async () => stateFixture({Series:{'AA-BB':{}},Movies:{'CC-DD':{}},Collections:{'EE-FF':{}},PendingTmdb:{'TV:42':{}},Prefs:{hideRatings:true}}));
   assert.equal(h.state.loadState(), h.state.loadState());
   await h.state.whenLoaded();
   assert.equal(h.calls.length,1);
@@ -55,7 +56,7 @@ test('old-user spoiler load cannot populate the new session', async t => {
   let resolve;
   const h = setup(t, () => new Promise(r => {resolve=r;}));
   const pending = h.state.loadState(); h.switchUser();
-  resolve({Series:{secret:{}}}); await pending;
+  resolve(stateFixture({Series:{secret:{}}})); await pending;
   assert.equal(h.state.hasAnyState(),false);
   assert.equal(h.state.isLoaded(),false);
 });
@@ -114,7 +115,7 @@ test('spoiler identity cookie follows login, switch and logout',t=>{
   h.switchUser(null); assert.equal(h.window.document.cookie,'');
 });
 test('Spoiler Guard exposes policy inputs for UI but no independent browser cache stamp', async t => {
-  const h = setup(t, async () => ({ Series: { aabb: {} }, Prefs: {} }));
+  const h = setup(t, async () => stateFixture({ Series: { aabb: {} }, Prefs: {} }));
   await h.state.whenLoaded();
   assert.equal(h.state.isEnabledFor('aabb'), true);
   assert.equal(h.state.tagStripRevision, undefined);

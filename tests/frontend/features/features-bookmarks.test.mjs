@@ -1,3 +1,4 @@
+import {installBookmarkPersistenceFixture} from '../helpers/bookmark-persistence.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHarness, plain } from '../helpers/harness.mjs';
@@ -15,11 +16,12 @@ function setup(t, bookmarks = {}, save = async()=>{}) {
     throw new Error(`Unexpected request: ${request.url}`);
   };
   const h=createHarness({JE:{pluginConfig:{BookmarksEnabled:true},userConfig:{bookmark:{bookmarks}},t:key=>key,toast:message=>toasts.push(message),escapeHtml:value=>String(value)},apiClient:{ajax}});
+  const bindBookmarks = installBookmarkPersistenceFixture(h, (...args) => routes.save(...args));
   t.after(()=>h.close());
   h.document.addEventListener('je-bookmarks-updated',e=>events.push(e.detail.reason));
   h.load('tags/rating-sources.js'); h.load('enhanced/config.js');
   h.load('enhanced/bookmarks/bookmarks.js');
-  return {...h,events,toasts,routes,api:h.JE.bookmarks};
+  return {...h,bindBookmarks,events,toasts,routes,api:h.JE.bookmarks};
 }
 /** Answers each user-settings save with a promise the test settles, in call order. */
 function controlledSaves(){
@@ -71,6 +73,7 @@ for(const operation of ['update','delete']){
 }
 test('saveUserSettings rejects only for callers that opt in',async t=>{
   let fail=true;const h=setup(t,{},async()=>{if(fail)throw new Error('offline');});
+  h.JE.userConfig.settingsRevision = 'fixture-loaded';
   h.expectConsoleError(/Failed to save settings\.json/);
   assert.equal(await h.JE.saveUserSettings('settings.json',{a:1}),undefined);
   await assert.rejects(h.JE.saveUserSettings('settings.json',{a:1},{throwOnError:true}),/offline/);
@@ -125,7 +128,7 @@ for(const operation of ['add','update','delete','syncBookmarks'])for(const failu
   let resolve,reject;const h=setup(t,{one:{itemId:'old',timestamp:5}},()=>new Promise((a,b)=>{resolve=a;reject=b;}));
   h.document.body.innerHTML='<div class="videoOsdBottom"><button class="btnUserRating" data-id="item"></button></div>';
   h.routes.items=async()=>({Items:[{Id:'item',Name:'Movie',Type:'Movie'}]});
-  const pending=operation==='add'?h.api.add(5):operation==='syncBookmarks'?h.api.syncBookmarks([{itemId:'old',timestamp:5}],{itemId:'new'}):h.api[operation]('one',{label:'updated'});
+  const pending=operation==='add'?h.api.add(5):operation==='syncBookmarks'?h.api.syncBookmarks([{id:'one',itemId:'old',timestamp:5}],{itemId:'new'}):h.api[operation]('one',{label:'updated'});
   await new Promise(done=>setImmediate(done));
   h.JE.userConfig={};
   if(failure){h.expectConsoleError(new RegExp(`Failed to ${operation==='add'?'save':operation==='syncBookmarks'?'sync':operation} bookmark`));reject(new Error('offline'));if(operation==='add'||operation==='syncBookmarks')await assert.rejects(pending,/offline/);else assert.equal(await pending,false);}else{resolve();await pending;}
@@ -137,7 +140,7 @@ test('bookmark metadata cached for one user is fetched again after account switc
  h.document.body.innerHTML='<div class="videoOsdBottom"><button class="btnUserRating" data-id="item"></button></div>';
  h.routes.items=async()=>{calls++;return {Items:[{Id:'item',Name:calls===1?'Private name':'Redacted',Type:'Movie'}]};};
  assert.equal((await h.api.add(1)).name,'Private name');
- h.JE.userConfig={bookmark:{bookmarks:{}}};
+ h.JE.userConfig={bookmark:{bookmarks:{}}};h.bindBookmarks();
  assert.equal((await h.api.add(2)).name,'Redacted');assert.equal(calls,2);
 });
 test('stale episode metadata cannot start a secondary series lookup as the old user',async t=>{

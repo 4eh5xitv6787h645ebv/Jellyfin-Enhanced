@@ -293,7 +293,7 @@ test('personal list orders subtitle chips, count tooltip names and Summary fact 
 test('settings preserve nullable inheritance, empty list and canonical values across unrelated saves', async t => {
   const h = setup(t);
   const writes = [];
-  h.window.ApiClient.ajax = async req => writes.push(JSON.parse(req.data));
+  h.window.ApiClient.ajax = async req => { writes.push(JSON.parse(req.data).Settings); return { Revision: 'saved' }; };
   h.load('enhanced/config.js');
   for (const [stored, list, strict] of [
     [{}, null, null],
@@ -301,7 +301,7 @@ test('settings preserve nullable inheritance, empty list and canonical values ac
     [{ languageTagsPriority: ['jpn', 'eng', 'en'] }, ['ja', 'en'], null],
     [{ languageTagsPriority: ['Japanese'] }, null, null],
   ]) {
-    h.JE.userConfig = { settings: stored };
+    h.JE.userConfig = { settings: stored, settingsRevision: 'fixture-loaded' };
     h.JE.currentSettings = h.JE.loadSettings();
     h.JE.currentSettings.showFileSizes = true;
     await h.JE.saveUserSettings('settings.json', h.JE.currentSettings);

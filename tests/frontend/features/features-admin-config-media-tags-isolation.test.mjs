@@ -82,7 +82,7 @@ function bootPage(t) {
     window.JEAdmin.alert = async () => {};
     const errors = [];
     window.addEventListener('error', (e) => errors.push(e.error || e.message));
-    const script = html.slice(html.indexOf('<script type="text/javascript">') + '<script type="text/javascript">'.length, html.lastIndexOf('</script>'));
+    const script = html.slice(html.lastIndexOf('<script>') + '<script>'.length, html.lastIndexOf('</script>'));
     window.eval(script);
     return { window, document: window.document, server, puts, posts, errors, logged };
 }

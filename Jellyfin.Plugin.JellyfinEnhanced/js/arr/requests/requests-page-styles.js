@@ -1,18 +1,90 @@
-// /js/arr/requests/requests-page-styles.js
-// Requests Page — CSS and theme-color injection (split from requests-page.js).
-// Owns the single injection site for the feature's styles; all former call
-// sites route through P.injectStyles, deduped by style id via JE.core.ui.injectCss.
-(function () {
-  "use strict";
+(() => {
+"use strict";
+(() => {
+  // client/src/host/downloads-host.ts
+  function downloadsHost() {
+    var _a;
+    const host = window;
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error("Downloads loaded before Jellyfin Enhanced");
+    JE.internals || (JE.internals = {});
+    const P = (_a = JE.internals).requestsPage || (_a.requestsPage = {});
+    return { JE, P, host, getApi: () => {
+      if (!host.ApiClient) throw new Error("API client unavailable");
+      return host.ApiClient;
+    } };
+  }
 
-  const JE = window.JellyfinEnhanced;
-  // Private cross-module wiring for the split requests page (js/arr/requests/requests-page-*.js).
-  // Not part of the public JE.* surface.
-  JE.internals = JE.internals || {};
-  const P = (JE.internals.requestsPage = JE.internals.requestsPage || {});
+  // client/src/features/downloads/runtime.ts
+  function runtime(deps) {
+    if (deps.P.runtime) return deps.P.runtime;
+    const { JE, P, host } = deps;
+    let generation = 0, disposed = false;
+    const lanes = /* @__PURE__ */ new Map();
+    const removers = [];
+    const identityLease = () => {
+      const api = host.ApiClient, epoch = JE.session?.getEpoch();
+      const serverId = () => typeof api?.serverId === "function" ? api.serverId() : api?.serverId;
+      const identity = api?.getCurrentUserId(), server = api?.serverAddress?.(), base = api?.getUrl("/"), token = api?.accessToken?.(), id = serverId();
+      return { current: () => !disposed && host.ApiClient === api && (epoch === void 0 || JE.session?.isCurrent(epoch) === true) && api?.getCurrentUserId() === identity && api?.serverAddress?.() === server && api?.getUrl("/") === base && api?.accessToken?.() === token && serverId() === id };
+    };
+    const owner = {
+      cleanup(callback) {
+        removers.push(callback);
+      },
+      installed: /* @__PURE__ */ new Set(),
+      mutations: /* @__PURE__ */ new Map(),
+      captureIdentity: identityLease,
+      capture(lane) {
+        const version = generation, identity = identityLease();
+        const route = host.location.pathname + host.location.hash;
+        const container = P.state?._customTabContainer || document.getElementById("je-downloads-container");
+        const serial = lane ? (lanes.get(lane) || 0) + 1 : 0;
+        if (lane) lanes.set(lane, serial);
+        return { current: () => !disposed && generation === version && (!lane || lanes.get(lane) === serial) && identity.current() && host.location.pathname + host.location.hash === route && (!container || container.isConnected && !container.closest(".hide, [hidden]") && (!container.closest(".tabContent") || container.closest(".tabContent")?.classList.contains("is-active") === true)) };
+      },
+      invalidate() {
+        generation++;
+        if (P.state) {
+          P.state.isLoading = false;
+          if (P.state.searchDebounceTimer !== null) {
+            clearTimeout(P.state.searchDebounceTimer);
+            P.state.searchDebounceTimer = null;
+          }
+        }
+      },
+      listen(target, event, callback, capture = false) {
+        target.addEventListener(event, callback, capture);
+        removers.push(() => target.removeEventListener(event, callback, capture));
+      },
+      dispose() {
+        disposed = true;
+        owner.invalidate();
+        removers.splice(0).forEach((remove) => remove());
+        if (P.state?.pollTimer) {
+          clearInterval(P.state.pollTimer);
+          P.state.pollTimer = null;
+        }
+      }
+    };
+    P.runtime = owner;
+    owner.listen(host, "hashchange", () => owner.invalidate());
+    owner.listen(host, "popstate", () => owner.invalidate());
+    owner.listen(host, "je:navigate", () => owner.invalidate());
+    owner.listen(document, "viewhide", (event) => {
+      if (event.target instanceof Element && (event.target.id === "je-downloads-page" || event.target.contains(P.state?._customTabContainer || document.getElementById("je-downloads-container")))) owner.invalidate();
+    });
+    JE.core?.lifecycle?.register("arr-requests-page").track(() => owner.dispose());
+    return owner;
+  }
 
-  // CSS Styles - minimal styling to fit Jellyfin's theme
-  const CSS_STYLES = `
+  // client/src/features/downloads/styles.ts
+  function install(deps) {
+    const { JE, P, host, getApi } = deps;
+    const life = runtime(deps);
+    if (life.installed.has("styles")) return;
+    life.installed.add("styles");
+    const CSS_STYLES = `
         .je-msym-rounded {
             font-family: 'JE Material Symbols Rounded';
             font-weight: normal;
@@ -594,26 +666,15 @@
           to { transform: rotate(360deg); }
         }
     `;
-
-  /**
-   * Inject CSS styles
-   */
-  function injectStyles() {
-    if (document.getElementById("je-downloads-styles")) return;
-    JE.core.ui.injectCss("je-downloads-styles", CSS_STYLES);
-
-    // Inject dynamic theme colors
-    injectThemeColors();
-  }
-
-  /**
-   * Inject dynamic theme colors
-   */
-  function injectThemeColors() {
-    const themeVars = JE.themer?.getThemeVariables() || {};
-    const primaryAccent = themeVars.primaryAccent || '#00a4dc';
-
-    JE.core.ui.injectCss("je-downloads-theme-colors", `
+    function injectStyles() {
+      if (document.getElementById("je-downloads-styles")) return;
+      JE.core.ui.injectCss("je-downloads-styles", CSS_STYLES);
+      injectThemeColors();
+    }
+    function injectThemeColors() {
+      const themeVars = JE.themer?.getThemeVariables() || {};
+      const primaryAccent = themeVars.primaryAccent || "#00a4dc";
+      JE.core.ui.injectCss("je-downloads-theme-colors", `
       .je-requests-tab.emby-button.active,
       .je-issues-tab.emby-button.active,
       .je-downloads-tab.emby-button.active {
@@ -624,7 +685,12 @@
         background: ${primaryAccent} !important;
       }
     `);
+    }
+    P.injectStyles = injectStyles;
   }
 
-  P.injectStyles = injectStyles;
+  // client/src/features/downloads/styles-entry.ts
+  install(downloadsHost());
 })();
+})();
+//# sourceMappingURL=requests-page-styles.js.map

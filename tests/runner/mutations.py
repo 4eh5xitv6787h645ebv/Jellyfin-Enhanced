@@ -33,7 +33,7 @@ CASES = [
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--target', choices=['jf10', 'jf12'], default='jf12')
+    parser.add_argument('--target', choices=['jf12'], default='jf12')
     parser.add_argument('--layer', choices=['all', 'backend', 'frontend'], default='all')
     parser.add_argument('--cases', type=Path, help='Local JSON case list, e.g. tests/history/backend-mutations.json')
     parser.add_argument('--artifacts', type=Path, default=ROOT/'artifacts/mutations')

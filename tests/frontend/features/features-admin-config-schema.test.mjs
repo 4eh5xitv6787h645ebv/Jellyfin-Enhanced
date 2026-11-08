@@ -78,9 +78,12 @@ test('the per-user setting list matches the controller', () => {
         ...controller.slice(a, b).matchAll(/=\s*defaultConfig\.(\w+)/g),
         ...controller.slice(c, d).matchAll(/=\s*src\.(\w+)/g)
     ].map((m) => m[1]));
-    const generated = readFileSync(join(config, 'admin', 'per-user.js'), 'utf8');
+    const generated = readFileSync(join(root, '..', 'client', 'src', 'admin', 'config', 'per-user-props.ts'), 'utf8');
     const actual = new Set([...generated.matchAll(/^\s+'(\w+)',?$/gm)].map((m) => m[1]));
     assert.deepEqual([...actual].sort(), [...expected].sort(), 'run: python scripts/generate_per_user_props.py');
+    // The script the page runs carries the same list.
+    const emitted = readFileSync(join(config, 'admin', 'per-user.js'), 'utf8');
+    assert.deepEqual([...emitted.matchAll(/"(\w+)"/g)].map((m) => m[1]).sort(), [...expected].sort(), 'run: npm run client:build');
 });
 
 test('per-user settings show the personal-copy icon', (t) => {

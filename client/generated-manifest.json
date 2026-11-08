@@ -1,0 +1,1730 @@
+{
+  "version": 1,
+  "tools": {
+    "typescript": "6.0.3",
+    "esbuild": "0.28.2"
+  },
+  "entries": [
+    {
+      "output": "Configuration/admin/per-user.js",
+      "source": "client/src/admin/config/per-user-entry.ts",
+      "manifest": "client/entries/admin-config.json"
+    },
+    {
+      "output": "Configuration/admin/sections.js",
+      "source": "client/src/admin/config/sections-entry.ts",
+      "manifest": "client/entries/admin-config.json"
+    },
+    {
+      "output": "Configuration/jeAdmin.js",
+      "source": "client/src/admin/config/engine-entry.ts",
+      "manifest": "client/entries/admin-config.json"
+    },
+    {
+      "output": "js/arr/arr-links.js",
+      "source": "client/src/features/details-providers/arr-links.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/arr/arr-tag-links.js",
+      "source": "client/src/features/details-providers/arr-tag-links.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/arr/calendar/calendar-custom-tab.js",
+      "source": "client/src/features/calendar/calendar-custom-tab.ts",
+      "manifest": "client/entries/calendar.json"
+    },
+    {
+      "output": "js/arr/calendar/calendar-page-actions.js",
+      "source": "client/src/features/calendar/calendar-page-actions.ts",
+      "manifest": "client/entries/calendar.json"
+    },
+    {
+      "output": "js/arr/calendar/calendar-page-data.js",
+      "source": "client/src/features/calendar/calendar-page-data.ts",
+      "manifest": "client/entries/calendar.json"
+    },
+    {
+      "output": "js/arr/calendar/calendar-page-init.js",
+      "source": "client/src/features/calendar/calendar-page-init.ts",
+      "manifest": "client/entries/calendar.json"
+    },
+    {
+      "output": "js/arr/calendar/calendar-page-render-events.js",
+      "source": "client/src/features/calendar/calendar-page-render-events.ts",
+      "manifest": "client/entries/calendar.json"
+    },
+    {
+      "output": "js/arr/calendar/calendar-page-render-views.js",
+      "source": "client/src/features/calendar/calendar-page-render-views.ts",
+      "manifest": "client/entries/calendar.json"
+    },
+    {
+      "output": "js/arr/calendar/calendar-page-styles.js",
+      "source": "client/src/features/calendar/calendar-page-styles.ts",
+      "manifest": "client/entries/calendar.json"
+    },
+    {
+      "output": "js/arr/requests/requests-custom-tab.js",
+      "source": "client/src/features/downloads/custom-tab-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/arr/requests/requests-page-actions.js",
+      "source": "client/src/features/downloads/actions-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/arr/requests/requests-page-data.js",
+      "source": "client/src/features/downloads/data-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/arr/requests/requests-page-init.js",
+      "source": "client/src/features/downloads/init-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/arr/requests/requests-page-render-cards.js",
+      "source": "client/src/features/downloads/render-cards-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/arr/requests/requests-page-render-helpers.js",
+      "source": "client/src/features/downloads/render-helpers-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/arr/requests/requests-page-render.js",
+      "source": "client/src/features/downloads/render-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/arr/requests/requests-page-styles.js",
+      "source": "client/src/features/downloads/styles-entry.ts",
+      "manifest": "client/entries/downloads.json"
+    },
+    {
+      "output": "js/awards/awards.js",
+      "source": "client/src/features/details-providers/awards.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/contracts/bootstrap.js",
+      "source": "client/src/contracts/bootstrap-entry.ts",
+      "manifest": "client/entries/contracts.json"
+    },
+    {
+      "output": "js/core/api-client.js",
+      "source": "client/src/core/api/entry.ts",
+      "manifest": "client/entries/core-api.json"
+    },
+    {
+      "output": "js/core/dom-observer.js",
+      "source": "client/src/core/dom/entry.ts",
+      "manifest": "client/entries/core-ui.json"
+    },
+    {
+      "output": "js/core/lifecycle.js",
+      "source": "client/src/core/lifecycle-entry.ts",
+      "manifest": "client/entries/core-runtime.json"
+    },
+    {
+      "output": "js/core/media-language.js",
+      "source": "client/src/features/media-tags/rules/media-language-entry.ts",
+      "manifest": "client/entries/tag-rules.json"
+    },
+    {
+      "output": "js/core/navigation.js",
+      "source": "client/src/core/navigation-entry.ts",
+      "manifest": "client/entries/core-runtime.json"
+    },
+    {
+      "output": "js/core/session.js",
+      "source": "client/src/core/session-entry.ts",
+      "manifest": "client/entries/core-runtime.json"
+    },
+    {
+      "output": "js/core/tag-layout.js",
+      "source": "client/src/features/media-tags/rules/tag-layout-entry.ts",
+      "manifest": "client/entries/tag-rules.json"
+    },
+    {
+      "output": "js/core/tag-look.js",
+      "source": "client/src/features/media-tags/rules/tag-look-entry.ts",
+      "manifest": "client/entries/tag-rules.json"
+    },
+    {
+      "output": "js/core/tag-renderer-base.js",
+      "source": "client/src/features/media-tags/runtime/tag-renderer-base-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/core/ui-kit.js",
+      "source": "client/src/core/ui/entry.ts",
+      "manifest": "client/entries/core-ui.json"
+    },
+    {
+      "output": "js/elsewhere/elsewhere.js",
+      "source": "client/src/features/details-providers/elsewhere.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/elsewhere/reviews.js",
+      "source": "client/src/features/details-providers/reviews.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/enhanced/admintags/admin-tags.js",
+      "source": "client/src/features/admin-tags/admin-tags.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/custom-rules-editor.js",
+      "source": "client/src/features/admin-tags/custom-rules-editor.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/agerating.js",
+      "source": "client/src/features/admin-tags/sections/agerating.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/awards.js",
+      "source": "client/src/features/admin-tags/sections/awards.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/badges.js",
+      "source": "client/src/features/admin-tags/sections/badges.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/colours.js",
+      "source": "client/src/features/admin-tags/sections/colours.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/custom.js",
+      "source": "client/src/features/admin-tags/sections/custom.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/genre.js",
+      "source": "client/src/features/admin-tags/sections/genre.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/language.js",
+      "source": "client/src/features/admin-tags/sections/language.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/layout.js",
+      "source": "client/src/features/admin-tags/sections/layout.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/logos.js",
+      "source": "client/src/features/admin-tags/sections/logos.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/overview.js",
+      "source": "client/src/features/admin-tags/sections/overview.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/people.js",
+      "source": "client/src/features/admin-tags/sections/people.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/portable.js",
+      "source": "client/src/features/admin-tags/sections/portable.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/quality.js",
+      "source": "client/src/features/admin-tags/sections/quality.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/rating.js",
+      "source": "client/src/features/admin-tags/sections/rating.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/rules.js",
+      "source": "client/src/features/admin-tags/sections/rules.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/server.js",
+      "source": "client/src/features/admin-tags/sections/server.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/sections/status.js",
+      "source": "client/src/features/admin-tags/sections/status.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/admintags/tag-styles-editor.js",
+      "source": "client/src/features/admin-tags/tag-styles-editor.ts",
+      "manifest": "client/entries/admin-tags.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks-library-init.js",
+      "source": "client/src/features/bookmarks/library-init.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks-library-items.js",
+      "source": "client/src/features/bookmarks/library-items.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks-library-modals.js",
+      "source": "client/src/features/bookmarks/library-modals.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks-library-page.js",
+      "source": "client/src/features/bookmarks/library-page.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks-library-render.js",
+      "source": "client/src/features/bookmarks/library-render.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks-library-replacements.js",
+      "source": "client/src/features/bookmarks/library-replacements.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks-library-styles.js",
+      "source": "client/src/features/bookmarks/library-styles.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/bookmarks/bookmarks.js",
+      "source": "client/src/features/bookmarks/bookmarks.ts",
+      "manifest": "client/entries/bookmarks.json"
+    },
+    {
+      "output": "js/enhanced/catchup/catchup-activity.js",
+      "source": "client/src/features/catchup/catchup-activity.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/enhanced/catchup/catchup-core.js",
+      "source": "client/src/features/catchup/catchup-core.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/enhanced/catchup/catchup-custom-tab.js",
+      "source": "client/src/features/catchup/catchup-custom-tab.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/enhanced/catchup/catchup-deck.js",
+      "source": "client/src/features/catchup/catchup-deck.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/enhanced/catchup/catchup-page.js",
+      "source": "client/src/features/catchup/catchup-page.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/enhanced/catchup/catchup-styles.js",
+      "source": "client/src/features/catchup/catchup-styles.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/enhanced/config.js",
+      "source": "client/src/features/settings/entry.ts",
+      "manifest": "client/entries/settings.json"
+    },
+    {
+      "output": "js/enhanced/events.js",
+      "source": "client/src/features/chrome/events-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/enhanced/features-random-button.js",
+      "source": "client/src/features/details-providers/random-button.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/enhanced/header-actions.js",
+      "source": "client/src/features/chrome/header-actions-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/enhanced/helpers.js",
+      "source": "client/src/features/shared/helpers-entry.ts",
+      "manifest": "client/entries/shared.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-buttons.js",
+      "source": "client/src/features/hidden-content/hidden-content-buttons.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-custom-tab.js",
+      "source": "client/src/features/hidden-content/hidden-content-custom-tab.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-data.js",
+      "source": "client/src/features/hidden-content/hidden-content-data.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-dialogs.js",
+      "source": "client/src/features/hidden-content/hidden-content-dialogs.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-filter.js",
+      "source": "client/src/features/hidden-content/hidden-content-filter.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-init.js",
+      "source": "client/src/features/hidden-content/hidden-content-init.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-page-admin.js",
+      "source": "client/src/features/hidden-content/hidden-content-page-admin.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-page-cards.js",
+      "source": "client/src/features/hidden-content/hidden-content-page-cards.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-page-init.js",
+      "source": "client/src/features/hidden-content/hidden-content-page-init.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-page-nav.js",
+      "source": "client/src/features/hidden-content/hidden-content-page-nav.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-page-render.js",
+      "source": "client/src/features/hidden-content/hidden-content-page-render.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-page-state.js",
+      "source": "client/src/features/hidden-content/hidden-content-page-state.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-page-styles.js",
+      "source": "client/src/features/hidden-content/hidden-content-page-styles.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-panel.js",
+      "source": "client/src/features/hidden-content/hidden-content-panel.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-save.js",
+      "source": "client/src/features/hidden-content/hidden-content-save.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/hiddencontent/hidden-content-styles.js",
+      "source": "client/src/features/hidden-content/hidden-content-styles.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/homeremoval/features-remove-home.js",
+      "source": "client/src/features/hidden-content/features-remove-home.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/homeremoval/features-remove-multiselect.js",
+      "source": "client/src/features/hidden-content/features-remove-multiselect.ts",
+      "manifest": "client/entries/hidden-content.json"
+    },
+    {
+      "output": "js/enhanced/icons.js",
+      "source": "client/src/features/shared/icons-entry.ts",
+      "manifest": "client/entries/shared.json"
+    },
+    {
+      "output": "js/enhanced/itemdetails/features-details-media-info.js",
+      "source": "client/src/features/details-providers/media-info.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/enhanced/itemdetails/features-details-page.js",
+      "source": "client/src/features/details-providers/details-page.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/enhanced/itemdetails/features-release-dates.js",
+      "source": "client/src/features/details-providers/release-dates.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/enhanced/native-tabs.js",
+      "source": "client/src/features/chrome/native-tabs-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/enhanced/player/auto-skip.js",
+      "source": "client/src/features/player/auto-skip.ts",
+      "manifest": "client/entries/player.json"
+    },
+    {
+      "output": "js/enhanced/player/now-playing.js",
+      "source": "client/src/features/player/now-playing.ts",
+      "manifest": "client/entries/player.json"
+    },
+    {
+      "output": "js/enhanced/player/osd-rating.js",
+      "source": "client/src/features/player/osd-rating.ts",
+      "manifest": "client/entries/player.json"
+    },
+    {
+      "output": "js/enhanced/player/pausescreen.js",
+      "source": "client/src/features/player/pausescreen.ts",
+      "manifest": "client/entries/player.json"
+    },
+    {
+      "output": "js/enhanced/player/playback-rating-badge.js",
+      "source": "client/src/features/player/playback-rating-badge.ts",
+      "manifest": "client/entries/player.json"
+    },
+    {
+      "output": "js/enhanced/player/playback.js",
+      "source": "client/src/features/player/playback.ts",
+      "manifest": "client/entries/player.json"
+    },
+    {
+      "output": "js/enhanced/player/subtitles.js",
+      "source": "client/src/features/player/subtitles.ts",
+      "manifest": "client/entries/player.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-entry-points.js",
+      "source": "client/src/features/settings-panel/ui-entry-points.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-hidden-content.js",
+      "source": "client/src/features/settings-panel/ui-panel-hidden-content.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-language.js",
+      "source": "client/src/features/settings-panel/ui-panel-language.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-media-tags.js",
+      "source": "client/src/features/settings-panel/ui-panel-media-tags.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-resize.js",
+      "source": "client/src/features/settings-panel/ui-panel-resize.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-settings.js",
+      "source": "client/src/features/settings-panel/ui-panel-settings.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-shortcut-editor.js",
+      "source": "client/src/features/settings-panel/ui-panel-shortcut-editor.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-tag-editor.js",
+      "source": "client/src/features/settings-panel/ui-panel-tag-editor.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-tag-looks.js",
+      "source": "client/src/features/settings-panel/ui-panel-tag-looks.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-tag-portable.js",
+      "source": "client/src/features/settings-panel/ui-panel-tag-portable.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-tag-preview.js",
+      "source": "client/src/features/settings-panel/ui-panel-tag-preview.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel-template.js",
+      "source": "client/src/features/settings-panel/ui-panel-template.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-panel.js",
+      "source": "client/src/features/settings-panel/ui-panel.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/settingspanel/ui-release-notes.js",
+      "source": "client/src/features/settings-panel/ui-release-notes.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/detail-button.js",
+      "source": "client/src/features/spoiler-guard/detail-button.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/dialog.js",
+      "source": "client/src/features/spoiler-guard/dialog.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/identity.js",
+      "source": "client/src/features/spoiler-guard/identity.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/ids.js",
+      "source": "client/src/features/spoiler-guard/ids.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/image-refresh.js",
+      "source": "client/src/features/spoiler-guard/image-refresh.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/index.js",
+      "source": "client/src/features/spoiler-guard/index.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/seerr-toggle.js",
+      "source": "client/src/features/spoiler-guard/seerr-toggle.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/settings-tab.js",
+      "source": "client/src/features/spoiler-guard/settings-tab.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/snooze.js",
+      "source": "client/src/features/spoiler-guard/snooze.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/state.js",
+      "source": "client/src/features/spoiler-guard/state.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/styles.js",
+      "source": "client/src/features/spoiler-guard/styles.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/spoilerguard/watched-refresh.js",
+      "source": "client/src/features/spoiler-guard/watched-refresh.ts",
+      "manifest": "client/entries/spoiler-guard.json"
+    },
+    {
+      "output": "js/enhanced/themer.js",
+      "source": "client/src/features/shared/themer-entry.ts",
+      "manifest": "client/entries/shared.json"
+    },
+    {
+      "output": "js/enhanced/translations.js",
+      "source": "client/src/features/shared/translations-entry.ts",
+      "manifest": "client/entries/shared.json"
+    },
+    {
+      "output": "js/enhanced/ui-styles.js",
+      "source": "client/src/features/settings-panel/ui-styles.ts",
+      "manifest": "client/entries/settings-panel.json"
+    },
+    {
+      "output": "js/extras/active-streams.js",
+      "source": "client/src/features/chrome/active-streams-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/extras/activity-custom-tab.js",
+      "source": "client/src/features/activity/activity-custom-tab.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/extras/activity-page.js",
+      "source": "client/src/features/activity/activity-page.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/extras/colored-activity-icons.js",
+      "source": "client/src/features/activity/colored-activity-icons.ts",
+      "manifest": "client/entries/social-pages.json"
+    },
+    {
+      "output": "js/extras/colored-ratings.js",
+      "source": "client/src/features/details-providers/colored-ratings.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/extras/login-image.js",
+      "source": "client/src/features/chrome/login-image-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/extras/plugin-icons.js",
+      "source": "client/src/features/chrome/plugin-icons-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/extras/plugin-revisions.js",
+      "source": "client/src/features/chrome/plugin-revisions-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/extras/theme-selector.js",
+      "source": "client/src/features/chrome/theme-selector-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/jellyseerr/api.js",
+      "source": "client/src/features/seerr/core/api-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/discovery/collection-discovery.js",
+      "source": "client/src/features/seerr/discovery/collection-discovery.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/discovery/discovery-base.js",
+      "source": "client/src/features/seerr/discovery/discovery-base.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/discovery/discovery-filter-utils.js",
+      "source": "client/src/features/seerr/discovery/discovery-filter-utils.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/discovery/genre-discovery.js",
+      "source": "client/src/features/seerr/discovery/genre-discovery.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/discovery/network-discovery.js",
+      "source": "client/src/features/seerr/discovery/network-discovery.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/discovery/person-discovery.js",
+      "source": "client/src/features/seerr/discovery/person-discovery.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/discovery/tag-discovery.js",
+      "source": "client/src/features/seerr/discovery/tag-discovery.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/hss-discovery-handler.js",
+      "source": "client/src/features/seerr/details/hss-discovery-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/issue-reporter.js",
+      "source": "client/src/features/seerr/details/issues/issue-reporter-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/item-details.js",
+      "source": "client/src/features/seerr/details/details-page/item-details-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/jellyseerr.js",
+      "source": "client/src/features/seerr/core/search-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/modal.js",
+      "source": "client/src/features/seerr/core/modal-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-actions-tv.js",
+      "source": "client/src/features/seerr/details/moreinfo/actions-tv-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-actions.js",
+      "source": "client/src/features/seerr/details/moreinfo/actions-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-badges.js",
+      "source": "client/src/features/seerr/details/moreinfo/badges-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-data.js",
+      "source": "client/src/features/seerr/details/moreinfo/data-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-init.js",
+      "source": "client/src/features/seerr/details/moreinfo/init-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-render.js",
+      "source": "client/src/features/seerr/details/moreinfo/render-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-seasons.js",
+      "source": "client/src/features/seerr/details/moreinfo/seasons-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/moreinfo/more-info-modal-styles.js",
+      "source": "client/src/features/seerr/details/moreinfo/styles-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-catalog.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-catalog.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-category.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-category.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-custom-tab.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-custom-tab.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-data.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-data.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-init.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-init.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-page.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-page.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-render.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-render.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/recommendations/recommendations-styles.js",
+      "source": "client/src/features/seerr/recommendations/recommendations-styles.ts",
+      "manifest": "client/entries/discovery-recommendations.json"
+    },
+    {
+      "output": "js/jellyseerr/request-manager.js",
+      "source": "client/src/features/seerr/core/request-manager-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/seamless-scroll.js",
+      "source": "client/src/features/seerr/details/scroll/seamless-scroll-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/seerr-detail-link.js",
+      "source": "client/src/features/seerr/details/seerr-detail-link-entry.ts",
+      "manifest": "client/entries/seerr-details.json"
+    },
+    {
+      "output": "js/jellyseerr/seerr-status.js",
+      "source": "client/src/features/seerr/core/status-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-badges.js",
+      "source": "client/src/features/seerr/core/ui/badges-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-buttons.js",
+      "source": "client/src/features/seerr/core/ui/buttons-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-cards.js",
+      "source": "client/src/features/seerr/core/ui/cards-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-icons.js",
+      "source": "client/src/features/seerr/core/ui/icons-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-popover.js",
+      "source": "client/src/features/seerr/core/ui/popover-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-quota.js",
+      "source": "client/src/features/seerr/core/ui/quota-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-request-modals.js",
+      "source": "client/src/features/seerr/core/ui/request-modals-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-results.js",
+      "source": "client/src/features/seerr/core/ui/results-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-season-modal.js",
+      "source": "client/src/features/seerr/core/ui/season-modal-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/jellyseerr/ui/ui-styles.js",
+      "source": "client/src/features/seerr/core/ui/styles-entry.ts",
+      "manifest": "client/entries/seerr-core.json"
+    },
+    {
+      "output": "js/others/doesthedogdie.js",
+      "source": "client/src/features/details-providers/doesthedogdie.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/others/letterboxd-links.js",
+      "source": "client/src/features/details-providers/letterboxd-links.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/others/mdblist-ratings.js",
+      "source": "client/src/features/details-providers/mdblist-ratings.ts",
+      "manifest": "client/entries/details-providers.json"
+    },
+    {
+      "output": "js/others/splashscreen.js",
+      "source": "client/src/features/chrome/splashscreen-entry.ts",
+      "manifest": "client/entries/chrome.json"
+    },
+    {
+      "output": "js/plugin.js",
+      "source": "client/src/bootstrap/loader/entry.ts",
+      "manifest": "client/entries/bootstrap-pages.json"
+    },
+    {
+      "output": "js/tags/ageratingtags.js",
+      "source": "client/src/features/media-tags/runtime/ageratingtags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/awardstags.js",
+      "source": "client/src/features/media-tags/runtime/awardstags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/customtags.js",
+      "source": "client/src/features/media-tags/runtime/customtags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/genretags.js",
+      "source": "client/src/features/media-tags/runtime/genretags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/languagetags.js",
+      "source": "client/src/features/media-tags/runtime/languagetags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/logotags.js",
+      "source": "client/src/features/media-tags/runtime/logotags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/peopletags.js",
+      "source": "client/src/features/media-tags/runtime/peopletags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/qualitytags.js",
+      "source": "client/src/features/media-tags/runtime/qualitytags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/rating-sources.js",
+      "source": "client/src/features/media-tags/rules/rating-sources-entry.ts",
+      "manifest": "client/entries/tag-rules.json"
+    },
+    {
+      "output": "js/tags/ratingtags.js",
+      "source": "client/src/features/media-tags/runtime/ratingtags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/status-vocabulary.js",
+      "source": "client/src/features/media-tags/rules/status-vocabulary-entry.ts",
+      "manifest": "client/entries/tag-rules.json"
+    },
+    {
+      "output": "js/tags/statustags.js",
+      "source": "client/src/features/media-tags/runtime/statustags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/tag-cache-store.js",
+      "source": "client/src/features/media-tags/runtime/tag-cache-store-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/tag-direct-play.js",
+      "source": "client/src/features/media-tags/runtime/tag-direct-play-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/tag-item-editor.js",
+      "source": "client/src/features/media-tags/runtime/tag-item-editor-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/tag-item-menu.js",
+      "source": "client/src/features/media-tags/runtime/tag-item-menu-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/tag-layout-styles.js",
+      "source": "client/src/features/media-tags/runtime/tag-layout-styles-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/tag-pipeline.js",
+      "source": "client/src/features/media-tags/runtime/tag-pipeline-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/tag-poster-colours.js",
+      "source": "client/src/features/media-tags/rules/poster-colours-entry.ts",
+      "manifest": "client/entries/tag-rules.json"
+    },
+    {
+      "output": "js/tags/tag-styles.js",
+      "source": "client/src/features/media-tags/runtime/tag-styles-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    },
+    {
+      "output": "js/tags/userreviewtags.js",
+      "source": "client/src/features/media-tags/runtime/userreviewtags-entry.ts",
+      "manifest": "client/entries/tag-runtime.json"
+    }
+  ],
+  "html": [
+    {
+      "output": "Configuration/configPage.html",
+      "manifest": "client/html-entries/admin-config.json",
+      "template": "client/html/admin-config/configPage.html",
+      "templateSha256": "6e0183d44fcc0d6cb16e3abad0b4a0e3475c5dce16983bb08c3ae515287e589b",
+      "outputSha256": "cd2477b1dd076f297541a0a8caea1aafd7d9fbc5b8cfa9604815f8736cac2840",
+      "scripts": [
+        {
+          "name": "startup",
+          "scriptIndex": 0,
+          "source": "client/src/admin/config/startup-entry.ts",
+          "sha256": "1185ca41234e99a992cd2f430600e9c461b2dcc4b65ba1806b2bd8247853e733",
+          "inputs": {
+            "client/src/admin/config/startup-entry.ts": "c0f00cc5cb997a6cf30ed25c5121644ca6a748b3ee46a230bf504ee6bffbdc7e",
+            "client/src/admin/config/startup.ts": "073f4d045361f56714042967ed446d8a2498230cff5dd724a19d5a13a2e42a04",
+            "client/src/host/admin-config-host.ts": "49de8cee697384ebb93ffc86705bbc3bc7fdd9c292482e16adafeb9e3e3db70f"
+          }
+        },
+        {
+          "name": "main",
+          "scriptIndex": 1,
+          "source": "client/src/admin/config/page-entry.ts",
+          "sha256": "5c65e12e45f2f0d79be92f52b099e5806d29de237b836195fc6f4c8ea5662f4c",
+          "inputs": {
+            "client/src/admin/config/domain/config-values.ts": "438b48bcac728b62b61c59dd541e190beadc5329a3b387fce0857ef3c2c720e9",
+            "client/src/admin/config/domain/config.ts": "9d01375f8e8fae1d4daba8d3b517bba38697fc32aad5926b57966703fa313e01",
+            "client/src/admin/config/domain/custom-tabs.ts": "62acc449704a13f260f733211b4e125d66da85558fde2ca0aaf36a12603e624b",
+            "client/src/admin/config/domain/http.ts": "3de96cff04499569ea3adb5223283e90063f2a6ded04ef17b6e265dfed1b59ae",
+            "client/src/admin/config/domain/seerr-import.ts": "5a1ae003f35f45b64229608548c4a38130c35c93f6c6b3fa55bb76e3c89f8993",
+            "client/src/admin/config/domain/shortcuts.ts": "fcd07723759e2266d62e04f012f63ec4e6fd1f52af6e977d95c6382707e0da65",
+            "client/src/admin/config/domain/whats-new.ts": "894bdc2385623c43d27fb549461154f97ba4edd2cd5e4eea360e4467e6017f27",
+            "client/src/admin/config/domain/write-scope.ts": "2b569c8e9ba25d85e44367b96558272d1f2efe8cf53d5e8fb816319557c56520",
+            "client/src/admin/config/engine/lifecycle.ts": "1588a62409f4e91c09dc42ea3fcc6292bbcb24de778ae7ef844e37cc0294a3da",
+            "client/src/admin/config/page-entry.ts": "38d89c62558d2d17101a98e2fa58230f98bf20faa9ee05c5aa0c72c36c641ca5",
+            "client/src/admin/config/page/actions.ts": "ecf05d3f79e94fe69255f3032f999553155e1797dd97adf79dc82d39c57bb1ef",
+            "client/src/admin/config/page/arr-tests.ts": "82f5999dcad23ba03e0566c0ab7c831e90ad1239225ad89b580ac4dcac1f4b0f",
+            "client/src/admin/config/page/arr.ts": "0e88a5ce05e84e4be3e02c81fc1e1d7d93e46406cd4e8fe528a2a6b1bb679458",
+            "client/src/admin/config/page/audit.ts": "e5baedd2c0d02ce16ccf1b7a0713fca89de4144df5d413a1fc7af84ef2f6d243",
+            "client/src/admin/config/page/auto-movie.ts": "9dae1d5ee47769865572f8ca4226e1d69060d7a112e2470fb33276910db17221",
+            "client/src/admin/config/page/banners.ts": "befa95a3b7f60dbbe0115772f3a400a4394d3be5314de96219fc11d8963ec215",
+            "client/src/admin/config/page/bindings.ts": "40dab5561bfff042491f4bda125dec913c470c5376ca22d1d8164a0f01605c0a",
+            "client/src/admin/config/page/blocked-users.ts": "bf006066e475f93c90edae910541be191dae3bf8fdbed946beb9efc9d59980e2",
+            "client/src/admin/config/page/boot.ts": "c328c388c941e6d7bfda5beeed3585248a4d38f4c6fb3ab175c5af610e019da9",
+            "client/src/admin/config/page/branding.ts": "372369a298df26f9fe540f6ae63725deb526835e49d543f913b7a3b1df8e0f85",
+            "client/src/admin/config/page/connections.ts": "45846cddc98bd72cf3e98086099ae16b38d0d91454e768bb685691d86e4262c2",
+            "client/src/admin/config/page/custom-tabs.ts": "4c941a39a1e11de1e45a325f0fb2d8bf33cca66d01b8fbefc941e66c42f1eb72",
+            "client/src/admin/config/page/dep-wiring.ts": "b7c7bd6b4b8f3e807d47aa5a90bf8330434e0e32ff1507dedfadeaf5fbcc467c",
+            "client/src/admin/config/page/dependencies.ts": "979c00e17eb9d32ae2904733d0210331baa8c16e4a55e2756928215e934a380d",
+            "client/src/admin/config/page/descriptions.ts": "181bfeed758ea647f0ac16c8f2ce0f987c1ca60620c8e1878fc93cf1b5f0c245",
+            "client/src/admin/config/page/dirty.ts": "5d28aea7f2cf1d8ebaae355be2d8af95fcd9edaea9c266b6bb55823f7f5815ca",
+            "client/src/admin/config/page/display-cards.ts": "b45eccd859712261606050f81242b735d6b14c9948b271e8eca81e0203589a24",
+            "client/src/admin/config/page/dom.ts": "c8b6adee359f97d2ef7fda699e486b350652c8639458eac933f88558970f9870",
+            "client/src/admin/config/page/gated-help.ts": "99574153ee48cf4fe8e69a58f781e8314a6692f0a44b7fd4d43f91b62d92c681",
+            "client/src/admin/config/page/links.ts": "cdf271dd92f0dedecd8fb75b211145e2d5d771c254b7dc593a077351479fd2ee",
+            "client/src/admin/config/page/load.ts": "3b30175bae741c573054206dde023e3955326c30bd2427a5ab2358a6b5c6d339",
+            "client/src/admin/config/page/locales.ts": "4ceb5d3e5525471ca2db3a000e77ec799841498b121457f30e65e6f0f6738165",
+            "client/src/admin/config/page/maintenance.ts": "d44d8cd1a3d74e0300a8ac96fdeb9ae34325e9c6802d45866d19bddfdec65ed7",
+            "client/src/admin/config/page/mappings.ts": "89ded1954b38f6ff06c9395e189f994129eaa5d6c112146002f6df09f72759e1",
+            "client/src/admin/config/page/media-tags-tab.ts": "467237a7cf707c599c91f3193e5e29d05719b3e2202ad575f910436ffd0dd954",
+            "client/src/admin/config/page/misc.ts": "808562b99544ab3e421f732428c630df6d0efd59c41a3e3a52d40a9bcef7082b",
+            "client/src/admin/config/page/overview-cards.ts": "e2d2765c8eb5f1771074436ee4bf193bed3b477702c5dcf8e19c8fda0f603bde",
+            "client/src/admin/config/page/page.ts": "55772763f8c4c9c39b06f96b2b0b9219bba1b786a80ed57531f045e31fd1ee25",
+            "client/src/admin/config/page/plugins.ts": "73b80050e840a68c9a44cdae8932e0925d4424ec7d805a3c24d2e97442973885",
+            "client/src/admin/config/page/probes.ts": "c3fe0748f310fa826812a163bb4011901e1e585e964b72d5565074e7b45d28a5",
+            "client/src/admin/config/page/regions.ts": "255af103b2cc2786d6f83907a6c75ba180e63899566278a3e2d8593f8e8afacf",
+            "client/src/admin/config/page/save.ts": "4c59f3c6740db50c6cc7e80b76e3d5620317c652f11885c0d8c6d37b84ab07d1",
+            "client/src/admin/config/page/search.ts": "62759c431d4c085b344c3a5932379d4430ca54e69551d556301bf51b074c7fa5",
+            "client/src/admin/config/page/service-status.ts": "11356eb62c2eebb433e7c8ba2d72a372206ed2a734e4df81c13785e3fcb4435e",
+            "client/src/admin/config/page/shortcuts.ts": "43348956b860bc0acbab2fb59e21d57b6d94c399dac410c318fe97132e41b09c",
+            "client/src/admin/config/page/spoiler.ts": "a986a86d89186e2e7f1bf6b760318f79a2b863a9fef951d075e4ac1c61af0921",
+            "client/src/admin/config/page/tabs.ts": "60255967f8392fad2cdfbd847ec5603582275d1f2d13f359130aa006bc947dbd",
+            "client/src/admin/config/page/theme.ts": "868561a93b240cdc9acdfb52d1a12baaab3dd0a54099a31240871c25ca87c83c",
+            "client/src/admin/config/page/timing.ts": "07ccbaad41c85ad67dd26542456f550f43fd3247a9cd3a422bbd1b5d18f67012",
+            "client/src/admin/config/page/whats-new.ts": "7ce186ba5636af208524dc6aae4df38ce6bbc91fde87128c175baa5c49fddfac",
+            "client/src/host/admin-config-host.ts": "49de8cee697384ebb93ffc86705bbc3bc7fdd9c292482e16adafeb9e3e3db70f"
+          }
+        }
+      ]
+    },
+    {
+      "output": "Configuration/mediaTagsPage.html",
+      "manifest": "client/html-entries/admin-config.json",
+      "template": "client/html/admin-config/mediaTagsPage.html",
+      "templateSha256": "a930b8550dc62ccbebe5bc85b2a47a4d00163678fe4fd8d83094ba09127c8a2b",
+      "outputSha256": "852a722753d35261a5456aa8e6b30ec435939344335c8ea1741bd836d6c7a691",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/admin/config/media-tags-redirect-entry.ts",
+          "sha256": "37b5f5b3710cf1dedb5eb1a14fceb7a52b9bb5233819f74699b815fe82e3d7f5",
+          "inputs": {
+            "client/src/admin/config/media-tags-redirect-entry.ts": "fe44bd46c242b1058c3a3c0dc5d5b1117e7b7bd6811b1a20d9f146febbc4f559",
+            "client/src/admin/config/media-tags-redirect.ts": "6729cfdfd38b2c4775f1e299f17e6fe6d03629a0b131e1c4b1698511f11a0ca9"
+          }
+        }
+      ]
+    },
+    {
+      "output": "PluginPages/ActivityPage.html",
+      "manifest": "client/html-entries/bootstrap-pages.json",
+      "template": "client/html/bootstrap-pages/ActivityPage.html",
+      "templateSha256": "b3e08a8e486376f1874abfb3e61003ac3949ba67d8a32645686b41b099c68a2c",
+      "outputSha256": "2e66b6a7bfc3e42a2a13f5ef4f4457cdbcb6262c100c4eae2cd31d4c51a2d576",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/pages/activity-page.ts",
+          "sha256": "368cb7af86ceb4071514c30da489882f626dcca141f4aa29ab3ca77e402e8b2a",
+          "inputs": {
+            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/pages/activity-page.ts": "0f67b0273c6ae5f726a4fa8f90beccba0f1ed92a82b5dbe490eeb4459ae12377",
+            "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
+          }
+        }
+      ]
+    },
+    {
+      "output": "PluginPages/BookmarksPage.html",
+      "manifest": "client/html-entries/bootstrap-pages.json",
+      "template": "client/html/bootstrap-pages/BookmarksPage.html",
+      "templateSha256": "ff4fa0e3b409d9ad0ff126a8d83947f77adf474a466627c742efe90ff9dae3e9",
+      "outputSha256": "c50965489216f03eaaf20111b897dcd32a2b27fdf70108a88c5a76e462d3db5d",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/pages/bookmarks-page.ts",
+          "sha256": "7663e7b9a8ff6ddc7fba0b3455f194fb2b6794df15dcfa810ede52860c7316a3",
+          "inputs": {
+            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/pages/bookmarks-page.ts": "5a0f1d6c9f172a4af335a02148b4419097f9268feb4878cab6cffa0596ad1bd5",
+            "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
+          }
+        }
+      ]
+    },
+    {
+      "output": "PluginPages/CalendarPage.html",
+      "manifest": "client/html-entries/bootstrap-pages.json",
+      "template": "client/html/bootstrap-pages/CalendarPage.html",
+      "templateSha256": "f0d88ab442ca6249d401d361bf4c40a1bd5db81ab3984522e59f2ab035ba8696",
+      "outputSha256": "b12638bf3868205a6d8d91e8635444cac72727530233bd54315077ac4fdb4c40",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/pages/calendar-page.ts",
+          "sha256": "981c7936b07cce3983d154a33c12ca8f5b1dafedb9cde033666482de8010f883",
+          "inputs": {
+            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/pages/calendar-page.ts": "dd55c6aa528645174c7bbfa03a229005961bded2a420af0b9a96a7b7816a6dba",
+            "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
+          }
+        }
+      ]
+    },
+    {
+      "output": "PluginPages/CatchUpPage.html",
+      "manifest": "client/html-entries/bootstrap-pages.json",
+      "template": "client/html/bootstrap-pages/CatchUpPage.html",
+      "templateSha256": "4a948a68b0bed20492606a32441b511f8315c5d86fb32fe259d40f2536532671",
+      "outputSha256": "d6bb579873ce61ca5b24a9044f547799e2903a942e175c054eae75be58ed15d0",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/pages/catchup-page.ts",
+          "sha256": "ce98d93361736148cc61e88642ad84a47f9ea563405a10cf0423d2a5fbf0d053",
+          "inputs": {
+            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/pages/catchup-page.ts": "4c707015ecfb54585930f061695bfd26796754348cb2657f1a573896cd114839",
+            "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
+          }
+        }
+      ]
+    },
+    {
+      "output": "PluginPages/DownloadsPage.html",
+      "manifest": "client/html-entries/bootstrap-pages.json",
+      "template": "client/html/bootstrap-pages/DownloadsPage.html",
+      "templateSha256": "38fb5eb8a2d38b92ea3d4fcdf6d318cc6eda63ec37aabcd0ee1d505840362414",
+      "outputSha256": "c1f57b3d64d5802f84b07fc1dce1d44044b478fdf5234e170ab714d0780d38db",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/pages/downloads-page.ts",
+          "sha256": "075566f24db9c5826afc40e0050343d4015cb9b54f6df553b8ed040ef0f1b2b6",
+          "inputs": {
+            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/pages/downloads-page.ts": "530f15abc22f8f97d83cda617d300a52971c596a94a2faf159be8e2527b5064b",
+            "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
+          }
+        }
+      ]
+    },
+    {
+      "output": "PluginPages/HiddenContentPage.html",
+      "manifest": "client/html-entries/bootstrap-pages.json",
+      "template": "client/html/bootstrap-pages/HiddenContentPage.html",
+      "templateSha256": "83fe4e7d51c02117c348a612f0e0f450797fda8f22dc9dbd5df3b2d8806f59c3",
+      "outputSha256": "0bd2f8aca47be38eda1f5e4f444bb2a65be2685d2580b4830462c2330835eee5",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/pages/hidden-content-page.ts",
+          "sha256": "8e35c653fa0796e756e9c06e4f78d00e023ed21e061de14f6b1b4e18b1e9da78",
+          "inputs": {
+            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/pages/hidden-content-page.ts": "4c24d91f833fd20104c0a4cfbafad94471cdb49f3387597bacef71c3c262f03f",
+            "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
+          }
+        }
+      ]
+    },
+    {
+      "output": "PluginPages/RecommendationsPage.html",
+      "manifest": "client/html-entries/bootstrap-pages.json",
+      "template": "client/html/bootstrap-pages/RecommendationsPage.html",
+      "templateSha256": "9da2dfe203a1f90efde6bbd2cb605f55eed67061df17de42d2f38b95bcbbe351",
+      "outputSha256": "1276033e9214a88186c629bcf8434f7e157ea0582a19663f7a642df0d14fc456",
+      "scripts": [
+        {
+          "name": "main",
+          "scriptIndex": 0,
+          "source": "client/src/pages/recommendations-page.ts",
+          "sha256": "3159da92c7dae1cf2c33e557bcdab84d37629c9b4da1bf6c816f3b78ed973c85",
+          "inputs": {
+            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6",
+            "client/src/pages/recommendations-page.ts": "1f446dadc11776eaca2716b49c467149f8857f353b550ac2b34861fdc9471f55"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js.map": "9b110e18ed5da597286dfd5ad410c0e28b9c25572e7b8f20e2433cc8a76b1fd4",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js": "e9c56670091f27a78b3e5fc5ae7cdd3077a38bc6f447a2b8094a0eba2574e512",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js.map": "30026bf7cec06cb8f7808c223077c47b913e9ddcba998a8f6ad1fcde83d2c331",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js": "25d5bd867614a4dbe8a9019ca1f6b89c5e1f30f0b0ace287748e88c2d99715dd",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js.map": "86b3dec98e44adfde3e950f4c56db95bef70eb47b5b45208993640f00d86ba5c",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js": "bf976589aea81fe7f903d2bf8de477881c82b37c2d3c6ad5e87a043e63b096f0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-links.js.map": "81fe1b6cd2641c031d0fda5a9f5e897de3c662b63b439ef12ee04aacd8ec5536",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-links.js": "346acf91f514856b044069d9a996b3c56e75ac4b249fcc1d0f9dff5ebb408808",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-tag-links.js.map": "f8bf6dfc83e49b654b7673ac8d0954a081a90ed642925f5c87b3e65890e4943e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-tag-links.js": "cf30e08eff3b2a60450331893fee510084834926c75df666fe3d4ed19956d74b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-custom-tab.js.map": "fc18493a4a0221bd71e1817358518cd75c7e04b1c6b60641bfc23777e779b6ee",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-custom-tab.js": "a0284b90437e134ab47773b33b335da430f230359fe2b738015fdda6f2dfa3a7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-actions.js.map": "485dd99566d7901513f720219d8cda89edbf85b50d99b91030c0aab04694b24a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-actions.js": "376dd0f4900d4c65901239448498000a626f89cd68a6c06e911a0269accc29aa",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-data.js.map": "85f0450e3e76a3bf3dcaedc213fd171a9b461c0d7336a45440a1b0d887bbc999",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-data.js": "c8ffe2fbc9f90088a8e2e8aca6ef0561a51177b062243b5262d493cb599f169c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-init.js.map": "aa56cfb5f12ad1bf2e97d87e6dd35449b574017bebcca64cf680ba796c0739df",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-init.js": "b73c856a86c1a141c6d1ac4ca2e32a567045ce286b9a03937cffc7045b361f4d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-render-events.js.map": "20102c2c9bd19efa5efcc1dd5404bdafc9d4b76c23bce20a3b12dff7b10fb1d2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-render-events.js": "09cb06ccd0250b069626290339924e28df0f7199861524c68643e50e7800fba1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-render-views.js.map": "9283dbd95cbf9176ad0344516b4edb32ac484d156ddfaa645c9223e727fb6e22",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-render-views.js": "32aa335bcb1d03a6e03e5d3c7405a5d73be05eb86894486fd84a1f7a71fd6be5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-styles.js.map": "05d8bcd180eb1984630303f0bb26f69103b9631ba872538487ca630e433dfc4a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar/calendar-page-styles.js": "29120e142bc075d2c455b6e35ee8f20f2ed7e0ee99cb32ea0e65a657105b9ad9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-custom-tab.js.map": "8ad1a9f924b4b5fe51634526cfa769cbca93ce916cb14e9d661475719a94ca2e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-custom-tab.js": "548fcb2d32ca49fdd79dc84684f2e7db4d30e3d6a8f6e3518de76d034f986f9c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-actions.js.map": "d58c2baced0662325251fb9711821a1117ec338eca9e0e5dd9c8b8c79caa8441",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-actions.js": "b7aeb43270d64f3c706d433ab72ad8cefabd910778c7f37695afd38c15664712",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-data.js.map": "01b08b6fbf97c6602bc687e979da88a46084ead4bb5fdd26c0009698a519bf74",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-data.js": "5230ad214cd47418c2170dfbadf50ba499ae4a17a29e954e7fbbcd07e283e35d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-init.js.map": "7fd018b13987560f365a7b3ea0c5f1eeee7d4d76a0f0f81039d1e5e18f1505b1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-init.js": "f7e46e2505daf7f00d94a0bd377a5179241d803f8ed6aa636f788f8cd99461fa",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render-cards.js.map": "4f7bcdb2af28f37f39a3753e882d39a058b438c1ab40a21db8bebf51df9831ea",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render-cards.js": "1e11fe8e488b04b06d86ef5067514f46166c6d69f32a584d519412d55d031e4e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render-helpers.js.map": "38325eacba7d5760835a95fc4439b82d926c912483de765d6b00963b4db45911",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render-helpers.js": "844f2eb6f4b79be4d2fe86ba35f3d973c0caed68622c532e8a831d89033415cc",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render.js.map": "2efda7b8fed699357444cebda86d10ff58f3524eb9e296dd136eca0c474dc934",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-render.js": "11f55b3b2bb3795da85380b77ab1c7dc85ef761902ebbda190914b36eb7aeb64",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-styles.js.map": "7c728a24d680a45d2b2a41ff5abd6df50b487f777fd6cadb469c146b6886e47b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests/requests-page-styles.js": "8a30c61f5f84e8f55651048666de6af095bc9a3322c4ad845cbed35aa8c8744d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/awards/awards.js.map": "3a139132154b28c62131c07e3378cc13a06331052adcf69f5ce950f5a2fddbe3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/awards/awards.js": "309442f09b5071fb3a4aa04dae649f5f752e3bc941befe47f53d74693cfbbad8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/contracts/bootstrap.js.map": "f682d5f99f447ef68a11f3654cdb310fa7e451ef210b48232cde5123fc31ebfe",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/contracts/bootstrap.js": "5f34861ec43d06db5b40ee3d00ae38b7ab1a04cdca37e420c86e29f60ea71582",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/api-client.js.map": "48d71d7ddfa281f73172ee94daeb9efde5cd2e8ba89d5eb583f16d07144a1d69",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/api-client.js": "bff474bceaad93de6ab83880be76842e26cd5cf15ba8b64b1eac7503228e4b49",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/dom-observer.js.map": "39c5e51a2629196af5a07a10f6c5549eafa83005bba3b7ff162f0c5a9ba57b43",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/dom-observer.js": "e612619bbd6f9ff7cf9f9fad77210adf14c89c94ccb4f549bb48cc70c5fb5131",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/lifecycle.js.map": "fcfceba2e08f10fea9f174bd33fc8eb666adb60296b2d39beb34dab5a77e3ee1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/lifecycle.js": "7f49fcabcd088088d212726bb3cf55cb6703796d469aac5a461b6c266f4d9349",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/media-language.js.map": "f6015e7c31375d6cadbafb4bf070e02c820c631c3808508916e1248b31082515",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/media-language.js": "4d63e5d4a1842a5c41254bc9bcc74e0f7a145e65d92502fe21b14103279dbab7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/navigation.js.map": "5b8f1de7170e9291d31cc1250c82f93856812a716fd8a184b9b3ffca15fdf1a9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/navigation.js": "2d412064fddf90eca312a88429078b3859b04c750a87f898874bafc04b11cc41",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/session.js.map": "27eadb2fe81efa0ebbcbe2060d6e7c79b6fa125571d8cb1ddf69806d0c614da8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/session.js": "738a9fe997608ef787131ef334143847262b3be12490b953b2c6af03cbb145c5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js.map": "691f617193830b4ee1400d6d124e4cbebee97017ae319c80f917a4f24eddc0a1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js": "7291be600943325f6dfec95a97de39e17d0d2af5a1fe0a0f1c33c204c4502813",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-look.js.map": "a686c9b803b9f627fa3702157e11c9bc308b578ef866b1c48bf584d8bdfbfbe7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-look.js": "d656e188f0f78d86c325d6ca43d9d640981e19cd22a897ccf48c9ec8678efd15",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-renderer-base.js.map": "23119a4bb0e3b83f3d529c73e84ce706d4ea5121d5b7368a51b3e7c9412aa7e2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-renderer-base.js": "9375f5c099703a39723508d584243997d2217697f54bc05facb9edcdfc7029d6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/ui-kit.js.map": "401242d883d5c41c1fc098b5cdf26b83be98511b8e58b9d403a94d769e40b0e0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/ui-kit.js": "d9401cb42ca4c36f9af53442c6210fbbac5606dc96795d4ac15b3f0f8c7d8e74",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/elsewhere.js.map": "a74337d406a3ec5fd8f98e9b3db7291fc498e2a6207ea1fffd5d7f4db2516407",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/elsewhere.js": "9b65990abda9c7c934bd5da780ccd7e8521bf6776abf2a52bf97afd3ab9bb594",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/reviews.js.map": "3fcc7941605091869adc24016d6030089bd5ba94607fae76ee7d925ad4a4d568",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/reviews.js": "a0648654ce4d62c34e78086b872e8419d2015db4d58426cbbd81434d0f4e26c7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js.map": "20598b2a54d8a4b214880dd4c8cb76c65e81a2ce2fa0913601431a2836d6ea7d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js": "2dc0abb5e92f6582d5be20f618b99065a8734259b59bf437f612f9bddae464cd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js.map": "da61be5f7b35bd39b022178fba357b9d921c0ef64a1821804001ef824e03a8b0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js": "ccf3837852be94d840d2e135aad3e8725a9af4adb6a3f19d46c87cdf8986188d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/agerating.js.map": "01f5533be4b0efad2006dbf9d73df5aa7a81f82440ad943a9db4d8738ab6fcda",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/agerating.js": "dcd4667bf3ff4b27aa3b8a4dfc2b4aeccfaa1a54b9f5e48b459603a9d2d711ba",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/awards.js.map": "5520323ce82e9d3750f6ea2bbb62396ffdbdad34f96aba36120c06ee376d9f22",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/awards.js": "243422b2a0fca2927255efe95e7b296a538eb46be031e07058cdb1c5579e0a50",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js.map": "ea6482a8bb992220f67fbca9f015e513a3f08b24245bb2955d67d0ad819c7b9b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js": "02736a5392990349d6536d581452e7f6a9ff1466d74626022aa4611567efd092",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js.map": "eb1c779dbcd6b192fc6c337543c4754660f60b2626e031d93784df18888847fc",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js": "be56b9e8ef609578642d0f05ca0d157356944238554673e43e411da3125a47b4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js.map": "226698a82f76ff6890da864be032a549fc3b4392dbae62b2ebbd784c0db41be2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js": "ce71f4bc5ccd64da9ef2a55823725e5a7b6f5cc14e3a8de434649b62cd512291",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/genre.js.map": "b043e1f5d5a42e4bfa7daad4a997d11410c7b4354f680e72a1ebb88d19a9aa1e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/genre.js": "032cbdb137c8ff328fe3e5cfa3a13dbfbe3b627ec512e8c3bc0913594c021d7f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/language.js.map": "78ffc0a179caf6e3f0b85c0ecfca24ab78a07b5d8f0437bd101764a2e665cec3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/language.js": "9780a4381288c99eb78ee9c4c8d03f53baa6dd84955778010acaecb6daa409ec",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/layout.js.map": "657c1b04a36747fc5b1670e9d1fd095264f01b8e511dbfc247cbba299e44726c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/layout.js": "1704a516ab1c8b1f279e4f7da4ed3838e21e3a629748913e89ccf1d910b2b7b8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/logos.js.map": "686f98cbb3dbefa52f1ac2cf7f200165e187b3405117b93253b27411ea8cf609",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/logos.js": "41d73ba9705fec63d04a0c9bf6c1a6e3331d1db5ecdaad235be7dd253a41c22f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/overview.js.map": "9f30a772e3dc64e4391599fe8d66ffabee0324be525caed88bb7e0f815cd4b2f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/overview.js": "f1554907558d15d312870c9ab683f4944ac7cb624e52e5dacd69cdb595b19cbc",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js.map": "76cbaf66770feca083759e4d59a64b82cdb8a1362fab3c952cf9fe78d6b97db4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js": "481084eee619dfa016f9f79764f43bf07dd78d077c861376092c1a8049e9029b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js.map": "6025339c023a8de206042f64ced62e8944122073fe6aa416eb62bf48032f5d91",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js": "b217703fd99dace2dd7b67041f53f4c9abffcf859d4ec14c9e9de2fcb34a6d5d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js.map": "538f05e3442171eeca1fa5b1b12ede5a604970f19e9669c4dc6f88890327c2e1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js": "4703c0aa849b758d2624fe0aa75185dce305e6c2ecd2d471653b877e72ce49ec",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rating.js.map": "f60387043648dc4f8b4f6605fa88bd3ad87c066c7be1c82ff5feb64dbba716aa",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rating.js": "f54d204d01868ddcd8810c8d00c6f3d976925ba87e9257feddef1801823d6959",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rules.js.map": "fe8ccccdc7cb93ad8d61c118d86e2d0a0d92e669c1759b1a59347138faba4756",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rules.js": "4c3df2251a8361dcda3f4648c2b26deee9d90b579730161246dac2d89c5caf60",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/server.js.map": "9e96d301e99792b6e0b7724037b77b29d781f32b894a398749613919ec245473",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/server.js": "9153a78f319adbd30fdac8c369271f6075619ded10bafd86b42a787cb25820b7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/status.js.map": "2f0a1adaf5b36342f293fb8e305e0aefa2b70f0af27bd4fe97368eb72dde116d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/status.js": "74171e45823092468302fefa0b750b7004f466b574a9c2fdd149284fe931d556",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js.map": "4a9c1757ed0187c3ba4368c271a273c49f80f6be1d595a12b78ae91e8c969923",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js": "dd5057e21ca8f41dc4d48773735f7d71a5391eb4eb5261191a984b5b6d7541a7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-init.js.map": "3ed40005a22c827aac3592c38ece0858e227cac2fa8abe688a5299fbe009dd03",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-init.js": "70b9a05dde4abf9525e7623c3030650968d8cbd11f2dd557198ee9349d62a0e8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-items.js.map": "56ab50502610698b4723da111e9f33cd5f527c87c801c3545912133bf6752b7c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-items.js": "8e6c8aff81232f000c92bdd1b14841250ecc138a56dd16f3be891562e7813f17",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-modals.js.map": "204dd4669fbce1f7eb18bae7e09f0e13007ea2d352d3a587560011687906b4a3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-modals.js": "aadf87c3d14c41e5a2514f340dd0e134fb314577995afde7e9ccebea4f5203d5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-page.js.map": "0e76d6ca469100db192b76ed9b3414ea569c31941a80b38cac52e240c4c2281e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-page.js": "8501cc745e652d2fdb90e2c076227cf4ea6268e16d27794684ed682216c5a239",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-render.js.map": "8031dd850f0c66181ca0f24cbb6946665f12ff6b9c3d6c1fbdfe86b704297d13",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-render.js": "0d9b567e0ce5f51e2600ccc20c96cfe7d6f622c5efbfade48f5408921b0ce471",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-replacements.js.map": "3eed38db807806c128f91eadff0bb169c4eedefc1f0ed842d849b8be64cd06d0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-replacements.js": "47655e4c05c7d79252300b7966893f7d95a4cc939ef045b401209458dd06adc0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-styles.js.map": "f07aaf52a691ea826148efb8aef4b0b4dde3e67caeb5adac35ec7504589cd46c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-styles.js": "af40a86b7bbc62f25baea771f4fcba91727dda9ae5ab8ba38de7838afbd9af66",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks.js.map": "958ba99da7e38921fed096410e731122bac6ed9e22c5d87bcea9876fb81ea53f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks.js": "8709cfc7ebb7e7cddceee61f08a4786e426ab0db0f40ae31606df0d1e54379c6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-activity.js.map": "a967130f6dac21bbe11946e590d617a4b5351241e191400fd0e5dd97a36a1815",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-activity.js": "723047f99edc94c4970f0c36fbcbfacb0c8af1a59e99b5c81dea69e470925736",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-core.js.map": "f7355829262d43f902f86c1a2d8a8d415cc4b2a1da6bea6381fd7cd9fbb55f6d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-core.js": "56bad6d1949b0efe15db7620a6e678e1391e4fe50104689b046da1c162e6b38e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-custom-tab.js.map": "3fde7c314dca0ef3131cef7bfad231109c47a11ab90c153f5f9d006de5556f5d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-custom-tab.js": "a5e27313147061b4130300e12667a75f08a06ba6d72904baac7bdc6f180eafaf",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-deck.js.map": "2107e13a3e728f2087caac4324c10dbebfed2583823c9bcd0b724db78f9c9983",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-deck.js": "cecab6c7540568da07cf8ee605939539375f5812b0b7dd8d98a4efcf7ba71111",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-page.js.map": "909a283d71afd85778c248c9dbe748acb552924de55d1e78e4d1353406bc35f6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-page.js": "baff99f50c2a371f2c996a89a3012fc1bb43ce629cc22b2f6ebb4717fd0dba55",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-styles.js.map": "defd175104be6717a9b6a8569fb59a292a544a3e519e6e1d5da5fb3d7cece02f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/catchup/catchup-styles.js": "72c99503b29fedd32adbb59786b920eafd935936e6070a6a65d12c8715c1bec2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/config.js.map": "9c71e1a62bda2f38dd2c92a140c3e08fefc8c412a65b6a363c3aacb7ba228bfd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/config.js": "03e7b7e5635ab850110be6e3b4364d99e4c4b6880233f77f5d5affd8dd751f63",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/events.js.map": "f597b936ae7b202f85f56ddbc819a3aa2a701e3c00c273d2d970a7a8a68518c4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/events.js": "93ce53afa75f13aa0830247f583cf8d5101be5cc6c20a5fd669809507f771396",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/features-random-button.js.map": "5c6fd064444320b6a59f9c0e8235c28a3a7cb7b22d884fcdda31c20d42190192",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/features-random-button.js": "05df084bbaf7c3e776a424dd93a7bbc15292679e321a7b6935ae7c424d0e2b78",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/header-actions.js.map": "c53c00fb1baa530f6199729e345bf0bc321e35a5c149300004f0c93eec42177e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/header-actions.js": "981993e5c71f94e1f65d367c06f1756cf11330eed58599544c799f8e2efeaad1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/helpers.js.map": "d4f3ae1991f80420ce43cf6c6b19fb96801e450b2bd0d567b4a88a2c8ae903e4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/helpers.js": "c6d2d4975a8a28c31a86b3423c07d6084385df10685ac7f5f864c9f0552efce2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-buttons.js.map": "2f5c79ee812152644f1506d8fd1e03f6f0d98f90bc2b37ba0342715f8c0b3243",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-buttons.js": "40c2fac7ec10570e268dd1fe0ea418491dcac35a42998e56c3ae60a871c2085b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-custom-tab.js.map": "73ea3c0f06fc70fb07d603eb6937d8b055511e743ee0e0fde011355cd181ac09",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-custom-tab.js": "c38ed618a326d1c4c703dc36a8007642b80f652bb85c0a6e51a24b0ae49e0493",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-data.js.map": "30afd487af93d5642290fa7442f6d336fa6994f9fc4028568da7729522de415c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-data.js": "1901843baa65b1299ea12a5311665a7fae008e243573e6503acdf129c25716cd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-dialogs.js.map": "121c43e37e2b66a0c024b8938d3bab4ddfcdc59913badbbdc4bd785c7912de7b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-dialogs.js": "61026963d9c96a362b89e44c74955b49d1fff12ffffe26a0338c756e47a99e30",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-filter.js.map": "dfb62c571a6bdb647dc92a2a9b528a7bcf23e017f527e0e0153fc1c0899477f0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-filter.js": "fee1433b8b0702dfd451f2cbea57ef77399ef8738660dccd80531b014863b29a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-init.js.map": "e4a788d891db28b1b564b078dcb230e90d76448c1cbc6671ff1c0c898ec821d8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-init.js": "6c97b9c4f5bd2fa8ea6ac8507d15b74309fafdffb15fc0faa1d28e6576edc07e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-admin.js.map": "2e7cb07569d48d27be11d91b51e49e926c586515d83e3e8966a3a565f50cee72",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-admin.js": "e86f2cc983be8932cb7412512c792d3fe600d92f5b367e0472ae5ac7cf3273d6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-cards.js.map": "f43e2a31c9df04d4be8b16bf2554ece8a869baae79caf9f09fca3cfe2cd4239e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-cards.js": "4101f6d3834006575b9e6851090f4a9000dc8ca78d861fa63fdeb14b15db879b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-init.js.map": "55125e244fef89e0257f6354f722973db1f418cbab73a6f89d5464e41a9c7e07",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-init.js": "056d7576b1198cd732f289cc9fc9ceccd5491571a5a1943bdb71bc96d891d972",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-nav.js.map": "e426a7114fe7c185e61b6d9249a446c9ba00906e207759dcd16615f2e0d22b88",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-nav.js": "c33ee8a69232856f275af69ba34cdacf8a6f8ae89be7fd6240d8290b4875f545",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-render.js.map": "3d90371f461ab2a5937972e18af3334d7a5325520f31054a9b952ba6e52c9d55",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-render.js": "bbe7bb8d93bc1d8a5e26c2bf0c5e2a9cef47c1ad72fa0467bb4851311ae75122",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-state.js.map": "34273c184613f21218a8cdd0ed8f70fa520e9331ffcec8f6581336055b481dfd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-state.js": "36387efe001be926951a5019a6b62c7f5d94e96f1d059d428680ae7383a89844",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-styles.js.map": "3d6b0c9c41cfc18c2ae8bc22b4cb2ccd1f24917067921cdb9fd689a561231631",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-page-styles.js": "f5af2ab8392b64ae2477dcb33dfe5c88435649deed76e63a0bf14d741c7019c3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-panel.js.map": "e4034c7703488fa2f58a59661d923eaa9ec266e3ab9e5f1f64bbdf8fbe8331a2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-panel.js": "dca55eb7548fc11e4a41d88c4657660ef0099a4d281109ef61bdddc053797019",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-save.js.map": "267cc1ebaa8e5ac6cd343c9adc6b3c77f7a91db597c4ec48f9595557bc9f952e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-save.js": "cc4a4c06264e7366f3c5aba5a3c78b0f54122c8bddc36fa9d1be55f877dadc82",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-styles.js.map": "5ea0bb947d4b9f31831e4a219bf83a0bf61f0c9737b316fce316d0ffa1ef7988",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/hiddencontent/hidden-content-styles.js": "4de525b92f15492d6c5ebbbc88846bbccdba7ea9aac82ec0c81ef1b5d5576668",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/homeremoval/features-remove-home.js.map": "5d8ec200c1808d1f2e2be263e362600e24263b32723e020e85e8e8d1f7d4541c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/homeremoval/features-remove-home.js": "30499f4df6e643c9d6e99b549f61b29b1d6ada170bbd507f4f02a730dfd547f6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/homeremoval/features-remove-multiselect.js.map": "fc3a8225b654a84774716049f1cdabfb0ac2f52e63e621cde700ccd2f4cc1658",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/homeremoval/features-remove-multiselect.js": "b114370b74a878e7797b6eb62c52c26c505b5eca39b5263d5b4724e55e395497",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/icons.js.map": "dbbab285ec3b285c33703e38a2c7b0a067638cfa70853e88acee9400c045df26",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/icons.js": "1e9e07e7b409372d3543c95405c9133d1eb1ba07477d44d29577654cb42e4f8a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-details-media-info.js.map": "bc5e3ee295ff0c1ac2c62b52a44cc49f5ea4904347571f17eb94ae6a1e2c0a09",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-details-media-info.js": "552049de4d8f224abf1a4b3fbfe773401029f9f6e16cbe3544214d542da1b9a3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-details-page.js.map": "6602b112ae1ec1c27913b2dcc5442cd1cd8ea22ab4240a6b826bb820e9bf39d5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-details-page.js": "d05c86e86b37806cadaaf83695e00573e68e30ba0e97d5d19c504853f7a45c5a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-release-dates.js.map": "112250691dcfbb932abb3e288bba409527cd79c7c4564c59daf042f4dec9fe38",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-release-dates.js": "7caf31f3c6f82c500ac92c7b6e69eaefb1ede1b9b073cdad995d3ba12b891d4f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/native-tabs.js.map": "01752fe101cac5edc19aca5017f194216f34147ad35d41c93dc032558e20c257",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/native-tabs.js": "938b4a528cd07cc4dd4885139a3184ae79f678e913b56bf333b5cad597d3df4b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/auto-skip.js.map": "7c6f48069f8b6ad58a60c018c8faf764a4ecc1ab0ecfcbabdfcba75047c29e99",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/auto-skip.js": "09535c1ef36879a1e872c82ddad0045816cfe5e8ab103bbe753cacf7469b8e10",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/now-playing.js.map": "7d6e9cd3359e8af19475b7b00c4d1e9c58fbca3fc8637c9cc08cedec9a975764",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/now-playing.js": "3eca4fc1681569fc63cf1fe766aa138b31b84cf2afac280f653973ee49db8909",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/osd-rating.js.map": "fa3aef138a4fc0bbe1c0fa191f111002fd8efd3b6857f48b84add95ba0c3a020",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/osd-rating.js": "65af187113ad3bdb63e88b3f68f4db6145eea808abc72ec037d8ece3cc702b65",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/pausescreen.js.map": "61bef3e39f2dd3b172795e1afa98a2d3d9fe1bef0c7a6b4d3285bd4b77f70994",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/pausescreen.js": "6c19a7490d40294e1defcac3e36955f1ed2e10328de499db8bbf87e71d33542c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/playback-rating-badge.js.map": "5e6f946f279ef7a2189f1c6d3544dd2c275427664d0af30b61b9dcd35ec045c3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/playback-rating-badge.js": "cd157e40e32a8145f4c6963f65af9cc9f7347bb0b4771d514feb84b07cfd20e5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/playback.js.map": "e438f74d5a536c9632913127221e37cbe1da24907f77f34ecb246b2d57b4a10d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/playback.js": "70b3aa942dad078ecd686795e4accb4bdb8ea31723e4813fe740f79b56585f6e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/subtitles.js.map": "39dab0f387b587be2e2beb988731461f8bde4747d502134b238d8e3f7570a87a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/subtitles.js": "b465f51a71804c66207bb962f0f34bfeded37dcaaa3b06def93c06cedf9055c6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-entry-points.js.map": "40462089af7a407ca57926034aa04e915a12c89aad9d803cdb7473c78d126adc",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-entry-points.js": "76310195201f21e41004b0b7662d1e58bcf264023dbd914503a7ed7d10117f5b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-hidden-content.js.map": "2788fcffcad0010326964c4c4ecc245aafbb8efe57c029e60977eb4385415a24",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-hidden-content.js": "fa26c36dccf3675b48ec47d9732c57f45e0063b6823ccccdd51550ea205aef51",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js.map": "4cfab8f45e203af4c745df04cc940f8b6c0053352c02a9a116346dc033ea0d16",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js": "e551ae65d291df1ae32753ea91c993837c65d43592adfe1042c9935b8df0eb13",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js.map": "1ea593091fb797b2a5e6b2886bbacbf054b8e48878d3cdc9bd2992c2e0491524",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js": "825550bd26dc3ed4d75ba36eaa92a3a32e53cc4d8c187e42232d8eef236a2a61",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-resize.js.map": "28c9672dc07dc86ab52724132c43d4d5f28d057289eb22e11e278f0cca21d759",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-resize.js": "3e4de8a1c9e62e1b13251523d360f508b967343093246b42d2c6471b8b1d25dd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-settings.js.map": "f212fd8e9fe6a8c91629dba36d49c6a02df45a9f12b04bde175c9142fa228b9b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-settings.js": "bc1561fa962b06e48ca8094fffc38357aa5dda34558032546d8137fa9f395745",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-shortcut-editor.js.map": "3c101191a3e9351c2065a359ae7ebe018243548d70e6b189dc896f48479650e4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-shortcut-editor.js": "e8d5b3edbdab3e710cb43e39d4615f57a0b8e1693125ca04e170a19514fe3770",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-editor.js.map": "3f603d13555f0d2e7b8d7c0c3720ef516815893196e8e843e9c7acdc606ab9b3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-editor.js": "26bdb8230f8b02f7d7feede81ed015d43254b8cda7b4d8d17dce85bfc1669f93",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-looks.js.map": "617600d391d29a491179322b26e6472db69af5fdfce95d2e6877e3d72cb17077",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-looks.js": "b029ff18a30469ac32fcda117cc2cc2f4955b5c02f57b4837d3aeb560adf2fe3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-portable.js.map": "a64949ae8fd5b65f8ac950e2a92a5be14d5bdc85931849d6947bf02893b170f8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-portable.js": "e8c00ce3a26166b5e4f50588a9866995b7989e026a617d5ad9d27c04530c0fe5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-preview.js.map": "08b3710931dd3e3c540df0b7cc47dd58e704123ae48dbcb37d7d68f820cdc396",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-preview.js": "dc06edcb2782b93b6c911d13f1344215992e2711240f6b20d35453f1f5e3777a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-template.js.map": "ddb60a0006eab17fd7ea34dbdfecae104a1cc8f095d86c9772334047fad5c0b9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-template.js": "4b61af017f979c99fc19cf047b06f916c8c792e08c4641b5fc2e2a8afbd289a9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel.js.map": "5b02f4c44804fd0267d87f3deff671b5e0cab56dabea9d254f0b612bdaba10a5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel.js": "570faf6bb2efeecfb40e0b9660527fc9924201ef1541b144b499576d1f1768b1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-release-notes.js.map": "75ebfb783659cbea60896c3bc9eaa700b2cb48141c8761a6ecc64eaa260f6f09",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-release-notes.js": "ae4635c9ccd16c7315f42b56a78bb522d07c67101b15a231b6d795d246c6ce4e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/detail-button.js.map": "a42b1e246fc0f5f3720526f6c121592daa0878df21f384831d76ac61dda4ec49",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/detail-button.js": "30d5e2df4164bacf38e9bdd9f0c18efb12de2939596f128169dd2816b691be9d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/dialog.js.map": "7c305cdaeb42bd651fa5811c578dc084a3c7ae262c3c482143a25fb962c12ab4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/dialog.js": "44bfa698f577c4ce82146648166bd91add8b164d905381094f517b56d1b4af1d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/identity.js.map": "734a584da41c7491f53f349e46cddadb34219175204aeeb2b2a3bf4f2e3976c7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/identity.js": "4ace00a1b281d4ac0236e0eca8b6e7343eed5357c2e18f50c98f478a77447bc2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/ids.js.map": "4ea11d7f1103a3968afbf1bc6a97623d134d598ae41c5d849daa2fe20c30fa62",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/ids.js": "a81be2f4002a04e73a82a3bcaf9efd87595ccf1d1c13e1d9323de924ea9aa3ae",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/image-refresh.js.map": "0ce8f50262a8319f1554bb58569525eb16576f259e5fd1eb74b2a28a4b9ea4a8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/image-refresh.js": "a74e6f1f0205e16e9a261569b0d39108d6b6c07ff0dddf5b0d2543bb0303d734",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/index.js.map": "d45f18e89b0da80e9c01921dfa24aefc992619a3698e2a408f083ff2efc35aed",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/index.js": "954f597a913756cfb433859497beb50fe75c16b6ad4e4eaff7b1c8cff6591427",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/seerr-toggle.js.map": "b9ef34aacdded7192ca5ba5d1904ad234febcf9ad5b3125efb5c41dfee2c0beb",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/seerr-toggle.js": "3425ffd4ca2d512b124f6635446e7493eaa3b5b594d5b5d34c9aac052788b647",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/settings-tab.js.map": "ed806893f1088798b49f2e84c7e1e81c440b2b30e51fe88ff6af94f5190d3785",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/settings-tab.js": "9025356b5c1de7531a7f1f582a11140fd31a4201bd75d28e1e29db8240162061",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/snooze.js.map": "be8f6ec0b3bdd99949fffdfe3cedcbc4b580146ba17b63d209667d2f98b655b9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/snooze.js": "547989de9145b7cfc8954a33575a0cf0c622e51739cb5df3cb994caf9c571b1d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/state.js.map": "7a6a929fa5b9420e45850a8ab732eb59d674f2e28030bbda99b013027dfa2b78",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/state.js": "26a1f01b96b0b89ed16f93c4c44f7569c8d02497c3905a55141fc2e3c05f11ca",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/styles.js.map": "87307d4d92c50db5090d18417a0cd4abf200b3f33662e7720dd2107860a4967e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/styles.js": "09eb0a02e24f9de630fccb5dadeecd890cb468c413cf4d4bd81c5da9ae35bcde",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/watched-refresh.js.map": "5c509812b8cebbb306f736443c7968befc32778c9bfe03f84eccfb9c70c70d79",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/spoilerguard/watched-refresh.js": "9cac46177b247d24afd0c38830cbf151112a1ad8ca8b76a1570202ed730bc2f3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/themer.js.map": "39980af35e9f9ff83e989c5759bfc3670773b87ccb0e3d497964d93ce928b4be",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/themer.js": "ed69aab08ea4dcc49fe1869d9f86240b69f7f997265294eeeb983939cff9ad37",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/translations.js.map": "7a7ef58d3341d6cbe04e1a6aba7148d6edff8b6b8ada0178da98e8d8d0330a21",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/translations.js": "df43592f3c1ddaae3ec86d7ff6cc51c5e6a09a29932a71c473ddfa0025019465",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/ui-styles.js.map": "b3d64dd63162d2e1a7cce6199c9507cf58199d81b9089a1813e2b7ac9b8029b4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/ui-styles.js": "959aaa91aca954995ecd353b31819cbd3cbb73e7ff6750e43b2dd1714d5a3e61",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/active-streams.js.map": "0cfb12dd3d33a5444dae30ada18f93614a9b96e5a6e23d80178fbcd688ba1157",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/active-streams.js": "d6171a53abc2af181966e7740c0bfe1cedab5d8b354c33d789fe33bac16e4cd1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/activity-custom-tab.js.map": "b2f512ef810b01c693302360bfba048967bae989c08e4eef70b2f189b33275c3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/activity-custom-tab.js": "ebed427a963fd263fa7c0e0c57820a834534d0594845b46ad3bd8879d3fb5d41",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/activity-page.js.map": "d8f5935f5874122ceeebe8a655a913ea8922f63102e6be17533b1f24d2341fa3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/activity-page.js": "bbe8664afef59ef8944a22addfb7ae906e72ee1c083a805981b55391f29b6b25",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/colored-activity-icons.js.map": "585e5e019a8079975e4d7ecc04a02141908e73a2ffa6b591c1fc62ae503203fd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/colored-activity-icons.js": "a35c1d2ac71f3c7f41112ab63eb0f26a0fade963a6cc8398d4d9aea91ba81d41",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/colored-ratings.js.map": "67ff3c4f6053b9a269f1d6d5f8ce17b757c75db39525d46eb4e2afaa22c0ac53",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/colored-ratings.js": "2452d80a77e1d37ca0068660c06cbe042e572bf07629e943e18397f452fcc5a2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/login-image.js.map": "7c61c6b8e558758d042ffb8240198bd67b09ab4eab50790b5e7fd1aefb54eac2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/login-image.js": "6278ae13541063361baeab9b21f545460485f6cefb680628aecd0154bc81be45",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/plugin-icons.js.map": "1810097b1f9766975982d7b415dc8df95d1b287bae6cd9ada31156354bea1864",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/plugin-icons.js": "443669ae37450f76428dbb2a42163f1eee96639565bfc84bd04f1fc526da9b23",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/plugin-revisions.js.map": "5ddbe11bd98860084cda6c32ba66b331c203c47309030b7a1291656657f79b6f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/plugin-revisions.js": "8faf6b8d11f52493b9260a96ca5b9ae797305c88c286c2f8f5bfa62c20eef2f8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/theme-selector.js.map": "a2eba73d26384fda71c1abb33383e40cb4849a2da5b9fdb3e425dae7301f5a1a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/extras/theme-selector.js": "c061f43dc03c10e39c58fb50e2286ed7aa4b1ff4e50c63a3b85b83ca1768fcf9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/api.js.map": "bbc75077367c3976e35061dd24ef467dfffe8f8492bac5cf6b558184f4e6619a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/api.js": "2b453696c9227067a503858b8ea0c8ce40d02327bb392fd0d1824e1fe74295e5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/collection-discovery.js.map": "2820c8bdc25e6f85bd1eeb30d5789c72c9ed60d6d50edb9a39e38090aa7f2094",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/collection-discovery.js": "31900360cfac4d8521b50900aa956c5fea8065145ab64714a667f31372b0283d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/discovery-base.js.map": "fedf1f8a77824bf8954385e2330cfaa1867493660609f8beb4564613299674c4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/discovery-base.js": "7619f2a91b4bbb8798097c30020bf253aa86707b66df0cdaf1401e48eb63b05c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/discovery-filter-utils.js.map": "6a26b2b2ca1446874b412d0c1924b26dfcbe0e0ccabfda97718d73eb6202bc4b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/discovery-filter-utils.js": "621210d1eec71c510e429ebcd926b3787dc51228c6511eadf6f0e340acc72c2c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/genre-discovery.js.map": "92c1e2d1b40cd6c831d4a5579fdeb2191bff61e33f5c2dd861b0e4607ebb75c9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/genre-discovery.js": "b53d6615586eff34a29fc9863ee683a313b9ccd915a5aec6d814c3e9bdf540ed",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/network-discovery.js.map": "252116dde47a64e30f58f7cd83d676bd531db395a2022aceaeabdff1a0246974",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/network-discovery.js": "be44592bc8deebf7b622250e1eb66c3fc31105f60a9222533b32262b0d937f12",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/person-discovery.js.map": "8f3feb0723cea4dcb720c5ce4e6a4a7581ac570d51ed1f2c05ce9e9417b82a3a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/person-discovery.js": "5e01c869cbaa0b11a9ccad38a934ffd4e26636c7e32b62c7edc1793388822bec",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/tag-discovery.js.map": "dc0f4f25a94c22b4479f03ab2c31f62909793123688d13c90aa4884d0c1f8f43",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/discovery/tag-discovery.js": "eccdfc57002d07b237901381b1df93de5fa9d0d912172b4d67b623e084c1c7c2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/hss-discovery-handler.js.map": "324b81f66b07b966368c9eb50794d46d7f0db511dcd656341377e582921abc87",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/hss-discovery-handler.js": "5ecc2f798983b24e1aca46676160c268203fa7de9a10cd96fe695b6b35375ffa",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/issue-reporter.js.map": "85bbbd3801beec28e4560b0b974b5c4884f2145d6357acc1b449f5f0edf0011b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/issue-reporter.js": "6b6cbcf4a744d44e54543a45ee49058d026436b2eada86f9bb3605862d11b3ad",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/item-details.js.map": "93e933d6c21a7f8ab191c4da91182dc558404d7e994376c8c0c9cfbb9db674d9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/item-details.js": "ce04b5682065c83741c1729d457fa35308f1e19074db353c9834b3e2505abc70",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/jellyseerr.js.map": "fcb8c787ac8f31f8e974e42feb5934a8af34c5eb4df0c75026a170b881ffa375",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/jellyseerr.js": "84f11122ab96181b917fb7d370e28b26d489ffdfe85c70e10c75f1b04bf19119",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/modal.js.map": "35b4de1f1fda80148d200d6993e5cfbe0ac9821ce44b1e21bfe8b122086401c2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/modal.js": "2a3739aadfdd5b2d7911c3422156cf4b727358f99146c04ed6fadf14c95a91b0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-actions-tv.js.map": "c8ce53b74edfda4f03b69fe2fa49685cf25bdf774509c89c98a07cbf9cbb2b44",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-actions-tv.js": "f7d917402599e3ed650010597565adc88c080b7319928fd670c4afde5c0a493b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-actions.js.map": "9529b53ef2e1230a1fc77e67e81ff0a46642ae9e3e6058e6bce1029c18299762",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-actions.js": "b15c509a4381508d6ac4becd9368c9a9be70c5a97e7463ed98c8496ba85e350c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-badges.js.map": "1ccf6175cb83673a3c68abb2720fd56f008b2ee8ad7f108863a07068d80f8983",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-badges.js": "3bfd5e97229aa00849641545d3a809abc7fab42ecc9d48b843b973066ff80a9d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-data.js.map": "ed871b382e0eec9fed38481cf22811d757a721aa3f9e1061ccdb1d424ef08676",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-data.js": "bc0bf0734a3f41f3e2ddc5a2b77de225455fd4c6609c15bb10bff0b4a55a35e2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-init.js.map": "fcade1ed7c714862e43828c554643e675854f07129f0164a6c0cbd2c9cb4d886",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-init.js": "2368be9abdfcfa0f54e87b33709a4741c64a0e41daaac50a148bccccd135fa2e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-render.js.map": "675423a5eb7f2dc6b84244cbca03bce0fabfaeb1e45c7301b5f19a1e2cfe8bdd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-render.js": "b1bd56c17a6e01bb2299f52965c708003829e3ce806bbe1bf135d88ab643a01c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-seasons.js.map": "43c4f51a2565741f434029340f92d953afd11e05d77aaaadcf5a7f5cf735ba7f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-seasons.js": "d5b717b63e386538aa33899e03c65207119cff713554b20d943e2ea82b074093",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-styles.js.map": "d649399855124a463a9a6a3ee9af9c6494a5322549771ed52e34b2e1ce07744e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/moreinfo/more-info-modal-styles.js": "8a1f17fd6f60665bece350363c187c4f362996d377ef2dfe1dacca94ad7361e8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-catalog.js.map": "7984fb19ef5290fafe87fafb3638d55bc81be2a8b8ad82761f4169de2b4380d4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-catalog.js": "f26cff2f80a2b5a8c8b58907ca45b3e2a7bdebd087a13d7f6e1c5f02ca04f2d3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-category.js.map": "5be4ce57a5849e16471fe22bfce787fd42ed87916c8f1d0908e9d9b7e3ec16cb",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-category.js": "ef23a706d5c9a76fbd540400d6b70b118358bb4dfcb70d58934f83ccec91e80f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-custom-tab.js.map": "6bc41b2587415ce7aced7a059c251157311cf5391460a7b178cd0119c219edb5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-custom-tab.js": "61f78bcc46af911d08c52a1b63be4a67fcc465e65cb1a786fec6ce763f77e486",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-data.js.map": "b7302f3ad954f050f3d43f3aef026ce03269998072f2d4d3458f76e8dc34ef91",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-data.js": "56a770b0a248336d34a06ce57f64d5425f92b5fc4b4157205d8eafd4740315af",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-init.js.map": "ef1328c587d9795dd8b487e86be43c633c7645bf6e4edac51263754909d8c21f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-init.js": "7817895d36cd8c4fb0a228aa5bea823b99d808944d8f263f93c82cd341586ffd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-page.js.map": "34ccaec9379f3d9f9072e3e39cf3c7b33c0d9e8609f5b45e15081d846258a9b0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-page.js": "dbb48409d72287c4ee8d747bf6806fe7e11be314bae7cc5429fedc8f30147823",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-render.js.map": "9c0adb6d4fd0069faabc6d6346cc388a6678a6232acfb0df17c2e1473bdf78ab",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-render.js": "94d450550a8142717ceeb37b3072af5022423ac8dba96ac35e95dae4622005ab",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-styles.js.map": "eda5ed6741e27eaf1ee09dc45711b88874cd58de00af551b7b016ce78f894569",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-styles.js": "f3f01ad6158afa18c3e04e8fbaf07546ed6c78937ec095452860cb956dafb53f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/request-manager.js.map": "8309d388585cbb66b87b61674dcb8ce79e83b6bc7af049833979486b4ee23ef1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/request-manager.js": "75778b0b46187ad5ce254363fb7d0224da1396ecf85e71674ad2226fc0e0c903",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/seamless-scroll.js.map": "1e19343bdc5830f5483c00c7c1d234a26a28109f3cd4fcab7e9ca63cc2312e98",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/seamless-scroll.js": "4e16883f477cf8c62b077d49ff6871dbd3d563aa3f3bccdba87de4506e8e9305",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/seerr-detail-link.js.map": "471adbe9080bc1f20a4ab9a1b6ee854cb75ace2d7d0c2d3f32576275665f0133",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/seerr-detail-link.js": "1d8097f6b4f358d20d93ab3d5766c03fc89e75e9704572258dcf4e319b581f53",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/seerr-status.js.map": "e2f0cf5e99d7c7aff268da41e90e77b7b764aeea9ee9ffa008bca7f402697f88",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/seerr-status.js": "73c46ac885d81a4149c7bddeab55a439773f5a2e1d962a3104698591c3cf752a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-badges.js.map": "d830d341a4c8e329af94fda26b28fad93c152b5abde19273d88f3c4eedb6d14f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-badges.js": "55c969ee445e701c26e01608e6bbb952745fca3bf6473637ee0e5bc1f1d0e7ad",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-buttons.js.map": "1eb033f603b7c76123aa83d522d3d67829c9423fd0e933fc58b802d9cd9a0e1f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-buttons.js": "5bf3546a4001e1155194005cd8542b58eeb4b5a8dbd3b229aa70df089e657ecd",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-cards.js.map": "3c7ae29ecb3457df5ea2b853ae20964dc3711a52e2cc8593a826d70f3f6e37b9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-cards.js": "52f682d0110ce00b9926703777a3af8ccf5556c9bd75335b03a60f3cd3fe924b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-icons.js.map": "a1c35eda5af57dd348b2b33812f925ac9e52787942a1d1db2eacfe8ca7ddbbcf",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-icons.js": "7719d7b767d52b8c09910ad3b38acd9024b644b19eb997b8a671b1ef086bd750",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-popover.js.map": "062f9faff71939176f3c4f0140ab53e7a41d45a5eb554f3277b26f93e54eefa1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-popover.js": "1fc5db62452024b8c6068af8943a762c587beda538d344494ede609f716a6089",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-quota.js.map": "d1484d941c688cfb1262aad29eb3e129a3bff1d876917220b72510088389b82a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-quota.js": "ecc7693d129c161d7cacd9c406b0832af128601c9b687c0890a378566f9ce9b2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-request-modals.js.map": "31c1a36be526c6b8644d5ad5ce2406957d87d70cef184e9ef90a330ffbb419e0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-request-modals.js": "d33baf5732438de7d60bb826db69f084fe1addfe8356433e6622f1c0341474ac",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-results.js.map": "5caec35fde7dbde8a84b0735745b1a2cc6051368662e8315b2e0611470e2774e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-results.js": "316b7bfbf04b7b9a001e41b222960dabdb78b3ab174fe5551890beb4a90ad18c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-season-modal.js.map": "bfe5be232026d98a709c56682bb48ad198f89d5e7dde8525601a7a94b781610f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-season-modal.js": "cc7d8fd6af40d936039c8432d5f9c2c7f7266fe4e075283f435bc9756f4bcde9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-styles.js.map": "9f41806f5b778bb58c7a50d484ed470514067798ba66c3ada8870594a72c6c6f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/ui/ui-styles.js": "3884dccf059b93e9403c6540e062073f254a46d73ed0c784eed832c6481d82bf",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/doesthedogdie.js.map": "e5b5ec49b588de033b2f19846ca1d0e613558bd3d1bd9a5b7b842c5cfd3bc29b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/doesthedogdie.js": "ce85f73d5970188727d0b17bceaa794bd0e65a75c9ce6ce0238ae226d7c8811c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/letterboxd-links.js.map": "27a5df6ef3b9f9d99dd81ef062cde735db0d2d2a8cdd875802565c3554d74804",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/letterboxd-links.js": "0c513d969e3f097e3011db88d84eb01aa86d71ac191fc59401d13d01b9ebd0f4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/mdblist-ratings.js.map": "e4d43690b35c0a18328b1905e1c5b5dcb43afd6ca58eaf9f2ede127c4efeaf06",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/mdblist-ratings.js": "43c2c60cad79bc818c0179c4c57d473b5bf6b8f051a7a1adad126e2bc93710f4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/splashscreen.js.map": "5274b763ca6d612a532bb20190e01f0c2e3a092a07b667142533cedf8aae473d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/others/splashscreen.js": "a2610430b4fefdc6f592d2ad1db54013c7a6ba0fc13e917b04bbb602ee9bdc75",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/plugin.js.map": "bd868c407a2c748a9fa88ebf00c0b205a73cd95c3b8789178fd1a46674ef3df8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/plugin.js": "4c28fe66a8be660b1e7d6360c4ba071faf4abe2dc00ef064a1d96efd69c06a87",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ageratingtags.js.map": "92aea514f5bcd60de23fdfb0c4157849e862277e3140446dce51c39eb2925838",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ageratingtags.js": "75daaded58656bb16f9a34ac47b0d1eba45818435eaa2cb0a2ce158232d71944",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/awardstags.js.map": "0fad108952fb7bbdc8da6e06cc7ce08d81c75b853f4c395e7b16ab6c40bd9906",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/awardstags.js": "500591832cb588dd9338ec6729412c860e6ba957ea1119f0e12b6bb1caa33579",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/customtags.js.map": "cbd6d215c9d3825b52fb8fc432070ed236cefa0ec3c87c080f85250c23de0de5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/customtags.js": "e81b1306644b056ec8cd72990e1d10d01a7c42b3a32b104a91da907b642b4b9f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/genretags.js.map": "8b83d84285fa77026dc03b7dc29b6616a21077f442ec98c22b8c86cbe302eed0",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/genretags.js": "d348d5f3f0e8dc31dc7a41acd8d554cc542359dbd0ff23da25e1662100ffa607",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/languagetags.js.map": "9f5158dbadf86982302dc86b771a6edd52b0b09e085123d68fd3240366b13e02",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/languagetags.js": "6084cab0f5b461586922ade01f3ab77e08da665de033b138ed62f6aaf33ac54a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/logotags.js.map": "bd57809de95541e6651e6e61a5715ca3515b581b0c834259c1d4f79bb1cad54a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/logotags.js": "d788910ed89368077bc589041ba0c1b8fd5f07c6b5a5320c0fe20d92d6ce184c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/peopletags.js.map": "50e4c00fb49a51eee8dee77f115f29270b25be59856476f9d143660cc2ad31b9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/peopletags.js": "8926af0f1bbb70ca845ce2b6e18826399f93c7150844542fae2377cc6fddc62f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/qualitytags.js.map": "c6014a2414b5515331da4ce83e784e7d9fdce379c64df6d344529b61850415fe",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/qualitytags.js": "ceeaa874b48b0dfb45f9e8deff48c9dc1178db00f6de780875e48405b44b91be",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/rating-sources.js.map": "1524ec41d0e3fda662a7975f9f0a265d79980d84fb42aa5368147a3c54e7c5ab",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/rating-sources.js": "c4ec4c4fbe23b60e66cfb00f5131f739de963c8197b5291282befcaf2dcefff9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ratingtags.js.map": "b20a876956de07a3b2cc9903d6bd955ef31161bbc8f96bd69f3a882dfb836a22",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ratingtags.js": "186e14ca51fcb67bf9838108fdec33f28bf2360d7dadd406269ecdf4599ecd27",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/status-vocabulary.js.map": "e5cd0f77f4c78b4eea5c9258a1e7702b56fd4c66f70a9c7547669a4e91ac8a9c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/status-vocabulary.js": "faa29f462320889076759bc5d8c6582422a7f6bbdf903249312a25e1cad29df3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js.map": "bf74e6feaa7668f7b6f70f56c3eae3fe21a58df34f2cfec16ec874ee8671ff66",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js": "05c7e5757dd77a89f5030e6f81dd0ccfa2b9d168b9aca697a0570e3e077abec6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-cache-store.js.map": "02db85356186c6ce117108dab0c7aee9e7def18de9941a302bbad81b5180d60f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-cache-store.js": "575ada5a5fe2292b913eaaaeba92d9191eb8516531ff64071577556a38793c82",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-direct-play.js.map": "37c7b969b5ef293aa7034596e279a83fe33530a45ced70d9464883e549c711b2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-direct-play.js": "f43453395360d3441730dbb7b379be437138ed14188f9678c1b99e2ef0fc863e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-item-editor.js.map": "bd013871fa035aefd78f0a973dfd2f64eb95c4280427eb691b53d72101fd6095",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-item-editor.js": "912eb4eb15f9aac742dfe722fb9553409f519873166a5fc0e81241cf7f60b717",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-item-menu.js.map": "2bb440d06fc02382f54ecd8a5de0c707a4b01953ae409aa90ff01cce5afd6ec3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-item-menu.js": "c64e7290d370ac6a118c3fc17d435788fbf29435729602e5f8cb30f93bdd8a39",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-layout-styles.js.map": "d2a0bd36907c52dc9ce1f5b8b4d8da62f4e316e0c0caef467607023897441f57",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-layout-styles.js": "14ea1d9236e45c2f234b883c7400601022c8a7f56bcd8f641747ea8075d7218b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-pipeline.js.map": "99d200ff23cba92e8e8c4c56df9ab400edb79e85f64e9c1afddd5d03ae324030",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-pipeline.js": "fd66165cbee31bb23b8624ec7145d3d0b182086c396d08a40a53e35ac646411a",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-poster-colours.js.map": "8ffe3d0b10f7557c93c2f28ccf8b1f05643aab1726a3d5192d535420874b3176",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-poster-colours.js": "cc78eb41ec4ff7d2362e8edbc936b02dd7859511a4c2348daa560769d786f7c8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-styles.js.map": "a1c3d20f74d968b08b927dcc50026e790468d5ecbfb53976850f1fa106efd360",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-styles.js": "a4b9d715d4c0d9e2f19132cc52ba43fb66c99192d287ce7df28258951cc84203",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/userreviewtags.js.map": "51b51f6753f99a34ee6bb13e92d0872814d35cd0c3af36bc5898af522c7d2b26",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/userreviewtags.js": "363a39adc7899b142d479b90980052b06731c613eeec74b1c1a6f2f10a2fd0b4",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html": "cd2477b1dd076f297541a0a8caea1aafd7d9fbc5b8cfa9604815f8736cac2840",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/mediaTagsPage.html": "852a722753d35261a5456aa8e6b30ec435939344335c8ea1741bd836d6c7a691",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/ActivityPage.html": "2e66b6a7bfc3e42a2a13f5ef4f4457cdbcb6262c100c4eae2cd31d4c51a2d576",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/BookmarksPage.html": "c50965489216f03eaaf20111b897dcd32a2b27fdf70108a88c5a76e462d3db5d",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/CalendarPage.html": "b12638bf3868205a6d8d91e8635444cac72727530233bd54315077ac4fdb4c40",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/CatchUpPage.html": "d6bb579873ce61ca5b24a9044f547799e2903a942e175c054eae75be58ed15d0",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/DownloadsPage.html": "c1f57b3d64d5802f84b07fc1dce1d44044b478fdf5234e170ab714d0780d38db",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/HiddenContentPage.html": "0bd2f8aca47be38eda1f5e4f444bb2a65be2685d2580b4830462c2330835eee5",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/RecommendationsPage.html": "1276033e9214a88186c629bcf8434f7e157ea0582a19663f7a642df0d14fc456"
+  }
+}

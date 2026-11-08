@@ -111,7 +111,7 @@ public class ApiAssetTests
     }
 
     [Fact]
-    public void BundleSourceMapPointsAtExactOriginalModuleLinesInManifestOrder()
+    public void BundleSourceMapPreservesTypedMappingsAndLegacyModuleLinesInManifestOrder()
     {
         using var fixture = new CoreFixture();
         var bundle = ClientScriptBundle.GetBundle("regression-version", true, fixture.Logger);
@@ -124,19 +124,41 @@ public class ApiAssetTests
         Assert.Equal(paths.Count, sections.Length);
         Assert.Contains($"window.__JE_BUNDLE_TOTAL = {paths.Count};", script);
         Assert.EndsWith("//# sourceMappingURL=bundle.js.map?v=regression-version\n", script);
+        var typedSections = 0;
         for (var i = 0; i < paths.Count; i++)
         {
             var section = sections[i];
             var sourceMap = section.GetProperty("map");
-            Assert.Equal($"js/{paths[i]}?v=regression-version", sourceMap.GetProperty("sources")[0].GetString());
             var line = section.GetProperty("offset").GetProperty("line").GetInt32();
             using var original = typeof(JellyfinEnhancedController).Assembly.GetManifestResourceStream("Jellyfin.Plugin.JellyfinEnhanced.js." + paths[i].Replace('/', '.'))!;
             using var reader = new StreamReader(original);
             var source = reader.ReadToEnd();
             Assert.Equal(source, string.Join('\n', lines.Skip(line)).Substring(0, source.Length));
-            var lineCount = source.Count(c => c == '\n') + (source.EndsWith('\n') ? 0 : 1);
-            Assert.Equal(lineCount, sourceMap.GetProperty("mappings").GetString()!.Split(';').Length);
+            using var embeddedMap = typeof(JellyfinEnhancedController).Assembly.GetManifestResourceStream(
+                "Jellyfin.Plugin.JellyfinEnhanced.js." + paths[i].Replace('/', '.') + ".map");
+            if (embeddedMap != null)
+            {
+                typedSections++;
+                using var typedMap = JsonDocument.Parse(embeddedMap);
+                foreach (var property in new[] { "mappings", "names", "sourcesContent" })
+                    Assert.True(JsonElement.DeepEquals(typedMap.RootElement.GetProperty(property), sourceMap.GetProperty(property)), $"Embedded source-map {property} changed.");
+                var originalSources = typedMap.RootElement.GetProperty("sources").EnumerateArray().ToArray();
+                var mappedSources = sourceMap.GetProperty("sources").EnumerateArray().ToArray();
+                Assert.Equal(originalSources.Length, mappedSources.Length);
+                for (var j = 0; j < mappedSources.Length; j++)
+                {
+                    Assert.StartsWith("client/src/", mappedSources[j].GetString());
+                    Assert.EndsWith(mappedSources[j].GetString()!, originalSources[j].GetString());
+                }
+            }
+            else
+            {
+                Assert.Equal($"js/{paths[i]}?v=regression-version", sourceMap.GetProperty("sources")[0].GetString());
+                var lineCount = source.Count(c => c == '\n') + (source.EndsWith('\n') ? 0 : 1);
+                Assert.Equal(lineCount, sourceMap.GetProperty("mappings").GetString()!.Split(';').Length);
+            }
         }
+        Assert.True(typedSections >= 3, "The production bundle must include the typed core runtime maps.");
         var cached = ClientScriptBundle.GetBundle("regression-version", false, fixture.Logger);
         Assert.Same(bundle.Script, cached.Script);
         var rebuilt = ClientScriptBundle.GetBundle("regression-version", true, fixture.Logger);
@@ -158,7 +180,8 @@ public class ApiAssetTests
         Assert.Contains("window.JEAdmin", script.Content);
         Assert.Contains("JEAdmin.define(", script.Content);
         Assert.Contains("JEAdmin.setPerUser(", script.Content);
-        Assert.True(script.Content.IndexOf("window.JEAdmin = {", StringComparison.Ordinal) < script.Content.IndexOf("JEAdmin.setPerUser(", StringComparison.Ordinal));
+        var engineAt = script.Content.IndexOf("window.JEAdmin = ", StringComparison.Ordinal);
+        Assert.True(engineAt >= 0 && engineAt < script.Content.IndexOf("JEAdmin.setPerUser(", StringComparison.Ordinal));
 
         var styles = Assert.IsType<ContentResult>(controller.GetAdminStylesheet());
         Assert.Equal("text/css", styles.ContentType);

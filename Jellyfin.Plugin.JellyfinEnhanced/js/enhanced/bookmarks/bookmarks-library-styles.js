@@ -1,23 +1,153 @@
-/**
- * Bookmarks Library View — styles.
- * Split from bookmarks-library.js (code motion; CSS block verbatim).
- * Creates <div class="sections bookmarks"></div> for CustomTabs plugin
- * (see bookmarks-library-init.js for the boot sequence).
- */
-(function (JE) {
-  'use strict';
-
-  JE.internals = JE.internals || {};
-  JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
-
-  if (!JE?.pluginConfig?.BookmarksEnabled) {
-    console.log('🪼 Jellyfin Enhanced: Bookmarks library feature is disabled');
-    return;
+(() => {
+"use strict";
+(() => {
+  // client/src/host/bookmarks-host.ts
+  function bookmarksHost() {
+    const host2 = window;
+    const JE2 = host2.JellyfinEnhanced;
+    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const getApi2 = () => {
+      const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
+      if (!api) throw new Error("API client not available");
+      return api;
+    };
+    return { JE: JE2, host: host2, getApi: getApi2 };
+  }
+  function lease(JE2) {
+    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
+    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
   }
 
-  // Inject custom styles
-  const style = document.createElement('style');
-  style.textContent = `
+  // client/src/features/bookmarks/lifetime.ts
+  function createLifetime(JE2, name) {
+    var _a;
+    JE2.internals ?? (JE2.internals = {});
+    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
+    JE2.internals.bookmarkLifetimes[name]?.dispose();
+    const cleanup = /* @__PURE__ */ new Set();
+    const dialogs = /* @__PURE__ */ new Set();
+    let disposed = false;
+    let generation = 0;
+    const pending = /* @__PURE__ */ new Set();
+    const keep = (value) => {
+      if (typeof value === "function") cleanup.add(() => value());
+      else if (typeof value === "object" && value !== null && "unsubscribe" in value && typeof value.unsubscribe === "function") {
+        const unsubscribe = value.unsubscribe.bind(value);
+        cleanup.add(() => unsubscribe());
+      }
+    };
+    const keepTeardown = (value) => {
+      if (typeof value === "object" && value !== null && "teardown" in value && typeof value.teardown === "function") {
+        const teardown = value.teardown.bind(value);
+        cleanup.add(() => teardown());
+      } else keep(value);
+    };
+    const listen = (target, event, callback, capture = false) => {
+      target.addEventListener(event, callback, capture);
+      cleanup.add(() => target.removeEventListener(event, callback, capture));
+    };
+    const timeout = (callback, delay) => {
+      const current = lease(JE2), version = generation;
+      const cancel = () => {
+        window.clearTimeout(id);
+        cleanup.delete(cancel);
+        pending.delete(cancel);
+      };
+      const id = window.setTimeout(() => {
+        cleanup.delete(cancel);
+        pending.delete(cancel);
+        if (!disposed && generation === version && current()) callback();
+      }, delay);
+      cleanup.add(cancel);
+      pending.add(cancel);
+      return id;
+    };
+    const interval = (callback, delay) => {
+      const id = window.setInterval(() => {
+        if (!disposed) callback();
+      }, delay);
+      cleanup.add(() => window.clearInterval(id));
+      return id;
+    };
+    const modal = (element) => {
+      const previousFocus = document.activeElement;
+      element.setAttribute("role", "dialog");
+      element.setAttribute("aria-modal", "true");
+      element.tabIndex = -1;
+      const close = () => {
+        element.remove();
+        cleanup.delete(close);
+        dialogs.delete(close);
+        document.removeEventListener("viewshow", close);
+        if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+      };
+      cleanup.add(close);
+      dialogs.add(close);
+      document.addEventListener("viewshow", close);
+      element.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          close();
+        }
+        if (event.key !== "Tab") return;
+        const controls = Array.from(element.querySelectorAll('button:not(:disabled), input:not(:disabled), [tabindex="0"]'));
+        const first = controls[0], last = controls[controls.length - 1];
+        if (!first || !last) {
+          event.preventDefault();
+          element.focus();
+          return;
+        }
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === element)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
+      timeout(() => {
+        if (element.isConnected) (element.querySelector("input") || element.querySelector("button") || element).focus();
+      }, 0);
+      return close;
+    };
+    const cancelPending = () => {
+      generation++;
+      for (const cancel of pending) cancel();
+      for (const close of dialogs) close();
+    };
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      cancelPending();
+      for (const release of cleanup) release();
+      cleanup.clear();
+    };
+    const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
+      const current = lease(JE2), version = generation;
+      return () => !disposed && generation === version && current();
+    } };
+    JE2.internals.bookmarkLifetimes[name] = result;
+    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+      for (const close of dialogs) close();
+      document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
+      document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
+    }));
+    listen(window, "pagehide", dispose);
+    return result;
+  }
+
+  // client/src/features/bookmarks/library-styles.ts
+  var { JE, host, getApi } = bookmarksHost();
+  function install(JE2) {
+    const lifetime = createLifetime(JE2, "library-styles");
+    JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
+    if (!JE2?.pluginConfig?.BookmarksEnabled) {
+      console.log("🪼 Jellyfin Enhanced: Bookmarks library feature is disabled");
+      return;
+    }
+    const style = document.createElement("style");
+    style.textContent = `
+    .je-bookmark-item[hidden] { display: none !important; }
     .je-bookmarks-wrapper {
       display: flex;
       flex-direction: column;
@@ -843,15 +973,19 @@
       font-size: 18px;
     }
   `;
-  document.head.appendChild(style);
-
-  const backdropStyle = document.createElement('style');
-  backdropStyle.textContent = [
-    '.backgroundContainer.withBackdrop:has(~ * #indexPage .tabContent.is-active .sections.bookmarks) {',
-    '  background: rgba(0, 0, 0, 0.7) !important;',
-    '  opacity: 1 !important;',
-    '}'
-  ].join('\n');
-  document.head.appendChild(backdropStyle);
-
-})(window.JellyfinEnhanced);
+    document.head.appendChild(style);
+    lifetime.keep(() => style.remove());
+    const backdropStyle = document.createElement("style");
+    backdropStyle.textContent = [
+      ".backgroundContainer.withBackdrop:has(~ * #indexPage .tabContent.is-active .sections.bookmarks) {",
+      "  background: rgba(0, 0, 0, 0.7) !important;",
+      "  opacity: 1 !important;",
+      "}"
+    ].join("\n");
+    document.head.appendChild(backdropStyle);
+    lifetime.keep(() => backdropStyle.remove());
+  }
+  install(JE);
+})();
+})();
+//# sourceMappingURL=bookmarks-library-styles.js.map

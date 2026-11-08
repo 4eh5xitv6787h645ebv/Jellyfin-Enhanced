@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { createHarness, plain, jsRoot } from '../helpers/harness.mjs';
+import { bootGenerated, settle } from '../helpers/admin-config-page.mjs';
 import { setup, OLD_FORM, POSITION_GROUPS, ALSO_WRITES, PAGE_FIELDS } from '../helpers/admin-tags-page.mjs';
+
+const require = createRequire(import.meta.url);
 
 test('every old-form control writes exactly its own field (oracle from the old form, payload delta per control)', async t => {
   const declared = new Map();
@@ -257,15 +261,12 @@ test('the hub preview draws a supplied document and hands the signed-in user\'s 
 });
 
 
-test('What\'s New on the main page lists new Media Tags settings with a link to their tab', () => {
-  // configPage.html's own helpers, run as the page runs them.
-  const page = readFileSync(resolve(jsRoot, '../Configuration/configPage.html'), 'utf8');
-  const humanize = /function jeHumanizeSettingId\(id\) \{[\s\S]*?\n        \}/.exec(page)[0];
-  const helper = page.slice(page.indexOf('// jeMediaTagsWhatsNewEntries: begin'), page.indexOf('// jeMediaTagsWhatsNewEntries: end'));
-  assert.ok(helper.includes('function jeMediaTagsWhatsNewEntries'));
+test('What\'s New on the main page lists new Media Tags settings with a link to their tab', async t => {
+  // The page's own helpers, bundled from the module the generated page bundles.
+  const { outputFiles } = require('esbuild').buildSync({ entryPoints: [resolve(jsRoot, '../../client/src/admin/config/domain/whats-new.ts')], bundle: true, write: false, format: 'iife', globalName: 'whatsNew', platform: 'browser', target: 'es2020' });
   const h = createHarness({ JE: {} });
   try {
-    h.window.eval(`${humanize}\n${helper}\nwindow.entries = jeMediaTagsWhatsNewEntries;`);
+    h.window.eval(`${outputFiles[0].text}\nwindow.entries = whatsNew.mediaTagsWhatsNewEntries;`);
     // GET whats-new `mediaTags`: where on the Media Tags tab each new setting lives (`page` is the older page's name).
     const page0 = 'JellyfinEnhancedMediaTags';
     const where = {
@@ -285,12 +286,37 @@ test('What\'s New on the main page lists new Media Tags settings with a link to 
       { tab: 'media-tags', tabLabel: 'Media Tags', title: 'Extras', href: `${base}extras`, mediaTags: { section: 'extras', group: null }, ids: ['tagFutureThing'] },
     ]);
   } finally { h.close(); }
-  // checkWhatsNew routes the ids the tab draws only once it opens through it, and the chip opens the tab in place.
-  assert.match(page, /var movedEntries = jeMediaTagsWhatsNewEntries\(moved, mediaTags\);/);
-  assert.match(page, /renderWhatsNewBanner\(\(perSetting\.length \? groupWhatsNewByFieldset\(perSetting\) : \[\]\)\.concat\(movedEntries\)/);
-  assert.match(page, /if \(f\.mediaTags\) jeOpenMediaTags\(f\.mediaTags\.section, f\.mediaTags\.group, true\);/);
+
+  // The generated page routes the settings the tab draws only once it opens through it, and the chip opens the tab in place.
+  const opened = [];
+  const page = bootGenerated({
+    saved: {},
+    globals: { JellyfinEnhanced: { t: key => key, core: { tagLayout: {} }, internals: { enhancedUi: {} }, adminTags: { mountTab: async () => ({ openTab: (section, options) => opened.push([section, options]) }), holdSaves: fn => fn() } } },
+    ajax: request => (/\/whats-new$/.test(request.url) && request.type === 'GET' ? {
+      pluginVersion: '9.9.9',
+      newSettings: { showFileSizes: '9.9.9', tagLayout: '9.9.9', ratingTagsOnNextUp: '9.9.9', tagDrawnAlready: '9.9.9', notOnAnyPage: '9.9.9' },
+      mediaTags: { tagLayout: { tab: 'layout', group: null }, ratingTagsOnNextUp: { tab: 'groups', group: 'rating' }, tagDrawnAlready: { tab: 'layout', group: null } },
+    } : undefined),
+  });
+  t.after(() => page.close());
+  await page.ready();
+  page.document.head.appendChild(Object.assign(page.document.createElement('link'), { id: 'jeTagAdminCss' }));
   // Controls of the Media Tags tab already open are routed the same way, not as main-page settings.
-  assert.match(page, /if \(tabContent && tabContent\.id === 'media-tags'\) return null;/);
+  const drawn = page.document.createElement('input');
+  drawn.id = 'tagDrawnAlready';
+  page.document.querySelector('#media-tags .je-tag-admin').appendChild(drawn);
+  page.show();
+  await settle(page.window, 100);
+  const chips = [...page.document.querySelectorAll('.je-whats-new-chip')];
+  assert.deepEqual(chips.map(chip => chip.textContent).sort(), ['Display > UI Preferences', 'Media Tags > Groups › Rating', 'Media Tags > Layout defaults'].sort());
+  assert.equal(page.document.querySelector('#media-tags .je-new-badge'), null, 'the tab keeps no badge of the main page');
+  assert.ok(page.document.getElementById('showFileSizes').closest('fieldset').querySelector('.je-new-badge'), 'a main-page setting keeps its badge');
+  const address = page.window.location.hash;
+  chips.find(chip => /Rating/.test(chip.textContent)).click();
+  await settle(page.window);
+  assert.deepEqual(plain(opened), [['groups', { group: 'rating', focus: true }]], 'the chip opens the tab at its group, with focus');
+  assert.equal(page.window.location.hash, address, 'in place, without navigating');
+  assert.ok(page.document.getElementById('media-tags').classList.contains('active'));
 });
 
 

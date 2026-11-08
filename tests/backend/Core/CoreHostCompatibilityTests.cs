@@ -11,8 +11,7 @@ public class CoreHostCompatibilityTests
 {
     private static HostCompatibilityService Service(bool mismatch)
     {
-        var matchingMajor = HostCompatibilityService.BuiltFor == "jf12" ? 12 : 10;
-        var version = new Version(mismatch ? (matchingMajor == 12 ? 10 : 12) : matchingMajor, 0);
+        var version = new Version(mismatch ? 10 : 12, 0);
         var host = new Mock<IServerApplicationHost>();
         host.SetupGet(h => h.ApplicationVersion).Returns(version);
         host.SetupGet(h => h.ApplicationVersionString).Returns(version.ToString());
@@ -117,7 +116,7 @@ public class CoreHostCompatibilityTests
     [InlineData(false, true)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public void GuidanceDistinguishesInstallFromProcessRestart(bool mismatch, bool stale)
+    public void GuidanceDistinguishesUnsupportedHostFromProcessRestart(bool mismatch, bool stale)
     {
         var service = Service(mismatch);
         var message = service.GetCompatibilityMessage(stale);
@@ -128,24 +127,22 @@ public class CoreHostCompatibilityTests
         }
 
         Assert.NotNull(message);
-        Assert.Contains("a dashboard restart keeps", message);
-        Assert.Contains("systemctl restart jellyfin", message);
-        Assert.Contains("docker restart <container>", message);
-        Assert.DoesNotContain("Install ", message);
-        Assert.Equal(mismatch && stale, message.Contains("the file on disk is the wrong build too", StringComparison.Ordinal));
-        Assert.Equal(mismatch, message.Contains("This copy of Jellyfin Enhanced was built for", StringComparison.Ordinal));
+        Assert.Equal(stale, message.Contains("a dashboard restart keeps", StringComparison.Ordinal));
+        Assert.Equal(stale, message.Contains("systemctl restart jellyfin", StringComparison.Ordinal));
+        Assert.Equal(stale, message.Contains("docker restart <container>", StringComparison.Ordinal));
         Assert.Equal(stale, message.Contains("still running the old copy from memory", StringComparison.Ordinal));
-        Assert.Equal(!stale, message.Contains("Both builds share one version number", StringComparison.Ordinal));
-
-        var logged = service.GetCompatibilityMessage(stale, includeInstallAdvice: true)!;
-        // Stale and mismatched: the replacement may be the wrong build too, so the log still names the right one.
-        Assert.Equal(mismatch, logged.Contains($"{service.ExpectedAssetName} from {HostCompatibilityService.ManifestUrl}.", StringComparison.Ordinal));
+        Assert.Equal(mismatch, message.Contains("Upgrade the server to Jellyfin 12.x", StringComparison.Ordinal));
+        Assert.DoesNotContain(".zip", message);
+        Assert.DoesNotContain("Both builds", message);
     }
 
     [Theory]
-    [InlineData("10.11.0", "jf10", "Jellyfin.Plugin.JellyfinEnhanced_10.11.0.zip")]
-    [InlineData("10.11.11", "jf10", "Jellyfin.Plugin.JellyfinEnhanced_10.11.0.zip")]
-    [InlineData("11.0.0", "jf10", "Jellyfin.Plugin.JellyfinEnhanced_10.11.0.zip")]
+    [InlineData("0.0.0", HostCompatibilityService.UnsupportedTarget, null)]
+    [InlineData("9.0.0", HostCompatibilityService.UnsupportedTarget, null)]
+    [InlineData("10.10.0", HostCompatibilityService.UnsupportedTarget, null)]
+    [InlineData("10.11.0", HostCompatibilityService.UnsupportedTarget, null)]
+    [InlineData("10.11.11", HostCompatibilityService.UnsupportedTarget, null)]
+    [InlineData("11.0.0", HostCompatibilityService.UnsupportedTarget, null)]
     [InlineData("12.0.0", "jf12", "Jellyfin.Plugin.JellyfinEnhanced_12.0.0.zip")]
     [InlineData("12.0.0-rc1", "jf12", "Jellyfin.Plugin.JellyfinEnhanced_12.0.0.zip")]
     [InlineData("12.4.0", "jf12", "Jellyfin.Plugin.JellyfinEnhanced_12.0.0.zip")]
@@ -163,30 +160,36 @@ public class CoreHostCompatibilityTests
     }
 
     [Theory]
+    [InlineData("10.11.0", false)]
+    [InlineData("10.11.0", true)]
+    [InlineData("11.0.0", false)]
+    [InlineData("11.0.0", true)]
     [InlineData("13.0.0", false)]
     [InlineData("13.0.0", true)]
     [InlineData("13.0.0-rc1", false)]
+    [InlineData("14.1.0", true)]
     public void UnsupportedHostNamesTheLinesAndOffersNoAsset(string version, bool stale)
     {
         var service = Service(version);
         Assert.True(service.IsMismatch);
+        Assert.True(service.IsHostUnsupported);
+        Assert.Null(service.ExpectedAssetName);
 
         var message = service.GetCompatibilityMessage(stale)!;
-        Assert.Contains("does not support Jellyfin 13.x yet", message);
+        Assert.Contains("supports Jellyfin 12.x only", message);
         Assert.Contains($"the server is Jellyfin {version}", message);
-        // The config page adds its own releases link, so the shown message stops at the advice.
-        Assert.Contains("Stay on Jellyfin 12.x.", message);
-        Assert.DoesNotContain("lists Jellyfin 13 support", message);
+        Assert.DoesNotContain("yet", message);
         Assert.DoesNotContain(".zip", message);
-        Assert.DoesNotContain("Install ", message);
         Assert.DoesNotContain(HostCompatibilityService.ManifestUrl, message);
         Assert.DoesNotContain(HostCompatibilityService.ReleasesUrl, message);
-        // Swapping builds cannot help here, so the build-swap restart advice is not repeated.
-        Assert.DoesNotContain("Both builds share one version number", message);
-        Assert.Equal(stale, message.Contains("plugin file on disk was also replaced", StringComparison.Ordinal));
+        Assert.Equal(stale, message.Contains("plugin file on disk was replaced", StringComparison.Ordinal));
+        if (service.HostVersion.Major < 12)
+            Assert.Contains("Upgrade the server to Jellyfin 12.x", message);
+        else
+            Assert.Contains("explicitly supports this server's major version", message);
 
         var logged = service.GetCompatibilityMessage(stale, includeInstallAdvice: true)!;
-        Assert.Contains($"Stay on Jellyfin 12.x until a Jellyfin Enhanced release lists Jellyfin 13 support; see {HostCompatibilityService.ReleasesUrl}.", logged);
+        Assert.Contains(HostCompatibilityService.ReleasesUrl, logged);
         Assert.DoesNotContain(HostCompatibilityService.ManifestUrl, logged);
         Assert.DoesNotContain(".zip", logged);
     }

@@ -43,10 +43,25 @@ export function createHarness({ html = '', url = 'http://jellyfin.test/web/index
   const { window } = dom;
   // Modules loaded by the host bundle run after the document is ready.
   Object.defineProperty(window.document, 'readyState', { configurable: true, value: 'complete' });
+  // Legacy feature fixtures model an already-loaded settings document. Real protocol
+  // tests explicitly set settingsRevision (including null) and supply their own receipt.
+  if (JE.userConfig?.settings && !Object.hasOwn(JE.userConfig, 'settingsRevision')) JE.userConfig.settingsRevision = 'fixture-loaded';
   window.JellyfinEnhanced = JE;
   window.ApiClient = {
     getCurrentUserId: () => 'user-a', accessToken: () => 'test-token', serverId: () => 'server-a',
-    getUrl: path => `http://jellyfin.test${path.startsWith('/') ? '' : '/'}${path}`, ...apiClient
+    // Jellyfin's real ApiClient rejects an empty URL name. Keep this boundary strict.
+    getUrl: path => {
+      if (!path) throw new Error('Url name cannot be empty');
+      return `http://jellyfin.test${path.startsWith('/') ? '' : '/'}${path}`;
+    }, ...apiClient
+  };
+  const fixtureAjax = window.ApiClient.ajax;
+  if (fixtureAjax) window.ApiClient.ajax = async request => {
+    const response = await fixtureAjax(request);
+    if (request.type === 'POST' && request.url.endsWith('/settings-document') &&
+        (response == null || (typeof response === 'object' && Object.keys(response).length === 0)))
+      return { Revision: 'fixture-saved' };
+    return response;
   };
   window.fetch = fetch || ((url) => {
     const error = new Error(`Unexpected network request: ${url}; provide a fetch fixture`);

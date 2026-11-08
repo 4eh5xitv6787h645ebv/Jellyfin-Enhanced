@@ -8,14 +8,6 @@ import { repositoryRoot } from '../helpers/discovery.mjs';
 // The Tag Styles editor lives on the Media Tags admin page
 // (js/enhanced/admintags/tag-styles-editor.js): run the real module over its
 // own markup.
-const source = readFileSync(resolve(repositoryRoot, 'Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js'), 'utf8');
-const between = (from, to) => {
-  const start = source.indexOf(from);
-  const end = source.indexOf(to, start);
-  assert.ok(start >= 0 && end > start, `${from} … ${to} not found in tag-styles-editor.js`);
-  return source.slice(start, end + to.length);
-};
-const contrastSource = between('// <tag-style-contrast>', '// </tag-style-contrast>');
 const markup = '<div id="jeTaRoot"><input id="tagStylesEnabled" type="checkbox" checked><div id="tagStylesBody"></div></div>';
 
 /**
@@ -102,8 +94,15 @@ async function setup(t, json = '', preset = 'default', { generator = true, cat =
   return { ...h, editor, $, click, $$: sel => [...h.document.querySelectorAll(sel)] };
 }
 
-test('the contrast helpers composite over the dark poster and grade like WCAG', () => {
-  const api = new Function('T', `${contrastSource}\nreturn { rgbaOf, compositeOver, luminance, contrastRatio, contrastLevel };`)(englishT);
+test('the contrast helpers composite over the dark poster and grade like WCAG', t => {
+  // The editor is TypeScript now: the pure helpers are published by the generated module itself.
+  const h = createHarness({ JE: { t: englishT } });
+  t.after(() => h.close());
+  h.load('enhanced/admintags/tag-styles-editor.js');
+  const page = h.JE.adminTags.tagStyleContrast;
+  // Results are the page realm's objects: compared as plain values.
+  const plain = (fn) => (...args) => JSON.parse(JSON.stringify(fn(...args)));
+  const api = { contrastRatio: page.contrastRatio, contrastLevel: plain(page.contrastLevel), rgbaOf: plain(page.rgbaOf) };
   const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 0.01, `${actual} ≈ ${expected}`);
   near(api.contrastRatio('#ffffff', '#000000'), 21);
   near(api.contrastRatio('#767676', '#ffffff'), 4.54);

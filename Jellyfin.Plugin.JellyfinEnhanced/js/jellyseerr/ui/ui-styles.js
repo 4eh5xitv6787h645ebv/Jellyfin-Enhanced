@@ -1,23 +1,185 @@
-// /js/jellyseerr/ui/ui-styles.js
-// CSS for Seerr search cards, buttons, popovers and the season modal.
-(function(JE) {
-    'use strict';
+(() => {
+"use strict";
+(() => {
+  // client/src/host/seerr-core-host.ts
+  function seerrCoreHost() {
+    const host = window;
+    const JE2 = host.JellyfinEnhanced;
+    if (!JE2) throw new Error("Jellyfin Enhanced must be initialized before the Seerr core group");
+    return { JE: JE2, window: host, document, apiClient: () => host.ApiClient };
+  }
 
-    const ui = JE.jellyseerrUI = JE.jellyseerrUI || {};
+  // client/src/features/seerr/core/decode.ts
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
+  var isString = (value) => typeof value === "string";
+  var isBoolean = (value) => typeof value === "boolean";
+  var optional = (check) => (value) => value === void 0 || check(value);
+  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
+  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
+  var either = (...checks) => (value) => checks.some((check) => check(value));
+  function matches(value, checks) {
+    if (!isRecord(value)) return false;
+    const table = checks;
+    for (const [key, check] of Object.entries(table)) {
+      if (!check(value[key])) return false;
+    }
+    return true;
+  }
+  var seasonStatusChecks = {
+    seasonNumber: optional(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber)
+  };
+  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
+  var downloadChecks = {
+    title: nullable(isString),
+    status: nullable(isString),
+    size: nullable(isNumber),
+    sizeLeft: nullable(isNumber),
+    estimatedCompletionTime: nullable(isString),
+    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
+  };
+  var isDownload = (value) => matches(value, downloadChecks);
+  var requestSummaryChecks = {
+    is4k: nullable(isBoolean),
+    seasons: nullable(listOf((value) => matches(value, {
+      seasonNumber: optional(isNumber),
+      status: nullable(isNumber)
+    })))
+  };
+  var mediaInfoChecks = {
+    id: nullable(isNumber),
+    tvdbId: nullable(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber),
+    jellyfinMediaId: nullable(isString),
+    jellyfinMediaId4k: nullable(isString),
+    seasons: nullable(listOf(isSeasonStatus)),
+    downloadStatus: nullable(listOf(isDownload)),
+    downloadStatus4k: nullable(listOf(isDownload)),
+    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
+  };
+  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
+  var collectionChecks = {
+    id: nullable(isNumber),
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var isCollectionRef = (value) => matches(value, collectionChecks);
+  var mediaItemChecks = {
+    id: isNumber,
+    mediaType: isString,
+    title: nullable(isString),
+    name: nullable(isString),
+    originalTitle: nullable(isString),
+    originalName: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString),
+    overview: nullable(isString),
+    voteAverage: nullable(isNumber),
+    releaseDate: nullable(isString),
+    firstAirDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo),
+    collection: nullable(isCollectionRef)
+  };
+  var userStatusChecks = {
+    active: isBoolean,
+    userFound: isBoolean,
+    reason: optional(isString),
+    message: optional(isString),
+    jellyseerrUserId: optional(either(isString, isNumber)),
+    canRequestAdvanced: optional(isBoolean)
+  };
+  var quotaSideChecks = {
+    limit: nullable(isNumber),
+    used: nullable(isNumber),
+    remaining: nullable(isNumber),
+    days: nullable(isNumber),
+    restricted: nullable(isBoolean),
+    nextResetAt: nullable(isString)
+  };
+  var quotaChecks = {
+    movie: nullable((value) => matches(value, quotaSideChecks)),
+    tv: nullable((value) => matches(value, quotaSideChecks))
+  };
+  var overrideRuleChecks = {
+    id: nullable(either(isNumber, isString)),
+    radarrServiceId: nullable(isNumber),
+    sonarrServiceId: nullable(isNumber),
+    language: nullable(isString),
+    genre: nullable(isString),
+    keywords: nullable(isString),
+    users: nullable(isString),
+    profileId: nullable(isNumber),
+    rootFolder: nullable(isString),
+    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
+  };
+  var profileChecks = { id: isNumber, name: nullable(isString) };
+  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
+  var serviceChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    isDefault: nullable(isBoolean),
+    is4k: nullable(isBoolean),
+    activeProfileId: nullable(isNumber),
+    activeDirectory: nullable(isString)
+  };
+  var candidateChecks = {
+    tvdbId: isNumber,
+    title: nullable(isString),
+    year: nullable(either(isNumber, isString)),
+    overview: nullable(isString),
+    remotePoster: nullable(isString)
+  };
+  var movieCollectionChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var issueChecks = {
+    id: nullable(isNumber),
+    media: nullable((value) => matches(value, {
+      tmdbId: nullable(either(isNumber, isString)),
+      mediaType: nullable(isString)
+    }))
+  };
+  var tvSeasonChecks = {
+    seasonNumber: isNumber,
+    name: nullable(isString),
+    episodeCount: nullable(isNumber),
+    airDate: nullable(isString),
+    jeYear: nullable(isString)
+  };
+  var collectionPartChecks = {
+    id: isNumber,
+    title: nullable(isString),
+    posterPath: nullable(isString),
+    releaseDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo)
+  };
 
-    // ================================
-    // STYLING SYSTEM
-    // ================================
+  // client/src/features/seerr/core/runtime.ts
+  function groupInternals(JE2) {
+    const internals = JE2.internals || (JE2.internals = {});
+    return internals.jellyseerrUi || (internals.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
+  }
+  function firstInstall(JE2, name) {
+    const internals = groupInternals(JE2);
+    const installed = internals.installed || (internals.installed = /* @__PURE__ */ new Set());
+    if (installed.has(name)) return false;
+    installed.add(name);
+    return true;
+  }
 
-    /**
-     * Adds main CSS styles for Seerr integration.
-     */
-    ui.addMainStyles = function() {
-        const styleId = 'jellyseerr-styles';
-        if (document.getElementById(styleId)) return;
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.textContent = `
+  // client/src/features/seerr/core/ui/styles-css.ts
+  var MAIN_STYLE_ID = "jellyseerr-styles";
+  var SEASON_MODAL_STYLE_ID = "jellyseerr-season-styles";
+  var MAIN_CSS = `
             /* LAYOUT & ICONS */
             .jellyseerr-section { margin-bottom: 1em; }
             .jellyseerr-section .itemsContainer { }
@@ -298,18 +460,7 @@
             @keyframes jellyseerr-spin { to { transform: rotate(360deg) } }
             .section-hidden { display: none !important; }
         `;
-        document.head.appendChild(style);
-    };
-
-    /**
-     * Adds enhanced CSS styles for season selection modal.
-     */
-    ui.addSeasonModalStyles = function() {
-        const seasonStyleId = 'jellyseerr-season-styles';
-        if (document.getElementById(seasonStyleId)) return;
-        const style = document.createElement('style');
-        style.id = seasonStyleId;
-        style.textContent = `
+  var SEASON_MODAL_CSS = `
             /* MODAL STYLES */
             .jellyseerr-season-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 10, 20, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
             .jellyseerr-season-modal.show { opacity: 1; pointer-events: all; }
@@ -436,12 +587,23 @@
             .jellyseerr-quota-chip-restricted { background: rgba(127, 29, 29, 0.25); border-color: rgba(248, 113, 113, 0.55); color: #fca5a5; }
             .jellyseerr-quota-chip-sub { font-size: 0.8rem; opacity: 0.85; font-weight: 400; }
         `;
-        document.head.appendChild(style);
-    };
-    // Inject styles immediately on module load so all self-initializing Jellyseerr
-    // sub-modules (item-details, discovery pages, issue reporter, etc.) get CSS
-    // regardless of whether the search module is enabled.
+
+  // client/src/features/seerr/core/ui/styles-entry.ts
+  var { JE, document: document2 } = seerrCoreHost();
+  function addStyle(id, css) {
+    if (document2.getElementById(id)) return;
+    const style = document2.createElement("style");
+    style.id = id;
+    style.textContent = css;
+    document2.head.appendChild(style);
+  }
+  if (firstInstall(JE, "ui-styles")) {
+    const ui = JE.jellyseerrUI || (JE.jellyseerrUI = {});
+    ui.addMainStyles = () => addStyle(MAIN_STYLE_ID, MAIN_CSS);
+    ui.addSeasonModalStyles = () => addStyle(SEASON_MODAL_STYLE_ID, SEASON_MODAL_CSS);
     ui.addMainStyles();
     ui.addSeasonModalStyles();
-
-})(window.JellyfinEnhanced);
+  }
+})();
+})();
+//# sourceMappingURL=ui-styles.js.map

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using System;
 using System.IO;
 using System.Linq;
@@ -869,11 +870,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // issues) must run to completion even if the browser goes away.
             var ct = method == HttpMethod.Get ? HttpContext.RequestAborted : CancellationToken.None;
 
+            // Writes are not idempotent: every failed write says whether it may have
+            // been applied (docs/rewrite/seerr-proxy-outcomes.md), and once one has been
+            // handed to the network it is never retried or failed over to another URL.
+            var isWrite = method != HttpMethod.Get;
+            Helpers.Jellyseerr.SeerrRequestOutcome? notSent = isWrite ? Helpers.Jellyseerr.SeerrRequestOutcome.NotSent : null;
+
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || !config.JellyseerrEnabled || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
             {
                 _logger.Warning("Seerr integration is not configured or enabled.");
-                return StatusCode(503, "Seerr integration is not configured or enabled.");
+                return isWrite
+                    ? StatusCode(503, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("not_configured", "Seerr integration is not configured or enabled.", notSent))
+                    : StatusCode(503, "Seerr integration is not configured or enabled.");
             }
 
             // Resolve user ID from authenticated principal (not caller-controlled headers)
@@ -910,28 +919,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var unreachableMsg = IsAdminUser()
                         ? "Can't reach Seerr. Check the JE log for cf-ray / Content-Type / status details."
                         : "Can't reach Seerr right now. Please try again in a moment.";
-                    return StatusCode(502, new
-                    {
-                        error = true,
-                        code = "unreachable",
-                        message = unreachableMsg
-                    });
+                    return StatusCode(502, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", unreachableMsg, notSent));
                 }
                 if (IsJellyseerrImportBlocked(jellyfinUserId, JellyfinEnhanced.Instance?.Configuration ?? new Configuration.PluginConfiguration()))
                 {
-                    return StatusCode(403, new
-                    {
-                        error = true,
-                        code = "blocked",
-                        message = "Your administrator has disabled Seerr for your account."
-                    });
+                    return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("blocked", "Your administrator has disabled Seerr for your account.", notSent));
                 }
-                return NotFound(new
-                {
-                    error = true,
-                    code = "unlinked",
-                    message = "Current Jellyfin user is not linked to a Jellyseerr user."
-                });
+                return NotFound(Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unlinked", "Current Jellyfin user is not linked to a Jellyseerr user.", notSent));
             }
 
             // Enforce Seerr permissions for write operations and sensitive reads.
@@ -954,7 +948,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         {
                             if (!JellyseerrPermissionHelper.HasAnyPermission(perms,
                                 JellyseerrPermission.REQUEST | JellyseerrPermission.REQUEST_MOVIE | JellyseerrPermission.REQUEST_TV))
-                                return StatusCode(403, new { code = "no_request_permission", message = "You do not have permission to make requests in Seerr." });
+                                return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("no_request_permission", "You do not have permission to make requests in Seerr.", notSent, error: false));
 
                             if (content != null && !JellyseerrPermissionHelper.HasAnyPermission(perms, AdvancedRequestPermissions))
                                 content = StripAdvancedRequestOptions(content);
@@ -965,7 +959,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         {
                             if (!JellyseerrPermissionHelper.HasAnyPermission(perms,
                                 JellyseerrPermission.CREATE_ISSUES | JellyseerrPermission.MANAGE_ISSUES))
-                                return StatusCode(403, new { code = "no_issue_permission", message = "You do not have permission to report issues in Seerr." });
+                                return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("no_issue_permission", "You do not have permission to report issues in Seerr.", notSent, error: false));
                         }
 
                         // GET /api/v1/issue — view issues list (any of: ?query, exact, /id)
@@ -1015,7 +1009,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 && content != null
                 && await IsRequestBodyParentalBlockedAsync(content, jellyfinUserId))
             {
-                return ParentalBlockedResult();
+                return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("parental_block", "This title is above your parental rating limit.", notSent));
             }
 
             if (isCacheable)
@@ -1041,6 +1035,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
             int lastStatusCode = 502;
             object lastErrorBody = new { error = true, code = "unreachable", message = "Can't reach Seerr right now. Please try again in a moment." };
+            // Every write failure that falls through the loop was provably not sent:
+            // anything sent returns from inside the loop.
+            if (isWrite)
+            {
+                lastErrorBody = Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", "Can't reach Seerr right now. Please try again in a moment.", notSent);
+            }
 
             foreach (var url in urls)
             {
@@ -1070,10 +1070,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         _logger.Info($"Proxying Seerr request for user {userDisplay} to: {requestUri}");
                 }
 
+                // Set immediately before the write is handed to HttpClient. From then
+                // on the write may reach Seerr, so it ends here whatever happens.
+                var writeDispatched = false;
                 try
                 {
                     string? json = null;
                     Helpers.Jellyseerr.SeerrError? error = null;
+                    var upstreamStatus = 0;
                     // Seerr answers 5xx when its own TMDB call fails, which happens in
                     // bursts (a cold page fires several TMDB calls at once) and clears
                     // within a second. Retry idempotent GETs a couple of times before
@@ -1085,7 +1089,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             method, requestUri, config.JellyseerrApiKey, jellyseerrUserId, content);
                         if (content != null && attempt == 1) _logger.Debug($"Request body: {content}");
 
+                        writeDispatched = isWrite;
                         using var response = await httpClient.SendAsync(request, ct);
+                        upstreamStatus = (int)response.StatusCode;
                         (json, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri, ct);
                         var transient = error != null && error.HttpStatus >= 500 && error.HttpStatus <= 599
                             && error.Code != Helpers.Jellyseerr.SeerrErrorCode.HtmlResponse
@@ -1093,6 +1099,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         if (!transient || attempt == attempts) break;
                         _logger.Debug($"Seerr returned {error!.HttpStatus} for {apiPath}; retrying ({attempt}/{attempts - 1})");
                         await Task.Delay(TimeSpan.FromMilliseconds(400 * attempt), ct);
+                    }
+
+                    // A 2xx that is not a complete JSON document cannot confirm the write
+                    // (truncated, empty or garbled), so it is reported as unknown below.
+                    if (isWrite && error == null && json != null && !Helpers.Jellyseerr.SeerrRequestOutcomes.IsUsableWriteResponse(json))
+                    {
+                        error = new Helpers.Jellyseerr.SeerrError
+                        {
+                            Code = Helpers.Jellyseerr.SeerrErrorCode.ParseError,
+                            HttpStatus = upstreamStatus,
+                            Url = requestUri,
+                            Message = $"Seerr answered {upstreamStatus} from {requestUri} with a body that is not valid JSON; the write may have been applied.",
+                            UserMessage = "Got an unexpected response from Seerr. Please try again in a moment."
+                        };
+                        json = null;
                     }
 
                     if (error == null && json != null)
@@ -1143,10 +1164,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         Helpers.Jellyseerr.SeerrErrorCode.HtmlResponse => 502,
                         Helpers.Jellyseerr.SeerrErrorCode.UpstreamRedirect => 502,
                         Helpers.Jellyseerr.SeerrErrorCode.Cloudflare5xx => 502,
+                        Helpers.Jellyseerr.SeerrErrorCode.ParseError => 502,
                         Helpers.Jellyseerr.SeerrErrorCode.Unauthorized => 401,
                         Helpers.Jellyseerr.SeerrErrorCode.Forbidden => 403,
                         _ => error.HttpStatus > 0 ? error.HttpStatus : 502,
                     };
+
+                    if (isWrite)
+                    {
+                        // Seerr (or something in front of it) answered this write: report
+                        // that answer; another URL would be a second, independent write.
+                        var outcome = Helpers.Jellyseerr.SeerrRequestOutcomes.ForUpstreamError(error);
+                        return SeerrWriteFailure(lastStatusCode, error.ToProxyErrorResponse(IsAdminUser(), outcome), apiPath, content, trimmedUrl);
+                    }
+
                     // admins keep the upstream URL in the response;
                     // non-admins get a sanitised version that strips it.
                     lastErrorBody = IsAdminUser() ? error.ToAdminResponseShape() : error.ToResponseShape();
@@ -1164,18 +1195,53 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 catch (Exception ex)
                 {
                     _logger.Error($"Failed to connect to Seerr URL for user {ResolveUserDisplay(jellyfinUserId)}: {trimmedUrl}. Error: {ex.Message}");
-                    if (IsAdminUser())
+                    var message = IsAdminUser()
+                        ? $"Failed to reach {trimmedUrl}: {ex.Message}"
+                        : "Can't reach Seerr right now. Please try again in a moment.";
+                    if (!isWrite)
                     {
-                        lastErrorBody = new { error = true, code = "unreachable", message = $"Failed to reach {trimmedUrl}: {ex.Message}" };
+                        lastErrorBody = new { error = true, code = "unreachable", message };
+                        continue;
                     }
-                    else
+
+                    // A refused connect or failed DNS lookup proves nothing reached this
+                    // URL, so the next one may still be tried. Anything else (timeout,
+                    // reset, a response cut short) may have been applied.
+                    if (writeDispatched && !Helpers.Jellyseerr.SeerrRequestOutcomes.IsProvablyUnsent(ex))
                     {
-                        lastErrorBody = new { error = true, code = "unreachable", message = "Can't reach Seerr right now. Please try again in a moment." };
+                        return SeerrWriteFailure(502, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", message, Helpers.Jellyseerr.SeerrRequestOutcome.Unknown), apiPath, content, trimmedUrl);
                     }
+
+                    lastErrorBody = Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", message, notSent);
                 }
             }
 
             return StatusCode(lastStatusCode, lastErrorBody);
+        }
+
+        /// <summary>
+        /// Ends a write that was handed to a Seerr URL without a usable success. Never
+        /// retried or failed over: the body says whether it may have been applied.
+        /// An unknown request outcome also evicts the title's cached details, so the
+        /// browser's follow-up status read sees what Seerr actually holds.
+        /// </summary>
+        /// <param name="status">The proxy HTTP status.</param>
+        /// <param name="body">The failure envelope, with its request outcome set.</param>
+        /// <param name="apiPath">The Seerr API path written to.</param>
+        /// <param name="content">The forwarded request body.</param>
+        /// <param name="url">The configured Seerr base URL the write went to (log only).</param>
+        /// <returns>The failure result.</returns>
+        private ObjectResult SeerrWriteFailure(int status, Helpers.Jellyseerr.SeerrProxyErrorResponse body, string apiPath, string? content, string url)
+        {
+            var outcome = body.RequestOutcome ?? Helpers.Jellyseerr.SeerrRequestOutcome.Unknown;
+            _logger.Warning($"Seerr write {apiPath} at {url} ended with outcome={outcome.ToWireValue()} status={status}; not retried on another URL.");
+            if (outcome == Helpers.Jellyseerr.SeerrRequestOutcome.Unknown
+                && apiPath.StartsWith("/api/v1/request", StringComparison.OrdinalIgnoreCase)
+                && content != null)
+            {
+                EvictMovieTvCacheForRequest(content);
+            }
+            return StatusCode(status, body);
         }
 
         /// <summary>
@@ -3703,31 +3769,31 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// /bootstrap so the field list lives in one place; callers MUST gate on
         /// IsAdminUser() before calling this.
         /// </summary>
-        private object BuildPrivateConfig(PluginConfiguration config)
+        private BootstrapPrivateConfig BuildPrivateConfig(PluginConfiguration config)
         {
             // Check + log corruption so admins who never hit one of the action endpoints
             // still see a server-side error entry on private-config load.
             WarnIfArrInstancesCorrupt(config);
 
-            return new
+            return new BootstrapPrivateConfig
             {
                 // For Arr Links (legacy single-instance fields, kept for backward compat)
-                config.SonarrUrl,
-                config.RadarrUrl,
-                config.BazarrUrl,
-                config.SonarrUrlMappings,
-                config.RadarrUrlMappings,
-                config.BazarrUrlMappings,
+                SonarrUrl = config.SonarrUrl,
+                RadarrUrl = config.RadarrUrl,
+                BazarrUrl = config.BazarrUrl,
+                SonarrUrlMappings = config.SonarrUrlMappings,
+                RadarrUrlMappings = config.RadarrUrlMappings,
+                BazarrUrlMappings = config.BazarrUrlMappings,
 
                 // Shoko (single-instance, like Jellyseerr)
-                config.ShokoUrl,
-                config.ShokoUrlMappings,
+                ShokoUrl = config.ShokoUrl,
+                ShokoUrlMappings = config.ShokoUrlMappings,
 
                 // Multi-instance Sonarr/Radarr (no API keys exposed). Enabled flag is exposed so
                 // the config page can render a per-instance toggle and arr-links can filter
                 // disabled instances from the dropdown without a round-trip.
-                SonarrInstances = config.GetSonarrInstances().Select(i => new { i.Name, i.Url, i.UrlMappings, i.Enabled }),
-                RadarrInstances = config.GetRadarrInstances().Select(i => new { i.Name, i.Url, i.UrlMappings, i.Enabled }),
+                SonarrInstances = config.GetSonarrInstances().Select(i => new BootstrapArrInstance { Name = i.Name, Url = i.Url, UrlMappings = i.UrlMappings, Enabled = i.Enabled }),
+                RadarrInstances = config.GetRadarrInstances().Select(i => new BootstrapArrInstance { Name = i.Name, Url = i.Url, UrlMappings = i.UrlMappings, Enabled = i.Enabled }),
 
                 // Corruption flags so the frontend can surface a toast without waiting for an
                 // action endpoint to round-trip a corruption error envelope.
@@ -3740,17 +3806,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         }
 
         /// <summary>The Custom tag rules as every client may see them: id, label and icon, in table order.</summary>
-        private static object[] CustomTagRulesForClients(PluginConfiguration config)
+        private static BootstrapCustomTagRule[] CustomTagRulesForClients(PluginConfiguration config)
         {
             var matcher = CustomTagMatcher.For(config);
-            return matcher.Rules.Select((rule, i) => (object)new { Id = matcher.Ids[i], rule.Label, rule.Icon }).ToArray();
+            return matcher.Rules.Select((rule, i) => new BootstrapCustomTagRule { Id = matcher.Ids[i], Label = rule.Label, Icon = rule.Icon }).ToArray();
         }
 
         /// <summary>The tag or collection each Custom tag rule matches, by id (admins only).</summary>
-        private static object[] CustomTagRuleSourcesForAdmins(PluginConfiguration config)
+        private static BootstrapCustomTagSource[] CustomTagRuleSourcesForAdmins(PluginConfiguration config)
         {
             var matcher = CustomTagMatcher.For(config);
-            return matcher.Rules.Select((rule, i) => (object)new { Id = matcher.Ids[i], rule.Match, rule.Value }).ToArray();
+            return matcher.Rules.Select((rule, i) => new BootstrapCustomTagSource { Id = matcher.Ids[i], Match = rule.Match, Value = rule.Value }).ToArray();
         }
         // [AllowAnonymous]: public-config is loaded by `loadLoginImageEarly` before
         // the user logs in, so we cannot gate the whole endpoint on [Authorize].
@@ -3794,7 +3860,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// field list lives in one place. Redaction of the Seerr URLs is keyed on the
         /// CURRENT request's authentication state, exactly as /public-config does.
         /// </summary>
-        private object BuildPublicConfig(PluginConfiguration config)
+        private BootstrapPublicConfig BuildPublicConfig(PluginConfiguration config)
         {
             // Expose whether TMDB is configured as a boolean so all users
             // (including non-admin) can use TMDB-dependent features like
@@ -3837,178 +3903,178 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 jellyseerrUrlMappings = config.JellyseerrUrlMappings ?? string.Empty;
             }
 
-            return new
+            return new BootstrapPublicConfig
             {
                 // Jellyfin Enhanced Settings
                 TmdbEnabled = tmdbEnabled,
-                config.ToastDuration,
-                config.HelpPanelAutocloseDelay,
-                config.EnableCustomSplashScreen,
-                config.SplashScreenImageUrl,
+                ToastDuration = config.ToastDuration,
+                HelpPanelAutocloseDelay = config.HelpPanelAutocloseDelay,
+                EnableCustomSplashScreen = config.EnableCustomSplashScreen,
+                SplashScreenImageUrl = config.SplashScreenImageUrl,
 
                 // Jellyfin Elsewhere Settings
-                config.ElsewhereEnabled,
-                config.DEFAULT_REGION,
-                config.DEFAULT_PROVIDERS,
-                config.IGNORE_PROVIDERS,
-                config.ElsewhereSeasonProviders,
-                config.ElsewhereCustomBrandingText,
-                config.ElsewhereCustomBrandingImageUrl,
-                config.ClearLocalStorageTimestamp,
-                config.ClearTranslationCacheTimestamp,
+                ElsewhereEnabled = config.ElsewhereEnabled,
+                DEFAULT_REGION = config.DEFAULT_REGION,
+                DEFAULT_PROVIDERS = config.DEFAULT_PROVIDERS,
+                IGNORE_PROVIDERS = config.IGNORE_PROVIDERS,
+                ElsewhereSeasonProviders = config.ElsewhereSeasonProviders,
+                ElsewhereCustomBrandingText = config.ElsewhereCustomBrandingText,
+                ElsewhereCustomBrandingImageUrl = config.ElsewhereCustomBrandingImageUrl,
+                ClearLocalStorageTimestamp = config.ClearLocalStorageTimestamp,
+                ClearTranslationCacheTimestamp = config.ClearTranslationCacheTimestamp,
 
                 // Default User Settings
-                config.AutoPauseEnabled,
-                config.AutoResumeEnabled,
-                config.AutoPipEnabled,
-                config.AutoSkipIntro,
-                config.AutoSkipOutro,
-                config.LongPress2xEnabled,
-                config.RandomButtonEnabled,
-                config.RandomIncludeMovies,
-                config.RandomIncludeShows,
-                config.RandomUnwatchedOnly,
-                config.RandomScopeCurrentContainer,
-                config.ShowWatchProgress,
-                config.WatchProgressDefaultMode,
-                config.WatchProgressTimeFormat,
-                config.ShowFileSizes,
-                config.RemoveContinueWatchingEnabled,
-                config.ShowAudioLanguages,
-                config.Shortcuts,
-                config.ShowReviews,
-                config.ShowUserReviews,
-                config.ReviewsExpandedByDefault,
-                config.HideReviewsFromHiddenUsers,
-                config.HideReviewsFromDisabledUsers,
-                config.ShowAwards,
-                config.ShowAnilistReviews,
-                config.ReviewTranslationEnabled,
+                AutoPauseEnabled = config.AutoPauseEnabled,
+                AutoResumeEnabled = config.AutoResumeEnabled,
+                AutoPipEnabled = config.AutoPipEnabled,
+                AutoSkipIntro = config.AutoSkipIntro,
+                AutoSkipOutro = config.AutoSkipOutro,
+                LongPress2xEnabled = config.LongPress2xEnabled,
+                RandomButtonEnabled = config.RandomButtonEnabled,
+                RandomIncludeMovies = config.RandomIncludeMovies,
+                RandomIncludeShows = config.RandomIncludeShows,
+                RandomUnwatchedOnly = config.RandomUnwatchedOnly,
+                RandomScopeCurrentContainer = config.RandomScopeCurrentContainer,
+                ShowWatchProgress = config.ShowWatchProgress,
+                WatchProgressDefaultMode = config.WatchProgressDefaultMode,
+                WatchProgressTimeFormat = config.WatchProgressTimeFormat,
+                ShowFileSizes = config.ShowFileSizes,
+                RemoveContinueWatchingEnabled = config.RemoveContinueWatchingEnabled,
+                ShowAudioLanguages = config.ShowAudioLanguages,
+                Shortcuts = config.Shortcuts,
+                ShowReviews = config.ShowReviews,
+                ShowUserReviews = config.ShowUserReviews,
+                ReviewsExpandedByDefault = config.ReviewsExpandedByDefault,
+                HideReviewsFromHiddenUsers = config.HideReviewsFromHiddenUsers,
+                HideReviewsFromDisabledUsers = config.HideReviewsFromDisabledUsers,
+                ShowAwards = config.ShowAwards,
+                ShowAnilistReviews = config.ShowAnilistReviews,
+                ReviewTranslationEnabled = config.ReviewTranslationEnabled,
                 ReviewTranslationServer = config.ReviewTranslationEnabled && !string.IsNullOrWhiteSpace(config.ReviewTranslationUrl),
                 DoesTheDogDieEnabled = config.DoesTheDogDieEnabled && !string.IsNullOrWhiteSpace(config.DoesTheDogDieApiKey),
                 MdblistEnabled = mdblistEnabled,
-                config.MdblistRatingsEnabled,
-                config.MdblistRatingsShowOnItemDetails,
-                config.MdblistRatingsSources,
-                config.MdblistRatingsShowPercentSymbol,
-                config.ShowReleaseDates,
-                config.ShowUserRatingOnPosters,
-                config.ShowUserRatingDash,
-                config.PauseScreenEnabled,
-                config.PauseScreenDelaySeconds,
-                config.ShowPlaybackRatingBadge,
-                config.NativePosterTagsEnabled,
+                MdblistRatingsEnabled = config.MdblistRatingsEnabled,
+                MdblistRatingsShowOnItemDetails = config.MdblistRatingsShowOnItemDetails,
+                MdblistRatingsSources = config.MdblistRatingsSources,
+                MdblistRatingsShowPercentSymbol = config.MdblistRatingsShowPercentSymbol,
+                ShowReleaseDates = config.ShowReleaseDates,
+                ShowUserRatingOnPosters = config.ShowUserRatingOnPosters,
+                ShowUserRatingDash = config.ShowUserRatingDash,
+                PauseScreenEnabled = config.PauseScreenEnabled,
+                PauseScreenDelaySeconds = config.PauseScreenDelaySeconds,
+                ShowPlaybackRatingBadge = config.ShowPlaybackRatingBadge,
+                NativePosterTagsEnabled = config.NativePosterTagsEnabled,
                 TagStyleWebActive = config.TagStylesEnabled && config.TagStyleTarget is "web" or "both"
                     && (config.TagStylesAllowUserPreset || !TagStyleSet.Parse(config.TagStyleOverrides, config.TagStylePreset).IsEmpty),
                 // Tag Styles: user presets
                 TagStylesAllowUserPreset = config.TagStylesEnabled && config.TagStylesAllowUserPreset,
                 TagStylePreset = TagStyleKeys.NormalizePreset(config.TagStylePreset),
-                config.QualityTagsEnabled,
-                config.ShowResolutionTag,
-                config.ShowSourceTag,
+                QualityTagsEnabled = config.QualityTagsEnabled,
+                ShowResolutionTag = config.ShowResolutionTag,
+                ShowSourceTag = config.ShowSourceTag,
                 // Source and edition defaults.
-                config.ShowEditionTag,
-                config.ShowRuntimeTag,
-                config.ShowVersionsTag,
-                config.ShowAspectRatioTag,
-                config.ShowFrameRateTag,
-                config.EditionTagOrder,
-                config.RuntimeTagOrder,
-                config.VersionsTagOrder,
-                config.AspectRatioTagOrder,
-                config.FrameRateTagOrder,
-                config.ShowLowQualitySourceTag,
-                config.ShowDynamicRangeTag,
-                config.ShowSpecialFormatTag,
-                config.ShowVideoCodecTag,
-                config.ShowAudioInfoTag,
-                config.ResolutionTagOrder,
-                config.SourceTagOrder,
-                config.DynamicRangeTagOrder,
-                config.SpecialFormatTagOrder,
-                config.VideoCodecTagOrder,
-                config.AudioInfoTagOrder,
-                config.GenreTagsEnabled,
-                config.LanguageTagsEnabled,
-                config.RatingTagsEnabled,
-                config.AgeRatingTagsEnabled,
-                config.LogoTagsEnabled,
-                config.StatusTagsEnabled,
-                config.AwardsTagsEnabled,
-                config.AwardsTagsPosition,
-                config.AwardsTagsImdb,
-                config.AwardsTagsCertifiedFresh,
-                config.AwardsTagsOscar,
-                config.AwardsTagsEmmy,
-                config.AwardsTagsLetterboxd,
-                config.CustomTagsEnabled,
-                config.PeopleTagsEnabled,
-                config.DisableAllShortcuts,
-                config.DefaultSubtitleStyle,
-                config.DefaultSubtitleSize,
-                config.DefaultSubtitleFont,
-                config.DefaultSubtitleTextEffect,
-                config.DisableCustomSubtitleStyles,
-                config.DefaultLanguage,
+                ShowEditionTag = config.ShowEditionTag,
+                ShowRuntimeTag = config.ShowRuntimeTag,
+                ShowVersionsTag = config.ShowVersionsTag,
+                ShowAspectRatioTag = config.ShowAspectRatioTag,
+                ShowFrameRateTag = config.ShowFrameRateTag,
+                EditionTagOrder = config.EditionTagOrder,
+                RuntimeTagOrder = config.RuntimeTagOrder,
+                VersionsTagOrder = config.VersionsTagOrder,
+                AspectRatioTagOrder = config.AspectRatioTagOrder,
+                FrameRateTagOrder = config.FrameRateTagOrder,
+                ShowLowQualitySourceTag = config.ShowLowQualitySourceTag,
+                ShowDynamicRangeTag = config.ShowDynamicRangeTag,
+                ShowSpecialFormatTag = config.ShowSpecialFormatTag,
+                ShowVideoCodecTag = config.ShowVideoCodecTag,
+                ShowAudioInfoTag = config.ShowAudioInfoTag,
+                ResolutionTagOrder = config.ResolutionTagOrder,
+                SourceTagOrder = config.SourceTagOrder,
+                DynamicRangeTagOrder = config.DynamicRangeTagOrder,
+                SpecialFormatTagOrder = config.SpecialFormatTagOrder,
+                VideoCodecTagOrder = config.VideoCodecTagOrder,
+                AudioInfoTagOrder = config.AudioInfoTagOrder,
+                GenreTagsEnabled = config.GenreTagsEnabled,
+                LanguageTagsEnabled = config.LanguageTagsEnabled,
+                RatingTagsEnabled = config.RatingTagsEnabled,
+                AgeRatingTagsEnabled = config.AgeRatingTagsEnabled,
+                LogoTagsEnabled = config.LogoTagsEnabled,
+                StatusTagsEnabled = config.StatusTagsEnabled,
+                AwardsTagsEnabled = config.AwardsTagsEnabled,
+                AwardsTagsPosition = config.AwardsTagsPosition,
+                AwardsTagsImdb = config.AwardsTagsImdb,
+                AwardsTagsCertifiedFresh = config.AwardsTagsCertifiedFresh,
+                AwardsTagsOscar = config.AwardsTagsOscar,
+                AwardsTagsEmmy = config.AwardsTagsEmmy,
+                AwardsTagsLetterboxd = config.AwardsTagsLetterboxd,
+                CustomTagsEnabled = config.CustomTagsEnabled,
+                PeopleTagsEnabled = config.PeopleTagsEnabled,
+                DisableAllShortcuts = config.DisableAllShortcuts,
+                DefaultSubtitleStyle = config.DefaultSubtitleStyle,
+                DefaultSubtitleSize = config.DefaultSubtitleSize,
+                DefaultSubtitleFont = config.DefaultSubtitleFont,
+                DefaultSubtitleTextEffect = config.DefaultSubtitleTextEffect,
+                DisableCustomSubtitleStyles = config.DisableCustomSubtitleStyles,
+                DefaultLanguage = config.DefaultLanguage,
                 // Overlay positions
-                config.QualityTagsPosition,
-                config.GenreTagsPosition,
-                config.LanguageTagsPosition,
-                config.LanguageTagsPriority,
-                config.LanguageTagsPriorityStrict,
-                config.LanguageTagsMergeRegions,
-                config.QualityTagsPreferredAudioLanguage,
+                QualityTagsPosition = config.QualityTagsPosition,
+                GenreTagsPosition = config.GenreTagsPosition,
+                LanguageTagsPosition = config.LanguageTagsPosition,
+                LanguageTagsPriority = config.LanguageTagsPriority,
+                LanguageTagsPriorityStrict = config.LanguageTagsPriorityStrict,
+                LanguageTagsMergeRegions = config.LanguageTagsMergeRegions,
+                QualityTagsPreferredAudioLanguage = config.QualityTagsPreferredAudioLanguage,
                 SeriesQualityAggregation = Services.SeriesQualityAggregation.Normalize(config.SeriesQualityAggregation),
-                config.QualityHideSdr,
+                QualityHideSdr = config.QualityHideSdr,
                 QualityMinimumResolution = QualityDisplayRules.Minimum(config.QualityMinimumResolution),
                 QualityHdrDisplayMode = QualityDisplayRules.Mode(config.QualityHdrDisplayMode),
                 QualityVideoCodecDisplayMode = QualityDisplayRules.Mode(config.QualityVideoCodecDisplayMode),
                 QualityAudioDisplayMode = QualityDisplayRules.Mode(config.QualityAudioDisplayMode),
-                config.QualityTagsAudioLanguageFromUser,
-                config.RatingTagsPosition,
-                config.RatingTagsOnMovies,
-                config.RatingTagsOnSeries,
-                config.RatingTagsOnSeasons,
-                config.RatingTagsOnEpisodes,
-                config.RatingTagsOnContinueWatching,
-                config.RatingTagsOnNextUp,
-                config.RatingTagsShowCommunity,
-                config.RatingTagsShowCritic,
+                QualityTagsAudioLanguageFromUser = config.QualityTagsAudioLanguageFromUser,
+                RatingTagsPosition = config.RatingTagsPosition,
+                RatingTagsOnMovies = config.RatingTagsOnMovies,
+                RatingTagsOnSeries = config.RatingTagsOnSeries,
+                RatingTagsOnSeasons = config.RatingTagsOnSeasons,
+                RatingTagsOnEpisodes = config.RatingTagsOnEpisodes,
+                RatingTagsOnContinueWatching = config.RatingTagsOnContinueWatching,
+                RatingTagsOnNextUp = config.RatingTagsOnNextUp,
+                RatingTagsShowCommunity = config.RatingTagsShowCommunity,
+                RatingTagsShowCritic = config.RatingTagsShowCritic,
                 // Multi-source rating defaults.
                 RatingTagsSources = RatingSourceSettings.Defaults(config),
                 RatingTagsMinScore = RatingSourceSettings.NormalizeMinimum(config.RatingTagsMinScore),
-                config.RatingTagsColorByScore,
+                RatingTagsColorByScore = config.RatingTagsColorByScore,
                 // Language Tags display starting defaults (normalized)
-                config.LanguageTagsShowAudio,
-                config.LanguageTagsShowSubtitles,
+                LanguageTagsShowAudio = config.LanguageTagsShowAudio,
+                LanguageTagsShowSubtitles = config.LanguageTagsShowSubtitles,
                 LanguageTagsStyle = LanguageTagDisplay.NormalizeStyle(config.LanguageTagsStyle),
                 LanguageTagsCountBadge = LanguageTagDisplay.NormalizeCountBadge(config.LanguageTagsCountBadge),
-                config.AgeRatingTagsPosition,
+                AgeRatingTagsPosition = config.AgeRatingTagsPosition,
                 // Logos group: its starting corner and the administrator's (read-only) choices.
-                config.LogoTagsPosition,
+                LogoTagsPosition = config.LogoTagsPosition,
                 LogoTagsMovieMode = LogoTagRules.MovieMode(config.LogoTagsMovieMode),
                 LogoTagsSeriesMode = LogoTagRules.SeriesMode(config.LogoTagsSeriesMode),
                 LogoTagsMaxLogos = LogoTagRules.Max(config.LogoTagsMaxLogos),
-                config.StatusTagsPosition,
+                StatusTagsPosition = config.StatusTagsPosition,
                 // Custom tag group: starting corner and rules.
-                config.CustomTagsPosition,
+                CustomTagsPosition = config.CustomTagsPosition,
                 // Rule ids, labels and icons only: the tag or collection a rule matches is
                 // admin-only (CustomTagRuleSources in the private config).
                 CustomTagRules = CustomTagRulesForClients(config),
-                config.StatusTagsJustAdded,
-                config.StatusTagsNewRelease,
-                config.StatusTagsTrending,
-                config.StatusTagsSchedule,
-                config.StatusTagsMilestones,
-                config.StatusTagsSeriesStatus,
-                config.StatusTagsScenes,
+                StatusTagsJustAdded = config.StatusTagsJustAdded,
+                StatusTagsNewRelease = config.StatusTagsNewRelease,
+                StatusTagsTrending = config.StatusTagsTrending,
+                StatusTagsSchedule = config.StatusTagsSchedule,
+                StatusTagsMilestones = config.StatusTagsMilestones,
+                StatusTagsSeriesStatus = config.StatusTagsSeriesStatus,
+                StatusTagsScenes = config.StatusTagsScenes,
                 // Leaving soon / direct-play families: starting values, and whether a
                 // Leaving soon source is set (never its URL, key or collection names).
-                config.StatusTagsLeaving,
-                config.StatusTagsDirectPlay,
+                StatusTagsLeaving = config.StatusTagsLeaving,
+                StatusTagsDirectPlay = config.StatusTagsDirectPlay,
                 LeavingSoonAvailable = Services.LeavingSoonService.Configured(config),
-                config.StatusTagsJustAddedDays,
-                config.StatusTagsNewReleaseDays,
+                StatusTagsJustAddedDays = config.StatusTagsJustAddedDays,
+                StatusTagsNewReleaseDays = config.StatusTagsNewReleaseDays,
                 // Poster tag layout starting defaults (normalized; null = built-in)
                 TagLayout = TagLayoutRules.NormalizeLayout(config.TagLayout),
                 TagLayouts = TagLayoutRules.NormalizeProfiles(config.TagLayouts),
@@ -4026,152 +4092,152 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 TagLookItemOverrides = VisibleItemLooks(config),
                 // Per-shape tag looks starting default (normalized; null = none)
                 TagShapeOverrides = TagShapeRules.NormalizeDefaults(config.TagShapeOverrides),
-                config.ShowRatingInPlayer,
+                ShowRatingInPlayer = config.ShowRatingInPlayer,
 
-                config.TagsCacheTtlDays,
-                config.DisableTagsOnSearchPage,
-                config.TagsHideOnHover,
-                config.TagCacheServerMode,
-                config.EnableTagsLocalStorageFallback,
+                TagsCacheTtlDays = config.TagsCacheTtlDays,
+                DisableTagsOnSearchPage = config.DisableTagsOnSearchPage,
+                TagsHideOnHover = config.TagsHideOnHover,
+                TagCacheServerMode = config.TagCacheServerMode,
+                EnableTagsLocalStorageFallback = config.EnableTagsLocalStorageFallback,
 
                 // Seerr Search Settings
-                config.JellyseerrEnabled,
-                config.JellyseerrShowSearchResults,
-                config.JellyseerrSearchExcludeLibraryItems,
-                config.JellyseerrShowReportButton,
-                config.JellyseerrShowIssueIndicator,
-                config.JellyseerrEnable4KRequests,
-                config.JellyseerrEnable4KTvRequests,
-                config.ShowCollectionsInSearch,
-                config.JellyseerrShowAdvanced,
-                config.JellyseerrSingleSeasonRequestOnly,
-                config.JellyseerrShowQuotaInfo,
-                config.ShowElsewhereOnJellyseerr,
-                config.JellyseerrUseMoreInfoModal,
-                config.JellyseerrAvailablePosterLinksToJellyfin,
-                config.AddRequestedMediaToWatchlist,
-                config.SyncJellyseerrWatchlist,
-                config.JellyseerrAutoImportUsers,
-                config.JellyseerrShowSimilar,
-                config.JellyseerrShowRecommended,
-                config.JellyseerrShowRequestMoreOnSeries,
-                config.JellyseerrShowNetworkDiscovery,
-                config.JellyseerrShowGenreDiscovery,
-                config.JellyseerrShowTagDiscovery,
-                config.JellyseerrShowPersonDiscovery,
-                config.JellyseerrShowCollectionDiscovery,
-                config.JellyseerrShowDetailPageLink,
-                config.JellyseerrShowDetailPageLinkAsText,
-                config.JellyseerrExcludeLibraryItems,
-                config.JellyseerrExcludeBlocklistedItems,
-                config.JellyseerrDisableCache,
+                JellyseerrEnabled = config.JellyseerrEnabled,
+                JellyseerrShowSearchResults = config.JellyseerrShowSearchResults,
+                JellyseerrSearchExcludeLibraryItems = config.JellyseerrSearchExcludeLibraryItems,
+                JellyseerrShowReportButton = config.JellyseerrShowReportButton,
+                JellyseerrShowIssueIndicator = config.JellyseerrShowIssueIndicator,
+                JellyseerrEnable4KRequests = config.JellyseerrEnable4KRequests,
+                JellyseerrEnable4KTvRequests = config.JellyseerrEnable4KTvRequests,
+                ShowCollectionsInSearch = config.ShowCollectionsInSearch,
+                JellyseerrShowAdvanced = config.JellyseerrShowAdvanced,
+                JellyseerrSingleSeasonRequestOnly = config.JellyseerrSingleSeasonRequestOnly,
+                JellyseerrShowQuotaInfo = config.JellyseerrShowQuotaInfo,
+                ShowElsewhereOnJellyseerr = config.ShowElsewhereOnJellyseerr,
+                JellyseerrUseMoreInfoModal = config.JellyseerrUseMoreInfoModal,
+                JellyseerrAvailablePosterLinksToJellyfin = config.JellyseerrAvailablePosterLinksToJellyfin,
+                AddRequestedMediaToWatchlist = config.AddRequestedMediaToWatchlist,
+                SyncJellyseerrWatchlist = config.SyncJellyseerrWatchlist,
+                JellyseerrAutoImportUsers = config.JellyseerrAutoImportUsers,
+                JellyseerrShowSimilar = config.JellyseerrShowSimilar,
+                JellyseerrShowRecommended = config.JellyseerrShowRecommended,
+                JellyseerrShowRequestMoreOnSeries = config.JellyseerrShowRequestMoreOnSeries,
+                JellyseerrShowNetworkDiscovery = config.JellyseerrShowNetworkDiscovery,
+                JellyseerrShowGenreDiscovery = config.JellyseerrShowGenreDiscovery,
+                JellyseerrShowTagDiscovery = config.JellyseerrShowTagDiscovery,
+                JellyseerrShowPersonDiscovery = config.JellyseerrShowPersonDiscovery,
+                JellyseerrShowCollectionDiscovery = config.JellyseerrShowCollectionDiscovery,
+                JellyseerrShowDetailPageLink = config.JellyseerrShowDetailPageLink,
+                JellyseerrShowDetailPageLinkAsText = config.JellyseerrShowDetailPageLinkAsText,
+                JellyseerrExcludeLibraryItems = config.JellyseerrExcludeLibraryItems,
+                JellyseerrExcludeBlocklistedItems = config.JellyseerrExcludeBlocklistedItems,
+                JellyseerrDisableCache = config.JellyseerrDisableCache,
                 JellyseerrBaseUrl = jellyseerrBaseUrl,
                 JellyseerrUrlMappings = jellyseerrUrlMappings,
 
                 // Bookmarks Settings
-                config.BookmarksEnabled,
-                config.BookmarksUsePluginPages,
-                config.BookmarksUseCustomTabs,
-                config.BookmarksUseNativeTab,
+                BookmarksEnabled = config.BookmarksEnabled,
+                BookmarksUsePluginPages = config.BookmarksUsePluginPages,
+                BookmarksUseCustomTabs = config.BookmarksUseCustomTabs,
+                BookmarksUseNativeTab = config.BookmarksUseNativeTab,
 
                 // Arr Links Settings
-                config.ArrLinksEnabled,
-                config.ShowArrLinksAsText,
-                config.ArrLinksShowStatusSingle,
+                ArrLinksEnabled = config.ArrLinksEnabled,
+                ShowArrLinksAsText = config.ShowArrLinksAsText,
+                ArrLinksShowStatusSingle = config.ArrLinksShowStatusSingle,
 
                 // Arr Tags Sync Settings
-                config.ArrTagsSyncEnabled,
-                config.ArrTagsPrefix,
-                config.ArrTagsShowAsLinks,
-                config.ArrTagsLinksFilter,
-                config.ArrTagsLinksHideFilter,
+                ArrTagsSyncEnabled = config.ArrTagsSyncEnabled,
+                ArrTagsPrefix = config.ArrTagsPrefix,
+                ArrTagsShowAsLinks = config.ArrTagsShowAsLinks,
+                ArrTagsLinksFilter = config.ArrTagsLinksFilter,
+                ArrTagsLinksHideFilter = config.ArrTagsLinksHideFilter,
 
                 // Audio Language Tags Sync Settings
-                config.AudioLanguageTagSyncEnabled,
-                config.AudioLanguageTagPrefix,
-                config.AudioLanguageTagShowAsLinks,
+                AudioLanguageTagSyncEnabled = config.AudioLanguageTagSyncEnabled,
+                AudioLanguageTagPrefix = config.AudioLanguageTagPrefix,
+                AudioLanguageTagShowAsLinks = config.AudioLanguageTagShowAsLinks,
 
                 // Letterboxd Settings
-                config.LetterboxdEnabled,
-                config.ShowLetterboxdLinkAsText,
+                LetterboxdEnabled = config.LetterboxdEnabled,
+                ShowLetterboxdLinkAsText = config.ShowLetterboxdLinkAsText,
                 // Metadata Icons (Druidblack)
-                config.MetadataIconsEnabled,
+                MetadataIconsEnabled = config.MetadataIconsEnabled,
 
                 // Icon Settings
-                config.UseIcons,
-                config.IconStyle,
+                UseIcons = config.UseIcons,
+                IconStyle = config.IconStyle,
 
                 // Extras Settings
-                config.ColoredRatingsEnabled,
-                config.ThemeSelectorEnabled,
-                config.ColoredActivityIconsEnabled,
-                config.PluginIconsEnabled,
-                config.EnableLoginImage,
-                config.ActiveStreamsEnabled,
-                config.ActiveStreamsAllUsers,
-                config.AnalyticsEnabled,
-                config.AnalyticsShareUsageCounts,
+                ColoredRatingsEnabled = config.ColoredRatingsEnabled,
+                ThemeSelectorEnabled = config.ThemeSelectorEnabled,
+                ColoredActivityIconsEnabled = config.ColoredActivityIconsEnabled,
+                PluginIconsEnabled = config.PluginIconsEnabled,
+                EnableLoginImage = config.EnableLoginImage,
+                ActiveStreamsEnabled = config.ActiveStreamsEnabled,
+                ActiveStreamsAllUsers = config.ActiveStreamsAllUsers,
+                AnalyticsEnabled = config.AnalyticsEnabled,
+                AnalyticsShareUsageCounts = config.AnalyticsShareUsageCounts,
 
                 // Requests Page Settings
-                config.DownloadsPageEnabled,
-                config.DownloadsPageShowIssues,
-                config.ShowDownloadsInRequests,
-                config.DownloadsUsePluginPages,
-                config.DownloadsUseCustomTabs,
-                config.DownloadsUseNativeTab,
-                config.DownloadsPagePollingEnabled,
-                config.DownloadsPollIntervalSeconds,
-                config.DownloadsFilterByUserRequests,
-                config.DownloadsShowHistory,
-                config.DownloadsHistoryAdminOnly,
+                DownloadsPageEnabled = config.DownloadsPageEnabled,
+                DownloadsPageShowIssues = config.DownloadsPageShowIssues,
+                ShowDownloadsInRequests = config.ShowDownloadsInRequests,
+                DownloadsUsePluginPages = config.DownloadsUsePluginPages,
+                DownloadsUseCustomTabs = config.DownloadsUseCustomTabs,
+                DownloadsUseNativeTab = config.DownloadsUseNativeTab,
+                DownloadsPagePollingEnabled = config.DownloadsPagePollingEnabled,
+                DownloadsPollIntervalSeconds = config.DownloadsPollIntervalSeconds,
+                DownloadsFilterByUserRequests = config.DownloadsFilterByUserRequests,
+                DownloadsShowHistory = config.DownloadsShowHistory,
+                DownloadsHistoryAdminOnly = config.DownloadsHistoryAdminOnly,
 
                 // Calendar Page Settings
-                config.CalendarPageEnabled,
-                config.CalendarUseCustomTabs,
-                config.CalendarUsePluginPages,
-                config.CalendarUseNativeTab,
-                config.CalendarFirstDayOfWeek,
-                config.CalendarTimeFormat,
-                config.CalendarHighlightFavorites,
-                config.CalendarHighlightWatchedSeries,
-                config.CalendarFilterByLibraryAccess,
-                config.CalendarShowOnlyRequested,
-                config.CalendarForceOnlyRequested,
+                CalendarPageEnabled = config.CalendarPageEnabled,
+                CalendarUseCustomTabs = config.CalendarUseCustomTabs,
+                CalendarUsePluginPages = config.CalendarUsePluginPages,
+                CalendarUseNativeTab = config.CalendarUseNativeTab,
+                CalendarFirstDayOfWeek = config.CalendarFirstDayOfWeek,
+                CalendarTimeFormat = config.CalendarTimeFormat,
+                CalendarHighlightFavorites = config.CalendarHighlightFavorites,
+                CalendarHighlightWatchedSeries = config.CalendarHighlightWatchedSeries,
+                CalendarFilterByLibraryAccess = config.CalendarFilterByLibraryAccess,
+                CalendarShowOnlyRequested = config.CalendarShowOnlyRequested,
+                CalendarForceOnlyRequested = config.CalendarForceOnlyRequested,
                 ShokoConfigured = config.IsShokoConfigured(),
 
                 // Recommendations Page Settings
-                config.RecommendationsPageEnabled,
-                config.RecommendationsUseCustomTabs,
-                config.RecommendationsUseNativeTab,
+                RecommendationsPageEnabled = config.RecommendationsPageEnabled,
+                RecommendationsUseCustomTabs = config.RecommendationsUseCustomTabs,
+                RecommendationsUseNativeTab = config.RecommendationsUseNativeTab,
 
                 // Activity Feed Settings
-                config.ActivityFeedEnabled,
-                config.ActivityFeedUseCustomTabs,
-                config.ActivityFeedUseNativeTab,
-                config.ActivityFeedShowWatched,
-                config.ActivityFeedShowFavorited,
-                config.ActivityFeedShowReviewed,
-                config.ActivityFeedShowActiveStreams,
+                ActivityFeedEnabled = config.ActivityFeedEnabled,
+                ActivityFeedUseCustomTabs = config.ActivityFeedUseCustomTabs,
+                ActivityFeedUseNativeTab = config.ActivityFeedUseNativeTab,
+                ActivityFeedShowWatched = config.ActivityFeedShowWatched,
+                ActivityFeedShowFavorited = config.ActivityFeedShowFavorited,
+                ActivityFeedShowReviewed = config.ActivityFeedShowReviewed,
+                ActivityFeedShowActiveStreams = config.ActivityFeedShowActiveStreams,
 
                 // Hidden Content Settings
-                config.HiddenContentEnabled,
-                config.HiddenContentUsePluginPages,
-                config.HiddenContentUseCustomTabs,
-                config.HiddenContentUseNativeTab,
-                config.HiddenContentAdmin,
+                HiddenContentEnabled = config.HiddenContentEnabled,
+                HiddenContentUsePluginPages = config.HiddenContentUsePluginPages,
+                HiddenContentUseCustomTabs = config.HiddenContentUseCustomTabs,
+                HiddenContentUseNativeTab = config.HiddenContentUseNativeTab,
+                HiddenContentAdmin = config.HiddenContentAdmin,
 
                 // Catch Up Page Settings
-                config.CatchUpEnabled,
-                config.CatchUpUsePluginPages,
-                config.CatchUpUseCustomTabs,
-                config.CatchUpUseNativeTab,
+                CatchUpEnabled = config.CatchUpEnabled,
+                CatchUpUsePluginPages = config.CatchUpUsePluginPages,
+                CatchUpUseCustomTabs = config.CatchUpUseCustomTabs,
+                CatchUpUseNativeTab = config.CatchUpUseNativeTab,
 
                 // Maintenance Mode
                 MaintenanceModeEnabled = mmActive,
                 MaintenanceModeMessage = mmMessage,
                 // UTC ISO timestamp (or null when open-ended) so the banner can count down.
                 MaintenanceModeEndsAt = mmState.IsActive ? mmState.EndsAt : null,
-                config.MaintenanceModeAction,
+                MaintenanceModeAction = config.MaintenanceModeAction,
                 // Derived, never the raw value: the stored setting can be a
                 // JSON array of real user GUIDs, and this endpoint is
                 // anonymous (pre-login). No client script reads this field —
@@ -4179,28 +4245,28 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 MaintenanceModeAffectedUsers = PluginConfiguration.DeriveAffectedUsersShape(config.MaintenanceModeAffectedUsers),
 
                 // Spoiler Guard — frontend uses these to decide whether the per-show toggle appears.
-                config.SpoilerBlurEnabled,
-                config.SpoilerBlurIntensity,
-                config.SpoilerBlurStrictRefresh,
+                SpoilerBlurEnabled = config.SpoilerBlurEnabled,
+                SpoilerBlurIntensity = config.SpoilerBlurIntensity,
+                SpoilerBlurStrictRefresh = config.SpoilerBlurStrictRefresh,
                 // Strip-policy fields drive the per-user override UI — only
                 // admin-enabled categories surface an opt-out toggle.
                 SpoilerStripSeriesOverview = config.SpoilerStripSeriesOverview ?? config.SpoilerStripOverview,
-                config.SpoilerStripOverview,
-                config.SpoilerStripTags,
-                config.SpoilerStripChapters,
-                config.SpoilerStripTaglines,
-                config.SpoilerStripRatings,
-                config.SpoilerStripPremiereDate,
-                config.SpoilerReplaceTitle,
-                config.SpoilerStripCast,
-                config.SpoilerStripReviews,
+                SpoilerStripOverview = config.SpoilerStripOverview,
+                SpoilerStripTags = config.SpoilerStripTags,
+                SpoilerStripChapters = config.SpoilerStripChapters,
+                SpoilerStripTaglines = config.SpoilerStripTaglines,
+                SpoilerStripRatings = config.SpoilerStripRatings,
+                SpoilerStripPremiereDate = config.SpoilerStripPremiereDate,
+                SpoilerReplaceTitle = config.SpoilerReplaceTitle,
+                SpoilerStripCast = config.SpoilerStripCast,
+                SpoilerStripReviews = config.SpoilerStripReviews,
                 // Gates the per-user "Seek previews" opt-out row.
-                config.SpoilerBlurTrickplay,
+                SpoilerBlurTrickplay = config.SpoilerBlurTrickplay,
                 // Advanced category reveals: clients only need the master flag
                 // (to gate the per-user opt-out row in the settings panel);
                 // the six per-category strip toggles are server-only strip
                 // policy and are deliberately not exposed.
-                config.SpoilerAdvancedMode,
+                SpoilerAdvancedMode = config.SpoilerAdvancedMode,
             };
         }
 
@@ -4253,7 +4319,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
             var isAdmin = IsAdminUser();
 
-            return new JsonResult(new
+            var settingsSnapshot = TryLoadUserDocument("settings.json", authorizedUserId, () => LoadRevisionedSettings(authorizedUserId));
+            var bookmarkSnapshot = TryLoadUserDocument("bookmark.json", authorizedUserId, () => new Features.Bookmarks.BookmarkDocumentService(_userConfigurationManager).Read(authorizedUserId));
+            return TransportJson.Create(new BootstrapResponse
             {
                 Version = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown",
                 // Lets the client confirm the payload belongs to the user it expects
@@ -4264,11 +4332,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // Same name checks the client used to run against GET /Plugins.
                 HasCustomTabs = IsPluginInstalled("Custom Tabs"),
                 HasPluginPages = IsPluginInstalled("Plugin Pages"),
-                UserSettings = new
+                UserSettings = new BootstrapUserDocuments
                 {
-                    Settings = TryLoadUserDocument("settings.json", authorizedUserId, () => LoadUserSettingsDocument(authorizedUserId)),
+                    Settings = settingsSnapshot?.Settings,
+                    SettingsRevision = settingsSnapshot?.Revision,
                     Shortcuts = TryLoadUserDocument("shortcuts.json", authorizedUserId, () => _userConfigurationManager.GetUserConfiguration<UserShortcuts>(authorizedUserId, "shortcuts.json")),
-                    Bookmark = TryLoadUserDocument("bookmark.json", authorizedUserId, () => _userConfigurationManager.GetUserConfiguration<UserBookmark>(authorizedUserId, "bookmark.json")),
+                    Bookmark = null,
+                    BookmarkSnapshot = bookmarkSnapshot,
                     Elsewhere = TryLoadUserDocument("elsewhere.json", authorizedUserId, () => _userConfigurationManager.GetUserConfiguration<ElsewhereSettings>(authorizedUserId, "elsewhere.json")),
                     HiddenContent = TryLoadUserDocument("hidden-content.json", authorizedUserId, () => LoadUserHiddenContentDocument(authorizedUserId)),
                 },
@@ -4294,7 +4364,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         ///   TagStripRevision     — the StripRevision POST tag-data answers carry (no endpoint of its
         ///                          own), null when the Spoiler Guard state could not be read
         /// </summary>
-        private object BuildBootstrapPrefetched(PluginConfiguration config, Guid userId, string authorizedUserId, bool isAdmin)
+        private BootstrapPrefetched BuildBootstrapPrefetched(PluginConfiguration config, Guid userId, string authorizedUserId, bool isAdmin)
         {
             UserSpoilerBlur? spoilerBlurSeries = null;
             object? seerrUserStatus = null;
@@ -4342,7 +4412,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
-            return new
+            return new BootstrapPrefetched
             {
                 SpoilerBlurSeries = spoilerBlurSeries,
                 SeerrUserStatus = seerrUserStatus,
@@ -4357,7 +4427,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// null (the client then applies the same defaults it uses when the
         /// standalone endpoint fails) instead of failing the whole bootstrap.
         /// </summary>
-        private object? TryLoadUserDocument(string fileName, string authorizedUserId, Func<object> load)
+        private T? TryLoadUserDocument<T>(string fileName, string authorizedUserId, Func<T> load) where T : class
         {
             try
             {
@@ -5542,145 +5612,165 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// </summary>
         private object LoadUserSettingsDocument(string authorizedUserId)
         {
-            // Populate defaults from plugin configuration if missing
-            if (!_userConfigurationManager.UserConfigurationExists(authorizedUserId, "settings.json"))
+            return LoadRevisionedSettings(authorizedUserId).Settings;
+        }
+
+        private JellyfinEnhancedUserSettings CreateSettingsDefaults()
+        {
+            var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
+            if (defaultConfig == null) return new JellyfinEnhancedUserSettings();
+            var defaultUserSettings = new JellyfinEnhancedUserSettings
             {
-                var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
-                if (defaultConfig != null)
-                {
-                    var defaultUserSettings = new JellyfinEnhancedUserSettings
-                    {
-                        AutoPauseEnabled = defaultConfig.AutoPauseEnabled,
-                        AutoResumeEnabled = defaultConfig.AutoResumeEnabled,
-                        AutoPipEnabled = defaultConfig.AutoPipEnabled,
-                        LongPress2xEnabled = defaultConfig.LongPress2xEnabled,
-                        PauseScreenEnabled = defaultConfig.PauseScreenEnabled,
-                        PauseScreenDelaySeconds = defaultConfig.PauseScreenDelaySeconds,
-                        AutoSkipIntro = defaultConfig.AutoSkipIntro,
-                        AutoSkipOutro = defaultConfig.AutoSkipOutro,
-                        DisableCustomSubtitleStyles = defaultConfig.DisableCustomSubtitleStyles,
-                        SelectedStylePresetIndex = defaultConfig.DefaultSubtitleStyle,
-                        SelectedFontSizePresetIndex = defaultConfig.DefaultSubtitleSize,
-                        SelectedFontFamilyPresetIndex = defaultConfig.DefaultSubtitleFont,
-                        SelectedTextEffectPresetIndex = defaultConfig.DefaultSubtitleTextEffect,
-                        RandomButtonEnabled = defaultConfig.RandomButtonEnabled,
-                        RandomUnwatchedOnly = defaultConfig.RandomUnwatchedOnly,
-                        RandomIncludeMovies = defaultConfig.RandomIncludeMovies,
-                        RandomIncludeShows = defaultConfig.RandomIncludeShows,
-                        RandomScopeCurrentContainer = defaultConfig.RandomScopeCurrentContainer,
-                        ShowWatchProgress = defaultConfig.ShowWatchProgress,
-                        WatchProgressMode = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressDefaultMode) ? "percentage" : defaultConfig.WatchProgressDefaultMode,
-                        WatchProgressTimeFormat = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressTimeFormat) ? "hours" : defaultConfig.WatchProgressTimeFormat,
-                        ShowFileSizes = defaultConfig.ShowFileSizes,
-                        ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
-                        UseNativePosterTags = null, // Not chosen yet: on while the administrator allows native poster tags.
-                        QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
-                        ShowResolutionTag = defaultConfig.ShowResolutionTag,
-                        ShowSourceTag = defaultConfig.ShowSourceTag,
-                        // Source and edition defaults.
-                        ShowEditionTag = defaultConfig.ShowEditionTag,
-                        ShowRuntimeTag = defaultConfig.ShowRuntimeTag,
-                        ShowVersionsTag = defaultConfig.ShowVersionsTag,
-                        ShowAspectRatioTag = defaultConfig.ShowAspectRatioTag,
-                        ShowFrameRateTag = defaultConfig.ShowFrameRateTag,
-                        EditionTagOrder = defaultConfig.EditionTagOrder,
-                        RuntimeTagOrder = defaultConfig.RuntimeTagOrder,
-                        VersionsTagOrder = defaultConfig.VersionsTagOrder,
-                        AspectRatioTagOrder = defaultConfig.AspectRatioTagOrder,
-                        FrameRateTagOrder = defaultConfig.FrameRateTagOrder,
-                        ShowLowQualitySourceTag = defaultConfig.ShowLowQualitySourceTag,
-                        ShowDynamicRangeTag = defaultConfig.ShowDynamicRangeTag,
-                        ShowSpecialFormatTag = defaultConfig.ShowSpecialFormatTag,
-                        ShowVideoCodecTag = defaultConfig.ShowVideoCodecTag,
-                        ShowAudioInfoTag = defaultConfig.ShowAudioInfoTag,
-                        ResolutionTagOrder = defaultConfig.ResolutionTagOrder,
-                        SourceTagOrder = defaultConfig.SourceTagOrder,
-                        DynamicRangeTagOrder = defaultConfig.DynamicRangeTagOrder,
-                        SpecialFormatTagOrder = defaultConfig.SpecialFormatTagOrder,
-                        VideoCodecTagOrder = defaultConfig.VideoCodecTagOrder,
-                        AudioInfoTagOrder = defaultConfig.AudioInfoTagOrder,
-                        GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
-                        LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
-                        RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
-                        AgeRatingTagsEnabled = defaultConfig.AgeRatingTagsEnabled,
-                        LogoTagsEnabled = defaultConfig.LogoTagsEnabled,
-                        StatusTagsEnabled = defaultConfig.StatusTagsEnabled,
-                        AwardsTagsEnabled = defaultConfig.AwardsTagsEnabled,
-                        AwardsTagsPosition = defaultConfig.AwardsTagsPosition,
-                        CustomTagsEnabled = defaultConfig.CustomTagsEnabled,
-                        PeopleTagsEnabled = defaultConfig.PeopleTagsEnabled,
-                        TagsHideOnHover = defaultConfig.TagsHideOnHover,
-                        QualityTagsPosition = defaultConfig.QualityTagsPosition,
-                        // Series/season quality aggregation default.
-                        SeriesQualityAggregation = Services.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
-                        QualityHideSdr = defaultConfig.QualityHideSdr,
-                        QualityMinimumResolution = QualityDisplayRules.Minimum(defaultConfig.QualityMinimumResolution),
-                        QualityHdrDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityHdrDisplayMode),
-                        QualityVideoCodecDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityVideoCodecDisplayMode),
-                        QualityAudioDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityAudioDisplayMode),
-                        GenreTagsPosition = defaultConfig.GenreTagsPosition,
-                        LanguageTagsPosition = defaultConfig.LanguageTagsPosition,
-                        RatingTagsPosition = defaultConfig.RatingTagsPosition,
-                        RatingTagsOnMovies = true, // follows the administrator (TagLayoutRules.RatingScope)
-                        RatingTagsOnSeries = true, // follows the administrator (TagLayoutRules.RatingScope)
-                        RatingTagsOnSeasons = true, // follows the administrator (TagLayoutRules.RatingScope)
-                        RatingTagsOnEpisodes = true, // follows the administrator (TagLayoutRules.RatingScope)
-                        RatingTagsOnContinueWatching = true, // follows the administrator (TagLayoutRules.RatingScope)
-                        RatingTagsOnNextUp = true, // follows the administrator (TagLayoutRules.RatingScope)
-                        RatingTagsShowCommunity = defaultConfig.RatingTagsShowCommunity,
-                        RatingTagsShowCritic = defaultConfig.RatingTagsShowCritic,
-                        // Multi-source rating defaults (copy the ordered array).
-                        RatingTagsSources = RatingSourceSettings.Defaults(defaultConfig).ToArray(),
-                        RatingTagsMinScore = RatingSourceSettings.NormalizeMinimum(defaultConfig.RatingTagsMinScore),
-                        RatingTagsColorByScore = defaultConfig.RatingTagsColorByScore,
-                        AgeRatingTagsPosition = defaultConfig.AgeRatingTagsPosition,
-                        LogoTagsPosition = defaultConfig.LogoTagsPosition,
-                        StatusTagsPosition = defaultConfig.StatusTagsPosition,
-                        CustomTagsPosition = defaultConfig.CustomTagsPosition,
-                        StatusTagsJustAdded = defaultConfig.StatusTagsJustAdded,
-                        StatusTagsNewRelease = defaultConfig.StatusTagsNewRelease,
-                        StatusTagsTrending = defaultConfig.StatusTagsTrending,
-                        // Tag Styles preset: null follows the admin's preset.
-                        TagStylePreset = null,
-                        StatusTagsSchedule = defaultConfig.StatusTagsSchedule,
-                        StatusTagsMilestones = defaultConfig.StatusTagsMilestones,
-                        StatusTagsSeriesStatus = defaultConfig.StatusTagsSeriesStatus,
-                        StatusTagsScenes = defaultConfig.StatusTagsScenes,
-                        StatusTagsLeaving = defaultConfig.StatusTagsLeaving,
-                        StatusTagsDirectPlay = defaultConfig.StatusTagsDirectPlay,
-                        ShowRatingInPlayer = defaultConfig.ShowRatingInPlayer,
-                        RemoveContinueWatchingEnabled = defaultConfig.RemoveContinueWatchingEnabled,
-                        ReviewsExpandedByDefault = defaultConfig.ReviewsExpandedByDefault,
-                        DisplayLanguage = defaultConfig.DefaultLanguage,
-                        CalendarDisplayMode = "list",
-                        CalendarDefaultViewMode = "agenda",
-                        LastOpenedTab = "shortcuts"
-                    };
-                    TagLayoutRules.ApplyDefaults(defaultUserSettings, defaultConfig);
-                    TagLookValidation.ApplyDefaults(defaultUserSettings, defaultConfig);
-                    LanguageTagDisplay.ApplyDefaults(defaultUserSettings, defaultConfig);
-                    TagShapeRules.ApplyDefaults(defaultUserSettings, defaultConfig);
+                AutoPauseEnabled = defaultConfig.AutoPauseEnabled,
+                AutoResumeEnabled = defaultConfig.AutoResumeEnabled,
+                AutoPipEnabled = defaultConfig.AutoPipEnabled,
+                LongPress2xEnabled = defaultConfig.LongPress2xEnabled,
+                PauseScreenEnabled = defaultConfig.PauseScreenEnabled,
+                PauseScreenDelaySeconds = defaultConfig.PauseScreenDelaySeconds,
+                AutoSkipIntro = defaultConfig.AutoSkipIntro,
+                AutoSkipOutro = defaultConfig.AutoSkipOutro,
+                DisableCustomSubtitleStyles = defaultConfig.DisableCustomSubtitleStyles,
+                SelectedStylePresetIndex = defaultConfig.DefaultSubtitleStyle,
+                SelectedFontSizePresetIndex = defaultConfig.DefaultSubtitleSize,
+                SelectedFontFamilyPresetIndex = defaultConfig.DefaultSubtitleFont,
+                SelectedTextEffectPresetIndex = defaultConfig.DefaultSubtitleTextEffect,
+                RandomButtonEnabled = defaultConfig.RandomButtonEnabled,
+                RandomUnwatchedOnly = defaultConfig.RandomUnwatchedOnly,
+                RandomIncludeMovies = defaultConfig.RandomIncludeMovies,
+                RandomIncludeShows = defaultConfig.RandomIncludeShows,
+                RandomScopeCurrentContainer = defaultConfig.RandomScopeCurrentContainer,
+                ShowWatchProgress = defaultConfig.ShowWatchProgress,
+                WatchProgressMode = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressDefaultMode) ? "percentage" : defaultConfig.WatchProgressDefaultMode,
+                WatchProgressTimeFormat = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressTimeFormat) ? "hours" : defaultConfig.WatchProgressTimeFormat,
+                ShowFileSizes = defaultConfig.ShowFileSizes,
+                ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
+                UseNativePosterTags = null, // Not chosen yet: on while the administrator allows native poster tags.
+                QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
+                ShowResolutionTag = defaultConfig.ShowResolutionTag,
+                ShowSourceTag = defaultConfig.ShowSourceTag,
+                // Source and edition defaults.
+                ShowEditionTag = defaultConfig.ShowEditionTag,
+                ShowRuntimeTag = defaultConfig.ShowRuntimeTag,
+                ShowVersionsTag = defaultConfig.ShowVersionsTag,
+                ShowAspectRatioTag = defaultConfig.ShowAspectRatioTag,
+                ShowFrameRateTag = defaultConfig.ShowFrameRateTag,
+                EditionTagOrder = defaultConfig.EditionTagOrder,
+                RuntimeTagOrder = defaultConfig.RuntimeTagOrder,
+                VersionsTagOrder = defaultConfig.VersionsTagOrder,
+                AspectRatioTagOrder = defaultConfig.AspectRatioTagOrder,
+                FrameRateTagOrder = defaultConfig.FrameRateTagOrder,
+                ShowLowQualitySourceTag = defaultConfig.ShowLowQualitySourceTag,
+                ShowDynamicRangeTag = defaultConfig.ShowDynamicRangeTag,
+                ShowSpecialFormatTag = defaultConfig.ShowSpecialFormatTag,
+                ShowVideoCodecTag = defaultConfig.ShowVideoCodecTag,
+                ShowAudioInfoTag = defaultConfig.ShowAudioInfoTag,
+                ResolutionTagOrder = defaultConfig.ResolutionTagOrder,
+                SourceTagOrder = defaultConfig.SourceTagOrder,
+                DynamicRangeTagOrder = defaultConfig.DynamicRangeTagOrder,
+                SpecialFormatTagOrder = defaultConfig.SpecialFormatTagOrder,
+                VideoCodecTagOrder = defaultConfig.VideoCodecTagOrder,
+                AudioInfoTagOrder = defaultConfig.AudioInfoTagOrder,
+                GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
+                LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
+                RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
+                AgeRatingTagsEnabled = defaultConfig.AgeRatingTagsEnabled,
+                LogoTagsEnabled = defaultConfig.LogoTagsEnabled,
+                StatusTagsEnabled = defaultConfig.StatusTagsEnabled,
+                AwardsTagsEnabled = defaultConfig.AwardsTagsEnabled,
+                AwardsTagsPosition = defaultConfig.AwardsTagsPosition,
+                CustomTagsEnabled = defaultConfig.CustomTagsEnabled,
+                PeopleTagsEnabled = defaultConfig.PeopleTagsEnabled,
+                TagsHideOnHover = defaultConfig.TagsHideOnHover,
+                QualityTagsPosition = defaultConfig.QualityTagsPosition,
+                // Series/season quality aggregation default.
+                SeriesQualityAggregation = Services.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
+                QualityHideSdr = defaultConfig.QualityHideSdr,
+                QualityMinimumResolution = QualityDisplayRules.Minimum(defaultConfig.QualityMinimumResolution),
+                QualityHdrDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityHdrDisplayMode),
+                QualityVideoCodecDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityVideoCodecDisplayMode),
+                QualityAudioDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityAudioDisplayMode),
+                GenreTagsPosition = defaultConfig.GenreTagsPosition,
+                LanguageTagsPosition = defaultConfig.LanguageTagsPosition,
+                RatingTagsPosition = defaultConfig.RatingTagsPosition,
+                RatingTagsOnMovies = true, // follows the administrator (TagLayoutRules.RatingScope)
+                RatingTagsOnSeries = true, // follows the administrator (TagLayoutRules.RatingScope)
+                RatingTagsOnSeasons = true, // follows the administrator (TagLayoutRules.RatingScope)
+                RatingTagsOnEpisodes = true, // follows the administrator (TagLayoutRules.RatingScope)
+                RatingTagsOnContinueWatching = true, // follows the administrator (TagLayoutRules.RatingScope)
+                RatingTagsOnNextUp = true, // follows the administrator (TagLayoutRules.RatingScope)
+                RatingTagsShowCommunity = defaultConfig.RatingTagsShowCommunity,
+                RatingTagsShowCritic = defaultConfig.RatingTagsShowCritic,
+                // Multi-source rating defaults (copy the ordered array).
+                RatingTagsSources = RatingSourceSettings.Defaults(defaultConfig).ToArray(),
+                RatingTagsMinScore = RatingSourceSettings.NormalizeMinimum(defaultConfig.RatingTagsMinScore),
+                RatingTagsColorByScore = defaultConfig.RatingTagsColorByScore,
+                AgeRatingTagsPosition = defaultConfig.AgeRatingTagsPosition,
+                LogoTagsPosition = defaultConfig.LogoTagsPosition,
+                StatusTagsPosition = defaultConfig.StatusTagsPosition,
+                CustomTagsPosition = defaultConfig.CustomTagsPosition,
+                StatusTagsJustAdded = defaultConfig.StatusTagsJustAdded,
+                StatusTagsNewRelease = defaultConfig.StatusTagsNewRelease,
+                StatusTagsTrending = defaultConfig.StatusTagsTrending,
+                // Tag Styles preset: null follows the admin's preset.
+                TagStylePreset = null,
+                StatusTagsSchedule = defaultConfig.StatusTagsSchedule,
+                StatusTagsMilestones = defaultConfig.StatusTagsMilestones,
+                StatusTagsSeriesStatus = defaultConfig.StatusTagsSeriesStatus,
+                StatusTagsScenes = defaultConfig.StatusTagsScenes,
+                StatusTagsLeaving = defaultConfig.StatusTagsLeaving,
+                StatusTagsDirectPlay = defaultConfig.StatusTagsDirectPlay,
+                ShowRatingInPlayer = defaultConfig.ShowRatingInPlayer,
+                RemoveContinueWatchingEnabled = defaultConfig.RemoveContinueWatchingEnabled,
+                ReviewsExpandedByDefault = defaultConfig.ReviewsExpandedByDefault,
+                DisplayLanguage = defaultConfig.DefaultLanguage,
+                CalendarDisplayMode = "list",
+                CalendarDefaultViewMode = "agenda",
+                LastOpenedTab = "shortcuts"
+            };
+            TagLayoutRules.ApplyDefaults(defaultUserSettings, defaultConfig);
+            TagLookValidation.ApplyDefaults(defaultUserSettings, defaultConfig);
+            LanguageTagDisplay.ApplyDefaults(defaultUserSettings, defaultConfig);
+            TagShapeRules.ApplyDefaults(defaultUserSettings, defaultConfig);
 
-                    _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "settings.json", defaultUserSettings);
-                    _logger.Info($"Saved default settings.json for new user {ResolveUserDisplay(authorizedUserId)} from plugin configuration.");
-                }
-            }
+            return defaultUserSettings;
+        }
 
-            var userConfig = _userConfigurationManager.GetUserConfiguration<JellyfinEnhancedUserSettings>(authorizedUserId, "settings.json");
+        private RevisionedSettingsResponse LoadRevisionedSettings(string userId)
+            => new Services.SettingsDocumentService(_userConfigurationManager).Read(userId, CreateSettingsDefaults, IsAdminUser());
 
-            // IsAdmin reflects the CALLER's admin status (not the target user's, in the
-            // rare admin-viewing-another-user's-settings case allowed by
-            // AuthorizeUserConfigAccess). Computed fresh on every request from the
-            // authenticated principal, never persisted to the settings file. Single
-            // source of truth for every admin-gated JS module (js/enhanced/helpers.js).
-            var settingsNode = System.Text.Json.JsonSerializer.SerializeToNode(userConfig) as System.Text.Json.Nodes.JsonObject;
-            if (settingsNode != null)
+        [HttpGet("user-settings/{userId}/settings-document")]
+        [Authorize]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public IActionResult GetRevisionedSettings(string userId)
+        {
+            var denied = AuthorizeUserConfigAccess(userId, out var authorizedUserId);
+            if (denied != null) return denied;
+            try { return TransportJson.Create(LoadRevisionedSettings(authorizedUserId)); }
+            catch (Exception ex) when (ex is System.IO.IOException || ex is System.IO.InvalidDataException || ex is Newtonsoft.Json.JsonException || ex is System.Text.Json.JsonException)
+            { return StatusCode(500, new { message = "Settings could not be read. The stored document has been preserved." }); }
+        }
+
+        [HttpPost("user-settings/{userId}/settings-document")]
+        [Authorize]
+        public IActionResult SaveRevisionedSettings(string userId, [FromBody] RevisionedSettingsRequest request)
+        {
+            var denied = AuthorizeUserConfigAccess(userId, out var authorizedUserId);
+            if (denied != null) return denied;
+            if (request == null || string.IsNullOrEmpty(request.Revision) || request.Settings == null)
+                return BadRequest(new { message = "Settings and their loaded revision are required." });
+            if (!MediaTagsPortable.TryNormalizeUser(request.Settings, out var invalid))
+                return BadRequest(new { message = invalid });
+            try
             {
-                settingsNode["IsAdmin"] = IsAdminUser();
-                return settingsNode;
+                var service = new Services.SettingsDocumentService(_userConfigurationManager);
+                if (!service.TrySave(authorizedUserId, request, IsAdminUser(), out var result))
+                    return Conflict(new { message = "Settings changed in another tab or on the server. Reload before saving again." });
+                Services.TagCacheService.Instance?.OnLogoSettingsChanged();
+                Services.TagCacheService.Instance?.OnRatingSourceSettingsChanged();
+                return TransportJson.Create(new SettingsSaveReceipt { Revision = result!.Revision });
             }
-
-            return userConfig;
+            catch (Exception ex) when (ex is System.IO.IOException || ex is System.IO.InvalidDataException || ex is Newtonsoft.Json.JsonException || ex is System.Text.Json.JsonException)
+            { return StatusCode(500, new { message = "Settings could not be saved. The stored document has been preserved." }); }
         }
 
         [HttpGet("user-settings/{userId}/shortcuts.json")]
@@ -5709,8 +5799,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return authorizationResult;
             }
 
-            var userConfig = _userConfigurationManager.GetUserConfiguration<ElsewhereSettings>(authorizedUserId, "elsewhere.json");
-            return Ok(userConfig);
+            try
+            {
+                return Content(new Services.ElsewhereDocumentService(_userConfigurationManager).ReadJson(authorizedUserId), "application/json");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to read user elsewhere settings for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                return StatusCode(500, new { message = "Elsewhere settings could not be read. The stored document has been preserved." });
+            }
         }
 
         [HttpPost("user-settings/{userId}/settings.json")]
@@ -5967,6 +6064,36 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
         }
 
+        [HttpGet("user-settings/{userId}/bookmark-document")]
+        [Authorize]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public IActionResult GetBookmarkDocument(string userId)
+        {
+            var denied = AuthorizeUserConfigAccess(userId, out var authorizedUserId);
+            if (denied != null) return denied;
+            try { return TransportJson.Create(new Features.Bookmarks.BookmarkDocumentService(_userConfigurationManager).Read(authorizedUserId)); }
+            catch (Exception ex) when (ex is System.IO.IOException || ex is System.IO.InvalidDataException || ex is Newtonsoft.Json.JsonException)
+            { return StatusCode(500, new { message = "Bookmarks could not be read. The stored document has been preserved." }); }
+        }
+
+        [HttpPost("user-settings/{userId}/bookmark-document")]
+        [Authorize]
+        public IActionResult MutateBookmarkDocument(string userId, [FromBody] BookmarkMutationRequest request)
+        {
+            var denied = AuthorizeUserConfigAccess(userId, out var authorizedUserId);
+            if (denied != null) return denied;
+            if (request == null || string.IsNullOrWhiteSpace(request.Revision)) return BadRequest(new { message = "The loaded bookmark revision is required." });
+            try
+            {
+                if (!new Features.Bookmarks.BookmarkDocumentService(_userConfigurationManager).TryMutate(authorizedUserId, request, out var receipt))
+                    return Conflict(new { message = "Bookmarks changed in another tab or on the server. Reload before saving again." });
+                return TransportJson.Create(receipt);
+            }
+            catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (Exception ex) when (ex is System.IO.IOException || ex is System.IO.InvalidDataException || ex is Newtonsoft.Json.JsonException)
+            { return StatusCode(500, new { message = "Bookmarks could not be saved. The stored document has been preserved." }); }
+        }
+
         [HttpGet("user-settings/{userId}/bookmark.json")]
         [Authorize]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
@@ -6114,7 +6241,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         [HttpPost("user-settings/{userId}/elsewhere.json")]
         [Authorize]
         [Produces("application/json")]
-        public IActionResult SaveUserSettingsElsewhere(string userId, [FromBody] ElsewhereSettings userConfiguration)
+        public IActionResult SaveUserSettingsElsewhere(string userId, [FromBody] System.Text.Json.JsonElement userConfiguration)
         {
             var authorizationResult = AuthorizeUserConfigAccess(userId, out var authorizedUserId);
             if (authorizationResult != null)
@@ -6122,9 +6249,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return authorizationResult;
             }
 
+            // Raw body: Jellyfin's converters would turn a number into a string for a typed model.
+            if (!Services.ElsewhereDocumentService.TryParseUpdate(userConfiguration, out var update, out var invalid))
+            {
+                return BadRequest(new { success = false, message = invalid });
+            }
+
             try
             {
-                _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "elsewhere.json", userConfiguration);
+                if (!new Services.ElsewhereDocumentService(_userConfigurationManager).TrySave(authorizedUserId, update))
+                {
+                    return Conflict(new { success = false, message = "Elsewhere settings are being changed by another request. Try again." });
+                }
+
                 _logger.Info($"Saved user elsewhere settings for {ResolveUserDisplay(authorizedUserId)} to elsewhere.json");
                 return Ok(new { success = true, file = "elsewhere.json" });
             }

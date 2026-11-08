@@ -66,15 +66,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             {
                 // The runtime of the leaf's first media source, as before. A
                 // single-version item's only source is the item itself; a
-                // multi-version item keeps Jellyfin's own source order (10.11
-                // sorts versions, so the first is not necessarily this item).
+                // multi-version item keeps Jellyfin's own source order, so the
+                // first is not necessarily this item.
                 totalRuntimeTicks += multiVersionSources.TryGetValue(leaf.Id, out var sources)
                     ? sources.FirstOrDefault()?.RunTimeTicks ?? 0
                     : leaf.RunTimeTicks ?? 0;
             }
 
             long totalPlaybackTicks = 0;
-#if JF12
             // One query for the whole batch (Jellyfin 12 API).
             var userData = _userDataManager.GetUserDataBatch(leaves, user);
             foreach (var leaf in leaves)
@@ -89,18 +88,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     ? leaf.RunTimeTicks ?? 0
                     : data.PlaybackPositionTicks;
             }
-#else
-            foreach (var leaf in leaves)
-            {
-                var data = _userDataManager.GetUserData(user, leaf);
-                if (data is null)
-                {
-                    continue;
-                }
-
-                totalPlaybackTicks += data.Played ? leaf.RunTimeTicks ?? 0 : data.PlaybackPositionTicks;
-            }
-#endif
 
             var progress = totalRuntimeTicks == 0 ? 0 : (double)totalPlaybackTicks / totalRuntimeTicks * 100;
             // Floating point numbers are not needed in the frontend UI.
@@ -313,9 +300,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         private HashSet<Guid> FindMultiVersionIds(List<BaseItem> leaves)
         {
             var result = new HashSet<Guid>();
-#if JF12
             var videoIds = new List<Guid>(leaves.Count);
-#endif
             foreach (var leaf in leaves)
             {
                 if (leaf.SourceType == SourceType.Channel)
@@ -331,7 +316,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                 // A secondary version lists its primary (and that one's
                 // versions) among its media sources.
-#if JF12
                 if (video.PrimaryVersionId.HasValue)
                 {
                     result.Add(video.Id);
@@ -339,29 +323,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 }
 
                 videoIds.Add(video.Id);
-#else
-                if (!string.IsNullOrEmpty(video.PrimaryVersionId))
-                {
-                    result.Add(video.Id);
-                    continue;
-                }
-
-
-                if ((video.LinkedAlternateVersions?.Length ?? 0) > 0 || (video.LocalAlternateVersions?.Length ?? 0) > 0)
-                {
-                    result.Add(video.Id);
-                }
-#endif
             }
 
-#if JF12
             if (videoIds.Count > 0)
             {
                 // One query for the whole batch (Jellyfin 12 API): the subset
                 // that owns a linked or local alternate version.
                 result.UnionWith(_libraryManager.GetItemIdsWithAlternateVersions(videoIds));
             }
-#endif
 
             return result;
         }
