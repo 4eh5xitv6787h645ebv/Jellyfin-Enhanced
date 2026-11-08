@@ -14,8 +14,13 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+import sys
 import wave
-from bookmarks import prepare as prepare_bookmarks
+
+# Tests load this file by path, so its own directory is not always on sys.path.
+if str(pathlib.Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from bookmarks import prepare as prepare_bookmarks  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 # Floating tags: each run pulls the newest release of its compatibility line and

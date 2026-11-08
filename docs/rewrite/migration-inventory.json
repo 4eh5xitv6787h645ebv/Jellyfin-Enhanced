@@ -1723,7 +1723,7 @@
       "source": "client/src/admin/config/startup-entry.ts",
       "template": "client/html/admin-config/configPage.html",
       "manifest": "client/html-entries/admin-config.json",
-      "sha256": "7ec0a5ed3d029e78aafa09a05eaca978428c9b75ad11b0a834ee958f213cba55"
+      "sha256": "1185ca41234e99a992cd2f430600e9c461b2dcc4b65ba1806b2bd8247853e733"
     },
     {
       "path": "Configuration/configPage.html",
@@ -1733,7 +1733,7 @@
       "source": "client/src/admin/config/page-entry.ts",
       "template": "client/html/admin-config/configPage.html",
       "manifest": "client/html-entries/admin-config.json",
-      "sha256": "390db411a1d09473f3c71cb250e6777b088fe0239cbfd5d2b87752179b766b2b"
+      "sha256": "5c65e12e45f2f0d79be92f52b099e5806d29de237b836195fc6f4c8ea5662f4c"
     },
     {
       "path": "Configuration/mediaTagsPage.html",
@@ -1743,7 +1743,7 @@
       "source": "client/src/admin/config/media-tags-redirect-entry.ts",
       "template": "client/html/admin-config/mediaTagsPage.html",
       "manifest": "client/html-entries/admin-config.json",
-      "sha256": "df549abec0d019ec182c210762aa5818508c3c2bb84b241b50911892ae6e42a2"
+      "sha256": "37b5f5b3710cf1dedb5eb1a14fceb7a52b9bb5233819f74699b815fe82e3d7f5"
     },
     {
       "path": "PluginPages/ActivityPage.html",
