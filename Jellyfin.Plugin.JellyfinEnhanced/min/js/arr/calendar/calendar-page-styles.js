@@ -1,5 +1,5 @@
 (() => {
-"use strict";(()=>{function o(a,e,r){let n=e.core?.featureContext;if(typeof n!="function")throw new Error(`${a}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);return n(a,e,r)}function l(){var d;let a=window,e=a.JellyfinEnhanced;if(!e)throw new Error("Calendar loaded before Jellyfin Enhanced");e.internals||(e.internals={});let n=(d=e.internals).calendarPage||(d.calendarPage={}),i=o("calendar",e,{facades:["initializeCalendarPage"],internalSlots:["calendarLifetime","calendarPage"],internalsObject:()=>e.internals||(e.internals={})});return{JE:e,ctx:i,host:a,P:n}}(function(){"use strict";let{JE:a,P:e}=l(),r=`
+"use strict";(()=>{var g=Object.defineProperty;var p=(a,e)=>{for(var r in e)g(a,r,{get:e[r],enumerable:!0})};function c(a,e,r){let n=e.core?.featureContext;if(typeof n!="function")throw new Error(`${a}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);return n(a,e,r)}function s(a){let e=window.JellyfinEnhanced;if(!e)return;let r=e.core??(e.core={}),n=r.sharedModules;n||(n=Object.create(null),Object.defineProperty(r,"sharedModules",{value:n,configurable:!0,writable:!0,enumerable:!1}));for(let[t,i]of Object.entries(a))n[t]??(n[t]=i)}var l={};p(l,{calendarHost:()=>d});function d(){var i;let a=window,e=a.JellyfinEnhanced;if(!e)throw new Error("Calendar loaded before Jellyfin Enhanced");e.internals||(e.internals={});let n=(i=e.internals).calendarPage||(i.calendarPage={}),t=c("calendar",e,{facades:["initializeCalendarPage"],internalSlots:["calendarLifetime","calendarPage"],internalsObject:()=>e.internals||(e.internals={})});return{JE:e,ctx:t,host:a,P:n}}s({"features/calendar/host":l});(function(){"use strict";let{JE:a,P:e}=d(),r=`
 
     .je-msym-rounded {
       font-family: 'JE Material Symbols Rounded';
@@ -1101,13 +1101,13 @@
         border-width: 0;
       }
     }
-  `;function n(){document.getElementById("je-calendar-styles")||(a.core.ui.injectCss("je-calendar-styles",r),i())}function i(){let t=(a.themer?.getThemeVariables()||{}).primaryAccent||"#00a4dc";a.core.ui.injectCss("je-calendar-theme-colors",`
+  `;function n(){document.getElementById("je-calendar-styles")||(a.core.ui.injectCss("je-calendar-styles",r),t())}function t(){let o=(a.themer?.getThemeVariables()||{}).primaryAccent||"#00a4dc";a.core.ui.injectCss("je-calendar-theme-colors",`
       .je-calendar-view-btn.active {
-        background: ${t} !important;
-        border-color: ${t} !important;
+        background: ${o} !important;
+        border-color: ${o} !important;
       }
       .je-calendar-legend-item.active {
-        border-color: ${t} !important;
+        border-color: ${o} !important;
       }
       .je-calendar-day.je-calendar-today {
         border-color: var(--je-gray) !important;
@@ -1115,7 +1115,7 @@
       }
       .je-calendar-day.je-calendar-today .je-calendar-day-number,
       .je-calendar-day.je-calendar-today .je-calendar-day-name {
-        color: ${t} !important;
+        color: ${o} !important;
       }
     `)}e.injectStyles=n})();})();
 })();

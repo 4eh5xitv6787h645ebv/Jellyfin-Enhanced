@@ -1,30 +1,26 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function records(value) {
-    return Array.isArray(value) ? value.filter(isRecord) : [];
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "records");
 
   // client/src/features/media-tags/layout/tag-styles.ts
   function createTagStyles(JE) {
@@ -51,7 +47,7 @@
     }
     const GENRE_NAME_FLOATS = ':not([data-je-slot="hover"] *)';
     function genreMap(genre) {
-      if (!isRecord(genre)) return {};
+      if (!export42(genre)) return {};
       return ["background", "border", "color"].some((f) => typeof genre[f] === "string") ? { "*": genre } : genre;
     }
     function posterRules(P, groups) {
@@ -87,7 +83,7 @@
       return Array.isArray(styles.posterGroups) ? styles.posterGroups : [];
     }
     function buildCss(input, scope) {
-      const styles = record(input);
+      const styles = export10(input);
       const rules = [];
       if (scope !== void 0 && scope !== null && scope !== "" && !SCOPE_ID.test(scope)) {
         throw new Error("tag-styles: scope must be a single #id selector");
@@ -96,40 +92,40 @@
       const add = (selectors, body) => push(rules, (typeof selectors === "string" ? [selectors] : selectors).map((sel) => scope ? sel : sel + OUTSIDE_SCOPES).join(", "), body);
       const posterGroups = posterGroupsOf(styles);
       if (!posterGroups || posterGroups.length) rules.push(...posterRules(P, posterGroups || void 0).map((rule) => scope ? rule : rule.replace(/ (\{)/, OUTSIDE_SCOPES + " $1")));
-      const quality = record(styles.quality);
-      const allQuality = record(quality["*"]);
+      const quality = export10(styles.quality);
+      const allQuality = export10(quality["*"]);
       const Q = `${P}.quality-overlay-container.quality-overlay-container.quality-overlay-container .quality-overlay-label`;
       add(Q, `${decl("background", allQuality.background)}${decl("color", allQuality.color)}${decl("border-color", allQuality.border)}`);
       for (const [label, c] of Object.entries(quality)) {
-        if (label === "*" || !isRecord(c)) continue;
+        if (label === "*" || !export42(c)) continue;
         add(`${Q}[data-quality="${attr(label)}"]`, `${decl("background", c.background)}${decl("color", c.color)}${decl("border-color", c.border)}`);
       }
       const A = `${P}.age-rating-overlay-container .age-rating-tag`;
-      add(`${P}.age-rating-overlay-container.age-rating-overlay-container .age-rating-tag`, box(record(styles.ageDefault)));
-      for (const board of records(styles.age)) {
+      add(`${P}.age-rating-overlay-container.age-rating-overlay-container .age-rating-tag`, box(export10(styles.ageDefault)));
+      for (const board of export11(styles.age)) {
         const ratings = Array.isArray(board.ratings) ? board.ratings : [];
         if (!ratings.length) continue;
         add(ratings.map((r) => `${A}[rating="${attr(r)}"]`), box(board));
       }
-      const chips = record(styles.rating);
+      const chips = export10(styles.rating);
       const R = `${P}.rating-overlay-container .rating-tag`;
-      const community = record(chips.community);
-      const critic = record(chips.critic);
-      const userReview = record(chips.userReview);
+      const community = export10(chips.community);
+      const critic = export10(chips.critic);
+      const userReview = export10(chips.userReview);
       add(`${R}.rating-tag-tmdb`, decl("background", community.background) + decl("color", community.color) + ring(community.border));
       add(`${R}.rating-tag-tmdb .rating-star-icon`, decl("color", community.color));
       add(`${R}.rating-tag-critic`, decl("background", critic.background) + decl("color", critic.color) + ring(critic.border));
       add(`${R}.rating-tag-userreview`, decl("background", userReview.background) + decl("color", userReview.color) + ring(userReview.border));
       add(`${R}.rating-tag-userreview .je-userreview-icon`, decl("color", userReview.color));
       for (const [id, c] of Object.entries(chips)) {
-        if (!isRecord(c) || ["community", "critic", "userReview"].includes(id)) continue;
+        if (!export42(c) || ["community", "critic", "userReview"].includes(id)) continue;
         add(`${R}[data-je-rating-source="${attr(id)}"]`, decl("background", c.background) + decl("color", c.color) + ring(c.border));
       }
       const genre = genreMap(styles.genre);
       const G = `${P}.genre-overlay-container .genre-tag`;
-      add(G, box(record(genre["*"])));
+      add(G, box(export10(genre["*"])));
       for (const [label, c] of Object.entries(genre)) {
-        if (label === "*" || !isRecord(c)) continue;
+        if (label === "*" || !export42(c)) continue;
         const L = `[data-je-genre="${attr(label)}"]`;
         add(`${G}${L}`, box(c));
         if (!posterGroups || posterGroups.includes("genre")) {
@@ -139,30 +135,30 @@
         add(`${G}${L} .genre-text`, decl("color", c.color));
         add(`${G}${L} .genre-text${GENRE_NAME_FLOATS}`, decl("background-color", c.background));
       }
-      for (const [id, color] of Object.entries(record(styles.awards))) {
-        if (isRecord(color)) add(`${P}.awards-overlay-container .awards-tag[data-je-award="${attr(id)}"]`, decl("background", color.background) + decl("color", color.color) + ring(color.border));
+      for (const [id, color] of Object.entries(export10(styles.awards))) {
+        if (export42(color)) add(`${P}.awards-overlay-container .awards-tag[data-je-award="${attr(id)}"]`, decl("background", color.background) + decl("color", color.color) + ring(color.border));
       }
-      const status = record(styles.status);
+      const status = export10(styles.status);
       for (const key of Object.keys(status)) {
         const c = status[key];
-        if (!isRecord(c) || !STATUS_KEY.test(key)) continue;
+        if (!export42(c) || !STATUS_KEY.test(key)) continue;
         const S = `${P}.status-overlay-container .status-tag[data-je-status="${key}"]`;
         add(S, box(c));
         if (key === "trending") add(`${S} .status-tag-rank`, decl("color", c.color));
       }
-      const custom = record(styles.custom);
+      const custom = export10(styles.custom);
       const C = `${P}.custom-overlay-container.custom-overlay-container .custom-tag`;
-      add(C, box(record(custom["*"])));
+      add(C, box(export10(custom["*"])));
       for (const [label, c] of Object.entries(custom)) {
-        if (label === "*" || !isRecord(c)) continue;
+        if (label === "*" || !export42(c)) continue;
         add(`${C}[data-je-custom="${attr(label)}"]`, box(c));
       }
-      add(`${P}.language-overlay-container .language-chip`, box(record(styles.language)));
-      const languageLabels = record(styles.languageLabels);
-      const flagColours = record(languageLabels.flag || styles.language);
+      add(`${P}.language-overlay-container .language-chip`, box(export10(styles.language)));
+      const languageLabels = export10(styles.languageLabels);
+      const flagColours = export10(languageLabels.flag || styles.language);
       add(`${P}.language-overlay-container .language-flag:not(.language-flag-partial)`, ring(flagColours.border));
       for (const [label, color] of Object.entries(languageLabels)) {
-        if (!isRecord(color)) continue;
+        if (!export42(color)) continue;
         if (["subtitles", "countBadge", "code"].includes(label)) {
           const kind = label === "code" ? ".language-code" : `[data-je-language="${label}"]`;
           add(`${P}.language-overlay-container.language-overlay-container .language-chip${kind}`, box(color));
@@ -170,10 +166,10 @@
           add(`${P}.language-overlay-container.language-overlay-container.language-overlay-container .language-chip[data-je-language-label="${attr(label)}"]`, box(color));
         }
       }
-      const logos = record(styles.logos);
+      const logos = export10(styles.logos);
       for (const key of ["provider", "company", "text"]) {
         const c = logos[key];
-        if (isRecord(c)) add(`${P}.logo-overlay-container .je-logo-chip[data-je-logo-style="${key}"]`, box(c));
+        if (export42(c)) add(`${P}.logo-overlay-container .je-logo-chip[data-je-logo-style="${key}"]`, box(c));
       }
       const flushStyles = JE.core?.tagLayout?.buildFlushStyles;
       if (scope && rules.length && flushStyles) rules.push(flushStyles(scope));
@@ -206,16 +202,16 @@
       const epoch = JE.session ? JE.session.getEpoch() : 0;
       try {
         const preset = userPreset();
-        const styles = await apiClient().ajax({
+        const styles = await export0().ajax({
           type: "GET",
-          url: apiClient().getUrl("JellyfinEnhanced/tag-styles", preset ? { preset } : void 0),
+          url: export0().getUrl("JellyfinEnhanced/tag-styles", preset ? { preset } : void 0),
           dataType: "json"
         });
         if (seq !== requestSeq || JE.session && !JE.session.isCurrent(epoch) || !JE.pluginConfig?.TagStyleWebActive) return;
         const css = buildCss(styles);
         if (css) JE.core.ui.injectCss(styleId, css);
         else JE.core.ui.removeCss(styleId);
-        const posterGroups = posterGroupsOf(record(styles));
+        const posterGroups = posterGroupsOf(export10(styles));
         JE.tagPosterColours?.setActive(!posterGroups || posterGroups.length > 0);
       } catch (e) {
         console.warn(`${logPrefix} Could not load tag style overrides.`, e);
@@ -226,7 +222,7 @@
   }
 
   // client/src/features/media-tags/layout/tag-styles-entry.ts
-  createTagStyles(tagRuntimeHost());
+  createTagStyles(export4());
 })();
 })();
 //# sourceMappingURL=tag-styles.js.map

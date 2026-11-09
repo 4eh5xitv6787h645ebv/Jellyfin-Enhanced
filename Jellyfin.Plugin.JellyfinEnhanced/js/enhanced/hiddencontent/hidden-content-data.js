@@ -1,6 +1,16 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -64,154 +74,16 @@
     runtime(JE).policy++;
   }
 
-  // client/src/features/hidden-content/model.ts
-  var defaults = {
-    enabled: true,
-    filterLibrary: true,
-    filterDiscovery: true,
-    filterUpcoming: true,
-    filterCalendar: true,
-    filterSearch: false,
-    filterRecommendations: true,
-    filterRequests: true,
-    filterNextUp: true,
-    filterContinueWatching: true,
-    showHideConfirmation: true,
-    showHideButtons: true,
-    showButtonJellyseerr: true,
-    showButtonLibrary: false,
-    showButtonDetails: true,
-    showButtonCast: false,
-    experimentalHideCollections: false
-  };
-  function record(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
-    return value;
-  }
-  function normalizeId(id) {
-    return typeof id === "string" || typeof id === "number" || typeof id === "bigint" ? String(id).replace(/-/g, "").toLowerCase() : "";
-  }
-  var itemStrings = ["itemId", "name", "type", "posterPath", "seriesId", "seriesName", "hiddenAt", "hideScope"];
-  function field(source, name) {
-    return Object.prototype.hasOwnProperty.call(source, name) ? source[name] : source[name[0]?.toUpperCase() + name.slice(1)];
-  }
-  function decodeItem(value) {
-    const raw = record(value);
-    const item = { ...raw };
-    for (const key of [...itemStrings, "tmdbId", "seasonNumber", "episodeNumber"]) delete item[key];
-    for (const key of itemStrings) {
-      const v = field(raw, key);
-      if (v !== void 0 && v !== null) {
-        if (typeof v !== "string") throw new Error(`Invalid ${key}`);
-        item[key] = v;
-      }
-    }
-    const tmdb = field(raw, "tmdbId");
-    if (tmdb !== void 0 && tmdb !== null) {
-      if (typeof tmdb !== "string" && (typeof tmdb !== "number" || !Number.isFinite(tmdb))) throw new Error("Invalid tmdbId");
-      item.tmdbId = tmdb;
-    }
-    for (const key of ["seasonNumber", "episodeNumber"]) {
-      const v = field(raw, key);
-      if (v !== void 0) {
-        if (v !== null && (typeof v !== "number" || !Number.isFinite(v))) throw new Error(`Invalid ${key}`);
-        item[key] = v;
-      }
-    }
-    for (const key of [...itemStrings, "tmdbId", "seasonNumber", "episodeNumber"]) delete item[key[0]?.toUpperCase() + key.slice(1)];
-    return item;
-  }
-  function decodeDocument(value) {
-    const raw = record(value);
-    const rawItems = record(field(raw, "items"));
-    const rawSettings = field(raw, "settings");
-    const settings = rawSettings == null ? {} : { ...record(rawSettings) };
-    for (const key of Object.keys(defaults)) {
-      const v = field(settings, key);
-      if (v !== void 0 && typeof v !== "boolean") throw new Error(`Invalid setting ${key}`);
-      if (v !== void 0) settings[key] = v;
-      delete settings[key[0]?.toUpperCase() + key.slice(1)];
-    }
-    const items = Object.fromEntries(Object.entries(rawItems).map(([key, item]) => [key, decodeItem(item)]));
-    const document2 = { ...raw, items, settings };
-    delete document2.Items;
-    delete document2.Settings;
-    return document2;
-  }
-  function settingsFor(data) {
-    const settings = { ...defaults };
-    for (const key of Object.keys(defaults)) {
-      const v = data.settings[key];
-      if (typeof v === "boolean") settings[key] = v;
-    }
-    return settings;
-  }
-  function widestScope(a, b) {
-    if (!a) return b || "";
-    if (!b) return a;
-    const left = a.toLowerCase(), right = b.toLowerCase();
-    const ranks = { global: 4, homesections: 3, continuewatching: 2, nextup: 2 };
-    const ra = ranks[left] ?? 1, rb = ranks[right] ?? 1;
-    return ra === 2 && rb === 2 && left !== right ? "homesections" : ra >= rb ? left : right;
-  }
-  function mergeHomeScope(existing, incoming = "continuewatching") {
-    const ex = existing.toLowerCase(), inc = incoming.toLowerCase();
-    return !ex ? inc : ex === "global" || ex === "homesections" || ex === inc ? ex : "homesections";
-  }
-  function sameValue(left, right) {
-    if (Object.is(left, right)) return true;
-    if (left === null || right === null || typeof left !== "object" || typeof right !== "object") return false;
-    if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((v, i) => sameValue(v, right[i]));
-    const a = record(left), b = record(right), keys = Object.keys(a);
-    return keys.length === Object.keys(b).length && keys.every((k) => Object.prototype.hasOwnProperty.call(b, k) && sameValue(a[k], b[k]));
-  }
-  function parsedFraction(stamp, time) {
-    const seconds = Math.floor(time / 1e3) * 1e3, millis = time - seconds;
-    const probe = millis === 123 ? 456 : 123;
-    const decimals = /\.(\d+)/g;
-    for (let match = decimals.exec(stamp); match; match = decimals.exec(stamp)) {
-      const digits = match[1];
-      if (!digits) continue;
-      const start = match.index + 1, end = start + digits.length;
-      const replace = (value) => stamp.slice(0, start) + value + digits.slice(3) + stamp.slice(end);
-      const changed = Date.parse(replace(String(probe).padStart(3, "0")));
-      if (changed === seconds + probe) return digits;
-      if (seconds + probe > 864e13 && !Number.isFinite(changed) && Date.parse(replace("000")) === seconds) return digits;
-    }
-    return String(millis).padStart(3, "0");
-  }
-  function compareHiddenTimes(left, right) {
-    const a = Date.parse(left), b = Date.parse(right);
-    if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
-    const seconds = Math.floor(a / 1e3) - Math.floor(b / 1e3);
-    if (seconds !== 0) return seconds;
-    const x = parsedFraction(left, a), y = parsedFraction(right, b), width = Math.max(x.length, y.length);
-    const ax = x.padEnd(width, "0"), by = y.padEnd(width, "0");
-    return ax < by ? -1 : ax > by ? 1 : 0;
-  }
-  function earliestHiddenAt(items) {
-    let selected = "";
-    for (const item of items) {
-      const stamp = item.hiddenAt;
-      if (!stamp) continue;
-      if (!selected || compareHiddenTimes(stamp, selected) < 0) selected = stamp;
-    }
-    return selected || (/* @__PURE__ */ new Date()).toISOString();
-  }
-  function aliasMetadata(items) {
-    const merged = Object.assign({}, ...items.slice().reverse());
-    for (const key of ["name", "type", "posterPath", "seriesId", "seriesName"]) {
-      const value = items.find((item) => !!item[key])?.[key];
-      if (value !== void 0) merged[key] = value;
-    }
-    const tmdb = items.find((item) => item.tmdbId !== void 0 && item.tmdbId !== "")?.tmdbId;
-    if (tmdb !== void 0) merged.tmdbId = tmdb;
-    for (const key of ["seasonNumber", "episodeNumber"]) {
-      const value = items.find((item) => item[key] != null)?.[key];
-      if (value !== void 0) merged[key] = value;
-    }
-    return merged;
-  }
+  // client/generated-shared/stub/client/src/features/hidden-content/model.ts
+  var shared = /* @__PURE__ */ sharedModule("features/hidden-content/model");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "aliasMetadata");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "decodeDocument");
+  var export8 = /* @__PURE__ */ sharedExport(shared, "earliestHiddenAt");
+  var export9 = /* @__PURE__ */ sharedExport(shared, "mergeHomeScope");
+  var export10 = /* @__PURE__ */ sharedExport(shared, "normalizeId");
+  var export12 = /* @__PURE__ */ sharedExport(shared, "sameValue");
+  var export13 = /* @__PURE__ */ sharedExport(shared, "settingsFor");
+  var export14 = /* @__PURE__ */ sharedExport(shared, "widestScope");
 
   // client/src/features/hidden-content/hidden-content-data.ts
   (function(JE) {
@@ -235,17 +107,17 @@
     let intentReset = 0;
     function noteItemChanges(before, after, forced = [], scopedMirror = false) {
       for (const key of /* @__PURE__ */ new Set([...Object.keys(before), ...Object.keys(after), ...forced])) {
-        if (!forced.includes(key) && sameValue(before[key], after[key])) continue;
+        if (!forced.includes(key) && export12(before[key], after[key])) continue;
         const version = ++editSequence;
         itemEdits.set(key, version);
         if (!scopedMirror) for (const id of [before[key]?.itemId, after[key]?.itemId, key]) {
-          if (id) itemIntents.set(normalizeId(id), version);
+          if (id) itemIntents.set(export10(id), version);
         }
       }
     }
     function captureItemIntent(itemId) {
       getHiddenData();
-      const id = normalizeId(itemId), version = itemIntents.get(id), reset = intentReset;
+      const id = export10(itemId), version = itemIntents.get(id), reset = intentReset;
       return { current: () => reset === intentReset && version === itemIntents.get(id) };
     }
     function getHiddenData() {
@@ -260,7 +132,7 @@
     }
     function getSettings() {
       const data = getHiddenData();
-      return settingsFor(data);
+      return export13(data);
     }
     function rebuildSets() {
       hiddenIdSet.clear();
@@ -272,7 +144,7 @@
         if (!item) continue;
         const scope = (item.hideScope || "global").toLowerCase();
         if (scope !== "global") continue;
-        if (item.itemId) hiddenIdSet.add(normalizeId(item.itemId));
+        if (item.itemId) hiddenIdSet.add(export10(item.itemId));
         if (item.tmdbId) hiddenTmdbIdSet.add(String(item.tmdbId));
       }
     }
@@ -328,7 +200,7 @@
         });
         if (!requestToken.current() || JE.session && !JE.session.isCurrent(requestEpoch)) return false;
         if (revision !== policyRevision || requestId !== refreshSequence || before !== JSON.stringify(hiddenData)) return false;
-        const camelCased = decodeDocument(fresh);
+        const camelCased = export1(fresh);
         loadValid = true;
         JE.userConfig = JE.userConfig || {};
         JE.userConfig.hiddenContent = camelCased || { items: {}, settings: {} };
@@ -352,9 +224,9 @@
       const noHyphen = itemId.replace(/-/g, "");
       const hyphenated = noHyphen.length === 32 ? `${noHyphen.slice(0, 8)}-${noHyphen.slice(8, 12)}-${noHyphen.slice(12, 16)}-${noHyphen.slice(16, 20)}-${noHyphen.slice(20)}` : itemId;
       const variants = [items[itemId], items[hyphenated], items[noHyphen]].filter((item) => item !== void 0);
-      const widestExisting = variants.reduce((acc, e) => widestScope(acc, e.hideScope || "global"), "");
-      const finalScope = mergeHomeScope(widestExisting, _scope);
-      const existing = aliasMetadata(variants);
+      const widestExisting = variants.reduce((acc, e) => export14(acc, e.hideScope || "global"), "");
+      const finalScope = export9(widestExisting, _scope);
+      const existing = export0(variants);
       const altPresent = hyphenated !== itemId && items[hyphenated] || noHyphen !== itemId && items[noHyphen];
       if (items[itemId] && items[itemId]?.hideScope === finalScope && !altPresent) return;
       const merged = {
@@ -363,7 +235,7 @@
         name: existing?.name || "",
         type: existing?.type || "",
         tmdbId: existing?.tmdbId || "",
-        hiddenAt: earliestHiddenAt(variants),
+        hiddenAt: export8(variants),
         posterPath: existing?.posterPath || "",
         seriesId: existing?.seriesId || "",
         seriesName: existing?.seriesName || "",
@@ -385,7 +257,7 @@
       if (!jellyfinItemId) return false;
       const settings = getSettings();
       if (!settings.enabled) return false;
-      return hiddenIdSet.has(normalizeId(jellyfinItemId));
+      return hiddenIdSet.has(export10(jellyfinItemId));
     }
     function isHiddenByTmdbId(tmdbId) {
       if (!tmdbId) return false;
@@ -398,24 +270,24 @@
       const data = getHiddenData();
       if (!itemId && !tmdbId) throw new Error("Hidden item needs a Jellyfin or TMDB identity");
       const requestedKey = itemId || `tmdb-${tmdbId}`;
-      const aliases = Object.entries(data.items).filter(([key2, value]) => key2 === requestedKey || !!itemId && normalizeId(value.itemId) === normalizeId(itemId));
+      const aliases = Object.entries(data.items).filter(([key2, value]) => key2 === requestedKey || !!itemId && export10(value.itemId) === export10(itemId));
       const key = aliases.find(([key2]) => key2 === requestedKey)?.[0] ?? aliases[0]?.[0] ?? requestedKey;
       const variants = aliases.map(([, value]) => value);
       const previous = data.items[key];
-      const metadata = aliasMetadata(previous ? [previous, ...variants.filter((item) => item !== previous)] : variants);
+      const metadata = export0(previous ? [previous, ...variants.filter((item) => item !== previous)] : variants);
       const newItem = {
         ...metadata,
         itemId: previous?.itemId || itemId || "",
         name: name ?? metadata.name ?? "",
         type: type ?? metadata.type ?? "",
         tmdbId: tmdbId != null ? String(tmdbId) : metadata.tmdbId ?? "",
-        hiddenAt: earliestHiddenAt(variants),
+        hiddenAt: export8(variants),
         posterPath: posterPath ?? metadata.posterPath ?? "",
         seriesId: seriesId ?? metadata.seriesId ?? "",
         seriesName: seriesName ?? metadata.seriesName ?? "",
         seasonNumber: seasonNumber !== void 0 ? seasonNumber : metadata.seasonNumber ?? null,
         episodeNumber: episodeNumber !== void 0 ? episodeNumber : metadata.episodeNumber ?? null,
-        hideScope: variants.reduce((scope, item) => widestScope(scope, item.hideScope || "global"), hideScope || "global")
+        hideScope: variants.reduce((scope, item) => export14(scope, item.hideScope || "global"), hideScope || "global")
       };
       const items = { ...data.items };
       for (const [alias] of aliases) delete items[alias];
@@ -431,7 +303,7 @@
       showUndoToast(name || "Item", key, () => {
         assertWritable();
         const current = getHiddenData();
-        if (affected.some((key2) => itemEdits.get(key2) !== appliedVersions.get(key2) || !sameValue(current.items[key2], items[key2]))) return;
+        if (affected.some((key2) => itemEdits.get(key2) !== appliedVersions.get(key2) || !export12(current.items[key2], items[key2]))) return;
         const restored = { ...current.items };
         for (const key2 of affected) {
           if (data.items[key2]) restored[key2] = data.items[key2];
@@ -453,9 +325,9 @@
       const newItems = { ...data.items };
       let restoredJellyfinId = "";
       const direct = newItems[itemId];
-      const wanted = normalizeId(direct?.itemId || (itemId.startsWith("tmdb-") ? "" : itemId));
+      const wanted = export10(direct?.itemId || (itemId.startsWith("tmdb-") ? "" : itemId));
       for (const [key, item] of Object.entries(newItems)) {
-        if (key === itemId || wanted && normalizeId(item.itemId) === wanted) {
+        if (key === itemId || wanted && export10(item.itemId) === wanted) {
           restoredJellyfinId = item.itemId || restoredJellyfinId;
           delete newItems[key];
         }
@@ -518,7 +390,7 @@
       }
       return events.filter((event) => {
         if (event.tmdbId && hiddenTmdbIdSet.has(String(event.tmdbId))) return false;
-        if (event.itemId && hiddenIdSet.has(normalizeId(event.itemId))) return false;
+        if (event.itemId && hiddenIdSet.has(export10(event.itemId))) return false;
         if (event.title && hiddenNames.has(event.title.toLowerCase())) return false;
         return true;
       });
@@ -529,7 +401,7 @@
       return items.filter((item) => {
         const tmdbId = item.tmdbId || item.id;
         if (tmdbId && hiddenTmdbIdSet.has(String(tmdbId))) return false;
-        if (item.jellyfinMediaId && hiddenIdSet.has(normalizeId(item.jellyfinMediaId))) return false;
+        if (item.jellyfinMediaId && hiddenIdSet.has(export10(item.jellyfinMediaId))) return false;
         return true;
       });
     }
@@ -552,7 +424,7 @@
       intentReset++;
       itemIntents.clear();
       try {
-        const next = JE.userConfig?.hiddenContent == null ? { items: {}, settings: {} } : decodeDocument(JE.userConfig.hiddenContent);
+        const next = JE.userConfig?.hiddenContent == null ? { items: {}, settings: {} } : export1(JE.userConfig.hiddenContent);
         hiddenData = next;
         dataOwner = lease(JE);
         itemEdits.clear();
@@ -585,7 +457,7 @@
       captureItemIntent,
       isLoadOk: () => loadValid,
       hiddenIdSet,
-      normalizeId,
+      normalizeId: export10,
       getHiddenData,
       getSettings,
       rebuildSets,

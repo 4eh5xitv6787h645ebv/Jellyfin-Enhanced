@@ -2,154 +2,38 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const shared = core.core?.featureContext;
-    if (typeof shared !== "function") {
-      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
-    }
-    return shared(feature, core, slots);
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/details-providers/host.ts
-  function hostWindow() {
-    return window;
-  }
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
-  }
-  function api() {
-    const client = hostWindow().ApiClient;
-    if (!client) throw new Error("Jellyfin ApiClient unavailable");
-    return client;
-  }
-  function hasApi() {
-    return hostWindow().ApiClient !== void 0;
-  }
-  function currentUserId() {
-    const id = hostWindow().ApiClient?.getCurrentUserId();
-    return typeof id === "string" && id ? id : null;
-  }
-  function detailsContext(JE2) {
-    const holder = JE2;
-    return featureContext("details-providers", JE2, {
-      internalSlots: ["features"],
-      internalsObject: () => holder.internals ?? (holder.internals = {})
-    });
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/details-providers/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "api");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bridge");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "currentUserId");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "detailsContext");
 
-  // client/src/features/details-providers/wire.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function field(value, key) {
-    return isRecord(value) ? value[key] : void 0;
-  }
-  function str(value) {
-    return typeof value === "string" ? value : void 0;
-  }
-  function num(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-  }
-  function int(value) {
-    return typeof value === "number" && Number.isInteger(value) ? value : void 0;
-  }
-  function bool(value) {
-    return typeof value === "boolean" ? value : void 0;
-  }
-  function list(value) {
-    return Array.isArray(value) ? value : [];
-  }
-  function stringList(value) {
-    return list(value).filter((entry) => typeof entry === "string");
-  }
-  function providerId(value) {
-    if (typeof value === "string") return value || void 0;
-    if (typeof value === "number" && Number.isFinite(value) && value !== 0) return String(value);
-    return void 0;
-  }
-  function decodeProviderIds(value) {
-    const ids = {};
-    if (!isRecord(value)) return ids;
-    const tmdb = providerId(value.Tmdb), imdb = providerId(value.Imdb), tvdb = providerId(value.Tvdb);
-    const aniList = providerId(value.AniList), anilist = providerId(value.Anilist);
-    if (tmdb !== void 0) ids.Tmdb = tmdb;
-    if (imdb !== void 0) ids.Imdb = imdb;
-    if (tvdb !== void 0) ids.Tvdb = tvdb;
-    if (aniList !== void 0) ids.AniList = aniList;
-    if (anilist !== void 0) ids.Anilist = anilist;
-    return ids;
-  }
-  function decodeStreams(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.filter(isRecord).map((stream) => {
-      const result = {};
-      const type = str(stream.Type), language = str(stream.Language);
-      if (type !== void 0) result.Type = type;
-      if (language !== void 0) result.Language = language;
-      return result;
-    });
-  }
-  function decodeSources(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.map((source) => {
-      const result = {};
-      const id = str(field(source, "Id")), streams = decodeStreams(field(source, "MediaStreams"));
-      if (id !== void 0) result.Id = id;
-      if (streams !== void 0) result.MediaStreams = streams;
-      return result;
-    });
-  }
-  function set(item, key, value) {
-    if (value !== void 0) item[key] = value;
-  }
-  function decodeDetailsItem(value) {
-    if (!isRecord(value)) return null;
-    const item = { ProviderIds: decodeProviderIds(value.ProviderIds), SeriesProviderIds: decodeProviderIds(value.SeriesProviderIds) };
-    set(item, "Id", str(value.Id));
-    set(item, "Type", str(value.Type));
-    set(item, "Name", str(value.Name));
-    set(item, "SeriesId", str(value.SeriesId));
-    set(item, "SeriesName", str(value.SeriesName));
-    set(item, "IndexNumber", num(value.IndexNumber));
-    set(item, "ParentIndexNumber", num(value.ParentIndexNumber));
-    set(item, "PremiereDate", str(value.PremiereDate));
-    set(item, "DisplayOrder", str(value.DisplayOrder));
-    set(item, "MediaSources", decodeSources(value.MediaSources));
-    set(item, "MediaStreams", decodeStreams(value.MediaStreams));
-    set(item, "FirstEpisodeId", str(field(value.FirstEpisode, "Id")));
-    if (Array.isArray(value.Tags)) item.Tags = stringList(value.Tags);
-    const userData = value.UserData;
-    set(item, "Played", bool(field(userData, "Played")));
-    set(item, "UnplayedItemCount", num(field(userData, "UnplayedItemCount")));
-    return item;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/page.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/details-providers/page");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "lookupDetailsItem");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "sessionLease");
 
-  // client/src/features/details-providers/page.ts
-  function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
-    if (helpers?.getItemCached) {
-      return withUser ? helpers.getItemCached(itemId, { userId }) : helpers.getItemCached(itemId);
-    }
-    return api().getItem(userId, itemId);
-  }
-  async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
-    return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
-  }
-  function sessionLease(session) {
-    const epoch = session?.getEpoch();
-    const userId = currentUserId();
-    const client = api();
-    const root = client.getUrl("/");
-    const token = client.accessToken();
-    return () => hasApi() && api() === client && client.getUrl("/") === root && client.accessToken() === token && (!session || epoch === void 0 || session.isCurrent(epoch)) && currentUserId() === userId;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/wire.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/details-providers/wire");
+  var export12 = /* @__PURE__ */ sharedExport(shared3, "decodeDetailsItem");
+  var export52 = /* @__PURE__ */ sharedExport(shared3, "field");
+  var export6 = /* @__PURE__ */ sharedExport(shared3, "int");
+  var export8 = /* @__PURE__ */ sharedExport(shared3, "list");
+  var export11 = /* @__PURE__ */ sharedExport(shared3, "str");
 
-  // client/src/features/details-providers/links.ts
-  function pathSegment(id) {
-    return encodeURIComponent(id);
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/links.ts
+  var shared4 = /* @__PURE__ */ sharedModule("features/details-providers/links");
+  var export2 = /* @__PURE__ */ sharedExport(shared4, "pathSegment");
 
   // client/src/features/details-providers/release-domain.ts
   function todayIso(now) {
@@ -175,10 +59,10 @@
     { types: [5], icon: "album", titleKey: "calendar_physical_release", type: "physical" }
   ];
   function decodeCountries(value) {
-    return list(field(value, "results")).map((entry) => ({
-      iso: str(field(entry, "iso_3166_1")),
-      dates: list(field(entry, "release_dates")).flatMap((date) => {
-        const type = int(field(date, "type")), releaseDate = str(field(date, "release_date"));
+    return export8(export52(value, "results")).map((entry) => ({
+      iso: export11(export52(entry, "iso_3166_1")),
+      dates: export8(export52(entry, "release_dates")).flatMap((date) => {
+        const type = export6(export52(date, "type")), releaseDate = export11(export52(date, "release_date"));
         return type !== void 0 && releaseDate ? [{ type, release_date: releaseDate }] : [];
       })
     }));
@@ -215,20 +99,20 @@
     return { date, icon: "tv_guide", titleKey: "calendar_episode", type: "episode" };
   }
   function seriesReleaseInfo(data) {
-    const date = str(field(field(data, "next_episode_to_air"), "air_date")) || str(field(field(data, "last_episode_to_air"), "air_date"));
+    const date = export11(export52(export52(data, "next_episode_to_air"), "air_date")) || export11(export52(export52(data, "last_episode_to_air"), "air_date"));
     return date ? [episodeInfo(date)] : [];
   }
   function seasonReleaseInfo(data, today) {
-    const episodes = field(data, "episodes");
+    const episodes = export52(data, "episodes");
     if (!Array.isArray(episodes) || episodes.length === 0) return [];
-    const withDates = episodes.map((episode) => str(field(episode, "air_date"))).filter((date2) => !!date2);
+    const withDates = episodes.map((episode) => export11(export52(episode, "air_date"))).filter((date2) => !!date2);
     if (withDates.length === 0) return [];
     const upcoming = withDates.find((date2) => date2 >= today);
     const date = upcoming ?? withDates[withDates.length - 1];
     return date ? [episodeInfo(date)] : [];
   }
   function episodeReleaseInfo(data) {
-    const date = str(field(data, "air_date"));
+    const date = export11(export52(data, "air_date"));
     return date ? [episodeInfo(date)] : [];
   }
   function premiereDate(value) {
@@ -237,8 +121,8 @@
   }
 
   // client/src/features/details-providers/release-dates.ts
-  var JE = bridge("Release dates");
-  var ctx = detailsContext(JE);
+  var JE = export1("Release dates");
+  var ctx = export5(JE);
   var _a;
   var internal = (_a = ctx.own).features ?? (_a.features = {});
   var RELEASEDATE_CACHE_TTL = 60 * 60 * 1e3;
@@ -258,7 +142,7 @@
   function currentReleaseOwner() {
     if (!releaseOwner || !releaseOwner()) {
       resetReleaseOwner();
-      releaseOwner = sessionLease(JE.session);
+      releaseOwner = export10(JE.session);
     }
     return releaseOwner;
   }
@@ -276,7 +160,7 @@
   });
   JE.session?.onUserChange("release-dates", resetReleaseOwner);
   function tmdbGet(path) {
-    const client = api();
+    const client = export0();
     const url = client.getUrl(`/JellyfinEnhanced/tmdb${path}`);
     return fetch(url, { headers: { Authorization: `MediaBrowser Token="${client.accessToken()}"`, "X-Emby-Token": client.accessToken() } }).then((response) => response.ok ? response.json() : Promise.reject(`API Error: ${response.status}`)).catch((error) => {
       console.error(`🪼 Jellyfin Enhanced: Release Date: TMDB request failed for ${path}`, error);
@@ -288,23 +172,23 @@
     if (!item) return [];
     if (mediaType === "Movie") {
       const tmdbId = item.ProviderIds.Tmdb;
-      return tmdbId ? movieReleaseInfo(await tmdbGet(`/movie/${pathSegment(tmdbId)}/release_dates`), JE.pluginConfig?.DEFAULT_REGION) : [];
+      return tmdbId ? movieReleaseInfo(await tmdbGet(`/movie/${export2(tmdbId)}/release_dates`), JE.pluginConfig?.DEFAULT_REGION) : [];
     }
     if (mediaType === "Series") {
       const tmdbId = item.ProviderIds.Tmdb;
-      return tmdbId ? seriesReleaseInfo(await tmdbGet(`/tv/${pathSegment(tmdbId)}`)) : [];
+      return tmdbId ? seriesReleaseInfo(await tmdbGet(`/tv/${export2(tmdbId)}`)) : [];
     }
     if (mediaType === "Season" || mediaType === "Episode") {
       let seriesTmdbId;
       if (item.SeriesId) {
         try {
-          const series = await lookupDetailsItem(JE.helpers, item.SeriesId, true, userId);
+          const series = await export7(JE.helpers, item.SeriesId, true, userId);
           seriesTmdbId = series?.ProviderIds.Tmdb;
         } catch {
         }
       }
       if (!seriesTmdbId) return [];
-      const show = pathSegment(seriesTmdbId);
+      const show = export2(seriesTmdbId);
       if (mediaType === "Season") {
         return item.IndexNumber != null ? seasonReleaseInfo(await tmdbGet(`/tv/${show}/season/${item.IndexNumber}`), todayIso(/* @__PURE__ */ new Date())) : [];
       }
@@ -338,8 +222,8 @@
       const revision = guardRevision;
       let cutShort = false;
       try {
-        const userId = currentUserId();
-        const lookupNow = async () => resolveReleaseInfo(await lookupDetailsItem(JE.helpers, itemId, true, userId), userId);
+        const userId = export3();
+        const lookupNow = async () => resolveReleaseInfo(await export7(JE.helpers, itemId, true, userId), userId);
         entry = releaseLookups.get(itemId);
         if (entry) entry.claimed = true;
         else releaseLookups.set(itemId, entry = { promise: lookupNow(), visit: null, claimed: true, ctl: null });
@@ -445,8 +329,8 @@
     const cached = releaseDateCache.get(itemId);
     if (cached && Date.now() - cached.ts < cacheTtl() || releaseLookups.has(itemId)) return;
     const ctl = new AbortController();
-    const userId = currentUserId();
-    const item = decodeDetailsItem(rawItem);
+    const userId = export3();
+    const item = export12(rawItem);
     const lookup = () => resolveReleaseInfo(item, userId);
     const manager = JE.core?.api?.manager;
     const promise = typeof manager?.withConcurrencyLimit === "function" ? manager.withConcurrencyLimit(lookup, { signal: ctl.signal }) : lookup();

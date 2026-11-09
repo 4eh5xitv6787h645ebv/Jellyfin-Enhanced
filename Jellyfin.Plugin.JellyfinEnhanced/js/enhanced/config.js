@@ -1,6 +1,12 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
     const shared = core.core?.featureContext;
@@ -9,333 +15,23 @@
     }
     return shared(feature, core, slots);
   }
-
-  // client/src/features/settings/host.ts
-  function settingsHost() {
-    const host = window;
-    const JE = host.JellyfinEnhanced;
-    if (!JE) throw new Error("Settings require Jellyfin Enhanced");
-    const ctx2 = featureContext("settings", JE, {});
-    return { JE, ctx: ctx2, apiClient: () => host.ApiClient };
-  }
-
-  // client/src/features/settings/state.ts
-  function installState(JE) {
-    JE.CONFIG = {
-      // Use getters so values always reflect the latest pluginConfig even if assigned later
-      get TOAST_DURATION() {
-        return JE.pluginConfig && JE.pluginConfig.ToastDuration || 1500;
-      },
-      get HELP_PANEL_AUTOCLOSE_DELAY() {
-        return JE.pluginConfig && JE.pluginConfig.HelpPanelAutocloseDelay || 15e3;
-      }
-    };
-    JE.state = JE.state || {
-      activeShortcuts: {},
-      // { itemId, surface: 'continuewatching'|'nextup'|null, ts } captured on a menu trigger.
-      removeContext: null,
-      pauseScreenClickTimer: null
-    };
-    JE.keyCombo = function(e) {
-      const key = e.key;
-      const isLetter = /^[a-zA-Z]$/.test(key);
-      const isShiftedSymbol = key.length === 1 && key !== " " && !isLetter;
-      return (e.metaKey ? "Meta+" : "") + (e.ctrlKey ? "Ctrl+" : "") + (e.altKey ? "Alt+" : "") + (e.shiftKey && !isShiftedSymbol ? "Shift+" : "") + (isLetter ? key.toUpperCase() : key);
-    };
-    JE.normalizeShortcutKey = function(key) {
-      if (typeof key !== "string") return key;
-      return key.replace(/Shift\+([^A-Za-z0-9\s,./;'\[\]\\=`-])$/, "$1");
-    };
-    JE.initializeShortcuts = function() {
-      const pluginDefaults = JE.pluginConfig || {};
-      const userShortcutsConfig = JE.userConfig?.shortcuts || {};
-      const defaultShortcuts = Array.isArray(pluginDefaults.Shortcuts) ? pluginDefaults.Shortcuts.reduce((acc, s) => {
-        if (s && s.Name && s.Key !== void 0) acc[s.Name] = s.Key;
-        return acc;
-      }, {}) : {};
-      const userShortcuts = Array.isArray(userShortcutsConfig.Shortcuts) ? userShortcutsConfig.Shortcuts.reduce((acc, s) => {
-        if (s && s.Name && s.Key !== void 0) acc[s.Name] = s.Key;
-        return acc;
-      }, {}) : {};
-      JE.state.activeShortcuts = JE.state.activeShortcuts || {};
-      Object.assign(JE.state.activeShortcuts, defaultShortcuts, userShortcuts);
-      Object.keys(JE.state.activeShortcuts).forEach(function(name) {
-        JE.state.activeShortcuts[name] = JE.normalizeShortcutKey(JE.state.activeShortcuts[name] ?? "");
-      });
-    };
-  }
-
-  // client/src/features/settings/inheritance.ts
-  var INHERITED_KEYS = [
-    "showEditionTag",
-    "editionTagOrder",
-    "showLowQualitySourceTag",
-    "resolutionTagOrder",
-    "sourceTagOrder",
-    "dynamicRangeTagOrder",
-    "specialFormatTagOrder",
-    "videoCodecTagOrder",
-    "audioInfoTagOrder",
-    "seriesQualityAggregation",
-    "showRuntimeTag",
-    "showAspectRatioTag",
-    "showFrameRateTag",
-    "showVersionsTag",
-    "runtimeTagOrder",
-    "aspectRatioTagOrder",
-    "frameRateTagOrder",
-    "versionsTagOrder",
-    "qualityAudioDisplayMode",
-    "qualityVideoCodecDisplayMode",
-    "qualityHdrDisplayMode",
-    "qualityMinimumResolution",
-    "qualityHideSdr"
-  ];
-  var inheritance = /* @__PURE__ */ new WeakMap();
-  function installInheritance(JE) {
-    JE.inheritedSettingKeys = Object.freeze(INHERITED_KEYS.slice());
-    JE.isSettingInherited = (settings, key) => {
-      const state = inheritance.get(settings);
-      return !!state && state.inherited.has(key) && settings[key] === state.defaults[key];
-    };
-    JE.setSettingInherited = (settings, key, inherit) => {
-      const state = inheritance.get(settings);
-      if (!state || !INHERITED_KEYS.includes(key)) return false;
-      if (inherit) {
-        state.inherited.add(key);
-        settings[key] = state.defaults[key];
-      } else {
-        state.inherited.delete(key);
-      }
-      return true;
-    };
-    JE.inheritedSettingDefault = (settings, key) => inheritance.get(settings)?.defaults[key];
-  }
-  var withInheritance = (settings, source) => {
-    const state = inheritance.get(settings);
-    if (!state) return source;
-    let out = source;
-    for (const key of [...state.inherited]) {
-      if (settings[key] !== state.defaults[key]) {
-        state.inherited.delete(key);
-        continue;
-      }
-      if (out === source) out = { ...source };
-      out[key] = null;
+  function publishSharedModules(modules) {
+    const JE = window.JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ?? (JE.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
     }
-    return out;
-  };
-
-  // client/src/features/settings/defaults.ts
-  function loadSettings(JE) {
-    const userSettings = JE.userConfig?.settings || {};
-    const pluginDefaults = JE.pluginConfig || {};
-    const hardcodedDefaults = {
-      autoPauseEnabled: true,
-      autoResumeEnabled: false,
-      autoPipEnabled: false,
-      autoSkipIntro: false,
-      autoSkipOutro: false,
-      selectedStylePresetIndex: 0,
-      selectedFontSizePresetIndex: 2,
-      selectedFontFamilyPresetIndex: 0,
-      selectedTextEffectPresetIndex: 0,
-      customSubtitleTextColor: "#FFFFFFFF",
-      customSubtitleBgColor: "#00000000",
-      usingCustomColors: false,
-      disableCustomSubtitleStyles: false,
-      subtitleVerticalPosition: 95,
-      subtitleHorizontalPosition: 50,
-      randomButtonEnabled: true,
-      randomIncludeMovies: true,
-      randomIncludeShows: true,
-      randomUnwatchedOnly: false,
-      randomScopeCurrentContainer: false,
-      randomSourceId: "",
-      showWatchProgress: false,
-      showFileSizes: false,
-      showAudioLanguages: true,
-      removeContinueWatchingEnabled: false,
-      watchProgressMode: "percentage",
-      watchProgressTimeFormat: "hours",
-      pauseScreenEnabled: true,
-      pauseScreenDelaySeconds: 5,
-      useNativePosterTags: true,
-      qualityTagsEnabled: false,
-      genreTagsEnabled: false,
-      languageTagsEnabled: false,
-      ratingTagsEnabled: false,
-      ageRatingTagsEnabled: false,
-      statusTagsEnabled: false,
-      logoTagsEnabled: false,
-      awardsTagsEnabled: false,
-      awardsTagsPosition: "top-left",
-      peopleTagsEnabled: false,
-      tagsHideOnHover: false,
-      showResolutionTag: true,
-      showSourceTag: true,
-      showDynamicRangeTag: true,
-      showSpecialFormatTag: true,
-      showVideoCodecTag: true,
-      showAudioInfoTag: true,
-      // Source and edition preferences.
-      showEditionTag: true,
-      editionTagOrder: 7,
-      showRuntimeTag: false,
-      runtimeTagOrder: 8,
-      showAspectRatioTag: false,
-      aspectRatioTagOrder: 9,
-      showFrameRateTag: false,
-      frameRateTagOrder: 10,
-      showVersionsTag: false,
-      versionsTagOrder: 11,
-      showLowQualitySourceTag: false,
-      resolutionTagOrder: 1,
-      sourceTagOrder: 2,
-      dynamicRangeTagOrder: 3,
-      specialFormatTagOrder: 4,
-      videoCodecTagOrder: 5,
-      audioInfoTagOrder: 6,
-      qualityTagsPosition: "top-left",
-      genreTagsPosition: "top-right",
-      languageTagsPosition: "bottom-left",
-      ratingTagsPosition: "bottom-right",
-      ageRatingTagsPosition: "bottom-right",
-      logoTagsPosition: "bottom-left",
-      statusTagsPosition: "top-right",
-      ratingTagsOnMovies: true,
-      ratingTagsOnSeries: true,
-      ratingTagsOnSeasons: true,
-      ratingTagsOnEpisodes: true,
-      ratingTagsOnContinueWatching: true,
-      ratingTagsOnNextUp: true,
-      ratingTagsShowCommunity: true,
-      ratingTagsShowCritic: true,
-      statusTagsJustAdded: true,
-      statusTagsNewRelease: true,
-      statusTagsTrending: true,
-      statusTagsSchedule: true,
-      statusTagsMilestones: true,
-      statusTagsSeriesStatus: false,
-      statusTagsScenes: false,
-      statusTagsLeaving: false,
-      statusTagsDirectPlay: false,
-      // Custom tag group (the administrator's tag/collection rules, tags/customtags.js).
-      customTagsEnabled: false,
-      customTagsPosition: "top-left",
-      // Language Tags display (normalized in tags/languagetags.js).
-      languageTagsShowAudio: true,
-      languageTagsShowSubtitles: false,
-      languageTagsStyle: "flags",
-      languageTagsCountBadge: "off",
-      // Poster tag layout scalars (0 = a document from before layouts; see core/tag-layout.js).
-      tagLayout: "corners",
-      tagLabelDensity: "full",
-      tagLayoutSettingsVersion: 0,
-      tagScale: "default",
-      tagGap: "default",
-      qualityAudioDisplayMode: "highest",
-      qualityVideoCodecDisplayMode: "highest",
-      qualityHdrDisplayMode: "highest",
-      qualityMinimumResolution: "off",
-      qualityHideSdr: false,
-      qualityTagsPreferredAudioLanguage: "",
-      // Series/season quality aggregation policy.
-      seriesQualityAggregation: "representative",
-      showRatingInPlayer: true,
-      reviewsExpandedByDefault: false,
-      displayLanguage: "",
-      calendarDisplayMode: "list",
-      calendarDefaultViewMode: "agenda",
-      disableAllShortcuts: false,
-      longPress2xEnabled: false,
-      lastOpenedTab: "shortcuts"
-    };
-    const pluginDefaultAliases = {
-      selectedStylePresetIndex: ["DefaultSubtitleStyle", "SelectedStylePresetIndex"],
-      selectedFontSizePresetIndex: ["DefaultSubtitleSize", "SelectedFontSizePresetIndex"],
-      selectedFontFamilyPresetIndex: ["DefaultSubtitleFont", "SelectedFontFamilyPresetIndex"],
-      displayLanguage: ["DefaultLanguage", "DisplayLanguage"],
-      watchProgressMode: ["WatchProgressDefaultMode", "WatchProgressMode"],
-      watchProgressTimeFormat: ["WatchProgressTimeFormat"],
-      pauseScreenDelaySeconds: ["PauseScreenDelaySeconds"]
-    };
-    const getPluginDefault = (key) => {
-      const aliases = pluginDefaultAliases[key] || [];
-      const candidates = [
-        key,
-        key.charAt(0).toUpperCase() + key.slice(1),
-        ...aliases
-      ];
-      for (const candidate of candidates) {
-        const value = pluginDefaults[candidate];
-        if (value !== null && value !== void 0) {
-          return value;
-        }
-      }
-      return void 0;
-    };
-    const mergedSettings = {};
-    for (const key in userSettings) {
-      mergedSettings[key] = userSettings[key];
-    }
-    for (const key in hardcodedDefaults) {
-      if (Object.prototype.hasOwnProperty.call(userSettings, key) && userSettings[key] !== null && userSettings[key] !== void 0) {
-        if (typeof userSettings[key] === "object" && Array.isArray(userSettings[key]) && userSettings[key].length === 0) {
-          const fallback = getPluginDefault(key);
-          mergedSettings[key] = fallback !== void 0 ? fallback : hardcodedDefaults[key];
-        } else if (typeof userSettings[key] === "object" && userSettings[key] !== null && !Array.isArray(userSettings[key])) {
-          const fallback = getPluginDefault(key);
-          mergedSettings[key] = fallback !== void 0 ? fallback : hardcodedDefaults[key];
-        } else {
-          mergedSettings[key] = userSettings[key];
-        }
-      } else {
-        const pluginVal = getPluginDefault(key);
-        if (pluginVal !== void 0) {
-          mergedSettings[key] = pluginVal;
-        } else {
-          mergedSettings[key] = hardcodedDefaults[key];
-        }
-      }
-    }
-    mergedSettings.languageTagsPriority = JE.core?.mediaLanguage?.priorityList(userSettings.languageTagsPriority) ?? null;
-    mergedSettings.languageTagsPriorityStrict = typeof userSettings.languageTagsPriorityStrict === "boolean" ? userSettings.languageTagsPriorityStrict : null;
-    mergedSettings.ratingTagsSources = JE.ratingSources?.normalizeSources(userSettings.ratingTagsSources) ?? null;
-    mergedSettings.ratingTagsMinScore = JE.ratingSources?.settings(userSettings, JE.pluginConfig).minimum ?? 0;
-    mergedSettings.ratingTagsColorByScore = JE.ratingSources?.settings(userSettings, JE.pluginConfig).color ?? false;
-    for (const key of ["tagLayouts", "tagGroupCaps", "tagGroupScopes"]) {
-      const value = userSettings[key];
-      mergedSettings[key] = value && typeof value === "object" && !Array.isArray(value) ? value : null;
-    }
-    mergedSettings.tagEdgeSpacing = typeof userSettings.tagEdgeSpacing === "string" && userSettings.tagEdgeSpacing ? userSettings.tagEdgeSpacing : null;
-    mergedSettings.tagStylePreset = typeof userSettings.tagStylePreset === "string" && userSettings.tagStylePreset ? userSettings.tagStylePreset : null;
-    mergedSettings.tagGroupOrder = Array.isArray(userSettings.tagGroupOrder) ? userSettings.tagGroupOrder : null;
-    mergedSettings.tagLookRules = Array.isArray(userSettings.tagLookRules) ? userSettings.tagLookRules : null;
-    mergedSettings.tagLayoutLocks = userSettings.tagLayoutLocks && typeof userSettings.tagLayoutLocks === "object" && !Array.isArray(userSettings.tagLayoutLocks) ? userSettings.tagLayoutLocks : null;
-    mergedSettings.tagScale = userSettings.tagScale ?? null;
-    mergedSettings.tagGap = userSettings.tagGap ?? null;
-    mergedSettings.tagShapeOverrides = userSettings.tagShapeOverrides && typeof userSettings.tagShapeOverrides === "object" && !Array.isArray(userSettings.tagShapeOverrides) ? userSettings.tagShapeOverrides : null;
-    mergedSettings.displayLanguage = Object.prototype.hasOwnProperty.call(userSettings, "displayLanguage") && userSettings.displayLanguage !== null && userSettings.displayLanguage !== void 0 ? userSettings.displayLanguage : getPluginDefault("displayLanguage") || "";
-    mergedSettings.lastOpenedTab = userSettings.lastOpenedTab || "shortcuts";
-    if (!Object.prototype.hasOwnProperty.call(userSettings, "removeContinueWatchingEnabled") && pluginDefaults.RemoveContinueWatchingEnabled === true) {
-      mergedSettings.removeContinueWatchingEnabled = true;
-    }
-    mergedSettings.languageTagsStyle = String(mergedSettings.languageTagsStyle).trim().toLowerCase() === "codes" ? "codes" : "flags";
-    const languageBadge = String(mergedSettings.languageTagsCountBadge).trim().toLowerCase();
-    mergedSettings.languageTagsCountBadge = ["only", "both"].includes(languageBadge) ? languageBadge : "off";
-    const defaults = {};
-    const inherited = /* @__PURE__ */ new Set();
-    for (const key of INHERITED_KEYS) {
-      const fallback = getPluginDefault(key);
-      defaults[key] = fallback !== void 0 ? fallback : hardcodedDefaults[key];
-      if (userSettings[key] === null || userSettings[key] === void 0) inherited.add(key);
-    }
-    inheritance.set(mergedSettings, { defaults, inherited });
-    return mergedSettings;
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
   }
 
   // client/src/contracts/schema.ts
+  var schema_exports = {};
+  __export(schema_exports, {
+    bootstrapSchema: () => bootstrapSchema
+  });
   var bootstrapSchema = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$ref": "#/$defs/BootstrapResponse",
@@ -5112,6 +4808,10 @@
   };
 
   // client/src/contracts/validate.ts
+  var validate_exports = {};
+  __export(validate_exports, {
+    validateSchema: () => validateSchema
+  });
   function validateSchema(value, schema, definitions) {
     const ancestors = /* @__PURE__ */ new Set();
     function json(value2, depth) {
@@ -5159,6 +4859,334 @@
       }
     }
     return json(value, 0) && matches(value, schema, 0);
+  }
+
+  // client/generated-shared/publish/js/enhanced/config.js.ts
+  publishSharedModules({ "contracts/schema": schema_exports, "contracts/validate": validate_exports });
+
+  // client/src/features/settings/host.ts
+  function settingsHost() {
+    const host = window;
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error("Settings require Jellyfin Enhanced");
+    const ctx2 = featureContext("settings", JE, {});
+    return { JE, ctx: ctx2, apiClient: () => host.ApiClient };
+  }
+
+  // client/src/features/settings/state.ts
+  function installState(JE) {
+    JE.CONFIG = {
+      // Use getters so values always reflect the latest pluginConfig even if assigned later
+      get TOAST_DURATION() {
+        return JE.pluginConfig && JE.pluginConfig.ToastDuration || 1500;
+      },
+      get HELP_PANEL_AUTOCLOSE_DELAY() {
+        return JE.pluginConfig && JE.pluginConfig.HelpPanelAutocloseDelay || 15e3;
+      }
+    };
+    JE.state = JE.state || {
+      activeShortcuts: {},
+      // { itemId, surface: 'continuewatching'|'nextup'|null, ts } captured on a menu trigger.
+      removeContext: null,
+      pauseScreenClickTimer: null
+    };
+    JE.keyCombo = function(e) {
+      const key = e.key;
+      const isLetter = /^[a-zA-Z]$/.test(key);
+      const isShiftedSymbol = key.length === 1 && key !== " " && !isLetter;
+      return (e.metaKey ? "Meta+" : "") + (e.ctrlKey ? "Ctrl+" : "") + (e.altKey ? "Alt+" : "") + (e.shiftKey && !isShiftedSymbol ? "Shift+" : "") + (isLetter ? key.toUpperCase() : key);
+    };
+    JE.normalizeShortcutKey = function(key) {
+      if (typeof key !== "string") return key;
+      return key.replace(/Shift\+([^A-Za-z0-9\s,./;'\[\]\\=`-])$/, "$1");
+    };
+    JE.initializeShortcuts = function() {
+      const pluginDefaults = JE.pluginConfig || {};
+      const userShortcutsConfig = JE.userConfig?.shortcuts || {};
+      const defaultShortcuts = Array.isArray(pluginDefaults.Shortcuts) ? pluginDefaults.Shortcuts.reduce((acc, s) => {
+        if (s && s.Name && s.Key !== void 0) acc[s.Name] = s.Key;
+        return acc;
+      }, {}) : {};
+      const userShortcuts = Array.isArray(userShortcutsConfig.Shortcuts) ? userShortcutsConfig.Shortcuts.reduce((acc, s) => {
+        if (s && s.Name && s.Key !== void 0) acc[s.Name] = s.Key;
+        return acc;
+      }, {}) : {};
+      JE.state.activeShortcuts = JE.state.activeShortcuts || {};
+      Object.assign(JE.state.activeShortcuts, defaultShortcuts, userShortcuts);
+      Object.keys(JE.state.activeShortcuts).forEach(function(name) {
+        JE.state.activeShortcuts[name] = JE.normalizeShortcutKey(JE.state.activeShortcuts[name] ?? "");
+      });
+    };
+  }
+
+  // client/src/features/settings/inheritance.ts
+  var INHERITED_KEYS = [
+    "showEditionTag",
+    "editionTagOrder",
+    "showLowQualitySourceTag",
+    "resolutionTagOrder",
+    "sourceTagOrder",
+    "dynamicRangeTagOrder",
+    "specialFormatTagOrder",
+    "videoCodecTagOrder",
+    "audioInfoTagOrder",
+    "seriesQualityAggregation",
+    "showRuntimeTag",
+    "showAspectRatioTag",
+    "showFrameRateTag",
+    "showVersionsTag",
+    "runtimeTagOrder",
+    "aspectRatioTagOrder",
+    "frameRateTagOrder",
+    "versionsTagOrder",
+    "qualityAudioDisplayMode",
+    "qualityVideoCodecDisplayMode",
+    "qualityHdrDisplayMode",
+    "qualityMinimumResolution",
+    "qualityHideSdr"
+  ];
+  var inheritance = /* @__PURE__ */ new WeakMap();
+  function installInheritance(JE) {
+    JE.inheritedSettingKeys = Object.freeze(INHERITED_KEYS.slice());
+    JE.isSettingInherited = (settings, key) => {
+      const state = inheritance.get(settings);
+      return !!state && state.inherited.has(key) && settings[key] === state.defaults[key];
+    };
+    JE.setSettingInherited = (settings, key, inherit) => {
+      const state = inheritance.get(settings);
+      if (!state || !INHERITED_KEYS.includes(key)) return false;
+      if (inherit) {
+        state.inherited.add(key);
+        settings[key] = state.defaults[key];
+      } else {
+        state.inherited.delete(key);
+      }
+      return true;
+    };
+    JE.inheritedSettingDefault = (settings, key) => inheritance.get(settings)?.defaults[key];
+  }
+  var withInheritance = (settings, source) => {
+    const state = inheritance.get(settings);
+    if (!state) return source;
+    let out = source;
+    for (const key of [...state.inherited]) {
+      if (settings[key] !== state.defaults[key]) {
+        state.inherited.delete(key);
+        continue;
+      }
+      if (out === source) out = { ...source };
+      out[key] = null;
+    }
+    return out;
+  };
+
+  // client/src/features/settings/defaults.ts
+  function loadSettings(JE) {
+    const userSettings = JE.userConfig?.settings || {};
+    const pluginDefaults = JE.pluginConfig || {};
+    const hardcodedDefaults = {
+      autoPauseEnabled: true,
+      autoResumeEnabled: false,
+      autoPipEnabled: false,
+      autoSkipIntro: false,
+      autoSkipOutro: false,
+      selectedStylePresetIndex: 0,
+      selectedFontSizePresetIndex: 2,
+      selectedFontFamilyPresetIndex: 0,
+      selectedTextEffectPresetIndex: 0,
+      customSubtitleTextColor: "#FFFFFFFF",
+      customSubtitleBgColor: "#00000000",
+      usingCustomColors: false,
+      disableCustomSubtitleStyles: false,
+      subtitleVerticalPosition: 95,
+      subtitleHorizontalPosition: 50,
+      randomButtonEnabled: true,
+      randomIncludeMovies: true,
+      randomIncludeShows: true,
+      randomUnwatchedOnly: false,
+      randomScopeCurrentContainer: false,
+      randomSourceId: "",
+      showWatchProgress: false,
+      showFileSizes: false,
+      showAudioLanguages: true,
+      removeContinueWatchingEnabled: false,
+      watchProgressMode: "percentage",
+      watchProgressTimeFormat: "hours",
+      pauseScreenEnabled: true,
+      pauseScreenDelaySeconds: 5,
+      useNativePosterTags: true,
+      qualityTagsEnabled: false,
+      genreTagsEnabled: false,
+      languageTagsEnabled: false,
+      ratingTagsEnabled: false,
+      ageRatingTagsEnabled: false,
+      statusTagsEnabled: false,
+      logoTagsEnabled: false,
+      awardsTagsEnabled: false,
+      awardsTagsPosition: "top-left",
+      peopleTagsEnabled: false,
+      tagsHideOnHover: false,
+      showResolutionTag: true,
+      showSourceTag: true,
+      showDynamicRangeTag: true,
+      showSpecialFormatTag: true,
+      showVideoCodecTag: true,
+      showAudioInfoTag: true,
+      // Source and edition preferences.
+      showEditionTag: true,
+      editionTagOrder: 7,
+      showRuntimeTag: false,
+      runtimeTagOrder: 8,
+      showAspectRatioTag: false,
+      aspectRatioTagOrder: 9,
+      showFrameRateTag: false,
+      frameRateTagOrder: 10,
+      showVersionsTag: false,
+      versionsTagOrder: 11,
+      showLowQualitySourceTag: false,
+      resolutionTagOrder: 1,
+      sourceTagOrder: 2,
+      dynamicRangeTagOrder: 3,
+      specialFormatTagOrder: 4,
+      videoCodecTagOrder: 5,
+      audioInfoTagOrder: 6,
+      qualityTagsPosition: "top-left",
+      genreTagsPosition: "top-right",
+      languageTagsPosition: "bottom-left",
+      ratingTagsPosition: "bottom-right",
+      ageRatingTagsPosition: "bottom-right",
+      logoTagsPosition: "bottom-left",
+      statusTagsPosition: "top-right",
+      ratingTagsOnMovies: true,
+      ratingTagsOnSeries: true,
+      ratingTagsOnSeasons: true,
+      ratingTagsOnEpisodes: true,
+      ratingTagsOnContinueWatching: true,
+      ratingTagsOnNextUp: true,
+      ratingTagsShowCommunity: true,
+      ratingTagsShowCritic: true,
+      statusTagsJustAdded: true,
+      statusTagsNewRelease: true,
+      statusTagsTrending: true,
+      statusTagsSchedule: true,
+      statusTagsMilestones: true,
+      statusTagsSeriesStatus: false,
+      statusTagsScenes: false,
+      statusTagsLeaving: false,
+      statusTagsDirectPlay: false,
+      // Custom tag group (the administrator's tag/collection rules, tags/customtags.js).
+      customTagsEnabled: false,
+      customTagsPosition: "top-left",
+      // Language Tags display (normalized in tags/languagetags.js).
+      languageTagsShowAudio: true,
+      languageTagsShowSubtitles: false,
+      languageTagsStyle: "flags",
+      languageTagsCountBadge: "off",
+      // Poster tag layout scalars (0 = a document from before layouts; see core/tag-layout.js).
+      tagLayout: "corners",
+      tagLabelDensity: "full",
+      tagLayoutSettingsVersion: 0,
+      tagScale: "default",
+      tagGap: "default",
+      qualityAudioDisplayMode: "highest",
+      qualityVideoCodecDisplayMode: "highest",
+      qualityHdrDisplayMode: "highest",
+      qualityMinimumResolution: "off",
+      qualityHideSdr: false,
+      qualityTagsPreferredAudioLanguage: "",
+      // Series/season quality aggregation policy.
+      seriesQualityAggregation: "representative",
+      showRatingInPlayer: true,
+      reviewsExpandedByDefault: false,
+      displayLanguage: "",
+      calendarDisplayMode: "list",
+      calendarDefaultViewMode: "agenda",
+      disableAllShortcuts: false,
+      longPress2xEnabled: false,
+      lastOpenedTab: "shortcuts"
+    };
+    const pluginDefaultAliases = {
+      selectedStylePresetIndex: ["DefaultSubtitleStyle", "SelectedStylePresetIndex"],
+      selectedFontSizePresetIndex: ["DefaultSubtitleSize", "SelectedFontSizePresetIndex"],
+      selectedFontFamilyPresetIndex: ["DefaultSubtitleFont", "SelectedFontFamilyPresetIndex"],
+      displayLanguage: ["DefaultLanguage", "DisplayLanguage"],
+      watchProgressMode: ["WatchProgressDefaultMode", "WatchProgressMode"],
+      watchProgressTimeFormat: ["WatchProgressTimeFormat"],
+      pauseScreenDelaySeconds: ["PauseScreenDelaySeconds"]
+    };
+    const getPluginDefault = (key) => {
+      const aliases = pluginDefaultAliases[key] || [];
+      const candidates = [
+        key,
+        key.charAt(0).toUpperCase() + key.slice(1),
+        ...aliases
+      ];
+      for (const candidate of candidates) {
+        const value = pluginDefaults[candidate];
+        if (value !== null && value !== void 0) {
+          return value;
+        }
+      }
+      return void 0;
+    };
+    const mergedSettings = {};
+    for (const key in userSettings) {
+      mergedSettings[key] = userSettings[key];
+    }
+    for (const key in hardcodedDefaults) {
+      if (Object.prototype.hasOwnProperty.call(userSettings, key) && userSettings[key] !== null && userSettings[key] !== void 0) {
+        if (typeof userSettings[key] === "object" && Array.isArray(userSettings[key]) && userSettings[key].length === 0) {
+          const fallback = getPluginDefault(key);
+          mergedSettings[key] = fallback !== void 0 ? fallback : hardcodedDefaults[key];
+        } else if (typeof userSettings[key] === "object" && userSettings[key] !== null && !Array.isArray(userSettings[key])) {
+          const fallback = getPluginDefault(key);
+          mergedSettings[key] = fallback !== void 0 ? fallback : hardcodedDefaults[key];
+        } else {
+          mergedSettings[key] = userSettings[key];
+        }
+      } else {
+        const pluginVal = getPluginDefault(key);
+        if (pluginVal !== void 0) {
+          mergedSettings[key] = pluginVal;
+        } else {
+          mergedSettings[key] = hardcodedDefaults[key];
+        }
+      }
+    }
+    mergedSettings.languageTagsPriority = JE.core?.mediaLanguage?.priorityList(userSettings.languageTagsPriority) ?? null;
+    mergedSettings.languageTagsPriorityStrict = typeof userSettings.languageTagsPriorityStrict === "boolean" ? userSettings.languageTagsPriorityStrict : null;
+    mergedSettings.ratingTagsSources = JE.ratingSources?.normalizeSources(userSettings.ratingTagsSources) ?? null;
+    mergedSettings.ratingTagsMinScore = JE.ratingSources?.settings(userSettings, JE.pluginConfig).minimum ?? 0;
+    mergedSettings.ratingTagsColorByScore = JE.ratingSources?.settings(userSettings, JE.pluginConfig).color ?? false;
+    for (const key of ["tagLayouts", "tagGroupCaps", "tagGroupScopes"]) {
+      const value = userSettings[key];
+      mergedSettings[key] = value && typeof value === "object" && !Array.isArray(value) ? value : null;
+    }
+    mergedSettings.tagEdgeSpacing = typeof userSettings.tagEdgeSpacing === "string" && userSettings.tagEdgeSpacing ? userSettings.tagEdgeSpacing : null;
+    mergedSettings.tagStylePreset = typeof userSettings.tagStylePreset === "string" && userSettings.tagStylePreset ? userSettings.tagStylePreset : null;
+    mergedSettings.tagGroupOrder = Array.isArray(userSettings.tagGroupOrder) ? userSettings.tagGroupOrder : null;
+    mergedSettings.tagLookRules = Array.isArray(userSettings.tagLookRules) ? userSettings.tagLookRules : null;
+    mergedSettings.tagLayoutLocks = userSettings.tagLayoutLocks && typeof userSettings.tagLayoutLocks === "object" && !Array.isArray(userSettings.tagLayoutLocks) ? userSettings.tagLayoutLocks : null;
+    mergedSettings.tagScale = userSettings.tagScale ?? null;
+    mergedSettings.tagGap = userSettings.tagGap ?? null;
+    mergedSettings.tagShapeOverrides = userSettings.tagShapeOverrides && typeof userSettings.tagShapeOverrides === "object" && !Array.isArray(userSettings.tagShapeOverrides) ? userSettings.tagShapeOverrides : null;
+    mergedSettings.displayLanguage = Object.prototype.hasOwnProperty.call(userSettings, "displayLanguage") && userSettings.displayLanguage !== null && userSettings.displayLanguage !== void 0 ? userSettings.displayLanguage : getPluginDefault("displayLanguage") || "";
+    mergedSettings.lastOpenedTab = userSettings.lastOpenedTab || "shortcuts";
+    if (!Object.prototype.hasOwnProperty.call(userSettings, "removeContinueWatchingEnabled") && pluginDefaults.RemoveContinueWatchingEnabled === true) {
+      mergedSettings.removeContinueWatchingEnabled = true;
+    }
+    mergedSettings.languageTagsStyle = String(mergedSettings.languageTagsStyle).trim().toLowerCase() === "codes" ? "codes" : "flags";
+    const languageBadge = String(mergedSettings.languageTagsCountBadge).trim().toLowerCase();
+    mergedSettings.languageTagsCountBadge = ["only", "both"].includes(languageBadge) ? languageBadge : "off";
+    const defaults = {};
+    const inherited = /* @__PURE__ */ new Set();
+    for (const key of INHERITED_KEYS) {
+      const fallback = getPluginDefault(key);
+      defaults[key] = fallback !== void 0 ? fallback : hardcodedDefaults[key];
+      if (userSettings[key] === null || userSettings[key] === void 0) inherited.add(key);
+    }
+    inheritance.set(mergedSettings, { defaults, inherited });
+    return mergedSettings;
   }
 
   // client/src/features/settings/save.ts

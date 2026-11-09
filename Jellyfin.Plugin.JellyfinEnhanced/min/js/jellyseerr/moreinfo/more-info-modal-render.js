@@ -1,10 +1,10 @@
 (() => {
-"use strict";(()=>{function $(e,n,t){let r=n.core?.featureContext;if(typeof r!="function")throw new Error(`${e}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);return r(e,n,t)}function E(){let e=window;if(!e.JellyfinEnhanced)throw new Error("Seerr details loaded before Jellyfin Enhanced");return e.JellyfinEnhanced}var A=new WeakMap;function R(e){let n=A.get(e);return n||(n=$("seerr",e,{internalSlots:["moreInfoModal"],internalsObject:()=>e.internals??(e.internals={})}),A.set(e,n)),n}function D(e){let n=R(e).own;return n.moreInfoModal??(n.moreInfoModal={state:{currentModal:null}})}function y(e,n){let t=e[n];if(t===void 0)throw new Error(`More Info loader dependency missing: ${n}`);return t}function O(e){return(n,t="",r)=>(r?e.t?.(n,r):e.t?.(n))||t}function _(e){return n=>e.escapeHtml?e.escapeHtml(n):String(n??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}var re=/^\d{4}-\d{2}-\d{2}/,F={year:"numeric",month:"long",day:"numeric"};function J(e){return re.test(e)}function L(e){if(J(e))return Number(e.slice(0,4));let n=new Date(e).getFullYear();return Number.isNaN(n)?void 0:n}function N(e){let n=J(e),t=new Date(n?`${e.slice(0,10)}T00:00:00Z`:e);if(!Number.isNaN(t.getTime()))return t.toLocaleDateString("en-US",n?{...F,timeZone:"UTC"}:F)}function k(e){return typeof e=="object"&&e!==null&&!Array.isArray(e)}function g(e){return k(e)?e:null}function a(e){return typeof e=="string"?e:void 0}function m(e){return typeof e=="string"&&e.length>0?e:null}function j(e){return typeof e=="number"&&Number.isFinite(e)?e:void 0}function oe(e){return Array.isArray(e)?e:[]}function u(e){return oe(e).filter(k)}function h(e){return typeof e=="number"&&Number.isFinite(e)?String(e):m(e)}function U(e){if(typeof e!="string"||e.length===0)return null;try{let{protocol:n}=new URL(e);return n==="http:"||n==="https:"?e:null}catch{return null}}function ie(e){return e.replace(/[\s'"()\\<>]/g,n=>encodeURIComponent(n).replace(/[()']/g,t=>`%${t.charCodeAt(0).toString(16).toUpperCase()}`))}function x(e,n){let t=a(n);return t?`https://image.tmdb.org/t/p/${e}${ie(t)}`:""}function B(e,n){return a(n==="movie"?e.title:e.name)??""}function se(e,n){return e.find(t=>t.iso_3166_1===n)??e.find(t=>t.iso_3166_1==="US")??e[0]}function q(e,n){if(!Array.isArray(e.watchProviders))return[];let t=[],r=new Set;for(let i of u(se(u(e.watchProviders),n)?.flatrate))if(!r.has(i.id)&&(r.add(i.id),t.push(i),t.length>=6))break;return t}function ae(e){return`${e>=60?`${Math.floor(e/60)}h `:""}${e%60?`${e%60}m`:""}`.trim()}function H(e,n){if(n==="movie"){let r=j(e.runtime);return r?ae(r):"N/A"}let t=Array.isArray(e.episodeRunTime)?j(e.episodeRunTime[0]):void 0;return t!==void 0?`${t} min episodes`:"N/A"}function K(e,n){return h(e.jeYear)??(n?L(n)??"N/A":"N/A")}function z(e){let n=g(e.credits);if(!n||!Array.isArray(n.crew))return null;let t=u(n.crew);return{director:t.find(r=>r.job==="Director"),writers:t.filter(r=>r.job==="Screenplay"||r.job==="Writer"||r.job==="Story").slice(0,3)}}var p=E(),le=R(p),c=D(p),o=_(p),de=O(p),l=(e,n="")=>o(de(e,n));function f(e,n){return`
+"use strict";(()=>{function $(e,n,t){let r=n.core?.featureContext;if(typeof r!="function")throw new Error(`${e}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);return r(e,n,t)}function E(){let e=window;if(!e.JellyfinEnhanced)throw new Error("Seerr details loaded before Jellyfin Enhanced");return e.JellyfinEnhanced}var A=new WeakMap;function T(e){let n=A.get(e);return n||(n=$("seerr",e,{internalSlots:["moreInfoModal"],internalsObject:()=>e.internals??(e.internals={})}),A.set(e,n)),n}function D(e){let n=T(e).own;return n.moreInfoModal??(n.moreInfoModal={state:{currentModal:null}})}function y(e,n){let t=e[n];if(t===void 0)throw new Error(`More Info loader dependency missing: ${n}`);return t}function O(e){return(n,t="",r)=>(r?e.t?.(n,r):e.t?.(n))||t}function _(e){return n=>e.escapeHtml?e.escapeHtml(n):String(n??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}var re=/^\d{4}-\d{2}-\d{2}/,J={year:"numeric",month:"long",day:"numeric"};function F(e){return re.test(e)}function L(e){if(F(e))return Number(e.slice(0,4));let n=new Date(e).getFullYear();return Number.isNaN(n)?void 0:n}function N(e){let n=F(e),t=new Date(n?`${e.slice(0,10)}T00:00:00Z`:e);if(!Number.isNaN(t.getTime()))return t.toLocaleDateString("en-US",n?{...J,timeZone:"UTC"}:J)}function k(e){return typeof e=="object"&&e!==null&&!Array.isArray(e)}function g(e){return k(e)?e:null}function a(e){return typeof e=="string"?e:void 0}function m(e){return typeof e=="string"&&e.length>0?e:null}function j(e){return typeof e=="number"&&Number.isFinite(e)?e:void 0}function oe(e){return Array.isArray(e)?e:[]}function u(e){return oe(e).filter(k)}function h(e){return typeof e=="number"&&Number.isFinite(e)?String(e):m(e)}function U(e){if(typeof e!="string"||e.length===0)return null;try{let{protocol:n}=new URL(e);return n==="http:"||n==="https:"?e:null}catch{return null}}function ie(e){return e.replace(/[\s'"()\\<>]/g,n=>encodeURIComponent(n).replace(/[()']/g,t=>`%${t.charCodeAt(0).toString(16).toUpperCase()}`))}function x(e,n){let t=a(n);return t?`https://image.tmdb.org/t/p/${e}${ie(t)}`:""}function B(e,n){return a(n==="movie"?e.title:e.name)??""}function se(e,n){return e.find(t=>t.iso_3166_1===n)??e.find(t=>t.iso_3166_1==="US")??e[0]}function q(e,n){if(!Array.isArray(e.watchProviders))return[];let t=[],r=new Set;for(let i of u(se(u(e.watchProviders),n)?.flatrate))if(!r.has(i.id)&&(r.add(i.id),t.push(i),t.length>=6))break;return t}function ae(e){return`${e>=60?`${Math.floor(e/60)}h `:""}${e%60?`${e%60}m`:""}`.trim()}function H(e,n){if(n==="movie"){let r=j(e.runtime);return r?ae(r):"N/A"}let t=Array.isArray(e.episodeRunTime)?j(e.episodeRunTime[0]):void 0;return t!==void 0?`${t} min episodes`:"N/A"}function K(e,n){return h(e.jeYear)??(n?L(n)??"N/A":"N/A")}function z(e){let n=g(e.credits);if(!n||!Array.isArray(n.crew))return null;let t=u(n.crew);return{director:t.find(r=>r.job==="Director"),writers:t.filter(r=>r.job==="Screenplay"||r.job==="Writer"||r.job==="Story").slice(0,3)}}var p=E(),le=T(p),c=D(p),o=_(p),de=O(p),l=(e,n="")=>o(de(e,n));function f(e,n){return`
                 <div class="je-more-info-stat-row">
                     <div class="je-more-info-stat-label">${e}</div>
                     <div class="je-more-info-stat-value">${n}</div>
                 </div>
-            `}function P(e,n){let t=m(n),r=t?N(t):void 0;return r?f(l(e),o(r)):""}function ce(e,n){let t=y(c,"getContentRating")(e,n);return p.pluginConfig?.ColoredRatingsEnabled&&t&&t!=="N/A"?`<span class="rating-badge mediaInfoOfficialRating" rating="${o(le.peer("normalizeOfficialRating")?.(t)||t)}">${o(t)}</span>`:`<span class="rating-badge">${o(t)}</span>`}function W(e,n,{budget:t,revenue:r,releaseDate:i,tmdbId:d}){let s=g(e)??{},S=u(s.productionCountries),C=u(s.productionCompanies),I=m(s.originalLanguage);return`
+            `}function P(e,n){let t=m(n),r=t?N(t):void 0;return r?f(l(e),o(r)):""}function ce(e,n){let t=y(c,"getContentRating")(e,n);return p.pluginConfig?.ColoredRatingsEnabled&&t&&t!=="N/A"?`<span class="rating-badge mediaInfoOfficialRating" rating="${o(le.peer("normalizeOfficialRating")?.(t)||t)}">${o(t)}</span>`:`<span class="rating-badge">${o(t)}</span>`}function W(e,n,{budget:t,revenue:r,releaseDate:i,tmdbId:d}){let s=g(e)??{},S=u(s.productionCountries),M=u(s.productionCompanies),C=m(s.originalLanguage);return`
         <div class="je-more-info-right-panel">
             <div class="je-more-info-media-ratings" data-mount="ratings">
                 ${s.ratings?y(c,"buildRatingLogos")(s.ratings,s,n,d):`
@@ -20,9 +20,9 @@
                 ${n==="tv"?`${P("jellyseerr_modal_first_air_date",s.firstAirDate)}${P("jellyseerr_modal_last_air_date",s.lastAirDate)}`:P("jellyseerr_modal_release_date",i)}
                 ${r?f(l("jellyseerr_modal_revenue"),o(r)):""}
                 ${t?f(l("jellyseerr_modal_budget"),o(t)):""}
-                ${I?f(l("jellyseerr_modal_original_language"),o(I.toUpperCase())):""}
-                ${S.length?f(l("jellyseerr_modal_production_country"),S.map(b=>{let v=a(b.name)??"",w=v==="United States of America"?"United States":v,T=p.cdn?.flagPng((a(b.iso_3166_1)??"").toLowerCase())??"";return`<div><img src="${o(T)}" alt="${o(w)}" title="${o(w)}" style="margin-right: 6px; vertical-align: middle;" /> ${o(w)}</div>`}).join("")):""}
-                ${C.length?f(l("jellyseerr_modal_studios"),C.slice(0,3).map(b=>o(a(b.name))).join(", ")):""}
+                ${C?f(l("jellyseerr_modal_original_language"),o(C.toUpperCase())):""}
+                ${S.length?f(l("jellyseerr_modal_production_country"),S.map(b=>{let v=a(b.name)??"",w=v==="United States of America"?"United States":v,R=p.cdn?.flagPng((a(b.iso_3166_1)??"").toLowerCase())??"";return`<div><img src="${o(R)}" alt="${o(w)}" title="${o(w)}" style="margin-right: 6px; vertical-align: middle;" /> ${o(w)}</div>`}).join("")):""}
+                ${M.length?f(l("jellyseerr_modal_studios"),M.slice(0,3).map(b=>o(a(b.name))).join(", ")):""}
                 ${Y(s)}
             </div>
             ${y(c,"buildMediaFacts")(s,n,d)}
@@ -108,7 +108,7 @@
                     `}).join("")}
             </div>
         </div>
-    `:""}function ge(e,n){let t=g(e)??{},r=B(t,n),i=a(n==="movie"?t.releaseDate:t.firstAirDate),d=K(t,i),s=y(c,"formatCurrency"),S=t.budget?s(t.budget):null,C=t.revenue?s(t.revenue):null,I=x("original",t.backdropPath),M=x("w500",t.posterPath),b=u(t.genres).map(te=>o(a(te.name))).join(", ")||"N/A",v=m(t.tagline),w=m(t.overview),T=h(t.id)??"";return`
+    `:""}function ge(e,n){let t=g(e)??{},r=B(t,n),i=a(n==="movie"?t.releaseDate:t.firstAirDate),d=K(t,i),s=y(c,"formatCurrency"),S=t.budget?s(t.budget):null,M=t.revenue?s(t.revenue):null,C=x("original",t.backdropPath),I=x("w500",t.posterPath),b=u(t.genres).map(te=>o(a(te.name))).join(", ")||"N/A",v=m(t.tagline),w=m(t.overview),R=h(t.id)??"";return`
         <div class="modal-overlay">
             <div class="modal-container">
                 <button class="modal-refresh" aria-label="Refresh" title="Refresh status">
@@ -125,7 +125,7 @@
                     </svg>
                 </button>
 
-                <div class="modal-backdrop" style="background-image: url('${o(I)}');">
+                <div class="modal-backdrop" style="background-image: url('${o(C)}');">
                     <div class="je-modal-backdrop-overlay"></div>
                 </div>
 
@@ -134,7 +134,7 @@
                         <div class="modal-left">
                             <div class="header-section">
                                 <div class="header-poster">
-                                    ${M?`<img src="${o(M)}" alt="${o(r)}" />`:""}
+                                    ${I?`<img src="${o(I)}" alt="${o(r)}" />`:""}
                                 </div>
                                 <div class="header-info">
                                     <div class="title-row">
@@ -171,7 +171,7 @@
                         </div>
 
                         <div class="modal-right">
-                            ${W(t,n,{budget:S,revenue:C,releaseDate:i,tmdbId:T})}
+                            ${W(t,n,{budget:S,revenue:M,releaseDate:i,tmdbId:R})}
                         </div>
                     </div>
 

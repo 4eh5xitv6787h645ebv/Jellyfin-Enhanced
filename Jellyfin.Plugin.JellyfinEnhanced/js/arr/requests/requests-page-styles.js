@@ -1,6 +1,12 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
     const shared = core.core?.featureContext;
@@ -9,26 +15,23 @@
     }
     return shared(feature, core, slots);
   }
-
-  // client/src/features/downloads/host.ts
-  function downloadsHost() {
-    var _a;
-    const host = window;
-    const JE = host.JellyfinEnhanced;
-    if (!JE) throw new Error("Downloads loaded before Jellyfin Enhanced");
-    const ctx = featureContext("downloads", JE, {
-      facades: ["downloadsPage", "initializeDownloadsPage"],
-      internalSlots: ["requestsPage"],
-      internalsObject: () => JE.internals || (JE.internals = {})
-    });
-    const P = (_a = ctx.own).requestsPage || (_a.requestsPage = {});
-    return { JE, P, host, ctx, getApi: () => {
-      if (!host.ApiClient) throw new Error("API client unavailable");
-      return host.ApiClient;
-    } };
+  function publishSharedModules(modules) {
+    const JE = window.JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ?? (JE.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
   }
 
   // client/src/features/downloads/runtime.ts
+  var runtime_exports = {};
+  __export(runtime_exports, {
+    runtime: () => runtime
+  });
   function runtime(deps) {
     if (deps.P.runtime) return deps.P.runtime;
     const { JE, P, host } = deps;
@@ -90,6 +93,31 @@
     JE.core?.lifecycle?.register("arr-requests-page").track(() => owner.dispose());
     return owner;
   }
+
+  // client/src/features/downloads/host.ts
+  var host_exports = {};
+  __export(host_exports, {
+    downloadsHost: () => downloadsHost
+  });
+  function downloadsHost() {
+    var _a;
+    const host = window;
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error("Downloads loaded before Jellyfin Enhanced");
+    const ctx = featureContext("downloads", JE, {
+      facades: ["downloadsPage", "initializeDownloadsPage"],
+      internalSlots: ["requestsPage"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+    const P = (_a = ctx.own).requestsPage || (_a.requestsPage = {});
+    return { JE, P, host, ctx, getApi: () => {
+      if (!host.ApiClient) throw new Error("API client unavailable");
+      return host.ApiClient;
+    } };
+  }
+
+  // client/generated-shared/publish/js/arr/requests/requests-page-styles.js.ts
+  publishSharedModules({ "features/downloads/runtime": runtime_exports, "features/downloads/host": host_exports });
 
   // client/src/features/downloads/styles.ts
   function install(deps) {

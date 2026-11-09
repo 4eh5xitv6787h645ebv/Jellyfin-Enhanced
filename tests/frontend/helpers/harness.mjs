@@ -20,16 +20,14 @@ function moduleSource(file) {
   }
   return sources.get(file);
 }
-const { featureContextInstaller } = featureContextHelper;
+const { provideSharedRuntime } = featureContextHelper;
 // canopy K1: core/ui-kit.js publishes the shared featureContext in production; load() publishes the same function
 // (helpers/feature-context.cjs) for a module that needs it, unless the harness was created with featureContext: false.
-// Feature modules carry the delegate, whose error names the slot; others never read it.
-const usesFeatureContext = source => source.includes('JE.core.featureContext is missing');
-/** Before evaluating `source` in `window`: publish the shared featureContext if the module needs it and none is there. */
-export function provideFeatureContext(window, source) {
-  if (usesFeatureContext(source) && typeof window.JellyfinEnhanced?.core?.featureContext !== 'function') {
-    window.eval(featureContextInstaller());
-  }
+// canopy K1b: likewise the shared modules (client/shared-modules.json) a script reads and no provider has published
+// yet, unless the harness was created with sharedModules: false.
+/** Before evaluating `source` (the script js/`path`) in `window`: publish what its providers would have published. */
+export function provideFeatureContext(window, source, path, options) {
+  provideSharedRuntime(code => window.eval(code), source, path, options);
 }
 if (process.env.JE_COVERAGE_DIR) process.on('exit', () => {
   mkdirSync(process.env.JE_COVERAGE_DIR, { recursive: true });
@@ -37,7 +35,7 @@ if (process.env.JE_COVERAGE_DIR) process.on('exit', () => {
 });
 
 /** Load real classic-script modules into a fresh browser realm; no network is permitted by default. */
-export function createHarness({ html = '', url = 'http://jellyfin.test/web/index.html#!/home', JE = {}, apiClient = {}, fetch, globals = {}, expectedConsoleErrors = [], featureContext = true } = {}) {
+export function createHarness({ html = '', url = 'http://jellyfin.test/web/index.html#!/home', JE = {}, apiClient = {}, fetch, globals = {}, expectedConsoleErrors = [], featureContext = true, sharedModules = true } = {}) {
   const errors = [];
   // Expected errors must occur before close(); optional ones (allowConsoleError) may.
   const allowedErrors = expectedConsoleErrors.map(pattern => ({ pattern, required: true, matched: false }));
@@ -96,7 +94,7 @@ export function createHarness({ html = '', url = 'http://jellyfin.test/web/index
       const twin = process.env.JE_TEST_MIN_TWINS === '1' ? resolve(jsRoot, '../min/js', path) : null;
       const file = twin && existsSync(twin) ? twin : resolve(jsRoot, path);
       const source = moduleSource(file);
-      if (featureContext) provideFeatureContext(window, source);
+      provideFeatureContext(window, source, path, { featureContext, shared: sharedModules });
       // Each IIFE is evaluated in this test's independent browser realm, as in the bundle.
       window.eval(source);
       return JE;

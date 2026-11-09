@@ -2,37 +2,23 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const shared = core.core?.featureContext;
-    if (typeof shared !== "function") {
-      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
-    }
-    return shared(feature, core, slots);
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
-  }
-  function mediaTagsContext(JE = tagRuntimeHost()) {
-    return featureContext("media-tags", JE, {
-      internalSlots: ["peopleTags"],
-      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
-      internalsObject: () => JE.internals = JE.internals || {}
-    });
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export2 = /* @__PURE__ */ sharedExport(shared, "mediaTagsContext");
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function text(value) {
-    return typeof value === "string" && value ? value : null;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export4 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export13 = /* @__PURE__ */ sharedExport(shared2, "text");
 
   // client/src/features/media-tags/types/age-rating/ageratingtags.ts
   function createAgeRatingTags(ctx) {
@@ -44,10 +30,10 @@
     let colourCssPromise = null;
     function normalizeRating(raw) {
       if (raw === null || raw === void 0) return null;
-      const text2 = String(raw).replace(/\s+/g, " ").trim();
-      if (!text2) return null;
-      const shared = JE.normalizeOfficialRating;
-      return text(typeof shared === "function" ? shared(text2) : text2);
+      const text = String(raw).replace(/\s+/g, " ").trim();
+      if (!text) return null;
+      const shared3 = JE.normalizeOfficialRating;
+      return export13(typeof shared3 === "function" ? shared3(text) : text);
     }
     function scopeRatingColours(cssText) {
       const withoutComments = cssText.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -97,8 +83,8 @@
     }
     function getCachedEntry(ctx2, itemId) {
       const entry = ctx2.getPersistent(itemId) ?? ctx2.hot?.get(itemId);
-      if (!isRecord(entry)) return null;
-      return { rating: text(entry.rating), seriesId: text(entry.s) };
+      if (!export4(entry)) return null;
+      return { rating: export13(entry.rating), seriesId: export13(entry.s) };
     }
     function setCachedEntry(ctx2, itemId, rating, seriesId) {
       const entry = seriesId ? { rating, s: seriesId } : { rating };
@@ -231,7 +217,7 @@
   }
 
   // client/src/features/media-tags/types/age-rating/ageratingtags-entry.ts
-  createAgeRatingTags(mediaTagsContext());
+  createAgeRatingTags(export2());
 })();
 })();
 //# sourceMappingURL=ageratingtags.js.map

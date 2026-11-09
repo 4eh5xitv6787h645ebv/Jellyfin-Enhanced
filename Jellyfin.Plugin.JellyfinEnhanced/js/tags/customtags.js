@@ -1,19 +1,23 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
 
   // client/src/features/media-tags/types/custom/customtags.ts
   function createCustomTags(JE) {
@@ -49,7 +53,7 @@
       "live_tv"
     ];
     function pick(obj, key) {
-      if (!isRecord(obj)) return void 0;
+      if (!export42(obj)) return void 0;
       if (obj[key] !== void 0 && obj[key] !== null) return obj[key];
       const pascal = key.charAt(0).toUpperCase() + key.slice(1);
       return obj[pascal] ?? void 0;
@@ -124,7 +128,7 @@ ${source}`;
     }
     function getCachedEntry(ctx, itemId) {
       const entry = ctx.hot?.get(itemId) ?? ctx.getPersistent(itemId);
-      if (isRecord(entry) && entry.r === currentRules().key && Array.isArray(entry.ids)) return entry.ids.map(String);
+      if (export42(entry) && entry.r === currentRules().key && Array.isArray(entry.ids)) return entry.ids.map(String);
       if (entry !== void 0) ctx.deletePersistent(itemId);
       return null;
     }
@@ -283,7 +287,7 @@ ${source}`;
   }
 
   // client/src/features/media-tags/types/custom/customtags-entry.ts
-  createCustomTags(tagRuntimeHost());
+  createCustomTags(export4());
 })();
 })();
 //# sourceMappingURL=customtags.js.map

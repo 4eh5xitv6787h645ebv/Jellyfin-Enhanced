@@ -2,185 +2,29 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const shared = core.core?.featureContext;
-    if (typeof shared !== "function") {
-      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
-    }
-    return shared(feature, core, slots);
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/bookmarks/host.ts
-  function bookmarksHost() {
-    const host2 = window;
-    const JE = host2.JellyfinEnhanced;
-    if (!JE) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
-    const ctx2 = featureContext("bookmarks", JE, {
-      facades: ["bookmarks", "initializeBookmarks", "cleanupBookmarks"],
-      internalSlots: ["bookmarksLibrary", "bookmarkLifetimes"],
-      internalsObject: () => JE.internals ?? (JE.internals = {})
-    });
-    const getApi2 = () => {
-      const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
-      if (!api) throw new Error("API client not available");
-      return api;
-    };
-    return { ctx: ctx2, host: host2, getApi: getApi2 };
-  }
-  function record(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function readItem(value) {
-    if (!record(value) || typeof value.Id !== "string") throw new Error("Invalid item response");
-    const text = (key) => typeof value[key] === "string" ? value[key] : void 0;
-    const number = (key) => typeof value[key] === "number" && Number.isFinite(value[key]) ? value[key] : void 0;
-    const providers = record(value.ProviderIds) ? value.ProviderIds : {};
-    const tags = record(value.ImageTags) ? value.ImageTags : {};
-    const user = record(value.UserData) ? value.UserData : {};
-    return {
-      Id: value.Id,
-      Name: text("Name"),
-      Type: text("Type"),
-      SeriesId: text("SeriesId"),
-      SeriesName: text("SeriesName"),
-      ProductionYear: number("ProductionYear"),
-      ParentIndexNumber: number("ParentIndexNumber"),
-      IndexNumber: number("IndexNumber"),
-      ProviderIds: { Tmdb: typeof providers.Tmdb === "string" ? providers.Tmdb : void 0, Tvdb: typeof providers.Tvdb === "string" ? providers.Tvdb : void 0 },
-      ImageTags: { Primary: typeof tags.Primary === "string" ? tags.Primary : void 0 },
-      UserData: { Key: typeof user.Key === "string" ? user.Key : void 0 }
-    };
-  }
-  function readSessions(value) {
-    if (!Array.isArray(value)) throw new Error("Invalid sessions response");
-    return value.flatMap((entry) => record(entry) && typeof entry.Id === "string" && typeof entry.DeviceId === "string" ? [{ Id: entry.Id, DeviceId: entry.DeviceId }] : []);
-  }
-  function lease(JE) {
-    const owner = JE.userConfig, epoch = JE.session?.getEpoch();
-    return () => JE.userConfig === owner && (epoch === void 0 || JE.session?.isCurrent(epoch) === true);
-  }
+  // client/generated-shared/stub/client/src/features/bookmarks/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/bookmarks/host");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bookmarksHost");
+  var export6 = /* @__PURE__ */ sharedExport(shared, "readItem");
+  var export8 = /* @__PURE__ */ sharedExport(shared, "readSessions");
 
-  // client/src/features/bookmarks/lifetime.ts
-  function createLifetime(ctx2, name) {
-    const JE = ctx2.core, own = ctx2.own;
-    own.bookmarkLifetimes ?? (own.bookmarkLifetimes = {});
-    own.bookmarkLifetimes[name]?.dispose();
-    const cleanup = /* @__PURE__ */ new Set();
-    const dialogs = /* @__PURE__ */ new Set();
-    let disposed = false;
-    let generation = 0;
-    const pending = /* @__PURE__ */ new Set();
-    const keep = (value) => {
-      if (typeof value === "function") cleanup.add(() => value());
-      else if (typeof value === "object" && value !== null && "unsubscribe" in value && typeof value.unsubscribe === "function") {
-        const unsubscribe = value.unsubscribe.bind(value);
-        cleanup.add(() => unsubscribe());
-      }
-    };
-    const keepTeardown = (value) => {
-      if (typeof value === "object" && value !== null && "teardown" in value && typeof value.teardown === "function") {
-        const teardown = value.teardown.bind(value);
-        cleanup.add(() => teardown());
-      } else keep(value);
-    };
-    const listen = (target, event, callback, capture = false) => {
-      target.addEventListener(event, callback, capture);
-      cleanup.add(() => target.removeEventListener(event, callback, capture));
-    };
-    const timeout = (callback, delay) => {
-      const current = lease(JE), version = generation;
-      const cancel = () => {
-        window.clearTimeout(id);
-        cleanup.delete(cancel);
-        pending.delete(cancel);
-      };
-      const id = window.setTimeout(() => {
-        cleanup.delete(cancel);
-        pending.delete(cancel);
-        if (!disposed && generation === version && current()) callback();
-      }, delay);
-      cleanup.add(cancel);
-      pending.add(cancel);
-      return id;
-    };
-    const interval = (callback, delay) => {
-      const id = window.setInterval(() => {
-        if (!disposed) callback();
-      }, delay);
-      cleanup.add(() => window.clearInterval(id));
-      return id;
-    };
-    const modal = (element) => {
-      const previousFocus = document.activeElement;
-      element.setAttribute("role", "dialog");
-      element.setAttribute("aria-modal", "true");
-      element.tabIndex = -1;
-      const close = () => {
-        element.remove();
-        cleanup.delete(close);
-        dialogs.delete(close);
-        document.removeEventListener("viewshow", close);
-        if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
-      };
-      cleanup.add(close);
-      dialogs.add(close);
-      document.addEventListener("viewshow", close);
-      element.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          close();
-        }
-        if (event.key !== "Tab") return;
-        const controls = Array.from(element.querySelectorAll('button:not(:disabled), input:not(:disabled), [tabindex="0"]'));
-        const first = controls[0], last = controls[controls.length - 1];
-        if (!first || !last) {
-          event.preventDefault();
-          element.focus();
-          return;
-        }
-        if (event.shiftKey && (document.activeElement === first || document.activeElement === element)) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      });
-      timeout(() => {
-        if (element.isConnected) (element.querySelector("input") || element.querySelector("button") || element).focus();
-      }, 0);
-      return close;
-    };
-    const cancelPending = () => {
-      generation++;
-      for (const cancel of pending) cancel();
-      for (const close of dialogs) close();
-    };
-    const dispose = () => {
-      if (disposed) return;
-      disposed = true;
-      cancelPending();
-      for (const release of cleanup) release();
-      cleanup.clear();
-    };
-    const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
-      const current = lease(JE), version = generation;
-      return () => !disposed && generation === version && current();
-    } };
-    own.bookmarkLifetimes[name] = result;
-    keep(JE.session?.onUserChange("bookmarks-" + name, () => {
-      for (const close of dialogs) close();
-      document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
-      document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
-    }));
-    listen(window, "pagehide", dispose);
-    return result;
-  }
+  // client/generated-shared/stub/client/src/features/bookmarks/lifetime.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/bookmarks/lifetime");
+  var export0 = /* @__PURE__ */ sharedExport(shared2, "createLifetime");
 
   // client/src/features/bookmarks/library-items.ts
-  var { ctx, host, getApi } = bookmarksHost();
+  var { ctx, host, getApi } = export1();
   function install(JE) {
-    const lifetime = createLifetime(ctx, "library-items");
+    const lifetime = export0(ctx, "library-items");
     const setTimeout = lifetime.timeout;
     const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
     if (!JE?.pluginConfig?.BookmarksEnabled) return;
@@ -228,7 +72,7 @@
         const itemId = group.details.itemId;
         if (itemId) {
           itemPromises.push(
-            (JE.helpers?.getItemCached ? JE.helpers.getItemCached(itemId, { userId }) : apiClient.getItem(userId, itemId)).then((value) => ({ key, group, item: readItem(value), orphaned: false })).catch((err) => {
+            (JE.helpers?.getItemCached ? JE.helpers.getItemCached(itemId, { userId }) : apiClient.getItem(userId, itemId)).then((value) => ({ key, group, item: export6(value), orphaned: false })).catch((err) => {
               console.warn(`Failed to fetch item ${itemId}:`, err);
               return { key, group, item: null, orphaned: true };
             })
@@ -494,7 +338,7 @@
         const deviceId = apiClient._deviceId || apiClient.deviceId();
         console.log(`${logPrefix} Device ID: ${deviceId}`);
         const sessionsUrl = apiClient.getUrl("Sessions");
-        const sessions = readSessions(await apiClient.ajax({
+        const sessions = export8(await apiClient.ajax({
           type: "GET",
           url: sessionsUrl,
           dataType: "json"

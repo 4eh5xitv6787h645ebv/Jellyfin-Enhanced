@@ -1,40 +1,50 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/details-providers/host.ts
-  function hostWindow() {
-    return window;
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
+    }
+    return shared(feature, core, slots);
   }
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
-  }
-  function api() {
-    const client = hostWindow().ApiClient;
-    if (!client) throw new Error("Jellyfin ApiClient unavailable");
-    return client;
-  }
-  function hasApi() {
-    return hostWindow().ApiClient !== void 0;
-  }
-  function currentUserId() {
-    const id = hostWindow().ApiClient?.getCurrentUserId();
-    return typeof id === "string" && id ? id : null;
-  }
-  function serverId() {
-    const id = api().serverId();
-    return typeof id === "string" ? id : "";
-  }
-  function dashboard() {
-    return hostWindow().Dashboard;
-  }
-  function embyPage() {
-    return hostWindow().Emby?.Page;
+  function publishSharedModules(modules) {
+    const JE2 = window.JellyfinEnhanced;
+    if (!JE2) return;
+    const core = JE2.core ?? (JE2.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
   }
 
   // client/src/features/details-providers/wire.ts
+  var wire_exports = {};
+  __export(wire_exports, {
+    bool: () => bool,
+    decodeDetailsItem: () => decodeDetailsItem,
+    decodeItems: () => decodeItems,
+    errorMessage: () => errorMessage,
+    errorShape: () => errorShape,
+    field: () => field,
+    int: () => int,
+    isRecord: () => isRecord,
+    list: () => list,
+    num: () => num,
+    providerId: () => providerId,
+    str: () => str,
+    stringList: () => stringList,
+    text: () => text
+  });
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
   }
@@ -44,8 +54,14 @@
   function str(value) {
     return typeof value === "string" ? value : void 0;
   }
+  function text(value) {
+    return typeof value === "string" && value !== "" ? value : void 0;
+  }
   function num(value) {
     return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+  }
+  function int(value) {
+    return typeof value === "number" && Number.isInteger(value) ? value : void 0;
   }
   function bool(value) {
     return typeof value === "boolean" ? value : void 0;
@@ -138,12 +154,92 @@
   }
 
   // client/src/features/details-providers/page.ts
+  var page_exports = {};
+  __export(page_exports, {
+    detailPageHook: () => detailPageHook,
+    detailsLease: () => detailsLease,
+    firstMatch: () => firstMatch,
+    hashItemId: () => hashItemId,
+    insertAfter: () => insertAfter,
+    insertBefore: () => insertBefore,
+    isDetailHook: () => isDetailHook,
+    lookupDetailsItem: () => lookupDetailsItem,
+    lookupItem: () => lookupItem,
+    removeFirst: () => removeFirst,
+    sessionLease: () => sessionLease,
+    visibleDetailPage: () => visibleDetailPage
+  });
+
+  // client/src/features/details-providers/host.ts
+  var host_exports = {};
+  __export(host_exports, {
+    api: () => api,
+    bridge: () => bridge,
+    browserTranslator: () => browserTranslator,
+    currentUserId: () => currentUserId,
+    dashboard: () => dashboard,
+    detailsContext: () => detailsContext,
+    embyPage: () => embyPage,
+    hasApi: () => hasApi,
+    optionalBridge: () => optionalBridge,
+    serverId: () => serverId
+  });
+  function hostWindow() {
+    return window;
+  }
+  function bridge(feature) {
+    const host = window;
+    const JE2 = host.JellyfinEnhanced;
+    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
+    return JE2;
+  }
+  function optionalBridge() {
+    const host = window;
+    return host.JellyfinEnhanced;
+  }
+  function api() {
+    const client = hostWindow().ApiClient;
+    if (!client) throw new Error("Jellyfin ApiClient unavailable");
+    return client;
+  }
+  function hasApi() {
+    return hostWindow().ApiClient !== void 0;
+  }
+  function currentUserId() {
+    const id = hostWindow().ApiClient?.getCurrentUserId();
+    return typeof id === "string" && id ? id : null;
+  }
+  function serverId() {
+    const id = api().serverId();
+    return typeof id === "string" ? id : "";
+  }
+  function dashboard() {
+    return hostWindow().Dashboard;
+  }
+  function embyPage() {
+    return hostWindow().Emby?.Page;
+  }
+  function browserTranslator() {
+    return hostWindow().Translator;
+  }
+  function detailsContext(JE2) {
+    const holder = JE2;
+    return featureContext("details-providers", JE2, {
+      internalSlots: ["features"],
+      internalsObject: () => holder.internals ?? (holder.internals = {})
+    });
+  }
+
+  // client/src/features/details-providers/page.ts
   function hashItemId(hash = window.location.hash) {
     try {
       return new URLSearchParams(hash.split("?")[1] ?? "").get("id");
     } catch {
       return null;
     }
+  }
+  function visibleDetailPage() {
+    return document.querySelector("#itemDetailPage:not(.hide)");
   }
   function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
     if (helpers?.getItemCached) {
@@ -154,6 +250,14 @@
   async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
     return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
   }
+  function detailsLease(session, itemId, page) {
+    const sameSession = sessionLease(session);
+    return {
+      itemId,
+      page,
+      current: () => sameSession() && hashItemId() === itemId && page.isConnected && visibleDetailPage() === page
+    };
+  }
   function sessionLease(session) {
     const epoch = session?.getEpoch();
     const userId = currentUserId();
@@ -162,6 +266,57 @@
     const token = client.accessToken();
     return () => hasApi() && api() === client && client.getUrl("/") === root && client.accessToken() === token && (!session || epoch === void 0 || session.isCurrent(epoch)) && currentUserId() === userId;
   }
+  function isDetailHook(element, hash) {
+    const hasItemId = window.location.hash.includes("id=") || typeof hash === "string" && hash.includes("id=");
+    const isItemDetailElement = !!element && (element.id === "itemDetailPage" || element.classList.contains("itemDetailPage"));
+    return hasItemId || isItemDetailElement;
+  }
+  function detailPageHook(enabled, unregister, process, retry) {
+    return async (_view, element, hash) => {
+      if (!enabled()) {
+        unregister();
+        return;
+      }
+      if (!isDetailHook(element, hash)) return;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const page = visibleDetailPage();
+      if (page) {
+        process(page);
+      } else if (retry) {
+        setTimeout(() => {
+          const retryPage = visibleDetailPage();
+          if (retryPage) process(retryPage);
+        }, 500);
+      }
+    };
+  }
+  function insertAfter(anchor, node) {
+    const parent = anchor.parentNode;
+    if (!parent) return false;
+    parent.insertBefore(node, anchor.nextSibling);
+    return true;
+  }
+  function insertBefore(anchor, node) {
+    const parent = anchor.parentNode;
+    if (!parent) return false;
+    parent.insertBefore(node, anchor);
+    return true;
+  }
+  function firstMatch(root, selectors) {
+    for (const selector of selectors) {
+      const found = root.querySelector(selector);
+      if (found) return found;
+    }
+    return null;
+  }
+  function removeFirst(page, selector) {
+    const root = page || visibleDetailPage() || document;
+    const section = root.querySelector(selector);
+    section?.parentNode?.removeChild(section);
+  }
+
+  // client/generated-shared/publish/js/enhanced/features-random-button.js.ts
+  publishSharedModules({ "features/details-providers/wire": wire_exports, "features/details-providers/page": page_exports, "features/details-providers/host": host_exports });
 
   // client/src/features/details-providers/random-domain.ts
   var DICE_FACES = [

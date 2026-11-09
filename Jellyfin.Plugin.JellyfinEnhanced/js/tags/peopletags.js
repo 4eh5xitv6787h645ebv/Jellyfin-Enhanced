@@ -2,45 +2,25 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const shared = core.core?.featureContext;
-    if (typeof shared !== "function") {
-      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
-    }
-    return shared(feature, core, slots);
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
-  }
-  function mediaTagsContext(JE = tagRuntimeHost()) {
-    return featureContext("media-tags", JE, {
-      internalSlots: ["peopleTags"],
-      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
-      internalsObject: () => JE.internals = JE.internals || {}
-    });
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export2 = /* @__PURE__ */ sharedExport(shared, "mediaTagsContext");
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function errorStatus(error) {
-    return isRecord(error) && typeof error.status === "number" ? error.status : 0;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export1 = /* @__PURE__ */ sharedExport(shared2, "errorStatus");
+  var export4 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
 
   // client/src/features/media-tags/types/people/people-countries.ts
   var COUNTRY_MAP = {
@@ -235,7 +215,7 @@
     return { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() };
   }
   function factsFromResponse(data) {
-    if (!isRecord(data)) return null;
+    if (!export4(data)) return null;
     const facts = {};
     if (parseCalendarDate(data.birthDate)) facts.birthDate = String(data.birthDate).slice(0, 10);
     if (parseCalendarDate(data.deathDate)) facts.deathDate = String(data.deathDate).slice(0, 10);
@@ -259,7 +239,7 @@
     return { birthPlace: facts.birthPlace || null, isDeceased, currentAge, ageAtDeath, ageAtItemRelease };
   }
   function sanitizeEntry(id, entry, now, ttlMs) {
-    if (!PERSON_ID_PATTERN.test(id) || !isRecord(entry)) return null;
+    if (!PERSON_ID_PATTERN.test(id) || !export4(entry)) return null;
     const ts = entry.ts;
     if (typeof ts !== "number" || !Number.isFinite(ts) || now - ts >= ttlMs || ts > now + 864e5) return null;
     const clean = { ts };
@@ -290,8 +270,8 @@
     } catch {
       value = null;
     }
-    const parsed = record(value);
-    if (parsed.v !== 2 || parsed.owner !== owner || !isRecord(parsed.people)) {
+    const parsed = export10(value);
+    if (parsed.v !== 2 || parsed.owner !== owner || !export4(parsed.people)) {
       return { people, rewrite: true };
     }
     let rewrite = false;
@@ -309,7 +289,7 @@
 
   // client/src/features/media-tags/types/people/peopletags.ts
   function isHotPerson(value) {
-    return isRecord(value) && isRecord(value.data) && typeof value.timestamp === "number";
+    return export4(value) && export4(value.data) && typeof value.timestamp === "number";
   }
   function createPeopleTags(ctx) {
     const JE = ctx.core;
@@ -331,7 +311,7 @@
       const FIRST_CHUNK_SIZE = 8;
       const RETRY_DELAYS_MS = [1e3, 3e3];
       const MAX_PASSES = 5;
-      const currentOwner = () => `${JE.session?.getServerId() || ""}:${JE.session?.getUserId() || apiClient().getCurrentUserId() || ""}`;
+      const currentOwner = () => `${JE.session?.getServerId() || ""}:${JE.session?.getUserId() || export0().getCurrentUserId() || ""}`;
       let storeOwner = currentOwner();
       let peopleStore = /* @__PURE__ */ new Map();
       try {
@@ -535,14 +515,14 @@
         }
       }
       function getItemPremiereDate(itemId) {
-        const load = typeof JE.helpers?.getItemCached === "function" ? JE.helpers.getItemCached(itemId) : apiClient().getItem(apiClient().getCurrentUserId(), itemId);
-        return Promise.resolve(load).then((item) => parseCalendarDate(record(item).PremiereDate)).catch(() => null);
+        const load = typeof JE.helpers?.getItemCached === "function" ? JE.helpers.getItemCached(itemId) : export0().getItem(export0().getCurrentUserId(), itemId);
+        return Promise.resolve(load).then((item) => parseCalendarDate(export10(item).PremiereDate)).catch(() => null);
       }
       function peopleInfoPath(ids) {
         return `/people/info?ids=${ids.map(encodeURIComponent).join(",")}`;
       }
       function rememberResponse(ids, response) {
-        const people = record(record(response).people);
+        const people = export10(export10(response).people);
         const now = Date.now();
         let cached = false;
         const facts = ids.map((id) => {
@@ -618,7 +598,7 @@
               releaseCards(chunk);
               return false;
             }
-            const status = errorStatus(error);
+            const status = export1(error);
             const retryable = !status || status >= 500 || status === 408 || status === 429;
             if (!retryable || attempt >= RETRY_DELAYS_MS.length) {
               console.warn(`${logPrefix} Failed to fetch person info for ${ids.length} people:`, error);
@@ -898,7 +878,7 @@
         const cast = [];
         const guestStars = [];
         for (const entry of item.People) {
-          const person = record(entry);
+          const person = export10(entry);
           if (typeof person.Id !== "string" || !person.Id) return null;
           if (person.Type === "Artist" || person.Type === "AlbumArtist") return null;
           (person.Type === "GuestStar" ? guestStars : cast).push(person.Id);
@@ -1064,7 +1044,7 @@
   }
 
   // client/src/features/media-tags/types/people/peopletags-entry.ts
-  createPeopleTags(mediaTagsContext());
+  createPeopleTags(export2());
 })();
 })();
 //# sourceMappingURL=peopletags.js.map

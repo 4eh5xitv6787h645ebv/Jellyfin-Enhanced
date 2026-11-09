@@ -1,22 +1,24 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
 
   // client/src/features/media-tags/types/ratings/userreviewtags.ts
   function createUserReviewTags(JE) {
@@ -64,14 +66,14 @@
           signal: controller.signal,
           priority: "low"
         });
-        const ratings = record(record(data).ratings);
+        const ratings = export10(export10(data).ratings);
         for (const [cacheKey, entry] of batch) {
-          const hit = record(Object.prototype.hasOwnProperty.call(ratings, cacheKey) ? ratings[cacheKey] : null);
+          const hit = export10(Object.prototype.hasOwnProperty.call(ratings, cacheKey) ? ratings[cacheKey] : null);
           const avg = typeof hit.average === "number" && Number.isFinite(hit.average) ? hit.average : null;
           settle(cacheKey, entry, avg, true);
         }
       } catch (e) {
-        const aborted = isRecord(e) && e.name === "AbortError";
+        const aborted = export42(e) && e.name === "AbortError";
         if (!aborted) {
           console.warn(`${logPrefix} rating batch failed; retrying these ratings after ${FAILURE_BACKOFF_MS / 1e3}s.`, e);
           if (isCurrent()) {
@@ -260,7 +262,7 @@
     }
     function resolveTmdbKey(item, extras) {
       const type = item.Type || "";
-      const providers = record(item.ProviderIds);
+      const providers = export10(item.ProviderIds);
       if (type === "Movie") {
         const id = providers.Tmdb || providers.tmdb;
         return id ? { tmdbKey: String(id), mediaType: "movie" } : null;
@@ -270,8 +272,8 @@
         return id ? { tmdbKey: String(id), mediaType: "tv" } : null;
       }
       if (type === "Season" || type === "Episode") {
-        const series = record(extras?.parentSeries?.ProviderIds);
-        const own = record(item.SeriesProviderIds);
+        const series = export10(extras?.parentSeries?.ProviderIds);
+        const own = export10(item.SeriesProviderIds);
         const seriesTmdbId = series.Tmdb || series.tmdb || own.Tmdb || own.tmdb;
         if (typeof seriesTmdbId !== "string" && typeof seriesTmdbId !== "number") return null;
         if (!seriesTmdbId) return null;
@@ -397,7 +399,7 @@
   }
 
   // client/src/features/media-tags/types/ratings/userreviewtags-entry.ts
-  createUserReviewTags(tagRuntimeHost());
+  createUserReviewTags(export4());
 })();
 })();
 //# sourceMappingURL=userreviewtags.js.map

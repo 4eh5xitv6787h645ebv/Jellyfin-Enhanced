@@ -37,7 +37,9 @@ test('the featureContext implementation ships once among the component scripts, 
 test('every component script that delegates to the shared featureContext loads after core/ui-kit.js', () => {
   const provider = componentScripts.indexOf(PROVIDER);
   assert.ok(provider >= 0, `${PROVIDER} is not in js/component-scripts.json`);
-  const users = componentScripts.filter(path => read(`js/${path}`).includes(DELEGATE));
+  // canopy K1b: a script may instead reach the delegate through a shared feature host (client/shared-modules.json),
+  // published by an earlier script; count those too (an over-approximation: every stub reader).
+  const users = componentScripts.filter(path => { const code = read(`js/${path}`); return code.includes(DELEGATE) || code.includes('\n  // client/generated-shared/stub/'); });
   assert.ok(users.length > 90, `expected the feature scripts to delegate, found ${users.length}`);
   for (const path of users) assert.ok(componentScripts.indexOf(path) > provider, `${path} loads before ${PROVIDER}`);
   for (const path of PRE_LOGIN) assert.equal(read(`js/${path}`).includes(DELEGATE), false, `${path} runs before the bundle`);

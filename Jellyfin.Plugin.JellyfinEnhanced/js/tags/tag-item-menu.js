@@ -2,42 +2,25 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const shared = core.core?.featureContext;
-    if (typeof shared !== "function") {
-      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
-    }
-    return shared(feature, core, slots);
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
-  }
-  function mediaTagsContext(JE = tagRuntimeHost()) {
-    return featureContext("media-tags", JE, {
-      internalSlots: ["peopleTags"],
-      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
-      internalsObject: () => JE.internals = JE.internals || {}
-    });
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export2 = /* @__PURE__ */ sharedExport(shared, "mediaTagsContext");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function text(value) {
-    return typeof value === "string" && value ? value : null;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export13 = /* @__PURE__ */ sharedExport(shared2, "text");
 
   // client/src/features/media-tags/editor/tag-item-menu.ts
   function createItemMenu(JE) {
@@ -61,8 +44,8 @@
           context = null;
           return;
         }
-        const userId = apiClient().getCurrentUserId();
-        context = { itemId: itemId2, type: null, item: apiClient().getItem(userId, itemId2).catch(() => null), opener: more, ts: Date.now() };
+        const userId = export0().getCurrentUserId();
+        context = { itemId: itemId2, type: null, item: export0().getItem(userId, itemId2).catch(() => null), opener: more, ts: Date.now() };
         return;
       }
       const button = e.type === "contextmenu" ? el : el.closest('button[data-action="menu"]');
@@ -84,8 +67,8 @@
       return scrollers[scrollers.length - 1] || null;
     }
     function buildRow(scroller) {
-      const shared = mediaTagsContext(JE).peer("homeRemoval")?.buildNativeActionSheetItem;
-      if (typeof shared === "function") return shared(scroller, { dataId: DATA_ID, icon: "local_offer", text: JE.t("common_media_tags") });
+      const shared3 = export2(JE).peer("homeRemoval")?.buildNativeActionSheetItem;
+      if (typeof shared3 === "function") return shared3(scroller, { dataId: DATA_ID, icon: "local_offer", text: JE.t("common_media_tags") });
       const ref = scroller.querySelector(".actionSheetMenuItem");
       const button = document.createElement("button");
       button.setAttribute("is", "emby-button");
@@ -97,10 +80,10 @@
       icon.setAttribute("aria-hidden", "true");
       const body = document.createElement("div");
       body.className = "listItemBody actionsheetListItemBody";
-      const text2 = document.createElement("div");
-      text2.className = "listItemBodyText actionSheetItemText";
-      text2.textContent = JE.t("common_media_tags");
-      body.appendChild(text2);
+      const text = document.createElement("div");
+      text.className = "listItemBodyText actionSheetItemText";
+      text.textContent = JE.t("common_media_tags");
+      body.appendChild(text);
       button.append(icon, body);
       return button;
     }
@@ -128,8 +111,8 @@
       let item = null;
       if (!type && ctx.item) {
         const read = await ctx.item;
-        item = isRecord(read) ? read : null;
-        type = text(item?.Type);
+        item = export42(read) ? read : null;
+        type = export13(item?.Type);
         if (context !== ctx || !scroller.isConnected) return;
       }
       context = null;
@@ -178,7 +161,7 @@
   }
 
   // client/src/features/media-tags/editor/tag-item-menu-entry.ts
-  createItemMenu(tagRuntimeHost());
+  createItemMenu(export4());
 })();
 })();
 //# sourceMappingURL=tag-item-menu.js.map

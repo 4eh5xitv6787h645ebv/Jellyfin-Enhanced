@@ -146,8 +146,9 @@ export function createPluginHost(t, { JE, client, seedDom = '', globals = {} } =
         /** Load a real emitted production module into this realm. */
         load(path) {
             const source = readFileSync(resolve(pluginRoot, 'js', path), 'utf8');
-            // core/ui-kit.js publishes it in production (canopy K1); these tests load feature modules on their own.
-            provideFeatureContext(window, source);
+            // core/ui-kit.js publishes it in production (canopy K1), and the shared modules' providers publish those
+            // (canopy K1b); these tests load feature modules on their own.
+            provideFeatureContext(window, source, path);
             window.eval(`[function () {\n${source}\n}][0]();`);
         }
     };

@@ -1,6 +1,16 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -61,41 +71,9 @@
     } };
   }
 
-  // client/src/features/hidden-content/model.ts
-  function record(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
-    return value;
-  }
-  function decodeLibraryItem(value) {
-    const r = record(value);
-    const result = {};
-    for (const k of ["Id", "Name", "Type", "SeriesId", "SeriesName"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "string") throw new Error(`Invalid item ${k}`);
-        result[k] = v;
-      }
-    }
-    for (const k of ["ParentIndexNumber", "IndexNumber", "ProductionYear"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "number" || !Number.isFinite(v)) throw new Error(`Invalid item ${k}`);
-        result[k] = v;
-      }
-    }
-    if (r.ProviderIds != null) {
-      const ids = record(r.ProviderIds);
-      result.ProviderIds = {};
-      for (const k of ["Tmdb", "tmdb"]) {
-        const v = ids[k];
-        if (v != null) {
-          if (typeof v !== "string") throw new Error("Invalid provider ID");
-          result.ProviderIds[k] = v;
-        }
-      }
-    }
-    return result;
-  }
+  // client/generated-shared/stub/client/src/features/hidden-content/model.ts
+  var shared = /* @__PURE__ */ sharedModule("features/hidden-content/model");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "decodeLibraryItem");
 
   // client/src/features/hidden-content/hidden-content-buttons.ts
   (function(JE) {
@@ -169,7 +147,7 @@
       const dialogOpts = { surface };
       try {
         const userId = api.getCurrentUserId();
-        const item = decodeLibraryItem(JE.helpers?.getItemCached ? await JE.helpers.getItemCached(itemId, { userId }) : await api.getItem(userId, itemId));
+        const item = export3(JE.helpers?.getItemCached ? await JE.helpers.getItemCached(itemId, { userId }) : await api.getItem(userId, itemId));
         if (!token.current() || !card.isConnected) return;
         const itemType = item?.Type || "";
         const seriesId = item?.SeriesId || "";
@@ -191,7 +169,7 @@
             if (!token.current() || !card.isConnected) return;
             let seriesTmdbId = "";
             try {
-              const series = decodeLibraryItem(JE.helpers?.getItemCached ? await JE.helpers.getItemCached(seriesId, { userId }) : await api.getItem(userId, seriesId));
+              const series = export3(JE.helpers?.getItemCached ? await JE.helpers.getItemCached(seriesId, { userId }) : await api.getItem(userId, seriesId));
               if (!token.current() || !card.isConnected) return;
               seriesTmdbId = series?.ProviderIds?.Tmdb || "";
             } catch (err) {

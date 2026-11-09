@@ -1,6 +1,16 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -65,41 +75,10 @@
     return { current: () => token.current() && state.policy === policy };
   }
 
-  // client/src/features/hidden-content/model.ts
-  function record(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
-    return value;
-  }
-  function decodeLibraryItem(value) {
-    const r = record(value);
-    const result = {};
-    for (const k of ["Id", "Name", "Type", "SeriesId", "SeriesName"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "string") throw new Error(`Invalid item ${k}`);
-        result[k] = v;
-      }
-    }
-    for (const k of ["ParentIndexNumber", "IndexNumber", "ProductionYear"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "number" || !Number.isFinite(v)) throw new Error(`Invalid item ${k}`);
-        result[k] = v;
-      }
-    }
-    if (r.ProviderIds != null) {
-      const ids = record(r.ProviderIds);
-      result.ProviderIds = {};
-      for (const k of ["Tmdb", "tmdb"]) {
-        const v = ids[k];
-        if (v != null) {
-          if (typeof v !== "string") throw new Error("Invalid provider ID");
-          result.ProviderIds[k] = v;
-        }
-      }
-    }
-    return result;
-  }
+  // client/generated-shared/stub/client/src/features/hidden-content/model.ts
+  var shared = /* @__PURE__ */ sharedModule("features/hidden-content/model");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "decodeLibraryItem");
+  var export11 = /* @__PURE__ */ sharedExport(shared, "record");
 
   // client/src/features/hidden-content/hidden-content-filter.ts
   (function(JE) {
@@ -151,7 +130,7 @@
             dataType: "json"
           });
           if (!requestToken.current() || JE.session && !JE.session.isCurrent(requestEpoch)) return null;
-          const seriesId = normalizeId(decodeLibraryItem(item).SeriesId) || null;
+          const seriesId = normalizeId(export3(item).SeriesId) || null;
           parentSeriesCache.set(itemId, seriesId);
           return seriesId;
         } catch (e) {
@@ -275,10 +254,10 @@
           });
           if (!canApply()) return;
           const itemsById = /* @__PURE__ */ new Map();
-          const responseItems = record(result).Items;
+          const responseItems = export11(result).Items;
           if (!Array.isArray(responseItems)) throw new Error("Invalid item list");
           for (let i = 0; i < responseItems.length; i++) {
-            const item = decodeLibraryItem(responseItems[i]);
+            const item = export3(responseItems[i]);
             if (!item.Id) throw new Error("Missing parent lookup item ID");
             const itemId = normalizeId(item.Id);
             const seriesId = normalizeId(item.SeriesId) || null;

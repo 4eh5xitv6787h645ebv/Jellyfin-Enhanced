@@ -1,166 +1,40 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/details-providers/host.ts
-  function hostWindow() {
-    return window;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
-  }
-  function api() {
-    const client = hostWindow().ApiClient;
-    if (!client) throw new Error("Jellyfin ApiClient unavailable");
-    return client;
-  }
-  function hasApi() {
-    return hostWindow().ApiClient !== void 0;
-  }
-  function currentUserId() {
-    const id = hostWindow().ApiClient?.getCurrentUserId();
-    return typeof id === "string" && id ? id : null;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/details-providers/wire.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function field(value, key) {
-    return isRecord(value) ? value[key] : void 0;
-  }
-  function str(value) {
-    return typeof value === "string" ? value : void 0;
-  }
-  function num(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-  }
-  function int(value) {
-    return typeof value === "number" && Number.isInteger(value) ? value : void 0;
-  }
-  function bool(value) {
-    return typeof value === "boolean" ? value : void 0;
-  }
-  function list(value) {
-    return Array.isArray(value) ? value : [];
-  }
-  function stringList(value) {
-    return list(value).filter((entry) => typeof entry === "string");
-  }
-  function providerId(value) {
-    if (typeof value === "string") return value || void 0;
-    if (typeof value === "number" && Number.isFinite(value) && value !== 0) return String(value);
-    return void 0;
-  }
-  function decodeProviderIds(value) {
-    const ids = {};
-    if (!isRecord(value)) return ids;
-    const tmdb = providerId(value.Tmdb), imdb = providerId(value.Imdb), tvdb = providerId(value.Tvdb);
-    const aniList = providerId(value.AniList), anilist = providerId(value.Anilist);
-    if (tmdb !== void 0) ids.Tmdb = tmdb;
-    if (imdb !== void 0) ids.Imdb = imdb;
-    if (tvdb !== void 0) ids.Tvdb = tvdb;
-    if (aniList !== void 0) ids.AniList = aniList;
-    if (anilist !== void 0) ids.Anilist = anilist;
-    return ids;
-  }
-  function decodeStreams(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.filter(isRecord).map((stream) => {
-      const result = {};
-      const type = str(stream.Type), language = str(stream.Language);
-      if (type !== void 0) result.Type = type;
-      if (language !== void 0) result.Language = language;
-      return result;
-    });
-  }
-  function decodeSources(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.map((source) => {
-      const result = {};
-      const id = str(field(source, "Id")), streams = decodeStreams(field(source, "MediaStreams"));
-      if (id !== void 0) result.Id = id;
-      if (streams !== void 0) result.MediaStreams = streams;
-      return result;
-    });
-  }
-  function set(item, key, value) {
-    if (value !== void 0) item[key] = value;
-  }
-  function decodeDetailsItem(value) {
-    if (!isRecord(value)) return null;
-    const item = { ProviderIds: decodeProviderIds(value.ProviderIds), SeriesProviderIds: decodeProviderIds(value.SeriesProviderIds) };
-    set(item, "Id", str(value.Id));
-    set(item, "Type", str(value.Type));
-    set(item, "Name", str(value.Name));
-    set(item, "SeriesId", str(value.SeriesId));
-    set(item, "SeriesName", str(value.SeriesName));
-    set(item, "IndexNumber", num(value.IndexNumber));
-    set(item, "ParentIndexNumber", num(value.ParentIndexNumber));
-    set(item, "PremiereDate", str(value.PremiereDate));
-    set(item, "DisplayOrder", str(value.DisplayOrder));
-    set(item, "MediaSources", decodeSources(value.MediaSources));
-    set(item, "MediaStreams", decodeStreams(value.MediaStreams));
-    set(item, "FirstEpisodeId", str(field(value.FirstEpisode, "Id")));
-    if (Array.isArray(value.Tags)) item.Tags = stringList(value.Tags);
-    const userData = value.UserData;
-    set(item, "Played", bool(field(userData, "Played")));
-    set(item, "UnplayedItemCount", num(field(userData, "UnplayedItemCount")));
-    return item;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/details-providers/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "api");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bridge");
+  var export7 = /* @__PURE__ */ sharedExport(shared, "hasApi");
 
-  // client/src/features/details-providers/page.ts
-  function hashItemId(hash = window.location.hash) {
-    try {
-      return new URLSearchParams(hash.split("?")[1] ?? "").get("id");
-    } catch {
-      return null;
-    }
-  }
-  function visibleDetailPage() {
-    return document.querySelector("#itemDetailPage:not(.hide)");
-  }
-  function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
-    if (helpers?.getItemCached) {
-      return withUser ? helpers.getItemCached(itemId, { userId }) : helpers.getItemCached(itemId);
-    }
-    return api().getItem(userId, itemId);
-  }
-  async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
-    return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/page.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/details-providers/page");
+  var export3 = /* @__PURE__ */ sharedExport(shared2, "hashItemId");
+  var export72 = /* @__PURE__ */ sharedExport(shared2, "lookupDetailsItem");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "visibleDetailPage");
 
-  // client/src/features/shared/url-domain.ts
-  function safeExternalUrl(value, base) {
-    try {
-      const url = new URL(value, base);
-      return ["http:", "https:", "mailto:", "tel:", "ftp:", "blob:"].includes(url.protocol) ? value : "#";
-    } catch {
-      return "#";
-    }
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/links.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/details-providers/links");
+  var export02 = /* @__PURE__ */ sharedExport(shared3, "externalLink");
 
-  // client/src/features/details-providers/links.ts
-  function safeHref(url) {
-    return safeExternalUrl(url, window.location.href);
-  }
-  function externalLink(helpers, url, options = {}) {
-    const shared = helpers?.createExternalLink;
-    if (shared) return shared(url, options);
-    const anchor = document.createElement("a");
-    anchor.setAttribute("is", "emby-linkbutton");
-    anchor.href = safeHref(url);
-    anchor.target = "_blank";
-    anchor.rel = "noopener noreferrer";
-    if (options.title) anchor.title = options.title;
-    if (options.className) anchor.className = options.className;
-    if (options.text) anchor.textContent = options.text;
-    if (options.resetStyle) anchor.style.cssText = "padding:0;background:none;border-radius:0;min-width:0;";
-    if (typeof options.setup === "function") options.setup(anchor);
-    return anchor;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/wire.ts
+  var shared4 = /* @__PURE__ */ sharedModule("features/details-providers/wire");
+  var export5 = /* @__PURE__ */ sharedExport(shared4, "field");
+  var export6 = /* @__PURE__ */ sharedExport(shared4, "int");
+  var export73 = /* @__PURE__ */ sharedExport(shared4, "isRecord");
+  var export8 = /* @__PURE__ */ sharedExport(shared4, "list");
+  var export9 = /* @__PURE__ */ sharedExport(shared4, "num");
+  var export112 = /* @__PURE__ */ sharedExport(shared4, "str");
 
   // client/src/features/details-providers/arr-domain.ts
   function parseUrlMappings(mappingsString) {
@@ -198,28 +72,28 @@
     return "partial";
   }
   function decodeInstanceErrors(value) {
-    const errors = field(value, "errors");
+    const errors = export5(value, "errors");
     if (!Array.isArray(errors)) return void 0;
-    return errors.map((error) => ({ instanceName: str(field(error, "instanceName")), reason: str(field(error, "reason")) }));
+    return errors.map((error) => ({ instanceName: export112(export5(error, "instanceName")), reason: export112(export5(error, "reason")) }));
   }
   function decodeSonarrMatches(value, serverAddress2) {
-    return list(field(value, "matches")).filter(isRecord).map((match) => ({
-      instanceName: str(match.instanceName),
-      instanceUrl: mappedUrl(parseUrlMappings(str(match.urlMappings) || ""), str(match.instanceUrl), serverAddress2),
-      titleSlug: str(match.titleSlug) ?? "",
-      episodeFileCount: int(match.episodeFileCount) || 0,
-      episodeCount: int(match.episodeCount) || 0,
-      sizeOnDisk: num(match.sizeOnDisk) || 0,
-      rootFolderPath: str(match.rootFolderPath) || ""
+    return export8(export5(value, "matches")).filter(export73).map((match) => ({
+      instanceName: export112(match.instanceName),
+      instanceUrl: mappedUrl(parseUrlMappings(export112(match.urlMappings) || ""), export112(match.instanceUrl), serverAddress2),
+      titleSlug: export112(match.titleSlug) ?? "",
+      episodeFileCount: export6(match.episodeFileCount) || 0,
+      episodeCount: export6(match.episodeCount) || 0,
+      sizeOnDisk: export9(match.sizeOnDisk) || 0,
+      rootFolderPath: export112(match.rootFolderPath) || ""
     }));
   }
   function decodeRadarrMatches(value, serverAddress2) {
-    return list(field(value, "matches")).filter(isRecord).map((match) => ({
-      name: str(match.instanceName),
-      url: mappedUrl(parseUrlMappings(str(match.urlMappings) || ""), str(match.instanceUrl), serverAddress2),
+    return export8(export5(value, "matches")).filter(export73).map((match) => ({
+      name: export112(match.instanceName),
+      url: mappedUrl(parseUrlMappings(export112(match.urlMappings) || ""), export112(match.instanceUrl), serverAddress2),
       hasFile: match.hasFile === true,
-      sizeOnDisk: num(match.sizeOnDisk) || 0,
-      rootFolderPath: str(match.rootFolderPath) || ""
+      sizeOnDisk: export9(match.sizeOnDisk) || 0,
+      rootFolderPath: export112(match.rootFolderPath) || ""
     }));
   }
   var trimSlash = (url) => url.replace(/\/$/, "");
@@ -286,9 +160,9 @@
   }
 
   // client/src/features/details-providers/arr-links.ts
-  var JE = bridge("Arr links");
+  var JE = export1("Arr links");
   var logPrefix = "🪼 Jellyfin Enhanced: Arr Links:";
-  var serverAddress = () => hasApi() && typeof api().serverAddress === "function" ? api().serverAddress?.() ?? window.location.origin : window.location.origin;
+  var serverAddress = () => export7() && typeof export0().serverAddress === "function" ? export0().serverAddress?.() ?? window.location.origin : window.location.origin;
   JE.initializeArrLinksScript = async function initializeArrLinksScript() {
     if (!JE.pluginConfig.ArrLinksEnabled) {
       console.log(`${logPrefix} Integration disabled in plugin settings.`);
@@ -353,7 +227,7 @@
         return img;
       }, createLinkButton2 = function(label, url, iconClass, status = null, badge = "", tooltip = "") {
         const statusClass = status ? ` arr-link--${status}` : "";
-        const button = externalLink(JE.helpers, url, { title: tooltip || label, className: `button-link emby-button arr-link${statusClass}` });
+        const button = export02(JE.helpers, url, { title: tooltip || label, className: `button-link emby-button arr-link${statusClass}` });
         if (asText()) {
           button.textContent = label;
           if (badge) {
@@ -402,7 +276,7 @@
         const menu = document.createElement("div");
         menu.className = "arr-dropdown-menu";
         for (const item of items) {
-          const link = externalLink(JE.helpers, item.url, { title: item.tip || item.name, className: "arr-dropdown-item" });
+          const link = export02(JE.helpers, item.url, { title: item.tip || item.name, className: "arr-dropdown-item" });
           const dot = document.createElement("span");
           dot.className = `arr-dropdown-dot arr-dropdown-dot--${item.status || "missing"}`;
           link.appendChild(dot);
@@ -454,8 +328,8 @@
       const toastedGlobalFailure = { sonarr: false, radarr: false };
       const toastedInstanceErrors = /* @__PURE__ */ new Set();
       const esc = (value) => {
-        const shared = JE.helpers.escHtml;
-        if (shared) return shared(value);
+        const shared5 = JE.helpers.escHtml;
+        if (shared5) return shared5(value);
         return String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
       };
       async function getSonarrSlugs(tvdbId) {
@@ -498,7 +372,7 @@
       const asText = () => !!JE.pluginConfig.ShowArrLinksAsText;
       async function addArrLinks() {
         if (isAddingLinks) return;
-        const visiblePage = visibleDetailPage();
+        const visiblePage = export11();
         if (!visiblePage) return;
         const anchorElement = visiblePage.querySelector(".itemExternalLinks");
         document.querySelectorAll("#itemDetailPage.hide .arr-link").forEach((staleLink) => {
@@ -511,9 +385,9 @@
         const separator = () => anchorElement.appendChild(document.createTextNode(asText() ? ", " : " "));
         isAddingLinks = true;
         try {
-          const itemId = hashItemId();
+          const itemId = export3();
           if (!itemId) return;
-          const item = await lookupDetailsItem(JE.helpers, itemId, false);
+          const item = await export72(JE.helpers, itemId, false);
           if (!isStillValidTarget()) return;
           if (item?.Type !== "Movie" && item?.Type !== "Series") return;
           const ids = externalTmdbIds([...visiblePage.querySelectorAll(".itemExternalLinks a, .externalIdLinks a")].map((link) => link.href));

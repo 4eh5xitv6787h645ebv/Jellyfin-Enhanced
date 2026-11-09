@@ -35,35 +35,23 @@
   }
 
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const shared = core.core?.featureContext;
-    if (typeof shared !== "function") {
-      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
-    }
-    return shared(feature, core, slots);
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/calendar/host.ts
-  function calendarHost() {
-    var _a;
-    const host = window;
-    const JE = host.JellyfinEnhanced;
-    if (!JE) throw new Error("Calendar loaded before Jellyfin Enhanced");
-    JE.internals || (JE.internals = {});
-    const partial = (_a = JE.internals).calendarPage || (_a.calendarPage = {});
-    const P = partial;
-    const ctx = featureContext("calendar", JE, {
-      facades: ["initializeCalendarPage"],
-      internalSlots: ["calendarLifetime", "calendarPage"],
-      internalsObject: () => JE.internals || (JE.internals = {})
-    });
-    return { JE, ctx, host, P };
-  }
+  // client/generated-shared/stub/client/src/features/calendar/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/calendar/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "calendarHost");
 
   // client/src/features/calendar/calendar-page-init.ts
   (function() {
     "use strict";
-    const { JE, ctx, P } = calendarHost();
+    const { JE, ctx, P } = export0();
     const state = P.state;
     const injectStyles = P.injectStyles;
     const loadSettings = P.loadSettings;

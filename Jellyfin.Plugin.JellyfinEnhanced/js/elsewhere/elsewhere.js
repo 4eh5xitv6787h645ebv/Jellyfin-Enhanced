@@ -1,204 +1,66 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/details-providers/host.ts
-  function hostWindow() {
-    return window;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
-  }
-  function api() {
-    const client = hostWindow().ApiClient;
-    if (!client) throw new Error("Jellyfin ApiClient unavailable");
-    return client;
-  }
-  function hasApi() {
-    return hostWindow().ApiClient !== void 0;
-  }
-  function currentUserId() {
-    const id = hostWindow().ApiClient?.getCurrentUserId();
-    return typeof id === "string" && id ? id : null;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/details-providers/wire.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function field(value, key) {
-    return isRecord(value) ? value[key] : void 0;
-  }
-  function str(value) {
-    return typeof value === "string" ? value : void 0;
-  }
-  function text(value) {
-    return typeof value === "string" && value !== "" ? value : void 0;
-  }
-  function num(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-  }
-  function int(value) {
-    return typeof value === "number" && Number.isInteger(value) ? value : void 0;
-  }
-  function bool(value) {
-    return typeof value === "boolean" ? value : void 0;
-  }
-  function list(value) {
-    return Array.isArray(value) ? value : [];
-  }
-  function stringList(value) {
-    return list(value).filter((entry) => typeof entry === "string");
-  }
-  function providerId(value) {
-    if (typeof value === "string") return value || void 0;
-    if (typeof value === "number" && Number.isFinite(value) && value !== 0) return String(value);
-    return void 0;
-  }
-  function decodeProviderIds(value) {
-    const ids = {};
-    if (!isRecord(value)) return ids;
-    const tmdb = providerId(value.Tmdb), imdb = providerId(value.Imdb), tvdb = providerId(value.Tvdb);
-    const aniList = providerId(value.AniList), anilist = providerId(value.Anilist);
-    if (tmdb !== void 0) ids.Tmdb = tmdb;
-    if (imdb !== void 0) ids.Imdb = imdb;
-    if (tvdb !== void 0) ids.Tvdb = tvdb;
-    if (aniList !== void 0) ids.AniList = aniList;
-    if (anilist !== void 0) ids.Anilist = anilist;
-    return ids;
-  }
-  function decodeStreams(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.filter(isRecord).map((stream) => {
-      const result = {};
-      const type = str(stream.Type), language = str(stream.Language);
-      if (type !== void 0) result.Type = type;
-      if (language !== void 0) result.Language = language;
-      return result;
-    });
-  }
-  function decodeSources(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.map((source) => {
-      const result = {};
-      const id = str(field(source, "Id")), streams = decodeStreams(field(source, "MediaStreams"));
-      if (id !== void 0) result.Id = id;
-      if (streams !== void 0) result.MediaStreams = streams;
-      return result;
-    });
-  }
-  function set(item, key, value) {
-    if (value !== void 0) item[key] = value;
-  }
-  function decodeDetailsItem(value) {
-    if (!isRecord(value)) return null;
-    const item = { ProviderIds: decodeProviderIds(value.ProviderIds), SeriesProviderIds: decodeProviderIds(value.SeriesProviderIds) };
-    set(item, "Id", str(value.Id));
-    set(item, "Type", str(value.Type));
-    set(item, "Name", str(value.Name));
-    set(item, "SeriesId", str(value.SeriesId));
-    set(item, "SeriesName", str(value.SeriesName));
-    set(item, "IndexNumber", num(value.IndexNumber));
-    set(item, "ParentIndexNumber", num(value.ParentIndexNumber));
-    set(item, "PremiereDate", str(value.PremiereDate));
-    set(item, "DisplayOrder", str(value.DisplayOrder));
-    set(item, "MediaSources", decodeSources(value.MediaSources));
-    set(item, "MediaStreams", decodeStreams(value.MediaStreams));
-    set(item, "FirstEpisodeId", str(field(value.FirstEpisode, "Id")));
-    if (Array.isArray(value.Tags)) item.Tags = stringList(value.Tags);
-    const userData = value.UserData;
-    set(item, "Played", bool(field(userData, "Played")));
-    set(item, "UnplayedItemCount", num(field(userData, "UnplayedItemCount")));
-    return item;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/details-providers/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "api");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bridge");
 
-  // client/src/features/details-providers/page.ts
-  function hashItemId(hash = window.location.hash) {
-    try {
-      return new URLSearchParams(hash.split("?")[1] ?? "").get("id");
-    } catch {
-      return null;
-    }
-  }
-  function visibleDetailPage() {
-    return document.querySelector("#itemDetailPage:not(.hide)");
-  }
-  function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
-    if (helpers?.getItemCached) {
-      return withUser ? helpers.getItemCached(itemId, { userId }) : helpers.getItemCached(itemId);
-    }
-    return api().getItem(userId, itemId);
-  }
-  async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
-    return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
-  }
-  function sessionLease(session) {
-    const epoch = session?.getEpoch();
-    const userId = currentUserId();
-    const client = api();
-    const root = client.getUrl("/");
-    const token = client.accessToken();
-    return () => hasApi() && api() === client && client.getUrl("/") === root && client.accessToken() === token && (!session || epoch === void 0 || session.isCurrent(epoch)) && currentUserId() === userId;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/page.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/details-providers/page");
+  var export3 = /* @__PURE__ */ sharedExport(shared2, "hashItemId");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "lookupDetailsItem");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "sessionLease");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "visibleDetailPage");
 
-  // client/src/features/shared/url-domain.ts
-  function safeExternalUrl(value, base) {
-    try {
-      const url = new URL(value, base);
-      return ["http:", "https:", "mailto:", "tel:", "ftp:", "blob:"].includes(url.protocol) ? value : "#";
-    } catch {
-      return "#";
-    }
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/links.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/details-providers/links");
+  var export02 = /* @__PURE__ */ sharedExport(shared3, "externalLink");
+  var export2 = /* @__PURE__ */ sharedExport(shared3, "pathSegment");
+  var export32 = /* @__PURE__ */ sharedExport(shared3, "safeHref");
 
-  // client/src/features/details-providers/links.ts
-  function safeHref(url) {
-    return safeExternalUrl(url, window.location.href);
-  }
-  function externalLink(helpers, url, options = {}) {
-    const shared = helpers?.createExternalLink;
-    if (shared) return shared(url, options);
-    const anchor = document.createElement("a");
-    anchor.setAttribute("is", "emby-linkbutton");
-    anchor.href = safeHref(url);
-    anchor.target = "_blank";
-    anchor.rel = "noopener noreferrer";
-    if (options.title) anchor.title = options.title;
-    if (options.className) anchor.className = options.className;
-    if (options.text) anchor.textContent = options.text;
-    if (options.resetStyle) anchor.style.cssText = "padding:0;background:none;border-radius:0;min-width:0;";
-    if (typeof options.setup === "function") options.setup(anchor);
-    return anchor;
-  }
-  function pathSegment(id) {
-    return encodeURIComponent(id);
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/wire.ts
+  var shared4 = /* @__PURE__ */ sharedModule("features/details-providers/wire");
+  var export5 = /* @__PURE__ */ sharedExport(shared4, "field");
+  var export6 = /* @__PURE__ */ sharedExport(shared4, "int");
+  var export72 = /* @__PURE__ */ sharedExport(shared4, "isRecord");
+  var export8 = /* @__PURE__ */ sharedExport(shared4, "list");
+  var export112 = /* @__PURE__ */ sharedExport(shared4, "str");
+  var export13 = /* @__PURE__ */ sharedExport(shared4, "text");
 
   // client/src/features/details-providers/elsewhere-domain.ts
   function parseProviderList(raw) {
     return raw ? raw.replace(/'/g, "").replace(/\n/g, ",").split(",").map((s) => s.trim()).filter((s) => s) : [];
   }
   function decodeService(value) {
-    if (!isRecord(value)) return null;
-    const service = { provider_name: str(value.provider_name) ?? "", logo_path: str(value.logo_path) ?? "" };
-    const id = int(value.provider_id);
+    if (!export72(value)) return null;
+    const service = { provider_name: export112(value.provider_name) ?? "", logo_path: export112(value.logo_path) ?? "" };
+    const id = export6(value.provider_id);
     if (id !== void 0) service.provider_id = id;
     return service;
   }
   function decodeRegion(value) {
     const region = {};
-    const link = text(field(value, "link"));
+    const link = export13(export5(value, "link"));
     if (link !== void 0) region.link = link;
-    const flatrate = field(value, "flatrate");
+    const flatrate = export5(value, "flatrate");
     if (Array.isArray(flatrate)) region.flatrate = flatrate.map(decodeService).filter((service) => service !== null);
     return region;
   }
   function decodeWatchProviders(value) {
     const results = {};
-    const raw = field(value, "results");
-    if (isRecord(raw)) for (const [code, region] of Object.entries(raw)) results[code] = decodeRegion(region);
+    const raw = export5(value, "results");
+    if (export72(raw)) for (const [code, region] of Object.entries(raw)) results[code] = decodeRegion(region);
     return { results };
   }
   function regionOf(data, region) {
@@ -315,7 +177,7 @@
     "SonyLIV"
   ];
   function streamingErrorMessage(error) {
-    const message = str(field(error, "message")) || "";
+    const message = export112(export5(error, "message")) || "";
     if (error instanceof TypeError && message === "Failed to fetch") return "TMDB API is unreachable.";
     if (error instanceof SyntaxError) return "Received an unexpected response from the server. Check your reverse proxy or Jellyfin configuration.";
     if (message.includes("401")) return "Invalid TMDB API Key.";
@@ -326,15 +188,15 @@
   }
   function readUserElsewhere(value, defaultRegion) {
     return {
-      region: text(field(value, "Region")) || defaultRegion,
-      regions: Array.isArray(field(value, "Regions")) ? list(field(value, "Regions")).filter((code) => typeof code === "string") : [],
-      services: Array.isArray(field(value, "Services")) ? list(field(value, "Services")).filter((name) => typeof name === "string") : [],
-      seasonProviders: field(value, "SeasonProviders") !== false
+      region: export13(export5(value, "Region")) || defaultRegion,
+      regions: Array.isArray(export5(value, "Regions")) ? export8(export5(value, "Regions")).filter((code) => typeof code === "string") : [],
+      services: Array.isArray(export5(value, "Services")) ? export8(export5(value, "Services")).filter((name) => typeof name === "string") : [],
+      seasonProviders: export5(value, "SeasonProviders") !== false
     };
   }
 
   // client/src/features/details-providers/elsewhere.ts
-  var JE = bridge("Jellyfin Elsewhere");
+  var JE = export1("Jellyfin Elsewhere");
   var LOG = "🪼 Jellyfin Enhanced: 🎬 Jellyfin Elsewhere:";
   JE.initializeElsewhereScript = function initializeElsewhereScript() {
     const config = JE.pluginConfig;
@@ -599,7 +461,7 @@
       return node;
     }
     function renderSettingsContent(modal, source) {
-      const sameSession = sessionLease(JE.session);
+      const sameSession = export10(JE.session);
       const generation = settingsGeneration;
       const current = () => sameSession() && generation === settingsGeneration;
       let saving = false;
@@ -746,24 +608,24 @@
     }
     function validPreferenceDocument(value) {
       if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
-      const region = field(value, "Region");
-      const regions = field(value, "Regions");
-      const services = field(value, "Services");
-      const season = field(value, "SeasonProviders");
+      const region = export5(value, "Region");
+      const regions = export5(value, "Regions");
+      const services = export5(value, "Services");
+      const season = export5(value, "SeasonProviders");
       return (region == null || typeof region === "string") && (regions == null || Array.isArray(regions) && regions.every((x) => typeof x === "string")) && (services == null || Array.isArray(services) && services.every((x) => typeof x === "string")) && (season == null || typeof season === "boolean");
     }
     function settingsText(key, fallback) {
-      const text2 = JE.t(key);
-      return text2 && text2 !== key ? text2 : fallback;
+      const text = JE.t(key);
+      return text && text !== key ? text : fallback;
     }
     function openSettings() {
       const modal = settingsModal();
       const request = ++formRequest;
-      const sameSession = sessionLease(JE.session);
+      const sameSession = export10(JE.session);
       const current = () => request === formRequest && sameSession() && modal.isConnected && modal.style.display !== "none";
       modal.replaceChildren(element("p", "color: #fff;", settingsText("elsewhere_settings_loading", "Loading your settings…")));
       modal.style.display = "flex";
-      const client = api();
+      const client = export0();
       const user = client.getCurrentUserId();
       void Promise.resolve().then(() => {
         if (!current() || !user) throw new Error("Settings opening cancelled");
@@ -870,11 +732,11 @@
       return badge;
     }
     function fetchStreamingData(tmdbId, mediaType, callback) {
-      const sameSession = sessionLease(JE.session);
+      const sameSession = export10(JE.session);
       const generation = settingsGeneration;
       const current = () => sameSession() && generation === settingsGeneration;
-      const path = `/${mediaType}/${pathSegment(tmdbId)}/watch/providers`;
-      const url = api().getUrl(`/JellyfinEnhanced/tmdb${path}`);
+      const path = `/${mediaType}/${export2(tmdbId)}/watch/providers`;
+      const url = export0().getUrl(`/JellyfinEnhanced/tmdb${path}`);
       JE.core.api.fetch(url, { cacheKey: `tmdb:${path}` }).then((data) => {
         if (current()) callback(null, decodeWatchProviders(data));
       }).catch((error) => {
@@ -888,7 +750,7 @@
       const key = `${tmdbId}:${seasonNumber}`;
       let pending = seasonProvidersCache.get(key);
       if (!pending) {
-        const url = api().getUrl(`/JellyfinEnhanced/tmdb/tv/${pathSegment(tmdbId)}/season/${seasonNumber}/watch/providers`);
+        const url = export0().getUrl(`/JellyfinEnhanced/tmdb/tv/${export2(tmdbId)}/season/${seasonNumber}/watch/providers`);
         pending = JE.core.api.fetch(url).then(decodeWatchProviders).catch(() => {
           seasonProvidersCache.delete(key);
           return null;
@@ -900,10 +762,10 @@
     function fetchTmdbSeasonNumbers(tmdbId) {
       let pending = tmdbSeasonNumbersCache.get(tmdbId);
       if (!pending) {
-        const url = api().getUrl(`/JellyfinEnhanced/tmdb/tv/${pathSegment(tmdbId)}`);
+        const url = export0().getUrl(`/JellyfinEnhanced/tmdb/tv/${export2(tmdbId)}`);
         pending = JE.core.api.fetch(url).then((data) => {
-          const seasons = field(data, "seasons");
-          return Array.isArray(seasons) ? new Set(seasons.map((season) => int(field(season, "season_number"))).filter((n) => n !== void 0)) : null;
+          const seasons = export5(data, "seasons");
+          return Array.isArray(seasons) ? new Set(seasons.map((season) => export6(export5(season, "season_number"))).filter((n) => n !== void 0)) : null;
         }).catch(() => {
           tmdbSeasonNumbersCache.delete(tmdbId);
           return null;
@@ -913,23 +775,23 @@
       return pending;
     }
     async function fetchJellyfinSeasonNumbers(seriesId) {
-      const client = api();
+      const client = export0();
       const url = client.getUrl(`Shows/${seriesId}/Seasons`, { userId: client.getCurrentUserId() ?? "" });
       const result = await JE.core.api.fetch(url);
-      return list(field(result, "Items")).map((season) => field(season, "IndexNumber")).filter((number) => Number.isInteger(number)).sort((a, b) => a - b);
+      return export8(export5(result, "Items")).map((season) => export5(season, "IndexNumber")).filter((number) => Number.isInteger(number)).sort((a, b) => a - b);
     }
     async function resolveSeasonContext(expectedTmdbId) {
       if (!SEASON_PROVIDERS_ADMIN || !userSeasonProviders) return null;
-      const itemId = hashItemId();
+      const itemId = export3();
       if (!itemId) return null;
-      const item = await lookupDetailsItem(JE.helpers, itemId, false);
+      const item = await export7(JE.helpers, itemId, false);
       if (!item) return null;
       let series;
       let seasonNumber = null;
       if (item.Type === "Series") {
         series = item;
       } else if (item.Type === "Season" && item.SeriesId && Number.isInteger(item.IndexNumber)) {
-        series = await lookupDetailsItem(JE.helpers, item.SeriesId, false);
+        series = await export7(JE.helpers, item.SeriesId, false);
         seasonNumber = item.IndexNumber ?? null;
       } else {
         return null;
@@ -1032,7 +894,7 @@
       const linkUrl = seasonView.link || regionData?.link || "";
       const hasFilteredServices = !!seasonGroups || filteredServices.length > 0;
       const brandedEmpty = !hasFilteredServices && !!BRANDING_TEXT;
-      const title = externalLink(JE.helpers, hasFilteredServices && linkUrl ? linkUrl : "#", { title: "JustWatch" });
+      const title = export02(JE.helpers, hasFilteredServices && linkUrl ? linkUrl : "#", { title: "JustWatch" });
       if (hasFilteredServices) {
         title.textContent = JE.t("elsewhere_panel_available_in", { region: regionName(userRegion) });
       } else if (BRANDING_TEXT) {
@@ -1074,7 +936,7 @@
             `;
       if (hasFilteredServices && linkUrl) {
         title.classList.add("elsewhere-link-reset");
-        title.href = safeHref(linkUrl);
+        title.href = export32(linkUrl);
         title.style.padding = "0";
         title.style.margin = "0";
       } else if (brandedEmpty) {
@@ -1252,7 +1114,7 @@
                 align-items: center;
                 margin-bottom: 10px;
             `);
-      const title = externalLink(JE.helpers, regionData.link || "#", { title: "JustWatch" });
+      const title = export02(JE.helpers, regionData.link || "#", { title: "JustWatch" });
       title.textContent = JE.t("elsewhere_panel_available_in_region", { region: regionName(region) });
       title.style.cssText = `
                 font-weight: 600;
@@ -1265,7 +1127,7 @@
             `;
       if (regionData.link) {
         title.classList.add("elsewhere-link-reset");
-        title.href = safeHref(regionData.link);
+        title.href = export32(regionData.link);
         title.style.padding = "0";
         title.style.margin = "0";
       }
@@ -1277,7 +1139,7 @@
       return container;
     }
     function autoLoadStreamingData(tmdbId, mediaType, container) {
-      const sameSession = sessionLease(JE.session);
+      const sameSession = export10(JE.session);
       const generation = settingsGeneration;
       const current = () => sameSession() && generation === settingsGeneration && container.isConnected;
       fetchStreamingData(tmdbId, mediaType, async (error, data) => {
@@ -1312,17 +1174,17 @@
     function mountSeasonPageFallback(section) {
       if (!SEASON_PROVIDERS_ADMIN || !userSeasonProviders) return;
       const page = section.closest("#itemDetailPage") ?? document;
-      if (page !== document && page !== visibleDetailPage()) return;
+      if (page !== document && page !== export11()) return;
       if (page.querySelector(".streaming-lookup-container")) return;
       if (section !== page.querySelector(".detailSectionContent")) return;
-      const itemId = hashItemId();
+      const itemId = export3();
       if (!itemId || seasonFallbackInFlight.has(itemId)) return;
       seasonFallbackInFlight.add(itemId);
-      const sameSession = sessionLease(JE.session);
+      const sameSession = export10(JE.session);
       const generation = settingsGeneration;
       resolveSeasonContext().then((ctx) => {
         if (!sameSession() || generation !== settingsGeneration || !ctx || ctx.kind !== "season") return;
-        if (!section.isConnected || hashItemId() !== itemId || page.querySelector(".streaming-lookup-container")) return;
+        if (!section.isConnected || export3() !== itemId || page.querySelector(".streaming-lookup-container")) return;
         mountStreamingLookup(section, ctx.tmdbId, "tv");
       }).catch(() => {
       }).finally(() => seasonFallbackInFlight.delete(itemId));
@@ -1330,7 +1192,7 @@
     function addStreamingLookup() {
       document.querySelectorAll(".detailSectionContent").forEach((section) => {
         const page = section.closest("#itemDetailPage");
-        if (page && page !== visibleDetailPage()) return;
+        if (page && page !== export11()) return;
         if (section.querySelector(".streaming-lookup-container")) return;
         const tmdbLink = section.querySelector('a[href*="themoviedb.org"]');
         if (!tmdbLink) {

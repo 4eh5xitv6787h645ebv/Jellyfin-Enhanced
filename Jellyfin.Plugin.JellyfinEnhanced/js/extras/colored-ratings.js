@@ -1,13 +1,19 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/details-providers/host.ts
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
+  function sharedExport(namespace, name) {
+    return namespace[name];
+  }
+
+  // client/generated-shared/stub/client/src/features/details-providers/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/details-providers/host");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bridge");
 
   // client/src/features/details-providers/rating-domain.ts
   var RATING_MAPPINGS = {
@@ -41,7 +47,7 @@
   }
 
   // client/src/features/details-providers/colored-ratings.ts
-  var JE = bridge("Colored ratings");
+  var JE = export1("Colored ratings");
   var CONFIG = {
     targetSelector: ".mediaInfoOfficialRating",
     attributeName: "rating",

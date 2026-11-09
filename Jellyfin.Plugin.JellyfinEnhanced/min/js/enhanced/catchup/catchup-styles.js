@@ -120,5 +120,5 @@
   .je-catchup { padding:14px 0 28px; }
   .je-catchup-activity .arow { grid-template-columns:56px 1fr; }
   .je-catchup-activity .arow .u { grid-column:2; } .je-catchup-activity .arow .a { grid-column:1; grid-row:2; } .je-catchup-activity .arow .i { grid-column:2; grid-row:2; }
-}`;function l(){let o={};try{o=a?.themer?.getThemeVariables?.()||{}}catch{}let u=document.documentElement.style;if([["accent",o.primaryAccent],["panel",o.panelBg],["secondary",o.secondaryBg]].forEach(([c,n])=>{n&&!/gradient/i.test(n)&&u.setProperty(`--je-catchup-${c}`,n)}),document.getElementById("je-catchup-styles"))return;let i=document.createElement("style");i.id="je-catchup-styles",i.textContent=d,document.head.appendChild(i)}r.injectStyles=l})();})();
+}`;function l(){let o={};try{o=a?.themer?.getThemeVariables?.()||{}}catch{}let u=document.documentElement.style;if([["accent",o.primaryAccent],["panel",o.panelBg],["secondary",o.secondaryBg]].forEach(([c,i])=>{i&&!/gradient/i.test(i)&&u.setProperty(`--je-catchup-${c}`,i)}),document.getElementById("je-catchup-styles"))return;let n=document.createElement("style");n.id="je-catchup-styles",n.textContent=d,document.head.appendChild(n)}r.injectStyles=l})();})();
 })();

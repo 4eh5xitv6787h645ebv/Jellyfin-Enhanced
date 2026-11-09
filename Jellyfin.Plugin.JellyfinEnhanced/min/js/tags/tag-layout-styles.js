@@ -1,5 +1,5 @@
 (() => {
-"use strict";(()=>{function y(){let s=window,i=s.JellyfinEnhanced??(s.JellyfinEnhanced={});return i.core??(i.core={}),i}function $(s){let i=":is(:is(.card, .listItem):is(:hover, :focus-within), .je-tag-reveal)",x="body.je-tags-hide-on-hover .card:hover",f=':is(.je-mtp, .je-tie-side)[data-je-hide-on-hover="true"] .je-tag-reveal',t=".je-tag-host > .je-tag-slot",e=n=>`.je-tag-host[data-je-layout="${n}"] > .je-tag-slot`,g=".cardScalable:has(.countIndicator, .playedIndicator) > .je-tag-host",v="clamp(20px, 3vw, 30px)",j="calc(clamp(20px, 3vw, 30px) * var(--je-tag-scale, 1))",b=`${t}:is([data-je-slot="tl"], [data-je-slot="tr"], [data-je-slot="bl"], [data-je-slot="br"])`,u=':is([data-je-group="rating"], [data-je-group="ageRating"], [data-je-group="status"])',l=n=>`.je-tag-host[data-je-legacy] > .je-tag-slot[data-je-slot="${n}"] > ${u}`,r='.je-tag-host[data-je-layout="corners"][data-je-edge] > .je-tag-slot',h='.je-tag-host[data-je-layout="corners"][data-je-edge="flush"] > .je-tag-slot',d=":is(.quality-overlay-label, .rating-tag, .age-rating-tag, .status-tag, .awards-tag, .je-logo-chip, .custom-tag, .language-chip)",m=`:is(${d}, .genre-tag)`,o=":is(.awards-link, .language-link)",c=`:is(${t}[data-je-slot="poster"], ${t}[data-je-slot="corner"], .je-tag-host[data-je-layout="minimal"] > .je-tag-slot[data-je-slot="top"])`,p=`:is([data-je-group] > ${m}, [data-je-group] > ${o} > ${d}, .je-tag-more)`;function w(n=""){let a=n?`${n} ${h}`:h;return`
+"use strict";(()=>{function y(s){let i=window.JellyfinEnhanced?.core?.sharedModules?.[s];if(!i)throw new Error(`${s} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);return i}function $(s,i){return s[i]}var z=y("features/media-tags/host");var k=$(z,"tagRuntimeHost");function C(s){let i=":is(:is(.card, .listItem):is(:hover, :focus-within), .je-tag-reveal)",u="body.je-tags-hide-on-hover .card:hover",m=':is(.je-mtp, .je-tie-side)[data-je-hide-on-hover="true"] .je-tag-reveal',e=".je-tag-host > .je-tag-slot",t=n=>`.je-tag-host[data-je-layout="${n}"] > .je-tag-slot`,g=".cardScalable:has(.countIndicator, .playedIndicator) > .je-tag-host",b="clamp(20px, 3vw, 30px)",j="calc(clamp(20px, 3vw, 30px) * var(--je-tag-scale, 1))",w=`${e}:is([data-je-slot="tl"], [data-je-slot="tr"], [data-je-slot="bl"], [data-je-slot="br"])`,x=':is([data-je-group="rating"], [data-je-group="ageRating"], [data-je-group="status"])',l=n=>`.je-tag-host[data-je-legacy] > .je-tag-slot[data-je-slot="${n}"] > ${x}`,r='.je-tag-host[data-je-layout="corners"][data-je-edge] > .je-tag-slot',h='.je-tag-host[data-je-layout="corners"][data-je-edge="flush"] > .je-tag-slot',d=":is(.quality-overlay-label, .rating-tag, .age-rating-tag, .status-tag, .awards-tag, .je-logo-chip, .custom-tag, .language-chip)",f=`:is(${d}, .genre-tag)`,o=":is(.awards-link, .language-link)",c=`:is(${e}[data-je-slot="poster"], ${e}[data-je-slot="corner"], .je-tag-host[data-je-layout="minimal"] > .je-tag-slot[data-je-slot="top"])`,p=`:is([data-je-group] > ${f}, [data-je-group] > ${o} > ${d}, .je-tag-more)`;function v(n=""){let a=n?`${n} ${h}`:h;return`
             /* Flush removes the visible edge seam while preserving the chip's
                border-box metrics. Clip only the touching sides of its shadow;
                the inward sides keep the group's original border and shadow. */
@@ -23,7 +23,7 @@
                 --je-flush-ring-right: 0px; --je-flush-ring-content: ''; --je-tag-ring-outline: transparent;
                 border-top-right-radius: 0; border-bottom-right-radius: 0;
             }
-            ${a}:is([data-je-slot="tl"], [data-je-slot="tr"]):not(.cardScalable:has(.countIndicator, .playedIndicator) > .je-tag-host[data-je-indicator-gap] > [data-je-slot="tr"], .cardIndicators ~ .je-tag-host[data-je-indicator-gap] > [data-je-slot="tr"]) > [data-je-group]:first-child > ${m}:first-child,
+            ${a}:is([data-je-slot="tl"], [data-je-slot="tr"]):not(.cardScalable:has(.countIndicator, .playedIndicator) > .je-tag-host[data-je-indicator-gap] > [data-je-slot="tr"], .cardIndicators ~ .je-tag-host[data-je-indicator-gap] > [data-je-slot="tr"]) > [data-je-group]:first-child > ${f}:first-child,
             ${a}:is([data-je-slot="tl"], [data-je-slot="tr"]):not(.cardScalable:has(.countIndicator, .playedIndicator) > .je-tag-host[data-je-indicator-gap] > [data-je-slot="tr"], .cardIndicators ~ .je-tag-host[data-je-indicator-gap] > [data-je-slot="tr"]) > [data-je-group]:first-child > ${o}:first-child > ${d},
             ${a}[data-je-slot="tc"] ${p}[data-je-flush-top],
             ${a}[data-je-slot="tc"] ${o}[data-je-flush-top] > ${d},
@@ -32,7 +32,7 @@
                 --je-flush-ring-top: 0px; --je-flush-ring-content: ''; --je-tag-ring-outline: transparent;
                 border-top-left-radius: 0; border-top-right-radius: 0;
             }
-            ${a}:is([data-je-slot="bl"], [data-je-slot="br"]) > [data-je-group]:first-child > ${m}:last-child,
+            ${a}:is([data-je-slot="bl"], [data-je-slot="br"]) > [data-je-group]:first-child > ${f}:last-child,
             ${a}:is([data-je-slot="bl"], [data-je-slot="br"]) > [data-je-group]:first-child > ${o}:last-child > ${d},
             ${a}[data-je-slot="bc"] ${p}[data-je-flush-bottom],
             ${a}[data-je-slot="bc"] ${o}[data-je-flush-bottom] > ${d},
@@ -52,12 +52,12 @@
                 border: 1px solid var(--je-tag-ring-color, transparent);
                 border-width: var(--je-flush-ring-top, 1px) var(--je-flush-ring-right, 1px) var(--je-flush-ring-bottom, 1px) var(--je-flush-ring-left, 1px);
             }
-        `}function T(){let n=`
+        `}function O(){let n=`
             /* Positions are physical, as on native posters: "Top left" is top left on a right-to-left page too.
                The host lays out left to right; each chip's text keeps its own direction (first strong letter). */
             .je-tag-host { direction: ltr; }
-            ${t} [data-je-group] > * { unicode-bidi: plaintext; }
-            ${t} {
+            ${e} [data-je-group] > * { unicode-bidi: plaintext; }
+            ${e} {
                 position: absolute;
                 display: flex;
                 gap: calc(4px * var(--je-tag-scale, 1) * var(--je-tag-gap, 1));
@@ -65,7 +65,7 @@
                 pointer-events: none;
                 transition: opacity 0.15s ease;
             }
-            ${t} > [data-je-group] {
+            ${e} > [data-je-group] {
                 position: relative;
                 flex-shrink: 0;
                 top: auto; right: auto; bottom: auto; left: auto;
@@ -73,34 +73,34 @@
             }
 
             /* corners: one stack per corner, first priority at the corner edge */
-            ${t}[data-je-slot="tl"], ${t}[data-je-slot="tr"],
-            ${t}[data-je-slot="bl"], ${t}[data-je-slot="br"] {
+            ${e}[data-je-slot="tl"], ${e}[data-je-slot="tr"],
+            ${e}[data-je-slot="bl"], ${e}[data-je-slot="br"] {
                 inset: 6px;
                 flex-direction: column;
             }
-            ${t}[data-je-slot="tl"] { align-items: flex-start; }
-            ${t}[data-je-slot="tr"] { align-items: flex-end; }
-            ${t}[data-je-slot="bl"] { flex-direction: column-reverse; align-items: flex-start; }
-            ${t}[data-je-slot="br"] { flex-direction: column-reverse; align-items: flex-end; }
-            ${t}:is([data-je-slot="tl"], [data-je-slot="bl"]) > [data-je-group] { align-items: flex-start; }
-            ${t}:is([data-je-slot="tr"], [data-je-slot="br"]) > [data-je-group] { align-items: flex-end; }
+            ${e}[data-je-slot="tl"] { align-items: flex-start; }
+            ${e}[data-je-slot="tr"] { align-items: flex-end; }
+            ${e}[data-je-slot="bl"] { flex-direction: column-reverse; align-items: flex-start; }
+            ${e}[data-je-slot="br"] { flex-direction: column-reverse; align-items: flex-end; }
+            ${e}:is([data-je-slot="tl"], [data-je-slot="bl"]) > [data-je-group] { align-items: flex-start; }
+            ${e}:is([data-je-slot="tr"], [data-je-slot="br"]) > [data-je-group] { align-items: flex-end; }
             /* The containers' own width limits were written against the whole card.
                In a slot that 100% is the slot: a corner slot, inset 6px, is the old
                limit (narrow cards clip chips exactly where they always did), and a
                slot sized to its chips must never be 12px narrower than they are. */
-            ${t} > :is(.quality-overlay-container, .rating-overlay-container, .age-rating-overlay-container, .status-overlay-container, .logo-overlay-container) {
+            ${e} > :is(.quality-overlay-container, .rating-overlay-container, .age-rating-overlay-container, .status-overlay-container, .logo-overlay-container) {
                 max-width: 100%;
             }
-            ${b} > :is(.quality-overlay-container, .language-overlay-container, .genre-overlay-container) {
+            ${w} > :is(.quality-overlay-container, .language-overlay-container, .genre-overlay-container) {
                 max-height: calc(90% + 10.8px);
             }
             @media (max-width: 480px) {
-                ${b} > :is(.quality-overlay-container, .genre-overlay-container) { max-height: calc(85% + 10.2px); }
+                ${w} > :is(.quality-overlay-container, .genre-overlay-container) { max-height: calc(85% + 10.2px); }
             }
             /* Centre anchors only: leave the original four corner rules untouched.
                Measured reserves keep rows between corner stacks and columns
                between the top and bottom stacks, even on episode thumbnails. */
-            ${e("corners")}:is([data-je-slot="tc"], [data-je-slot="bc"], [data-je-slot="c"]) {
+            ${t("corners")}:is([data-je-slot="tc"], [data-je-slot="bc"], [data-je-slot="c"]) {
                 left: 50%; transform: translateX(-50%);
                 width: max(0px, calc(100% - 2 * var(--je-anchor-reserve, 6px)));
                 max-height: calc(100% / 3);
@@ -109,11 +109,11 @@
                 justify-content: center; align-items: center; align-content: center;
                 gap: calc(4px * var(--je-tag-scale, 1) * var(--je-tag-gap, 1));
             }
-            ${e("corners")}[data-je-slot="tc"] { top: var(--je-anchor-top, 6px); }
-            ${e("corners")}[data-je-slot="bc"] { bottom: var(--je-anchor-bottom, 6px); }
-            ${e("corners")}[data-je-slot="c"] { top: 50%; transform: translate(-50%, -50%); max-width: calc(100% - 12px); }
-            ${e("corners")}:is([data-je-slot="tc"], [data-je-slot="bc"], [data-je-slot="c"]) > [data-je-group] { display: contents; }
-            ${e("corners")}:is([data-je-slot="ml"], [data-je-slot="mr"]) {
+            ${t("corners")}[data-je-slot="tc"] { top: var(--je-anchor-top, 6px); }
+            ${t("corners")}[data-je-slot="bc"] { bottom: var(--je-anchor-bottom, 6px); }
+            ${t("corners")}[data-je-slot="c"] { top: 50%; transform: translate(-50%, -50%); max-width: calc(100% - 12px); }
+            ${t("corners")}:is([data-je-slot="tc"], [data-je-slot="bc"], [data-je-slot="c"]) > [data-je-group] { display: contents; }
+            ${t("corners")}:is([data-je-slot="ml"], [data-je-slot="mr"]) {
                 top: 50%; transform: translateY(-50%);
                 max-height: max(0px, calc(100% - 2 * var(--je-anchor-reserve, 6px)));
                 max-width: var(--je-anchor-width, calc(100% - 12px));
@@ -121,41 +121,41 @@
                    able to extend from the icon toward the card's centre. */
                 flex-direction: column; overflow: visible;
             }
-            ${e("corners")}[data-je-slot="ml"] { left: 6px; align-items: flex-start; }
-            ${e("corners")}[data-je-slot="mr"] { right: 6px; align-items: flex-end; }
-            ${e("corners")}[data-je-slot="ml"] > [data-je-group] { align-items: flex-start; }
-            ${e("corners")}[data-je-slot="mr"] > [data-je-group] { align-items: flex-end; }
-            ${e("corners")}:is([data-je-slot="ml"], [data-je-slot="mr"]) > [data-je-group] { display: contents; }
+            ${t("corners")}[data-je-slot="ml"] { left: 6px; align-items: flex-start; }
+            ${t("corners")}[data-je-slot="mr"] { right: 6px; align-items: flex-end; }
+            ${t("corners")}[data-je-slot="ml"] > [data-je-group] { align-items: flex-start; }
+            ${t("corners")}[data-je-slot="mr"] > [data-je-group] { align-items: flex-end; }
+            ${t("corners")}:is([data-je-slot="ml"], [data-je-slot="mr"]) > [data-je-group] { display: contents; }
             /* Measure intrinsic chip widths before constraining the first label. */
-            ${e("corners")}:is([data-je-slot="tc"], [data-je-slot="bc"], [data-je-slot="ml"], [data-je-slot="mr"], [data-je-slot="c"]) > [data-je-group] > * { max-width: none; box-sizing: border-box; flex-shrink: 0; }
+            ${t("corners")}:is([data-je-slot="tc"], [data-je-slot="bc"], [data-je-slot="ml"], [data-je-slot="mr"], [data-je-slot="c"]) > [data-je-group] > * { max-width: none; box-sizing: border-box; flex-shrink: 0; }
 
-            ${e("corners")}:is([data-je-slot="ml"], [data-je-slot="mr"]) .genre-text {
+            ${t("corners")}:is([data-je-slot="ml"], [data-je-slot="mr"]) .genre-text {
                 box-sizing: border-box;
                 max-width: max(0px, calc(var(--je-anchor-width, 0px) - 100% - 6px));
                 overflow: hidden; text-overflow: ellipsis;
             }
-            ${e("corners")} > [data-je-group] > [data-je-fit-width] {
+            ${t("corners")} > [data-je-group] > [data-je-fit-width] {
                 max-width: var(--je-chip-fit-width); min-width: 0;
                 overflow: visible;
             }
             /* Truncate only the shrinking label, retaining flex height and
                icon alignment as measured before the constraint was applied. */
-            ${e("corners")} [data-je-fit-width] :is(.je-tag-fit-text, .custom-tag-text, .rating-text),
-            ${e("corners")} [data-je-fit-width].awards-tag > span:last-child {
+            ${t("corners")} [data-je-fit-width] :is(.je-tag-fit-text, .custom-tag-text, .rating-text),
+            ${t("corners")} [data-je-fit-width].awards-tag > span:last-child {
                 display: block; min-width: 0;
                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
             }
 
             /* A link is transparent to chip sizing and paint: clip the label,
                not the rounded chip or its inward border/ring/shadow. */
-            ${e("corners")} > [data-je-group] > ${o}[data-je-fit-width] {
+            ${t("corners")} > [data-je-group] > ${o}[data-je-fit-width] {
                 display: inline-flex; overflow: visible;
             }
-            ${e("corners")} ${o}[data-je-fit-width] > ${d} {
+            ${t("corners")} ${o}[data-je-fit-width] > ${d} {
                 max-width: var(--je-chip-fit-width); min-width: 0; box-sizing: border-box;
             }
-            ${e("corners")} ${o}[data-je-fit-width] > .awards-tag > span:last-child,
-            ${e("corners")} ${o}[data-je-fit-width] > .language-chip > .je-tag-fit-text {
+            ${t("corners")} ${o}[data-je-fit-width] > .awards-tag > span:last-child,
+            ${t("corners")} ${o}[data-je-fit-width] > .language-chip > .je-tag-fit-text {
                 min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
             }
             /* A stack chip wider than the card keeps its whole box at the slot's
@@ -192,7 +192,7 @@
             }
             ${g}[data-je-legacy] > .je-tag-slot[data-je-slot="tr"] > [data-je-indicator-gap],
             .cardIndicators ~ .je-tag-host[data-je-legacy] > .je-tag-slot[data-je-slot="tr"] > [data-je-indicator-gap] {
-                margin-top: max(0px, ${v} - var(--je-indicator-before, 0px));
+                margin-top: max(0px, ${b} - var(--je-indicator-before, 0px));
             }
             /* ... and on phones the rating, age rating and status containers sit
                4px from the card edges instead of 6px. */
@@ -203,9 +203,9 @@
                 ${l("br")} { margin-right: -2px; }
                 ${l("tl")}:first-child, ${l("tr")}:first-child { margin-top: -2px; }
                 ${l("bl")}:first-child, ${l("br")}:first-child { margin-bottom: -2px; }
-                ${g}[data-je-legacy] > .je-tag-slot[data-je-slot="tr"] > ${u}[data-je-indicator-gap],
-                .cardIndicators ~ .je-tag-host[data-je-legacy] > .je-tag-slot[data-je-slot="tr"] > ${u}[data-je-indicator-gap] {
-                    margin-top: max(0px, ${v} - 2px - var(--je-indicator-before, 0px));
+                ${g}[data-je-legacy] > .je-tag-slot[data-je-slot="tr"] > ${x}[data-je-indicator-gap],
+                .cardIndicators ~ .je-tag-host[data-je-legacy] > .je-tag-slot[data-je-slot="tr"] > ${x}[data-je-indicator-gap] {
+                    margin-top: max(0px, ${b} - 2px - var(--je-indicator-before, 0px));
                 }
             }
 
@@ -245,7 +245,7 @@
             .cardIndicators ~ .je-tag-host[data-je-indicator-gap][data-je-edge] > .je-tag-slot[data-je-slot="tr"] {
                 top: calc(var(--je-edge) + ${j});
             }
-            ${w()}
+            ${v()}
             ${h}[data-je-slot="tc"] { top: var(--je-anchor-top, 0px); align-items: flex-start; overflow: visible; }
             ${h}[data-je-slot="bc"] { bottom: var(--je-anchor-bottom, 0px); align-items: flex-end; overflow: visible; }
 
@@ -261,7 +261,7 @@
 
             /* bands: first top group left, the rest right; whole groups wrap
                when long milestone labels and age ratings cannot share a row. */
-            ${e("bands")}[data-je-slot="top"] {
+            ${t("bands")}[data-je-slot="top"] {
                 top: 0; left: 0; right: 0;
                 padding: 6px 6px 16px;
                 flex-direction: row;
@@ -269,7 +269,7 @@
                 align-items: flex-start;
                 background: linear-gradient(to bottom, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
             }
-            ${e("bands")}[data-je-slot="top"] > [data-je-group] {
+            ${t("bands")}[data-je-slot="top"] > [data-je-group] {
                 flex-direction: row;
                 flex-wrap: wrap;
                 justify-content: flex-end;
@@ -279,15 +279,15 @@
                 min-width: 0;
                 max-width: 100%;
             }
-            ${e("bands")}[data-je-slot="top"] > [data-je-group] > * {
+            ${t("bands")}[data-je-slot="top"] > [data-je-group] > * {
                 box-sizing: border-box;
                 min-width: 0;
                 max-width: 100%;
             }
-            ${e("bands")}[data-je-slot="top"] > [data-je-group] + [data-je-group] {
+            ${t("bands")}[data-je-slot="top"] > [data-je-group] + [data-je-group] {
                 margin-left: auto;
             }
-            ${e("bands")}[data-je-slot="top"] > [data-je-group]:first-child {
+            ${t("bands")}[data-je-slot="top"] > [data-je-group]:first-child {
                 justify-content: flex-start;
                 margin-right: auto;
             }
@@ -296,7 +296,7 @@
             }
             /* At most two rows; the fitting pass hides the rest behind "+N", and
                cards under 160px wide get compact labels. */
-            ${e("bands")}[data-je-slot="bottom"] {
+            ${t("bands")}[data-je-slot="bottom"] {
                 bottom: 0; left: 0; right: 0;
                 padding: 16px 6px 6px;
                 flex-direction: row;
@@ -307,8 +307,8 @@
             }
 
             /* Flattened slots: chips of every group flow in one row. */
-            ${e("bands")}[data-je-slot="bottom"] > [data-je-group],
-            ${t}[data-je-slot="hover"] > [data-je-group],
+            ${t("bands")}[data-je-slot="bottom"] > [data-je-group],
+            ${e}[data-je-slot="hover"] > [data-je-group],
             .je-tag-caption > [data-je-group] {
                 display: contents;
             }
@@ -316,8 +316,8 @@
                on Hover is on (it fades the poster slots instead); the caption
                strip, which stays readable, shows them on hover either way; the
                summary / minimal reveal shows them inline (below). */
-            ${e("bands")}[data-je-slot="top"] > [data-je-group]:not(:first-child) .genre-tag .genre-text,
-            ${e("bands")}[data-je-slot="bottom"] .genre-tag .genre-text {
+            ${t("bands")}[data-je-slot="top"] > [data-je-group]:not(:first-child) .genre-tag .genre-text,
+            ${t("bands")}[data-je-slot="bottom"] .genre-tag .genre-text {
                 right: calc(100% + 4px);
                 left: auto;
             }
@@ -333,13 +333,13 @@
             }
 
             /* caption: a small poster stack, and a strip below the image */
-            ${t}[data-je-slot="poster"] {
+            ${e}[data-je-slot="poster"] {
                 top: 6px; left: 6px;
                 max-width: calc(100% - 12px);
                 flex-direction: column;
                 align-items: flex-start;
             }
-            ${t}[data-je-slot="poster"] > [data-je-group] { align-items: flex-start; }
+            ${e}[data-je-slot="poster"] > [data-je-group] { align-items: flex-start; }
             .je-tag-caption {
                 display: flex;
                 flex-wrap: wrap;
@@ -460,7 +460,7 @@
             .je-tag-host > .je-tag-more-tip[data-je-tip-fit="hidden"] { display: none; }
 
             /* summary: one fact pill; full chips on hover / focus */
-            ${t}[data-je-slot="pill"] {
+            ${e}[data-je-slot="pill"] {
                 left: 0; right: 0; bottom: 8px;
                 justify-content: center;
             }
@@ -497,7 +497,7 @@
                chips, then "+N"; the fitting pass keeps fewer whole rows when 40%
                of a short card has room for less), clear of the centre play
                button; Jellyfin's overlay buttons stay above it and clickable. */
-            ${t}[data-je-slot="hover"] {
+            ${e}[data-je-slot="hover"] {
                 left: 0; right: 0; bottom: 0;
                 max-height: 40%;
                 overflow: hidden;
@@ -533,13 +533,13 @@
             }
 
             /* minimal: status top, quality dots, rating corner */
-            ${e("minimal")}[data-je-slot="top"] {
+            ${t("minimal")}[data-je-slot="top"] {
                 top: 6px; left: 6px;
                 max-width: calc(100% - 12px);
                 flex-direction: column;
                 align-items: flex-start;
             }
-            ${t}[data-je-slot="dots"] { left: 7px; bottom: 7px; }
+            ${e}[data-je-slot="dots"] { left: 7px; bottom: 7px; }
             .je-tag-dots {
                 display: flex;
                 align-items: center;
@@ -559,13 +559,13 @@
             .je-tag-dot[data-je-dot="audio"] { background: #2e7d32; }
             .je-tag-dot[data-je-dot="codec"] { background: #546e7a; }
             /* The fitting pass lifts the stack clear of the dots on narrow cards. */
-            ${t}[data-je-slot="corner"] {
+            ${e}[data-je-slot="corner"] {
                 right: 6px; bottom: calc(6px + var(--je-stack-lift, 0px));
                 max-width: calc(100% - 12px);
                 flex-direction: column-reverse;
                 align-items: flex-end;
             }
-            ${t}[data-je-slot="corner"] > [data-je-group] { align-items: flex-end; gap: calc(2px * var(--je-tag-scale, 1) * var(--je-tag-gap, 1)); }
+            ${e}[data-je-slot="corner"] > [data-je-group] { align-items: flex-end; gap: calc(2px * var(--je-tag-scale, 1) * var(--je-tag-gap, 1)); }
             html .je-tag-host > .je-tag-slot[data-je-slot="corner"] :is(.rating-tag, .quality-overlay-label, .age-rating-tag, .status-tag) {
                 font-size: calc(11px * var(--je-tag-scale, 1));
                 padding: calc(2px * var(--je-tag-scale, 1)) calc(5px * var(--je-tag-scale, 1));
@@ -574,15 +574,15 @@
             html .je-tag-host > .je-tag-slot[data-je-slot="corner"] .rating-star-icon { font-size: calc(11px * var(--je-tag-scale, 1)) !important; }
 
             /* Hide Tags on Hover: everything but the summary / minimal reveal. */
-            ${x} .je-tag-host > .je-tag-slot:not([data-je-slot="hover"]),
-            ${x} .je-tag-host:not([data-je-layout="summary"], [data-je-layout="minimal"]) > .je-tag-more-tip,
-            ${f} .je-tag-host > .je-tag-slot:not([data-je-slot="hover"]),
-            ${f} .je-tag-host:not([data-je-layout="summary"], [data-je-layout="minimal"]) > .je-tag-more-tip {
+            ${u} .je-tag-host > .je-tag-slot:not([data-je-slot="hover"]),
+            ${u} .je-tag-host:not([data-je-layout="summary"], [data-je-layout="minimal"]) > .je-tag-more-tip,
+            ${m} .je-tag-host > .je-tag-slot:not([data-je-slot="hover"]),
+            ${m} .je-tag-host:not([data-je-layout="summary"], [data-je-layout="minimal"]) > .je-tag-more-tip {
                 opacity: 0 !important;
             }
 
             @media (prefers-reduced-motion: reduce) {
-                ${t}, .je-tag-host > .je-tag-more-tip { transition: none; }
+                ${e}, .je-tag-host > .je-tag-more-tip { transition: none; }
             }
-        `;return s.core.tagLayout?.preserveLegacySizing?.(n)||n}s.core?.tagLayout&&(s.core.tagLayout.buildStyles=T,s.core.tagLayout.buildFlushStyles=w)}$(y());})();
+        `;return s.core.tagLayout?.preserveLegacySizing?.(n)||n}s.core?.tagLayout&&(s.core.tagLayout.buildStyles=O,s.core.tagLayout.buildFlushStyles=v)}C(k());})();
 })();

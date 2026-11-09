@@ -117,3 +117,45 @@ export function featureContext<Own extends object, Peers extends object = Record
     }
     return shared<Own, Peers, Core>(feature, core, slots);
 }
+
+/**
+ * Shared modules (canopy K1b). client/shared-modules.json names stateless modules that many component scripts used to
+ * inline, each with the one component script that ships it: its *provider*, the first script in
+ * js/component-scripts.json that uses it. The build (scripts/client/shared-modules.mjs) injects
+ * `publishSharedModules({ id: namespace })` into the provider, ahead of its own code, and replaces the module in every
+ * later script with a stub that reads the published namespace through {@link sharedModule} at load time. Source files
+ * are unchanged; the module must hold no state (the build checks its whole runtime import closure), so one copy behaves
+ * exactly like the inlined ones did.
+ */
+export interface SharedModulesCore {
+    sharedModules?: Record<string, object | undefined>;
+}
+
+/**
+ * Publish module namespaces on `JE.core.sharedModules` (non-enumerable, like featureContext; a null-prototype object
+ * keyed by module id). An id that is already there keeps its existing copy. Without `window.JellyfinEnhanced` nothing is
+ * published: the provider's own code reports that, and the consumers' stubs fail with sharedModule's error.
+ */
+export function publishSharedModules(modules: Record<string, object>): void {
+    const JE = (window as { JellyfinEnhanced?: { core?: SharedModulesCore } }).JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ??= {};
+    let registry = core.sharedModules;
+    if (!registry) {
+        registry = Object.create(null) as Record<string, object | undefined>;
+        Object.defineProperty(core, 'sharedModules', { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ??= namespace;
+}
+
+/** A consumer stub's lookup of the namespace published for module `id` (its path under client/src, without .ts). */
+export function sharedModule(id: string): Record<string, unknown> {
+    const namespace = (window as { JellyfinEnhanced?: { core?: SharedModulesCore } }).JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace as Record<string, unknown>;
+}
+
+/** One export of a shared namespace; the stubs mark each call pure, so an export nobody imports costs nothing. */
+export function sharedExport(namespace: Record<string, unknown>, name: string): unknown {
+    return namespace[name];
+}

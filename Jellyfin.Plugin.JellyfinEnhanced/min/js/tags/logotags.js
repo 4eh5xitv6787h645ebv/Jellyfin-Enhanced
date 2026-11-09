@@ -1,6 +1,6 @@
 (() => {
-"use strict";(()=>{function k(){let o=window,a=o.JellyfinEnhanced??(o.JellyfinEnhanced={});return a.core??(a.core={}),a}function R(){let o=window;return o.ApiClient!==void 0&&o.ApiClient!==null}function m(){let o=window;if(!o.ApiClient)throw new Error("Jellyfin ApiClient unavailable");return o.ApiClient}var A=Object.freeze({});function f(o){return typeof o=="object"&&o!==null&&!Array.isArray(o)}function S(o){return f(o)?o:A}function j(o){let a="🪼 Jellyfin Enhanced: Logos Tags:",l="logo-overlay-container",s="je-logo-chip",c="je-logo-img",L=new Set(["provider","network","studio"]),y=/^\/[A-Za-z0-9_-]{1,80}\.(?:png|jpe?g|webp)$/,T=new Set,x=!1;function w(e){let t=String(e||"").trim();if(t.length<=12)return t;let n=t.split(/[\s\-–—/&+]+/).filter(r=>/[\p{L}\p{N}]/u.test(r));return n.length>=2?n.slice(0,4).map(r=>(r.match(/[\p{L}\p{N}]/u)||[""])[0].toUpperCase()).join(""):`${t.slice(0,11)}…`}function b(e){if(typeof e!="string"||!y.test(e))return null;let t=`JellyfinEnhanced/logo/w92${e}`;return R()&&typeof m().getUrl=="function"?m().getUrl(t):`/${t}`}function g(e){if(!Array.isArray(e))return[];let t=[];for(let n of e){let r=S(n),i=String(r.kind??r.Kind??""),v=String(r.name??r.Name??"").trim();if(!L.has(i)||!v)continue;let p=r.logo??r.Logo;if(t.push({kind:i,name:v,logo:typeof p=="string"&&y.test(p)?p:null}),t.length===2)break}return t}function h(e,t){e.textContent=w(t),e.dataset.jeLogoStyle="text",e.classList.add("je-logo-text"),e.removeAttribute("role"),e.removeAttribute("aria-label")}function C(e,t){let n=document.createElement("span");n.className=s,n.dataset.jeLogoKind=e.kind,n.title=e.name;let r=t||b(e.logo);if(!r||T.has(r))return h(n,e.name),n;n.dataset.jeLogoStyle=e.kind==="provider"?"provider":"company";let i=document.createElement("img");return i.className=c,i.alt=e.name,i.decoding="async",i.draggable=!1,i.src=r,n.appendChild(i),n}function P(){x||typeof document.addEventListener!="function"||(x=!0,document.addEventListener("error",e=>{let t=e.target;if(!(t instanceof HTMLImageElement)||!t.classList.contains(c))return;T.add(t.getAttribute("src")||"");let n=t.closest(`.${s}`);n&&h(n,t.alt)},!0))}function d(e,t,n){if(!n.length)return;e.removeExistingOverlay(t);let r=document.createElement("div");r.className=l;for(let i of n)r.appendChild(C(i));e.commitOverlay(t,r)}let u={logPrefix:a,settingKey:"logoTagsEnabled",containerClass:l,taggedAttr:"jeLogoTagged",styleId:"jellyfin-enhanced-logo-tags-css",position:{userKey:"logoTagsPosition",pluginKey:"LogoTagsPosition",fallback:"bottom-left"},cache:{key:"JellyfinEnhanced-logoTagsCache",legacyPrefix:"logoTagsCache",hotBucket:"logos",saveOnUnload:!1},buildCss(){return`
-                .${l} {
+"use strict";(()=>{function d(s){let a=window.JellyfinEnhanced?.core?.sharedModules?.[s];if(!a)throw new Error(`${s} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);return a}function c(s,a){return s[a]}var x=d("features/media-tags/host"),h=c(x,"apiClient"),k=c(x,"hasApiClient");var E=c(x,"tagRuntimeHost");var O=d("features/media-tags/pipeline/dto");var S=c(O,"isRecord");var R=c(O,"record");function F(s){let a="🪼 Jellyfin Enhanced: Logos Tags:",g="logo-overlay-container",i="je-logo-chip",u="je-logo-img",M=new Set(["provider","network","studio"]),b=/^\/[A-Za-z0-9_-]{1,80}\.(?:png|jpe?g|webp)$/,y=new Set,w=!1;function j(e){let t=String(e||"").trim();if(t.length<=12)return t;let o=t.split(/[\s\-–—/&+]+/).filter(n=>/[\p{L}\p{N}]/u.test(n));return o.length>=2?o.slice(0,4).map(n=>(n.match(/[\p{L}\p{N}]/u)||[""])[0].toUpperCase()).join(""):`${t.slice(0,11)}…`}function C(e){if(typeof e!="string"||!b.test(e))return null;let t=`JellyfinEnhanced/logo/w92${e}`;return k()&&typeof h().getUrl=="function"?h().getUrl(t):`/${t}`}function l(e){if(!Array.isArray(e))return[];let t=[];for(let o of e){let n=R(o),r=String(n.kind??n.Kind??""),L=String(n.name??n.Name??"").trim();if(!M.has(r)||!L)continue;let m=n.logo??n.Logo;if(t.push({kind:r,name:L,logo:typeof m=="string"&&b.test(m)?m:null}),t.length===2)break}return t}function T(e,t){e.textContent=j(t),e.dataset.jeLogoStyle="text",e.classList.add("je-logo-text"),e.removeAttribute("role"),e.removeAttribute("aria-label")}function v(e,t){let o=document.createElement("span");o.className=i,o.dataset.jeLogoKind=e.kind,o.title=e.name;let n=t||C(e.logo);if(!n||y.has(n))return T(o,e.name),o;o.dataset.jeLogoStyle=e.kind==="provider"?"provider":"company";let r=document.createElement("img");return r.className=u,r.alt=e.name,r.decoding="async",r.draggable=!1,r.src=n,o.appendChild(r),o}function P(){w||typeof document.addEventListener!="function"||(w=!0,document.addEventListener("error",e=>{let t=e.target;if(!(t instanceof HTMLImageElement)||!t.classList.contains(u))return;y.add(t.getAttribute("src")||"");let o=t.closest(`.${i}`);o&&T(o,t.alt)},!0))}function p(e,t,o){if(!o.length)return;e.removeExistingOverlay(t);let n=document.createElement("div");n.className=g;for(let r of o)n.appendChild(v(r));e.commitOverlay(t,n)}let f={logPrefix:a,settingKey:"logoTagsEnabled",containerClass:g,taggedAttr:"jeLogoTagged",styleId:"jellyfin-enhanced-logo-tags-css",position:{userKey:"logoTagsPosition",pluginKey:"LogoTagsPosition",fallback:"bottom-left"},cache:{key:"JellyfinEnhanced-logoTagsCache",legacyPrefix:"logoTagsCache",hotBucket:"logos",saveOnUnload:!1},buildCss(){return`
+                .${g} {
                     display: flex;
                     flex-direction: column;
                     align-items: flex-start;
@@ -10,7 +10,7 @@
                     max-width: calc(100% - 12px);
                 }
 
-                .${s} {
+                .${i} {
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
@@ -32,21 +32,21 @@
                     pointer-events: none;
                 }
 
-                .${s}[data-je-logo-style="provider"] { padding: calc(2px * var(--je-tag-scale, 1)); }
+                .${i}[data-je-logo-style="provider"] { padding: calc(2px * var(--je-tag-scale, 1)); }
 
-                .${s}[data-je-logo-style="company"] {
+                .${i}[data-je-logo-style="company"] {
                     background-color: rgba(255, 255, 255, 0.9);
                     color: #111111;
                     border-color: rgba(0, 0, 0, 0.12);
                 }
 
-                .${s}[data-je-logo-style="text"] {
+                .${i}[data-je-logo-style="text"] {
                     background-color: rgba(0, 0, 0, 0.75);
                     border-color: rgba(255, 255, 255, 0.25);
                     text-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
                 }
 
-                .${c} {
+                .${u} {
                     display: block;
                     height: 100%;
                     width: auto;
@@ -57,12 +57,12 @@
 
                 /* Card-width sizing, like the age rating chip */
                 @supports (container-type: inline-size) {
-                    html:not(.layout-mobile) .je-tag-host .${s} {
+                    html:not(.layout-mobile) .je-tag-host .${i} {
                         height: calc(clamp(18px, 13cqw, 28px) * var(--je-tag-scale, 1));
                         font-size: calc(clamp(9px, 6.4cqw, 12px) * var(--je-tag-scale, 1));
                     }
                 }
 
-                .layout-mobile .${s} { height: calc(22px * var(--je-tag-scale, 1)); font-size: calc(10px * var(--je-tag-scale, 1)); }
-            `},pipeline:{needsFirstEpisode:!1,needsParentSeries:!1,render(e,t,n){if(e.shouldIgnore(t)||e.isTagged(t)||t.closest(".je-hidden"))return;let r=g(n.Logos),i={l:r};e.setPersistent(String(n.Id),i),e.hot?.set(String(n.Id),i),d(e,t,r)},renderFromCache(e,t,n){if(e.isTagged(t)||e.shouldIgnore(t)||t.closest(".je-hidden"))return!0;let r=e.getPersistent(n)??e.hot?.get(n);return!f(r)||!Array.isArray(r.l)?!1:(d(e,t,g(r.l)),!0)},renderFromServerCache(e,t,n){e.isTagged(t)||e.shouldIgnore(t)||d(e,t,g(n?.Logos))}}};o.initializeLogoTags=function(){console.log(`${a} Starting...`),P(),o.core.tagRenderer.register("logos",u).injectCss(),console.log(`${a} Initialized successfully.`)},o.reinitializeLogoTags=function(){o.core.tagRenderer.reinitialize("logos",u)},o.logoTags={buildChip:C,readLogos:g,shortName:w,logoUrl:b},o.core.tagRenderer.registerStyles(u)}j(k());})();
+                .layout-mobile .${i} { height: calc(22px * var(--je-tag-scale, 1)); font-size: calc(10px * var(--je-tag-scale, 1)); }
+            `},pipeline:{needsFirstEpisode:!1,needsParentSeries:!1,render(e,t,o){if(e.shouldIgnore(t)||e.isTagged(t)||t.closest(".je-hidden"))return;let n=l(o.Logos),r={l:n};e.setPersistent(String(o.Id),r),e.hot?.set(String(o.Id),r),p(e,t,n)},renderFromCache(e,t,o){if(e.isTagged(t)||e.shouldIgnore(t)||t.closest(".je-hidden"))return!0;let n=e.getPersistent(o)??e.hot?.get(o);return!S(n)||!Array.isArray(n.l)?!1:(p(e,t,l(n.l)),!0)},renderFromServerCache(e,t,o){e.isTagged(t)||e.shouldIgnore(t)||p(e,t,l(o?.Logos))}}};s.initializeLogoTags=function(){console.log(`${a} Starting...`),P(),s.core.tagRenderer.register("logos",f).injectCss(),console.log(`${a} Initialized successfully.`)},s.reinitializeLogoTags=function(){s.core.tagRenderer.reinitialize("logos",f)},s.logoTags={buildChip:v,readLogos:l,shortName:j,logoUrl:C},s.core.tagRenderer.registerStyles(f)}F(E());})();
 })();

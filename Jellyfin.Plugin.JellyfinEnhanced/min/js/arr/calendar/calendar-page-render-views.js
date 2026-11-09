@@ -1,61 +1,61 @@
 (() => {
-"use strict";(()=>{function F(t){if(/^\d{4}-\d{2}-\d{2}$/.test(t)){let[o=0,i=0,e=0]=t.split("-").map(Number),y=new Date(o,i-1,e);return y.getFullYear()!==o||y.getMonth()!==i-1||y.getDate()!==e?new Date(NaN):y}return new Date(t)}function A(t,o,i){let e=o.core?.featureContext;if(typeof e!="function")throw new Error(`${t}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);return e(t,o,i)}function O(){var b;let t=window,o=t.JellyfinEnhanced;if(!o)throw new Error("Calendar loaded before Jellyfin Enhanced");o.internals||(o.internals={});let e=(b=o.internals).calendarPage||(b.calendarPage={}),y=A("calendar",o,{facades:["initializeCalendarPage"],internalSlots:["calendarLifetime","calendarPage"],internalsObject:()=>o.internals||(o.internals={})});return{JE:o,ctx:y,host:t,P:e}}(function(){"use strict";let{JE:t,ctx:o,P:i}=O(),e=i.state,y=i.STATUS_COLORS,b=i.filterEvents,C=i.groupEventsByDate,_=i.getRangeForView,L=i.getDaysInMonth,R=i.getFirstDayOfMonth,x=i.isTodayDate,H=i.formatRangeLabel,q=i.formatHourLabel,E=i.renderEvent,N=i.renderAgendaEvent,h=i.renderCardItems,$=i.compareEventsWithinDay,k=i.collapseEpisodes;function S(){return window.matchMedia?window.matchMedia("(max-width: 768px)").matches:!1}function M(){let n=document.querySelector(".je-calendar-sidebar"),a=document.querySelector(".je-calendar-sidebar-toggle");!n||!a||(n.classList.toggle("is-collapsed",!!e.sidebarCollapsed),a.setAttribute("aria-expanded",e.sidebarCollapsed?"false":"true"))}function J(n){e.sidebarCollapsed=!!n,M()}function W(){typeof e.sidebarCollapsed!="boolean"&&(e.sidebarCollapsed=S()),J(!e.sidebarCollapsed)}function U(){document.querySelectorAll(".je-calendar-mode-btn").forEach(a=>{let u=a.dataset.mode;a.classList.toggle("active",u===e.settings.displayMode)})}function z(){let n=new Date(e.currentDate);n.setHours(0,0,0,0),n.setDate(1);let a=L(n),u=R(n),g=b(e.events),f=o.peer("hiddenContent");f&&(g=f.filterCalendarEvents(g));let p=C(g);if(g.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;let d=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],l=d.indexOf(e.settings.firstDayOfWeek),m=[...d.slice(l),...d.slice(0,l)],r='<div class="je-calendar-month">';r+='<div class="je-calendar-weekdays">',m.forEach(s=>{r+=`<div class="je-calendar-weekday">${s.substring(0,3)}</div>`}),r+="</div>",r+='<div class="je-calendar-month-grid">';for(let s=0;s<u;s++)r+='<div class="je-calendar-day je-calendar-day-placeholder" style="opacity: 0.3;"></div>';for(let s=1;s<=a;s++){let v=n.getFullYear(),c=String(n.getMonth()+1).padStart(2,"0"),w=String(s).padStart(2,"0"),P=`${v}-${c}-${w}`,j=p[P]||[];j.sort($),j=k(j);let T=new Date(v,n.getMonth(),s),X=x(T)?" je-calendar-today":"",Z=(d[T.getDay()]||"").substring(0,3);r+=`
-        <div class="je-calendar-day${X}">
+"use strict";(()=>{function _(t){if(/^\d{4}-\d{2}-\d{2}$/.test(t)){let[y=0,o=0,e=0]=t.split("-").map(Number),f=new Date(y,o-1,e);return f.getFullYear()!==y||f.getMonth()!==o-1||f.getDate()!==e?new Date(NaN):f}return new Date(t)}function F(t){let y=window.JellyfinEnhanced?.core?.sharedModules?.[t];if(!y)throw new Error(`${t} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);return y}function A(t,y){return t[y]}var ae=F("features/calendar/host"),O=A(ae,"calendarHost");(function(){"use strict";let{JE:t,ctx:y,P:o}=O(),e=o.state,f=o.STATUS_COLORS,j=o.filterEvents,$=o.groupEventsByDate,R=o.getRangeForView,L=o.getDaysInMonth,J=o.getFirstDayOfMonth,x=o.isTodayDate,q=o.formatRangeLabel,N=o.formatHourLabel,E=o.renderEvent,H=o.renderAgendaEvent,b=o.renderCardItems,C=o.compareEventsWithinDay,k=o.collapseEpisodes;function P(){return window.matchMedia?window.matchMedia("(max-width: 768px)").matches:!1}function D(){let n=document.querySelector(".je-calendar-sidebar"),a=document.querySelector(".je-calendar-sidebar-toggle");!n||!a||(n.classList.toggle("is-collapsed",!!e.sidebarCollapsed),a.setAttribute("aria-expanded",e.sidebarCollapsed?"false":"true"))}function W(n){e.sidebarCollapsed=!!n,D()}function z(){typeof e.sidebarCollapsed!="boolean"&&(e.sidebarCollapsed=P()),W(!e.sidebarCollapsed)}function V(){document.querySelectorAll(".je-calendar-mode-btn").forEach(a=>{let c=a.dataset.mode;a.classList.toggle("active",c===e.settings.displayMode)})}function U(){let n=new Date(e.currentDate);n.setHours(0,0,0,0),n.setDate(1);let a=L(n),c=J(n),p=j(e.events),v=y.peer("hiddenContent");v&&(p=v.filterCalendarEvents(p));let u=$(p);if(p.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;let d=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],i=d.indexOf(e.settings.firstDayOfWeek),m=[...d.slice(i),...d.slice(0,i)],r='<div class="je-calendar-month">';r+='<div class="je-calendar-weekdays">',m.forEach(s=>{r+=`<div class="je-calendar-weekday">${s.substring(0,3)}</div>`}),r+="</div>",r+='<div class="je-calendar-month-grid">';for(let s=0;s<c;s++)r+='<div class="je-calendar-day je-calendar-day-placeholder" style="opacity: 0.3;"></div>';for(let s=1;s<=a;s++){let g=n.getFullYear(),l=String(n.getMonth()+1).padStart(2,"0"),h=String(s).padStart(2,"0"),M=`${g}-${l}-${h}`,w=u[M]||[];w.sort(C),w=k(w);let T=new Date(g,n.getMonth(),s),Z=x(T)?" je-calendar-today":"",ee=(d[T.getDay()]||"").substring(0,3);r+=`
+        <div class="je-calendar-day${Z}">
           <div class="je-calendar-day-header">
             <span class="je-calendar-day-number">${s}</span>
-            <span class="je-calendar-month-day-name">${Z}</span>
+            <span class="je-calendar-month-day-name">${ee}</span>
           </div>
           <div class="${e.settings.displayMode==="cards"?"je-calendar-day-cards":"je-calendar-events-list"}">
-            ${e.settings.displayMode==="cards"?h(j):j.map(ee=>E(ee)).join("")}
+            ${e.settings.displayMode==="cards"?b(w):w.map(ne=>E(ne)).join("")}
           </div>
         </div>
-      `}return r+="</div></div>",r}function V(){let{start:n}=_(e.currentDate,"week"),a=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],u=b(e.events),g=o.peer("hiddenContent");g&&(u=g.filterCalendarEvents(u));let f=C(u);if(u.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;let p='<div class="je-calendar-grid">';for(let d=0;d<7;d++){let l=new Date(n);l.setDate(n.getDate()+d);let m=l.getFullYear(),r=String(l.getMonth()+1).padStart(2,"0"),s=String(l.getDate()).padStart(2,"0"),v=`${m}-${r}-${s}`,c=f[v]||[];c.sort($),c=k(c);let w=x(l)?" je-calendar-today":"";p+=`
-        <div class="je-calendar-day${w}">
+      `}return r+="</div></div>",r}function B(){let{start:n}=R(e.currentDate,"week"),a=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],c=j(e.events),p=y.peer("hiddenContent");p&&(c=p.filterCalendarEvents(c));let v=$(c);if(c.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;let u='<div class="je-calendar-grid">';for(let d=0;d<7;d++){let i=new Date(n);i.setDate(n.getDate()+d);let m=i.getFullYear(),r=String(i.getMonth()+1).padStart(2,"0"),s=String(i.getDate()).padStart(2,"0"),g=`${m}-${r}-${s}`,l=v[g]||[];l.sort(C),l=k(l);let h=x(i)?" je-calendar-today":"";u+=`
+        <div class="je-calendar-day${h}">
           <div class="je-calendar-day-header">
-            <span class="je-calendar-day-number">${l.getDate()}</span>
-            <span class="je-calendar-day-name">${(a[l.getDay()]||"").substring(0,3)}</span>
+            <span class="je-calendar-day-number">${i.getDate()}</span>
+            <span class="je-calendar-day-name">${(a[i.getDay()]||"").substring(0,3)}</span>
           </div>
           <div class="${e.settings.displayMode==="cards"?"je-calendar-day-cards":"je-calendar-events-list"}">
-            ${e.settings.displayMode==="cards"?h(c):c.map(P=>E(P)).join("")}
+            ${e.settings.displayMode==="cards"?b(l):l.map(M=>E(M)).join("")}
           </div>
         </div>
-      `}return p+="</div>",p}function B(){let n=b(e.events),a=o.peer("hiddenContent");a&&(n=a.filterCalendarEvents(n));let u=C(n),g=Object.keys(u).sort();if(g.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;let f='<div class="je-calendar-agenda">';return g.forEach(p=>{let[d="0",l="1",m="1"]=p.split("-"),r=new Date(parseInt(d),parseInt(l)-1,parseInt(m)),s=r.toLocaleDateString(void 0,{weekday:"short"}),v=r.toLocaleDateString(void 0,{month:"short",day:"numeric"}),c=u[p]||[];c.sort($),c=k(c),f+=`
+      `}return u+="</div>",u}function K(){let n=j(e.events),a=y.peer("hiddenContent");a&&(n=a.filterCalendarEvents(n));let c=$(n),p=Object.keys(c).sort();if(p.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;let v='<div class="je-calendar-agenda">';return p.forEach(u=>{let[d="0",i="1",m="1"]=u.split("-"),r=new Date(parseInt(d),parseInt(i)-1,parseInt(m)),s=r.toLocaleDateString(void 0,{weekday:"short"}),g=r.toLocaleDateString(void 0,{month:"short",day:"numeric"}),l=c[u]||[];l.sort(C),l=k(l),v+=`
         <div class="je-calendar-agenda-row">
           <div class="je-calendar-agenda-date">
-            <div>${s}, ${v}</div>
+            <div>${s}, ${g}</div>
           </div>
           <div class="je-calendar-agenda-events">
-            ${c.map(w=>N(w)).join("")}
+            ${l.map(h=>H(h)).join("")}
           </div>
         </div>
-      `}),f+="</div>",f}function K(){let n=b(e.events),a=o.peer("hiddenContent");a&&(n=a.filterCalendarEvents(n));let u=C(n),g=new Date(e.currentDate),f=`${g.getFullYear()}-${String(g.getMonth()+1).padStart(2,"0")}-${String(g.getDate()).padStart(2,"0")}`,p=u[f]||[];if(p.sort($),p=k(p),p.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;if(e.settings.displayMode==="cards")return`
+      `}),v+="</div>",v}function Y(){let n=j(e.events),a=y.peer("hiddenContent");a&&(n=a.filterCalendarEvents(n));let c=$(n),p=new Date(e.currentDate),v=`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,"0")}-${String(p.getDate()).padStart(2,"0")}`,u=c[v]||[];if(u.sort(C),u=k(u),u.length===0)return`<div class="je-calendar-empty">${t.t("calendar_no_releases")}</div>`;if(e.settings.displayMode==="cards")return`
         <div class="je-calendar-dayline je-calendar-day-cards">
-          ${h(p)}
+          ${b(u)}
         </div>
-      `;let d={allDay:[],hours:new Map};p.forEach(r=>{let s=F(r.releaseDate);if(Number.isNaN(s.getTime())){d.allDay.push(r);return}if(!!(s.getHours()===0&&s.getMinutes()===0)){d.allDay.push(r);return}let c=s.getHours();d.hours.has(c)||d.hours.set(c,[]),d.hours.get(c)?.push(r)});let l='<div class="je-calendar-day-hours">';for(let r=0;r<24;r+=1){let s=d.hours.get(r);if(!s||s.length===0)continue;let v=e.settings.displayMode==="cards"?"je-calendar-hour-events je-calendar-day-cards":"je-calendar-hour-events";l+=`
+      `;let d={allDay:[],hours:new Map};u.forEach(r=>{let s=_(r.releaseDate);if(Number.isNaN(s.getTime())){d.allDay.push(r);return}if(!!(s.getHours()===0&&s.getMinutes()===0)){d.allDay.push(r);return}let l=s.getHours();d.hours.has(l)||d.hours.set(l,[]),d.hours.get(l)?.push(r)});let i='<div class="je-calendar-day-hours">';for(let r=0;r<24;r+=1){let s=d.hours.get(r);if(!s||s.length===0)continue;let g=e.settings.displayMode==="cards"?"je-calendar-hour-events je-calendar-day-cards":"je-calendar-hour-events";i+=`
         <div class="je-calendar-hour-row">
-          <div class="je-calendar-hour-label">${q(r)}</div>
-          <div class="${v}">
-            ${e.settings.displayMode==="cards"?h(s):s.map(c=>E(c)).join("")}
+          <div class="je-calendar-hour-label">${N(r)}</div>
+          <div class="${g}">
+            ${e.settings.displayMode==="cards"?b(s):s.map(l=>E(l)).join("")}
           </div>
         </div>
-      `}let m=t.t?.("calendar_all_day")||"All day";if(d.allDay.length){let r=d.allDay,s=e.settings.displayMode==="cards"?"je-calendar-hour-events je-calendar-day-cards":"je-calendar-hour-events";l+=`
+      `}let m=t.t?.("calendar_all_day")||"All day";if(d.allDay.length){let r=d.allDay,s=e.settings.displayMode==="cards"?"je-calendar-hour-events je-calendar-day-cards":"je-calendar-hour-events";i+=`
         <div class="je-calendar-hour-row">
           <div class="je-calendar-hour-label">${m}</div>
           <div class="${s}">
-            ${e.settings.displayMode==="cards"?h(r):r.map(v=>E(v)).join("")}
+            ${e.settings.displayMode==="cards"?b(r):r.map(g=>E(g)).join("")}
           </div>
         </div>
-      `}return l+="</div>",l}function Y(){return e.error&&!e.events.length||e.requestError&&(e.settings.forceOnlyRequested||e.activeFilters.has("Requests"))?`<div class="je-calendar-error" role="alert">${t.escapeHtml(e.error||e.requestError||"")}<button onclick="window.JellyfinEnhanced.calendarPage.refresh()">Retry</button></div>`:e.viewMode==="week"?V():e.viewMode==="agenda"?B():e.viewMode==="day"?K():z()}function G(){let n=e.activeFilters.size>0,a=c=>n?e.activeFilters.has(c)?"active":"inactive":"",u=!!t.pluginConfig?.JellyseerrEnabled&&!e.settings.forceOnlyRequested,g=t.t?.("requests_requests")||"Requests",f=u?`<div class="je-calendar-legend-item ${a("Requests")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Requests'); event.stopPropagation();">
+      `}return i+="</div>",i}function G(){return e.error&&!e.events.length||e.requestError&&(e.settings.forceOnlyRequested||e.activeFilters.has("Requests"))?`<div class="je-calendar-error" role="alert">${t.escapeHtml(e.error||e.requestError||"")}<button onclick="window.JellyfinEnhanced.calendarPage.refresh()">Retry</button></div>`:e.viewMode==="week"?B():e.viewMode==="agenda"?K():e.viewMode==="day"?Y():U()}function Q(){let n=e.activeFilters.size>0,a=l=>n?e.activeFilters.has(l)?"active":"inactive":"",c=!!t.pluginConfig?.JellyseerrEnabled&&!e.settings.forceOnlyRequested,p=t.t?.("requests_requests")||"Requests",v=c?`<div class="je-calendar-legend-item ${a("Requests")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Requests'); event.stopPropagation();">
           <span class="je-msym-rounded" style="color: #6f63f2; font-size: 18px;">download</span>
-          <span>${g}</span>
-        </div>`:"",p=e.settings.highlightFavorites?`<div class="je-calendar-legend-item ${a("Watchlist")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Watchlist'); event.stopPropagation();">
+          <span>${p}</span>
+        </div>`:"",u=e.settings.highlightFavorites?`<div class="je-calendar-legend-item ${a("Watchlist")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Watchlist'); event.stopPropagation();">
           <span class="je-msym-rounded" style="color: #ffd700; font-size: 18px; font-variation-settings: 'FILL' 1;">bookmark</span>
           <span>${t.t("calendar_watchlist")}</span>
         </div>`:"",d=e.settings.highlightWatchedSeries?`<div class="je-calendar-legend-item ${a("Watched")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Watched'); event.stopPropagation();">
           <span class="je-msym-rounded" style="color: #64b5f6; font-size: 18px;">visibility</span>
           <span>${t.t("calendar_watched")}</span>
-        </div>`:"",l=e.activeFilters.size>=2,m=`<div class="je-calendar-legend-item je-calendar-unmonitored-toggle ${e.settings.showUnmonitored?"active":n?"inactive":""}" onclick="window.JellyfinEnhanced.calendarPage.toggleShowUnmonitored(); event.stopPropagation();" style="cursor: pointer;">
+        </div>`:"",i=e.activeFilters.size>=2,m=`<div class="je-calendar-legend-item je-calendar-unmonitored-toggle ${e.settings.showUnmonitored?"active":n?"inactive":""}" onclick="window.JellyfinEnhanced.calendarPage.toggleShowUnmonitored(); event.stopPropagation();" style="cursor: pointer;">
         <span class="je-msym-rounded" style="color: #ff9800; font-size: 18px;">${e.settings.showUnmonitored?"visibility":"visibility_off"}</span>
         <span>${t.t?.("calendar_include_unmonitored")||"Unmonitored"}</span>
       </div>`,r=`<div class="je-calendar-legend-item ${e.settings.collapseEpisodes?"active":""}" onclick="window.JellyfinEnhanced.calendarPage.toggleCollapseEpisodes(); event.stopPropagation();" style="cursor: pointer;">
@@ -63,53 +63,53 @@
         <span>${t.t("calendar_collapse_episodes")}</span>
       </div>`,s=`
       <div class="je-calendar-filter-controls">
-        <div class="je-calendar-filter-toggle ${l?"":"is-disabled"}" role="group" aria-label="Filter mode">
-          <button type="button" class="je-calendar-filter-btn ${e.filterMatchMode==="any"?"active":""}" data-filter-mode="any" ${l?"":'disabled aria-disabled="true"'}>OR</button>
-          <button type="button" class="je-calendar-filter-btn ${e.filterMatchMode==="all"?"active":""}" data-filter-mode="all" ${l?"":'disabled aria-disabled="true"'}>AND</button>
+        <div class="je-calendar-filter-toggle ${i?"":"is-disabled"}" role="group" aria-label="Filter mode">
+          <button type="button" class="je-calendar-filter-btn ${e.filterMatchMode==="any"?"active":""}" data-filter-mode="any" ${i?"":'disabled aria-disabled="true"'}>OR</button>
+          <button type="button" class="je-calendar-filter-btn ${e.filterMatchMode==="all"?"active":""}" data-filter-mode="all" ${i?"":'disabled aria-disabled="true"'}>AND</button>
         </div>
         <button type="button" class="je-calendar-filter-invert ${e.filterInvert?"active":""} ${n?"":"is-disabled"}" data-filter-invert="true" ${n?"":'disabled aria-disabled="true"'}>NOT</button>
-      </div>`,v=t.pluginConfig?.ShokoConfigured?`<div class="je-calendar-legend-item ${a("Anime")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Anime'); event.stopPropagation();">
-          <span class="je-msym-rounded" style="color: ${y.Anime}; font-size: 18px;">animation</span>
+      </div>`,g=t.pluginConfig?.ShokoConfigured?`<div class="je-calendar-legend-item ${a("Anime")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Anime'); event.stopPropagation();">
+          <span class="je-msym-rounded" style="color: ${f.Anime}; font-size: 18px;">animation</span>
           <span>${t.t("calendar_anime")}</span>
         </div>`:"";return`
       <div class="je-calendar-legend">
         ${s}
         <div class="je-calendar-legend-item ${a("CinemaRelease")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('CinemaRelease'); event.stopPropagation();">
-          <span class="je-msym-rounded" style="color: ${y.CinemaRelease}; font-size: 18px;">local_movies</span>
+          <span class="je-msym-rounded" style="color: ${f.CinemaRelease}; font-size: 18px;">local_movies</span>
           <span>${t.t("calendar_cinema_release")}</span>
         </div>
         <div class="je-calendar-legend-item ${a("DigitalRelease")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('DigitalRelease'); event.stopPropagation();">
-          <span class="je-msym-rounded" style="color: ${y.DigitalRelease}; font-size: 18px;">ondemand_video</span>
+          <span class="je-msym-rounded" style="color: ${f.DigitalRelease}; font-size: 18px;">ondemand_video</span>
           <span>${t.t("calendar_digital_release")}</span>
         </div>
         <div class="je-calendar-legend-item ${a("PhysicalRelease")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('PhysicalRelease'); event.stopPropagation();">
-          <span class="je-msym-rounded" style="color: ${y.PhysicalRelease}; font-size: 18px;">album</span>
+          <span class="je-msym-rounded" style="color: ${f.PhysicalRelease}; font-size: 18px;">album</span>
           <span>${t.t("calendar_physical_release")}</span>
         </div>
         <div class="je-calendar-legend-item ${a("Episode")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Episode'); event.stopPropagation();">
-          <span class="je-msym-rounded" style="color: ${y.Episode}; font-size: 18px;">tv_guide</span>
+          <span class="je-msym-rounded" style="color: ${f.Episode}; font-size: 18px;">tv_guide</span>
           <span>${t.t("calendar_episode")}</span>
         </div>
-        ${v}
+        ${g}
         <div class="je-calendar-legend-item ${a("Available")}" onclick="window.JellyfinEnhanced.calendarPage.toggleFilter('Available'); event.stopPropagation();">
           <span class="je-msym-rounded" style="color: #4caf50; font-size: 18px;">check_circle</span>
           <span>${t.t?.("jellyseerr_btn_available")||"Available"}</span>
         </div>
-        ${f}
-        ${p}
+        ${v}
+        ${u}
         ${d}
         ${m}
         ${r}
       </div>
-    `}function D(){let n=document.getElementById("je-calendar-page");if(!n){n=document.createElement("div"),n.id="je-calendar-page",n.className="page type-interior mainAnimatedPage hide",n.setAttribute("data-title","Calendar"),n.setAttribute("data-backbutton","true"),n.setAttribute("data-url","#/calendar"),n.setAttribute("data-type","custom"),n.innerHTML=`
+    `}function S(){let n=document.getElementById("je-calendar-page");if(!n){n=document.createElement("div"),n.id="je-calendar-page",n.className="page type-interior mainAnimatedPage hide",n.setAttribute("data-title","Calendar"),n.setAttribute("data-backbutton","true"),n.setAttribute("data-url","#/calendar"),n.setAttribute("data-type","custom"),n.innerHTML=`
         <div data-role="content">
           <div class="content-primary je-calendar-page">
             <div id="je-calendar-container" style="padding-top: 5em; padding-left: 0.5em; padding-right: 0.5em;"></div>
           </div>
         </div>
-      `;let a=document.querySelector(".mainAnimatedPages");a?a.appendChild(n):document.body.appendChild(n)}return n}function Q(n){I();let a;if(n)e._customTabContainer=n,a=n;else if(e._customTabContainer&&document.contains(e._customTabContainer)&&window.location.hash.indexOf("userpluginsettings")===-1)a=e._customTabContainer;else{e._customTabContainer=null;let u=D();if(a=document.getElementById("je-calendar-container"),!u||!a)return}typeof e.sidebarCollapsed!="boolean"&&(e.sidebarCollapsed=S()),a.innerHTML=`
+      `;let a=document.querySelector(".mainAnimatedPages");a?a.appendChild(n):document.body.appendChild(n)}return n}function X(n){I();let a;if(n)e._customTabContainer=n,a=n;else if(e._customTabContainer&&document.contains(e._customTabContainer)&&window.location.hash.indexOf("userpluginsettings")===-1)a=e._customTabContainer;else{e._customTabContainer=null;let c=S();if(a=document.getElementById("je-calendar-container"),!c||!a)return}typeof e.sidebarCollapsed!="boolean"&&(e.sidebarCollapsed=P()),a.innerHTML=`
       <div class="je-calendar-header">
-        <h1 class="je-calendar-title">${H()}</h1>
+        <h1 class="je-calendar-title">${q()}</h1>
         <div class="je-calendar-actions je-calendar-actions-center">
           <div class="je-calendar-nav">
             <div class="je-calendar-nav-group">
@@ -144,18 +144,18 @@
 
         <div class="je-calendar-layout">
           <div class="je-calendar-main">
-            ${e.isLoading?"":Y()}
+            ${e.isLoading?"":G()}
           </div>
           <aside class="je-calendar-sidebar${e.sidebarCollapsed?" is-collapsed":""}">
             <button type="button" class="je-calendar-sidebar-toggle" aria-expanded="${e.sidebarCollapsed?"false":"true"}" aria-controls="je-calendar-sidebar-content">
               <span class="material-icons je-calendar-sidebar-toggle-icon">expand_more</span>
             </button>
             <div class="je-calendar-sidebar-content" id="je-calendar-sidebar-content">
-              ${G().replace('je-calendar-legend"','je-calendar-legend je-calendar-legend-vertical"')}
+              ${Q().replace('je-calendar-legend"','je-calendar-legend je-calendar-legend-vertical"')}
             </div>
           </aside>
         </div>
 
       
-    `,M()}function I(){let n=document.querySelectorAll(".je-calendar-page, .content-primary.je-calendar-page");n.length&&n.forEach(a=>{a.classList.remove("je-view-day","je-view-week","je-view-month","je-view-agenda"),a.classList.remove("je-display-list","je-display-backdrop","je-display-cards"),e.viewMode&&a.classList.add(`je-view-${e.viewMode}`),e.settings.displayMode&&a.classList.add(`je-display-${e.settings.displayMode}`)})}i.updateDisplayModeButtons=U,i.toggleSidebarCollapsed=W,i.renderPage=Q,i.syncPageModeClasses=I,i.createPageContainer=D})();})();
+    `,D()}function I(){let n=document.querySelectorAll(".je-calendar-page, .content-primary.je-calendar-page");n.length&&n.forEach(a=>{a.classList.remove("je-view-day","je-view-week","je-view-month","je-view-agenda"),a.classList.remove("je-display-list","je-display-backdrop","je-display-cards"),e.viewMode&&a.classList.add(`je-view-${e.viewMode}`),e.settings.displayMode&&a.classList.add(`je-display-${e.settings.displayMode}`)})}o.updateDisplayModeButtons=V,o.toggleSidebarCollapsed=z,o.renderPage=X,o.syncPageModeClasses=I,o.createPageContainer=S})();})();
 })();

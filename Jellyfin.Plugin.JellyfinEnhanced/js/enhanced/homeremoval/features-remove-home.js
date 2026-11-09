@@ -1,6 +1,12 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
     const shared = core.core?.featureContext;
@@ -9,6 +15,246 @@
     }
     return shared(feature, core, slots);
   }
+  function publishSharedModules(modules) {
+    const JE = window.JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ?? (JE.core = {});
+    let registry2 = core.sharedModules;
+    if (!registry2) {
+      registry2 = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry2, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry2[id] ?? (registry2[id] = namespace);
+  }
+
+  // client/src/features/hidden-content/model.ts
+  var model_exports = {};
+  __export(model_exports, {
+    aliasMetadata: () => aliasMetadata,
+    decodeDocument: () => decodeDocument,
+    decodeItem: () => decodeItem,
+    decodeLibraryItem: () => decodeLibraryItem,
+    decodeSeerrItem: () => decodeSeerrItem,
+    decodeSeerrSearch: () => decodeSeerrSearch,
+    decodeUsers: () => decodeUsers,
+    defaults: () => defaults,
+    earliestHiddenAt: () => earliestHiddenAt,
+    mergeHomeScope: () => mergeHomeScope,
+    normalizeId: () => normalizeId,
+    record: () => record,
+    sameValue: () => sameValue,
+    settingsFor: () => settingsFor,
+    widestScope: () => widestScope
+  });
+  var defaults = {
+    enabled: true,
+    filterLibrary: true,
+    filterDiscovery: true,
+    filterUpcoming: true,
+    filterCalendar: true,
+    filterSearch: false,
+    filterRecommendations: true,
+    filterRequests: true,
+    filterNextUp: true,
+    filterContinueWatching: true,
+    showHideConfirmation: true,
+    showHideButtons: true,
+    showButtonJellyseerr: true,
+    showButtonLibrary: false,
+    showButtonDetails: true,
+    showButtonCast: false,
+    experimentalHideCollections: false
+  };
+  function record(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
+    return value;
+  }
+  function normalizeId(id) {
+    return typeof id === "string" || typeof id === "number" || typeof id === "bigint" ? String(id).replace(/-/g, "").toLowerCase() : "";
+  }
+  var itemStrings = ["itemId", "name", "type", "posterPath", "seriesId", "seriesName", "hiddenAt", "hideScope"];
+  function field(source, name) {
+    return Object.prototype.hasOwnProperty.call(source, name) ? source[name] : source[name[0]?.toUpperCase() + name.slice(1)];
+  }
+  function decodeItem(value) {
+    const raw = record(value);
+    const item = { ...raw };
+    for (const key of [...itemStrings, "tmdbId", "seasonNumber", "episodeNumber"]) delete item[key];
+    for (const key of itemStrings) {
+      const v = field(raw, key);
+      if (v !== void 0 && v !== null) {
+        if (typeof v !== "string") throw new Error(`Invalid ${key}`);
+        item[key] = v;
+      }
+    }
+    const tmdb = field(raw, "tmdbId");
+    if (tmdb !== void 0 && tmdb !== null) {
+      if (typeof tmdb !== "string" && (typeof tmdb !== "number" || !Number.isFinite(tmdb))) throw new Error("Invalid tmdbId");
+      item.tmdbId = tmdb;
+    }
+    for (const key of ["seasonNumber", "episodeNumber"]) {
+      const v = field(raw, key);
+      if (v !== void 0) {
+        if (v !== null && (typeof v !== "number" || !Number.isFinite(v))) throw new Error(`Invalid ${key}`);
+        item[key] = v;
+      }
+    }
+    for (const key of [...itemStrings, "tmdbId", "seasonNumber", "episodeNumber"]) delete item[key[0]?.toUpperCase() + key.slice(1)];
+    return item;
+  }
+  function decodeDocument(value) {
+    const raw = record(value);
+    const rawItems = record(field(raw, "items"));
+    const rawSettings = field(raw, "settings");
+    const settings = rawSettings == null ? {} : { ...record(rawSettings) };
+    for (const key of Object.keys(defaults)) {
+      const v = field(settings, key);
+      if (v !== void 0 && typeof v !== "boolean") throw new Error(`Invalid setting ${key}`);
+      if (v !== void 0) settings[key] = v;
+      delete settings[key[0]?.toUpperCase() + key.slice(1)];
+    }
+    const items = Object.fromEntries(Object.entries(rawItems).map(([key, item]) => [key, decodeItem(item)]));
+    const document2 = { ...raw, items, settings };
+    delete document2.Items;
+    delete document2.Settings;
+    return document2;
+  }
+  function settingsFor(data) {
+    const settings = { ...defaults };
+    for (const key of Object.keys(defaults)) {
+      const v = data.settings[key];
+      if (typeof v === "boolean") settings[key] = v;
+    }
+    return settings;
+  }
+  function decodeUsers(value) {
+    const users = record(value).users;
+    if (!Array.isArray(users)) throw new Error("Invalid admin user list");
+    return users.map((value2) => {
+      const u = record(value2);
+      if (typeof u.userId !== "string" || typeof u.userName !== "string" || typeof u.count !== "number" || !Number.isInteger(u.count) || u.count < 0) throw new Error("Invalid admin user");
+      return { userId: u.userId, userName: u.userName, count: u.count };
+    });
+  }
+  function widestScope(a, b) {
+    if (!a) return b || "";
+    if (!b) return a;
+    const left = a.toLowerCase(), right = b.toLowerCase();
+    const ranks = { global: 4, homesections: 3, continuewatching: 2, nextup: 2 };
+    const ra = ranks[left] ?? 1, rb = ranks[right] ?? 1;
+    return ra === 2 && rb === 2 && left !== right ? "homesections" : ra >= rb ? left : right;
+  }
+  function mergeHomeScope(existing, incoming = "continuewatching") {
+    const ex = existing.toLowerCase(), inc = incoming.toLowerCase();
+    return !ex ? inc : ex === "global" || ex === "homesections" || ex === inc ? ex : "homesections";
+  }
+  function decodeLibraryItem(value) {
+    const r = record(value);
+    const result = {};
+    for (const k of ["Id", "Name", "Type", "SeriesId", "SeriesName"]) {
+      const v = r[k];
+      if (v != null) {
+        if (typeof v !== "string") throw new Error(`Invalid item ${k}`);
+        result[k] = v;
+      }
+    }
+    for (const k of ["ParentIndexNumber", "IndexNumber", "ProductionYear"]) {
+      const v = r[k];
+      if (v != null) {
+        if (typeof v !== "number" || !Number.isFinite(v)) throw new Error(`Invalid item ${k}`);
+        result[k] = v;
+      }
+    }
+    if (r.ProviderIds != null) {
+      const ids = record(r.ProviderIds);
+      result.ProviderIds = {};
+      for (const k of ["Tmdb", "tmdb"]) {
+        const v = ids[k];
+        if (v != null) {
+          if (typeof v !== "string") throw new Error("Invalid provider ID");
+          result.ProviderIds[k] = v;
+        }
+      }
+    }
+    return result;
+  }
+  function decodeSeerrItem(value) {
+    const r = record(value), result = {};
+    for (const k of ["mediaType", "posterPath", "poster_path", "title", "name", "releaseDate", "firstAirDate"]) {
+      const v = r[k];
+      if (v != null) {
+        if (typeof v !== "string") throw new Error(`Invalid Seerr ${k}`);
+        result[k] = v;
+      }
+    }
+    if (r.id != null) {
+      if (typeof r.id !== "number" || !Number.isFinite(r.id)) throw new Error("Invalid Seerr ID");
+      result.id = r.id;
+    }
+    return result;
+  }
+  function decodeSeerrSearch(value) {
+    const results = record(value).results;
+    if (!Array.isArray(results)) throw new Error("Invalid Seerr results");
+    return { results: results.map(decodeSeerrItem) };
+  }
+  function sameValue(left, right) {
+    if (Object.is(left, right)) return true;
+    if (left === null || right === null || typeof left !== "object" || typeof right !== "object") return false;
+    if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((v, i) => sameValue(v, right[i]));
+    const a = record(left), b = record(right), keys = Object.keys(a);
+    return keys.length === Object.keys(b).length && keys.every((k) => Object.prototype.hasOwnProperty.call(b, k) && sameValue(a[k], b[k]));
+  }
+  function parsedFraction(stamp, time) {
+    const seconds = Math.floor(time / 1e3) * 1e3, millis = time - seconds;
+    const probe = millis === 123 ? 456 : 123;
+    const decimals = /\.(\d+)/g;
+    for (let match = decimals.exec(stamp); match; match = decimals.exec(stamp)) {
+      const digits = match[1];
+      if (!digits) continue;
+      const start = match.index + 1, end = start + digits.length;
+      const replace = (value) => stamp.slice(0, start) + value + digits.slice(3) + stamp.slice(end);
+      const changed = Date.parse(replace(String(probe).padStart(3, "0")));
+      if (changed === seconds + probe) return digits;
+      if (seconds + probe > 864e13 && !Number.isFinite(changed) && Date.parse(replace("000")) === seconds) return digits;
+    }
+    return String(millis).padStart(3, "0");
+  }
+  function compareHiddenTimes(left, right) {
+    const a = Date.parse(left), b = Date.parse(right);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+    const seconds = Math.floor(a / 1e3) - Math.floor(b / 1e3);
+    if (seconds !== 0) return seconds;
+    const x = parsedFraction(left, a), y = parsedFraction(right, b), width = Math.max(x.length, y.length);
+    const ax = x.padEnd(width, "0"), by = y.padEnd(width, "0");
+    return ax < by ? -1 : ax > by ? 1 : 0;
+  }
+  function earliestHiddenAt(items) {
+    let selected = "";
+    for (const item of items) {
+      const stamp = item.hiddenAt;
+      if (!stamp) continue;
+      if (!selected || compareHiddenTimes(stamp, selected) < 0) selected = stamp;
+    }
+    return selected || (/* @__PURE__ */ new Date()).toISOString();
+  }
+  function aliasMetadata(items) {
+    const merged = Object.assign({}, ...items.slice().reverse());
+    for (const key of ["name", "type", "posterPath", "seriesId", "seriesName"]) {
+      const value = items.find((item) => !!item[key])?.[key];
+      if (value !== void 0) merged[key] = value;
+    }
+    const tmdb = items.find((item) => item.tmdbId !== void 0 && item.tmdbId !== "")?.tmdbId;
+    if (tmdb !== void 0) merged.tmdbId = tmdb;
+    for (const key of ["seasonNumber", "episodeNumber"]) {
+      const value = items.find((item) => item[key] != null)?.[key];
+      if (value !== void 0) merged[key] = value;
+    }
+    return merged;
+  }
+
+  // client/generated-shared/publish/js/enhanced/homeremoval/features-remove-home.js.ts
+  publishSharedModules({ "features/hidden-content/model": model_exports });
 
   // client/src/features/hidden-content/host.ts
   var browser = window;
@@ -108,12 +354,6 @@
       if ("Message" in r && typeof r.Message === "string") return r.Message;
     }
     return "statusText" in error && typeof error.statusText === "string" ? error.statusText : fallback;
-  }
-
-  // client/src/features/hidden-content/model.ts
-  function record(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
-    return value;
   }
 
   // client/src/features/hidden-content/features-remove-home.ts

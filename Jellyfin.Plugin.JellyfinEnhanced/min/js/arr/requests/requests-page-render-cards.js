@@ -1,129 +1,129 @@
 (() => {
-"use strict";(()=>{function K(i,s,a){let l=s.core?.featureContext;if(typeof l!="function")throw new Error(`${i}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);return l(i,s,a)}function V(){var h;let i=window,s=i.JellyfinEnhanced;if(!s)throw new Error("Downloads loaded before Jellyfin Enhanced");let a=K("downloads",s,{facades:["downloadsPage","initializeDownloadsPage"],internalSlots:["requestsPage"],internalsObject:()=>s.internals||(s.internals={})}),l=(h=a.own).requestsPage||(h.requestsPage={});return{JE:s,P:l,host:i,ctx:a,getApi:()=>{if(!i.ApiClient)throw new Error("API client unavailable");return i.ApiClient}}}function ye(i){return typeof i=="object"&&i!==null&&!Array.isArray(i)}function M(i){if(!ye(i))throw new Error("Invalid downloads response");return i}function z(i){if(i!=null){if(typeof i!="string")throw new Error("Invalid text");return i}}function W(i){let s=M(i),a={};for(let l of["movies","series"]){if(s[l]==null)continue;let h=M(s[l]),q={};for(let[A,P]of Object.entries(h)){let T=M(P);q[A]={matches:Array.isArray(T.matches)?T.matches.map(f=>{let o=M(f);return{urlMappings:z(o.urlMappings)||"",instanceUrl:z(o.instanceUrl)||"",titleSlug:z(o.titleSlug)||""}}):[]}}a[l]=q}return a}function O(i,s){if(!i)return"";try{let a=new URL(i,s);return a.protocol==="http:"||a.protocol==="https:"?a.href:""}catch{return""}}function N(i,s,a){let l=O(i,a);if(!l)return"";let h=new URL(l);return h.pathname=h.pathname.replace(/\/+$/,"")+"/"+s,h.href}function G(i){if(i.P.runtime)return i.P.runtime;let{JE:s,P:a,host:l}=i,h=0,q=!1,A=new Map,P=[],T=()=>{let o=l.ApiClient,S=s.session?.getEpoch(),C=()=>typeof o?.serverId=="function"?o.serverId():o?.serverId,U=o?.getCurrentUserId(),x=o?.serverAddress?.(),_=o?.getUrl("/"),D=o?.accessToken?.(),n=C();return{current:()=>!q&&l.ApiClient===o&&(S===void 0||s.session?.isCurrent(S)===!0)&&o?.getCurrentUserId()===U&&o?.serverAddress?.()===x&&o?.getUrl("/")===_&&o?.accessToken?.()===D&&C()===n}},f={cleanup(o){P.push(o)},installed:new Set,mutations:new Map,captureIdentity:T,capture(o){let S=h,C=T(),U=l.location.pathname+l.location.hash,x=a.state?._customTabContainer||document.getElementById("je-downloads-container"),_=o?(A.get(o)||0)+1:0;return o&&A.set(o,_),{current:()=>!q&&h===S&&(!o||A.get(o)===_)&&C.current()&&l.location.pathname+l.location.hash===U&&(!x||x.isConnected&&!x.closest(".hide, [hidden]")&&(!x.closest(".tabContent")||x.closest(".tabContent")?.classList.contains("is-active")===!0))}},invalidate(){h++,a.state&&(a.state.isLoading=!1,a.state.searchDebounceTimer!==null&&(clearTimeout(a.state.searchDebounceTimer),a.state.searchDebounceTimer=null))},listen(o,S,C,U=!1){o.addEventListener(S,C,U),P.push(()=>o.removeEventListener(S,C,U))},dispose(){q=!0,f.invalidate(),P.splice(0).forEach(o=>o()),a.state?.pollTimer&&(clearInterval(a.state.pollTimer),a.state.pollTimer=null)}};return a.runtime=f,f.listen(l,"hashchange",()=>f.invalidate()),f.listen(l,"popstate",()=>f.invalidate()),f.listen(l,"je:navigate",()=>f.invalidate()),f.listen(document,"viewhide",o=>{o.target instanceof Element&&(o.target.id==="je-downloads-page"||o.target.contains(a.state?._customTabContainer||document.getElementById("je-downloads-container")))&&f.invalidate()}),s.core?.lifecycle?.register("arr-requests-page").track(()=>f.dispose()),f}function X(i){let{JE:s,P:a,host:l,ctx:h,getApi:q}=i,A=G(i);if(A.installed.has("render-cards"))return;A.installed.add("render-cards");let P=a.state,T=a.getStatusColors,f=a.formatTimeRemaining,o=a.formatRelativeDate,S=a.getReleaseDateLabel,C=a.formatDownloadStats,U=a.resolveRequestStatus,x=a.getIssueMediaType,_=a.getIssueTmdbId,D=a.translateStatus,n=s.escapeHtml,L=s.cdn.selfhst("svg/sonarr.svg"),H=s.cdn.selfhst("svg/radarr-light-hybrid-light.svg"),Y=s.cdn.selfhst("svg/seerr.svg");function Q(e){let t=T(),r=t[(e.status||"unknown").toLowerCase()]||t.unknown,d=e.source==="Sonarr"?L:H,c=n(e.instanceName||e.source),u=e.posterUrl?`<img class="je-download-poster" src="${n(e.posterUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="je-download-poster placeholder"></div>',b=`
+"use strict";(()=>{function _(i){let r=window.JellyfinEnhanced?.core?.sharedModules?.[i];if(!r)throw new Error(`${i} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);return r}function M(i,r){return i[r]}var be=_("features/downloads/host"),F=M(be,"downloadsHost");function ve(i){return typeof i=="object"&&i!==null&&!Array.isArray(i)}function U(i){if(!ve(i))throw new Error("Invalid downloads response");return i}function N(i){if(i!=null){if(typeof i!="string")throw new Error("Invalid text");return i}}function J(i){let r=U(i),l={};for(let m of["movies","series"]){if(r[m]==null)continue;let I=U(r[m]),x={};for(let[S,E]of Object.entries(I)){let C=U(E);x[S]={matches:Array.isArray(C.matches)?C.matches.map(R=>{let k=U(R);return{urlMappings:N(k.urlMappings)||"",instanceUrl:N(k.instanceUrl)||"",titleSlug:N(k.titleSlug)||""}}):[]}}l[m]=x}return l}function O(i,r){if(!i)return"";try{let l=new URL(i,r);return l.protocol==="http:"||l.protocol==="https:"?l.href:""}catch{return""}}function L(i,r,l){let m=O(i,l);if(!m)return"";let I=new URL(m);return I.pathname=I.pathname.replace(/\/+$/,"")+"/"+r,I.href}var je=_("features/downloads/runtime"),K=M(je,"runtime");function V(i){let{JE:r,P:l,host:m,ctx:I,getApi:x}=i,S=K(i);if(S.installed.has("render-cards"))return;S.installed.add("render-cards");let E=l.state,C=l.getStatusColors,R=l.formatTimeRemaining,k=l.formatRelativeDate,G=l.getReleaseDateLabel,P=l.formatDownloadStats,W=l.resolveRequestStatus,X=l.getIssueMediaType,Y=l.getIssueTmdbId,D=l.translateStatus,n=r.escapeHtml,q=r.cdn.selfhst("svg/sonarr.svg"),T=r.cdn.selfhst("svg/radarr-light-hybrid-light.svg"),Q=r.cdn.selfhst("svg/seerr.svg");function Z(e){let t=C(),s=t[(e.status||"unknown").toLowerCase()]||t.unknown,a=e.source==="Sonarr"?q:T,o=n(e.instanceName||e.source),d=e.posterUrl?`<img class="je-download-poster" src="${n(e.posterUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="je-download-poster placeholder"></div>',y=`
       <div class="je-download-progress-container">
         <div class="je-download-progress">
-          <div class="je-download-progress-bar" style="width: ${Math.max(0,Math.min(100,e.progress||0))}%; background: ${r}"></div>
+          <div class="je-download-progress-bar" style="width: ${Math.max(0,Math.min(100,e.progress||0))}%; background: ${s}"></div>
         </div>
         <div class="je-download-stats">
           <span>${Math.max(0,Math.min(100,e.progress||0))}%</span>
-          ${e.timeRemaining?`<span>ETA: ${n(f(e.timeRemaining))}</span>`:""}
-          ${e.totalSize?`<span>${C(e.totalSize,e.sizeRemaining)}</span>`:""}
+          ${e.timeRemaining?`<span>ETA: ${n(R(e.timeRemaining))}</span>`:""}
+          ${e.totalSize?`<span>${P(e.totalSize,e.sizeRemaining)}</span>`:""}
         </div>
       </div>
     `;return`
       <div class="je-download-card" ${e.jellyfinMediaId?`data-media-id="${n(e.jellyfinMediaId)}"`:""}>
         <div class="je-download-card-content">
-          ${u}
+          ${d}
           <div class="je-download-info">
-            <div class="je-download-title" title="${n(e.title||"")}">${n(e.title||s.t?.("requests_unknown")||"Unknown")}</div>
+            <div class="je-download-title" title="${n(e.title||"")}">${n(e.title||r.t?.("requests_unknown")||"Unknown")}</div>
             ${e.subtitle?`<div class="je-download-subtitle" title="${n(e.subtitle)}">${n(e.subtitle)}</div>`:""}
             <div class="je-download-meta">
-                <span class="je-download-badge je-arr-badge" title="${c}"><img src="${d}" alt="${c}" loading="lazy"></span>
-              <span class="je-download-badge" style="background: ${r}">${n(D(e.status))}</span>
+                <span class="je-download-badge je-arr-badge" title="${o}"><img src="${a}" alt="${o}" loading="lazy"></span>
+              <span class="je-download-badge" style="background: ${s}">${n(D(e.status))}</span>
             </div>
           </div>
         </div>
-        ${b}
+        ${y}
       </div>
-    `}function Z(e){let t=U(e.mediaStatus,e),r=S(e),d="";e.posterUrl?d=`<img class="je-request-poster" src="${n(e.posterUrl)}" alt="" loading="lazy">`:d='<div class="je-request-poster placeholder"></div>';let c="";e.requestedByAvatar&&(c=`<img class="je-request-avatar" data-avatar-src="${n(e.requestedByAvatar)}" alt="" loading="lazy" style="display:none" onerror="this.style.display='none'">`);let u="";if(e.jellyfinMediaId&&(e.mediaStatus==="Available"||e.mediaStatus==="Partially Available")){let g=s.t?.("jellyseerr_btn_available")||"Available";u=`<button class="je-request-watch-btn" title="${n(g)}" aria-label="${n(g)}" data-media-id="${n(e.jellyfinMediaId)}"><span class="material-icons">play_arrow</span></button>`}let b="";P.canApproveRequests&&e.requestStatus===1&&e.id&&(b=`
+    `}function ee(e){let t=W(e.mediaStatus,e),s=G(e),a="";e.posterUrl?a=`<img class="je-request-poster" src="${n(e.posterUrl)}" alt="" loading="lazy">`:a='<div class="je-request-poster placeholder"></div>';let o="";e.requestedByAvatar&&(o=`<img class="je-request-avatar" data-avatar-src="${n(e.requestedByAvatar)}" alt="" loading="lazy" style="display:none" onerror="this.style.display='none'">`);let d="";if(e.jellyfinMediaId&&(e.mediaStatus==="Available"||e.mediaStatus==="Partially Available")){let p=r.t?.("jellyseerr_btn_available")||"Available";d=`<button class="je-request-watch-btn" title="${n(p)}" aria-label="${n(p)}" data-media-id="${n(e.jellyfinMediaId)}"><span class="material-icons">play_arrow</span></button>`}let y="";E.canApproveRequests&&e.requestStatus===1&&e.id&&(y=`
         <button class="je-request-approve-btn" data-request-id="${n(String(e.id))}" title="Approve"><span class="material-icons">check</span></button>
         <button class="je-request-decline-btn" data-request-id="${n(String(e.id))}" title="Decline"><span class="material-icons">close</span></button>
-      `);let j="";if(r){let g=typeof r=="object"?r.label:r;j=`<span class="je-release-date-chip">${typeof r=="object"&&r.icon?`<span class="material-icons je-release-date-icon">${n(r.icon)}</span>`:""}${typeof g=="object"?g.text||"":n(g)}</span>`}let k="",I=s.pluginConfig?.JellyseerrEnabled!==!1&&s.pluginConfig?.JellyseerrShowDetailPageLink!==!1,R=O(h.peer("jellyseerrAPI")?.resolveJellyseerrBaseUrl?.()||"",l.location.href);if(e.tmdbId&&I&&R){let g=e.type==="tv"?"tv":"movie",m=s.t?.("jellyseerr_card_view_on_jellyseerr")||"View on Seerr";k=`<a is="emby-linkbutton" class="je-request-external-link" href="${n(N(R,`${g}/${e.tmdbId}`,l.location.href))}" target="_blank" rel="noopener noreferrer" title="${n(m)}" aria-label="${n(m)}"><img src="${Y}" alt="Seerr"></a>`}let $="";e.tmdbId&&($=`<div class="je-request-external-links" data-tmdb-id="${n(String(e.tmdbId))}" data-tvdb-id="${n(String(e.tvdbId||""))}" data-media-type="${n(e.type||"")}">${k}</div>`);let p=e.jellyfinMediaId?` data-media-id="${n(e.jellyfinMediaId)}"`:"",v=e.jellyfinMediaId?"je-request-title je-request-title-link":"je-request-title";return`
+      `);let v="";if(s){let p=typeof s=="object"?s.label:s;v=`<span class="je-release-date-chip">${typeof s=="object"&&s.icon?`<span class="material-icons je-release-date-icon">${n(s.icon)}</span>`:""}${typeof p=="object"?p.text||"":n(p)}</span>`}let h="",j=r.pluginConfig?.JellyseerrEnabled!==!1&&r.pluginConfig?.JellyseerrShowDetailPageLink!==!1,$=O(I.peer("jellyseerrAPI")?.resolveJellyseerrBaseUrl?.()||"",m.location.href);if(e.tmdbId&&j&&$){let p=e.type==="tv"?"tv":"movie",u=r.t?.("jellyseerr_card_view_on_jellyseerr")||"View on Seerr";h=`<a is="emby-linkbutton" class="je-request-external-link" href="${n(L($,`${p}/${e.tmdbId}`,m.location.href))}" target="_blank" rel="noopener noreferrer" title="${n(u)}" aria-label="${n(u)}"><img src="${Q}" alt="Seerr"></a>`}let w="";e.tmdbId&&(w=`<div class="je-request-external-links" data-tmdb-id="${n(String(e.tmdbId))}" data-tvdb-id="${n(String(e.tvdbId||""))}" data-media-type="${n(e.type||"")}">${h}</div>`);let c=e.jellyfinMediaId?` data-media-id="${n(e.jellyfinMediaId)}"`:"",g=e.jellyfinMediaId?"je-request-title je-request-title-link":"je-request-title";return`
             <div class="je-request-card${e.isOrphaned?" je-request-card-orphaned":""}">
                 <div class="je-request-poster-col">
-                    ${d}
-                    ${$}
+                    ${a}
+                    ${w}
                 </div>
                 <div class="je-request-info">
                     <div class="je-request-header">
                       <div>
                         <div class="je-request-title-row">
-                          <div class="${v}"${p}>${n(e.title||"Unknown")}</div>
+                          <div class="${g}"${c}>${n(e.title||"Unknown")}</div>
                           ${e.year?`<span class="je-request-year">(${n(e.year)})</span>`:""}
                         </div>
-                        <span class="je-requests-status-chip ${n(t.className)}">${n(t.label)}</span>${j}
+                        <span class="je-requests-status-chip ${n(t.className)}">${n(t.label)}</span>${v}
                       </div>
                     </div>
                     <div class="je-request-meta">
                       <div class="je-request-meta-left">
-                        ${c}
+                        ${o}
                         <span>${n(e.requestedBy||"Unknown")}</span>
-                        ${e.createdAt?`<span>&#8226;</span><span>${n(o(e.createdAt))}</span>`:""}
+                        ${e.createdAt?`<span>&#8226;</span><span>${n(k(e.createdAt))}</span>`:""}
                       </div>
                     </div>
-                    ${u||b?`<div class="je-request-actions">${u}${b}</div>`:""}
+                    ${d||y?`<div class="je-request-actions">${d}${y}</div>`:""}
                 </div>
             </div>
-        `}function ee(e){return{1:s.t?.("jellyseerr_report_issue_type_video")||"Video",2:s.t?.("jellyseerr_report_issue_type_audio")||"Audio",3:s.t?.("jellyseerr_report_issue_type_subtitles")||"Subtitles",4:s.t?.("jellyseerr_report_issue_type_other")||"Other"}[e||4]||"Other"}function te(e){let t=String(e||"").toLowerCase(),r=s.t?.("jellyseerr_issue_resolved")||"Resolved",d=s.t?.("jellyseerr_issue_open")||"Open";return t==="2"||t==="resolved"?{label:r,className:"je-issue-status-resolved"}:{label:d,className:"je-issue-status-open"}}function ne(e){let t=e?.media||{};return t.title||t.name||t.originalTitle||t.originalName||"Unknown"}function se(e){let t=e?.media||{},r=t.releaseDate||t.firstAirDate||"";return!r||r.length<4?"":r.substring(0,4)}function re(e){let t=e?.media||{};return t.mediaInfo?.posterPath?`https://image.tmdb.org/t/p/w300${t.mediaInfo.posterPath}`:t.mediaInfo?.poster_path?`https://image.tmdb.org/t/p/w300${t.mediaInfo.poster_path}`:t.posterUrl?t.posterUrl:t.posterPath?`https://image.tmdb.org/t/p/w300${t.posterPath}`:""}function ae(e){let t=e?.media||{};return t.jellyfinMediaId||t.mediaInfo?.jellyfinMediaId||t.mediaInfo?.jellyfinMediaId4k||t.mediaInfo?.jellyfinMediaId4K||null}function oe(e){let t=e?.createdBy||{};return t.jellyfinUsername||t.displayName||t.username||t.email||"Unknown"}function ie(e){let t=e?.createdBy?.avatar;return t?t.startsWith("/")?q().getUrl("/JellyfinEnhanced/proxy/avatar",{path:t}):t:""}function le(e){return e?.message?e.message:(Array.isArray(e?.comments)?e.comments[0]:null)?.message||""}function de(e){let t=re(e),r=ne(e),d=se(e),c=ee(e?.issueType||e?.problemType),u=te(e?.status),b=oe(e),j=ie(e),k=le(e),I=x(e),R=_(e),$=!!(R&&I),p=ae(e),v=t?`<img class="je-request-poster" src="${n(t)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="je-request-poster placeholder"></div>',g=j?`<img class="je-request-avatar" data-avatar-src="${n(j)}" alt="" loading="lazy" style="display:none" onerror="this.style.display='none'">`:"";return`
-      <div class="je-issue-card" ${p?`data-media-id="${n(p)}"`:""}>
-        ${v}
+        `}function te(e){return{1:r.t?.("jellyseerr_report_issue_type_video")||"Video",2:r.t?.("jellyseerr_report_issue_type_audio")||"Audio",3:r.t?.("jellyseerr_report_issue_type_subtitles")||"Subtitles",4:r.t?.("jellyseerr_report_issue_type_other")||"Other"}[e||4]||"Other"}function ne(e){let t=String(e||"").toLowerCase(),s=r.t?.("jellyseerr_issue_resolved")||"Resolved",a=r.t?.("jellyseerr_issue_open")||"Open";return t==="2"||t==="resolved"?{label:s,className:"je-issue-status-resolved"}:{label:a,className:"je-issue-status-open"}}function se(e){let t=e?.media||{};return t.title||t.name||t.originalTitle||t.originalName||"Unknown"}function re(e){let t=e?.media||{},s=t.releaseDate||t.firstAirDate||"";return!s||s.length<4?"":s.substring(0,4)}function ae(e){let t=e?.media||{};return t.mediaInfo?.posterPath?`https://image.tmdb.org/t/p/w300${t.mediaInfo.posterPath}`:t.mediaInfo?.poster_path?`https://image.tmdb.org/t/p/w300${t.mediaInfo.poster_path}`:t.posterUrl?t.posterUrl:t.posterPath?`https://image.tmdb.org/t/p/w300${t.posterPath}`:""}function oe(e){let t=e?.media||{};return t.jellyfinMediaId||t.mediaInfo?.jellyfinMediaId||t.mediaInfo?.jellyfinMediaId4k||t.mediaInfo?.jellyfinMediaId4K||null}function ie(e){let t=e?.createdBy||{};return t.jellyfinUsername||t.displayName||t.username||t.email||"Unknown"}function le(e){let t=e?.createdBy?.avatar;return t?t.startsWith("/")?x().getUrl("/JellyfinEnhanced/proxy/avatar",{path:t}):t:""}function de(e){return e?.message?e.message:(Array.isArray(e?.comments)?e.comments[0]:null)?.message||""}function ce(e){let t=ae(e),s=se(e),a=re(e),o=te(e?.issueType||e?.problemType),d=ne(e?.status),y=ie(e),v=le(e),h=de(e),j=X(e),$=Y(e),w=!!($&&j),c=oe(e),g=t?`<img class="je-request-poster" src="${n(t)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="je-request-poster placeholder"></div>',p=v?`<img class="je-request-avatar" data-avatar-src="${n(v)}" alt="" loading="lazy" style="display:none" onerror="this.style.display='none'">`:"";return`
+      <div class="je-issue-card" ${c?`data-media-id="${n(c)}"`:""}>
+        ${g}
         <div class="je-issue-info">
           <div class="je-issue-title-row">
-            <div class="je-issue-title">${n(r)}${d?` <span class="je-request-year">(${n(d)})</span>`:""}</div>
-            <span class="je-issue-status-chip ${u.className}">${n(u.label)}</span>
-            <span class="je-issue-type-chip">${n(c)}</span>
+            <div class="je-issue-title">${n(s)}${a?` <span class="je-request-year">(${n(a)})</span>`:""}</div>
+            <span class="je-issue-status-chip ${d.className}">${n(d.label)}</span>
+            <span class="je-issue-type-chip">${n(o)}</span>
           </div>
-          ${k?`<div class="je-issue-message">${n(k)}</div>`:""}
+          ${h?`<div class="je-issue-message">${n(h)}</div>`:""}
           <div class="je-issue-summary">
-            ${g}
-            <span>${n(b)}</span>
-            ${e?.createdAt?`<span>&#8226;</span><span>${n(o(e.createdAt))}</span>`:""}
-            <button class="je-issue-view-btn ${$?"":"is-disabled"}" type="button" aria-label="View issue" ${$?`data-issue-tmdb-id="${n(R)}" data-issue-media-type="${n(I)}" data-issue-title="${n(r)}"`:"disabled"}>
+            ${p}
+            <span>${n(y)}</span>
+            ${e?.createdAt?`<span>&#8226;</span><span>${n(k(e.createdAt))}</span>`:""}
+            <button class="je-issue-view-btn ${w?"":"is-disabled"}" type="button" aria-label="View issue" ${w?`data-issue-tmdb-id="${n($)}" data-issue-media-type="${n(j)}" data-issue-title="${n(s)}"`:"disabled"}>
               <span class="material-icons">visibility</span>
             </button>
           </div>
         </div>
       </div>
-    `}function ce(e){let t=e.source==="Sonarr"?L:H,r=n(e.instanceName||e.source),d=e.eventType==="partial",c=e.eventType==="imported",u=d?s.t?.("downloads_history_partial")||"Partially Imported":c?s.t?.("downloads_history_imported")||"Imported":s.t?.("downloads_history_failed")||"Import Failed",b=d?"je-chip-partial":c?"je-chip-available":"je-chip-declined",j=e.episodeCount?(s.t?.("downloads_history_partial_summary")||"{imported}/{total} episodes imported").replace("{imported}",String(e.importedCount??0)).replace("{total}",String(e.episodeCount)):null;return`
+    `}function ue(e){let t=e.source==="Sonarr"?q:T,s=n(e.instanceName||e.source),a=e.eventType==="partial",o=e.eventType==="imported",d=a?r.t?.("downloads_history_partial")||"Partially Imported":o?r.t?.("downloads_history_imported")||"Imported":r.t?.("downloads_history_failed")||"Import Failed",y=a?"je-chip-partial":o?"je-chip-available":"je-chip-declined",v=e.episodeCount?(r.t?.("downloads_history_partial_summary")||"{imported}/{total} episodes imported").replace("{imported}",String(e.importedCount??0)).replace("{total}",String(e.episodeCount)):null;return`
       <div class="je-request-card">
         ${e.posterUrl?`<img class="je-request-poster" src="${n(e.posterUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="je-request-poster placeholder"></div>'}
         <div class="je-request-info">
           <div class="je-request-header">
             <div>
               <div class="je-request-title-row">
-                <div class="je-request-title">${n(e.title||s.t?.("requests_unknown")||"Unknown")}</div>
+                <div class="je-request-title">${n(e.title||r.t?.("requests_unknown")||"Unknown")}</div>
                 ${e.subtitle?`<span class="je-request-year">${n(e.subtitle)}</span>`:""}
               </div>
-              <span class="je-requests-status-chip ${b}">${n(u)}</span>
-              ${j?`<span class="je-download-subtitle">${n(j)}</span>`:""}
+              <span class="je-requests-status-chip ${y}">${n(d)}</span>
+              ${v?`<span class="je-download-subtitle">${n(v)}</span>`:""}
             </div>
           </div>
           <div class="je-request-meta">
             <div class="je-request-meta-left">
-              <span class="je-download-badge je-arr-badge" title="${r}"><img src="${t}" alt="${r}" loading="lazy"></span>
-              <span>${n(r)}</span>
-              ${e.date?`<span>&#8226;</span><span>${n(o(e.date))}</span>`:""}
+              <span class="je-download-badge je-arr-badge" title="${s}"><img src="${t}" alt="${s}" loading="lazy"></span>
+              <span>${n(s)}</span>
+              ${e.date?`<span>&#8226;</span><span>${n(k(e.date))}</span>`:""}
             </div>
           </div>
         </div>
       </div>
-    `}function ue(e){let t=T(),r=e.item,d=t[(r.status||"unknown").toLowerCase()]||t.unknown,c=r.posterUrl?`<img class="je-download-poster" src="${n(r.posterUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="je-download-poster placeholder"></div>',u=e.episodes[0]?.totalSize||0,b=e.episodes[0]?.sizeRemaining||0,j=e.episodes.every($=>$.totalSize===u&&$.sizeRemaining===b),k=j?u:e.episodes.reduce(($,p)=>$+(p.totalSize||0),0),I=j?b:e.episodes.reduce(($,p)=>$+(p.sizeRemaining||0),0),R=`
+    `}function pe(e){let t=C(),s=e.item,a=t[(s.status||"unknown").toLowerCase()]||t.unknown,o=s.posterUrl?`<img class="je-download-poster" src="${n(s.posterUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'<div class="je-download-poster placeholder"></div>',d=e.episodes[0]?.totalSize||0,y=e.episodes[0]?.sizeRemaining||0,v=e.episodes.every(w=>w.totalSize===d&&w.sizeRemaining===y),h=v?d:e.episodes.reduce((w,c)=>w+(c.totalSize||0),0),j=v?y:e.episodes.reduce((w,c)=>w+(c.sizeRemaining||0),0),$=`
       <div class="je-download-progress-container">
         <div class="je-download-progress">
-          <div class="je-download-progress-bar" style="width: ${Math.max(0,Math.min(100,r.progress||0))}%; background: ${d}"></div>
+          <div class="je-download-progress-bar" style="width: ${Math.max(0,Math.min(100,s.progress||0))}%; background: ${a}"></div>
         </div>
         <div class="je-download-stats">
-          <span>${Math.max(0,Math.min(100,r.progress||0))}%</span>
-          ${r.timeRemaining?`<span>ETA: ${n(f(r.timeRemaining))}</span>`:""}
-          ${k?`<span>${C(k,I)}</span>`:""}
+          <span>${Math.max(0,Math.min(100,s.progress||0))}%</span>
+          ${s.timeRemaining?`<span>ETA: ${n(R(s.timeRemaining))}</span>`:""}
+          ${h?`<span>${P(h,j)}</span>`:""}
         </div>
       </div>
     `;return`
-      <div class="je-download-card je-season-pack" ${r.jellyfinMediaId?`data-media-id="${n(r.jellyfinMediaId)}"`:""}>
+      <div class="je-download-card je-season-pack" ${s.jellyfinMediaId?`data-media-id="${n(s.jellyfinMediaId)}"`:""}>
         <div class="je-download-card-content">
-          ${c}
+          ${o}
           <div class="je-download-info">
-            <div class="je-download-title" title="${n(r.title||"")}">${n(r.title||s.t?.("requests_unknown")||"Unknown")}</div>
-            <div class="je-download-subtitle">${s.t?.("requests_season")||"Season"} ${r.seasonNumber} (${e.episodeCount} ${s.t?.("requests_episodes")||"episodes"})</div>
+            <div class="je-download-title" title="${n(s.title||"")}">${n(s.title||r.t?.("requests_unknown")||"Unknown")}</div>
+            <div class="je-download-subtitle">${r.t?.("requests_season")||"Season"} ${s.seasonNumber} (${e.episodeCount} ${r.t?.("requests_episodes")||"episodes"})</div>
             <div class="je-download-meta">
-              <span class="je-download-badge je-arr-badge" title="Sonarr"><img src="${L}" alt="Sonarr" loading="lazy"></span>
-              <span class="je-download-badge" style="background: ${d}">${n(D(r.status))}</span>
+              <span class="je-download-badge je-arr-badge" title="Sonarr"><img src="${q}" alt="Sonarr" loading="lazy"></span>
+              <span class="je-download-badge" style="background: ${a}">${n(D(s.status))}</span>
               <span class="je-download-badge" style="background: rgba(128,128,128,0.4)">${e.episodeRange}</span>
             </div>
           </div>
         </div>
-        ${R}
+        ${$}
       </div>
-    `}function pe(e){let t=[];return e&&e.split(`
-`).forEach(r=>{let d=r.trim();if(!d)return;let c=d.split("|").map(u=>u.trim());c.length===2&&c[0]&&c[1]&&t.push({jellyfinUrl:c[0],arrUrl:c[1]})}),t}function me(e,t){if(!t)return null;if(!e||e.length===0)return t;let d=(l.ApiClient?.serverAddress?.()||window.location.origin).replace(/\/+$/,"").toLowerCase();for(let c of e){let u=c.jellyfinUrl.replace(/\/+$/,"").toLowerCase();if(d===u)return c.arrUrl.replace(/\/$/,"")}return t.replace(/\/$/,"")}let B=100,F=6,E=null;function ge(e,t,r){let d=(r?.matches||[])[0],c=d?me(pe(d.urlMappings||""),d.instanceUrl):null,u=O(c||"",l.location.href);return e==="movie"?u?`<a is="emby-linkbutton" class="je-request-external-link" href="${n(N(u,`movie/${encodeURIComponent(t)}`,l.location.href))}" target="_blank" rel="noopener noreferrer" title="Open in Radarr" aria-label="Open in Radarr"><img src="${H}" alt="Radarr"></a>`:null:!u||!d?.titleSlug?null:`<a is="emby-linkbutton" class="je-request-external-link" href="${n(N(u,`series/${encodeURIComponent(d.titleSlug)}`,l.location.href))}" target="_blank" rel="noopener noreferrer" title="Open in Sonarr" aria-label="Open in Sonarr"><img src="${L}" alt="Sonarr"></a>`}async function fe(e){let t=A.capture();if(!t.current()||!(s.pluginConfig?.ArrLinksEnabled===!0)||!s.helpers.isAdmin())return;let d=e.querySelectorAll(".je-request-external-links[data-tmdb-id]");if(!d.length)return;let c=[];if(d.forEach(p=>{let v=p.getAttribute("data-tmdb-id"),g=p.getAttribute("data-tvdb-id"),m=p.getAttribute("data-media-type")==="tv"?"tv":"movie";if(!v)return;let w=(m==="movie"?v:g||"").trim();!/^\d+$/.test(w)||!(Number(w)>0)||Number(w)>2147483647||c.push({slot:p,mediaType:m,tmdbId:v,id:String(Number(w))})}),!c.length)return;let u=[],b=[];for(let[p,v,g]of[["movie","tmdbIds","movies"],["tv","tvdbIds","series"]]){let m=[...new Set(c.filter(y=>y.mediaType===p).map(y=>y.id))],w=y=>({param:v,field:g,query:`${v}=${y.join(",")}`});if(m.length){u.push(w(m.slice(0,F)));for(let y=F;y<m.length;y+=B)b.push(w(m.slice(y,y+B)))}}let j=[...u,...b],k=JSON.stringify([s.session?.getEpoch(),l.ApiClient?.getCurrentUserId(),l.ApiClient?.serverAddress?.(),j.map(p=>p.query)]),I=E;if(!I||I.key!==k||I.controller.signal.aborted){I&&I.controller.abort();let p=new AbortController,v=s.core.lifecycle?.register("arr-requests-page");v?.track(p);let g=j.map(w=>({field:w.field,promise:s.core.api.plugin(`/arr/links?${w.query}`,{signal:p.signal,priority:"low"}).then(W).catch(()=>null)})),m={key:k,controller:p,chunks:g};Promise.all(g.map(w=>w.promise)).then(()=>{v?.untrack(p),E===m&&(E=null)}),I=m,E=m}let{controller:R,chunks:$}=I;await Promise.all($.map(async({field:p,promise:v})=>{let m=(await v)?.[p];if(!t.current()||!s.helpers.isAdmin()||s.pluginConfig?.ArrLinksEnabled!==!0||R.signal.aborted||!m||typeof m!="object")return;let w=p==="movies"?"movie":"tv";for(let y of c){if(y.mediaType!==w||!y.slot.isConnected||!Object.prototype.hasOwnProperty.call(m,y.id))continue;let J=ge(w,y.tmdbId,m[y.id]);J&&y.slot.insertAdjacentHTML("beforeend",J)}}))}a.renderDownloadCard=Q,a.renderRequestCard=Z,a.hydrateExternalLinks=fe,a.renderIssueCard=de,a.renderHistoryCard=ce,a.renderSeasonPackCard=ue}X(V());})();
+    `}function fe(e){let t=[];return e&&e.split(`
+`).forEach(s=>{let a=s.trim();if(!a)return;let o=a.split("|").map(d=>d.trim());o.length===2&&o[0]&&o[1]&&t.push({jellyfinUrl:o[0],arrUrl:o[1]})}),t}function me(e,t){if(!t)return null;if(!e||e.length===0)return t;let a=(m.ApiClient?.serverAddress?.()||window.location.origin).replace(/\/+$/,"").toLowerCase();for(let o of e){let d=o.jellyfinUrl.replace(/\/+$/,"").toLowerCase();if(a===d)return o.arrUrl.replace(/\/$/,"")}return t.replace(/\/$/,"")}let z=100,H=6,A=null;function ye(e,t,s){let a=(s?.matches||[])[0],o=a?me(fe(a.urlMappings||""),a.instanceUrl):null,d=O(o||"",m.location.href);return e==="movie"?d?`<a is="emby-linkbutton" class="je-request-external-link" href="${n(L(d,`movie/${encodeURIComponent(t)}`,m.location.href))}" target="_blank" rel="noopener noreferrer" title="Open in Radarr" aria-label="Open in Radarr"><img src="${T}" alt="Radarr"></a>`:null:!d||!a?.titleSlug?null:`<a is="emby-linkbutton" class="je-request-external-link" href="${n(L(d,`series/${encodeURIComponent(a.titleSlug)}`,m.location.href))}" target="_blank" rel="noopener noreferrer" title="Open in Sonarr" aria-label="Open in Sonarr"><img src="${q}" alt="Sonarr"></a>`}async function ge(e){let t=S.capture();if(!t.current()||!(r.pluginConfig?.ArrLinksEnabled===!0)||!r.helpers.isAdmin())return;let a=e.querySelectorAll(".je-request-external-links[data-tmdb-id]");if(!a.length)return;let o=[];if(a.forEach(c=>{let g=c.getAttribute("data-tmdb-id"),p=c.getAttribute("data-tvdb-id"),u=c.getAttribute("data-media-type")==="tv"?"tv":"movie";if(!g)return;let b=(u==="movie"?g:p||"").trim();!/^\d+$/.test(b)||!(Number(b)>0)||Number(b)>2147483647||o.push({slot:c,mediaType:u,tmdbId:g,id:String(Number(b))})}),!o.length)return;let d=[],y=[];for(let[c,g,p]of[["movie","tmdbIds","movies"],["tv","tvdbIds","series"]]){let u=[...new Set(o.filter(f=>f.mediaType===c).map(f=>f.id))],b=f=>({param:g,field:p,query:`${g}=${f.join(",")}`});if(u.length){d.push(b(u.slice(0,H)));for(let f=H;f<u.length;f+=z)y.push(b(u.slice(f,f+z)))}}let v=[...d,...y],h=JSON.stringify([r.session?.getEpoch(),m.ApiClient?.getCurrentUserId(),m.ApiClient?.serverAddress?.(),v.map(c=>c.query)]),j=A;if(!j||j.key!==h||j.controller.signal.aborted){j&&j.controller.abort();let c=new AbortController,g=r.core.lifecycle?.register("arr-requests-page");g?.track(c);let p=v.map(b=>({field:b.field,promise:r.core.api.plugin(`/arr/links?${b.query}`,{signal:c.signal,priority:"low"}).then(J).catch(()=>null)})),u={key:h,controller:c,chunks:p};Promise.all(p.map(b=>b.promise)).then(()=>{g?.untrack(c),A===u&&(A=null)}),j=u,A=u}let{controller:$,chunks:w}=j;await Promise.all(w.map(async({field:c,promise:g})=>{let u=(await g)?.[c];if(!t.current()||!r.helpers.isAdmin()||r.pluginConfig?.ArrLinksEnabled!==!0||$.signal.aborted||!u||typeof u!="object")return;let b=c==="movies"?"movie":"tv";for(let f of o){if(f.mediaType!==b||!f.slot.isConnected||!Object.prototype.hasOwnProperty.call(u,f.id))continue;let B=ye(b,f.tmdbId,u[f.id]);B&&f.slot.insertAdjacentHTML("beforeend",B)}}))}l.renderDownloadCard=Z,l.renderRequestCard=ee,l.hydrateExternalLinks=ge,l.renderIssueCard=ce,l.renderHistoryCard=ue,l.renderSeasonPackCard=pe}V(F());})();
 })();

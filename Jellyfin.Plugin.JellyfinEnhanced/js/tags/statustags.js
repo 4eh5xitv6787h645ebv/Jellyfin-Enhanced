@@ -1,51 +1,36 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function hasApiClient() {
-    const host = window;
-    return host.ApiClient !== void 0 && host.ApiClient !== null;
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function records(value) {
-    return Array.isArray(value) ? value.filter(isRecord) : [];
-  }
-  function stringList(value) {
-    return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
-  }
-  function text(value) {
-    return typeof value === "string" && value ? value : null;
-  }
-  function finite(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : null;
-  }
-  function own(table, key) {
-    return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export2 = /* @__PURE__ */ sharedExport(shared2, "finite");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export9 = /* @__PURE__ */ sharedExport(shared2, "own");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "records");
+  var export12 = /* @__PURE__ */ sharedExport(shared2, "stringList");
+  var export13 = /* @__PURE__ */ sharedExport(shared2, "text");
 
   // client/src/features/media-tags/types/status/status-facts.ts
   var MAX_DATE_MS = 864e13;
   function readLeaving(raw) {
-    if (!isRecord(raw)) return null;
+    if (!export42(raw)) return null;
     const deleteAt = toMs(raw.DeleteAt ?? raw.deleteAt ?? null);
     return { deleteAt: deleteAt !== null && Math.abs(deleteAt) <= MAX_DATE_MS ? deleteAt : null };
   }
@@ -63,9 +48,9 @@
     return String(id).replace(/-/g, "").toLowerCase();
   }
   function readFacts(src) {
-    const index = record(src.LatestEpisodeIndex);
-    const premiere = record(src.SeasonPremiere);
-    const span = record(src.SeasonAddedSpan);
+    const index = export10(src.LatestEpisodeIndex);
+    const premiere = export10(src.SeasonPremiere);
+    const span = export10(src.SeasonAddedSpan);
     const season = toInt(index.Season);
     const episode = toInt(index.Episode);
     const premiereSeason = toInt(premiere.Season);
@@ -73,9 +58,9 @@
     const first = toMs(span.First);
     const last = toMs(span.Last);
     const count = toInt(span.Count);
-    const isLast = record(src.EpisodeIndex).IsLast;
+    const isLast = export10(src.EpisodeIndex).IsLast;
     return {
-      scenes: isRecord(src.Scenes) ? src.Scenes : null,
+      scenes: export42(src.Scenes) ? src.Scenes : null,
       status: typeof src.Status === "string" && src.Status ? src.Status : null,
       latestAired: toMs(src.LatestEpisodeAired),
       isLast: typeof isLast === "boolean" ? isLast : null,
@@ -85,10 +70,10 @@
     };
   }
   function fromServerEntry(entry, itemId, inputs) {
-    const type = text(entry.Type);
+    const type = export13(entry.Type);
     const tmdb = entry.TmdbId ? String(entry.TmdbId) : null;
-    const index = record(entry.EpisodeIndex);
-    const stream = record(entry.StreamData);
+    const index = export10(entry.EpisodeIndex);
+    const stream = export10(entry.StreamData);
     return {
       type,
       tmdb,
@@ -112,9 +97,9 @@
     };
   }
   function fromItem(item, inputs) {
-    const type = text(item.Type);
-    const index = record(item.EpisodeIndex);
-    const tmdbRaw = record(item.ProviderIds).Tmdb || item.TmdbId;
+    const type = export13(item.Type);
+    const index = export10(item.EpisodeIndex);
+    const tmdbRaw = export10(item.ProviderIds).Tmdb || item.TmdbId;
     const tmdb = tmdbRaw ? String(tmdbRaw) : null;
     return {
       type,
@@ -139,19 +124,19 @@
   }
   function probedOf(streams, sources) {
     if (!Array.isArray(streams)) return null;
-    const first = Array.isArray(sources) ? record(sources[0]).Id : null;
-    const all = records(streams);
+    const first = Array.isArray(sources) ? export10(sources[0]).Id : null;
+    const all = export11(streams);
     const ofFirst = first && all.some((stream) => stream.SourceId) ? all.filter((stream) => stream.SourceId === first) : all;
     return ofFirst.some((stream) => stream.Type === "Video");
   }
   function mediaKeyOf(streams, sources, inputs) {
     const parts = [];
-    const list = (Array.isArray(sources) ? sources : []).map(record);
+    const list = (Array.isArray(sources) ? sources : []).map(export10);
     const revised = list.length > 0 && list.every((source) => typeof source.Revision === "string" && source.Revision);
     for (const source of list) {
       parts.push(revised ? `${String(source.Id || "")}:${String(source.Path || "")}:${String(source.Revision)}` : inputs.source.map((field) => source[field] ?? "").join(","));
     }
-    for (const stream of revised || !Array.isArray(streams) ? [] : streams.map(record)) {
+    for (const stream of revised || !Array.isArray(streams) ? [] : streams.map(export10)) {
       parts.push([stream.SourceId, ...inputs.stream.map((field) => stream[field])].map((v) => v ?? "").join(","));
     }
     let hash = 2166136261;
@@ -159,10 +144,10 @@
     return hash.toString(36);
   }
   function versionIds(sources) {
-    return records(sources).map((source) => source.Id).filter((id) => typeof id === "string" && !!id);
+    return export11(sources).map((source) => source.Id).filter((id) => typeof id === "string" && !!id);
   }
   function sourcePaths(sources) {
-    return Array.isArray(sources) ? sources.map((source) => record(source).Path) : [];
+    return Array.isArray(sources) ? sources.map((source) => export10(source).Path) : [];
   }
   function isStrm(paths) {
     return paths.some((path) => typeof path === "string" && path.toLowerCase().endsWith(".strm"));
@@ -314,7 +299,7 @@
       const list = trending.data;
       if (!list || !data.tmdb) return null;
       const map = data.type === "Movie" ? list.movies : data.type === "Series" ? list.series : null;
-      const rank = map ? own(map, data.tmdb) : null;
+      const rank = map ? export9(map, data.tmdb) : null;
       return typeof rank === "number" && rank > 0 ? rank : null;
     }
     function seriesFactsFor(data) {
@@ -336,14 +321,14 @@
       return isLast === true && (!facts.next || facts.next.season !== null && last.season !== null && facts.next.season > last.season);
     }
     function badgeDefinition(key) {
-      const definition = own(badgeDefinitions, key);
+      const definition = export9(badgeDefinitions, key);
       if (!definition) throw new Error(`Unknown status badge ${key}`);
       return definition;
     }
     function makeBadge(key, params) {
       const definition = badgeDefinition(key);
       const badge = { kind: definition.kind, key, label: label(definition.label, params) };
-      const compact = own(COMPACT_LABEL_KEYS, key);
+      const compact = export9(COMPACT_LABEL_KEYS, key);
       if (compact) badge.compact = label(compact, params);
       return badge;
     }
@@ -504,33 +489,33 @@
     }
     function getCachedEntry(ctx, itemId) {
       const entry = ctx.getPersistent(itemId) ?? ctx.hot?.get(itemId);
-      if (!isRecord(entry) || entry.v !== CACHE_ENTRY_VERSION) return null;
+      if (!export42(entry) || entry.v !== CACHE_ENTRY_VERSION) return null;
       if (typeof entry.timestamp !== "number" || Date.now() - entry.timestamp > CACHE_FRESH_MS) return null;
       return {
         fetchedAt: entry.timestamp,
-        type: text(entry.t),
-        tmdb: text(entry.m),
-        created: finite(entry.c),
-        premiere: finite(entry.p),
-        latest: finite(entry.l),
-        status: text(entry.st),
-        scenes: isRecord(entry.sc) ? entry.sc : null,
-        latestAired: finite(entry.la),
+        type: export13(entry.t),
+        tmdb: export13(entry.m),
+        created: export2(entry.c),
+        premiere: export2(entry.p),
+        latest: export2(entry.l),
+        status: export13(entry.st),
+        scenes: export42(entry.sc) ? entry.sc : null,
+        latestAired: export2(entry.la),
         isLast: typeof entry.il === "boolean" ? entry.il : null,
         latestIndex: Array.isArray(entry.li) ? { s: Number(entry.li[0]), e: Number(entry.li[1]), isLast: entry.li[2] === true } : null,
         seasonPremiere: Array.isArray(entry.sp) ? { s: Number(entry.sp[0]), aired: Number(entry.sp[1]) } : null,
-        addedSpan: Array.isArray(entry.as) ? { first: Number(entry.as[0]), last: Number(entry.as[1]), count: Number(entry.as[2]), coveredThrough: finite(entry.as[3]) } : null,
-        season: finite(entry.sn),
-        episode: finite(entry.en),
-        episodeEnd: finite(entry.ee),
-        media: text(entry.mk) ?? "",
+        addedSpan: Array.isArray(entry.as) ? { first: Number(entry.as[0]), last: Number(entry.as[1]), count: Number(entry.as[2]), coveredThrough: export2(entry.as[3]) } : null,
+        season: export2(entry.sn),
+        episode: export2(entry.en),
+        episodeEnd: export2(entry.ee),
+        media: export13(entry.mk) ?? "",
         // Whether a direct-play lookup may probe this item, and which versions it can ask about.
         probed: typeof entry.pr === "boolean" ? entry.pr : null,
         strm: entry.sm === true,
-        versions: stringList(entry.vs),
-        seriesId: text(entry.si),
+        versions: export12(entry.vs),
+        seriesId: export13(entry.si),
         // Stored only when known (null and undefined both mean "unknown" here).
-        seriesTmdb: text(entry.stm) ?? (entry.t === "Series" ? null : void 0),
+        seriesTmdb: export13(entry.stm) ?? (entry.t === "Series" ? null : void 0),
         leaving: Array.isArray(entry.lv) ? readLeaving({ DeleteAt: typeof entry.lv[0] === "number" ? entry.lv[0] : null }) : null
       };
     }
@@ -742,17 +727,17 @@
       const now = Date.now();
       if (now < trending.retryAt) return;
       if (trending.data?.source && now - trending.fetchedAt < TRENDING_TTL_MS) return;
-      if (!hasApiClient()) return;
+      if (!export1()) return;
       const previous = trendingKey(trending.data);
       trending.promise = (async () => {
         try {
-          const response = record(await apiClient().ajax({
+          const response = export10(await export0().ajax({
             type: "GET",
-            url: apiClient().getUrl("JellyfinEnhanced/status-tags/trending"),
+            url: export0().getUrl("JellyfinEnhanced/status-tags/trending"),
             dataType: "json"
           }));
-          const movies = record(response.movies);
-          const series = record(response.series);
+          const movies = export10(response.movies);
+          const series = export10(response.series);
           trending.data = { source: typeof response.source === "string" ? response.source : null, movies, series };
           trending.fetchedAt = Date.now();
           trending.retryAt = trending.data.source ? 0 : trending.fetchedAt + TRENDING_RETRY_MS;
@@ -777,7 +762,7 @@
         }
         return;
       }
-      if (seriesQueue.has(seriesId) || !hasApiClient()) return;
+      if (seriesQueue.has(seriesId) || !export1()) return;
       seriesInfo.set(seriesId, { facts: known?.facts ?? null, expires: known?.expires ?? 0, loading: true });
       seriesQueue.add(seriesId);
       if (!seriesTimer) seriesTimer = setTimeout(() => {
@@ -815,14 +800,14 @@
       }
     }
     function readSeriesFacts(raw) {
-      if (!isRecord(raw)) return null;
-      const episode = (ep, withType) => isRecord(ep) && airDay(ep.date) !== null ? { date: String(ep.date), season: toInt(ep.season), episode: toInt(ep.episode), ...withType ? { type: typeof ep.type === "string" ? ep.type : null } : {} } : null;
+      if (!export42(raw)) return null;
+      const episode = (ep, withType) => export42(ep) && airDay(ep.date) !== null ? { date: String(ep.date), season: toInt(ep.season), episode: toInt(ep.episode), ...withType ? { type: typeof ep.type === "string" ? ep.type : null } : {} } : null;
       return {
         status: typeof raw.status === "string" ? raw.status : null,
         last: episode(raw.lastAired, true),
         regular: episode(raw.lastRegularAired, true),
         next: episode(raw.nextAired, false),
-        seasonEpisodes: isRecord(raw.seasonEpisodes) ? raw.seasonEpisodes : null
+        seasonEpisodes: export42(raw.seasonEpisodes) ? raw.seasonEpisodes : null
       };
     }
     async function flushSeries(ctx) {
@@ -846,9 +831,9 @@
         let answer = null;
         let ok = false;
         try {
-          answer = await apiClient().ajax({
+          answer = await export0().ajax({
             type: "GET",
-            url: apiClient().getUrl("JellyfinEnhanced/status-tags/series", { ids: batch.join(",") }),
+            url: export0().getUrl("JellyfinEnhanced/status-tags/series", { ids: batch.join(",") }),
             dataType: "json"
           });
           ok = true;
@@ -857,11 +842,11 @@
         }
         if (epoch !== seriesEpoch) return;
         const byId = /* @__PURE__ */ new Map();
-        for (const [key, value] of Object.entries(record(answer))) byId.set(normId(key), value);
+        for (const [key, value] of Object.entries(export10(answer))) byId.set(normId(key), value);
         const now = Date.now();
         for (const id of batch) {
           const previous = seriesInfo.get(id)?.facts ?? null;
-          const failed = !ok || record(byId.get(id)).retry === true;
+          const failed = !ok || export10(byId.get(id)).retry === true;
           const facts = failed ? previous : readSeriesFacts(byId.get(id));
           seriesInfo.set(id, { facts, expires: now + (failed ? SERIES_RETRY_MS : SERIES_TTL_MS), retry: failed });
           if (JSON.stringify(previous) !== JSON.stringify(facts)) changed = true;
@@ -1119,7 +1104,7 @@
   }
 
   // client/src/features/media-tags/types/status/statustags-entry.ts
-  createStatusTags(tagRuntimeHost());
+  createStatusTags(export4());
 })();
 })();
 //# sourceMappingURL=statustags.js.map

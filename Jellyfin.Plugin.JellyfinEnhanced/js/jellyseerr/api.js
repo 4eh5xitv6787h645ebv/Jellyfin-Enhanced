@@ -3,11 +3,19 @@
 (() => {
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const shared = core.core?.featureContext;
-    if (typeof shared !== "function") {
+    const shared2 = core.core?.featureContext;
+    if (typeof shared2 !== "function") {
       throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return shared(feature, core, slots);
+    return shared2(feature, core, slots);
+  }
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
   // client/src/features/seerr/host-core.ts
@@ -30,254 +38,36 @@
     return { JE, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
   }
 
-  // client/src/features/seerr/core/decode.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
-  var isString = (value) => typeof value === "string";
-  var isBoolean = (value) => typeof value === "boolean";
-  var optional = (check) => (value) => value === void 0 || check(value);
-  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
-  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
-  var either = (...checks) => (value) => checks.some((check) => check(value));
-  function matches(value, checks) {
-    if (!isRecord(value)) return false;
-    const table = checks;
-    for (const [key, check] of Object.entries(table)) {
-      if (!check(value[key])) return false;
-    }
-    return true;
-  }
-  var seasonStatusChecks = {
-    seasonNumber: optional(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber)
-  };
-  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
-  var downloadChecks = {
-    title: nullable(isString),
-    status: nullable(isString),
-    size: nullable(isNumber),
-    sizeLeft: nullable(isNumber),
-    estimatedCompletionTime: nullable(isString),
-    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
-  };
-  var isDownload = (value) => matches(value, downloadChecks);
-  var requestSummaryChecks = {
-    is4k: nullable(isBoolean),
-    seasons: nullable(listOf((value) => matches(value, {
-      seasonNumber: optional(isNumber),
-      status: nullable(isNumber)
-    })))
-  };
-  var mediaInfoChecks = {
-    id: nullable(isNumber),
-    tvdbId: nullable(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber),
-    jellyfinMediaId: nullable(isString),
-    jellyfinMediaId4k: nullable(isString),
-    seasons: nullable(listOf(isSeasonStatus)),
-    downloadStatus: nullable(listOf(isDownload)),
-    downloadStatus4k: nullable(listOf(isDownload)),
-    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
-  };
-  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
-  var collectionChecks = {
-    id: nullable(isNumber),
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var isCollectionRef = (value) => matches(value, collectionChecks);
-  var mediaItemChecks = {
-    id: isNumber,
-    mediaType: isString,
-    title: nullable(isString),
-    name: nullable(isString),
-    originalTitle: nullable(isString),
-    originalName: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString),
-    overview: nullable(isString),
-    voteAverage: nullable(isNumber),
-    releaseDate: nullable(isString),
-    firstAirDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo),
-    collection: nullable(isCollectionRef)
-  };
-  var isMediaItem = (value) => matches(value, mediaItemChecks);
-  function mediaItems(value) {
-    if (!Array.isArray(value)) return { items: [], dropped: 0 };
-    const items = [];
-    let dropped = 0;
-    for (const entry of value) {
-      if (isMediaItem(entry)) items.push(entry);
-      else dropped++;
-    }
-    return { items, dropped };
-  }
-  var SeerrDecodeError = class extends Error {
-    constructor(what) {
-      super(`Seerr response did not match the expected ${what}`);
-      this.name = "SeerrDecodeError";
-    }
-  };
-  function decodeSearchPage(value) {
-    if (!isRecord(value)) throw new SeerrDecodeError("search page");
-    if (value.results !== void 0 && !Array.isArray(value.results)) throw new SeerrDecodeError("search results");
-    const raw = Array.isArray(value.results) ? value.results : [];
-    const { items } = mediaItems(raw.filter((entry) => !(isRecord(entry) && entry.mediaType === "person")));
-    const page = { totalResults: items.length, results: items };
-    if (isNumber(value.page)) page.page = value.page;
-    if (isNumber(value.totalPages)) page.totalPages = value.totalPages;
-    return page;
-  }
-  function decodeRelatedPage(value) {
-    if (!isRecord(value)) throw new SeerrDecodeError("related page");
-    const { items } = mediaItems(value.results);
-    return {
-      page: isNumber(value.page) ? value.page : 1,
-      totalPages: isNumber(value.totalPages) ? value.totalPages : 0,
-      totalResults: isNumber(value.totalResults) ? value.totalResults : items.length,
-      results: items
-    };
-  }
-  var userStatusChecks = {
-    active: isBoolean,
-    userFound: isBoolean,
-    reason: optional(isString),
-    message: optional(isString),
-    jellyseerrUserId: optional(either(isString, isNumber)),
-    canRequestAdvanced: optional(isBoolean)
-  };
-  var isUserStatus = (value) => matches(value, userStatusChecks);
-  var quotaSideChecks = {
-    limit: nullable(isNumber),
-    used: nullable(isNumber),
-    remaining: nullable(isNumber),
-    days: nullable(isNumber),
-    restricted: nullable(isBoolean),
-    nextResetAt: nullable(isString)
-  };
-  var quotaChecks = {
-    movie: nullable((value) => matches(value, quotaSideChecks)),
-    tv: nullable((value) => matches(value, quotaSideChecks))
-  };
-  var isUserQuota = (value) => matches(value, quotaChecks);
-  function decodeRequestSettings(value) {
-    if (!isRecord(value)) throw new SeerrDecodeError("request settings");
-    return { partialRequestsEnabled: value.partialRequestsEnabled === true, enableSpecialEpisodes: value.enableSpecialEpisodes === true };
-  }
-  var overrideRuleChecks = {
-    id: nullable(either(isNumber, isString)),
-    radarrServiceId: nullable(isNumber),
-    sonarrServiceId: nullable(isNumber),
-    language: nullable(isString),
-    genre: nullable(isString),
-    keywords: nullable(isString),
-    users: nullable(isString),
-    profileId: nullable(isNumber),
-    rootFolder: nullable(isString),
-    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
-  };
-  function decodeOverrideRules(value) {
-    if (!Array.isArray(value)) return [];
-    return value.filter((rule) => matches(rule, overrideRuleChecks));
-  }
-  var profileChecks = { id: isNumber, name: nullable(isString) };
-  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
-  function decodeProfiles(value) {
-    return Array.isArray(value) ? value.filter((entry) => matches(entry, profileChecks)) : [];
-  }
-  function decodeFolders(value) {
-    return Array.isArray(value) ? value.filter((entry) => matches(entry, folderChecks)) : [];
-  }
-  var serviceChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    isDefault: nullable(isBoolean),
-    is4k: nullable(isBoolean),
-    activeProfileId: nullable(isNumber),
-    activeDirectory: nullable(isString)
-  };
-  var isServiceListing = (value) => matches(value, serviceChecks);
-  function decodeAdvancedData(value) {
-    if (!isRecord(value) || !Array.isArray(value.servers)) return { servers: [], tags: [] };
-    const servers = [];
-    for (const entry of value.servers) {
-      if (!isServiceListing(entry)) continue;
-      servers.push({ ...entry, qualityProfiles: decodeProfiles(entry.qualityProfiles), rootFolders: decodeFolders(entry.rootFolders) });
-    }
-    return { servers, tags: Array.isArray(value.tags) ? value.tags.filter(isNumber) : [] };
-  }
-  var candidateChecks = {
-    tvdbId: isNumber,
-    title: nullable(isString),
-    year: nullable(either(isNumber, isString)),
-    overview: nullable(isString),
-    remotePoster: nullable(isString)
-  };
-  function decodeSonarrCandidates(value) {
-    return Array.isArray(value) ? value.filter((entry) => matches(entry, candidateChecks)) : [];
-  }
-  var movieCollectionChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var isMovieCollection = (value) => matches(value, movieCollectionChecks);
-  var issueChecks = {
-    id: nullable(isNumber),
-    media: nullable((value) => matches(value, {
-      tmdbId: nullable(either(isNumber, isString)),
-      mediaType: nullable(isString)
-    }))
-  };
-  function decodeIssuePage(value) {
-    if (!isRecord(value)) return { results: [] };
-    const results = Array.isArray(value.results) ? value.results.filter((issue) => matches(issue, issueChecks)) : [];
-    return { ...value, results };
-  }
-  var tvSeasonChecks = {
-    seasonNumber: isNumber,
-    name: nullable(isString),
-    episodeCount: nullable(isNumber),
-    airDate: nullable(isString),
-    jeYear: nullable(isString)
-  };
-  function decodeBelongsToCollection(value) {
-    if (!isRecord(value)) return null;
-    const belongs = isRecord(value.belongs_to_collection) ? value.belongs_to_collection : isRecord(value.belongsToCollection) ? value.belongsToCollection : null;
-    if (!belongs) return null;
-    const id = isNumber(belongs.id) && belongs.id ? belongs.id : isNumber(belongs.tmdbId) && belongs.tmdbId ? belongs.tmdbId : null;
-    if (id === null) return null;
-    const pick = (a, b) => isString(a) && a ? a : isString(b) && b ? b : null;
-    return {
-      id,
-      name: isString(belongs.name) ? belongs.name : null,
-      posterPath: pick(belongs.poster_path, belongs.posterPath),
-      backdropPath: pick(belongs.backdrop_path, belongs.backdropPath)
-    };
-  }
-  var collectionPartChecks = {
-    id: isNumber,
-    title: nullable(isString),
-    posterPath: nullable(isString),
-    releaseDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo)
-  };
+  // client/generated-shared/stub/client/src/features/seerr/core/decode.ts
+  var shared = /* @__PURE__ */ sharedModule("features/seerr/core/decode");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "SeerrDecodeError");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "decodeAdvancedData");
+  var export2 = /* @__PURE__ */ sharedExport(shared, "decodeBelongsToCollection");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "decodeFolders");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "decodeIssuePage");
+  var export6 = /* @__PURE__ */ sharedExport(shared, "decodeOverrideRules");
+  var export7 = /* @__PURE__ */ sharedExport(shared, "decodeProfiles");
+  var export8 = /* @__PURE__ */ sharedExport(shared, "decodeRelatedPage");
+  var export9 = /* @__PURE__ */ sharedExport(shared, "decodeRequestSettings");
+  var export10 = /* @__PURE__ */ sharedExport(shared, "decodeSearchPage");
+  var export11 = /* @__PURE__ */ sharedExport(shared, "decodeSonarrCandidates");
+  var export14 = /* @__PURE__ */ sharedExport(shared, "isCollectionRef");
+  var export17 = /* @__PURE__ */ sharedExport(shared, "isMovieCollection");
+  var export18 = /* @__PURE__ */ sharedExport(shared, "isNumber");
+  var export19 = /* @__PURE__ */ sharedExport(shared, "isRecord");
+  var export21 = /* @__PURE__ */ sharedExport(shared, "isServiceListing");
+  var export22 = /* @__PURE__ */ sharedExport(shared, "isString");
+  var export23 = /* @__PURE__ */ sharedExport(shared, "isUserQuota");
+  var export24 = /* @__PURE__ */ sharedExport(shared, "isUserStatus");
 
   // client/src/features/seerr/core/override-rules.ts
   function ruleMedia(value) {
-    if (!isRecord(value)) return { originalLanguage: null, genreIds: void 0, genreNames: [], keywordNames: void 0 };
-    const names = (list) => Array.isArray(list) ? list.map((entry) => isRecord(entry) && isString(entry.name) ? entry.name.toLowerCase() : "") : [];
+    if (!export19(value)) return { originalLanguage: null, genreIds: void 0, genreNames: [], keywordNames: void 0 };
+    const names = (list) => Array.isArray(list) ? list.map((entry) => export19(entry) && export22(entry.name) ? entry.name.toLowerCase() : "") : [];
     const keywords = value.jeRuleKeywords || value.keywords;
     return {
-      originalLanguage: isString(value.originalLanguage) && value.originalLanguage ? value.originalLanguage : null,
-      genreIds: Array.isArray(value.genreIds) ? value.genreIds.filter((id) => isNumber(id) || isString(id)).map(String) : void 0,
+      originalLanguage: export22(value.originalLanguage) && value.originalLanguage ? value.originalLanguage : null,
+      genreIds: Array.isArray(value.genreIds) ? value.genreIds.filter((id) => export18(id) || export22(id)).map(String) : void 0,
       genreNames: names(value.genres),
       // A non-list keyword field matches no keyword rule.
       keywordNames: keywords ? names(keywords) : void 0
@@ -285,9 +75,9 @@
   }
   var split = (value, separator) => value.split(separator).map((part) => part.trim());
   function ruleTags(tags) {
-    if (Array.isArray(tags)) return tags.map((tag) => isNumber(tag) ? tag : parseInt(tag, 10)).filter((tag) => !Number.isNaN(tag));
-    if (isString(tags)) return split(tags, "|").map((tag) => parseInt(tag, 10)).filter((tag) => !Number.isNaN(tag));
-    if (isNumber(tags)) return [tags];
+    if (Array.isArray(tags)) return tags.map((tag) => export18(tag) ? tag : parseInt(tag, 10)).filter((tag) => !Number.isNaN(tag));
+    if (export22(tags)) return split(tags, "|").map((tag) => parseInt(tag, 10)).filter((tag) => !Number.isNaN(tag));
+    if (export18(tags)) return [tags];
     return void 0;
   }
   async function matchOverrideRule(rules, media, mediaType, currentUser) {
@@ -346,7 +136,7 @@
   function text(read) {
     try {
       const value = read();
-      return isString(value) && value ? value : null;
+      return export22(value) && value ? value : null;
     } catch {
       return null;
     }
@@ -382,14 +172,14 @@
   }
   function errorStatus(error) {
     const status = thrownProperty(error, "status");
-    return isNumber(status) ? status : null;
+    return export18(status) ? status : null;
   }
   function errorBody(error) {
     const body = thrownProperty(error, "responseJSON");
-    if (!isRecord(body)) return { message: null, code: null, requestOutcome: null };
+    if (!export19(body)) return { message: null, code: null, requestOutcome: null };
     return {
-      message: isString(body.message) && body.message ? body.message : null,
-      code: isString(body.code) && body.code ? body.code : null,
+      message: export22(body.message) && body.message ? body.message : null,
+      code: export22(body.code) && body.code ? body.code : null,
       requestOutcome: body.requestOutcome === "unknown" || body.requestOutcome === "rejected" || body.requestOutcome === "not_sent" ? body.requestOutcome : null
     };
   }
@@ -449,17 +239,17 @@
     for (const key of SETTING_KEYS) {
       const entry = Reflect.get(value, key);
       if (key === "rootFolder") {
-        if (isString(entry)) out.rootFolder = entry;
+        if (export22(entry)) out.rootFolder = entry;
       } else if (key === "is4k") {
         if (typeof entry === "boolean") out.is4k = entry;
       } else if (key === "tags") {
-        if (Array.isArray(entry)) out.tags = entry.filter(isNumber);
-      } else if (isNumber(entry)) out[key] = entry;
+        if (Array.isArray(entry)) out.tags = entry.filter(export18);
+      } else if (export18(entry)) out[key] = entry;
     }
     return out;
   }
   function positiveInteger(value) {
-    const number = isNumber(value) ? value : isString(value) ? parseInt(value, 10) : NaN;
+    const number = export18(value) ? value : export22(value) ? parseInt(value, 10) : NaN;
     return Number.isInteger(number) && number > 0 ? number : null;
   }
   function installApi(host) {
@@ -495,7 +285,7 @@
     function post(path, body) {
       return coreApi().plugin(`/jellyseerr${path}`, { method: "POST", body, skipRetry: true });
     }
-    const detailsOrNull = (value) => isRecord(value) ? value : null;
+    const detailsOrNull = (value) => export19(value) ? value : null;
     function recallMovieCollection(tmdbId) {
       const entry = movieCollections.get(tmdbId);
       if (!entry) return void 0;
@@ -543,7 +333,7 @@
         recordOutcome(JE, { ...outcomeBase, kind: "not-sent", stale: false });
         throw new RequestNotSentError("invalid-input", `Invalid Seerr request target: ${mediaType} ${String(tmdbIdValue)}`);
       }
-      const supplied = isRecord(advancedSettings) ? advancedSettings : {};
+      const supplied = export19(advancedSettings) ? advancedSettings : {};
       let settings = forwardedSettings(supplied);
       if (Object.keys(supplied).length === 0 && mediaData) {
         const override = await api.evaluateOverrideRules(mediaData, mediaType, is4k);
@@ -607,7 +397,7 @@
       const page = typeof pageOrOptions === "number" ? pageOrOptions : pageOrOptions.page || 1;
       const options = typeof pageOrOptions === "object" ? readOptions(pageOrOptions) : {};
       try {
-        return decodeRelatedPage(await get(`/${mediaType}/${segment(tmdbId)}/${relation}?page=${page}`, options));
+        return export8(await get(`/${mediaType}/${segment(tmdbId)}/${relation}?page=${page}`, options));
       } catch (error) {
         if (isAbortError(error)) throw error;
         console.error(`${LOG} Failed to fetch ${relation} ${mediaType} for TMDB ID ${tmdbId}:`, error);
@@ -616,8 +406,8 @@
     }
     const api = {
       followUpOptions(details) {
-        if (!isRecord(details) || !details.jeSpoilerGuard) return void 0;
-        const items = Array.isArray(details.jeSpoilerGuardItems) ? details.jeSpoilerGuardItems.filter(isString) : [];
+        if (!export19(details) || !details.jeSpoilerGuard) return void 0;
+        const items = Array.isArray(details.jeSpoilerGuardItems) ? details.jeSpoilerGuardItems.filter(export22) : [];
         return { skipCache: true, headers: { "X-JE-Spoiler-Guarded": items.length ? items.join(",") : "1" } };
       },
       async checkUserStatus() {
@@ -628,8 +418,8 @@
         const origin = captureOrigin(host);
         try {
           const prefetched = JE.takePrefetched?.("SeerrUserStatus");
-          const raw = isUserStatus(prefetched) ? prefetched : await get("/user-status", { skipCache: true });
-          if (!isUserStatus(raw)) throw new SeerrDecodeError("user status");
+          const raw = export24(prefetched) ? prefetched : await get("/user-status", { skipCache: true });
+          if (!export24(raw)) throw new export0("user status");
           if (origin.current()) {
             cachedUserStatus = raw;
             cachedUserStatusAt = Date.now();
@@ -652,12 +442,12 @@
       },
       surfaceUserStatusBanner(status) {
         try {
-          if (!isRecord(status) || status.active && status.userFound) return;
-          const reason = isString(status.reason) ? status.reason : void 0;
+          if (!export19(status) || status.active && status.userFound) return;
+          const reason = export22(status.reason) ? status.reason : void 0;
           if (reason === "disabled") return;
           if (host.window.__JE_userStatusBannerShown === reason) return;
           host.window.__JE_userStatusBannerShown = reason ?? null;
-          const raw = isString(status.message) && status.message || reason && BANNER_REASONS[reason] || "Seerr is unavailable right now.";
+          const raw = export22(status.message) && status.message || reason && BANNER_REASONS[reason] || "Seerr is unavailable right now.";
           if (typeof JE.toast === "function") JE.toast(`Seerr: ${escapeHtml(raw)}`, 6e3);
           else console.warn(`${LOG} ${raw}`);
         } catch (error) {
@@ -678,7 +468,7 @@
           const fetchOptions = { skipCache };
           if (signal) fetchOptions.signal = signal;
           const data = await get(`/search?query=${encodeURIComponent(query)}&page=${page}&language=${language}`, fetchOptions);
-          return decodeSearchPage(data);
+          return export10(data);
         } catch (error) {
           if (isAbortError(error) || throwOnError) throw error;
           console.error('%s Search failed for query "%s":', LOG, query, error);
@@ -690,9 +480,9 @@
         const fetchOptions = signal ? { signal } : {};
         try {
           const seerr = await get(`/movie/${segment(tmdbId)}`, fetchOptions);
-          const c = isRecord(seerr) && isCollectionRef(seerr.collection) ? seerr.collection : null;
+          const c = export19(seerr) && export14(seerr.collection) ? seerr.collection : null;
           if (c?.id) return { id: c.id, name: c.name ?? null, posterPath: c.posterPath ?? null, backdropPath: c.backdropPath ?? null };
-          if (JE.pluginConfig?.TmdbEnabled) return decodeBelongsToCollection(await tmdbGet(`/movie/${segment(tmdbId)}`, fetchOptions));
+          if (JE.pluginConfig?.TmdbEnabled) return export2(await tmdbGet(`/movie/${segment(tmdbId)}`, fetchOptions));
           return null;
         } catch (error) {
           if (isAbortError(error)) throw error;
@@ -718,12 +508,12 @@
             const fetchOptions = { skipCache: true };
             if (signal) fetchOptions.signal = signal;
             const data = await get(`/movie-collections?ids=${chunk.join(",")}`, fetchOptions);
-            const answers = isRecord(data) && isRecord(data.results) ? data.results : {};
+            const answers = export19(data) && export19(data.results) ? data.results : {};
             for (const [key, collection] of Object.entries(answers)) {
               const id = Number(key);
               if (!Number.isInteger(id)) continue;
               if (!collection) answered.set(id, null);
-              else if (isMovieCollection(collection)) answered.set(id, collection);
+              else if (export17(collection)) answered.set(id, collection);
             }
           }
         } catch (error) {
@@ -747,7 +537,7 @@
         }
       },
       async fetchSonarrLookup(tmdbId) {
-        return decodeSonarrCandidates(await get(`/sonarr/lookup/${segment(tmdbId)}`));
+        return export11(await get(`/sonarr/lookup/${segment(tmdbId)}`));
       },
       async fetchTvSeasonDetails(tmdbId, seasonNumber, options) {
         try {
@@ -769,7 +559,7 @@
         if (cachedOverrideRules !== null && Date.now() - overrideRulesCachedAt < OVERRIDE_RULES_TTL_MS) return cachedOverrideRules;
         const origin = captureOrigin(host);
         try {
-          const rules = decodeOverrideRules(await get("/overrideRule"));
+          const rules = export6(await get("/overrideRule"));
           if (origin.current()) {
             cachedOverrideRules = rules;
             overrideRulesCachedAt = Date.now();
@@ -839,7 +629,7 @@
         const { take = 20, skip = 0, filter = "open", sort = "added" } = options;
         try {
           const query = new URLSearchParams({ take: String(take), skip: String(skip), filter, sort });
-          const page = decodeIssuePage(await get(`/issue?${query.toString()}`));
+          const page = export5(await get(`/issue?${query.toString()}`));
           const results = page.results.filter((issue) => {
             const media = issue.media || {};
             const tmdbMatch = !!media.tmdbId && Number(media.tmdbId) === Number(tmdbId);
@@ -865,17 +655,17 @@
         try {
           const listed = await get(`/${serverType}`);
           const serverList = Array.isArray(listed) ? listed : [listed];
-          const servers = await Promise.all(serverList.filter(isServiceListing).map(async (server) => {
+          const servers = await Promise.all(serverList.filter(export21).map(async (server) => {
             try {
               const details = await get(`/${serverType}/${server.id}`);
-              const record = isRecord(details) ? details : {};
-              return { ...server, qualityProfiles: decodeProfiles(record.profiles), rootFolders: decodeFolders(record.rootFolders) };
+              const record = export19(details) ? details : {};
+              return { ...server, qualityProfiles: export7(record.profiles), rootFolders: export4(record.rootFolders) };
             } catch (error) {
               console.error(`${LOG} Could not fetch details for ${serverType} server ID ${server.id}:`, error);
               return { ...server, qualityProfiles: [], rootFolders: [] };
             }
           }));
-          return decodeAdvancedData({ servers, tags: [] });
+          return export1({ servers, tags: [] });
         } catch (error) {
           console.error(`${LOG} Failed to fetch ${serverType} servers:`, error);
           return { servers: [], tags: [] };
@@ -885,7 +675,7 @@
         if (host.liveBridge()?.pluginConfig?.JellyseerrShowQuotaInfo === false) return null;
         try {
           const quota = await get("/quota", readOptions(options));
-          if (isUserQuota(quota)) return quota;
+          if (export23(quota)) return quota;
           console.warn(`${LOG} Quota response was not a quota document`);
           return null;
         } catch (error) {
@@ -897,7 +687,7 @@
       },
       async fetchRequestSettings() {
         try {
-          const settings = decodeRequestSettings(await get("/settings/partial-requests", { skipCache: true }));
+          const settings = export9(await get("/settings/partial-requests", { skipCache: true }));
           lastRequestSettings = settings;
           return settings;
         } catch (error) {
@@ -930,7 +720,7 @@
           let details = null;
           if (mediaType === "movie") details = await get(`/movie/${segment(mediaId)}`);
           else if (mediaType === "tv") details = await get(`/tv/${segment(mediaId)}`);
-          const mediaInfo = isRecord(details) && isRecord(details.mediaInfo) ? details.mediaInfo : null;
+          const mediaInfo = export19(details) && export19(details.mediaInfo) ? details.mediaInfo : null;
           const internalId = mediaInfo ? positiveInteger(mediaInfo.id) : null;
           if (!internalId) throw new Error(`Could not find Jellyseerr media id (mediaInfo.id) for TMDB id ${mediaId} (${mediaType})`);
           if (!origin.current()) throw new RequestNotSentError("identity-changed", "The signed-in account changed before the issue was sent");
