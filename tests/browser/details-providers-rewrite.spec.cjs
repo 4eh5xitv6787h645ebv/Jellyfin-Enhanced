@@ -1,7 +1,7 @@
 // Details-providers rewrite: a real-browser journey over the production emitted
 // scripts with an intercepted local fixture (no Jellyfin host, no network).
 const { test, expect } = require('@playwright/test');
-const path = require('node:path');
+const path = require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const root = path.resolve(__dirname, '../../Jellyfin.Plugin.JellyfinEnhanced/js');
 const SCRIPTS = ['enhanced/itemdetails/features-details-media-info.js', 'enhanced/itemdetails/features-release-dates.js', 'enhanced/itemdetails/features-details-page.js',
   'elsewhere/reviews.js', 'awards/awards.js', 'others/letterboxd-links.js', 'extras/colored-ratings.js'];
@@ -57,7 +57,7 @@ async function setup(page) {
     window.showView = () => views.forEach(fn => fn('itemDetailPage', document.getElementById('itemDetailPage'), location.hash, null, { target: document.getElementById('itemDetailPage'), detail: { params: { id: new URLSearchParams(location.hash.split('?')[1]).get('id') } } }));
     window.changeAccount = () => { epoch++; users.forEach(fn => fn()); };
   });
-  for (const file of SCRIPTS) await page.addScriptTag({ path: path.join(root, file) });
+  await provideFeatureContext(page);  for (const file of SCRIPTS) await page.addScriptTag({ path: path.join(root, file) });
   await page.evaluate(() => {
     const JE = window.JellyfinEnhanced;
     JE.initializeReviewsScript(); JE.initializeAwardsScript(); JE.initializeLetterboxdLinksScript(); JE.initializeColoredRatings();

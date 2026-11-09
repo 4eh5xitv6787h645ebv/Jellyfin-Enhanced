@@ -2,7 +2,7 @@
  * Narrow host adapters for the header/chrome feature group. Each feature declares
  * the exact legacy facade members it consumes; nothing here is an aggregate bag.
  */
-import { featureContext, type FeatureContext } from '../../host/context';
+import { createFeatureContext, featureContext, type FeatureContext } from '../../host/context';
 import type { BookmarkApi } from '../bookmarks/public-api';
 import type { EventsBridge } from './events';
 
@@ -45,6 +45,13 @@ export type ChromeContext<Bridge extends object, Own extends object> = FeatureCo
 /** The context of an entry that publishes `facades` on the bridge it read (chromeBridge, ensureBridge or optionalBridge). */
 export function chromeContext<Bridge extends object, F extends keyof Bridge & string>(JE: Bridge, facades: readonly F[]): ChromeContext<Bridge, Pick<Bridge, F>> {
     return featureContext<Pick<Bridge, F>, ChromePeers, Bridge>('chrome', JE, { facades });
+}
+/**
+ * chromeContext for the pre-login scripts (splash, login image). They load before the component bundle, so
+ * core/ui-kit.js has not published the shared featureContext yet; they build theirs with the implementation itself.
+ */
+export function preLoginChromeContext<Bridge extends object, F extends keyof Bridge & string>(JE: Bridge, facades: readonly F[]): ChromeContext<Bridge, Pick<Bridge, F>> {
+    return createFeatureContext<Pick<Bridge, F>, ChromePeers, Bridge>('chrome', JE, { facades });
 }
 /** The events entry's own slots: its two facades and chrome's owner-only `JE.internals.canonicalCombo` slot. */
 export type EventsOwn = Pick<EventsBridge, 'keyListener' | 'initializeEnhancedScript'> & NonNullable<EventsBridge['internals']>;

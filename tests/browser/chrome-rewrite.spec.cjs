@@ -1,6 +1,6 @@
 // Real Chromium journeys for the chrome slice's user-visible controls, on the emitted scripts.
 const {test,expect}=require('@playwright/test');
-const path=require('node:path');
+const path=require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const root=path.resolve(process.env.CHROME_JS||path.join(__dirname,'../../Jellyfin.Plugin.JellyfinEnhanced/js'));
 const page0=html=>route=>route.fulfill({contentType:'text/html',body:`<!doctype html><html><head><style>body{margin:0;font-family:sans-serif;background:#101010;color:#eee}
  .headerTop{display:flex;align-items:center;height:56px;padding:0 8px;background:#202020}.headerLeft{flex-grow:1;display:flex;align-items:center}
@@ -28,7 +28,7 @@ test('header More menu collapses JE actions on a phone width, forwards to origin
  await page.route('http://chrome.fixture/**',page0(header));
  await page.goto('http://chrome.fixture/#/home');
  await bridge(page);
- await page.addScriptTag({path:path.join(root,'enhanced/header-actions.js')});
+ await provideFeatureContext(page); await page.addScriptTag({path:path.join(root,'enhanced/header-actions.js')});
  await page.evaluate(()=>{const tray=window.JellyfinEnhanced.headerActions.getTray();
   for(const id of ['randomItemButton','calendar','requests','bookmarks','downloads','activity','catchup']){const b=document.createElement('button');b.id=id;b.className='headerButton';b.title=id+' title';b.textContent=id[0];b.onclick=()=>{window.clicked=id;};tray.appendChild(b);}});
  const launcher=page.locator('#je-header-launcher');
@@ -63,7 +63,7 @@ test('active streams panel shows sessions to an admin, broadcasts, and refuses a
  await page.goto('http://chrome.fixture/#/home');
  const session={UserId:'u2',UserName:'Viewer',Client:'Web',DeviceName:'Chrome',RemoteEndPoint:'10.0.0.5',NowPlayingItem:{Id:'m',Name:'Movie <b>x</b>',RunTimeTicks:600000000,ProductionYear:2020},PlayState:{IsPaused:false,PositionTicks:300000000,PlayMethod:'DirectPlay'}};
  await bridge(page,{sessions:[session]});
- await page.addScriptTag({path:path.join(root,'enhanced/header-actions.js')});
+ await provideFeatureContext(page); await page.addScriptTag({path:path.join(root,'enhanced/header-actions.js')});
  await page.addScriptTag({path:path.join(root,'extras/active-streams.js')});
  await page.evaluate(()=>window.JellyfinEnhanced.activeStreams.initialize());
  const counter=page.locator('#je-active-streams');
@@ -113,7 +113,7 @@ test('theme selector renders on the preferences page and toggles the daily theme
  await page.goto('http://chrome.fixture/#/mypreferencesmenu');
  await page.evaluate(()=>{window.ApiClient={getCurrentUserId:()=>'user-a'};window.Dashboard={alert:m=>{window.alerted=m;}};
   window.JellyfinEnhanced={cdn:{url:(s,p)=>'/cdn/'+s+'/'+p}};localStorage.setItem('user-a-lastRandomThemeDate',new Date().toISOString().split('T')[0]);});
- await page.addScriptTag({path:path.join(root,'extras/theme-selector.js')});
+ await provideFeatureContext(page); await page.addScriptTag({path:path.join(root,'extras/theme-selector.js')});
  await page.evaluate(()=>{window.JellyfinEnhanced.initializeThemeSelector();document.body.appendChild(document.createElement('i'));});
  const select=page.getByRole('combobox',{name:'Select theme'});
  await expect(select).toBeVisible();await expect(select).toHaveValue('Default');

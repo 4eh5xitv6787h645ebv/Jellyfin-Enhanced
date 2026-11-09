@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const path = require('node:path');
+const path = require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 
 // A small journey through the emitted Seerr details scripts in a real browser: real history,
 // layout, IntersectionObserver and CSS, with the Seerr facades stubbed behind a fixture page.
@@ -36,7 +36,7 @@ async function setup(page) {
       jellyseerrUI: { isQuotaError: () => false, buildQuotaChip: () => null, addMainStyles() {} } };
     window.switchAccount = () => { epoch++; handlers.forEach(fn => fn()); };
   });
-  for (const script of scripts) await page.addScriptTag({ path: path.join(jsRoot, script) });
+  await provideFeatureContext(page);  for (const script of scripts) await page.addScriptTag({ path: path.join(jsRoot, script) });
 }
 
 const modal = page => page.locator('.je-more-info-modal');

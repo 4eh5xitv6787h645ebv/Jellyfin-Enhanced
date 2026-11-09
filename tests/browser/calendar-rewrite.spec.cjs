@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');
-const path=require('node:path');
+const path=require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 test.use({timezoneId:'America/New_York'});
 const root=path.resolve(__dirname,'../../Jellyfin.Plugin.JellyfinEnhanced/js/arr/calendar');
 test('generated calendar switches views, expands episodes, retries errors, rejects account-stale navigation and remounts',async({page},testInfo)=>{
@@ -20,7 +20,7 @@ test('generated calendar switches views, expands episodes, retries errors, rejec
    }}}};
   window.changeUser=()=>{epoch++;changes.forEach(f=>f());};
  });
- for(const name of ['styles','data','render-events','render-views','actions','init'])await page.addScriptTag({path:path.join(root,'calendar-page-'+name+'.js')});
+ await provideFeatureContext(page); for(const name of ['styles','data','render-events','render-views','actions','init'])await page.addScriptTag({path:path.join(root,'calendar-page-'+name+'.js')});
  await page.evaluate(()=>{window.JellyfinEnhanced.internals.calendarPage.state.currentDate=new Date(2026,2,8);window.JellyfinEnhanced.calendarPage.initialize();});
  await expect(page.locator('.je-calendar-agenda-event')).toHaveCount(1);
  await page.locator('.je-calendar-group-toggle').click();await expect(page.locator('.je-calendar-agenda-event')).toHaveCount(2);

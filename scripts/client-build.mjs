@@ -8,6 +8,8 @@ import { checkTagData } from './tag-data.mjs';
 export const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const pluginDirectory = 'Jellyfin.Plugin.JellyfinEnhanced';
 const ledgerPath = 'client/generated-manifest.json';
+/** Minified twins of the component scripts, read only by the served bundle (ClientScriptBundle.cs). */
+export const minDirectory = 'min';
 const versions = { typescript: '6.0.3', esbuild: '0.28.2' };
 const require = createRequire(import.meta.url);
 
@@ -166,6 +168,16 @@ export function checkSourcePolicy(root = repositoryRoot) {
   if (failures.length) throw new Error(`Client source policy failed:\n${failures.join('\n')}`);
 }
 
+/** The `js/<path>` outputs js/component-scripts.json lists (its `//` entries are notes); empty when there is none. */
+function readComponentScripts(root) {
+  const path = `${pluginDirectory}/js/component-scripts.json`;
+  const file = safePath(root, path);
+  if (!existsSync(file)) return new Set();
+  const list = JSON.parse(readFileSync(file, 'utf8'));
+  if (!Array.isArray(list) || list.some(item => typeof item !== 'string')) throw new Error(`${path}: expected an array of strings`);
+  return new Set(list.map(item => item.trim()).filter(item => item && !item.startsWith('//')).map(item => `js/${item}`));
+}
+
 /** Loads HTML support only for trees with HTML sources; JS-only builds never need it. */
 async function loadHtmlPages(root, ts) {
   const present = ['client/html', 'client/html-entries'].some(path => lstatSync(join(root, path), { throwIfNoEntry: false }));
@@ -217,6 +229,7 @@ export async function buildClient({ root = repositoryRoot, check = false, typech
   const sourceCount = checkTypes(ts, root, [...entries, ...htmlSources]);
   if (typecheckOnly) return { entries: entries.length, sources: sourceCount, html: pages.length };
   const artifacts = new Map();
+  const componentScripts = readComponentScripts(root);
   for (const entry of entries) {
     const result = await bundle(esbuild, root, {
       entryPoints: [entry.source],
@@ -230,6 +243,29 @@ export async function buildClient({ root = repositoryRoot, check = false, typech
       if (path !== expected && path !== `${expected}.map`) throw new Error(`Unexpected generated artifact: ${path}`);
       if (artifacts.has(path)) throw new Error(`Duplicate generated artifact: ${path}`);
       artifacts.set(path, output.contents);
+    }
+  }
+  // The served bundle (/JellyfinEnhanced/bundle.js, ClientScriptBundle.cs) concatenates the component scripts. Each
+  // gets a minified twin under min/ that only the bundle reads; js/** stays readable for tests, the per-file
+  // loader and debugging (canopy K1). Same source, same wrapper, plus `minify`; built at the readable output's own
+  // path so the external map's `sources` match the readable map's (the server copies sourcesContent from that map).
+  for (const entry of entries.filter(entry => componentScripts.has(entry.output))) {
+    const result = await bundle(esbuild, root, {
+      entryPoints: [entry.source],
+      outfile: `${pluginDirectory}/${entry.output}`,
+      charset: 'utf8',
+      minify: true,
+      sourcemap: 'external',
+      sourcesContent: false,
+    });
+    for (const output of result.outputFiles) {
+      const path = relative(root, output.path).split(sep).join('/');
+      const readable = `${pluginDirectory}/${entry.output}`;
+      if (path !== readable && path !== `${readable}.map`) throw new Error(`Unexpected generated artifact: ${path}`);
+      const twin = `${pluginDirectory}/${minDirectory}/${path.slice(pluginDirectory.length + 1)}`;
+      safePath(root, twin);
+      if (artifacts.has(twin)) throw new Error(`Duplicate generated artifact: ${twin}`);
+      artifacts.set(twin, output.contents);
     }
   }
   const htmlLedger = [];

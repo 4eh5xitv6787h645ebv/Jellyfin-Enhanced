@@ -105,6 +105,9 @@
     <EmbeddedResource Include="Configuration\whats-new-seed.json"/>
     <None Remove="plugin.js"/>
     <EmbeddedResource Include="js\**" />
+    <!-- Minified twins of the component scripts (scripts/client-build.mjs), read only by the served bundle
+         (Features/Platform/Services/ClientScriptBundle.cs); never served per file. -->
+    <EmbeddedResource Include="min\**" />
   </ItemGroup>
 
 

@@ -100,8 +100,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
 
         /// <summary>
         /// The concatenated component scripts (see Services/ClientScriptBundle).
-        /// Same headers as GetScriptResource: immutable in production (the URL
+        /// Same Cache-Control as GetScriptResource: immutable in production (the URL
         /// carries the cache key), no-store and rebuilt per request in dev mode.
+        /// Sent pre-compressed (br, else gzip, per Accept-Encoding; Vary: Accept-Encoding)
+        /// with a strong ETag per representation; a matching If-None-Match gets a 304.
+        /// A response that already has Content-Encoding is left alone by ASP.NET Core's
+        /// response compression, so it is never compressed twice.
         /// </summary>
         [HttpGet("bundle.js")]
         public ActionResult GetScriptBundle() => GetScriptBundleResource(map: false);
@@ -118,10 +122,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
             }
 
             var devMode = plugin.Configuration?.DevMode == true;
-            byte[] script, sourceMap;
+            Features.Platform.Services.EncodedBody body;
             try
             {
-                (script, sourceMap) = Features.Platform.Services.ClientScriptBundle.GetBundle(plugin.ScriptCacheKey, rebuild: devMode, _logger);
+                var bundle = Features.Platform.Services.ClientScriptBundle.GetServedBundle(plugin.ScriptCacheKey, rebuild: devMode, _logger);
+                body = (map ? bundle.SourceMap : bundle.Script).Select(Request.Headers.AcceptEncoding.ToString());
             }
             catch (Exception ex)
             {
@@ -131,9 +136,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
             }
 
             Response.Headers["Cache-Control"] = devMode ? "no-store" : "public, max-age=31536000, immutable";
-            return map
-                ? File(sourceMap, "application/json")
-                : File(script, "application/javascript");
+            Response.Headers["Vary"] = "Accept-Encoding";
+            Response.Headers["ETag"] = body.ETag;
+            if (Features.Platform.Services.ServedFile.NotModified(Request.Headers.IfNoneMatch.ToString(), body))
+            {
+                return StatusCode(304);
+            }
+
+            if (body.Encoding != null)
+            {
+                Response.Headers["Content-Encoding"] = body.Encoding;
+            }
+
+            return File(body.Bytes, map ? "application/json" : "application/javascript");
         }
 
         [HttpGet("locales")]

@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');
-const path=require('node:path');
+const path=require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const root=path.resolve(__dirname,'../../Jellyfin.Plugin.JellyfinEnhanced/js/arr/requests');
 test.beforeEach(async({page})=>{const errors=[];page.on('pageerror',e=>errors.push(e.message));page.__downloadsErrors=errors;});
 test.afterEach(async({page})=>{expect(page.__downloadsErrors).toEqual([]);});
@@ -24,7 +24,7 @@ async function setup(page,mode='standalone'){
    window.changeAccount=()=>{epoch++;resets.forEach(fn=>fn());};
    window.dispose=()=>{resources.splice(0).forEach(r=>typeof r==='function'?r():typeof r==='number'?clearInterval(r):r.abort?.());};
  },mode);
- for(const name of ['styles','data','render-helpers','render-cards','render','actions','init'])await page.addScriptTag({path:path.join(root,'requests-page-'+name+'.js')});
+ await provideFeatureContext(page); for(const name of ['styles','data','render-helpers','render-cards','render','actions','init'])await page.addScriptTag({path:path.join(root,'requests-page-'+name+'.js')});
  await page.evaluate(()=>window.JellyfinEnhanced.downloadsPage.initialize());
  if(mode==='standalone')await page.evaluate(()=>window.JellyfinEnhanced.downloadsPage.showPage());
  else await page.addScriptTag({path:path.join(root,'requests-custom-tab.js')});

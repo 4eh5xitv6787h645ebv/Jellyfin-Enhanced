@@ -51,8 +51,20 @@ export interface OwnSlots<Own extends object> {
     readonly internalsObject?: () => object;
 }
 
-/** Build a feature's context around the typed bridge its host read from `window.JellyfinEnhanced`. */
-export function featureContext<Own extends object, Peers extends object = Record<never, never>, Core extends object = object>(
+/** The `JE.core` slot that carries the one shared copy of {@link createFeatureContext} (see publishFeatureContext). */
+export interface FeatureContextCore {
+    featureContext?: typeof createFeatureContext;
+}
+
+/**
+ * Build a feature's context around the typed bridge its host read from `window.JellyfinEnhanced`.
+ *
+ * The implementation. Feature hosts do not call it directly: they call {@link featureContext}, which delegates to the
+ * one copy core/ui-kit.js publishes on `JE.core.featureContext`, so the ~100 feature outputs no longer each inline
+ * this function (canopy K1). Only scripts that run outside the component bundle, before it (the pre-login splash
+ * and login image), call it directly.
+ */
+export function createFeatureContext<Own extends object, Peers extends object = Record<never, never>, Core extends object = object>(
     feature: FeatureName, core: Core, slots: OwnSlots<Own>,
 ): FeatureContext<Own, Peers, Core> {
     const own = {} as Own;
@@ -78,4 +90,30 @@ export function featureContext<Own extends object, Peers extends object = Record
         own,
         peer: name => (core as Record<string, unknown>)[name] as Peers[typeof name] | undefined,
     };
+}
+
+/**
+ * Publish the shared implementation on `JE.core` once (canopy K1). core/ui-kit.js does this as its first statement,
+ * and it loads before every feature script in js/component-scripts.json (bundle and per-file loader alike;
+ * tests/client-build/feature-context.test.mjs checks the order). Non-enumerable, so it never shows up in a walk of
+ * `JE.core`; an existing copy is kept.
+ */
+export function publishFeatureContext(core: FeatureContextCore): void {
+    if (typeof core.featureContext === 'function') return;
+    Object.defineProperty(core, 'featureContext', { value: createFeatureContext, configurable: true, writable: true, enumerable: false });
+}
+
+/**
+ * Build a feature's context (frontend.md §2.3). Feature hosts call this with the `JE` bridge; it runs the shared
+ * implementation published on `JE.core.featureContext` (publishFeatureContext) instead of a copy inlined into
+ * every feature output.
+ */
+export function featureContext<Own extends object, Peers extends object = Record<never, never>, Core extends object = object>(
+    feature: FeatureName, core: Core, slots: OwnSlots<Own>,
+): FeatureContext<Own, Peers, Core> {
+    const shared = (core as { core?: FeatureContextCore }).core?.featureContext;
+    if (typeof shared !== 'function') {
+        throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
+    }
+    return shared<Own, Peers, Core>(feature, core, slots);
 }

@@ -12,6 +12,7 @@
 #   scripts/restructure-gates.sh tool            python3 tests/run.py tooling + mutation/history path check vs baselines/mutation-check.txt
 #   scripts/restructure-gates.sh bundle <out.js> raw bytes of the in-process GET /JellyfinEnhanced/bundle.js; prints nothing on stdout
 #   scripts/restructure-gates.sh bundle-hash <f> prints `<stable sha256> <comment-stripped sha256>` of a bundle file
+#   scripts/restructure-gates.sh size            served bundle raw and gzip -9 bytes vs client/bundle-budget.json (ratchet)
 #   scripts/restructure-gates.sh image           the HOST image tag in baselines/jf12-digest.txt still has the recorded RepoDigest
 #
 # Pre-existing test failures are ratcheted, not fixed: a dotnet or node test run passes when every failing test is
@@ -379,6 +380,30 @@ gate_bundle_hash() (
     "$(grep -vE "$map|^[[:space:]]*// client/src/" "$1" | sha256sum | cut -d' ' -f1)"
 )
 
+# canopy K1 bundle-size gate: the identity body of the in-process GET /JellyfinEnhanced/bundle.js (gate_bundle) must fit
+# client/bundle-budget.json `limits`, raw and gzip -9 (tests/backend/Api/BundleBudgetTests.cs checks the same in T, and
+# that the budget only rises with a reason). Brotli -q 11 (what the endpoint sends to browsers) is printed, not gated.
+gate_size() (
+  set -e
+  local dir raw gzip br max_raw max_gzip rc=0
+  dir=$(mktemp -d)
+  trap 'rm -rf "$dir"' EXIT
+  step "SIZE: served bundle vs client/bundle-budget.json"
+  gate_bundle "$dir/bundle.js"
+  raw=$(wc -c < "$dir/bundle.js")
+  gzip=$(gzip -9 -n -c "$dir/bundle.js" | wc -c)
+  max_raw=$(jq -e '.limits.rawBytes' client/bundle-budget.json)
+  max_gzip=$(jq -e '.limits.gzipBytes' client/bundle-budget.json)
+  br=$(if command -v brotli >/dev/null; then brotli -q 11 -c "$dir/bundle.js" | wc -c; else echo 'n/a (no brotli CLI)'; fi)
+  echo "SIZE: raw $raw (budget $max_raw), gzip -9 $gzip (budget $max_gzip), brotli -q 11 $br" >&2
+  if [ "$raw" -gt "$max_raw" ]; then echo "SIZE: raw $raw > budget $max_raw" >&2; rc=1; fi
+  if [ "$gzip" -gt "$max_gzip" ]; then echo "SIZE: gzip -9 $gzip > budget $max_gzip" >&2; rc=1; fi
+  if [ "$rc" != 0 ]; then
+    echo "SIZE: make the bundle smaller, or raise the budget in a new client/bundle-budget.json history entry with a reason." >&2
+  fi
+  return "$rc"
+)
+
 # baselines/jf12-digest.txt: `<tag> <RepoDigest>`; HOST runs `je up <name> <port> --image <tag>`.
 gate_image() (
   set -e
@@ -392,12 +417,12 @@ gate_image() (
   echo "image: $tag = $digest" >&2
 )
 
-usage() { sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
 case "$cmd" in
-  be|fe|all|browser|h|inv|tool) [ $# -eq 0 ] || usage; "gate_$cmd" ;;
+  be|fe|all|browser|h|inv|tool|size) [ $# -eq 0 ] || usage; "gate_$cmd" ;;
   r) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_r "$1" ;;
   bundle) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_bundle "$1" ;;
   bundle-hash) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_bundle_hash "$1"; exit 0 ;;

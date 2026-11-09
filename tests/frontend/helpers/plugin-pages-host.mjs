@@ -2,6 +2,7 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { repositoryRoot } from './discovery.mjs';
+import { provideFeatureContext } from './harness.mjs';
 
 export const pageNames = ['ActivityPage', 'BookmarksPage', 'CalendarPage', 'CatchUpPage', 'DownloadsPage', 'HiddenContentPage', 'RecommendationsPage'];
 const pluginRoot = resolve(repositoryRoot, 'Jellyfin.Plugin.JellyfinEnhanced');
@@ -143,6 +144,11 @@ export function createPluginHost(t, { JE, client, seedDom = '', globals = {} } =
         },
         userDataLoaded() { document.dispatchEvent(new window.CustomEvent('je:user-data-loaded', { detail: { userId, epoch: 2 } })); },
         /** Load a real emitted production module into this realm. */
-        load(path) { window.eval(`[function () {\n${readFileSync(resolve(pluginRoot, 'js', path), 'utf8')}\n}][0]();`); }
+        load(path) {
+            const source = readFileSync(resolve(pluginRoot, 'js', path), 'utf8');
+            // core/ui-kit.js publishes it in production (canopy K1); these tests load feature modules on their own.
+            provideFeatureContext(window, source);
+            window.eval(`[function () {\n${source}\n}][0]();`);
+        }
     };
 }
