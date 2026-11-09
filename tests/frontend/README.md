@@ -53,4 +53,6 @@ Specs are grouped by feature under `bootstrap/`, `core/`, `features/`, `pages/`,
 `features/<feature>/` (Media Tags admin specs in `features/media-tags/admin/`), and
 the admin configuration page's specs are in `admin/config/`. Both runners discover nested `*.test.mjs` files
 through `helpers/discovery.mjs`; an empty discovery fails. Shared helpers live
-in `helpers/`. See the [test directory guide](../README.md) for contribution rules.
+in `helpers/`. `guards/` holds the source-scanning bug-class guards (escape, CSS injection,
+error-as-empty, leaks, performance rules, config controls), each ratcheted by a checked-in baseline;
+see CONTRIBUTING.md "Robustness and security rules". See the [test directory guide](../README.md) for contribution rules.
