@@ -83,7 +83,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 │   │   └── per-user.js                 # Generated list of settings users also hold personally
 │   └── whats-new-seed.json
 ├── Features/                         # One folder per feature (docs/feature-map.json): Je<Feature>Controller.cs (+ partials), Services/, Models/, Events/, Tasks/, PublicApi/
-├── Shared/                           # Code several features use, by area: Analytics/, Arr/, HiddenContent/, Host/, Library/, Maintenance/, Media/, MediaTags/, Parental/, Reviews/, Seerr/, Sessions/, SpoilerGuard/, Text/, Tmdb/
+├── Shared/                           # Code several features use, by area: Analytics/, Arr/, HiddenContent/, Host/, Library/, Maintenance/, Mdblist/, Media/, MediaTags/, Parental/, Reviews/, Seerr/, Sessions/, Settings/, SpoilerGuard/, Text/, Tmdb/
 ├── Infrastructure/                   # Auth/, Extensions/ (repository, database and user API adapters), Hosting/ (event consumer and MVC filter registration), Http/ (JeControllerBase), Identity/, Persistence/
 ├── Transport/                        # Bootstrap and bookmark wire records, TransportJson
 ├── PluginPages/                      # Seven embedded page wrappers
@@ -456,7 +456,8 @@ Paths are relative to `Jellyfin.Plugin.JellyfinEnhanced/`. `Features/<F>/` holds
 | `Shared/Library/ItemLibraryResolver.cs` | The library an item is in (seasons and episodes: their series'), stored as `LibraryId` in tag-cache entries and `tag-data` items for tag look rules. |
 | `Features/MediaTags/Services/TagCache/TagCachePendingChanges.cs`, `TagCacheResponseBody.cs` | Coalesces pending item changes; assembles bulk response bytes and hashes the viewer's final body for its ETag. |
 | `Shared/HiddenContent/HiddenContentResponseFilter.cs` | Filters supported Jellyfin item lists and Home Screen Sections responses using the viewer's hidden-content scopes. |
-| `Features/DetailsProviders/Services/ReviewAuthorCache.cs` | Cached author lookups for review visibility, invalidated by user changes/deletion/lockout. |
+| `Shared/Reviews/ReviewAuthorCache.cs` | Cached author lookups for review visibility, invalidated by user changes/deletion/lockout. |
+| `Shared/Settings/SettingsDocumentService.cs`, `SettingsDocumentPatch.cs`, `SettingsDefaults.cs` | The revisioned per-user settings document (read, patch, defaults), used by the Settings routes and, through `JeControllerBase.LoadRevisionedSettings`, by the Platform bootstrap. |
 | `Features/Platform/Services/CdnAssetService.cs` | Local routes and disk caching for third-party static assets; separate from generated embedded poster assets. |
 | `Features/Platform/Services/ScriptInjectionStartupFilter.cs`, `Features/Chrome/Services/BrandingAssetStartupFilter.cs` | Request-time loader injection and custom branding asset delivery. |
 | `Features/Platform/Services/StartupService.cs`, `Shared/Host/HostCompatibilityService.cs` | Scheduled startup initialization and build/host compatibility diagnostics. |

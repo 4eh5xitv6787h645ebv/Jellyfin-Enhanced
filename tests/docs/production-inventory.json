@@ -274,10 +274,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ReviewAuthorCache.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ReviewTranslationService.cs",
       "category": "Features"
     },
@@ -762,18 +758,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDefaults.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentPatch.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentService.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Events/SpoilerAutoEnableEvents.cs",
       "category": "Features"
     },
@@ -1066,6 +1050,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Reviews/ReviewAuthorCache.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Reviews/ReviewVisibility.cs",
       "category": "Shared"
     },
@@ -1107,6 +1095,18 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Sessions/ActiveSessionsService.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Settings/SettingsDefaults.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Settings/SettingsDocumentPatch.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Settings/SettingsDocumentService.cs",
       "category": "Shared"
     },
     {
@@ -10218,10 +10218,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
     },
     {
-      "literal": "settings.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentService.cs"
-    },
-    {
       "literal": "user-settings/{userId}/spoilerblur.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs"
     },
@@ -10256,6 +10252,10 @@
     {
       "literal": "media-tag-presets.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/MediaTagsPortable.cs"
+    },
+    {
+      "literal": "settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Settings/SettingsDocumentService.cs"
     },
     {
       "literal": "tmdb-cache.json",

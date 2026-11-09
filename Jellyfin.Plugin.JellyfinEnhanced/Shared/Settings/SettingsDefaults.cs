@@ -1,6 +1,6 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Settings
 {
     /// <summary>
     /// The settings a user starts with, seeded from the plugin configuration. Moved verbatim from

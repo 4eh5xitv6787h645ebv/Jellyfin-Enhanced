@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Reviews
 {
     /// <summary>
     /// Review authors resolved recently, shared across requests. On Jellyfin

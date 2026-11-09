@@ -7,7 +7,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using Newtonsoft.Json.Linq;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Settings;
 
 /// <summary>Revision and content always come from the same locked store snapshot.</summary>
 public sealed class SettingsDocumentService(UserConfigurationManager store)

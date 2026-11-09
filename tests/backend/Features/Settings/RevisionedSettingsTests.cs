@@ -3,7 +3,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using Newtonsoft.Json.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Settings;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
