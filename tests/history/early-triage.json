@@ -355,7 +355,7 @@
     "title": "🐛[BUG] Not working with \"/jellyfin\" BaseUrl",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/Api/ApiMiddlewareTests.cs",
+      "tests/backend/Features/Platform/ApiMiddlewareTests.cs",
       "tests/frontend/bootstrap/bootstrap.test.mjs"
     ],
     "assessment": "Base-path asset/bootstrap coverage exists; historical reverse-proxy deployment and branded-image route not reproduced end-to-end."
@@ -2266,7 +2266,7 @@
     "title": "🐛[BUG] Custom xxxx does not support base URL",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/Api/ApiMiddlewareTests.cs",
+      "tests/backend/Features/Platform/ApiMiddlewareTests.cs",
       "tests/frontend/bootstrap/bootstrap.test.mjs"
     ],
     "assessment": "Base-path asset/bootstrap coverage exists; historical reverse-proxy deployment and branded-image route not reproduced end-to-end."

@@ -11,6 +11,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
@@ -68,7 +69,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
     }
 
     // Spoiler Guard's stripping of JE tag data, shared by GET /tag-cache, POST
-    // /tag-data (JellyfinEnhancedController) and native poster tags (so a
+    // /tag-data (JeMediaTagsController) and native poster tags (so a
     // poster baked for a guarded item shows exactly what the web overlays
     // would: nothing that the web hides). Extracted verbatim from the
     // controller; the decisions mirror SpoilerBlurImageFilter and

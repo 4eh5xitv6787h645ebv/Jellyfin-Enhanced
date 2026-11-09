@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;

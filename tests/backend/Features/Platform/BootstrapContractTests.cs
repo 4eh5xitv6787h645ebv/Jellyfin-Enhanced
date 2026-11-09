@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
@@ -17,13 +16,14 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Platform;
 
 [Collection("Plugin singleton")]
 public class BootstrapContractTests
 {
-    private static JellyfinEnhancedController Controller(ApiPluginFixture fixture, Guid user, bool admin, bool documents = true)
+    private static JePlatformController Controller(ApiPluginFixture fixture, Guid user, bool admin, bool documents = true)
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
         var controller = ApiAssetTests.Controller(fixture.Core, maintenance, documents ? fixture.Core.Manager : new object());
@@ -176,7 +176,7 @@ public class BootstrapContractTests
         var controller = Controller(fixture, Guid.NewGuid(), false);
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
         Assert.IsType<ForbidResult>(controller.GetBootstrap());
-        var method = typeof(JellyfinEnhancedController).GetMethod(nameof(JellyfinEnhancedController.GetBootstrap))!;
+        var method = typeof(JePlatformController).GetMethod(nameof(JePlatformController.GetBootstrap))!;
         Assert.NotNull(method.GetCustomAttribute<AuthorizeAttribute>());
         var cache = method.GetCustomAttribute<ResponseCacheAttribute>()!;
         Assert.True(cache.NoStore);

@@ -12,7 +12,7 @@ For endpoint details, see the [API reference](api.md). For setup and placement, 
 
 This section follows the client from loader injection through initialization and user switches.
 
-`Features/Platform/Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Controllers/JellyfinEnhancedController.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
+`Features/Platform/Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Features/Platform/JePlatformController.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
 
 The ordered module list lives in `js/component-scripts.json`: 181 component modules, with paths relative to `js/`. Entries starting with `//` are ordering notes.
 
@@ -82,8 +82,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 │   │   ├── sections.css
 │   │   └── per-user.js                 # Generated list of settings users also hold personally
 │   └── whats-new-seed.json
-├── Controllers/
-│   └── JellyfinEnhancedController.cs  # Most plugin endpoints
+├── Features/                       # One folder per feature: Je<Feature>Controller.cs (+ partials), Services/, Models/, Tasks/
 ├── PluginPages/                      # Seven embedded page wrappers
 ├── Helpers/
 │   └── Jellyseerr/                   # Seerr HTTP, permissions, imports, parental rules

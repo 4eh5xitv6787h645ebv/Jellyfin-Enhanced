@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Analytics;
 
 namespace JE.Tests.Features.HiddenContent;
 

@@ -134,10 +134,6 @@
       "category": "Configuration"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "category": "Controllers"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/ActivityServiceRegistration.cs",
       "category": "Features"
     },
@@ -638,7 +634,15 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Models/AnalyticsData.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/PlatformServiceRegistration.cs",
       "category": "Features"
     },
     {
@@ -663,10 +667,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/StartupService.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/UsageEventCounterService.cs",
       "category": "Features"
     },
     {
@@ -920,6 +920,10 @@
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/PluginServiceRegistrator.cs",
       "category": "PluginServiceRegistrator.cs"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Analytics/UsageEventCounterService.cs",
+      "category": "Shared"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ArrInstance.cs",
@@ -2129,149 +2133,6 @@
   "routes": [
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/script",
-      "method": "GetMainScript",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/js/{**path}",
-      "method": "GetScript",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/Configuration/jeAdmin.css",
-      "method": "GetAdminStylesheet",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/Configuration/jeAdmin.js",
-      "method": "GetAdminScript",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/version",
-      "method": "GetVersion",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/private-config",
-      "method": "GetPrivateConfig",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/public-config",
-      "method": "GetPublicConfig",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/bootstrap",
-      "method": "GetBootstrap",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/bundle.js",
-      "method": "GetScriptBundle",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/bundle.js.map",
-      "method": "GetScriptBundleMap",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/usage/track",
-      "method": "TrackUsage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/usage/preview",
-      "method": "PreviewUsageReport",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/locales",
-      "method": "GetAvailableLocales",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(Duration = 86400)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/cdn/{source}/{**path}",
-      "method": "GetCdnAsset",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/fonts/{name}",
-      "method": "GetBundledFont",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/locales/{lang}.json",
-      "method": "GetLocale",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/proxy/avatar",
-      "method": "ProxyAvatar",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/{viewName}",
-      "method": "GetView",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/activity",
       "method": "GetActivityFeed",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/JeActivityController.cs",
@@ -3159,6 +3020,149 @@
       "following_attributes": [
         "Authorize"
       ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/script",
+      "method": "GetMainScript",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/js/{**path}",
+      "method": "GetScript",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/Configuration/jeAdmin.css",
+      "method": "GetAdminStylesheet",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/Configuration/jeAdmin.js",
+      "method": "GetAdminScript",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/version",
+      "method": "GetVersion",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/private-config",
+      "method": "GetPrivateConfig",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/public-config",
+      "method": "GetPublicConfig",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/bootstrap",
+      "method": "GetBootstrap",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/bundle.js",
+      "method": "GetScriptBundle",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/bundle.js.map",
+      "method": "GetScriptBundleMap",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/usage/track",
+      "method": "TrackUsage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/usage/preview",
+      "method": "PreviewUsageReport",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/locales",
+      "method": "GetAvailableLocales",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(Duration = 86400)"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/cdn/{source}/{**path}",
+      "method": "GetCdnAsset",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/fonts/{name}",
+      "method": "GetBundledFont",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/locales/{lang}.json",
+      "method": "GetLocale",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/proxy/avatar",
+      "method": "ProxyAvatar",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/{viewName}",
+      "method": "GetView",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs",
+      "following_attributes": []
     },
     {
       "verb": "GET",
@@ -9950,38 +9954,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Configuration/UserConfigurationManager.cs"
     },
     {
-      "literal": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.{baseLang}.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.{sanitizedLang}.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "bookmark.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "elsewhere.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "locales/{lang}.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "settings.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "shortcuts.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
       "literal": "Jellyfin.Plugin.JellyfinEnhanced.Configuration.whats-new-seed.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs"
     },
@@ -10142,6 +10114,38 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/TagLogoService.cs"
     },
     {
+      "literal": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.{baseLang}.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
+      "literal": "Jellyfin.Plugin.JellyfinEnhanced.js.locales.{sanitizedLang}.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
+      "literal": "bookmark.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
+      "literal": "elsewhere.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
+      "literal": "locales/{lang}.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
+      "literal": "settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
+      "literal": "shortcuts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/JePlatformController.cs"
+    },
+    {
       "literal": "bookmark.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/AnalyticsReportingService.cs"
     },
@@ -10160,10 +10164,6 @@
     {
       "literal": "component-scripts.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/ClientScriptBundle.cs"
-    },
-    {
-      "literal": "usage-counters.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/UsageEventCounterService.cs"
     },
     {
       "literal": "Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
@@ -10204,6 +10204,10 @@
     {
       "literal": "config.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.cs"
+    },
+    {
+      "literal": "usage-counters.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Analytics/UsageEventCounterService.cs"
     },
     {
       "literal": "hidden-content.json",
@@ -10502,7 +10506,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 529,
+    "files": 530,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,

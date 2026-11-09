@@ -27,6 +27,8 @@ using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Analytics;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced
 {
@@ -34,7 +36,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
     {
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
-            serviceCollection.AddSingleton<StartupService>();
+            serviceCollection.AddJePlatform();
             // Build-target vs host-version check; logged at startup and surfaced
             // on the config page so unsupported host majors are not silent.
             serviceCollection.AddSingleton<HostCompatibilityService>();
@@ -45,7 +47,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             //   - BrandingAssetStartupFilter serves custom logo/banner/favicon images.
             //     Both are kill-switchable via config and no-op safely when there's
             //     nothing to do.
-            serviceCollection.AddSingleton<IStartupFilter, ScriptInjectionStartupFilter>();
             serviceCollection.AddJeChrome();
 
             serviceCollection.AddHttpClient();
@@ -72,10 +73,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddJeSeerr();
             serviceCollection.AddJeCatchup();
             serviceCollection.AddJeMediaTags();
-            // Local CDN subsystem: serves every third-party static asset (icons, fonts,
-            // theme sheets, flags, remote locales) from the plugin's own route, backed by
-            // an on-disk cache that the RefreshCdnAssetsTask warms/refreshes every 24h.
-            serviceCollection.AddSingleton<CdnAssetService>();
             serviceCollection.AddJeDetailsProviders();
             // In-memory, size-bounded cache + single-flight for TMDB passthrough and
             // person lookups -- see TmdbResponseCache for TTLs and why it is account-safe.
@@ -87,9 +84,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // payload on AnalyticsReportTask's cadence. See AnalyticsReportingService
             // for what's collected and why it's safe to ship the anon key in-client.
             serviceCollection.AddSingleton<UsageEventCounterService>();
-            serviceCollection.AddSingleton<AnalyticsReportingService>();
-            serviceCollection.AddTransient<AnalyticsReportTask>();
-            serviceCollection.AddTransient<RefreshCdnAssetsTask>();
 
             // Hidden Content: server-side filter for every native Jellyfin endpoint that surfaces user-facing item lists
             // (Resume, Items, Latest, NextUp, Upcoming, Suggestions, SearchHints), plus the Home Screen Sections

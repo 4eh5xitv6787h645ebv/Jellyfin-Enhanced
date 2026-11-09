@@ -30,7 +30,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         private readonly IApplicationPaths _applicationPaths;
         private readonly IServerConfigurationManager _serverConfigurationManager;
         private readonly Logger _logger;
-        private readonly Services.AnalyticsReportingService _analyticsReportingService;
+        private readonly Features.Platform.Services.AnalyticsReportingService _analyticsReportingService;
         private const string PluginName = "Jellyfin Enhanced";
 
         public JellyfinEnhanced(
@@ -38,7 +38,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             IServerConfigurationManager serverConfigurationManager,
             IXmlSerializer xmlSerializer,
             Logger logger,
-            Services.AnalyticsReportingService analyticsReportingService,
+            Features.Platform.Services.AnalyticsReportingService analyticsReportingService,
             Shared.Host.HostCompatibilityService hostCompatibility) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;

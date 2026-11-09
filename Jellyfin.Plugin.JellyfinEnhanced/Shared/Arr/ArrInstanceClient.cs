@@ -7,6 +7,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr
 {

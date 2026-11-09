@@ -284,7 +284,7 @@ public class QualityDisplayTests
     private static JeSettingsController SettingsController(ApiPluginFixture f, Claim claim)
         => ApiAssetTests.Sibling<JeSettingsController>(Controller(f, claim), f.Core, f.Core.Manager);
 
-    private static Jellyfin.Plugin.JellyfinEnhanced.Controllers.JellyfinEnhancedController Controller(ApiPluginFixture f, Claim claim)
+    private static Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.JePlatformController Controller(ApiPluginFixture f, Claim claim)
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
         var controller = ApiAssetTests.Controller(f.Core, maintenance, f.Core.Manager);

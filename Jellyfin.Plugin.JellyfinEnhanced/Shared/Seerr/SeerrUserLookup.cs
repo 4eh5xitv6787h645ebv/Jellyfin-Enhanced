@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 using static Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrCaches;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr

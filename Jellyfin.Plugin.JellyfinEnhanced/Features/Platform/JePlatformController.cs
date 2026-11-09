@@ -58,26 +58,27 @@ using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Sessions;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Analytics;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
 {
     [Route("JellyfinEnhanced")]
     [ApiController]
-    public class JellyfinEnhancedController : JeControllerBase
+    public class JePlatformController : JeControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILibraryManager _libraryManager;
         private readonly Shared.Maintenance.MaintenanceModeService _maintenanceModeService;
-        private readonly Services.CdnAssetService _cdnAssetService;
-        private readonly Services.UsageEventCounterService _usageEventCounterService;
-        private readonly Services.AnalyticsReportingService _analyticsReportingService;
+        private readonly Features.Platform.Services.CdnAssetService _cdnAssetService;
+        private readonly Shared.Analytics.UsageEventCounterService _usageEventCounterService;
+        private readonly Features.Platform.Services.AnalyticsReportingService _analyticsReportingService;
         private readonly IPluginManager _pluginManager;
         private readonly UserDisplayResolver _userDisplayResolver;
         private readonly ArrInstanceClient _arrInstanceClient;
         private readonly ActiveSessionsService _activeSessionsService;
         private readonly HiddenContentDocumentService _hiddenContentDocumentService;
 
-        public JellyfinEnhancedController(
+        public JePlatformController(
             IHttpClientFactory httpClientFactory,
             Logger logger,
             IUserManager userManager,
@@ -85,9 +86,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             UserConfigurationManager userConfigurationManager,
             MediaBrowser.Controller.Session.ISessionManager sessionManager,
             Shared.Maintenance.MaintenanceModeService maintenanceModeService,
-            Services.CdnAssetService cdnAssetService,
-            Services.UsageEventCounterService usageEventCounterService,
-            Services.AnalyticsReportingService analyticsReportingService,
+            Features.Platform.Services.CdnAssetService cdnAssetService,
+            Shared.Analytics.UsageEventCounterService usageEventCounterService,
+            Features.Platform.Services.AnalyticsReportingService analyticsReportingService,
             IPluginManager pluginManager)
             : base(userManager, logger, userConfigurationManager)
         {
@@ -367,10 +368,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 ShowPlaybackRatingBadge = config.ShowPlaybackRatingBadge,
                 NativePosterTagsEnabled = config.NativePosterTagsEnabled,
                 TagStyleWebActive = config.TagStylesEnabled && config.TagStyleTarget is "web" or "both"
-                    && (config.TagStylesAllowUserPreset || !TagStyleSet.Parse(config.TagStyleOverrides, config.TagStylePreset).IsEmpty),
+                    && (config.TagStylesAllowUserPreset || !MediaTagsApi.TagStyles.ParseIsEmpty(config.TagStyleOverrides, config.TagStylePreset)),
                 // Tag Styles: user presets
                 TagStylesAllowUserPreset = config.TagStylesEnabled && config.TagStylesAllowUserPreset,
-                TagStylePreset = TagStyleKeys.NormalizePreset(config.TagStylePreset),
+                TagStylePreset = MediaTagsApi.TagStyles.NormalizePreset(config.TagStylePreset),
                 QualityTagsEnabled = config.QualityTagsEnabled,
                 ShowResolutionTag = config.ShowResolutionTag,
                 ShowSourceTag = config.ShowSourceTag,
@@ -711,7 +712,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             IReadOnlyList<string>? componentScripts = null;
             try
             {
-                componentScripts = Services.ClientScriptBundle.GetComponentScripts();
+                componentScripts = Features.Platform.Services.ClientScriptBundle.GetComponentScripts();
             }
             catch (Exception ex)
             {
@@ -885,7 +886,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             byte[] script, sourceMap;
             try
             {
-                (script, sourceMap) = Services.ClientScriptBundle.GetBundle(plugin.ScriptCacheKey, rebuild: devMode, _logger);
+                (script, sourceMap) = Features.Platform.Services.ClientScriptBundle.GetBundle(plugin.ScriptCacheKey, rebuild: devMode, _logger);
             }
             catch (Exception ex)
             {
@@ -937,11 +938,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // the plugin actually emits: without it, any authenticated user
             // could mint unbounded distinct counter rows or forge "total.*"
             // snapshot keys alongside the real ones.
-            if (!Services.UsageEventCounterService.IsValidKey(key))
+            if (!Shared.Analytics.UsageEventCounterService.IsValidKey(key))
             {
                 return BadRequest("Invalid feature key.");
             }
-            if (!Services.UsageEventCounterService.IsKnownKey(key))
+            if (!Shared.Analytics.UsageEventCounterService.IsKnownKey(key))
             {
                 // Loud on purpose: a well-formed-but-unlisted key is almost
                 // always a new client counter shipped without the matching

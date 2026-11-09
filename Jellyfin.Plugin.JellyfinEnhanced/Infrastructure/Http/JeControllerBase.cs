@@ -9,6 +9,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Reviews;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
 {

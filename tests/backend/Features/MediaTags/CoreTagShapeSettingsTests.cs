@@ -169,7 +169,7 @@ public class CoreTagShapeSettingsTests
     private static JeSettingsController SettingsController(ApiPluginFixture fixture, Claim claim)
         => ApiAssetTests.Sibling<JeSettingsController>(Controller(fixture, claim), fixture.Core, fixture.Core.Manager);
 
-    private static Jellyfin.Plugin.JellyfinEnhanced.Controllers.JellyfinEnhancedController Controller(ApiPluginFixture fixture, Claim claim)
+    private static Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.JePlatformController Controller(ApiPluginFixture fixture, Claim claim)
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
         var controller = ApiAssetTests.Controller(fixture.Core, maintenance, fixture.Core.Manager);

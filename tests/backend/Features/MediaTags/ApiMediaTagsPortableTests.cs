@@ -4,7 +4,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
@@ -17,6 +16,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace JE.Tests.Features.MediaTags;
 
@@ -27,7 +27,7 @@ namespace JE.Tests.Features.MediaTags;
 [Collection("Plugin singleton")]
 public class ApiMediaTagsPortableTests
 {
-    private static (JellyfinEnhancedController Controller, Guid User, Action<bool> SignIn) Signed(ApiPluginFixture f, bool admin = false)
+    private static (JePlatformController Controller, Guid User, Action<bool> SignIn) Signed(ApiPluginFixture f, bool admin = false)
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
         var controller = ApiAssetTests.Controller(f.Core, maintenance, f.Core.Manager);

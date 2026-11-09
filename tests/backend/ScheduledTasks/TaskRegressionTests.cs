@@ -9,6 +9,7 @@ using MediaBrowser.Model.Tasks;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;
 
 namespace JE.Tests;
 

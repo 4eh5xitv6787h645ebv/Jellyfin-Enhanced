@@ -4,9 +4,10 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;
 using Plugin = Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Platform;
 
 [Collection("Plugin singleton")]
 public class ApiMiddlewareTests

@@ -3,8 +3,10 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Analytics;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Platform;
 
 [Collection("Plugin singleton")]
 public class IntegrationAnalyticsTests

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using MediaBrowser.Model.Plugins;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Models;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 {

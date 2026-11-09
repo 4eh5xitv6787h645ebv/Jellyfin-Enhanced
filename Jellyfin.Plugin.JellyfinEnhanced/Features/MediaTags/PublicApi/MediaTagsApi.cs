@@ -25,5 +25,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi
             /// <summary><c>LeavingSoonService.Configured(config)</c>.</summary>
             public static bool Configured(Configuration.PluginConfiguration? config) => LeavingSoonService.Configured(config);
         }
+
+        /// <summary>Forwards to the static Tag Styles members (<see cref="PosterTags.TagStyleSet"/>, <see cref="PosterTags.TagStyleKeys"/>) other features call.</summary>
+        public static class TagStyles
+        {
+            /// <summary><c>TagStyleSet.Parse(json, preset).IsEmpty</c>.</summary>
+            public static bool ParseIsEmpty(string? json, string? preset) => PosterTags.TagStyleSet.Parse(json, preset).IsEmpty;
+
+            /// <summary><c>TagStyleKeys.NormalizePreset(preset)</c>.</summary>
+            public static string NormalizePreset(string? preset) => PosterTags.TagStyleKeys.NormalizePreset(preset);
+        }
+
+        /// <summary>Forwards to the static <see cref="PosterTags.NativeClientPolicy"/> members other features read.</summary>
+        public static class NativeClients
+        {
+            /// <summary><c>NativeClientPolicy.BuiltInWebClients</c> (the same list instance).</summary>
+            public static System.Collections.Generic.IReadOnlyList<string> BuiltInWebClients => PosterTags.NativeClientPolicy.BuiltInWebClients;
+        }
     }
 }

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using Newtonsoft.Json;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
 {
     /// <summary>
     /// Local CDN subsystem. Every third-party static asset the client used to load

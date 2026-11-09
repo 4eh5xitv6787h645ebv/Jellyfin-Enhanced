@@ -1,16 +1,17 @@
 using System.Text;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace JE.Tests;
 
 public class ApiAssetTests
 {
-    internal static JellyfinEnhancedController Controller(CoreFixture fixture, params object[] services)
-        => (JellyfinEnhancedController)Controller(typeof(JellyfinEnhancedController), fixture, services);
+    internal static JePlatformController Controller(CoreFixture fixture, params object[] services)
+        => (JePlatformController)Controller(typeof(JePlatformController), fixture, services);
 
     // Any plugin controller type: each constructor parameter is filled from `services` (first instance of a matching
     // type), the fixture logger, or an inert SpoilerSeerrRedactor; anything else is null.

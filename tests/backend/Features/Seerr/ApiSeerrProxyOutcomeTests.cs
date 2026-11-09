@@ -5,7 +5,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;

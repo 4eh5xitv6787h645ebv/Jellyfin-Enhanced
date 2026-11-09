@@ -13,6 +13,7 @@ using MediaBrowser.Common.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
 {
@@ -21,7 +22,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
     /// Trakt, Metacritic, etc.) for a title by TMDB id from the MDBList API,
     /// and caches the result to disk. The admin's MDBList API key never
     /// leaves the server; clients only ever see the parsed rating entries
-    /// via JellyfinEnhancedController's proxy endpoint.
+    /// via JeDetailsProvidersController's mdblist-ratings endpoint.
     ///
     /// Persistence mirrors WikidataAwardsService: an in-memory dictionary is
     /// the source of truth, mutations are debounced to one atomic (temp file
