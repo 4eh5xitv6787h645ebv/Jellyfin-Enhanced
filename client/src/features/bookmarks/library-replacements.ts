@@ -246,7 +246,7 @@ function install(JE: BookmarkHost) {
         const synced = await ctx.own.bookmarks.syncBookmarks(oldGroup.bookmarks, newDetails, 0, { replaceOriginals: true });
         if (!isCurrent()) return;
 
-        if (isCurrent()) JE.toast(JE.t('bookmark_migrated').replace('{count}', String(synced.length)).replace('{name}', fullItem.Name || ''), 4000);
+        if (isCurrent()) JE.toast(JE.t('bookmark_migrated').replace('{count}', String(synced.length)).replace('{name}', () => escapeHtml(fullItem.Name || '')), 4000);
 
         closeDialog();
 

@@ -310,14 +310,14 @@ export function installSeasonModal(host: SeerrCoreHost): void {
                         }
                         await api.requestTvSeasons(tmdbId, [...new Set(selected)], settings, searchResultItem, is4k, manualTvdbId);
                         if (!origin.current()) { closeFn(); return; }
-                        JE.toast?.(JE.t('jellyseerr_modal_toast_request_success', { count: new Set(selected).size, title: resolvedShowTitle }), 4000);
+                        JE.toast?.(JE.t('jellyseerr_modal_toast_request_success', { count: new Set(selected).size, title: escapeHtml(resolvedShowTitle) }), 4000);
                     } else {
                         // Whole show: every regular season, so Specials are never locked.
                         const all = tvDetails.seasons.map(s => s.seasonNumber).filter(n => Number.isFinite(n) && n > 0);
                         if (all.length > 0) await api.requestTvSeasons(tmdbId, all, settings, searchResultItem, is4k, manualTvdbId);
                         else await api.requestMedia(tmdbId, 'tv', settings, is4k, searchResultItem, manualTvdbId);
                         if (!origin.current()) { closeFn(); return; }
-                        JE.toast?.(JE.t('jellyseerr_modal_toast_request_success', { count: 'all', title: resolvedShowTitle }), 4000);
+                        JE.toast?.(JE.t('jellyseerr_modal_toast_request_success', { count: 'all', title: escapeHtml(resolvedShowTitle) }), 4000);
                     }
                     host.document.dispatchEvent(new CustomEvent('jellyseerr-tv-requested', { detail: { tmdbId, mediaType: 'tv', is4k } }));
                     host.document.dispatchEvent(new CustomEvent('jellyseerr-media-requested', { detail: { tmdbId, mediaType: 'tv', is4k } }));

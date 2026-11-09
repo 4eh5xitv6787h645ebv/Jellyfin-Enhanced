@@ -84,7 +84,11 @@ function boot(t, { server, url, apiClient = {}, globals = {}, patch, routes = {}
     url: url || 'http://jellyfin.test/web/index.html#/configurationpage?name=Jellyfin%20Enhanced&jeSection=media-tags',
     JE: { t: (key, params) => (params ? `${key}:${Object.values(params).join('|')}` : key), pluginConfig: {}, currentSettings: {} },
     apiClient: {
-      getUrl: (path, query) => `http://jellyfin.test/${path.replace(/^\//, '')}${query ? `?${new URLSearchParams(query)}` : ''}`,
+      // Jellyfin's real ApiClient rejects an empty URL name (as the harness does).
+      getUrl: (path, query) => {
+        if (!path) throw new Error('Url name cannot be empty');
+        return `http://jellyfin.test/${path.replace(/^\//, '')}${query ? `?${new URLSearchParams(query)}` : ''}`;
+      },
       getJSON: async () => [{ ItemId: LIBRARY, Name: 'Movies' }, { ItemId: OTHER_LIBRARY, Name: 'Shows' }],
       getPluginConfiguration: async () => structuredClone(server),
       ajax: async (request) => {

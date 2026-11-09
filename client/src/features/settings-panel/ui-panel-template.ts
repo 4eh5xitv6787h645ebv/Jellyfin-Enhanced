@@ -6,7 +6,7 @@
 import type { JsonValue } from '../../contracts/generated';
 import { panelHost, registry, settingsPanelContext, type FontFamilyPreset, type FontSizePreset, type PanelBridge, type SubtitlePreset, type TextEffectPreset } from './host';
 import type { PanelContext } from './context';
-import { entryAt, numeric } from '../shared/settings-values';
+import { entryAt, isSafeCssColor, isSafeFontFamily, numeric } from '../shared/settings-values';
 import { PLAYER_COLUMN, pluginShortcutList } from './shortcut-rules';
 
 type Deps = Pick<PanelBridge, 'internals' | 'escapeHtml' | 't' | 'icon' | 'IconName' | 'icons' | 'pluginVersion' | 'pluginConfig'
@@ -90,7 +90,11 @@ export function installUiPanelTemplate(JE: Deps, featureCtx = settingsPanelConte
         const posPreviewFontPx = Math.max(8, Math.min(22, 13 * (posPreviewFontSizePreset.size / normalFontSize.size)));
         const decodedSubtitleText = JE.decodeSubtitleColor(JE.currentSettings.customSubtitleTextColor, { fallbackSwatch: '#FFFFFF', fallbackAlphaValue: 255 });
         const decodedSubtitleBg = JE.decodeSubtitleColor(JE.currentSettings.customSubtitleBgColor, { fallbackSwatch: '#000000', fallbackAlphaValue: 0 });
-        const previewTextShadow = JE.getSubtitleTextShadow(JE.currentSettings.customSubtitleBgColor || '#00000000');
+        // The stored colours and the font go into style attributes below: a malformed value falls back to the default.
+        const subtitleTextColor = isSafeCssColor(JE.currentSettings.customSubtitleTextColor) ? JE.currentSettings.customSubtitleTextColor : '#FFFFFFFF';
+        const subtitleBgColor = isSafeCssColor(JE.currentSettings.customSubtitleBgColor) ? JE.currentSettings.customSubtitleBgColor : '';
+        const subtitleFontFamily = isSafeFontFamily(posPreviewFontFamilyPreset.family) ? posPreviewFontFamilyPreset.family : 'inherit';
+        const previewTextShadow = JE.getSubtitleTextShadow(subtitleBgColor || '#00000000');
 
         const userShortcuts = new Set((JE.userConfig.shortcuts.Shortcuts || []).map(s => s.Name));
         const pluginShortcuts = pluginShortcutList(JE.pluginConfig.Shortcuts);
@@ -299,7 +303,7 @@ export function installUiPanelTemplate(JE: Deps, featureCtx = settingsPanelConte
                                             </div>
                                         </div>
                                     </div>
-                                    <div id="subtitleColorPreview" style="display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; border-radius: 6px; background: rgba(0,0,0,0.3); color: ${JE.currentSettings.customSubtitleTextColor || '#FFFFFFFF'}; background-color: ${JE.currentSettings.customSubtitleBgColor || '#00000000'}; text-shadow: ${previewTextShadow}; padding: 12px 20px; flex: 0.5; align-self: center;">AaBbCcDd</div>
+                                    <div id="subtitleColorPreview" style="display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; border-radius: 6px; background: rgba(0,0,0,0.3); color: ${subtitleTextColor}; background-color: ${subtitleBgColor || '#00000000'}; text-shadow: ${previewTextShadow}; padding: 12px 20px; flex: 0.5; align-self: center;">AaBbCcDd</div>
                                 </div>
                             </div>
                             <div style="margin-bottom: 16px;"><div style="font-weight: 600; margin-bottom: 8px;">${JE.t('panel_settings_subtitles_size')}</div><div id="font-size-presets-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 8px;">${generatePresetHTML(JE.fontSizePresets, 'font-size')}</div></div>
@@ -317,7 +321,7 @@ export function installUiPanelTemplate(JE: Deps, featureCtx = settingsPanelConte
                                         <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(255,255,255,0.08);transform:translateY(-50%);"></div>
                                     </div>
                                     <!-- Subtitle preview text -->
-                                    <div id="subtitlePositionPreview" style="position:absolute; transform:translateX(-50%); pointer-events:none; white-space:nowrap; font-size:${posPreviewFontPx}px; font-family:${posPreviewFontFamilyPreset.family}; font-weight:600; color:${JE.currentSettings.customSubtitleTextColor || '#FFFFFFFF'}; background-color:${JE.currentSettings.customSubtitleBgColor || 'transparent'}; padding:2px 6px; border-radius:3px; text-shadow:${previewTextShadow}; left:${JE.currentSettings.subtitleHorizontalPosition ?? 50}%; bottom:${100 - numeric(JE.currentSettings.subtitleVerticalPosition, 95)}%; top:auto;">AaBbCcDd</div>
+                                    <div id="subtitlePositionPreview" style="position:absolute; transform:translateX(-50%); pointer-events:none; white-space:nowrap; font-size:${posPreviewFontPx}px; font-family:${subtitleFontFamily}; font-weight:600; color:${subtitleTextColor}; background-color:${subtitleBgColor || 'transparent'}; padding:2px 6px; border-radius:3px; text-shadow:${previewTextShadow}; left:${JE.currentSettings.subtitleHorizontalPosition ?? 50}%; bottom:${100 - numeric(JE.currentSettings.subtitleVerticalPosition, 95)}%; top:auto;">AaBbCcDd</div>
                                 </div>
                                 <div id="je-subtitle-position-note" style="display:none; margin-top:6px; font-size:11px; color:#ffcf5c; text-align:center; align-items:center; justify-content:center; gap:4px;">
                                     <span class="material-icons" style="font-size:13px;">warning</span>

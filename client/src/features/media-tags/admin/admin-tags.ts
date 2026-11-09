@@ -218,6 +218,8 @@ function requestedTarget(): Target {
 let identityStillCurrent: () => boolean = () => false;
 let identityRevision = 0;
 let identityAccount = '|';
+/** The client whose identity could not be read (one revision for it, not a new one per call). */
+let identityFailedFor: { client: unknown } | null = null;
 function identity(): string {
     try {
         if (!identityStillCurrent()) {
@@ -227,16 +229,24 @@ function identity(): string {
             const user = client?.getCurrentUserId?.();
             identityAccount = String(serverId || '') + '|' + String(user || '');
             const token = client?.accessToken?.();
-            const root = client?.getUrl('');
+            // Jellyfin's ApiClient throws on an empty URL name.
+            const root = client?.getUrl('/');
             // Only an opaque revision reaches store ownership; credentials stay in this closure.
             identityStillCurrent = () => optionalApiClient() === client && server() === serverId
-                && client?.getCurrentUserId?.() === user && client?.accessToken?.() === token && client?.getUrl('') === root;
+                && client?.getCurrentUserId?.() === user && client?.accessToken?.() === token && client?.getUrl('/') === root;
+            identityFailedFor = null;
             identityRevision++;
         }
         return String(identityRevision);
     } catch {
         identityStillCurrent = () => false;
-        return String(++identityRevision);
+        // A client whose identity cannot be read keeps one revision until it is replaced.
+        const client = optionalApiClient();
+        if (!identityFailedFor || identityFailedFor.client !== client) {
+            identityFailedFor = { client };
+            identityRevision++;
+        }
+        return String(identityRevision);
     }
 }
 

@@ -39,7 +39,11 @@ function boot(t, { url = PAGE_URL, config: extra = {}, patch, put, lazy = false,
     fetch: async () => ({ ok: true, status: 200, json: async () => ({}), text: async () => '' }),
     JE: { t: (key, params) => (params ? `${key}:${Object.values(params).join('|')}` : key), pluginConfig: {}, currentSettings: {} },
     apiClient: {
-      getUrl: (path, query) => `http://jellyfin.test/${path.replace(/^\//, '')}${query ? `?${new URLSearchParams(query)}` : ''}`,
+      // Jellyfin's real ApiClient rejects an empty URL name (as the harness does).
+      getUrl: (path, query) => {
+        if (!path) throw new Error('Url name cannot be empty');
+        return `http://jellyfin.test/${path.replace(/^\//, '')}${query ? `?${new URLSearchParams(query)}` : ''}`;
+      },
       getPluginConfiguration: async () => clone(server),
       updatePluginConfiguration: async (id, body) => {
         calls.push({ kind: 'put', body: clone(body) });
@@ -277,6 +281,24 @@ test('Save never puts an older Media Tags value back: a pending field save goes 
   assert.deepEqual(patch, { Changes: { DisableTagsOnSearchPage: true }, Expected: { DisableTagsOnSearchPage: false } });
   assert.equal(h.server.DisableTagsOnSearchPage, true);
   assert.equal(h.server.TagsHideOnHover, true, 'still the tab\'s value');
+});
+
+test('the page\'s Save persists after the Media Tags tab has loaded, over Jellyfin\'s strict getUrl', async (t) => {
+  const h = boot(t);
+  let reads = 0;
+  const read = h.window.ApiClient.getPluginConfiguration;
+  // Past a handful of reads the answer never comes, so a read loop cannot spin forever.
+  h.window.ApiClient.getPluginConfiguration = async (...args) => (++reads > 5 ? new Promise(() => {}) : read(...args));
+  h.tabButton('media-tags').click();
+  await h.until();
+  await h.settle();
+  assert.equal(reads, 1, 'the tab read the configuration once');
+  const wanted = !h.server.ShowFileSizes;
+  h.change(h.document.getElementById('showFileSizes'), wanted);
+  h.form.dispatchEvent(new h.window.Event('submit', { bubbles: true, cancelable: true }));
+  await h.until(() => h.calls.some((c) => c.kind === 'put'), 'Save wrote the configuration');
+  assert.equal(h.calls.find((c) => c.kind === 'put').body.ShowFileSizes, wanted);
+  assert.equal(h.server.ShowFileSizes, wanted, 'the server kept the saved value');
 });
 
 test('Apply all plugin settings and Apply the above save a pending Media Tags change first and never write one', async (t) => {
