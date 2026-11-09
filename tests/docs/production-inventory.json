@@ -186,6 +186,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs",
       "category": "Features"
     },
@@ -2944,66 +2948,6 @@
       ]
     },
     {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark-document",
-      "method": "GetBookmarkDocument",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark-document",
-      "method": "MutateBookmarkDocument",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json",
-      "method": "GetUserBookmark",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json",
-      "method": "SaveUserBookmark",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json/add",
-      "method": "AddUserBookmark",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json/{bookmarkId}",
-      "method": "RemoveUserBookmark",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
       "verb": "POST",
       "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
       "method": "SaveUserSettingsElsewhere",
@@ -3827,6 +3771,66 @@
       "following_attributes": [
         "Authorize",
         "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark-document",
+      "method": "GetBookmarkDocument",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark-document",
+      "method": "MutateBookmarkDocument",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json",
+      "method": "GetUserBookmark",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json",
+      "method": "SaveUserBookmark",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json/add",
+      "method": "AddUserBookmark",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/bookmark.json/{bookmarkId}",
+      "method": "RemoveUserBookmark",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "following_attributes": [
+        "Authorize",
         "Produces(\"application/json\")"
       ]
     },
@@ -9810,10 +9814,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved enhanced bookmarks for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to bookmark.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
       "literal": "Saved hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to hidden-content.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
@@ -9851,10 +9851,6 @@
     },
     {
       "literal": "shortcuts.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/bookmark.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -9896,6 +9892,18 @@
     {
       "literal": "whats-new.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs"
+    },
+    {
+      "literal": "Saved enhanced bookmarks for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to bookmark.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs"
+    },
+    {
+      "literal": "bookmark.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/bookmark.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs"
     },
     {
       "literal": "bookmark.json",
@@ -10322,10 +10330,10 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 492,
+    "files": 493,
     "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 88,
+    "storage_references": 89,
     "scheduled_tasks": 15,
     "locales": 33
   }
