@@ -156,13 +156,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard
                 {
                     foreach (var key in userConfiguration.PendingTmdb.Keys)
                     {
-                        Services.SpoilerSeerrPendingPromoter.RegisterPending(key, gateUserId);
+                        Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.RegisterPending(key, gateUserId);
                     }
                     foreach (var stale in priorPending)
                     {
                         if (!userConfiguration.PendingTmdb.ContainsKey(stale))
                         {
-                            Services.SpoilerSeerrPendingPromoter.UnregisterPending(stale, gateUserId);
+                            Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.UnregisterPending(stale, gateUserId);
                         }
                     }
                 }
@@ -1086,7 +1086,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard
                     });
                 // Either way the key is no longer pending for this user — keep the
                 // promoter's gate consistent so it stops sweeping this user.
-                Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId.Value);
+                Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId.Value);
                 var (removedAnything, removedFrom, removedJellyfinId) = resultBox[0];
                 if (!removedAnything)
                 {

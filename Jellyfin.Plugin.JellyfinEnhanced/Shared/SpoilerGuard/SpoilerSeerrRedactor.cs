@@ -12,7 +12,6 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.AspNetCore.Http;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {

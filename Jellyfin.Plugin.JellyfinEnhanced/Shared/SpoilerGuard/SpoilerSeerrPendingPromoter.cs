@@ -15,7 +15,7 @@ using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     // Promotes pending Spoiler Guard entries (UserSpoilerBlur.PendingTmdb) into
     // real Series/Movies entries when matching library items land via Seerr or
@@ -201,7 +201,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
                 var dirName = Path.GetFileName(userDir);
                 if (!Guid.TryParseExact(dirName, "N", out var userId)) continue;
 
-                var path = Path.Combine(userDir, SpoilerBlurImageFilter.SpoilerBlurFileName);
+                var path = Path.Combine(userDir, Features.SpoilerGuard.Services.SpoilerBlurImageFilter.SpoilerBlurFileName);
                 if (!File.Exists(path)) continue;
                 users++;
                 try
@@ -361,7 +361,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
             if (visibleItem == null) return PromotionOutcome.StillPending;
 
             var userKey = userId.ToString("N");
-            var fileName = SpoilerBlurImageFilter.SpoilerBlurFileName;
+            var fileName = Features.SpoilerGuard.Services.SpoilerBlurImageFilter.SpoilerBlurFileName;
             var itemKey = itemId.ToString("N");
 
             try

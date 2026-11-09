@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     // Strips spoiler-y metadata fields (Overview, Tags, Chapter names,
     // Taglines, ratings, premiere date, episode title, cast) from

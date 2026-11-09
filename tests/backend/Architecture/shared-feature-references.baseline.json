@@ -12,10 +12,6 @@
     "Shared/MediaTags/SeriesQualityAggregation -> Features/MediaTags/PosterTags/Resolution/LanguageFlagRules": 7,
     "Shared/MediaTags/SeriesQualityAggregation -> Features/MediaTags/PosterTags/Resolution/LanguageFlagRules+ParsedTag": 7,
     "Shared/MediaTags/SeriesQualityAggregation -> Features/MediaTags/PosterTags/Resolution/QualityTagRules": 22,
-    "Shared/SpoilerGuard/SpoilerPendingService -> Features/SpoilerGuard/Services/SpoilerSeerrPendingPromoter": 5,
-    "Shared/SpoilerGuard/SpoilerSeerrRedactor -> Features/SpoilerGuard/Services/SpoilerFieldStripFilter": 10,
-    "Shared/SpoilerGuard/SpoilerSeerrRedactor -> Features/SpoilerGuard/Services/SpoilerFieldStripFilter+CategoryReveal": 19,
-    "Shared/SpoilerGuard/SpoilerSeerrRedactor -> Features/SpoilerGuard/Services/SpoilerNextUnwatchedService": 4,
     "Shared/SpoilerGuard/SpoilerTagDataStripper -> Features/MediaTags/PosterTags/Resolution/QualityTagRules": 1
   }
 }

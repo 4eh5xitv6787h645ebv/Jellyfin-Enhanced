@@ -476,18 +476,18 @@ Files in this table are under `Features/SpoilerGuard/Services/` unless the row n
 |---|---|
 | `ImageBlurService.cs` | SkiaSharp Gaussian blur, stock cards and pre-encoded fail-closed JPEG fallback, with result caching. |
 | `SpoilerBlurImageFilter.cs` | Replaces protected image/trickplay responses with parent art, blur or fallback according to mode and availability. |
-| `SpoilerFieldStripFilter.cs` | Strips/rewrites supported unwatched-item metadata in Jellyfin API responses, honoring user state and overrides. |
+| `Shared/SpoilerGuard/SpoilerFieldStripFilter.cs` | Strips/rewrites supported unwatched-item metadata in Jellyfin API responses, honoring user state and overrides. |
 | `Shared/SpoilerGuard/SpoilerIdentityService.cs`, `Features/SpoilerGuard/Services/SpoilerIdentityTagFilter.cs` | Stable per-user markers and item DTO image-tag stamping for anonymous image requests. The tag filter also calls native poster stamping. |
 | `Shared/SpoilerGuard/ImageTagDecoration.cs` | Shared parsing/composition of `[sb-{8hex}-]{jellyfinTag}[-jet{23hex}][-jeu{12hex}]`. |
 | `Shared/SpoilerGuard/SpoilerUserResolver.cs` | Loads Spoiler Guard state for the resolved requester. |
-| `SpoilerNextUnwatchedService.cs` | Cached per-user/per-series next-unwatched boundary for advanced category reveals. |
+| `Shared/SpoilerGuard/SpoilerNextUnwatchedService.cs` | Cached per-user/per-series next-unwatched boundary for advanced category reveals. |
 | `Shared/SpoilerGuard/SpoilerTagDataStripper.cs` | Removes sensitive tag data, shared by web tag endpoints and native poster rendering. |
 | `Shared/SpoilerGuard/SpoilerSeerrRedactor.cs` | Applies the same per-user policy to Seerr, TMDB and MDBList data, after parental filtering and on top of their shared caches, and to the Requests, Downloads and calendar rows JE builds itself. Must change with `SpoilerFieldStripFilter.cs`. |
 | `SpoilerAutoEnableFilter.cs` | Shared content-type/library scope gate for first-play, Seerr-request and library-add automation. |
 | `SpoilerAutoEnableArmer.cs` | Bulk arming for users with library access, including disabled accounts, with one locked `spoilerblur.json` update per user. |
 | `SpoilerLibraryAddAutoEnabler.cs` | Batches new-title library events into bulk arming. |
 | `SpoilerExistingTitlesApplier.cs` | Preview/application for existing titles, run by `Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs`. |
-| `SpoilerSeerrPendingPromoter.cs` | Converts pending pre-acquisition protection into library-item entries when content arrives. |
+| `Shared/SpoilerGuard/SpoilerSeerrPendingPromoter.cs` | Converts pending pre-acquisition protection into library-item entries when content arrives. |
 
 `Infrastructure/Identity/RequestIdentityService.cs` resolves authenticated claims first, then image markers, the single-user shortcut, validated cookies and session-by-IP candidates. Consumers distinguish confident identity from ambiguous shared-IP candidates.
 

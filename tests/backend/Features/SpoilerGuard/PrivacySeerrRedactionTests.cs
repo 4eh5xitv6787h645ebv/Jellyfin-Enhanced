@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using Series = MediaBrowser.Controller.Entities.TV.Series;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
 namespace JE.Tests.Features.SpoilerGuard;
 

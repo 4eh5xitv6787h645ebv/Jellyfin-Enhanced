@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 

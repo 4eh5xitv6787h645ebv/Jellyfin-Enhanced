@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting
 {
