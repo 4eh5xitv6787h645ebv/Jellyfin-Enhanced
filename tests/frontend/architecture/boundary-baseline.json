@@ -14,34 +14,6 @@
     "internals calendarLifetime": 1,
     "internals calendarPage": 3
   },
-  "client/src/features/catchup/catchup-activity.ts": {
-    "import client/src/features/activity/host.ts": 1,
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/catchup-core.ts": {
-    "import client/src/features/activity/host.ts": 2,
-    "internals *": 2,
-    "internals catchUp": 2
-  },
-  "client/src/features/catchup/catchup-custom-tab.ts": {
-    "internals catchUp": 2
-  },
-  "client/src/features/catchup/catchup-deck.ts": {
-    "import client/src/features/activity/host.ts": 1,
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/catchup-page.ts": {
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/catchup-styles.ts": {
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/model.ts": {
-    "import client/src/features/activity/host.ts": 1
-  },
-  "client/src/features/catchup/types.ts": {
-    "import client/src/features/activity/host.ts": 1
-  },
   "client/src/features/chrome/events-entry.ts": {
     "internals *": 2,
     "internals canonicalCombo": 1

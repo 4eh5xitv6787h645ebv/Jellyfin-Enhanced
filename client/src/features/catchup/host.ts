@@ -1,5 +1,6 @@
 import type { CatchRuntime } from './types';
 import type { SocialApi, SocialSession, RequestOptions } from '../activity/public-api';
+import { featureContext, type FeatureContext } from '../../host/context';
 export interface CatchHost {
  pluginConfig?: {CatchUpEnabled?: boolean; CatchUpUseCustomTabs?: boolean; CatchUpUseNativeTab?: boolean};
  themer?: {getThemeVariables(): {primaryAccent?: string; panelBg?: string; secondaryBg?: string}};
@@ -11,4 +12,18 @@ export interface CatchHost {
  catchUpPage?: {injectStyles(): void; renderPage(container?: HTMLElement): void};
 }
 interface CatchWindow extends Window {JellyfinEnhanced?: CatchHost; JE?: CatchHost; ApiClient?: SocialApi; Emby?: {Page?: {showItem(id: string): void}}}
-export function catchupHost() {const host: CatchWindow = window; return {host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby};}
+/** catchup's own slots (frontend.md §2.3): the facade it publishes on JE and its JE.internals slot. */
+export type CatchupOwn = Pick<CatchHost, 'catchUpPage'> & CatchHost['internals'];
+/** catchup reads no other feature's facade. */
+export type CatchupPeers = Record<never, never>;
+export type CatchupContext = FeatureContext<CatchupOwn, CatchupPeers, CatchHost>;
+/** `ctx` is undefined when the script loads before Jellyfin Enhanced (the entries then do nothing, as before). */
+export function catchupHost() {
+ const host: CatchWindow = window, JE = host.JellyfinEnhanced;
+ const ctx: CatchupContext | undefined = JE && featureContext<CatchupOwn, CatchupPeers, CatchHost>('catchup', JE, {
+  facades: ['catchUpPage'],
+  internalSlots: ['catchUp'],
+  internalsObject: () => JE.internals ??= {},
+ });
+ return {host, ctx, getApi: () => host.ApiClient, Emby: host.Emby};
+}

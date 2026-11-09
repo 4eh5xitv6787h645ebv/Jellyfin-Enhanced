@@ -1,7 +1,7 @@
 import type {Item, Options, Direction, Gesture} from './types';
 import {readItems} from './model';
 import { catchupHost } from './host';
-import { errorMessage, currentLease } from '../activity/host';
+import { errorMessage, currentLease } from './wire';
 /**
  * @file Catch Up card deck: cards, drag and keyboard gestures, the season picker and undo.
  * Mounted by catchup-page.js through JE.internals.catchUp.deck.mount().
@@ -10,13 +10,13 @@ import { errorMessage, currentLease } from '../activity/host';
  */
 (function () {
   'use strict';
-  const { JE: candidate, getApi } = catchupHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context, getApi } = catchupHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
 
 
   if (!JE?.pluginConfig?.CatchUpEnabled) return;
-  const runtime = JE.internals.catchUp;
+  const runtime = ctx.own.catchUp;
   if (!runtime) return;
   const S = runtime;
   const { state, tt, h, icon, ACTIONS, ACT_NAME } = S;
