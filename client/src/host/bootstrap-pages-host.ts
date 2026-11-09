@@ -112,7 +112,7 @@ export interface LoaderNamespace extends Partial<Record<FeatureInitializer, Hook
     jellyseerrIssueReporter?: { initialize?(): void };
 }
 
-/** Bundle globals are written by Services/ClientScriptBundle.cs. */
+/** Bundle globals are written by Features/Platform/Services/ClientScriptBundle.cs. */
 interface LoaderWindow extends Window {
     JellyfinEnhanced?: LoaderNamespace;
     ApiClient?: LoaderClient;

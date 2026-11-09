@@ -5,7 +5,7 @@
  * (js/enhanced/admintags/sections/portable.js).
  *
  * A document is `{"v":1,"kind":"je-media-tags-user","settings":{…}}` with the
- * server's PascalCase field names (Features/MediaTags/Services/MediaTagsPortable.cs); a preset adds
+ * server's PascalCase field names (Shared/MediaTags/MediaTagsPortable.cs); a preset adds
  * an id, a name and a description. Every import is checked by the server first
  * (POST user-settings/{id}/media-tags/preview, the settings save path's
  * validators): the dialog shows what changes and which fields are skipped, and

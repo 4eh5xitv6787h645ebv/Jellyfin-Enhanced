@@ -1,10 +1,10 @@
 // The Media Tags section modules (js/enhanced/admintags/sections/*.js) are read as text by three
-// consumers besides the browser: the server's field-patch allowlist (Features/MediaTags/Admin/MediaTagsPageFields.cs),
+// consumers besides the browser: the server's field-patch allowlist (Shared/MediaTags/MediaTagsPageFields.cs),
 // What's New (Features/Admin/Services/WhatsNewService.cs ParseSectionModule and the setting id list) and the docs
 // generator (scripts/generate_config_flag_groups.py). Their patterns are ported here verbatim, so a
 // test can read a generated module exactly as they do.
 
-// Features/MediaTags/Admin/MediaTagsPageFields.cs
+// Shared/MediaTags/MediaTagsPageFields.cs
 const FIELD = /^\s*\{ id: '\w+', key: '(\w+)'(?:.*?orderKey: '(\w+)')?/gm;
 const WRITES = /^\s*writes: \[([^\]]*)\]/gm;
 const QUOTED = /'(\w+)'/g;

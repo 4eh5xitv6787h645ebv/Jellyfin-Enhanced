@@ -1753,7 +1753,7 @@
       "source": "client/src/pages/activity-page.ts",
       "template": "client/html/bootstrap-pages/ActivityPage.html",
       "manifest": "client/html-entries/bootstrap-pages.json",
-      "sha256": "91ad3c0affc20cc516fef41c1fa5388aa7284a98c3481ca59908259202bce3ad"
+      "sha256": "21410131461ba56d67873ce05353b6ea5a4ee7b6c5da8b62a404221f74461f06"
     },
     {
       "path": "PluginPages/BookmarksPage.html",
@@ -1763,7 +1763,7 @@
       "source": "client/src/pages/bookmarks-page.ts",
       "template": "client/html/bootstrap-pages/BookmarksPage.html",
       "manifest": "client/html-entries/bootstrap-pages.json",
-      "sha256": "e4d968ae6dd0561bffa4e194e03f7e4ff2bbe26a112645a6ff41f075fd39f9d0"
+      "sha256": "fb600db94ec0801765ecc48c004d60f97be40e33fd5409c980571640a23a9336"
     },
     {
       "path": "PluginPages/CalendarPage.html",
@@ -1773,7 +1773,7 @@
       "source": "client/src/pages/calendar-page.ts",
       "template": "client/html/bootstrap-pages/CalendarPage.html",
       "manifest": "client/html-entries/bootstrap-pages.json",
-      "sha256": "a1a2e71976de0454df13b8c97f05e486b93832387098f2f0af43b8cf9918ce0c"
+      "sha256": "da90b494d242178616a9c4f59cd9e5874b1c5cbb3bc2b1252dd16c93fa42b610"
     },
     {
       "path": "PluginPages/CatchUpPage.html",
@@ -1783,7 +1783,7 @@
       "source": "client/src/pages/catchup-page.ts",
       "template": "client/html/bootstrap-pages/CatchUpPage.html",
       "manifest": "client/html-entries/bootstrap-pages.json",
-      "sha256": "3be78188582c2e74867c35eff8843970b17856acbff5f0d855a899498e7e4599"
+      "sha256": "9291a50614a148a2e8ba759059127d1d0e070ba35c9cea3b9ef7bb9c643de7cf"
     },
     {
       "path": "PluginPages/DownloadsPage.html",
@@ -1793,7 +1793,7 @@
       "source": "client/src/pages/downloads-page.ts",
       "template": "client/html/bootstrap-pages/DownloadsPage.html",
       "manifest": "client/html-entries/bootstrap-pages.json",
-      "sha256": "5b1e9f43dac6bc9ed4cf23c8a0f9d929f47a9c12f29cd7e8676843e8808539ad"
+      "sha256": "94023810a5c98b79217c52e7c4038e59c60dc8c1c422708d65fb642227faebff"
     },
     {
       "path": "PluginPages/HiddenContentPage.html",
@@ -1803,7 +1803,7 @@
       "source": "client/src/pages/hidden-content-page.ts",
       "template": "client/html/bootstrap-pages/HiddenContentPage.html",
       "manifest": "client/html-entries/bootstrap-pages.json",
-      "sha256": "467b6db928e1964dde7ca783741651ab8c3d0911b73ca3d42c5e70c566e6812b"
+      "sha256": "c5e51567c67dc8c162ab99dc688d132275e063c9fb9abc2a91ee9a23538a42e8"
     },
     {
       "path": "PluginPages/RecommendationsPage.html",
@@ -1813,7 +1813,7 @@
       "source": "client/src/pages/recommendations-page.ts",
       "template": "client/html/bootstrap-pages/RecommendationsPage.html",
       "manifest": "client/html-entries/bootstrap-pages.json",
-      "sha256": "14fb5066cfdc55c764eb2bc4eb22b3e65dc43d5ce9336b41c302fa7d5d94f782"
+      "sha256": "82226ef832c06bee59f811d8f5b4fd9de1a4038248652bad3192eae9b143bd1a"
     }
   ]
 }

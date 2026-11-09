@@ -7,7 +7,7 @@ import { readAll } from '../../../helpers/admin-tags-declarations.mjs';
 import { BASE, boot, setup, TWO_PAGES } from '../../../helpers/admin-tags-page.mjs';
 
 // The Media Tags admin tab (js/enhanced/admintags/*) is generated from strict TypeScript
-// (client/src/features/admin-tags). These tests drive the generated scripts: the text contract
+// (client/src/features/media-tags/admin). These tests drive the generated scripts: the text contract
 // the server and the docs generator read, the public facade, and the faults the rewrite fixed
 // (docs/rewrite/admin-tags.md, artifacts/rewrite-admin-tags/bugs.json).
 
@@ -18,7 +18,7 @@ const settle = async (n = 6) => { for (let i = 0; i < n; i++) await new Promise(
 test('the server, What\'s New and the docs generator read the same declarations from the generated modules as from the hand-written ones', () => {
   const baseline = JSON.parse(readFileSync(new URL('./admin-tags-rewrite.declarations.json', import.meta.url), 'utf8'));
   const now = readAll(Object.fromEntries(sectionFiles().map((f) => [f, readFileSync(resolve(sectionsDir, f), 'utf8')])));
-  // Features/MediaTags/Admin/MediaTagsPageFields.cs: the field patch's allowlist (a missing field is refused, an extra one writable).
+  // Shared/MediaTags/MediaTagsPageFields.cs: the field patch's allowlist (a missing field is refused, an extra one writable).
   assert.deepEqual(now.allowed, baseline.allowed);
   assert.ok(now.allowed.length > 100);
   assert.deepEqual(now.settingIds, baseline.settingIds, 'Features/Admin/Services/WhatsNewService.cs setting ids');
