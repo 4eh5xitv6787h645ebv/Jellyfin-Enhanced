@@ -234,7 +234,15 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/DetailsProvidersServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Events/ReviewAuthorCacheInvalidator.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
       "category": "Features"
     },
     {
@@ -267,10 +275,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/MdblistService.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ProviderHelper.cs",
       "category": "Features"
     },
     {
@@ -978,6 +982,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ProviderHelper.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/RadarrService.cs",
       "category": "Shared"
     },
@@ -1015,6 +1023,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/TrackRoles.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/AwardLists.cs",
       "category": "Shared"
     },
     {
@@ -2698,107 +2710,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/anilist/reviews",
-      "method": "GetAnilistReviews",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/translate/languages",
-      "method": "GetTranslationLanguages",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/translate",
-      "method": "TranslateReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/awards/{mediaType}/{tmdbId}",
-      "method": "GetAwards",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/mdblist-ratings/{mediaType}/{tmdbId}",
-      "method": "GetMdblistRatings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/ddd/{mediaType}/{tmdbId}",
-      "method": "GetDoesTheDogDie",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/ddd/usage",
-      "method": "GetDoesTheDogDieUsage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/ddd/topics",
-      "method": "GetDoesTheDogDieTopics",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/ddd-triggers.json",
-      "method": "GetUserSettingsDdd",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/ddd-triggers.json",
-      "method": "SaveUserSettingsDdd",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/mdblist-ratings/account-status",
-      "method": "GetMdblistAccountStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/locales",
       "method": "GetAvailableLocales",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -2827,26 +2738,6 @@
       "method": "GetLocale",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
-      "method": "GetUserSettingsElsewhere",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
-      "method": "SaveUserSettingsElsewhere",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
     },
     {
       "verb": "GET",
@@ -3050,106 +2941,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
-      "method": "GetItemReviews",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/reviews/ratings",
-      "method": "GetReviewRatings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
-      "method": "UpsertReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
-      "method": "AdminUpsertReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
-      "method": "DeleteReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/reviews/admin/all",
-      "method": "AdminListReviews",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
-      "method": "AdminDeleteReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/item-stats/{userId}/{itemId}",
-      "method": "GetItemStatsByItemId",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/file-size/{userId}/{itemId}",
-      "method": "GetFileSizeByItemId",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/watch-progress/{userId}/{itemId}",
-      "method": "GetWatchProgressByItemId",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/jellyseerr/issue",
       "method": "GetJellyseerrIssues",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3170,51 +2961,6 @@
       "verb": "POST",
       "path": "/JellyfinEnhanced/jellyseerr/issue",
       "method": "ReportJellyseerrIssue",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/identify-url",
-      "method": "IdentifyUrl",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/series-slug",
-      "method": "GetSeriesSlug",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/series-slugs",
-      "method": "GetSeriesSlugs",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/links",
-      "method": "GetArrLinks",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/movie-instances",
-      "method": "GetMovieInstances",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize"
@@ -3510,6 +3256,272 @@
       "path": "/JellyfinEnhanced/active-streams/broadcast",
       "method": "BroadcastMessage",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/anilist/reviews",
+      "method": "GetAnilistReviews",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/translate/languages",
+      "method": "GetTranslationLanguages",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/translate",
+      "method": "TranslateReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/awards/{mediaType}/{tmdbId}",
+      "method": "GetAwards",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/mdblist-ratings/{mediaType}/{tmdbId}",
+      "method": "GetMdblistRatings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/ddd/{mediaType}/{tmdbId}",
+      "method": "GetDoesTheDogDie",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/ddd/usage",
+      "method": "GetDoesTheDogDieUsage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/ddd/topics",
+      "method": "GetDoesTheDogDieTopics",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/ddd-triggers.json",
+      "method": "GetUserSettingsDdd",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/ddd-triggers.json",
+      "method": "SaveUserSettingsDdd",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/mdblist-ratings/account-status",
+      "method": "GetMdblistAccountStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
+      "method": "GetUserSettingsElsewhere",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
+      "method": "SaveUserSettingsElsewhere",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
+      "method": "GetItemReviews",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/reviews/ratings",
+      "method": "GetReviewRatings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
+      "method": "UpsertReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
+      "method": "AdminUpsertReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
+      "method": "DeleteReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/reviews/admin/all",
+      "method": "AdminListReviews",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
+      "method": "AdminDeleteReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/item-stats/{userId}/{itemId}",
+      "method": "GetItemStatsByItemId",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/file-size/{userId}/{itemId}",
+      "method": "GetFileSizeByItemId",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/watch-progress/{userId}/{itemId}",
+      "method": "GetWatchProgressByItemId",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/identify-url",
+      "method": "IdentifyUrl",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/series-slug",
+      "method": "GetSeriesSlug",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/series-slugs",
+      "method": "GetSeriesSlugs",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/links",
+      "method": "GetArrLinks",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/movie-instances",
+      "method": "GetMovieInstances",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
       "following_attributes": [
         "Authorize"
       ]
@@ -9890,15 +9902,7 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to elsewhere.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
       "literal": "bookmark.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "ddd-triggers.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -9919,14 +9923,6 @@
     },
     {
       "literal": "shortcuts.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/ddd-triggers.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/elsewhere.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -9964,6 +9960,26 @@
     {
       "literal": "bookmark.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs"
+    },
+    {
+      "literal": "Saved user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to elsewhere.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs"
+    },
+    {
+      "literal": "ddd-triggers.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs"
+    },
+    {
+      "literal": "elsewhere.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/ddd-triggers.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/elsewhere.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs"
     },
     {
       "literal": "ddd-cache.json",
@@ -10430,10 +10446,10 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 512,
+    "files": 515,
     "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 95,
+    "storage_references": 96,
     "scheduled_tasks": 15,
     "locales": 33
   }

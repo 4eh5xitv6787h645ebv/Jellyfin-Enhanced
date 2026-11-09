@@ -157,7 +157,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
                 case "AwardsTagsLetterboxdList":
                     var list = (value as string)?.Trim();
                     normalized = list;
-                    if (AwardTagsService.IsListId(list)) return true;
+                    if (AwardLists.IsListId(list)) return true;
                     error = "must be a numeric list id or owner/slug";
                     return false;
                 case "CustomTagRules":

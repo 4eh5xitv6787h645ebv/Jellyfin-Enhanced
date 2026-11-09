@@ -1,14 +1,14 @@
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Mvc;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.DetailsProviders;
 
 [Collection("Plugin singleton")]
 public class ApiReviewTranslationTests
 {
-    private static async Task<(ObjectResult Result, JellyfinEnhancedController Controller)> Translate(int status, string? retryAfter)
+    private static async Task<(ObjectResult Result, JeDetailsProvidersController Controller)> Translate(int status, string? retryAfter)
     {
         using var f = new ApiPluginFixture();
         f.Plugin.Configuration.ReviewTranslationEnabled = true;
@@ -19,8 +19,8 @@ public class ApiReviewTranslationTests
             if (retryAfter != null) response.Headers.Add("Retry-After", retryAfter);
             return Task.FromResult(response);
         });
-        var controller = ApiAssetTests.Controller(f.Core, new ReviewTranslationService(transport, f.Core.Logger));
-        var result = await controller.TranslateReview(new JellyfinEnhancedController.TranslateRequest { Text = "Hello", Target = "de" }, default);
+        var controller = (JeDetailsProvidersController)ApiAssetTests.Controller(typeof(JeDetailsProvidersController), f.Core, new ReviewTranslationService(transport, f.Core.Logger));
+        var result = await controller.TranslateReview(new JeDetailsProvidersController.TranslateRequest { Text = "Hello", Target = "de" }, default);
         return (Assert.IsAssignableFrom<ObjectResult>(result), controller);
     }
 

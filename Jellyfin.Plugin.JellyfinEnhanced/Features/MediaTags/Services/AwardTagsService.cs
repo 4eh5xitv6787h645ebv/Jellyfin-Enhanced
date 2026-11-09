@@ -14,6 +14,9 @@ using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
@@ -32,7 +35,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         private readonly object _sync = new();
         private readonly Dictionary<string, CachedTitle> _titles = new(StringComparer.Ordinal);
         private readonly Dictionary<string, CachedList> _lists = new(StringComparer.Ordinal);
-        private static readonly Regex ListId = new(@"^(?:[1-9][0-9]{0,17}|[a-zA-Z0-9_-]{1,80}/[a-zA-Z0-9_-]{1,160})$", RegexOptions.Compiled);
 
         public AwardTagsService(IHttpClientFactory http, IApplicationPaths paths, MdblistService mdblist, WikidataAwardsService wikidata, Logger logger)
         {
@@ -50,9 +52,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
             }
             catch (Exception ex) { _logger.Warning($"[AwardTags] Could not read snapshot: {ex.Message}"); }
         }
-
-        /// <summary>Accept numeric MDBList ids or a bounded owner/slug; arbitrary URLs are refused.</summary>
-        public static bool IsListId(string? id) => id != null && ListId.IsMatch(id);
 
         private static string Signature(PluginConfiguration config) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
             $"{config.MdblistApiKey}|{config.AwardsTagsImdbList}|{config.AwardsTagsLetterboxdList}|{config.AwardsTagsImdb}|{config.AwardsTagsLetterboxd}|{config.AwardsTagsCertifiedFresh}|{config.AwardsTagsOscar}|{config.AwardsTagsEmmy}")));
@@ -159,7 +158,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 
         private async Task<CachedList?> GetListAsync(string id, PluginConfiguration config, TimeSpan ttl, CancellationToken token)
         {
-            if (!IsListId(id)) return null;
+            if (!AwardLists.IsListId(id)) return null;
             var key = Signature(config) + ":" + id;
             CachedList? old;
             lock (_sync) _lists.TryGetValue(key, out old);
@@ -181,35 +180,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
                 lock (_sync) _lists[key] = failed;
                 return failed;
             }
-        }
-
-        /// <summary>MDBList's movies/shows buckets contain TMDB ids and explicit rank, never assume API position is rank.</summary>
-        internal static Dictionary<string, int> ParseList(JsonElement root)
-        {
-            var ranks = new Dictionary<string, int>(StringComparer.Ordinal);
-            var valid = false;
-            foreach (var (bucket, type) in new[] { ("movies", "movie"), ("shows", "tv") })
-            {
-                if (!root.TryGetProperty(bucket, out var items) || items.ValueKind != JsonValueKind.Array) continue;
-                valid = true;
-                foreach (var item in items.EnumerateArray().Take(250))
-                {
-                    if (!item.TryGetProperty("rank", out var rankValue) || !rankValue.TryGetInt32(out var rank)) continue;
-                    // MDBList numbers list positions in steps of 1000 (1000, 2000, ...); fold that back to 1, 2, ...
-                    if (rank > 250 && rank % 1000 == 0) rank /= 1000;
-                    if (rank is < 1 or > 250) continue;
-                    JsonElement id = default;
-                    if (item.TryGetProperty("ids", out var ids) && ids.ValueKind == JsonValueKind.Object) ids.TryGetProperty("tmdb", out id);
-                    if (id.ValueKind == JsonValueKind.Undefined) item.TryGetProperty("tmdb_id", out id);
-                    var text = id.ValueKind is JsonValueKind.String or JsonValueKind.Number ? id.ToString() : "";
-                    if (text.Length is > 0 and < 20 && text.All(char.IsAsciiDigit)) ranks[type + ":" + text] = rank;
-                }
-            }
-            if (!valid) throw new JsonException("Missing list buckets");
-            // A list that lists titles but yields no usable rank is a parsing problem, never a confirmed empty chart.
-            if (ranks.Count == 0 && root.EnumerateObject().Any(b => b.Value.ValueKind == JsonValueKind.Array && b.Value.GetArrayLength() > 0))
-                throw new JsonException("List items carry no usable rank");
-            return ranks;
         }
 
         private void Save()

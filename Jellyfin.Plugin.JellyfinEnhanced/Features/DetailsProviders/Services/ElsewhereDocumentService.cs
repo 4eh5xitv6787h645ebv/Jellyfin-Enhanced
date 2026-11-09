@@ -8,7 +8,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
 /// <summary>
 /// Strict, lossless boundary for one user's elsewhere.json. Only an absent file has

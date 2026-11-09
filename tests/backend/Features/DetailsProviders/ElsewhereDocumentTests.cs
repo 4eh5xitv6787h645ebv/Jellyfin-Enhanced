@@ -6,8 +6,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Jellyfin.Extensions.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -19,8 +17,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.DetailsProviders;
 
 // Requests pass through real routing, authentication, authorization, model binding and
 // result execution, configured with Jellyfin's JsonDefaults, and reach real files.
@@ -47,7 +47,7 @@ public class ElsewhereDocumentTests
     {
         public object Create(ControllerContext context)
         {
-            var controller = ApiAssetTests.Controller(fixture.Core, fixture.Core.Manager);
+            var controller = ApiAssetTests.Controller(context.ActionDescriptor.ControllerTypeInfo.AsType(), fixture.Core, fixture.Core.Manager);
             controller.ControllerContext = context;
             return controller;
         }
@@ -698,8 +698,8 @@ public class ElsewhereDocumentTests
     [Fact]
     public void RoutesKeepTheirAuthorizationAndCachePolicies()
     {
-        var read = typeof(JellyfinEnhancedController).GetMethod(nameof(JellyfinEnhancedController.GetUserSettingsElsewhere))!;
-        var save = typeof(JellyfinEnhancedController).GetMethod(nameof(JellyfinEnhancedController.SaveUserSettingsElsewhere))!;
+        var read = typeof(JeDetailsProvidersController).GetMethod(nameof(JeDetailsProvidersController.GetUserSettingsElsewhere))!;
+        var save = typeof(JeDetailsProvidersController).GetMethod(nameof(JeDetailsProvidersController.SaveUserSettingsElsewhere))!;
         Assert.Equal("user-settings/{userId}/elsewhere.json", read.GetCustomAttribute<HttpGetAttribute>()!.Template);
         Assert.Equal("user-settings/{userId}/elsewhere.json", save.GetCustomAttribute<HttpPostAttribute>()!.Template);
         Assert.NotNull(read.GetCustomAttribute<AuthorizeAttribute>());

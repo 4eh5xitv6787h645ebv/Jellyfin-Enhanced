@@ -1,7 +1,7 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.DetailsProviders;
 
 public class IntegrationMdblistTests
 {

@@ -7,6 +7,9 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace JE.Tests.Features.MediaTags;
 
@@ -17,7 +20,7 @@ public class AwardTagsTests
     [InlineData("123", true)] [InlineData("owner/chart-250", true)]
     [InlineData("https://example.com", false)] [InlineData("a/../b", false)]
     [InlineData("a/b?apikey=x", false)] [InlineData("", false)]
-    public void ListConfigurationCannotEscapeProviderPath(string id, bool valid) => Assert.Equal(valid, AwardTagsService.IsListId(id));
+    public void ListConfigurationCannotEscapeProviderPath(string id, bool valid) => Assert.Equal(valid, AwardLists.IsListId(id));
 
     [Fact]
     public void UnrelatedAdminSavesDoNotRepublishAwardsOrWaitForTheCacheRebuildLock()
@@ -106,7 +109,7 @@ public class AwardTagsTests
     public void ChartParserSeparatesMediaTypesAndNeverMatchesInternalIdsOrOutOfChartRanks()
     {
         using var json = JsonDocument.Parse("{\"movies\":[{\"id\":999,\"ids\":{\"tmdb\":42},\"rank\":12},{\"id\":888,\"rank\":1},{\"ids\":{\"tmdb\":43},\"rank\":251}],\"shows\":[{\"ids\":{\"tmdb\":42},\"rank\":3}]}");
-        var ranks = AwardTagsService.ParseList(json.RootElement);
+        var ranks = AwardLists.ParseList(json.RootElement);
         Assert.Equal(2, ranks.Count); Assert.Equal(12, ranks["movie:42"]); Assert.Equal(3, ranks["tv:42"]);
     }
 
@@ -114,10 +117,10 @@ public class AwardTagsTests
     public void ChartParserFoldsMdblistThousandStepRanksAndRejectsAListWithNoUsableRank()
     {
         using var scaled = JsonDocument.Parse("{\"movies\":[{\"ids\":{\"tmdb\":278},\"rank\":134000},{\"ids\":{\"tmdb\":1},\"rank\":1000}],\"shows\":[]}");
-        var ranks = AwardTagsService.ParseList(scaled.RootElement);
+        var ranks = AwardLists.ParseList(scaled.RootElement);
         Assert.Equal(134, ranks["movie:278"]); Assert.Equal(1, ranks["movie:1"]);
         using var unusable = JsonDocument.Parse("{\"movies\":[{\"ids\":{\"tmdb\":5},\"rank\":999999}],\"shows\":[]}");
-        Assert.Throws<JsonException>(() => AwardTagsService.ParseList(unusable.RootElement));
+        Assert.Throws<JsonException>(() => AwardLists.ParseList(unusable.RootElement));
     }
 
     [Fact]

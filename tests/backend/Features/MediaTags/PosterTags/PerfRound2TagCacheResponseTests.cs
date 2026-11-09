@@ -20,6 +20,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 
 namespace JE.Tests.Features.MediaTags;
 
@@ -179,9 +180,9 @@ public class PerfRound2TagCacheResponseTests
         {
             "tag-cache" => ApiAssetTests.SiblingOf<JeMediaTagsController>(endpoint.Controller).GetTagCache(alice),
             "tag-data" => ApiAssetTests.SiblingOf<JeMediaTagsController>(endpoint.Controller).GetTagData(alice, [item.ToString()]),
-            "item-stats" => endpoint.Controller.GetItemStatsByItemId(alice, item),
-            "file-size" => endpoint.Controller.GetFileSizeByItemId(alice, item),
-            _ => endpoint.Controller.GetWatchProgressByItemId(alice, item),
+            "item-stats" => ApiAssetTests.SiblingOf<JeDetailsProvidersController>(endpoint.Controller).GetItemStatsByItemId(alice, item),
+            "file-size" => ApiAssetTests.SiblingOf<JeDetailsProvidersController>(endpoint.Controller).GetFileSizeByItemId(alice, item),
+            _ => ApiAssetTests.SiblingOf<JeDetailsProvidersController>(endpoint.Controller).GetWatchProgressByItemId(alice, item),
         };
         Assert.IsType<ForbidResult>(result);
         if (route != "tag-cache") return;

@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
 {
     /// <summary>
     /// Top user reviews for an anime from AniList's public GraphQL API, by AniList id.

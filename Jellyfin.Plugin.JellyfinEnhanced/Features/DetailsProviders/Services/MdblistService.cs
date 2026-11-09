@@ -11,8 +11,10 @@ using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
 {
     /// <summary>
     /// Looks up ratings (TMDB score, Rotten Tomatoes critic/audience, IMDb,
@@ -556,7 +558,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         internal async Task<Dictionary<string, int>?> GetAwardListWithinReserveAsync(string id, int reserve, CancellationToken cancellationToken)
         {
             var apiKey = JellyfinEnhanced.Instance?.Configuration.MdblistApiKey;
-            if (string.IsNullOrWhiteSpace(apiKey) || !AwardTagsService.IsListId(id)) return null;
+            if (string.IsNullOrWhiteSpace(apiKey) || !AwardLists.IsListId(id)) return null;
             await _backgroundQuotaGate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
@@ -574,7 +576,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 response.EnsureSuccessStatusCode();
                 await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token).ConfigureAwait(false);
                 using var json = await JsonDocument.ParseAsync(stream, cancellationToken: timeout.Token).ConfigureAwait(false);
-                return AwardTagsService.ParseList(json.RootElement);
+                return AwardLists.ParseList(json.RootElement);
             }
             finally { _backgroundQuotaGate.Release(); }
         }

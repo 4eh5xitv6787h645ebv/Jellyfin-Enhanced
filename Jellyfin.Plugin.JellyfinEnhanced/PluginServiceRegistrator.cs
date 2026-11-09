@@ -6,6 +6,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using MediaBrowser.Controller;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced
 {
@@ -72,20 +74,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // theme sheets, flags, remote locales) from the plugin's own route, backed by
             // an on-disk cache that the RefreshCdnAssetsTask warms/refreshes every 24h.
             serviceCollection.AddSingleton<CdnAssetService>();
-            // Awards lookup: on-demand per-title fetch from Wikidata's public SPARQL
-            // endpoint (no API key), cached to disk indefinitely for hits / with a TTL
-            // for misses — see WikidataAwardsService for details.
-            serviceCollection.AddSingleton<WikidataAwardsService>();
-            serviceCollection.AddSingleton<AnilistReviewsService>();
-            serviceCollection.AddSingleton<ReviewTranslationService>();
-            serviceCollection.AddSingleton<MdblistService>();
-            serviceCollection.AddSingleton<DoesTheDogDieService>();
+            serviceCollection.AddJeDetailsProviders();
             // In-memory, size-bounded cache + single-flight for TMDB passthrough and
             // person lookups -- see TmdbResponseCache for TTLs and why it is account-safe.
             serviceCollection.AddSingleton<TmdbResponseCache>();
-            // Size / watch-progress of an item subtree in a handful of queries
-            // (details-page media-info chips) -- see ItemStatsService.
-            serviceCollection.AddSingleton<ItemStatsService>();
             serviceCollection.AddSingleton<SeerrParentalFilter>();
             // Opt-in anonymous usage reporting: UsageEventCounterService holds the
             // current period's counters (debounced disk persistence, same pattern
@@ -96,12 +88,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<AnalyticsReportingService>();
             serviceCollection.AddTransient<AnalyticsReportTask>();
             serviceCollection.AddTransient<RefreshCdnAssetsTask>();
-            serviceCollection.AddTransient<MdblistRatingsFetchTask>();
-            serviceCollection.AddTransient<MdblistRatingsSyncTask>();
             serviceCollection.AddTransient<JellyseerrWatchlistSyncTask>();
             serviceCollection.AddTransient<JellyfinToSeerrWatchlistSyncTask>();
             serviceCollection.AddTransient<JellyseerrUserImportTask>();
-            serviceCollection.AddTransient<ClearTranslationCacheTask>();
 
             // Hidden Content: server-side filter for every native Jellyfin endpoint that surfaces user-facing item lists
             // (Resume, Items, Latest, NextUp, Upcoming, Suggestions, SearchHints), plus the Home Screen Sections

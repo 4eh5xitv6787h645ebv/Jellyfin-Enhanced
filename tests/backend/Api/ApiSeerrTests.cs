@@ -11,6 +11,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 
 namespace JE.Tests;
 
@@ -63,6 +64,13 @@ public class ApiSeerrTests
             var calendar = (JeCalendarController)ApiAssetTests.Controller(typeof(JeCalendarController), Plugin.Core, services);
             calendar.ControllerContext = Controller.ControllerContext;
             return calendar;
+        }
+        // The DetailsProviders actions live on JeDetailsProvidersController (restructure S2.12); same services, same HTTP context.
+        public JeDetailsProvidersController DetailsProviders()
+        {
+            var details = (JeDetailsProvidersController)ApiAssetTests.Controller(typeof(JeDetailsProvidersController), Plugin.Core, services);
+            details.ControllerContext = Controller.ControllerContext;
+            return details;
         }
         // The Downloads actions live on JeDownloadsController (restructure S2.10); same services, same HTTP context.
         public JeDownloadsController Downloads()
@@ -320,7 +328,7 @@ public class ApiSeerrTests
     {
         using var f = GuardedSeerr(out _);
         f.Plugin.Plugin.Configuration.MdblistRatingsEnabled = true;
-        var ok = Assert.IsType<OkObjectResult>(await f.Controller.GetMdblistRatings("movie", "603", CancellationToken.None));
+        var ok = Assert.IsType<OkObjectResult>(await f.DetailsProviders().GetMdblistRatings("movie", "603", CancellationToken.None));
         var body = Body(JsonSerializer.Serialize(ok.Value));
         Assert.False(body.GetProperty("Found").GetBoolean());
         // Not confirmed, so no cache keeps it past the guard.

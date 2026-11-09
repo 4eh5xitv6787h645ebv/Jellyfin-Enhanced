@@ -10,6 +10,8 @@ using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Tasks;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {

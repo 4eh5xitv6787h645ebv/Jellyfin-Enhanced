@@ -2,8 +2,9 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Events.Users;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Events
 {
     // Review visibility depends on the author's hidden/disabled flags and on
     // the author still existing, and ReviewAuthorCache keeps resolved authors

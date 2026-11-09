@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.DetailsProviders;
 
 public class IntegrationReviewTranslationTests
 {

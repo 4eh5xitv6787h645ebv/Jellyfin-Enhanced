@@ -4,15 +4,14 @@ using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Reviews;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Persistence;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.DetailsProviders;
 
 public class ReviewActivityVisibilityTests
 {

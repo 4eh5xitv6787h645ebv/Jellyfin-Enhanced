@@ -156,11 +156,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
         /// </summary>
         /// <summary>
         /// The Jellyfin user behind a review author id (null when the user no
-        /// longer exists), through <see cref="Services.ReviewAuthorCache"/>, which the
+        /// longer exists), through <see cref="Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services.ReviewAuthorCache"/>, which the
         /// user update/delete events invalidate.
         /// </summary>
         protected Jellyfin.Database.Implementations.Entities.User? ResolveReviewAuthor(Guid userGuid)
-            => Services.ReviewAuthorCache.Resolve(userGuid, _userManager.GetUserById);
+            => Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services.ReviewAuthorCache.Resolve(userGuid, _userManager.GetUserById);
 
         protected bool IsReviewVisibleToViewer(
             UserReview review,

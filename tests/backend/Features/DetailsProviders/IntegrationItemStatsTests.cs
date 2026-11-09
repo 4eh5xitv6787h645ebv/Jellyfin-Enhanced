@@ -1,12 +1,12 @@
 using System.Linq.Expressions;
 using Jellyfin.Database.Implementations.Entities;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.DetailsProviders;
 
 public class IntegrationItemStatsTests
 {
