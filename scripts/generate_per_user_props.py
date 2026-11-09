@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Regenerates client/src/admin/config/per-user-props.ts: the plugin settings every user also holds a personal copy of.
 
-Source of truth is the controller: the properties ResetAllUsersSettings copies into each user's settings.json, plus
-BuildHcDefaultSettings (Hidden Content defaults). The config page marks those settings with the per-user icon and shows
+Source of truth is the code: the properties ResetAllUsersSettings (Features/Settings/JeSettingsController.cs) copies
+into each user's settings.json, plus BuildHcDefaultSettings (Hidden Content defaults,
+Shared/HiddenContent/HiddenContentDefaults.cs). The config page marks those settings with the per-user icon and shows
 the "apply to all users" banner when one changes. Run this after changing either method, then rebuild the client,
 which emits Configuration/admin/per-user.js from it:
 
@@ -13,17 +14,18 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent / "Jellyfin.Plugin.JellyfinEnhanced"
-CONTROLLER = ROOT / "Controllers" / "JellyfinEnhancedController.cs"
+SETTINGS = ROOT / "Features" / "Settings" / "JeSettingsController.cs"
+HC_DEFAULTS = ROOT / "Shared" / "HiddenContent" / "HiddenContentDefaults.cs"
 OUT = ROOT.parent / "client" / "src" / "admin" / "config" / "per-user-props.ts"
 
-src = CONTROLLER.read_text(encoding="utf-8")
-
+src = SETTINGS.read_text(encoding="utf-8")
 a = src.index('[HttpPost("reset-all-users-settings")]')
 b = src.index("Reset settings for", a)
 props = set(re.findall(r"=\s*defaultConfig\.(\w+)", src[a:b]))
 
-c = src.index("private static HiddenContentSettings BuildHcDefaultSettings")
-d = src.index("[HttpPost", c)
+src = HC_DEFAULTS.read_text(encoding="utf-8")
+c = src.index("public static HiddenContentSettings BuildHcDefaultSettings")
+d = src.index("\n        }\n", c)
 props |= set(re.findall(r"=\s*src\.(\w+)", src[c:d]))
 
 body = "".join("    '%s',\n" % p for p in sorted(props))

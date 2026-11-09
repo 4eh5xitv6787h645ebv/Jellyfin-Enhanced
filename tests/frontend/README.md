@@ -42,7 +42,8 @@ needs another file's top-level declarations, or a module later in the manifest,
 while it loads fails here. Both runners
 pin `TZ=UTC` and an `en_US.UTF-8` locale and pass `--test-timeout=300000`, which
 Node 22 (used in CI) applies to each test file and newer Node to each test.
-`--test-concurrency=4` bounds CPU and memory use on the four-core CI runner.
+`--test-concurrency` is `JE_TEST_CONCURRENCY` when set, otherwise one less than the
+machine's cores and never below 4, which keeps 4 on the four-core CI runner.
 The admin page specs share `helpers/admin-tags-page.mjs` and run by concern;
 `h.load()` caches immutable script sources per process, with a fresh browser
 realm and independent coverage counters for each test.

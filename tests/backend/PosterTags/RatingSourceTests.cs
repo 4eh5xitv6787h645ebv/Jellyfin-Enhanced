@@ -14,6 +14,8 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -452,7 +454,7 @@ public class RatingSourceTests
 
         // The first user naming a source saves through the real endpoint: the next call enriches.
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
-        var controller = ApiAssetTests.Controller(f.Core, maintenance, f.Core.Manager);
+        var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), f.Core, maintenance, f.Core.Manager);
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("Jellyfin-UserId", ids[3])], "test"));
         var saved = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(ids[3], "settings.json");
         saved.RatingTagsSources = ["imdb"];

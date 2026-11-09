@@ -21,6 +21,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xunit.Abstractions;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
 namespace JE.Tests;
 
@@ -28,11 +29,12 @@ namespace JE.Tests;
 [Collection("Plugin singleton")]
 public class ApiItemLookMutationTests(ITestOutputHelper output)
 {
+    // Builds whichever plugin controller the matched action belongs to (POST admin/configuration is on JeAdminController).
     private sealed class Activator(CoreFixture fixture) : IControllerActivator
     {
         public object Create(ControllerContext context)
         {
-            var controller = ApiAssetTests.Controller(fixture);
+            var controller = ApiAssetTests.Controller(context.ActionDescriptor.ControllerTypeInfo.AsType(), fixture);
             controller.ControllerContext = context;
             return controller;
         }

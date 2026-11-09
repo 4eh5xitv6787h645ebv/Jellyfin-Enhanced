@@ -11,8 +11,9 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Hosting;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.Events
 {
     internal static class CwEventHelpers
     {

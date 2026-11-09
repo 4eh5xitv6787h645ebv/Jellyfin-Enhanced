@@ -5,6 +5,9 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Library;
@@ -12,6 +15,7 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -30,6 +34,14 @@ public class ApiMediaTagsPortableTests
         void SignIn(bool asAdmin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user, asAdmin) } };
         SignIn(admin);
         return (controller, user, SignIn);
+    }
+
+    /// <summary>POST admin/configuration is on JeAdminController (restructure S2.7): one sharing the signed-in context of <paramref name="controller"/>.</summary>
+    private static JeAdminController Admin(ApiPluginFixture f, ControllerBase controller)
+    {
+        var admin = (JeAdminController)ApiAssetTests.Controller(typeof(JeAdminController), f.Core);
+        admin.ControllerContext = controller.ControllerContext;
+        return admin;
     }
 
     private static JsonElement Json(string text) => JsonDocument.Parse(text).RootElement.Clone();
@@ -104,7 +116,7 @@ public class ApiMediaTagsPortableTests
         var target = JsonNode.Parse(JsonSerializer.Serialize(f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(other, "settings.json")))!.AsObject();
         foreach (var change in preview["changes"]!.AsArray()) target[(string)change!["field"]!] = change["to"]?.DeepClone();
         var bound = JsonSerializer.Deserialize<JellyfinEnhancedUserSettings>(target.ToJsonString(), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
-        Assert.IsType<OkObjectResult>(controller.SaveUserSettingsSettings(other, bound));
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).SaveUserSettingsSettings(other, bound));
         var again = (JsonObject)Body(controller.ExportUserMediaTags(other));
         Assert.True(JsonNode.DeepEquals(exported, again), $"{exported.ToJsonString()}\n{again.ToJsonString()}");
         Assert.Equal("fr", f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(other, "settings.json").DisplayLanguage);
@@ -120,7 +132,7 @@ public class ApiMediaTagsPortableTests
             TagGroupCaps = new() { Status = 9, AgeRating = 0, Genre = 2 } };
         f.Core.Manager.SaveUserConfiguration(id, "settings.json", source);
         source.DisplayLanguage = "fr";
-        Assert.IsType<OkObjectResult>(controller.SaveUserSettingsSettings(id, source));
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).SaveUserSettingsSettings(id, source));
         var saved = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(id, "settings.json");
         Assert.Equal(9, saved.TagGroupCaps!.Status);
         Assert.Equal(0, saved.TagGroupCaps.AgeRating);
@@ -170,9 +182,9 @@ public class ApiMediaTagsPortableTests
         var preview = Body(controller.PreviewAdminMediaTags(Json(exported)));
         Assert.Empty(preview["skipped"]!.AsArray());
         var change = preview["changes"]!.AsArray().Single(c => (string?)c!["field"] == "TagGroupCaps")!;
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new() { Changes = new() { ["TagGroupCaps"] = Json(change["to"]!) } }));
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(new() { Changes = new() { ["TagGroupCaps"] = Json(change["to"]!) } }));
         Assert.True(JsonNode.DeepEquals(exported, Body(controller.ExportAdminMediaTags())));
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new() { Changes = new() {
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(new() { Changes = new() {
             ["TagGroupCaps"] = Json("{\"Status\":9,\"AgeRating\":0,\"Genre\":3}") } }));
         Assert.Equal(9, f.Plugin.Configuration.TagGroupCaps!.Status);
         Assert.Equal(0, f.Plugin.Configuration.TagGroupCaps.AgeRating);
@@ -420,12 +432,12 @@ public class ApiMediaTagsPortableTests
         Assert.Equal(new[] { "StatusTagsJustAddedDays", "TagLayout" }, changes.Select(c => (string)c!["field"]!));
 
         // The page applies the changes through the field patch, expecting the values it read.
-        var request = new JellyfinEnhancedController.ConfigurationPatchRequest
+        var request = new ConfigurationPatchRequest
         {
             Changes = changes.ToDictionary(c => (string)c!["field"]!, c => Json(c!["to"]!.ToJsonString())),
             Expected = changes.ToDictionary(c => (string)c!["field"]!, c => Json(c!["from"]!.ToJsonString())),
         };
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(request));
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(request));
         Assert.Equal("bands", f.Plugin.Configuration.TagLayout);
         Assert.Equal(5, f.Plugin.Configuration.StatusTagsJustAddedDays);
         Assert.Equal("keep-me", f.Plugin.Configuration.CustomTagRuleKey);
@@ -434,7 +446,7 @@ public class ApiMediaTagsPortableTests
 
         // Applied again by a page that read the old values: another administrator's change wins nothing silently.
         f.Plugin.Configuration.TagLayout = "caption";
-        Assert.IsType<ConflictObjectResult>(controller.PatchConfiguration(request));
+        Assert.IsType<ConflictObjectResult>(Admin(f, controller).PatchConfiguration(request));
         Assert.Equal("caption", f.Plugin.Configuration.TagLayout);
     }
 
@@ -445,7 +457,7 @@ public class ApiMediaTagsPortableTests
         var (controller, _, _) = Signed(f, admin: true);
         // Three genres in different colours and Other, as tests/fixtures/genre-styles.json stores them.
         const string styles = "{\"v\":2,\"preset\":\"default\",\"groups\":{\"genre\":{\"border\":\"rgba(255, 255, 255, 0.6)\"}},\"labels\":{\"genre:animation\":{\"background\":\"rgba(30, 136, 229, 1)\"},\"genre:comedy\":{\"background\":\"rgba(255, 209, 102, 1)\",\"text\":\"rgba(17, 17, 17, 1)\"},\"genre:horror\":{\"background\":\"rgba(198, 40, 40, 1)\"},\"genre:other\":{\"background\":\"rgba(84, 110, 122, 1)\"}}}";
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagStyleOverrides"] = Json(JsonSerializer.Serialize(styles)) } }));
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(new ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagStyleOverrides"] = Json(JsonSerializer.Serialize(styles)) } }));
         Assert.Equal(styles, f.Plugin.Configuration.TagStyleOverrides);
         var exported = Body(controller.ExportAdminMediaTags());
         Assert.Equal(styles, (string?)exported["settings"]!["TagStyleOverrides"]);
@@ -456,7 +468,7 @@ public class ApiMediaTagsPortableTests
         Assert.Empty(preview["skipped"]!.AsArray());
         var change = Assert.Single(preview["changes"]!.AsArray());
         Assert.Equal("TagStyleOverrides", (string?)change!["field"]);
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(new ConfigurationPatchRequest
         {
             Changes = new Dictionary<string, JsonElement> { ["TagStyleOverrides"] = Json(change["to"]!.ToJsonString()) },
             Expected = new Dictionary<string, JsonElement> { ["TagStyleOverrides"] = Json(change["from"]!.ToJsonString()) },
@@ -492,7 +504,7 @@ public class ApiMediaTagsPortableTests
         Assert.Empty(preview["changes"]!.AsArray());
         Assert.Equal(MediaTagsPortable.AdminFields(MediaTagsPageFields.Allowed).Count, preview["imported"]!.AsObject().Count);
         // The page can write the empty order back unchanged.
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagGroupOrder"] = Json("[]") } }));
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(new ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagGroupOrder"] = Json("[]") } }));
     }
 
     [Fact]
@@ -519,9 +531,9 @@ public class ApiMediaTagsPortableTests
         Assert.True(MediaTagsPortable.TryNormalizeOfferedPresets($"[{string.Join(",", Enumerable.Range(0, MediaTagsPortable.MaxOfferedPresets).Select(i => Preset($"p{i}")))}]", out _, out _));
 
         // Through the page's patch: refused values write nothing; an accepted one shows in every user's list.
-        Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(refused[3])) } }));
+        Assert.IsType<BadRequestObjectResult>(Admin(f, controller).PatchConfiguration(new ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(refused[3])) } }));
         Assert.Equal(string.Empty, f.Plugin.Configuration.TagOfferedPresets);
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(one)) } }));
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(new ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(one)) } }));
         var offered = Body(controller.GetMediaTagsPresets(user.ToString("N")))["offered"]!.AsArray();
         Assert.Equal("family", (string?)Assert.Single(offered)!["id"]);
     }
@@ -586,14 +598,14 @@ public class ApiMediaTagsPortableTests
         Assert.Equal($"larger than {cap} bytes", sentError);
 
         // The page's patch: the over-cap value writes nothing and names the field.
-        var refused = controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(overText)) } });
+        var refused = Admin(f, controller).PatchConfiguration(new ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(overText)) } });
         Assert.Contains("once normalised", JsonSerializer.Serialize(((ObjectResult)refused).Value), StringComparison.Ordinal);
         Assert.IsType<BadRequestObjectResult>(refused);
         Assert.Equal(string.Empty, f.Plugin.Configuration.TagOfferedPresets);
 
         // The value at the cap is stored canonically and round-trips: normalised again unchanged, exported,
         // previewed with nothing skipped or changed, and shown to users.
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(atCap)) } }));
+        Assert.IsType<OkObjectResult>(Admin(f, controller).PatchConfiguration(new ConfigurationPatchRequest { Changes = new Dictionary<string, JsonElement> { ["TagOfferedPresets"] = Json(JsonSerializer.Serialize(atCap)) } }));
         Assert.Equal(stored, f.Plugin.Configuration.TagOfferedPresets);
         Assert.True(MediaTagsPortable.TryNormalizeOfferedPresets(stored, out var again, out var againError), againError);
         Assert.Equal(stored, again);

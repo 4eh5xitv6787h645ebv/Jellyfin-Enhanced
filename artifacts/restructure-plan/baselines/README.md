@@ -14,10 +14,12 @@ First recorded 2026-11-09 on restructure-base + the plan commit (25da61c7). Re-r
 | inventory-routes.txt | 202 `(verb, path)` routes. Not re-recorded. | INV. |
 | tooling-tests.txt | `Ran 16 tests` / `OK`. | TOOL; DoD count floor. |
 | mutation-check.txt | 9 stale frontend anchors, as the plan predicted. Not re-recorded. | TOOL path check. |
+| browser-failures.txt | Sorted (`LC_ALL=C`) `[project] › <file>:<line>:<col> › <title path>` of each failing `npm run test:browser` test (52), copied from `step-logs/step6-browser-failures.txt` without its 4-space indent. Added in step 7 (coordinator decision); identical on the pre-step-6 tree and after step 6. That run had 693 tests: 638 passed, 52 failed, 3 skipped. | `restructure-gates.sh browser` (PLAN.md gate BROWSER): every failure must be listed. Only failures are ratcheted; there is no count floor file. |
 
 ## Pre-existing failures (ratcheted, not fixed)
 - **Backend (gate T):** `ApiAssetTests.BundleSourceMapPreservesTypedMappingsAndLegacyModuleLinesInManifestOrder` (`v=next-version` not in the source map).
 - **Frontend (`npm test`, 9):** `bootstrap-media-tags-portable.test.mjs` ×3 (null `.hidden`), `bootstrap-native-tabs.test.mjs` ×3 (tab index assertions), `core-translate-plural.test.mjs` ×3 (`tr is not a function`). Deterministic when run alone.
+- **Browser (gate BROWSER, 52):** by spec tag-genre-names 12, settings-matrix 12, settings-overflow 9, settings-panel 6, seerr-details-rewrite 3, seerr-core-rewrite 3, flows 3, settings-panel-rewrite 2, chrome-rewrite 2. Main causes: `JE.t is not a function` in the fixture's `showEnhancedPanel`, `toCamelCase is not defined`, and a few locator assertions (step6-frontend.md).
 - **`npm run verify:rewrite`** therefore fails at its `test:frontend` step (its dotnet step never runs). `restructure-gates.sh be` runs its parts with the ratchet instead.
 
 ## Fixed by the base-prep commit

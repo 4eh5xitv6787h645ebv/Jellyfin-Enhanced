@@ -162,7 +162,19 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/AdminServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Events/MaintenancePlaybackReminder.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Models/ConfigurationPatchRequest.cs",
       "category": "Features"
     },
     {
@@ -207,6 +219,18 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/Services/CatchUpLogService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/ChromeServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/Services/ActiveSessionsService.cs",
       "category": "Features"
     },
     {
@@ -290,7 +314,15 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentResponseFilter.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/HiddenContentServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentDocumentService.cs",
       "category": "Features"
     },
     {
@@ -758,6 +790,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDefaults.cs",
       "category": "Features"
     },
@@ -943,6 +979,14 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/SonarrService.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentDefaults.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentResponseFilter.cs",
       "category": "Shared"
     },
     {
@@ -2098,24 +2142,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/host-compat",
-      "method": "GetHostCompatibility",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyfin-urls",
-      "method": "GetJellyfinNetworkUrls",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/jellyseerr/{type}/{serverId}",
       "method": "GetServiceDetails",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -2830,61 +2856,12 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
-      "method": "GetUserSettingsSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
-      "method": "GetRevisionedSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
-      "method": "SaveRevisionedSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
-      "method": "GetUserSettingsShortcuts",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
       "method": "GetUserSettingsElsewhere",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize",
         "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
-      "method": "SaveUserSettingsSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
       ]
     },
     {
@@ -2943,39 +2920,8 @@
     },
     {
       "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
-      "method": "SaveUserSettingsShortcuts",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
       "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
       "method": "SaveUserSettingsElsewhere",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
-      "method": "GetUserHiddenContent",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
-      "method": "SaveUserHiddenContent",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize",
@@ -3003,46 +2949,6 @@
         "Produces(\"application/json\")",
         "Consumes(\"application/json\")",
         "RequestSizeLimit(2 * 1024 * 1024)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/admin/hidden-content-users",
-      "method": "GetHiddenContentUsers",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}",
-      "method": "GetUserHiddenContentForAdmin",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/unhide",
-      "method": "AdminUnhideForUser",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/hide",
-      "method": "AdminHideForUser",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
       ]
     },
     {
@@ -3223,46 +3129,6 @@
       ]
     },
     {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
-      "method": "HideFromContinueWatching",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
-      "method": "HideFromNextUp",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
-      "method": "UnhideFromContinueWatching",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
-      "method": "UnhideFromNextUp",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
       "verb": "GET",
       "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
       "method": "GetItemReviews",
@@ -3334,24 +3200,6 @@
     },
     {
       "verb": "POST",
-      "path": "/JellyfinEnhanced/reset-all-users-settings",
-      "method": "ResetAllUsersSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/apply-user-settings",
-      "method": "ApplyUserSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
       "path": "/JellyfinEnhanced/tag-cache/rebuild",
       "method": "RebuildTagCache",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3390,17 +3238,6 @@
       ]
     },
     {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/configuration",
-      "method": "PatchConfiguration",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "RequestSizeLimit(PluginConfigurationPatch.MaxRequestBytes)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
       "verb": "GET",
       "path": "/JellyfinEnhanced/admin/media-tags/export",
       "method": "ExportAdminMediaTags",
@@ -3430,25 +3267,6 @@
       "following_attributes": [
         "Authorize",
         "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/whats-new",
-      "method": "GetWhatsNew",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/whats-new/dismiss",
-      "method": "DismissWhatsNew",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
       ]
     },
     {
@@ -3528,60 +3346,6 @@
       ]
     },
     {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/UploadBrandingImage",
-      "method": "UploadBrandingImage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/BrandingStatus",
-      "method": "GetBrandingStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/BrandingImage",
-      "method": "GetBrandingImage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/DeleteBrandingImage",
-      "method": "DeleteBrandingImage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/validate/sonarr",
-      "method": "ValidateSonarr",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/validate/radarr",
-      "method": "ValidateRadarr",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
       "verb": "GET",
       "path": "/JellyfinEnhanced/arr/identify-url",
       "method": "IdentifyUrl",
@@ -3621,24 +3385,6 @@
       "verb": "GET",
       "path": "/JellyfinEnhanced/arr/movie-instances",
       "method": "GetMovieInstances",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/active-streams/sessions",
-      "method": "GetActiveSessions",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/active-streams/broadcast",
-      "method": "BroadcastMessage",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize"
@@ -3702,41 +3448,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Status",
-      "method": "GetMaintenanceStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Enable",
-      "method": "EnableMaintenanceMode",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Disable",
-      "method": "DisableMaintenanceMode",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Users",
-      "method": "GetMaintenanceModeUsers",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Broadcast",
-      "method": "BroadcastMaintenanceMessage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/{viewName}",
       "method": "GetView",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3752,6 +3463,107 @@
         "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
         "Produces(\"application/json\")"
       ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/host-compat",
+      "method": "GetHostCompatibility",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyfin-urls",
+      "method": "GetJellyfinNetworkUrls",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/configuration",
+      "method": "PatchConfiguration",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize",
+        "RequestSizeLimit(PluginConfigurationPatch.MaxRequestBytes)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/whats-new",
+      "method": "GetWhatsNew",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/whats-new/dismiss",
+      "method": "DismissWhatsNew",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/validate/sonarr",
+      "method": "ValidateSonarr",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/validate/radarr",
+      "method": "ValidateRadarr",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Status",
+      "method": "GetMaintenanceStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Enable",
+      "method": "EnableMaintenanceMode",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Disable",
+      "method": "DisableMaintenanceMode",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Users",
+      "method": "GetMaintenanceModeUsers",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Broadcast",
+      "method": "BroadcastMaintenanceMessage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
     },
     {
       "verb": "GET",
@@ -3861,6 +3673,238 @@
       "path": "/JellyfinEnhanced/catchup/summary",
       "method": "GetSummary",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/JeCatchupController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/UploadBrandingImage",
+      "method": "UploadBrandingImage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/BrandingStatus",
+      "method": "GetBrandingStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/BrandingImage",
+      "method": "GetBrandingImage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/DeleteBrandingImage",
+      "method": "DeleteBrandingImage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/active-streams/sessions",
+      "method": "GetActiveSessions",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/active-streams/broadcast",
+      "method": "BroadcastMessage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
+      "method": "GetUserHiddenContent",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
+      "method": "SaveUserHiddenContent",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/admin/hidden-content-users",
+      "method": "GetHiddenContentUsers",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}",
+      "method": "GetUserHiddenContentForAdmin",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/unhide",
+      "method": "AdminUnhideForUser",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/hide",
+      "method": "AdminHideForUser",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
+      "method": "HideFromContinueWatching",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
+      "method": "HideFromNextUp",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
+      "method": "UnhideFromContinueWatching",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
+      "method": "UnhideFromNextUp",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
+      "method": "GetUserSettingsSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
+      "method": "GetRevisionedSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
+      "method": "SaveRevisionedSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
+      "method": "GetUserSettingsShortcuts",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
+      "method": "SaveUserSettingsSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
+      "method": "SaveUserSettingsShortcuts",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/reset-all-users-settings",
+      "method": "ResetAllUsersSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/apply-user-settings",
+      "method": "ApplyUserSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
       "following_attributes": [
         "Authorize"
       ]
@@ -9818,15 +9862,7 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
       "literal": "Saved user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to elsewhere.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -9863,18 +9899,6 @@
     },
     {
       "literal": "user-settings/{userId}/elsewhere.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/settings.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/shortcuts.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -9934,8 +9958,20 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs"
     },
     {
+      "literal": "Saved hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs"
+    },
+    {
       "literal": "hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentResponseFilter.cs"
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentDocumentService.cs"
     },
     {
       "literal": "settings.json",
@@ -10050,6 +10086,30 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs"
     },
     {
+      "literal": "Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "shortcuts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/shortcuts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
       "literal": "settings.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentService.cs"
     },
@@ -10060,6 +10120,10 @@
     {
       "literal": "config.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentResponseFilter.cs"
     },
     {
       "literal": "settings.json",
@@ -10334,10 +10398,10 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 494,
+    "files": 505,
     "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 89,
+    "storage_references": 94,
     "scheduled_tasks": 15,
     "locales": 33
   }

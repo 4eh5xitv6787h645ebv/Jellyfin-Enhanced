@@ -7,8 +7,9 @@ using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Events
 {
     /// <summary>
     /// Maintenance Mode reminder: while maintenance is active and MaintenanceModeRemindOnPlayback is

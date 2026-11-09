@@ -15,6 +15,8 @@ using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -192,11 +194,11 @@ public class SourceEditionTagsTests
         Assert.False(publicConfig.GetProperty("ShowEditionTag").GetBoolean());
         Assert.True(publicConfig.GetProperty("ShowLowQualitySourceTag").GetBoolean());
         Assert.Equal(2, publicConfig.GetProperty("EditionTagOrder").GetInt32());
-        Assert.IsType<OkObjectResult>(controller.GetUserSettingsSettings(userId));
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, fixture.Core, fixture.Core.Manager).GetUserSettingsSettings(userId));
         var seeded = fixture.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(userId, "settings.json");
         Assert.False(seeded.ShowEditionTag); Assert.True(seeded.ShowLowQualitySourceTag); Assert.Equal(2, seeded.EditionTagOrder);
         config.ShowEditionTag = true; config.ShowLowQualitySourceTag = false; config.EditionTagOrder = 7;
-        Assert.IsType<OkObjectResult>(controller.ResetAllUsersSettings());
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, fixture.Core, fixture.Core.Manager).ResetAllUsersSettings());
         var reset = fixture.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(userId, "settings.json");
         Assert.True(reset.ShowEditionTag); Assert.False(reset.ShowLowQualitySourceTag); Assert.Equal(7, reset.EditionTagOrder);
     }

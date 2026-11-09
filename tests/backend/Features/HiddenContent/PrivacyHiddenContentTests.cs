@@ -1,6 +1,8 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.Events;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
+using JellyfinEnhanced.Tests;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
@@ -16,7 +18,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.HiddenContent;
 
 [Collection("Plugin singleton")]
 public class PrivacyHiddenContentTests

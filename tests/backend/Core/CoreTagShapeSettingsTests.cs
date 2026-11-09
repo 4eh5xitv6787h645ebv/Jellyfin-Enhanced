@@ -8,6 +8,8 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -164,6 +166,9 @@ public class CoreTagShapeSettingsTests
         Assert.Equal(10, locks["abcdefabcdefabcdefabcdefabcdefab"].Shapes!.List!.Caps!.Status);
     }
 
+    private static JeSettingsController SettingsController(ApiPluginFixture fixture, Claim claim)
+        => ApiAssetTests.Sibling<JeSettingsController>(Controller(fixture, claim), fixture.Core, fixture.Core.Manager);
+
     private static Jellyfin.Plugin.JellyfinEnhanced.Controllers.JellyfinEnhancedController Controller(ApiPluginFixture fixture, Claim claim)
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
@@ -197,7 +202,7 @@ public class CoreTagShapeSettingsTests
         using var fixture = new ApiPluginFixture();
         fixture.Plugin.Configuration.TagShapeOverrides = new TagShapeOverrides { Landscape = Landscape() };
         var userId = Guid.NewGuid();
-        var user = Controller(fixture, new Claim("Jellyfin-UserId", userId.ToString()));
+        var user = SettingsController(fixture, new Claim("Jellyfin-UserId", userId.ToString()));
 
         // A new user's document is seeded from the admin's defaults.
         Assert.IsType<OkObjectResult>(user.GetUserSettingsSettings(userId.ToString("N")));
@@ -214,7 +219,7 @@ public class CoreTagShapeSettingsTests
         Assert.Equal(10, saved.TagShapeOverrides.List.Caps!.Quality);
 
         // "Apply defaults to all users" copies the admin's shape looks again.
-        var admin = Controller(fixture, new Claim(ClaimTypes.Role, "Administrator"));
+        var admin = SettingsController(fixture, new Claim(ClaimTypes.Role, "Administrator"));
         Assert.IsType<OkObjectResult>(admin.ResetAllUsersSettings());
         var reset = fixture.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(userId.ToString("N"), "settings.json");
         Assert.Equal("bands", reset.TagShapeOverrides!.Landscape!.Layout);

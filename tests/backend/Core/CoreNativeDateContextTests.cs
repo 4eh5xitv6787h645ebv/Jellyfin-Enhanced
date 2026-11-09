@@ -5,6 +5,8 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -49,7 +51,7 @@ public class CoreNativeDateContextTests
         using var fixture = new ApiPluginFixture();
         var userId = Guid.NewGuid().ToString("N");
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
-        var controller = ApiAssetTests.Controller(fixture.Core, maintenance, fixture.Core.Manager);
+        var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), fixture.Core, maintenance, fixture.Core.Manager);
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("Jellyfin-UserId", userId)], "test"));
         fixture.Core.Manager.SaveUserConfiguration(userId, "settings.json", new JellyfinEnhancedUserSettings { LastOpenedTab = "previous-tab" });
         var posted = System.Text.Json.JsonSerializer.Deserialize<JellyfinEnhancedUserSettings>(System.Text.Json.JsonSerializer.Serialize(new { NativePosterDateLocale = locale, NativePosterTimeZone = zone }))!;

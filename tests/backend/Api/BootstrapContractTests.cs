@@ -12,6 +12,8 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -58,7 +60,7 @@ public class BootstrapContractTests
         await ValidateClientWire(body, admin);
         Assert.DoesNotContain("never-export-this-key", json);
         Assert.Equal(admin, json.Contains("private.invalid", StringComparison.Ordinal));
-        Assert.True(JsonNode.DeepEquals(JsonSerializer.SerializeToNode(body.UserSettings.Settings), JsonSerializer.SerializeToNode(Assert.IsType<OkObjectResult>(controller.GetUserSettingsSettings(user.ToString("N"))).Value)));
+        Assert.True(JsonNode.DeepEquals(JsonSerializer.SerializeToNode(body.UserSettings.Settings), JsonSerializer.SerializeToNode(Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, fixture.Core, fixture.Core.Manager).GetUserSettingsSettings(user.ToString("N"))).Value)));
     }
 
     [Fact]

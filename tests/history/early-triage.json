@@ -2871,7 +2871,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/frontend/features/features-hidden.test.mjs",
-      "tests/backend/Privacy/PrivacyHiddenContentTests.cs"
+      "tests/backend/Features/HiddenContent/PrivacyHiddenContentTests.cs"
     ],
     "assessment": "Current hidden-state isolation/filtering covered; all nine surfaces plus dialogs/undo/native-host paths are not exhaustively exercised."
   },

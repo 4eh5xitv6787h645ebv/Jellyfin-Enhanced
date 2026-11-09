@@ -9,6 +9,7 @@ using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {
