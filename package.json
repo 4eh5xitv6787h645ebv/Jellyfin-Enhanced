@@ -18,6 +18,7 @@
     "client:check": "node scripts/client-build.mjs --check",
     "test:client-build": "node --test --test-concurrency=1 tests/client-build/*.test.mjs",
     "verify:rewrite": "node scripts/client-verify.mjs",
+    "verify:restructure": "scripts/restructure-gates.sh all && scripts/restructure-gates.sh browser",
     "inventory:rewrite": "node scripts/rewrite-inventory.mjs",
     "inventory:rewrite:check": "node scripts/rewrite-inventory.mjs --check",
     "test:contract-boundary": "node --test tools/ClientContracts/boundary.test.mjs"
