@@ -1,6 +1,6 @@
 /**
  * Readers for the Media Tags import/export/preset answers
- * (Helpers/MediaTagsPortable.cs). Values stay unknown: a change's from/to
+ * (Features/MediaTags/Services/MediaTagsPortable.cs). Values stay unknown: a change's from/to
  * are whatever JSON the server reports and are only shown or written back
  * through the settings save path, which validates them again.
  */

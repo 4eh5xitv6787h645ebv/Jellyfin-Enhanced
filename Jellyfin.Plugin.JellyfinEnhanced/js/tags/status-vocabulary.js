@@ -9,7 +9,7 @@
     return host.JellyfinEnhanced;
   }
 
-  // client/src/features/media-tags/rules/status-vocabulary.ts
+  // client/src/features/media-tags/types/status/status-vocabulary.ts
   var statusVocabulary = {
     "thresholds": {
       "dayMs": 864e5,

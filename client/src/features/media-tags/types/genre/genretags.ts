@@ -1,7 +1,7 @@
 import type { TagRuntimeBridge } from '../../../../host/tag-runtime-host';
 import { members, memberText, record } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
-import { genreIconMap, genreLabelOfIcon, genreOtherLabel } from '../../runtime/genre-table';
+import { genreIconMap, genreLabelOfIcon, genreOtherLabel } from './genre-table';
 
 const has = (table: object, key: string): boolean => Object.prototype.hasOwnProperty.call(table, key);
 // /js/tags/genretags.js

@@ -896,7 +896,7 @@
     "host-import client/src/features/media-tags/layout/poster-colours.ts": 1,
     "host-import client/src/features/media-tags/layout/tag-layout.ts": 1,
     "host-import client/src/features/media-tags/layout/tag-look.ts": 1,
-    "host-import client/src/features/media-tags/rules/media-language.ts": 1,
+    "host-import client/src/features/media-tags/types/language/media-language.ts": 1,
     "host-import client/src/features/media-tags/types/ratings/rating-sources.ts": 1,
     "host-import client/src/features/settings-panel/context.ts": 2,
     "host-import client/src/features/settings-panel/registry.ts": 1,
@@ -914,9 +914,9 @@
     "host-import client/src/features/media-tags/layout/poster-colours.ts": 2,
     "host-import client/src/features/media-tags/layout/tag-layout.ts": 1,
     "host-import client/src/features/media-tags/layout/tag-look.ts": 3,
-    "host-import client/src/features/media-tags/rules/media-language.ts": 1,
-    "host-import client/src/features/media-tags/rules/status-vocabulary.ts": 1,
+    "host-import client/src/features/media-tags/types/language/media-language.ts": 1,
     "host-import client/src/features/media-tags/types/ratings/rating-sources.ts": 1,
+    "host-import client/src/features/media-tags/types/status/status-vocabulary.ts": 1,
     "raw-global JellyfinEnhanced": 2
   },
   "client/src/host/tag-runtime-host.ts": {
@@ -929,14 +929,14 @@
     "host-import client/src/features/media-tags/pipeline/dto.ts": 1,
     "host-import client/src/features/media-tags/pipeline/scopes.ts": 1,
     "host-import client/src/features/media-tags/pipeline/tag-cache-store.ts": 1,
-    "host-import client/src/features/media-tags/rules/media-language.ts": 1,
-    "host-import client/src/features/media-tags/rules/status-vocabulary.ts": 1,
     "host-import client/src/features/media-tags/types/awards/awardstags.ts": 1,
     "host-import client/src/features/media-tags/types/custom/customtags.ts": 1,
     "host-import client/src/features/media-tags/types/direct-play/tag-direct-play.ts": 1,
     "host-import client/src/features/media-tags/types/language/languagetags.ts": 1,
+    "host-import client/src/features/media-tags/types/language/media-language.ts": 1,
     "host-import client/src/features/media-tags/types/logo/logotags.ts": 1,
     "host-import client/src/features/media-tags/types/ratings/rating-sources.ts": 1,
+    "host-import client/src/features/media-tags/types/status/status-vocabulary.ts": 1,
     "raw-global JellyfinEnhanced": 1
   },
   "client/src/host/ui-host.ts": {

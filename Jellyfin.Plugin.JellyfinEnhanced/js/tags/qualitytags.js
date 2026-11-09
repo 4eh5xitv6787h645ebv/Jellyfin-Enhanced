@@ -55,7 +55,7 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/media-tags/runtime/quality-data.ts
+  // client/src/features/media-tags/types/quality/quality-data.ts
   var resolutionOrder = ["8K", "4K", "1440p", "1080p", "1080i", "720p", "576p", "576i", "480p", "480i", "LOW-RES", "SD"];
   var sourceOrder = ["REMUX", "BluRay", "WEB", "HD DVD", "DVD", "VHS", "HDTV", "SDTV", "Physical", "CAM", "TS", "TC", "SCR"];
   var EDITION_PREFIX = "edition:";

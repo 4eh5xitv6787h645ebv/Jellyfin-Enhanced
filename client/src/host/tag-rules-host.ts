@@ -1,8 +1,8 @@
-import type { LanguageConfig, LanguageSettings, MediaLanguage } from '../features/media-tags/rules/media-language';
+import type { LanguageConfig, LanguageSettings, MediaLanguage } from '../features/media-tags/types/language/media-language';
 import type { RatingConfig, RatingSettings, RatingSources } from '../features/media-tags/types/ratings/rating-sources';
 /** Only the legacy host surface consumed by this rule slice. Values remain untrusted at rule inputs. */
 export interface TagRulesBridge {
-    statusVocabulary?: typeof import('../features/media-tags/rules/status-vocabulary').statusVocabulary;
+    statusVocabulary?: typeof import('../features/media-tags/types/status/status-vocabulary').statusVocabulary;
     core?: {
         mediaLanguage?: MediaLanguage;
         tagLook?: import('../features/media-tags/layout/tag-look').TagLook;

@@ -1,7 +1,7 @@
 import type { TagRuntimeBridge } from '../../../../host/tag-runtime-host';
 import { isRecord, type JsonRecord } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
-import { CAPTION_KEYS, CSS, LABELS, LOGOS, LOGO_FILES, NAMES, type AwardId } from '../../runtime/awards-data';
+import { CAPTION_KEYS, CSS, LABELS, LOGOS, LOGO_FILES, NAMES, type AwardId } from './awards-data';
 
 const IDS: AwardId[] = ['imdbTop250', 'certifiedFresh', 'oscar', 'emmy', 'letterboxdTop250'];
 export interface AwardsTags {

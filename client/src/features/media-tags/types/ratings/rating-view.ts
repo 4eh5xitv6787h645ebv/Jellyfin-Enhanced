@@ -1,5 +1,5 @@
-import { COLORS, LOGOS, LOGO_FILES, NAMES, NAME_KEYS } from '../../rules/rating-data';
-import type { RatingSourceId } from '../../rules/rating-data';
+import { COLORS, LOGOS, LOGO_FILES, NAMES, NAME_KEYS } from './rating-data';
+import type { RatingSourceId } from './rating-data';
 import type { RatingFact } from './rating-sources';
 export interface RatingViewHost {
     document: Document;

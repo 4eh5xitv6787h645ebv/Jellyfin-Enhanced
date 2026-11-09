@@ -2,7 +2,7 @@ import type { JsonValue } from '../contracts/generated';
 import type { SaveOptions, SettingsDocument } from './settings-host';
 import type { TagLayout } from '../features/media-tags/layout/tag-layout';
 import type { TagLook } from '../features/media-tags/layout/tag-look';
-import type { MediaLanguage } from '../features/media-tags/rules/media-language';
+import type { MediaLanguage } from '../features/media-tags/types/language/media-language';
 import type { RatingSources } from '../features/media-tags/types/ratings/rating-sources';
 import type { PosterColours } from '../features/media-tags/layout/poster-colours';
 import type { EnhancedUi } from '../features/settings-panel/registry';

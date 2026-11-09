@@ -5,8 +5,8 @@
  * all users; also provides the shared cache helpers (A.cacheSummary,
  * A.rebuildCache) the Server tab uses.
  */
-/*! Lexical index of this module's declarations, in the order Helpers/MediaTagsPageFields.cs (the field
- *  patch's allowlist), Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
+/*! Lexical index of this module's declarations, in the order Features/MediaTags/Admin/MediaTagsPageFields.cs (the field
+ *  patch's allowlist), Features/Admin/Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
  *  from the generated file. Not code: tests/frontend/features/admin-tags-rewrite.test.mjs keeps it equal
  *  to the sections this module registers and to what those readers found in the JavaScript module.
 registerSection({

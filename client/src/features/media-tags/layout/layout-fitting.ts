@@ -1,5 +1,5 @@
-import { COMPACT_QUALITY } from '../rules/compact-quality';
-export { COMPACT_QUALITY } from '../rules/compact-quality';
+import { COMPACT_QUALITY } from '../types/quality/compact-quality';
+export { COMPACT_QUALITY } from '../types/quality/compact-quality';
 import * as rules from './layout-rules';
 import type { LayoutSettings } from './layout-rules';
 export const SHAPE_RATIO = 1.2;

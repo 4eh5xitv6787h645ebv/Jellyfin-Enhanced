@@ -9,7 +9,8 @@ import { buildClient, repositoryRoot } from '../../scripts/client-build.mjs';
 import { synchronizeTagData, tagDataArtifacts } from '../../scripts/tag-data.mjs';
 
 const plugin = 'Jellyfin.Plugin.JellyfinEnhanced';
-const typed = 'client/src/features/media-tags/rules';
+const status = 'client/src/features/media-tags/types/status';
+const quality = 'client/src/features/media-tags/types/quality';
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'je-tag-data-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -18,9 +19,9 @@ function fixture(t) {
   put('client/tsconfig.json', readFileSync(join(repositoryRoot, 'client/tsconfig.json')));
   put(`${plugin}/js/tags/status-vocabulary.json`, '{"thresholds":{"dayMs":86400000}}');
   put(`${plugin}/js/tags/quality-compact.json`, '{"Dolby Digital":["DD",true]}');
-  put('client/entries/tags.json', JSON.stringify({'js/tags/status-vocabulary.js': `${typed}/entry.ts`, 'js/core/tag-layout.js': `${typed}/quality-entry.ts`}));
-  put(`${typed}/entry.ts`, "import { statusVocabulary } from './status-vocabulary'; document.title = String(statusVocabulary.thresholds.dayMs);");
-  put(`${typed}/quality-entry.ts`, "import { COMPACT_QUALITY } from './compact-quality'; document.title = JSON.stringify(COMPACT_QUALITY);");
+  put('client/entries/tags.json', JSON.stringify({'js/tags/status-vocabulary.js': `${status}/entry.ts`, 'js/core/tag-layout.js': `${quality}/quality-entry.ts`}));
+  put(`${status}/entry.ts`, "import { statusVocabulary } from './status-vocabulary'; document.title = String(statusVocabulary.thresholds.dayMs);");
+  put(`${quality}/quality-entry.ts`, "import { COMPACT_QUALITY } from './compact-quality'; document.title = JSON.stringify(COMPACT_QUALITY);");
   synchronizeTagData({root, kind:'status'}); synchronizeTagData({root, kind:'quality'});
   return {root, put};
 }
@@ -48,7 +49,7 @@ for (const mode of [{}, {check:true}, {typecheckOnly:true}]) {
     f.put(`${plugin}/js/tags/status-vocabulary.json`, '{"thresholds":{"dayMs":123}}');
     await assert.rejects(buildClient({root:f.root,...mode}), /Stale status vocabulary/);
     assert.equal(readFileSync(path, 'utf8'), before);
-    assert.match(readFileSync(join(f.root, `${typed}/status-vocabulary.ts`),'utf8'), /86400000/);
+    assert.match(readFileSync(join(f.root, `${status}/status-vocabulary.ts`),'utf8'), /86400000/);
     synchronizeTagData({root:f.root,kind:'status'});
     await buildClient({root:f.root});
     const document = {title:''}; runInNewContext(readFileSync(path,'utf8'), {document});

@@ -9,7 +9,7 @@
     return host.JellyfinEnhanced;
   }
 
-  // client/src/features/media-tags/rules/rating-data.ts
+  // client/src/features/media-tags/types/ratings/rating-data.ts
   var IDS = ["community", "critic", "imdb", "tmdb", "rtCritic", "rtAudience", "metacritic", "letterboxd", "trakt"];
   var NAMES = { "imdb": "IMDb", "tmdb": "TMDb", "metacritic": "Metacritic", "letterboxd": "Letterboxd", "trakt": "Trakt" };
   var NAME_KEYS = { community: "rating_source_community", critic: "rating_source_critic", rtCritic: "rating_source_rtCritic", rtAudience: "rating_source_rtAudience" };

@@ -1,6 +1,6 @@
 # media-tags
 
-Media tags: the poster tag pipeline, cache store, renderer base and contracts (`pipeline/`), the item tag editor and menu (`editor/`), one folder per tag type (`types/<type>/`: quality, direct-play, language, people, status, ratings, age-rating, awards, genre, logo, custom), layout, looks, poster colours and tag styles (`layout/`), the user-settings panels (`settings/`) and the admin Media Tags page (`admin/`; formerly `features/admin-tags`). Until step B2, the generated data modules are still in `runtime/` and `rules/`.
+Media tags: the poster tag pipeline, cache store, renderer base and contracts (`pipeline/`), the item tag editor and menu (`editor/`), one folder per tag type (`types/<type>/`: quality, direct-play, language, people, status, ratings, age-rating, awards, genre, logo, custom), layout, looks, poster colours and tag styles (`layout/`), the user-settings panels (`settings/`) and the admin Media Tags page (`admin/`; formerly `features/admin-tags`).
 
 Owner: Jellyfin Enhanced maintainers. Backend counterpart: `Features/MediaTags/` (with `JeMediaTagsController.Admin.cs` and `Admin/`) (PLAN.md canonical feature list).
 
@@ -86,10 +86,10 @@ Step F1 mirrors these into `tests/frontend/features/media-tags/`. `npm test` run
 
 Listed in `GENERATED_SOURCES` (`tests/frontend/architecture/scan.mjs`). Scripts and tests pin their paths (frontend.md §0.1), so a move updates those in the same commit:
 
-- `rules/status-vocabulary.ts`
-- `rules/compact-quality.ts`
-- `runtime/quality-data.ts`
-- `runtime/genre-table.ts`
-- `runtime/awards-data.ts`
-- `rules/rating-data.ts`
-- `rules/media-language.ts`
+- `types/status/status-vocabulary.ts`
+- `types/quality/compact-quality.ts`
+- `types/quality/quality-data.ts`
+- `types/genre/genre-table.ts`
+- `types/awards/awards-data.ts`
+- `types/ratings/rating-data.ts`
+- `types/language/media-language.ts`

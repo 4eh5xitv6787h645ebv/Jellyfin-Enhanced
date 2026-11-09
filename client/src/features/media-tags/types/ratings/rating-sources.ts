@@ -1,5 +1,5 @@
-import { IDS, COLORS } from '../../rules/rating-data';
-import type { RatingSourceId } from '../../rules/rating-data';
+import { IDS, COLORS } from './rating-data';
+import type { RatingSourceId } from './rating-data';
 import { createRatingView, sourceName } from './rating-view';
 import type { RatingViewHost } from './rating-view';
 export interface RatingSettings {

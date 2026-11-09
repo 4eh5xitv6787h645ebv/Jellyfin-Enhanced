@@ -10,10 +10,10 @@ export type { PreviewInteraction, PreviewInteractionOptions, TagPreview, TagPrev
 // Types code outside this folder imports today (host/tag-runtime-host.ts, host/tag-rules-host.ts,
 // host/settings-panel-host.ts; added in S2). C1 moves the first two into this feature; the settings-panel host
 // moves to settings-panel/ and then needs these through this file.
-export type { LanguageConfig, LanguageSettings, MediaLanguage } from './rules/media-language';
+export type { LanguageConfig, LanguageSettings, MediaLanguage } from './types/language/media-language';
 export type { PosterColours } from './layout/poster-colours';
 export type { RatingConfig, RatingSettings, RatingSources } from './types/ratings/rating-sources';
-export type { statusVocabulary } from './rules/status-vocabulary';
+export type { statusVocabulary } from './types/status/status-vocabulary';
 export type { TagLayout } from './layout/tag-layout';
 export type { TagLook } from './layout/tag-look';
 export type { PipelineApi, RendererApi } from './pipeline/contract';

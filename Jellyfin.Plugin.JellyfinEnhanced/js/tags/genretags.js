@@ -27,7 +27,7 @@
     return value;
   }
 
-  // client/src/features/media-tags/runtime/genre-table.ts
+  // client/src/features/media-tags/types/genre/genre-table.ts
   var tables = /* @__PURE__ */ (() => {
     const genreIconMap2 = {
       // Default

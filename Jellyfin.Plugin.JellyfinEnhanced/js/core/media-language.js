@@ -19,7 +19,7 @@
     return [saved, bridge2.currentSettings?.displayLanguage, document.documentElement?.getAttribute("lang")];
   }
 
-  // client/src/features/media-tags/rules/media-language.ts
+  // client/src/features/media-tags/types/language/media-language.ts
   var baseLanguageFlags = {
     English: "gb",
     eng: "gb",

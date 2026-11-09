@@ -9,7 +9,7 @@
     return host.JellyfinEnhanced;
   }
 
-  // client/src/features/media-tags/rules/compact-quality.ts
+  // client/src/features/media-tags/types/quality/compact-quality.ts
   var COMPACT_QUALITY = {
     "Dolby Vision": [
       "DV",

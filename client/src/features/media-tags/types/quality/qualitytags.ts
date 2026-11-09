@@ -1,7 +1,7 @@
 import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../../../host/tag-runtime-host';
 import { isRecord, own, record, stringList, type JsonRecord } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
-import { CATEGORY_BY_KEY, EDITIONS, EDITION_PREFIX, audioOrder, codecOrder, dynamicRangeOrder, qualityCss, resolutionOrder, specialFormatOrder } from '../../runtime/quality-data';
+import { CATEGORY_BY_KEY, EDITIONS, EDITION_PREFIX, audioOrder, codecOrder, dynamicRangeOrder, qualityCss, resolutionOrder, specialFormatOrder } from './quality-data';
 import { createQualityRules } from './quality-rules';
 
 /** A computed set of labels and everything that could make it stale. */

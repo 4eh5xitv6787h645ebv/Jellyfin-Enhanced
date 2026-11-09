@@ -1,8 +1,8 @@
 // What an item's streams, versions and series facts say about its quality. No browser state: every setting and
 // language rule arrives through QualityHost. Mirrors QualityTagRules on the server.
 import { finite, isRecord, memberRecord, memberText, members, own, record, records, text, type JsonRecord } from '../../pipeline/dto';
-import { AUDIO_BASES, CATEGORIES, CATEGORY_BY_KEY, EDITION_PREFIX, TAG_TO_CATEGORY, aspectRatios, audioOrder, resolutionOrder, sourceOrder } from '../../runtime/quality-data';
-import type { MediaLanguage } from '../../rules/media-language';
+import { AUDIO_BASES, CATEGORIES, CATEGORY_BY_KEY, EDITION_PREFIX, TAG_TO_CATEGORY, aspectRatios, audioOrder, resolutionOrder, sourceOrder } from './quality-data';
+import type { MediaLanguage } from '../language/media-language';
 
 export interface QualityHost {
     /** The personal value of a setting, else the administrator's PascalCase value. */
@@ -433,7 +433,7 @@ export function createQualityRules(host: QualityHost) {
     }
 
     // A scene release group closing a file name after its codec, audio, resolution or source token
-    // (Services/MediaNamingTags.cs TrailingGroup): its letters are a name, not a release word.
+    // (Features/MediaTags/Services/MediaNamingTags.cs TrailingGroup): its letters are a name, not a release word.
     const RELEASE_GROUP = /(?<=(?:^|[. _\-[\](){}])(?:[xh]\.?26[45]|hevc|avc|av1|vp9|xvid|divx|mpeg2|aac|ac3|e?ac3|dts|ma|ddp?|flac|opus|atmos|truehd|\d\.\d|\d{3,4}p|web|webrip|web[. _\-[\]()]*dl|bluray|remux|hdtv|dvdrip|10bit|hdr|hdr10|dv|sdr))-[A-Za-z0-9]{2,}$/i;
 
     /** @returns A path without the release group closing its file name (MediaNamingTags.WithoutReleaseGroup). */
