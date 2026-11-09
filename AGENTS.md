@@ -20,12 +20,15 @@ Guidance for AI coding agents working in this repository. Human contributors: se
   - `npm run client:build && npm run inventory:rewrite`;
   - `npm run contracts:generate`;
   - `python3 tests/inventory/generate.py` after moving or editing a controller file.
+
+  The build's outputs are exactly the `outputs` keys of `client/generated-manifest.json` (the `.js`/`.js.map` files under `js/` and `min/js/`, and `Configuration/admin/*.js`). The rest of `js/` is hand-written: `locales/`, `fonts/`, `tags/*.json` and `component-scripts.json`. Commit regenerated outputs in the same commit as their source. A merge or rebase conflict in a generated file is never merged by hand: take either side, regenerate, then `git add` it.
 - **Snapshots and baselines.** Never update a snapshot or baseline to make a gate pass, and never set `JE_UPDATE_SNAPSHOTS`. This covers:
   - the route/auth, auth-helper, registration and `*.base.json` snapshots in `tests/backend/Architecture/`;
   - `artifacts/restructure-plan/baselines/*`;
-  - `shared-feature-references.baseline.json`, the `FileSizeTests` allow-list and `tests/frontend/architecture/size-baseline.json`.
+  - `shared-feature-references.baseline.json`, the `FileSizeTests` allow-list and `tests/frontend/architecture/size-baseline.json`;
+  - the guard baselines `tests/frontend/guards/*-baseline.json`.
 
-  Failure lists and ratchets only shrink. If a gate fails, fix the code or stop and report.
+  Failure lists and ratchets only shrink. When a change removes a recorded violation, lower its guard baseline with `node tests/frontend/guards/record.mjs` (it never raises one) in the same commit; when a gate notes that a listed failure now passes, delete that line. If a gate fails, fix the code or stop and report.
 - **Frontend feature boundaries** (`tests/frontend/architecture/feature-boundaries.test.mjs`, strict):
   - A file in `features/<A>/` imports only `features/<A>/**`, `core/**`, `contracts/**`, `features/shared/**`, `host/context.ts`, and another feature's `public-api.ts` with `import type`.
   - Runtime access to another feature goes through the `FeatureContext` (`ctx.own`/`ctx.peer`, `host/context.ts`).
@@ -39,7 +42,8 @@ Guidance for AI coding agents working in this repository. Human contributors: se
   - References from `Shared/`/`Infrastructure/` into `Features/` must not grow (folder-keyed M2 ratchet, `shared-feature-references.baseline.json`). It sees IL references only: a `const` (inlined) or a generic argument such as `AddSingleton<T>` is invisible to it, so don't rely on the gate for those.
 - **Folder = namespace.** A file under `Features/<F>/` declares `…Features.<F>[.*]`; a file under `Shared/<Area>/` or `Infrastructure/<Area>/` declares `…Shared.<Area>[.*]` or `…Infrastructure.<Area>[.*]` (no exemptions there). A new `Shared/` file in a legacy namespace such as `…Helpers` fails `FolderNamespaceTests`. Scheduled-task types are the only exception: they keep `Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks`, and `StartupService` keeps `…Services`, wherever their files live. Jellyfin keys a task's saved triggers and history by the type's full name, so renaming one resets admins' schedules.
 - **Sizes.** Controller files (`Je*Controller*.cs`) have at most **1,200** lines; split a controller into partials. Other `Features/**` and `Shared/**` files have at most 1,500. The one exception is `Features/MediaTags/Services/TagCache/TagCacheService.cs`, allow-listed at its current size (4,125 lines) in `FileSizeTests`: it predates the cap, and splitting it is its own refactor. The entry only shrinks, so don't grow the file; lower the entry when it gets smaller. Each feature has one controller type, `Je<Feature>Controller`.
-- **Routes and auth.** Routes stay under `[Route("JellyfinEnhanced")]`. A route, verb or authorization change is a contract change. It shows up in the route/auth snapshot and needs the maintainer, not a regenerated snapshot.
+- **Routes and auth.** Routes stay under `[Route("JellyfinEnhanced")]`. A route, verb or authorization change is a contract change. It shows up in the route/auth snapshot and needs the maintainer, not a regenerated snapshot. Until there is a sanctioned procedure, a task that needs a new route leaves the Architecture snapshot tests (the failure message lists the `+`/`-` lines) and the INV route list failing: check that the diff adds only your route, and report it for review.
+- **Cached output.** Some constants version stored or cached results. Bump the one whose comment covers your change, in the same commit: `PosterTagSettings.ResolverVersion` (`Shared/MediaTags/PosterTags/PosterTagSettings.cs`, tags produced for the same settings and data), `PosterTagComposer.CompositionVersion` (composite pixels) and `TagCacheService.CurrentCacheSchemaVersion` (what a tag-cache entry holds). Find the others with `git grep -n -iE '(Schema|Resolver|Renderer|Composition)Version'`.
 
 ## How to verify
 
@@ -55,6 +59,7 @@ scripts/restructure-gates.sh inv            # production inventory is current; r
 scripts/restructure-gates.sh tool           # runner unit tests + mutation/history path check
 scripts/restructure-gates.sh h              # poster harness builds + ResolutionData.g.cs check
 scripts/restructure-gates.sh r '<pattern>'  # no stale reference outside artifacts/
+scripts/restructure-gates.sh quick [feat…]  # inner loop (~30 s per feature): typecheck, build, the features' tests; not a merge gate
 npm run verify:rewrite                      # the rewrite's CI gate
 ```
 
@@ -63,7 +68,7 @@ Gate details are in `artifacts/restructure-plan/PLAN.md` ("Gates"). Known load-s
 **HOST (real Jellyfin 12.4).** Run this before claiming that something works in Jellyfin:
 1. `scripts/restructure-gates.sh image` checks that the pinned image digest is unchanged.
 2. Start a disposable server with the maintainers' `je` lab tool: `je up <name> <port> --image jellyfin/jellyfin:12.4`. Always pass `--image`. `je` is not on `PATH`: it is `~/.claude/skills/jellyfin-enhanced/scripts/je` (the `jellyfin-enhanced` skill; lab scripts in `/home/jake/je-lab/`).
-3. Before opening any page, disable any Sonarr/Radarr instances the lab configuration points at.
+3. Before the plugin's first start, point every Sonarr, Radarr and Seerr setting in the lab configuration away from real hosts: the golden copy names the live host for Sonarr and Radarr, and its Seerr is a shared container that forwards requests to that Sonarr. Editing after the server starts races the plugin's startup.
 4. `je up` builds and installs this tree. Since round 13 its build snapshot gets `npm ci`, and it tolerates exactly the warnings in `baselines/build-warnings.txt`. If it fails, install by hand: build with `dotnet build Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj -c Release -p:JellyfinTarget=jf12 -o <dir>`, then stop the container, copy the DLL and a `meta.json` into `config/plugins/JellyfinEnhanced_<version>/` and start it again. The repository has no `meta.json`; use the `META` constant in `je` (`targetAbi` `12.0.0.0`), which `je` writes to `JellyfinEnhanced_12.8.0.0/`.
 5. Check that the plugin loads without JE errors, that the admin page, Media Tags hub and a tagged poster render, that the JE scheduled tasks are listed under their original names, and that `/api-docs/openapi.json` returns 200. Also compare `GET /JellyfinEnhanced/bundle.js` with `scripts/restructure-gates.sh bundle <file>` (`bundle-hash`).
 6. Remove the container and its data afterwards (`je rm <name>`).
