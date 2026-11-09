@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/catchup/wire.ts
+  // client/src/features/shared/wire.ts
   function currentLease(session, getApi) {
     const epoch = session?.getEpoch(), user = getApi?.()?.getCurrentUserId(), server = getApi?.()?.getUrl("/");
     return () => (epoch === void 0 || session?.isCurrent(epoch) === true) && user === getApi?.()?.getCurrentUserId() && server === getApi?.()?.getUrl("/");

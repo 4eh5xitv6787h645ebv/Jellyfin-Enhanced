@@ -1,5 +1,5 @@
 import {catchupHost} from './host';
-import {currentLease, array, string} from './wire';
+import {currentLease, array, string} from '../shared/wire';
 import type {CatchHost} from './host';
 import type {SocialApi, RequestOptions} from '../activity/public-api';
 import type {CatchRuntime, State, Item, Image, Gesture, Options} from './types';

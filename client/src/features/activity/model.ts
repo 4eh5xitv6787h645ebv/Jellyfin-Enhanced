@@ -1,4 +1,4 @@
-import {object, string, number, optionalString, optionalNumber, optionalBoolean, array} from './host';
+import {object, string, number, optionalString, optionalNumber, optionalBoolean, array} from '../shared/wire';
 export function readItem(value: unknown) {
  const v = object(value), tags = v.ImageTags == null ? {} : object(v.ImageTags);
  return {Id: string(v.Id), Name: string(v.Name), SeriesName: optionalString(v.SeriesName), SeriesId: optionalString(v.SeriesId),

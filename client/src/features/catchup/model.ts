@@ -1,4 +1,4 @@
-import {object, string, optionalString, optionalNumber, array, optionalBoolean, number} from './wire';
+import {object, string, optionalString, optionalNumber, array, optionalBoolean, number} from '../shared/wire';
 import type {Item} from './types';
 export function readItem(value: unknown): Item {const v=object(value), tags = v.ImageTags == null ? {} : object(v.ImageTags), user = v.UserData == null ? {} : object(v.UserData); return {
  Id: string(v.Id), Name: string(v.Name), Type: optionalString(v.Type), SeriesId: optionalString(v.SeriesId), SeriesPrimaryImageTag: optionalString(v.SeriesPrimaryImageTag), ImageTags: {Primary: optionalString(tags.Primary)},
