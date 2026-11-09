@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -21,6 +49,13 @@
       if (value === void 0) throw new Error(`Missing hidden-content loader dependency: ${key}`);
       return value;
     } });
+  }
+  function hiddenContentContext(JE) {
+    return featureContext("hidden-content", JE, {
+      internalSlots: ["hiddenContent", "hiddenContentPage", "hiddenContentRuntime", "features"],
+      // Same expression as registry() and runtime() below.
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
   }
   function runtime(JE) {
     const internals = JE.internals ?? (JE.internals = {});
@@ -133,6 +168,7 @@
     "use strict";
     const JE = host.JellyfinEnhanced;
     const internal = registry(JE, "hiddenContentPage");
+    const featureCtx = hiddenContentContext(JE);
     const { state, POSTER_MAX_WIDTH } = internal;
     const renderPage = (...args) => internal.renderPage(...args);
     const logPrefix = "🪼 Jellyfin Enhanced: Hidden Content Page:";
@@ -451,7 +487,8 @@
           if (!Array.isArray(items)) throw new Error("Invalid item list");
           return items.map(decodeLibraryItem);
         }).catch(() => []);
-        const seerrP = JE.jellyseerrAPI && JE.jellyseerrAPI.search ? JE.jellyseerrAPI.search(term).then(decodeSeerrSearch).then((res) => res.results).catch(() => []) : Promise.resolve([]);
+        const seerrApi = featureCtx.peer("jellyseerrAPI");
+        const seerrP = seerrApi && seerrApi.search ? seerrApi.search(term).then(decodeSeerrSearch).then((res) => res.results).catch(() => []) : Promise.resolve([]);
         const [libItems, seerrItems] = await Promise.all([libP, seerrP]);
         if (token !== searchToken || !selection.current() || !overlay.isConnected) return;
         const normalized = [];

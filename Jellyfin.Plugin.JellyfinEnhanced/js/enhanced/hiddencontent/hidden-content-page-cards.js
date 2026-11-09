@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -21,6 +49,13 @@
       if (value === void 0) throw new Error(`Missing hidden-content loader dependency: ${key}`);
       return value;
     } });
+  }
+  function hiddenContentContext(JE) {
+    return featureContext("hidden-content", JE, {
+      internalSlots: ["hiddenContent", "hiddenContentPage", "hiddenContentRuntime", "features"],
+      // Same expression as registry() and runtime() below.
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
   }
   function runtime(JE) {
     const internals = JE.internals ?? (JE.internals = {});
@@ -98,6 +133,7 @@
     "use strict";
     const JE = host.JellyfinEnhanced;
     const internal = registry(JE, "hiddenContentPage");
+    const featureCtx = hiddenContentContext(JE);
     const {
       scopeBadgeText,
       scopeUnhideText,
@@ -137,7 +173,7 @@
         img.src = `${getApi().getUrl("/Items/" + group.seriesId + "/Images/Primary", { maxWidth: POSTER_MAX_WIDTH })}`;
         img.onerror = function() {
           var self = img;
-          if (hasTmdbId && JE.jellyseerrMoreInfo) {
+          if (hasTmdbId && featureCtx.peer("jellyseerrMoreInfo")) {
             posterLink.dataset.jellyfinRemoved = "1";
           }
           if (hasTmdbId && fallbackPosterPath) {
@@ -145,13 +181,13 @@
             self.onerror = function() {
               img.style.display = "none";
             };
-          } else if (hasTmdbId && JE.jellyseerrAPI) {
+          } else if (hasTmdbId && featureCtx.peer("jellyseerrAPI")) {
             self.onerror = function() {
               img.style.display = "none";
             };
             var mainItem = group.items[0];
             var mediaType = mainItem && mainItem.type === "Series" ? "tv" : "movie";
-            var fetchFn = mediaType === "tv" ? JE.jellyseerrAPI.fetchTvShowDetails : JE.jellyseerrAPI.fetchMovieDetails;
+            var fetchFn = mediaType === "tv" ? featureCtx.peer("jellyseerrAPI").fetchTvShowDetails : featureCtx.peer("jellyseerrAPI").fetchMovieDetails;
             fetchFn(parseInt(tmdbId, 10)).then(decodeSeerrItem).then(function(details) {
               if (!imageToken.current() || !img.isConnected) return;
               var path = details && (details.posterPath || details.poster_path);
@@ -163,9 +199,9 @@
             }).catch(function() {
               self.style.display = "none";
             });
-          } else if (group.seriesName && JE.jellyseerrAPI && JE.jellyseerrMoreInfo) {
+          } else if (group.seriesName && featureCtx.peer("jellyseerrAPI") && featureCtx.peer("jellyseerrMoreInfo")) {
             self.style.display = "none";
-            JE.jellyseerrAPI.search(group.seriesName).then(decodeSeerrSearch).then(function(res) {
+            featureCtx.peer("jellyseerrAPI").search(group.seriesName).then(decodeSeerrSearch).then(function(res) {
               if (!imageToken.current() || !img.isConnected) return;
               var results = res && res.results || [];
               var hit = results.find(function(r) {
@@ -368,7 +404,7 @@
       card.appendChild(createGroupPoster(group, tmdbId));
       const { info, nameEl } = createGroupInfo(group, mainItem, totalItems, hasEpisodes, tmdbId);
       card.appendChild(info);
-      if (JE.jellyseerrMoreInfo) {
+      if (featureCtx.peer("jellyseerrMoreInfo")) {
         const posterLink = card.querySelector(".je-hidden-group-poster-link");
         const baseMediaType = mainItem.type === "Series" ? "tv" : "movie";
         const openJellyseerr = (e) => {
@@ -376,7 +412,7 @@
           if (!id) return;
           const mediaType = tmdbId ? baseMediaType : posterLink?.dataset.resolvedMediaType || "tv";
           if (e) e.preventDefault();
-          JE.jellyseerrMoreInfo?.open(parseInt(id, 10), mediaType);
+          featureCtx.peer("jellyseerrMoreInfo")?.open(parseInt(id, 10), mediaType);
         };
         if (posterLink) {
           if (hasTmdbId && !hasJellyfinId) {

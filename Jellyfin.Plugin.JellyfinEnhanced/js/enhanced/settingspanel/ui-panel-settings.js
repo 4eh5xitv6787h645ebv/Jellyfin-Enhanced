@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/settings-panel/host.ts
   function panelHost() {
     const host = window;
@@ -15,6 +43,12 @@
   function optionalApiClient() {
     const host = window;
     return host.ApiClient;
+  }
+  function settingsPanelContext(JE) {
+    return featureContext("settings-panel", JE, {
+      internalSlots: ["enhancedUi"],
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
   }
   function registry(JE) {
     JE.internals = JE.internals || {};
@@ -136,7 +170,7 @@
       return { id: typeof id === "string" ? id : String(id), name: typeof name === "string" ? name : "", type: Reflect.get(item, "Type") };
     });
   };
-  function installUiPanelSettings(JE) {
+  function installUiPanelSettings(JE, featureCtx = settingsPanelContext(JE)) {
     const internal = registry(JE);
     const { showReleaseNotesNotification } = internal;
     const fontSizeAt = (value) => entryAt(JE.fontSizePresets, value, 2) || JE.fontSizePresets[2];
@@ -169,49 +203,58 @@
     };
     internal.removeTagGroup = removeTagGroup;
     const redrawLogosWhenServerHasThem = () => {
-      const pipeline = JE.tagPipeline;
+      const pipeline = featureCtx.peer("tagPipeline");
       if (!pipeline?.waitForServerCache || anyEntryHasLogos(pipeline.serverEntries?.() || [])) return;
       pipeline.waitForServerCache(anyEntryHasLogos).then((ready) => {
-        if (ready && JE.currentSettings?.logoTagsEnabled) JE.reinitializeLogoTags?.();
+        if (ready && JE.currentSettings?.logoTagsEnabled) featureCtx.peer("reinitializeLogoTags")?.();
       }).catch(() => {
       });
     };
     const TAG_TOGGLE_ACTIONS = {
       qualityTagsToggle: { on: () => {
-        if (typeof JE.initializeQualityTags === "function") JE.initializeQualityTags();
+        const peerFn = featureCtx.peer("initializeQualityTags");
+        if (typeof peerFn === "function") peerFn();
       }, off: () => removeTagGroup("quality", "quality-overlay-container") },
       genreTagsToggle: { on: () => {
-        if (typeof JE.initializeGenreTags === "function") JE.initializeGenreTags();
+        const peerFn = featureCtx.peer("initializeGenreTags");
+        if (typeof peerFn === "function") peerFn();
       }, off: () => removeTagGroup("genre", "genre-overlay-container") },
       languageTagsToggle: { on: () => {
-        if (typeof JE.initializeLanguageTags === "function") JE.initializeLanguageTags();
+        const peerFn = featureCtx.peer("initializeLanguageTags");
+        if (typeof peerFn === "function") peerFn();
       }, off: () => removeTagGroup("language", "language-overlay-container") },
       ratingTagsToggle: { on: () => {
-        if (typeof JE.initializeRatingTags === "function") JE.initializeRatingTags();
+        const peerFn = featureCtx.peer("initializeRatingTags");
+        if (typeof peerFn === "function") peerFn();
       }, off: () => removeTagGroup("rating", "rating-overlay-container") },
       ageRatingTagsToggle: { on: () => {
-        if (typeof JE.initializeAgeRatingTags === "function") JE.initializeAgeRatingTags();
+        const peerFn = featureCtx.peer("initializeAgeRatingTags");
+        if (typeof peerFn === "function") peerFn();
       }, off: () => removeTagGroup("ageRating", "age-rating-overlay-container") },
       logoTagsToggle: {
         on: () => {
-          if (typeof JE.initializeLogoTags === "function") JE.initializeLogoTags();
+          const peerFn = featureCtx.peer("initializeLogoTags");
+          if (typeof peerFn === "function") peerFn();
           redrawLogosWhenServerHasThem();
         },
         off: () => {
-          JE.tagPipeline?.stopWaitingForServerCache?.();
+          featureCtx.peer("tagPipeline")?.stopWaitingForServerCache?.();
           removeTagGroup("logos", "logo-overlay-container");
         }
       },
       statusTagsToggle: { on: () => {
-        if (typeof JE.initializeStatusTags === "function") JE.initializeStatusTags();
+        const peerFn = featureCtx.peer("initializeStatusTags");
+        if (typeof peerFn === "function") peerFn();
       }, off: () => removeTagGroup("status", "status-overlay-container") },
-      awardsTagsToggle: { on: () => JE.initializeAwardsTags?.(), off: () => removeTagGroup("awards", "awards-overlay-container") },
+      awardsTagsToggle: { on: () => featureCtx.peer("initializeAwardsTags")?.(), off: () => removeTagGroup("awards", "awards-overlay-container") },
       customTagsToggle: { on: () => {
-        if (typeof JE.initializeCustomTags === "function") JE.initializeCustomTags();
+        const peerFn = featureCtx.peer("initializeCustomTags");
+        if (typeof peerFn === "function") peerFn();
       }, off: () => removeTagGroup("custom", "custom-overlay-container") },
       peopleTagsToggle: {
         on: () => {
-          if (typeof JE.initializePeopleTags === "function") JE.initializePeopleTags();
+          const peerFn = featureCtx.peer("initializePeopleTags");
+          if (typeof peerFn === "function") peerFn();
         },
         off: () => {
           document.querySelectorAll(".je-people-place-banner").forEach((el) => el.remove());
@@ -294,7 +337,7 @@
             else tagAction.off();
             requiresRefresh = false;
           }
-          if (TAG_GROUP_TOGGLES.includes(id)) JE.reinitializeTagLayout?.();
+          if (TAG_GROUP_TOGGLES.includes(id)) featureCtx.peer("reinitializeTagLayout")?.();
           if (requiresRefresh) {
             toastMessage += ".<br> Refresh page to apply.";
           }
@@ -353,8 +396,9 @@
           JE.setSettingInherited?.(JE.currentSettings, settingKey, false);
           JE.currentSettings[settingKey] = target.checked;
           JE.saveUserSettings("settings.json", JE.currentSettings);
-          if (typeof JE.reinitializeQualityTags === "function" && JE.currentSettings.qualityTagsEnabled) {
-            JE.reinitializeQualityTags();
+          const reinitQuality = featureCtx.peer("reinitializeQualityTags");
+          if (typeof reinitQuality === "function" && JE.currentSettings.qualityTagsEnabled) {
+            reinitQuality();
           }
           resetAutoCloseTimer();
         });
@@ -381,8 +425,9 @@
           });
           JE.saveUserSettings("settings.json", JE.currentSettings);
           refreshQualityCatArrowStates(qualitySubGroup);
-          if (typeof JE.reinitializeQualityTags === "function" && JE.currentSettings.qualityTagsEnabled) {
-            JE.reinitializeQualityTags();
+          const reinitQuality = featureCtx.peer("reinitializeQualityTags");
+          if (typeof reinitQuality === "function" && JE.currentSettings.qualityTagsEnabled) {
+            reinitQuality();
           }
           resetAutoCloseTimer();
         });
@@ -398,8 +443,8 @@
             JE.currentSettings[key] = key === "qualityHideSdr" ? value === "true" : value;
           }
           JE.saveUserSettings("settings.json", JE.currentSettings);
-          JE.reinitializeQualityTags?.();
-          JE.reinitializeTagLayout?.();
+          featureCtx.peer("reinitializeQualityTags")?.();
+          featureCtx.peer("reinitializeTagLayout")?.();
           resetAutoCloseTimer();
         });
       });
@@ -408,7 +453,7 @@
         JE.setSettingInherited?.(JE.currentSettings, "showLowQualitySourceTag", false);
         JE.currentSettings.showLowQualitySourceTag = lowSourceToggle.checked;
         JE.saveUserSettings("settings.json", JE.currentSettings);
-        if (JE.currentSettings.qualityTagsEnabled) JE.reinitializeQualityTags?.();
+        if (JE.currentSettings.qualityTagsEnabled) featureCtx.peer("reinitializeQualityTags")?.();
         resetAutoCloseTimer();
       });
       const aggregationSelect = selectById("seriesQualityAggregationSelect");
@@ -424,7 +469,7 @@
             JE.currentSettings.seriesQualityAggregation = chosen;
           }
           JE.saveUserSettings("settings.json", JE.currentSettings);
-          JE.reinitializeQualityTags?.();
+          featureCtx.peer("reinitializeQualityTags")?.();
           resetAutoCloseTimer();
         });
       }
@@ -451,8 +496,8 @@
           rows.sort((a, b) => orderOf(a) - orderOf(b) || Number(a.dataset.defaultOrder) - Number(b.dataset.defaultOrder)).forEach((r) => qualitySubGroup.appendChild(r));
           refreshQualityCatArrowStates(qualitySubGroup);
         }
-        if (JE.currentSettings.qualityTagsEnabled) JE.reinitializeQualityTags?.();
-        JE.reinitializeTagLayout?.();
+        if (JE.currentSettings.qualityTagsEnabled) featureCtx.peer("reinitializeQualityTags")?.();
+        featureCtx.peer("reinitializeTagLayout")?.();
         JE.toast(JE.t("toast_quality_tags_follow_server"));
         resetAutoCloseTimer();
       });
@@ -491,8 +536,9 @@
         audioLangSelect.addEventListener("change", () => {
           JE.currentSettings.qualityTagsPreferredAudioLanguage = audioLangSelect.value;
           JE.saveUserSettings("settings.json", JE.currentSettings);
-          if (typeof JE.reinitializeQualityTags === "function" && JE.currentSettings.qualityTagsEnabled) {
-            JE.reinitializeQualityTags();
+          const reinitQuality = featureCtx.peer("reinitializeQualityTags");
+          if (typeof reinitQuality === "function" && JE.currentSettings.qualityTagsEnabled) {
+            reinitQuality();
           }
           resetAutoCloseTimer();
         });
@@ -526,7 +572,8 @@
         JE.currentSettings[key] = value;
         JE.currentSettings.tagLayoutSettingsVersion = 1;
         JE.saveUserSettings("settings.json", JE.currentSettings);
-        if (typeof JE.reinitializeTagLayout === "function") JE.reinitializeTagLayout();
+        const peerFn = featureCtx.peer("reinitializeTagLayout");
+        if (typeof peerFn === "function") peerFn();
         JE.toast(JE.t("toast_tag_layout_updated"));
         resetAutoCloseTimer();
       };
@@ -538,7 +585,8 @@
       document.getElementById("jeTagPresetChoice")?.addEventListener("change", (e) => {
         JE.currentSettings.tagStylePreset = controlValue(e.target) || null;
         JE.saveUserSettings("settings.json", JE.currentSettings);
-        if (typeof JE.initializeTagStyles === "function") JE.initializeTagStyles();
+        const peerFn = featureCtx.peer("initializeTagStyles");
+        if (typeof peerFn === "function") peerFn();
         JE.toast(JE.t("toast_tag_style_preset_updated"));
         resetAutoCloseTimer();
       });
@@ -566,14 +614,16 @@
         wireNestedList("ratingTagsToggle", "ratingTagsSubWrap", "ratingTagsSubToggles", "ratingTagsSubToggleExpander"),
         "ratingTagsEnabled",
         () => {
-          if (typeof JE.reinitializeRatingTags === "function") JE.reinitializeRatingTags();
+          const peerFn = featureCtx.peer("reinitializeRatingTags");
+          if (typeof peerFn === "function") peerFn();
         }
       );
       wireCatKeyToggles(
         wireNestedList("statusTagsToggle", "statusTagsSubWrap", "statusTagsSubToggles", "statusTagsSubToggleExpander"),
         "statusTagsEnabled",
         () => {
-          if (typeof JE.reinitializeStatusTags === "function") JE.reinitializeStatusTags();
+          const peerFn = featureCtx.peer("reinitializeStatusTags");
+          if (typeof peerFn === "function") peerFn();
         }
       );
       addSettingToggleListener("disableCustomSubtitleStyles", "disableCustomSubtitleStyles", "feature_disable_custom_subtitle_styles", true);

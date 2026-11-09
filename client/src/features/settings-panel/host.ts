@@ -1,5 +1,5 @@
 import type { JsonValue } from '../../contracts/generated';
-import type { SaveOptions, SettingsDocument } from '../../host/context';
+import { featureContext, type FeatureContext, type SaveOptions, type SettingsDocument } from '../../host/context';
 import type { MediaLanguage, PosterColours, RatingSources, TagLayout, TagLook } from '../media-tags/public-api';
 import type { EnhancedUi } from './registry';
 import type { createIcons } from '../shared/icons';
@@ -235,6 +235,26 @@ export function apiClient(): PanelApiClient {
 export function optionalApiClient(): PanelApiClient | undefined {
     const host: Window & BrowserHost = window;
     return host.ApiClient;
+}
+
+/** settings-panel's own slot (frontend.md §2.3): the `JE.internals.enhancedUi` registry (internals-owners.json). */
+export type SettingsPanelOwn = Pick<Internals, 'enhancedUi'>;
+/**
+ * Other features' facades the panel shell reads: hidden-content's `hiddenContent` and media-tags' pipeline and
+ * (re)initialisers. Their owners' public-api.ts files export no facade types yet, so the structural types above
+ * (only the members read here) type them.
+ */
+export type SettingsPanelPeers = Required<Pick<PanelBridge, 'hiddenContent' | 'tagPipeline'
+    | 'initializeQualityTags' | 'initializeGenreTags' | 'initializeLanguageTags' | 'initializeRatingTags' | 'initializeAgeRatingTags'
+    | 'initializeLogoTags' | 'initializeStatusTags' | 'initializeAwardsTags' | 'initializeCustomTags' | 'initializePeopleTags' | 'initializeTagStyles'
+    | 'reinitializeQualityTags' | 'reinitializeRatingTags' | 'reinitializeStatusTags' | 'reinitializeLogoTags' | 'reinitializeTagLayout'>>;
+export type SettingsPanelContext<Core extends Pick<PanelBridge, 'internals'> = PanelBridge> = FeatureContext<SettingsPanelOwn, SettingsPanelPeers, Core>;
+/** The context a panel module gets (step C3): `core` is the bridge `panelHost()` returned. */
+export function settingsPanelContext<Core extends Pick<PanelBridge, 'internals'>>(JE: Core): SettingsPanelContext<Core> {
+    return featureContext<SettingsPanelOwn, SettingsPanelPeers, Core>('settings-panel', JE, {
+        internalSlots: ['enhancedUi'],
+        internalsObject: () => JE.internals = JE.internals || {},
+    });
 }
 
 /** The shared panel registry (`JE.internals.enhancedUi`), created on first use like the legacy modules. */

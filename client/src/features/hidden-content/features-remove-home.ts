@@ -2,7 +2,7 @@ import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } f
 import { lease } from './host';
 import { isHomeSurface, errorMessage, type HomeSurface, type RemoveTarget, type SurfaceConfig } from './home-model';
 import { record } from './model';
-import { host, registry, type HiddenHost } from './host';
+import { hiddenContentContext, host, registry, type HiddenHost } from './host';
 /**
  * @file Remove from Continue Watching / Next Up: surface detection, the server
  * POST + optimistic hide, and the per-item action-sheet Remove button.
@@ -12,6 +12,7 @@ import { host, registry, type HiddenHost } from './host';
     if(!installOnce(JE,'features-remove-home'))return;
     'use strict';
     const internal = registry(JE, 'features');
+    const featureCtx = hiddenContentContext(JE);
 
     /**
      * Shows notifications using Jellyfin's built-in notification system.
@@ -391,7 +392,7 @@ import { host, registry, type HiddenHost } from './host';
             return false;
         }
 
-        const intent=JE.internals?.hiddenContent?.captureItemIntent?.(itemId);
+        const intent=featureCtx.own.hiddenContent?.captureItemIntent?.(itemId);
 
         // Flush pending HC save BEFORE the POST so a later debounce can't clobber the just-written entry.
         // If the flush fails the debounce is rescheduled inside flushPendingSave; abort the write so we

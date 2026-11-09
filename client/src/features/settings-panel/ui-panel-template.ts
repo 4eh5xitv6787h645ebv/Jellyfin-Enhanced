@@ -4,13 +4,13 @@
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
 import type { JsonValue } from '../../contracts/generated';
-import { panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge, type SubtitlePreset, type TextEffectPreset } from './host';
+import { panelHost, registry, settingsPanelContext, type FontFamilyPreset, type FontSizePreset, type PanelBridge, type SubtitlePreset, type TextEffectPreset } from './host';
 import type { PanelContext } from './context';
 import { entryAt, numeric } from '../shared/settings-values';
 import { PLAYER_COLUMN, pluginShortcutList } from './shortcut-rules';
 
 type Deps = Pick<PanelBridge, 'internals' | 'escapeHtml' | 't' | 'icon' | 'IconName' | 'icons' | 'pluginVersion' | 'pluginConfig'
-    | 'currentSettings' | 'userConfig' | 'state' | 'hiddenContent' | 'fontSizePresets' | 'fontFamilyPresets' | 'subtitlePresets'
+    | 'currentSettings' | 'userConfig' | 'state' | 'fontSizePresets' | 'fontFamilyPresets' | 'subtitlePresets'
     | 'subtitleTextEffectPresets' | 'decodeSubtitleColor' | 'getSubtitleTextShadow'>;
 type PresetType = 'style' | 'font-size' | 'font-family' | 'text-effect';
 type AnyPreset = SubtitlePreset | FontSizePreset | FontFamilyPreset | TextEffectPreset;
@@ -21,7 +21,7 @@ function must<T>(value: T | undefined, what: string): T {
     return value;
 }
 
-export function installUiPanelTemplate(JE: Deps): void {
+export function installUiPanelTemplate(JE: Deps, featureCtx = settingsPanelContext(JE)): void {
 
     const internal = registry(JE);
 
@@ -401,24 +401,24 @@ export function installUiPanelTemplate(JE: Deps): void {
                     ${/* Media Tags hub: layout, groups, status badges, rules and locks, colours, server pointers (ui-panel-media-tags.js) */ ''}
                     ${internal.buildMediaTagsHubHtml ? internal.buildMediaTagsHubHtml(ctx) : ''}
                     ${/* Hidden Content settings — only rendered when the module is initialized (controlled by HiddenContentEnabled config) */ ''}
-                    ${JE.hiddenContent ? `<section class="je-pane" data-pane="hidden-content">
+                    ${featureCtx.peer('hiddenContent') ? `<section class="je-pane" data-pane="hidden-content">
                         <h3 class="je-pane-title">${JE.icon(JE.IconName.EYE)} ${JE.t('hidden_content_settings_title')}</h3>
                         <div style="padding: 0 16px 16px 16px;">
                             <div style="margin-bottom: 12px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                    <input type="checkbox" id="hiddenContentEnabledToggle" ${JE.hiddenContent?.getSettings()?.enabled !== false ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                    <input type="checkbox" id="hiddenContentEnabledToggle" ${featureCtx.peer('hiddenContent')?.getSettings()?.enabled !== false ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('hidden_content_toggle_label')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('hidden_content_toggle_desc')}</div></div>
                                 </label>
                             </div>
                             <div style="margin-bottom: 12px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                    <input type="checkbox" id="hiddenShowHideButtons" ${JE.hiddenContent?.getSettings()?.showHideButtons !== false ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                    <input type="checkbox" id="hiddenShowHideButtons" ${featureCtx.peer('hiddenContent')?.getSettings()?.showHideButtons !== false ? 'checked' : ''} style="width:18px; height:18px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500;">${JE.t('hidden_content_show_buttons_label')}</div><div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">${JE.t('hidden_content_show_buttons_desc')}</div></div>
                                 </label>
                             </div>
                             <div style="margin-bottom: 12px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                 <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                    <input type="checkbox" id="hiddenShowConfirmation" ${JE.hiddenContent?.getSettings()?.showHideConfirmation !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                    <input type="checkbox" id="hiddenShowConfirmation" ${featureCtx.peer('hiddenContent')?.getSettings()?.showHideConfirmation !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                     <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_confirm_toggle_label')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_confirm_toggle_desc')}</div></div>
                                 </label>
                             </div>
@@ -426,25 +426,25 @@ export function installUiPanelTemplate(JE: Deps): void {
                                 <div style="font-weight:500; font-size:13px; color:rgba(255,255,255,0.7); margin-bottom:8px; padding-left:4px;">${JE.t('hidden_content_button_section_title')}</div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenShowButtonJellyseerr" ${JE.hiddenContent?.getSettings()?.showButtonJellyseerr !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenShowButtonJellyseerr" ${featureCtx.peer('hiddenContent')?.getSettings()?.showButtonJellyseerr !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_show_button_jellyseerr')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_show_button_jellyseerr_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenShowButtonLibrary" ${JE.hiddenContent?.getSettings()?.showButtonLibrary ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenShowButtonLibrary" ${featureCtx.peer('hiddenContent')?.getSettings()?.showButtonLibrary ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_show_button_library')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_show_button_library_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenShowButtonDetails" ${JE.hiddenContent?.getSettings()?.showButtonDetails !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenShowButtonDetails" ${featureCtx.peer('hiddenContent')?.getSettings()?.showButtonDetails !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_show_button_details')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_show_button_details_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenShowButtonCast" ${JE.hiddenContent?.getSettings()?.showButtonCast ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenShowButtonCast" ${featureCtx.peer('hiddenContent')?.getSettings()?.showButtonCast ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_show_button_cast')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_show_button_cast_desc')}</div></div>
                                     </label>
                                 </div>
@@ -452,55 +452,55 @@ export function installUiPanelTemplate(JE: Deps): void {
                             <div id="hiddenContentSurfaceToggles" style="margin-bottom: 12px;">
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterLibrary" ${JE.hiddenContent?.getSettings()?.filterLibrary !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterLibrary" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterLibrary !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_library')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_library_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterDiscovery" ${JE.hiddenContent?.getSettings()?.filterDiscovery !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterDiscovery" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterDiscovery !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_discovery')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_discovery_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterSearch" ${JE.hiddenContent?.getSettings()?.filterSearch !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterSearch" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterSearch !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_search')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_search_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterCalendar" ${JE.hiddenContent?.getSettings()?.filterCalendar !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterCalendar" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterCalendar !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_calendar')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_calendar_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterUpcoming" ${JE.hiddenContent?.getSettings()?.filterUpcoming !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterUpcoming" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterUpcoming !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_upcoming')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_upcoming_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterRecommendations" ${JE.hiddenContent?.getSettings()?.filterRecommendations !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterRecommendations" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterRecommendations !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_recommendations')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_recommendations_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterRequests" ${JE.hiddenContent?.getSettings()?.filterRequests !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterRequests" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterRequests !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_requests')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_requests_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterNextUp" ${JE.hiddenContent?.getSettings()?.filterNextUp !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterNextUp" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterNextUp !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_nextup')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_nextup_desc')}</div></div>
                                     </label>
                                 </div>
                                 <div style="margin-bottom: 8px; padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid rgba(255,255,255,0.15);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenFilterContinueWatching" ${JE.hiddenContent?.getSettings()?.filterContinueWatching !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
+                                        <input type="checkbox" id="hiddenFilterContinueWatching" ${featureCtx.peer('hiddenContent')?.getSettings()?.filterContinueWatching !== false ? 'checked' : ''} style="width:16px; height:16px; accent-color:${toggleAccentColor}; cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_filter_continue')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_filter_continue_desc')}</div></div>
                                     </label>
                                 </div>
@@ -509,14 +509,14 @@ export function installUiPanelTemplate(JE: Deps): void {
                                 <div style="font-weight:500; font-size:13px; color:rgba(255, 180, 50, 0.9); margin-bottom:8px; padding-left:4px;">${JE.t('hidden_content_experimental_label')}</div>
                                 <div style="padding: 12px; background: rgba(255, 180, 50, 0.05); border-radius: 6px; border-left: 3px solid rgba(255, 180, 50, 0.3);">
                                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                        <input type="checkbox" id="hiddenExperimentalCollections" ${JE.hiddenContent?.getSettings()?.experimentalHideCollections ? 'checked' : ''} style="width:16px; height:16px; accent-color:rgba(255, 180, 50, 0.8); cursor:pointer;">
+                                        <input type="checkbox" id="hiddenExperimentalCollections" ${featureCtx.peer('hiddenContent')?.getSettings()?.experimentalHideCollections ? 'checked' : ''} style="width:16px; height:16px; accent-color:rgba(255, 180, 50, 0.8); cursor:pointer;">
                                         <div><div style="font-weight:500; font-size:13px;">${JE.t('hidden_content_experimental_collections')}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:1px;">${JE.t('hidden_content_experimental_collections_desc')}</div></div>
                                     </label>
                                 </div>
                             </div>
                             <div style="padding: 12px; background: ${presetBoxBackground}; border-radius: 6px; border-left: 3px solid ${toggleAccentColor};">
                                 <button id="manageHiddenContentBtn" style="width: 100%; padding: 12px; background: ${toggleAccentColor}; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                                    ${JE.t('hidden_content_manage_button')} (${JE.hiddenContent?.getHiddenCount() || 0})
+                                    ${JE.t('hidden_content_manage_button')} (${featureCtx.peer('hiddenContent')?.getHiddenCount() || 0})
                                 </button>
                                 <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:8px;">${JE.t('hidden_content_manage_desc')}</div>
                             </div>

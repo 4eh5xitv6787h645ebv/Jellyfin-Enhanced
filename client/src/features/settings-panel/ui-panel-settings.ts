@@ -5,7 +5,7 @@
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
 import type { JsonValue } from '../../contracts/generated';
-import { apiClient, optionalApiClient, panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge } from './host';
+import { apiClient, optionalApiClient, panelHost, registry, settingsPanelContext, type FontFamilyPreset, type FontSizePreset, type PanelBridge } from './host';
 import type { PanelContext } from './context';
 import { closestTarget, controlChecked, controlValue, inputById, isDisabled, queryElements, queryInput, requireId, selectById, setDisabled } from '../shared/dom';
 import { audioLanguageOptions, decodeCultures } from './language-options';
@@ -13,10 +13,7 @@ import { entryAt } from '../shared/settings-values';
 import { activeSubtitleIsBitmap, clampPauseDelay, clampPosition, colorWithAlpha } from './subtitle-format';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'currentSettings' | 'userConfig' | 'pluginConfig' | 'saveUserSettings' | 'toast' | 't'
-    | 'escapeHtml' | 'tagPipeline' | 'setSettingInherited' | 'isSettingInherited' | 'inheritedSettingKeys'
-    | 'initializeQualityTags' | 'initializeGenreTags' | 'initializeLanguageTags' | 'initializeRatingTags' | 'initializeAgeRatingTags'
-    | 'initializeLogoTags' | 'initializeStatusTags' | 'initializeAwardsTags' | 'initializeCustomTags' | 'initializePeopleTags' | 'initializeTagStyles'
-    | 'reinitializeQualityTags' | 'reinitializeRatingTags' | 'reinitializeStatusTags' | 'reinitializeLogoTags' | 'reinitializeTagLayout'
+    | 'escapeHtml' | 'setSettingInherited' | 'isSettingInherited' | 'inheritedSettingKeys'
     | 'addRandomButton' | 'pauseScreenInstance' | 'getSubtitleTextShadow' | 'applySavedStylesWhenReady' | 'applySubtitlePosition'
     | 'applySubtitleStyles' | 'decodeSubtitleColor' | 'subtitlePresets' | 'fontSizePresets' | 'fontFamilyPresets' | 'subtitleTextEffectPresets'>;
 type SettingsContext = Pick<PanelContext, 'createToast' | 'resetAutoCloseTimer'> & Partial<Pick<PanelContext, 'help' | 'registerSearch' | 'onClose'>>;
@@ -47,7 +44,7 @@ const sourceItems = (response: unknown): SourceItem[] => {
     });
 };
 
-export function installUiPanelSettings(JE: Deps): void {
+export function installUiPanelSettings(JE: Deps, featureCtx = settingsPanelContext(JE)): void {
     const internal = registry(JE);
 
     const { showReleaseNotesNotification } = internal;
@@ -114,29 +111,29 @@ export function installUiPanelSettings(JE: Deps): void {
      * no wait.
      */
     const redrawLogosWhenServerHasThem = () => {
-        const pipeline = JE.tagPipeline;
+        const pipeline = featureCtx.peer('tagPipeline');
         if (!pipeline?.waitForServerCache || anyEntryHasLogos(pipeline.serverEntries?.() || [])) return;
         pipeline.waitForServerCache(anyEntryHasLogos).then((ready) => {
-            if (ready && JE.currentSettings?.logoTagsEnabled) JE.reinitializeLogoTags?.();
+            if (ready && JE.currentSettings?.logoTagsEnabled) featureCtx.peer('reinitializeLogoTags')?.();
         }).catch(() => {});
     };
 
     /** Feature toggles that bring their tag group back (initialize) or remove it from every card. */
     const TAG_TOGGLE_ACTIONS: Readonly<Record<string, { on(): void; off(): void }>> = {
-        qualityTagsToggle: { on: () => { if (typeof JE.initializeQualityTags === 'function') JE.initializeQualityTags(); }, off: () => removeTagGroup('quality', 'quality-overlay-container') },
-        genreTagsToggle: { on: () => { if (typeof JE.initializeGenreTags === 'function') JE.initializeGenreTags(); }, off: () => removeTagGroup('genre', 'genre-overlay-container') },
-        languageTagsToggle: { on: () => { if (typeof JE.initializeLanguageTags === 'function') JE.initializeLanguageTags(); }, off: () => removeTagGroup('language', 'language-overlay-container') },
-        ratingTagsToggle: { on: () => { if (typeof JE.initializeRatingTags === 'function') JE.initializeRatingTags(); }, off: () => removeTagGroup('rating', 'rating-overlay-container') },
-        ageRatingTagsToggle: { on: () => { if (typeof JE.initializeAgeRatingTags === 'function') JE.initializeAgeRatingTags(); }, off: () => removeTagGroup('ageRating', 'age-rating-overlay-container') },
+        qualityTagsToggle: { on: () => { const peerFn = featureCtx.peer('initializeQualityTags'); if (typeof peerFn === 'function') peerFn(); }, off: () => removeTagGroup('quality', 'quality-overlay-container') },
+        genreTagsToggle: { on: () => { const peerFn = featureCtx.peer('initializeGenreTags'); if (typeof peerFn === 'function') peerFn(); }, off: () => removeTagGroup('genre', 'genre-overlay-container') },
+        languageTagsToggle: { on: () => { const peerFn = featureCtx.peer('initializeLanguageTags'); if (typeof peerFn === 'function') peerFn(); }, off: () => removeTagGroup('language', 'language-overlay-container') },
+        ratingTagsToggle: { on: () => { const peerFn = featureCtx.peer('initializeRatingTags'); if (typeof peerFn === 'function') peerFn(); }, off: () => removeTagGroup('rating', 'rating-overlay-container') },
+        ageRatingTagsToggle: { on: () => { const peerFn = featureCtx.peer('initializeAgeRatingTags'); if (typeof peerFn === 'function') peerFn(); }, off: () => removeTagGroup('ageRating', 'age-rating-overlay-container') },
         logoTagsToggle: {
-            on: () => { if (typeof JE.initializeLogoTags === 'function') JE.initializeLogoTags(); redrawLogosWhenServerHasThem(); },
-            off: () => { JE.tagPipeline?.stopWaitingForServerCache?.(); removeTagGroup('logos', 'logo-overlay-container'); }
+            on: () => { const peerFn = featureCtx.peer('initializeLogoTags'); if (typeof peerFn === 'function') peerFn(); redrawLogosWhenServerHasThem(); },
+            off: () => { featureCtx.peer('tagPipeline')?.stopWaitingForServerCache?.(); removeTagGroup('logos', 'logo-overlay-container'); }
         },
-        statusTagsToggle: { on: () => { if (typeof JE.initializeStatusTags === 'function') JE.initializeStatusTags(); }, off: () => removeTagGroup('status', 'status-overlay-container') },
-        awardsTagsToggle: { on: () => JE.initializeAwardsTags?.(), off: () => removeTagGroup('awards', 'awards-overlay-container') },
-        customTagsToggle: { on: () => { if (typeof JE.initializeCustomTags === 'function') JE.initializeCustomTags(); }, off: () => removeTagGroup('custom', 'custom-overlay-container') },
+        statusTagsToggle: { on: () => { const peerFn = featureCtx.peer('initializeStatusTags'); if (typeof peerFn === 'function') peerFn(); }, off: () => removeTagGroup('status', 'status-overlay-container') },
+        awardsTagsToggle: { on: () => featureCtx.peer('initializeAwardsTags')?.(), off: () => removeTagGroup('awards', 'awards-overlay-container') },
+        customTagsToggle: { on: () => { const peerFn = featureCtx.peer('initializeCustomTags'); if (typeof peerFn === 'function') peerFn(); }, off: () => removeTagGroup('custom', 'custom-overlay-container') },
         peopleTagsToggle: {
-            on: () => { if (typeof JE.initializePeopleTags === 'function') JE.initializePeopleTags(); },
+            on: () => { const peerFn = featureCtx.peer('initializePeopleTags'); if (typeof peerFn === 'function') peerFn(); },
             off: () => {
                 document.querySelectorAll('.je-people-place-banner').forEach(el => el.remove());
                 document.querySelectorAll('.je-people-age-container').forEach(el => el.remove());
@@ -238,7 +235,7 @@ export function installUiPanelSettings(JE: Deps): void {
                 // Re-present every card for the new set of groups: caption space
                 // is reserved on every card when a group that can fill it comes
                 // on, and given back once none is left.
-                if (TAG_GROUP_TOGGLES.includes(id)) JE.reinitializeTagLayout?.();
+                if (TAG_GROUP_TOGGLES.includes(id)) featureCtx.peer('reinitializeTagLayout')?.();
 
                 if (requiresRefresh) {
                     toastMessage += ".<br> Refresh page to apply.";
@@ -307,8 +304,8 @@ export function installUiPanelSettings(JE: Deps): void {
                 JE.setSettingInherited?.(JE.currentSettings, settingKey, false);
                 JE.currentSettings[settingKey] = target.checked;
                 JE.saveUserSettings('settings.json', JE.currentSettings);
-                if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
-                    JE.reinitializeQualityTags();
+                const reinitQuality = featureCtx.peer('reinitializeQualityTags'); if (typeof reinitQuality === 'function' && JE.currentSettings.qualityTagsEnabled) {
+                    reinitQuality();
                 }
                 resetAutoCloseTimer();
             });
@@ -344,8 +341,8 @@ export function installUiPanelSettings(JE: Deps): void {
                 JE.saveUserSettings('settings.json', JE.currentSettings);
 
                 refreshQualityCatArrowStates(qualitySubGroup);
-                if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
-                    JE.reinitializeQualityTags();
+                const reinitQuality = featureCtx.peer('reinitializeQualityTags'); if (typeof reinitQuality === 'function' && JE.currentSettings.qualityTagsEnabled) {
+                    reinitQuality();
                 }
                 resetAutoCloseTimer();
             });
@@ -363,8 +360,8 @@ export function installUiPanelSettings(JE: Deps): void {
                     JE.currentSettings[key] = key === 'qualityHideSdr' ? value === 'true' : value;
                 }
                 JE.saveUserSettings('settings.json', JE.currentSettings);
-                JE.reinitializeQualityTags?.();
-                JE.reinitializeTagLayout?.();
+                featureCtx.peer('reinitializeQualityTags')?.();
+                featureCtx.peer('reinitializeTagLayout')?.();
                 resetAutoCloseTimer();
             });
         });
@@ -375,7 +372,7 @@ export function installUiPanelSettings(JE: Deps): void {
             JE.setSettingInherited?.(JE.currentSettings, 'showLowQualitySourceTag', false);
             JE.currentSettings.showLowQualitySourceTag = lowSourceToggle.checked;
             JE.saveUserSettings('settings.json', JE.currentSettings);
-            if (JE.currentSettings.qualityTagsEnabled) JE.reinitializeQualityTags?.();
+            if (JE.currentSettings.qualityTagsEnabled) featureCtx.peer('reinitializeQualityTags')?.();
             resetAutoCloseTimer();
         });
 
@@ -395,7 +392,7 @@ export function installUiPanelSettings(JE: Deps): void {
                     JE.currentSettings.seriesQualityAggregation = chosen;
                 }
                 JE.saveUserSettings('settings.json', JE.currentSettings);
-                JE.reinitializeQualityTags?.();
+                featureCtx.peer('reinitializeQualityTags')?.();
                 resetAutoCloseTimer();
             });
         }
@@ -424,8 +421,8 @@ export function installUiPanelSettings(JE: Deps): void {
                     .forEach(r => qualitySubGroup.appendChild(r));
                 refreshQualityCatArrowStates(qualitySubGroup);
             }
-            if (JE.currentSettings.qualityTagsEnabled) JE.reinitializeQualityTags?.();
-            JE.reinitializeTagLayout?.();
+            if (JE.currentSettings.qualityTagsEnabled) featureCtx.peer('reinitializeQualityTags')?.();
+            featureCtx.peer('reinitializeTagLayout')?.();
             JE.toast(JE.t('toast_quality_tags_follow_server'));
             resetAutoCloseTimer();
         });
@@ -473,8 +470,8 @@ export function installUiPanelSettings(JE: Deps): void {
             audioLangSelect.addEventListener('change', () => {
                 JE.currentSettings.qualityTagsPreferredAudioLanguage = audioLangSelect.value;
                 JE.saveUserSettings('settings.json', JE.currentSettings);
-                if (typeof JE.reinitializeQualityTags === 'function' && JE.currentSettings.qualityTagsEnabled) {
-                    JE.reinitializeQualityTags();
+                const reinitQuality = featureCtx.peer('reinitializeQualityTags'); if (typeof reinitQuality === 'function' && JE.currentSettings.qualityTagsEnabled) {
+                    reinitQuality();
                 }
                 resetAutoCloseTimer();
             });
@@ -520,7 +517,7 @@ export function installUiPanelSettings(JE: Deps): void {
             JE.currentSettings[key] = value;
             JE.currentSettings.tagLayoutSettingsVersion = 1;
             JE.saveUserSettings('settings.json', JE.currentSettings);
-            if (typeof JE.reinitializeTagLayout === 'function') JE.reinitializeTagLayout();
+            const peerFn = featureCtx.peer('reinitializeTagLayout'); if (typeof peerFn === 'function') peerFn();
             JE.toast(JE.t('toast_tag_layout_updated'));
             resetAutoCloseTimer();
         };
@@ -538,7 +535,7 @@ export function installUiPanelSettings(JE: Deps): void {
         document.getElementById('jeTagPresetChoice')?.addEventListener('change', (e) => {
             JE.currentSettings.tagStylePreset = controlValue(e.target) || null;
             JE.saveUserSettings('settings.json', JE.currentSettings);
-            if (typeof JE.initializeTagStyles === 'function') JE.initializeTagStyles();
+            const peerFn = featureCtx.peer('initializeTagStyles'); if (typeof peerFn === 'function') peerFn();
             JE.toast(JE.t('toast_tag_style_preset_updated'));
             resetAutoCloseTimer();
         });
@@ -569,11 +566,11 @@ export function installUiPanelSettings(JE: Deps): void {
         // Rating tag scope (item types / home rows): nested under the master
         // toggle exactly like the quality-tag categories above.
         wireCatKeyToggles(wireNestedList('ratingTagsToggle', 'ratingTagsSubWrap', 'ratingTagsSubToggles', 'ratingTagsSubToggleExpander'),
-            'ratingTagsEnabled', () => { if (typeof JE.reinitializeRatingTags === 'function') JE.reinitializeRatingTags(); });
+            'ratingTagsEnabled', () => { const peerFn = featureCtx.peer('reinitializeRatingTags'); if (typeof peerFn === 'function') peerFn(); });
         // Status tag badges (Trending / New / Just Added): same nested
         // sub-toggle pattern as the rating scope above.
         wireCatKeyToggles(wireNestedList('statusTagsToggle', 'statusTagsSubWrap', 'statusTagsSubToggles', 'statusTagsSubToggleExpander'),
-            'statusTagsEnabled', () => { if (typeof JE.reinitializeStatusTags === 'function') JE.reinitializeStatusTags(); });
+            'statusTagsEnabled', () => { const peerFn = featureCtx.peer('reinitializeStatusTags'); if (typeof peerFn === 'function') peerFn(); });
         addSettingToggleListener('disableCustomSubtitleStyles', 'disableCustomSubtitleStyles', 'feature_disable_custom_subtitle_styles', true);
         addSettingToggleListener('longPress2xEnabled', 'longPress2xEnabled', 'feature_long_press_2x_speed');
 

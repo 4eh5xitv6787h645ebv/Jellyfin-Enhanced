@@ -1,4 +1,4 @@
-import type { TagRuntimeBridge } from '../../host';
+import type { MediaTagsContext } from '../../host';
 import { finite, isRecord, own, record, type JsonRecord } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
 import type { ScopeId } from '../../pipeline/scopes';
@@ -14,7 +14,8 @@ const SCOPE_OF_KEY: Readonly<Record<string, ScopeId>> = { ratingTagsOnMovies: 'm
 // which owns the cache/ignore/tagged/CSS/reinitialize plumbing. This module
 // supplies only the rating-specific parts: rating normalization, the chip
 // markup, and the synthetic items handed to the user-review tag module.
-export function createRatingTags(JE: TagRuntimeBridge) {
+export function createRatingTags(ctx: MediaTagsContext) {
+    const JE = ctx.core;
 
     const logPrefix = '🪼 Jellyfin Enhanced: Rating Tags:';
     const containerClass = 'rating-overlay-container';
@@ -106,7 +107,7 @@ export function createRatingTags(JE: TagRuntimeBridge) {
      * */
     function isSuppressionPending(): boolean {
         try {
-            const sg = JE.spoilerBlur;
+            const sg = ctx.peer('spoilerBlur');
             if (!sg || JE.pluginConfig?.SpoilerBlurEnabled !== true) return false;
             if (typeof sg.isLoaded === 'function') return sg.isLoaded() !== true;
             return typeof sg.isLoadOk === 'function' && sg.isLoadOk() !== true;
@@ -133,7 +134,7 @@ export function createRatingTags(JE: TagRuntimeBridge) {
             if (!JE.pluginConfig || JE.pluginConfig.SpoilerBlurEnabled !== true) return false;
             // Only when ratings are truly being hidden for this user.
             if (JE.pluginConfig.SpoilerStripRatings === false) return false;
-            const sg = JE.spoilerBlur;
+            const sg = ctx.peer('spoilerBlur');
             if (!sg || typeof sg.isEnabledFor !== 'function') return false;
             if (typeof sg.getUserPrefs === 'function') {
                 if (sg.getUserPrefs()?.HideRatings === false) return false; // user opted to keep ratings

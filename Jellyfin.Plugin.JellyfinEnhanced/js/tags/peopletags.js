@@ -1,12 +1,47 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/media-tags/host.ts
   function tagRuntimeHost() {
     const host = window;
     const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
     bridge.core ?? (bridge.core = {});
     return bridge;
+  }
+  function mediaTagsContext(JE = tagRuntimeHost()) {
+    return featureContext("media-tags", JE, {
+      internalSlots: ["peopleTags"],
+      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
   }
   function apiClient() {
     const host = window;
@@ -295,7 +330,8 @@
   function isHotPerson(value) {
     return isRecord(value) && isRecord(value.data) && typeof value.timestamp === "number";
   }
-  function createPeopleTags(JE) {
+  function createPeopleTags(ctx) {
+    const JE = ctx.core;
     JE.initializePeopleTags = function() {
       if (!JE.currentSettings?.peopleTagsEnabled) {
         console.log("🪼 Jellyfin Enhanced: People Tags: Feature is disabled in settings.");
@@ -1039,8 +1075,7 @@
           }
         );
         handlePeopleTags();
-        JE.internals = JE.internals || {};
-        JE.internals.peopleTags = { prefetch, leave };
+        ctx.own.peopleTags = { prefetch, leave };
         console.debug(`${logPrefix} Initialization complete`);
       }
       initialize();
@@ -1048,7 +1083,7 @@
   }
 
   // client/src/features/media-tags/types/people/peopletags-entry.ts
-  createPeopleTags(tagRuntimeHost());
+  createPeopleTags(mediaTagsContext());
 })();
 })();
 //# sourceMappingURL=peopletags.js.map

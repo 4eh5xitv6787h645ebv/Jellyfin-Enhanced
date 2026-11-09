@@ -1,12 +1,47 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own2 = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own2, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own: own2,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/media-tags/host.ts
   function tagRuntimeHost() {
     const host = window;
     const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
     bridge.core ?? (bridge.core = {});
     return bridge;
+  }
+  function mediaTagsContext(JE = tagRuntimeHost()) {
+    return featureContext("media-tags", JE, {
+      internalSlots: ["peopleTags"],
+      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
   }
 
   // client/src/features/media-tags/pipeline/dto.ts
@@ -33,7 +68,8 @@
     ratingTagsOnContinueWatching: "continueWatching",
     ratingTagsOnNextUp: "nextUp"
   };
-  function createRatingTags(JE) {
+  function createRatingTags(ctx) {
+    const JE = ctx.core;
     const logPrefix = "🪼 Jellyfin Enhanced: Rating Tags:";
     const containerClass = "rating-overlay-container";
     const tagClass = "rating-tag";
@@ -76,7 +112,7 @@
     JE.isRatingTagExcludedByScope = isExcludedByScope;
     function isSuppressionPending() {
       try {
-        const sg = JE.spoilerBlur;
+        const sg = ctx.peer("spoilerBlur");
         if (!sg || JE.pluginConfig?.SpoilerBlurEnabled !== true) return false;
         if (typeof sg.isLoaded === "function") return sg.isLoaded() !== true;
         return typeof sg.isLoadOk === "function" && sg.isLoadOk() !== true;
@@ -89,7 +125,7 @@
         if (!item) return false;
         if (!JE.pluginConfig || JE.pluginConfig.SpoilerBlurEnabled !== true) return false;
         if (JE.pluginConfig.SpoilerStripRatings === false) return false;
-        const sg = JE.spoilerBlur;
+        const sg = ctx.peer("spoilerBlur");
         if (!sg || typeof sg.isEnabledFor !== "function") return false;
         if (typeof sg.getUserPrefs === "function") {
           if (sg.getUserPrefs()?.HideRatings === false) return false;
@@ -113,8 +149,8 @@
         return !!(JE.pluginConfig && JE.pluginConfig.SpoilerBlurEnabled === true);
       }
     }
-    function getCachedEntry(ctx, itemId) {
-      const entry = ctx.getPersistent(itemId) ?? ctx.hot?.get(itemId);
+    function getCachedEntry(ctx2, itemId) {
+      const entry = ctx2.getPersistent(itemId) ?? ctx2.hot?.get(itemId);
       if (!entry) return null;
       const refreshAt = isRecord(entry) ? finite(entry.refreshAt) : null;
       if (refreshAt !== null && Date.now() >= refreshAt) return null;
@@ -130,19 +166,19 @@
       }
       return null;
     }
-    function setCachedEntry(ctx, itemId, rating) {
-      ctx.setPersistent(itemId, rating);
-      ctx.hot?.set(itemId, rating);
+    function setCachedEntry(ctx2, itemId, rating) {
+      ctx2.setPersistent(itemId, rating);
+      ctx2.hot?.set(itemId, rating);
     }
-    function applyRatingTag(ctx, el, rating) {
+    function applyRatingTag(ctx2, el, rating) {
       if (!rating) return;
       const facts = JE.ratingSources.resolve(rating.tmdb, rating.critic, rating.ratings);
-      ctx.removeExistingOverlay(el);
+      ctx2.removeExistingOverlay(el);
       if (!facts.length) return;
       const container = document.createElement("div");
       container.className = containerClass;
       for (const fact of facts) container.appendChild(JE.ratingSources.chip(fact));
-      ctx.commitOverlay(el, container);
+      ctx2.commitOverlay(el, container);
     }
     const spec = {
       logPrefix,
@@ -228,26 +264,26 @@
       pipeline: {
         needsFirstEpisode: false,
         needsParentSeries: false,
-        render(ctx, el, item, extras) {
-          if (ctx.shouldIgnore(el)) return;
-          if (ctx.isTagged(el)) return;
+        render(ctx2, el, item, extras) {
+          if (ctx2.shouldIgnore(el)) return;
+          if (ctx2.isTagged(el)) return;
           if (el.closest(".je-hidden")) return;
           if (isExcludedByScope(el, item.Type)) {
-            ctx.markTagged(el);
+            ctx2.markTagged(el);
             return;
           }
           const itemId = String(item.Id);
           if (shouldSuppressRatingTag(item)) {
-            ctx.markTagged(el);
+            ctx2.markTagged(el);
             if (!isSuppressionPending() && typeof JE.appendUserRatingToContainer === "function") {
               JE.appendUserRatingToContainer(el, item, extras);
             }
             return;
           }
-          const cached = getCachedEntry(ctx, itemId);
+          const cached = getCachedEntry(ctx2, itemId);
           if (cached && cached.tmdb !== void 0) {
             if (cached.tmdb || cached.critic !== null || cached.ratings) {
-              applyRatingTag(ctx, el, cached);
+              applyRatingTag(ctx2, el, cached);
             }
             if (typeof JE.appendUserRatingToContainer === "function") {
               JE.appendUserRatingToContainer(el, item, extras);
@@ -268,7 +304,7 @@
           const tmdbMediaType = item.Type === "Series" ? "tv" : "movie";
           const serverRefreshAt = finite(item.RatingsRefreshAt);
           const refreshAt = item.RatingsPending === true ? Date.now() + PENDING_RETRY_MS : serverRefreshAt !== null ? Math.max(serverRefreshAt, Date.now() + PENDING_RETRY_MS) : null;
-          setCachedEntry(ctx, itemId, {
+          setCachedEntry(ctx2, itemId, {
             ...rating,
             ...refreshAt !== null ? { refreshAt } : {},
             tmdbId,
@@ -282,7 +318,7 @@
             sgPlayed: record(item.UserData).Played === true
           });
           if (tmdb || critic !== null || rating.ratings) {
-            applyRatingTag(ctx, el, rating);
+            applyRatingTag(ctx2, el, rating);
             if (typeof JE.appendUserRatingToContainer === "function") {
               JE.appendUserRatingToContainer(el, item, extras);
             }
@@ -290,13 +326,13 @@
             JE.appendUserRatingToContainer(el, item, extras);
           }
         },
-        renderFromCache(ctx, el, itemId) {
-          if (ctx.isTagged(el)) return true;
-          if (ctx.shouldIgnore(el)) return true;
+        renderFromCache(ctx2, el, itemId) {
+          if (ctx2.isTagged(el)) return true;
+          if (ctx2.shouldIgnore(el)) return true;
           if (el.closest(".je-hidden")) return true;
-          const cached = getCachedEntry(ctx, itemId);
+          const cached = getCachedEntry(ctx2, itemId);
           if (isExcludedByScope(el, cached?.sgType)) {
-            ctx.markTagged(el);
+            ctx2.markTagged(el);
             return true;
           }
           if (!cached) return false;
@@ -306,7 +342,7 @@
             SeriesId: cached.sgSeriesId,
             UserData: { Played: cached.sgPlayed === true }
           })) {
-            ctx.markTagged(el);
+            ctx2.markTagged(el);
             if (isSuppressionPending()) return true;
             if (typeof JE.appendUserRatingToContainer === "function" && (cached.tmdbId || cached.seriesTmdbId)) {
               JE.appendUserRatingToContainer(el, {
@@ -318,7 +354,7 @@
             return true;
           }
           if (cached.tmdb || cached.critic !== null || cached.ratings) {
-            applyRatingTag(ctx, el, cached);
+            applyRatingTag(ctx2, el, cached);
           }
           if (typeof JE.appendUserRatingToContainer === "function" && (cached.tmdbId || cached.seriesTmdbId)) {
             const syntheticItem = {
@@ -340,11 +376,11 @@
           }
           return true;
         },
-        renderFromServerCache(ctx, el, entry, itemId) {
-          if (ctx.isTagged(el)) return;
-          if (ctx.shouldIgnore(el)) return;
+        renderFromServerCache(ctx2, el, entry, itemId) {
+          if (ctx2.isTagged(el)) return;
+          if (ctx2.shouldIgnore(el)) return;
           if (isExcludedByScope(el, entry.Type)) {
-            ctx.markTagged(el);
+            ctx2.markTagged(el);
             return;
           }
           const suppressed = (entry.Type === "Series" || entry.Type === "Season") && shouldSuppressRatingTag({
@@ -353,13 +389,13 @@
             SeriesId: entry.SeriesId
           });
           if (suppressed) {
-            ctx.markTagged(el);
+            ctx2.markTagged(el);
             if (isSuppressionPending()) return;
           } else {
             const tmdb = entry.CommunityRating != null ? parseFloat(String(entry.CommunityRating)).toFixed(1) : null;
             const critic = entry.CriticRating != null ? normalizeCriticPercent(entry.CriticRating) : null;
             if (tmdb || critic !== null || entry.Ratings) {
-              applyRatingTag(ctx, el, { tmdb, critic, ratings: entry.Ratings });
+              applyRatingTag(ctx2, el, { tmdb, critic, ratings: entry.Ratings });
             }
           }
           if (typeof JE.appendUserRatingToContainer === "function") {
@@ -381,8 +417,8 @@
     };
     JE.initializeRatingTags = function() {
       console.log(`${logPrefix} Starting...`);
-      const ctx = JE.core.tagRenderer.register("rating", spec);
-      ctx.injectCss();
+      const ctx2 = JE.core.tagRenderer.register("rating", spec);
+      ctx2.injectCss();
       console.log(`${logPrefix} Initialized successfully.`);
     };
     JE.reinitializeRatingTags = function() {
@@ -392,7 +428,7 @@
   }
 
   // client/src/features/media-tags/types/ratings/ratingtags-entry.ts
-  createRatingTags(tagRuntimeHost());
+  createRatingTags(mediaTagsContext());
 })();
 })();
 //# sourceMappingURL=ratingtags.js.map
