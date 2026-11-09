@@ -51,6 +51,32 @@ Adding a client module:
 4. No `.csproj` change is needed — `js\**` is embedded by a glob — but the plugin must be rebuilt and redeployed for a new file to be served.
 5. `js/fonts/` holds two copies of each Material Symbols face. JE's own icons use the `*-subset.woff2` files, which contain only the icons the client uses and are declared under the private family names `'JE Material Symbols Rounded'` / `'JE Material Symbols Outlined'` — always use those names in JE rules, and give JE's icon elements the matching private classes `je-msym-rounded` / `je-msym-outlined`, never Google's `material-symbols-rounded` / `material-symbols-outlined`, which themes and other plugins style for their own icons. The full fonts stay under the public names (`'Material Symbols Rounded'` / `'Material Symbols Outlined'`) only for themes, plugins and custom CSS that rely on JE providing them (`js/enhanced/ui-styles.js` also points Google's classes at them through a zero-specificity `:where()` fallback); a subset under a public name would shadow a theme's own declaration and break its icons. To use a new Material Symbols icon, add its name to `ICONS` in `scripts/material-symbols/subset.py`, re-run the script and commit the regenerated subsets — otherwise the icon renders as its name in plain text. The script also fails if JE code uses the `material-symbols-*` classes.
 
+### Where things live
+
+Client code is TypeScript under `client/src/`. `npm run client:build` bundles it into the shipped scripts under `Jellyfin.Plugin.JellyfinEnhanced/js/`, using the manifests in `client/entries/` (see [its README](client/entries/README.md)). The backend has one folder per feature under `Jellyfin.Plugin.JellyfinEnhanced/Features/`. `Shared/` and `Infrastructure/` beside it are layers that several features use, not features. Each `client/src/features/<feature>/README.md` lists that feature's entry points, public API and tests.
+
+The canonical list is [`docs/feature-map.json`](docs/feature-map.json). `tests/frontend/architecture/feature-map.test.mjs` keeps this table equal to it, so change the map first and copy the rows it prints.
+
+| Feature | Client (`client/src/`) | Backend (`Jellyfin.Plugin.JellyfinEnhanced/Features/`) | Tests |
+|---|---|---|---|
+| `activity` | `features/activity/` | `Activity/` | `tests/frontend/pages/` |
+| `bookmarks` | `features/bookmarks/` | `Bookmarks/` | `tests/frontend/features/bookmarks/`, `tests/backend/Features/Bookmarks/` |
+| `calendar` | `features/calendar/` | `Calendar/` | `tests/frontend/pages/`, `tests/backend/Features/Calendar/` |
+| `catchup` | `features/catchup/` | `Catchup/` | `tests/frontend/pages/` |
+| `chrome` | `features/chrome/` | `Chrome/` | `tests/frontend/chrome/`, `tests/backend/Features/Chrome/` |
+| `details-providers` | `features/details-providers/` | `DetailsProviders/` | `tests/frontend/features/details-providers/`, `tests/backend/Features/DetailsProviders/` |
+| `downloads` | `features/downloads/` | `Downloads/` | `tests/frontend/features/downloads/` |
+| `hidden-content` | `features/hidden-content/` | `HiddenContent/` | `tests/frontend/features/hidden-content/`, `tests/backend/Features/HiddenContent/` |
+| `media-tags` | `features/media-tags/` | `MediaTags/` | `tests/frontend/features/media-tags/`, `tests/backend/Features/MediaTags/` |
+| `player` | `features/player/` | none | `tests/frontend/features/player/` |
+| `seerr` | `features/seerr/` | `Seerr/` | `tests/frontend/requests/`, `tests/frontend/pages/`, `tests/backend/Features/Seerr/` |
+| `settings` | `features/settings/` | `Settings/` | `tests/frontend/bootstrap/`, `tests/backend/Features/Settings/` |
+| `settings-panel` | `features/settings-panel/` | none (served by `Settings/`) | `tests/frontend/features/settings-panel/` |
+| `spoiler-guard` | `features/spoiler-guard/` | `SpoilerGuard/` | `tests/frontend/features/spoiler-guard/`, `tests/backend/Features/SpoilerGuard/` |
+| `shared` | `features/shared/` | none (served by `Platform/`) | `tests/frontend/core/` |
+| `admin` (area) | `admin/config/` | `Admin/` | `tests/frontend/admin/`, `tests/backend/Features/Admin/` |
+| `platform` (area) | `bootstrap/`, `core/`, `host/`, `pages/`, `features/shared/` | `Platform/` | `tests/frontend/bootstrap/`, `tests/frontend/core/`, `tests/frontend/pages/`, `tests/frontend/contracts/`, `tests/frontend/regressions/`, `tests/backend/Features/Platform/` |
+
 ## 📝 Code Contribution Guidelines
 
 ### Code Style
