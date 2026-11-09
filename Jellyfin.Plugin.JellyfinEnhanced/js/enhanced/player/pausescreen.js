@@ -34,70 +34,22 @@
     return h > 0 ? `${h}:${m}:${s}` : `${Number(m)}:${s}`;
   }
 
-  // client/src/features/player/lifetime.ts
-  function createPlayerLifetime(JE2, name) {
-    let generation = 0;
-    let controller = new AbortController();
-    const cleanups = /* @__PURE__ */ new Set();
-    const timers = /* @__PURE__ */ new Set();
-    function reset() {
-      generation++;
-      controller.abort();
-      controller = new AbortController();
-      for (const cleanup of cleanups) cleanup();
-      for (const timer of timers) clearTimeout(timer);
-      timers.clear();
-    }
-    JE2.session?.onUserChange(name + "-lifetime", reset);
-    if (JE2.core?.navigation) JE2.core.navigation.onNavigate(reset);
-    else window.addEventListener("hashchange", reset);
-    function lease(video) {
-      const captured = generation, hash = location.hash;
-      const session = JE2.session?.createLease?.();
-      const source = video ? video.currentSrc || video.src : null;
-      return { signal: controller.signal, current: () => captured === generation && hash === location.hash && (!session || session.isCurrent()) && (!video || video.isConnected && (video.currentSrc || video.src) === source) };
-    }
-    return {
-      lease,
-      reset,
-      onReset(cleanup) {
-        cleanups.add(cleanup);
-        return () => cleanups.delete(cleanup);
-      },
-      timeout(callback, delay) {
-        const id = window.setTimeout(() => {
-          timers.delete(id);
-          callback();
-        }, delay);
-        timers.add(id);
-        return id;
-      },
-      cancel(id) {
-        if (id != null) {
-          clearTimeout(id);
-          timers.delete(id);
-        }
-      },
-      sleep(delay, signal) {
-        return new Promise((resolve) => {
-          if (signal.aborted) {
-            resolve();
-            return;
-          }
-          const done = () => {
-            clearTimeout(id);
-            signal.removeEventListener("abort", done);
-            resolve();
-          };
-          const id = window.setTimeout(done, delay);
-          signal.addEventListener("abort", done, { once: true });
-        });
-      }
-    };
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/player/pause-styles.ts
-  var pauseStyles = `
+  // client/generated-shared/stub/client/src/features/player/lifetime.ts
+  var shared = /* @__PURE__ */ sharedModule("features/player/lifetime");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "createPlayerLifetime");
+
+  // client/src/features/player/pause-screen.css
+  var pause_screen_default = `
             :root {
               --pause-screen-overlay-bg: rgba(0,0,0,.78);
               --pause-screen-blur: 50px;
@@ -363,86 +315,21 @@
 
           `;
 
-  // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
-    }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
-  }
+  // client/src/features/player/pause-styles.ts
+  var pauseStyles = pause_screen_default;
 
-  // client/src/features/player/host.ts
-  function playerHost() {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
-    const ctx2 = featureContext("player", JE2, {
-      internalSlots: ["player", "nowPlaying", "autoSkip"],
-      internalsObject: () => JE2.internals = JE2.internals || {}
-    });
-    const requireApi = () => {
-      if (!host.ApiClient) throw new Error("Jellyfin API unavailable");
-      return host.ApiClient;
-    };
-    const ApiClient2 = {
-      getCurrentUserId: () => host.ApiClient?.getCurrentUserId() ?? null,
-      deviceId: () => host.ApiClient?.deviceId?.() ?? "",
-      serverId: () => {
-        const id = host.ApiClient?.serverId;
-        return typeof id === "function" ? id.call(host.ApiClient) : id ?? "";
-      },
-      serverAddress: () => requireApi().serverAddress(),
-      getUrl: (path, params) => requireApi().getUrl(path, params),
-      ajax: (options) => requireApi().ajax(options),
-      getItem: (userId, itemId) => requireApi().getItem(userId, itemId)
-    };
-    return { JE: JE2, ApiClient: ApiClient2, ctx: ctx2 };
-  }
+  // client/generated-shared/stub/client/src/features/player/host.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/player/host");
+  var export02 = /* @__PURE__ */ sharedExport(shared2, "playerHost");
 
-  // client/src/features/player/wire.ts
-  function record(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : {};
-  }
-  var text = (v) => typeof v === "string" ? v : void 0;
-  var number = (v) => typeof v === "number" && Number.isFinite(v) ? v : void 0;
-  var strings = (v) => Array.isArray(v) ? v.filter((s) => typeof s === "string") : [];
-  var list = (v) => Array.isArray(v) ? v : [];
-  function stream(v) {
-    const r = record(v);
-    const fps = (v2) => typeof v2 === "string" ? v2 : number(v2);
-    return { Type: text(r.Type), Index: number(r.Index), ReferenceFrameRate: fps(r.ReferenceFrameRate), RealFrameRate: fps(r.RealFrameRate), AverageFrameRate: fps(r.AverageFrameRate), DisplayTitle: text(r.DisplayTitle), Title: text(r.Title), Language: text(r.Language), Codec: text(r.Codec) };
-  }
-  function decodeItem(v) {
-    const r = record(v);
-    return { Id: text(r.Id), Type: text(r.Type), SeriesId: text(r.SeriesId), ParentId: text(r.ParentId), RunTimeTicks: number(r.RunTimeTicks), ProductionYear: number(r.ProductionYear), CommunityRating: number(r.CommunityRating), CriticRating: number(r.CriticRating), OfficialRating: text(r.OfficialRating), Overview: text(r.Overview), Container: text(r.Container), Genres: strings(r.Genres), Tags: strings(r.Tags), ImageTags: { Logo: text(record(r.ImageTags).Logo) }, MediaStreams: list(r.MediaStreams).map(stream), MediaSources: list(r.MediaSources).map((v2) => {
-      const s = record(v2);
-      return { Id: text(s.Id), MediaStreams: list(s.MediaStreams).map(stream) };
-    }) };
-  }
+  // client/generated-shared/stub/client/src/features/player/wire.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/player/wire");
+  var export03 = /* @__PURE__ */ sharedExport(shared3, "decodeItem");
+  var export4 = /* @__PURE__ */ sharedExport(shared3, "record");
 
   // client/src/features/player/pausescreen.ts
-  var { JE, ApiClient, ctx } = playerHost();
-  var lifetime = createPlayerLifetime(JE, "pause-screen");
+  var { JE, ApiClient, ctx } = export02();
+  var lifetime = export0(JE, "pause-screen");
   JE.initializePauseScreen = function() {
     if (!JE.currentSettings.pauseScreenEnabled) {
       JE.pauseScreenInstance?.destroy();
@@ -528,8 +415,8 @@
         const creds = localStorage.getItem("jellyfin_credentials");
         if (!creds) return null;
         try {
-          const parsed = record(JSON.parse(creds));
-          const servers = Array.isArray(parsed.Servers) ? parsed.Servers.map(record) : [];
+          const parsed = export4(JSON.parse(creds));
+          const servers = Array.isArray(parsed.Servers) ? parsed.Servers.map(export4) : [];
           let activeServerId = null;
           try {
             activeServerId = (typeof ApiClient.serverId === "function" ? ApiClient.serverId() : ApiClient.serverId) || null;
@@ -902,18 +789,18 @@
         this.fetchAbort?.abort();
         this.fetchAbort = new AbortController();
         try {
-          let record2 = this.itemCache.get(itemId);
-          if (!record2) {
+          let record = this.itemCache.get(itemId);
+          if (!record) {
             const itemResp = await this.fetchWithRetry(ApiClient.getUrl(`/Items/${itemId}`), {
               headers: { "Authorization": 'MediaBrowser Token="' + this.token + '"', "X-Emby-Token": this.token ?? "", "Accept": "application/json" },
               signal: this.fetchAbort.signal
             });
             if (this.destroyed || generation !== this.generation) return;
             if (!itemResp) return;
-            record2 = { item: itemResp, domain: ApiClient.serverAddress() };
-            this.itemCache.set(itemId, record2);
+            record = { item: itemResp, domain: ApiClient.serverAddress() };
+            this.itemCache.set(itemId, record);
           }
-          await this.displayItemInfo(record2.item, record2.domain, itemId);
+          await this.displayItemInfo(record.item, record.domain, itemId);
           if (!this.destroyed && generation === this.generation) this.readyItemId = itemId;
         } catch (err) {
           if (this.destroyed || generation !== this.generation) return;
@@ -928,7 +815,7 @@
           try {
             const response = await fetch(url, options);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return decodeItem(await response.json());
+            return export03(await response.json());
           } catch (error) {
             if (i === maxRetries || options.signal?.aborted) throw error;
             const signal = options.signal ?? lifetime.lease().signal;

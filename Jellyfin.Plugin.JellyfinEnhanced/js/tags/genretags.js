@@ -1,31 +1,25 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function members(value) {
-    if (!value) return [];
-    if (!Array.isArray(value)) throw new TypeError("Expected a list");
-    return value;
-  }
-  function memberText(value) {
-    if (typeof value !== "string") throw new TypeError("Read a list member that is not text");
-    return value;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export6 = /* @__PURE__ */ sharedExport(shared2, "memberText");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "members");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
 
   // client/src/features/media-tags/types/genre/genre-table.ts
   var tables = /* @__PURE__ */ (() => {
@@ -254,7 +248,7 @@
       const genreContainer = document.createElement("div");
       genreContainer.className = containerClass;
       genres.forEach(function(member) {
-        const genreName = memberText(member);
+        const genreName = export6(member);
         const iconName = iconFor(genreName);
         const tag = document.createElement("div");
         tag.className = tagClass;
@@ -412,9 +406,9 @@
         render(ctx, el, item, extras) {
           if (ctx.isTagged(el)) return;
           if (ctx.shouldIgnore(el)) return;
-          const own = members(item.Genres);
-          const parent = members(extras.parentSeries?.Genres);
-          const episode = members(extras.firstEpisode?.Genres);
+          const own = export7(item.Genres);
+          const parent = export7(extras.parentSeries?.Genres);
+          const episode = export7(extras.firstEpisode?.Genres);
           let genres = own;
           if (item.Type === "Season" && own.length === 0 && parent.length > 0) {
             genres = parent;
@@ -431,7 +425,7 @@
           if (ctx.isTagged(el)) return true;
           const cached = ctx.hot?.get(itemId) || ctx.getPersistent(itemId);
           if (cached) {
-            const entry = record(cached);
+            const entry = export10(cached);
             const stored = Array.isArray(cached) ? cached : entry.genres;
             if (Array.isArray(stored)) {
               const genres = stored;
@@ -445,7 +439,7 @@
         renderFromServerCache(ctx, el, entry) {
           if (ctx.isTagged(el)) return;
           if (ctx.shouldIgnore(el)) return;
-          const genres = members(entry.Genres);
+          const genres = export7(entry.Genres);
           if (genres.length > 0) {
             insertGenreTags(ctx, el, genres);
           }
@@ -470,7 +464,7 @@
   }
 
   // client/src/features/media-tags/types/genre/genretags-entry.ts
-  createGenreTags(tagRuntimeHost());
+  createGenreTags(export4());
 })();
 })();
 //# sourceMappingURL=genretags.js.map

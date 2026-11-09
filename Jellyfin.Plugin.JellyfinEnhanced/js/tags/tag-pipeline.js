@@ -1,69 +1,45 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function hasApiClient() {
-    const host = window;
-    return host.ApiClient !== void 0 && host.ApiClient !== null;
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function records(value) {
-    return Array.isArray(value) ? value.filter(isRecord) : [];
-  }
-  function stringList(value) {
-    return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
-  }
-  function members(value) {
-    if (!value) return [];
-    if (!Array.isArray(value)) throw new TypeError("Expected a list");
-    return value;
-  }
-  function memberRecord(value) {
-    if (value === null || value === void 0) throw new TypeError("Read a missing list member");
-    return record(value);
-  }
-  function finite(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : null;
-  }
-  function normalizeItemId(id) {
-    return String(id).replace(/-/g, "").toLowerCase();
-  }
-  function idText(value) {
-    return typeof value === "string" && value || typeof value === "number" && Number.isFinite(value) ? String(value) : null;
-  }
-  function errorStatus(error) {
-    return isRecord(error) && typeof error.status === "number" ? error.status : 0;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export12 = /* @__PURE__ */ sharedExport(shared2, "errorStatus");
+  var export2 = /* @__PURE__ */ sharedExport(shared2, "finite");
+  var export3 = /* @__PURE__ */ sharedExport(shared2, "idText");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export5 = /* @__PURE__ */ sharedExport(shared2, "memberRecord");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "members");
+  var export8 = /* @__PURE__ */ sharedExport(shared2, "normalizeItemId");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "records");
+  var export122 = /* @__PURE__ */ sharedExport(shared2, "stringList");
 
   // client/src/features/media-tags/pipeline/state.ts
   function entryPairs(items) {
-    return Object.entries(record(items)).filter((pair) => isRecord(pair[1]));
+    return Object.entries(export10(items)).filter((pair) => export42(pair[1]));
   }
   var servedAtOf = (resp) => typeof resp.servedAt === "number" ? resp.servedAt : 0;
   var textOrEmpty = (value) => typeof value === "string" ? value : "";
-  var cursorOf = (resp) => finite(resp.timestamp) ?? 0;
+  var cursorOf = (resp) => export2(resp.timestamp) ?? 0;
   function firstItem(response) {
     const first = Array.isArray(response.Items) ? response.Items[0] : null;
-    return isRecord(first) ? first : null;
+    return export42(first) ? first : null;
   }
   var MEDIA_TYPES = /* @__PURE__ */ new Set(["Movie", "Episode", "Series", "Season", "BoxSet", "Video"]);
   var isMediaType = (type) => typeof type === "string" && MEDIA_TYPES.has(type);
@@ -193,10 +169,10 @@
     async function reconcileAccess(resp, base, generation) {
       const revision = textOrEmpty(resp.filterRevision);
       if (!Array.isArray(resp.visible) || !s.serverFilterBase || resp.filterBase !== s.serverFilterBase || !revision || !s.serverCache) return false;
-      const visible = new Set(stringList(resp.visible));
+      const visible = new Set(export122(resp.visible));
       const newEntries = entryPairs(resp.items);
-      const carried = record(resp.items);
-      const removed = stringList(resp.removed).filter((id) => !(id in carried));
+      const carried = export10(resp.items);
+      const removed = export122(resp.removed).filter((id) => !(id in carried));
       const next = { timestamp: cursorOf(resp), servedAt: servedAtOf(resp), filterRevision: revision, filterBase: s.serverFilterBase };
       let dropped;
       if (s.serverCacheComplete) {
@@ -283,7 +259,7 @@
           dataType: "json"
         });
         if (JE.session && !JE.session.isCurrent(requestEpoch)) return;
-        if (!isRecord(resp) || !resp.items || !s.serverCache || generation !== s.cacheGeneration) return;
+        if (!export42(resp) || !resp.items || !s.serverCache || generation !== s.cacheGeneration) return;
         deps.applyReviewRatings(resp, requestedAt);
         const revision = textOrEmpty(resp.filterRevision);
         const rolledBack = typeof resp.timestamp === "number" && resp.timestamp < base.timestamp;
@@ -326,8 +302,8 @@
           return;
         }
         const newEntries = entryPairs(resp.items);
-        const carried = record(resp.items);
-        const removed = stringList(resp.removed).filter((id) => !(id in carried));
+        const carried = export10(resp.items);
+        const removed = export122(resp.removed).filter((id) => !(id in carried));
         if (newEntries.length > 0 || removed.length > 0) {
           for (const [id, entry] of newEntries) {
             deps.forgetItemFacts(id);
@@ -437,10 +413,10 @@
     }
     function rememberItemFacts(entry, id = entry.Id, fetchedAt = Date.now()) {
       if (!id || entry.Type !== "Series" && entry.Type !== "Season") return;
-      const itemId = normalizeItemId(id);
+      const itemId = export8(id);
       if (!Number.isFinite(fetchedAt) || fetchedAt + ITEM_FACTS_TTL_MS <= Date.now() || (s.itemFacts.get(itemId)?.fetchedAt ?? -Infinity) > fetchedAt) return;
       forgetItemFacts(itemId);
-      const seriesId = entry.SeriesId ? normalizeItemId(entry.SeriesId) : null;
+      const seriesId = entry.SeriesId ? export8(entry.SeriesId) : null;
       const seasonKey = entry.Type === "Season" && seriesId ? `${seriesId}:${entry.SeasonNumber ?? entry.IndexNumber}` : null;
       if (seasonKey) {
         const previousId = s.seasonFactIds.get(seasonKey);
@@ -476,7 +452,7 @@
       if (!userId) return;
       for (let i = 0; i < missing.length; i += 200) {
         try {
-          const response = record(await deps.apiClient().ajax({
+          const response = export10(await deps.apiClient().ajax({
             type: "POST",
             url: deps.apiClient().getUrl(`/JellyfinEnhanced/tag-data/${userId}`, { latestEpisode: true }),
             data: JSON.stringify(missing.slice(i, i + 200)),
@@ -484,7 +460,7 @@
             dataType: "json"
           }));
           if (generation !== s.cacheGeneration || JE.session && !JE.session.isCurrent(epoch)) return;
-          for (const entry of members(response.Items)) rememberItemFacts(memberRecord(entry));
+          for (const entry of export7(response.Items)) rememberItemFacts(export5(entry));
         } catch {
         }
       }
@@ -519,9 +495,9 @@
         }
         const stored = JSON.parse(localStorage.getItem(LOOK_FACTS_KEY) || "{}");
         const clearedAt = Number(JE.pluginConfig?.ClearLocalStorageTimestamp || 0);
-        if (isRecord(stored)) {
+        if (export42(stored)) {
           for (const [id, facts] of Object.entries(stored)) {
-            if (isRecord(facts) && Number(facts.at) > clearedAt) s.lookFacts.set(id, facts);
+            if (export42(facts) && Number(facts.at) > clearedAt) s.lookFacts.set(id, facts);
           }
           if (s.lookFacts.size !== Object.keys(stored).length) saveLookFacts();
         }
@@ -571,7 +547,7 @@
       if (known && enrichedLookFacts(known)) return known;
       const userId = deps.apiClient().getCurrentUserId();
       const epoch = JE.session?.getEpoch?.();
-      const response = record(await deps.apiClient().ajax({
+      const response = export10(await deps.apiClient().ajax({
         type: "POST",
         url: deps.apiClient().getUrl(`/JellyfinEnhanced/tag-data/${userId}`),
         data: JSON.stringify([itemId]),
@@ -579,7 +555,7 @@
         dataType: "json"
       }));
       if (userId !== deps.apiClient().getCurrentUserId() || epoch !== JE.session?.getEpoch?.()) return null;
-      const item = records(response.Items).find((i) => normalizeItemId(i.Id ?? "") === itemId) || null;
+      const item = export11(response.Items).find((i) => export8(i.Id ?? "") === itemId) || null;
       if (item) rememberLookFacts(itemId, item);
       return item;
     }
@@ -649,22 +625,22 @@
         }
       }
       try {
-        const response = record(await deps.apiClient().ajax({
+        const response = export10(await deps.apiClient().ajax({
           type: "POST",
           url: deps.apiClient().getUrl(`/JellyfinEnhanced/tag-data/${userId}`, needsLatestEpisode ? { latestEpisode: true } : void 0),
           data: JSON.stringify(ids),
           contentType: "application/json",
           dataType: "json"
         }));
-        const answered = members(response.Items);
+        const answered = export7(response.Items);
         if (!isCurrent()) return;
-        if (needsLatestEpisode) answered.forEach((item) => deps.rememberItemFacts(memberRecord(item)));
-        const items = answered.map(memberRecord);
+        if (needsLatestEpisode) answered.forEach((item) => deps.rememberItemFacts(export5(item)));
+        const items = answered.map(export5);
         const stripRevision = typeof response.StripRevision === "string" ? response.StripRevision : null;
         s.tagStripRevision = stripRevision;
         const parentSeriesNeeded = /* @__PURE__ */ new Set();
         for (const item of items) {
-          const seriesId = idText(item.SeriesId);
+          const seriesId = export3(item.SeriesId);
           if ((item.Type === "Season" || item.Type === "Episode") && seriesId && !item.CommunityRating && !item.CriticRating) {
             parentSeriesNeeded.add(seriesId);
           }
@@ -675,10 +651,10 @@
         const parentSeriesMap = /* @__PURE__ */ new Map();
         for (const item of items) {
           if (item.Id === void 0 || item.Id === null) throw new TypeError("A tag-data item has no id");
-          parentSeriesMap.set(normalizeItemId(item.Id), item);
+          parentSeriesMap.set(export8(item.Id), item);
         }
         for (const seriesId of parentSeriesNeeded) {
-          const normalizedId = normalizeItemId(seriesId);
+          const normalizedId = export8(seriesId);
           if (!parentSeriesMap.has(normalizedId)) {
             try {
               const parent = await deps.getParentSeries(userId, seriesId);
@@ -696,7 +672,7 @@
         };
         const renderItem = (item, firstEpisode) => {
           if (!isCurrent()) return;
-          const itemId = normalizeItemId(item.Id);
+          const itemId = export8(item.Id);
           const batchEntries = elMap.get(itemId);
           if (!batchEntries || batchEntries.length === 0) return;
           if (!isMediaType(item.Type)) return;
@@ -704,7 +680,7 @@
           let parentSeries = null;
           let ratingParentSeries = null;
           if (item.SeriesId) {
-            const parentId = normalizeItemId(item.SeriesId);
+            const parentId = export8(item.SeriesId);
             parentSeries = parentSeriesMap.get(parentId) || null;
             if ((item.Type === "Season" || item.Type === "Episode") && !item.CommunityRating && !item.CriticRating) {
               ratingParentSeries = parentSeries;
@@ -740,10 +716,10 @@
         const pendingFirstEps = [];
         let renderedSinceYield = 0;
         for (const item of items) {
-          const firstEpisode = isRecord(item.FirstEpisode) ? item.FirstEpisode : null;
+          const firstEpisode = export42(item.FirstEpisode) ? item.FirstEpisode : null;
           if (anyNeedsFirstEp && firstEpisode?.NeedsStreamFetch) {
             pendingFirstEps.push(
-              deps.getFirstEpisode(userId, String(item.Id), idText(firstEpisode.Id)).then((ep) => renderItem(item, ep)).catch(() => renderItem(item, null)).then(() => {
+              deps.getFirstEpisode(userId, String(item.Id), export3(firstEpisode.Id)).then((ep) => renderItem(item, ep)).catch(() => renderItem(item, null)).then(() => {
                 for (const host of pendingHosts) JE.core.tagRenderer.scheduleCornerStacking(host);
                 pendingHosts = [];
               })
@@ -771,7 +747,7 @@
           try {
             const item = JE.helpers?.getItemCached ? await JE.helpers.getItemCached(itemId, { userId }) : await deps.apiClient().getItem(userId, itemId);
             if (!isCurrent()) return;
-            if (!isRecord(item) || !isMediaType(item.Type)) continue;
+            if (!export42(item) || !isMediaType(item.Type)) continue;
             deps.rememberLookFacts(itemId, item, "item");
             const firstEpisode = item.Type === "Series" || item.Type === "Season" ? await deps.getFirstEpisode(userId, String(item.Id)) : null;
             if (!isCurrent()) break;
@@ -1037,23 +1013,23 @@
       const match = text ? /Items\/([a-f0-9]{32})\//i.exec(text) : null;
       return match?.[1] ? match[1].toLowerCase() : "";
     }
-    function isIdentityChange(record2) {
-      const target = record2.target;
-      if (!(target instanceof Element) || !record2.attributeName) return false;
-      if (record2.attributeName === "style") {
+    function isIdentityChange(record) {
+      const target = record.target;
+      if (!(target instanceof Element) || !record.attributeName) return false;
+      if (record.attributeName === "style") {
         if (!target.matches(CARD_IMAGE_SELECTOR)) return false;
-        const before = imageItemId(record2.oldValue);
+        const before = imageItemId(record.oldValue);
         const after = imageItemId(target.getAttribute("style"));
         return !!before && !!after && before !== after;
       }
       const norm = (value) => (value || "").replace(/-/g, "").toLowerCase();
-      return norm(target.getAttribute(record2.attributeName)) !== norm(record2.oldValue);
+      return norm(target.getAttribute(record.attributeName)) !== norm(record.oldValue);
     }
     function releaseReusedCards(mutations) {
       let released = false;
-      for (const record2 of mutations) {
-        if (!isIdentityChange(record2)) continue;
-        const target = record2.target;
+      for (const record of mutations) {
+        if (!isIdentityChange(record)) continue;
+        const target = record.target;
         if (!(target instanceof HTMLElement)) continue;
         const images = target.matches(CARD_IMAGE_SELECTOR) ? [target] : Array.from(target.querySelectorAll(CARD_IMAGE_SELECTOR));
         for (const el of images) {
@@ -1090,7 +1066,7 @@
       const promise = (async () => {
         if (firstEpisodeId) {
           try {
-            const enriched = record(await deps.apiClient().ajax({
+            const enriched = export10(await deps.apiClient().ajax({
               type: "POST",
               url: deps.apiClient().getUrl(`/JellyfinEnhanced/tag-data/${userId}`),
               data: JSON.stringify([firstEpisodeId]),
@@ -1103,7 +1079,7 @@
           }
         }
         try {
-          const response = record(await deps.apiClient().ajax({
+          const response = export10(await deps.apiClient().ajax({
             type: "GET",
             url: deps.apiClient().getUrl("/Items", {
               ParentId: parentId,
@@ -1121,7 +1097,7 @@
           const episode = firstItem(response);
           if (!episode?.Id) return episode;
           try {
-            const enriched = record(await deps.apiClient().ajax({
+            const enriched = export10(await deps.apiClient().ajax({
               type: "POST",
               url: deps.apiClient().getUrl(`/JellyfinEnhanced/tag-data/${userId}`),
               data: JSON.stringify([episode.Id]),
@@ -1145,7 +1121,7 @@
       const promise = (async () => {
         try {
           const item = JE.helpers?.getItemCached ? await JE.helpers.getItemCached(seriesId, { userId }) : await deps.apiClient().getItem(userId, seriesId);
-          return isRecord(item) ? item : null;
+          return export42(item) ? item : null;
         } catch {
           return null;
         }
@@ -1174,13 +1150,13 @@
       s.reviewRatingsRequestedAt = requestedAt;
       const previous = s.reviewRatings;
       const raw = resp.reviewRatings;
-      if (!isRecord(raw)) {
+      if (!export42(raw)) {
         s.reviewRatings = null;
       } else {
         const map = /* @__PURE__ */ new Map();
         for (const key in raw) {
           const value = raw[key];
-          if (isRecord(value) && typeof value.average === "number" && Number.isFinite(value.average)) {
+          if (export42(value) && typeof value.average === "number" && Number.isFinite(value.average)) {
             map.set(key, value.average);
           }
         }
@@ -1304,7 +1280,7 @@
         const meta = await store.getMeta(scope);
         queuePersist(() => store.clearOtherScopes(scope));
         if (JE.session && !JE.session.isCurrent(requestEpoch)) return false;
-        const storedCursor = meta ? finite(meta.timestamp) : null;
+        const storedCursor = meta ? export2(meta.timestamp) : null;
         const storedFilter = meta?.filterRevision;
         const storedAt = meta?.servedAt;
         if (!meta || meta.pending || !(Number(meta.count) > 0) || !storedCursor || typeof storedFilter !== "string" || typeof storedAt !== "number") return false;
@@ -1411,7 +1387,7 @@
     async function fetchFullPages(userId, fresh, requestEpoch, scope) {
       const get = async (params) => {
         const resp = await deps.apiClient().ajax({ type: "GET", url: deps.apiClient().getUrl(`/JellyfinEnhanced/tag-cache/${userId}`, params), dataType: "json" });
-        return JE.session && !JE.session.isCurrent(requestEpoch) || !isRecord(resp) ? null : resp;
+        return JE.session && !JE.session.isCurrent(requestEpoch) || !export42(resp) ? null : resp;
       };
       const base = fresh ? { fresh } : {};
       for (let attempt = 0; attempt <= FULL_LOAD_RESTARTS; attempt++) {
@@ -1525,7 +1501,7 @@
           releaseStoreGate();
           console.warn(`${logPrefix} Failed to load server cache, using batch fallback:`, err);
           if (!s.serverCache) s.skipStoreThisSession = true;
-          if (errorStatus(err) === 404 && JE.tagCacheStore?.available()) {
+          if (export12(err) === 404 && JE.tagCacheStore?.available()) {
             const scope = cacheScope();
             if (scope) JE.tagCacheStore.clearScope(scope).catch(() => {
             });
@@ -1574,7 +1550,7 @@
     const deps = {};
     Object.assign(
       deps,
-      { apiClient, hasApiClient },
+      { apiClient: export0, hasApiClient: export1 },
       createItemFacts(s, JE, deps),
       createRenderers(s, JE, deps),
       createSeriesLookup(s, JE, deps),
@@ -1882,7 +1858,7 @@
   }
 
   // client/src/features/media-tags/pipeline/tag-pipeline-entry.ts
-  createTagPipeline(tagRuntimeHost());
+  createTagPipeline(export4());
 })();
 })();
 //# sourceMappingURL=tag-pipeline.js.map

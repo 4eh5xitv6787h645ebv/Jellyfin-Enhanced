@@ -1,59 +1,31 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function settingsUi(JE) {
-    return JE.internals?.enhancedUi;
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function own(table, key) {
-    return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "settingsUi");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
-  // client/src/features/media-tags/layout/layout-rules.ts
-  function isLayout(value) {
-    return LAYOUTS.some((layout) => layout === value);
-  }
-  var DEFAULT_ORDER = ["status", "quality", "rating", "ageRating", "language", "genre", "awards", "logos", "custom"];
-  var GROUPS = new Set(DEFAULT_ORDER);
-  var LAYOUT_SLOTS = withoutPrototype({
-    corners: ["tl", "tc", "tr", "ml", "c", "mr", "bl", "bc", "br", "off"],
-    bands: ["top", "bottom", "off"],
-    caption: ["poster", "caption", "off"],
-    summary: ["pill", "hover", "off"],
-    minimal: ["top", "dots", "corner", "hover", "off"]
-  });
-  var LAYOUTS = ["corners", "bands", "caption", "summary", "minimal"];
-  var EDGE_SPACINGS = withoutPrototype({ default: 6, tight: 3, flush: 0 });
-  var POSITION_TO_SLOT = withoutPrototype({ "top-left": "tl", "top-right": "tr", "bottom-left": "bl", "bottom-right": "br", "top-center": "tc", "bottom-center": "bc", "center-left": "ml", "center-right": "mr", "center": "c" });
-  var SLOT_TO_POSITION = withoutPrototype({ tl: "top-left", tr: "top-right", bl: "bottom-left", br: "bottom-right", tc: "top-center", bc: "bottom-center", ml: "center-left", mr: "center-right", c: "center" });
-  function normalizeLayout(value) {
-    const lowered = typeof value === "string" ? value.trim().toLowerCase() : "";
-    return isLayout(lowered) ? lowered : "corners";
-  }
-  function withoutPrototype(value) {
-    Object.setPrototypeOf(value, null);
-    return value;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export9 = /* @__PURE__ */ sharedExport(shared2, "own");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
+
+  // client/generated-shared/stub/client/src/features/media-tags/layout/layout-rules.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/media-tags/layout/layout-rules");
+  var export23 = /* @__PURE__ */ sharedExport(shared3, "normalizeLayout");
 
   // client/src/features/media-tags/editor/tag-item-editor.ts
   function must(value) {
@@ -63,13 +35,13 @@
   function createItemEditor(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced [TagLook]:";
     const TYPES = /* @__PURE__ */ new Set(["Movie", "Series", "Season", "Episode", "BoxSet", "Video"]);
-    const LAYOUTS2 = ["corners", "bands", "caption", "summary", "minimal"];
+    const LAYOUTS = ["corners", "bands", "caption", "summary", "minimal"];
     const SCALES = ["smaller", "default", "larger", "largest"];
     const GAPS = ["tight", "default", "roomy"];
     const EDGES = ["default", "tight", "flush"];
     const MAX_CAP = 10;
     const UNDO_MS = 8e3;
-    const GROUPS2 = {
+    const GROUPS = {
       status: { setting: "statusTagsEnabled", nameKey: "panel_settings_ui_tag_group_status", capFixed: true },
       quality: { setting: "qualityTagsEnabled", nameKey: "panel_settings_ui_tag_group_quality", capAll: true },
       rating: { setting: "ratingTagsEnabled", nameKey: "panel_settings_ui_tag_group_rating", capAll: true },
@@ -268,7 +240,7 @@
       return slot === "off" ? JE.t("panel_settings_ui_tag_slot_off") : JE.t(vocabularyKey("slot", `${layout}_${slot}`));
     }
     function positionsFor(layout, group) {
-      return (own(layoutApi()?.LAYOUT_SLOTS ?? {}, layout) || []).filter((slot) => slot !== "off" && (slot !== "dots" || group === "quality"));
+      return (export9(layoutApi()?.LAYOUT_SLOTS ?? {}, layout) || []).filter((slot) => slot !== "off" && (slot !== "dots" || group === "quality"));
     }
     function stepCap(cap, dir, meta) {
       if (meta.capFixed) return null;
@@ -282,11 +254,11 @@
     }
     function anyTagsOn() {
       const s = JE.currentSettings;
-      return Object.values(GROUPS2).some((g) => s?.[g.setting] === true);
+      return Object.values(GROUPS).some((g) => s?.[g.setting] === true);
     }
     function groupOn(group) {
       if (group === "awards" && JE.pluginConfig?.AwardsTagsEnabled === false) return false;
-      const meta = own(GROUPS2, group);
+      const meta = export9(GROUPS, group);
       return !!meta && JE.currentSettings?.[meta.setting] === true;
     }
     function lookOf(draft, scope) {
@@ -371,8 +343,8 @@
     }
     async function fetchItem(id) {
       try {
-        const item = await apiClient().getItem(apiClient().getCurrentUserId(), id);
-        return isRecord(item) ? item : null;
+        const item = await export0().getItem(export0().getCurrentUserId(), id);
+        return export42(item) ? item : null;
       } catch (err) {
         console.warn(`${logPrefix} could not read item ${id}:`, err);
         return null;
@@ -380,8 +352,8 @@
     }
     async function isAdministrator() {
       try {
-        const user = await apiClient().getCurrentUser();
-        return record(record(user).Policy).IsAdministrator === true;
+        const user = await export0().getCurrentUser();
+        return export10(export10(user).Policy).IsAdministrator === true;
       } catch {
         return false;
       }
@@ -425,7 +397,7 @@
       const hasSeries = type === "Series" || !!seriesId;
       const seriesTarget = type === "Series" ? id : seriesId;
       const read = look.read();
-      const own2 = read.locks.get(id) || null;
+      const own = read.locks.get(id) || null;
       const seriesLock = seriesId ? read.locks.get(seriesId) || null : null;
       const ownOverride = read.overrides.get(id) || null;
       const seriesOverride = seriesId ? read.overrides.get(seriesId) || null : null;
@@ -448,8 +420,8 @@
       const base = L.normalizeSettings();
       const conf = L.resolveLayout(context);
       const usable = (lock) => lock && (lock !== seriesLock || lock.scope !== "item");
-      const baseCap = (group) => own(base.caps, group) ?? 0;
-      const startLock = serverMode ? options.look ? look.normalizeLock(options.look) : null : own2 || (usable(seriesLock) ? seriesLock : null) || ownOverride || (seriesOverride && seriesOverride.scope !== "item" ? seriesOverride : null);
+      const baseCap = (group) => export9(base.caps, group) ?? 0;
+      const startLock = serverMode ? options.look ? look.normalizeLock(options.look) : null : own || (usable(seriesLock) ? seriesLock : null) || ownOverride || (seriesOverride && seriesOverride.scope !== "item" ? seriesOverride : null);
       let effective = conf;
       if (serverMode && startLock) {
         const sample = document.createElement("div");
@@ -476,12 +448,12 @@
         tagGap: effective.tagGap === base.tagGap ? null : effective.tagGap,
         edge: effective.edge === base.edge ? null : effective.edge
       };
-      for (const layout of LAYOUTS2) draft.slots[layout] = { ...base.profiles[layout] };
+      for (const layout of LAYOUTS) draft.slots[layout] = { ...base.profiles[layout] };
       let openGroup = null;
       let hiddenOpen = false;
       const lastSlot = {};
       draft.slots[startLayout] = { ...effective.slots };
-      let scope = !hasSeries ? "item" : own2 ? type === "Series" && own2.scope !== "item" ? "series" : "item" : usable(seriesLock) ? "series" : type === "Series" ? "series" : "item";
+      let scope = !hasSeries ? "item" : own ? type === "Series" && own.scope !== "item" ? "series" : "item" : usable(seriesLock) ? "series" : type === "Series" ? "series" : "item";
       if (serverMode && type === "Series" && startLock) scope = startLock.scope === "item" ? "item" : "series";
       const keptAt = (target2) => target2 ? read.locks.get(target2) || null : null;
       const overrideAt = (target2) => target2 ? read.overrides.get(target2) || null : null;
@@ -519,7 +491,7 @@
                         <label class="je-tie-pill"><input type="radio" name="${uid}Scope" value="item">${tx(type === "Series" ? "tag_item_editor_scope_series_only" : "tag_item_editor_scope_item", { type: typeName })}</label>
                         <label class="je-tie-pill"><input type="radio" name="${uid}Scope" value="series">${tx("tag_item_editor_scope_series")}</label></div></fieldset>` : ""}
                     <fieldset class="je-tie-box" aria-describedby="${uid}LayoutDesc"><legend>${tx("common_layout")}</legend><div class="je-tie-tiles">
-                        ${LAYOUTS2.map((l) => `<label class="je-tie-tile"><input type="radio" name="${uid}Layout" value="${l}"><span class="je-tie-art" data-layout="${l}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${tx(vocabularyKey("layout", l))}</label>`).join("")}</div><p class="je-tie-hint je-tie-under" id="${uid}LayoutDesc" aria-live="polite"></p></fieldset>
+                        ${LAYOUTS.map((l) => `<label class="je-tie-tile"><input type="radio" name="${uid}Layout" value="${l}"><span class="je-tie-art" data-layout="${l}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${tx(vocabularyKey("layout", l))}</label>`).join("")}</div><p class="je-tie-hint je-tie-under" id="${uid}LayoutDesc" aria-live="polite"></p></fieldset>
                     <fieldset class="je-tie-box" aria-describedby="${uid}DensityDesc"><legend>${tx("panel_settings_ui_tag_density")}</legend><div class="je-tie-pills">
                         ${["full", "compact"].map((d) => `<label class="je-tie-pill"><input type="radio" name="${uid}Density" value="${d}">${tx(`panel_settings_ui_tag_density_${d}`)}</label>`).join("")}</div><p class="je-tie-hint je-tie-under" id="${uid}DensityDesc">${tx("panel_settings_ui_tag_density_desc")}</p></fieldset>
                     <section class="je-tie-box" aria-labelledby="${uid}Groups" aria-describedby="${uid}GroupsHint"><h4 class="je-tie-h" id="${uid}Groups">${tx("tag_item_editor_groups_title")}</h4><p class="je-tie-hint je-tie-groups-hint" id="${uid}GroupsHint">${tx(serverMode ? "tag_item_editor_groups_hint_server" : "tag_item_editor_groups_hint")}</p><div data-tie-groups></div></section>
@@ -547,15 +519,15 @@
       const everyoneBox = dialog.querySelector("[data-tie-everyone]");
       const previewSide = must(dialog.querySelector(".je-tie-side"));
       const hoverNote = must(dialog.querySelector("[data-tie-hover-note]"));
-      const interaction = settingsUi(JE)?.bindTagPreviewInteraction([dialog.querySelector(".je-tie-card")], dialog.querySelector(".je-tie-view"), {
+      const interaction = export3(JE)?.bindTagPreviewInteraction([dialog.querySelector(".je-tie-card")], dialog.querySelector(".je-tie-view"), {
         change: (active2) => {
           const hidden = !!JE.currentSettings?.tagsHideOnHover;
           previewSide.dataset.jeHideOnHover = String(hidden);
           hoverNote.hidden = !(active2 && hidden);
         }
       });
-      const primaryTag = record(item.ImageTags).Primary;
-      const image = primaryTag ? apiClient().getScaledImageUrl(id, { type: "Primary", maxHeight: 480, tag: String(primaryTag) }) : "";
+      const primaryTag = export10(item.ImageTags).Primary;
+      const image = primaryTag ? export0().getScaledImageUrl(id, { type: "Primary", maxHeight: 480, tag: String(primaryTag) }) : "";
       if (image) target.style.backgroundImage = `url("${image}")`;
       const jump = must(dialog.querySelector("[data-tie-jump]"));
       if (image) must(jump.querySelector(".je-tie-jump-thumb")).style.backgroundImage = `url("${image}")`;
@@ -578,7 +550,7 @@
       let dirty = false;
       const present = () => {
         L.setPreviewLook(target, { ...lookOf(draft, scopeField()), locked: keep });
-        const inherited = before.source === "lock" && !own2 || before.source === "override" && !ownOverride;
+        const inherited = before.source === "lock" && !own || before.source === "override" && !ownOverride;
         const unknown = !facts && (read.rules.length > 0 || !!seriesId);
         if (serverMode) sourceEl.replaceChildren(document.createTextNode(`${JE.t("tag_item_editor_editing")} `), Object.assign(document.createElement("strong"), { textContent: JE.t("tag_item_editor_editing_server") }));
         else sourceEl.replaceChildren(document.createTextNode(`${JE.t("tag_item_editor_now")} `), Object.assign(document.createElement("strong"), { textContent: unknown ? JE.t("tag_item_editor_source_unknown") : sourceText(before, !!inherited) }));
@@ -596,7 +568,7 @@
         if (keep) return "tag_item_editor_save_mine";
         if (everyone) return "tag_item_editor_save_everyone";
         const target2 = targetOf();
-        const removes = !!keptAt(target2) || target2 !== id && !!own2 || !!everyoneBox && !!overrideAt(target2);
+        const removes = !!keptAt(target2) || target2 !== id && !!own || !!everyoneBox && !!overrideAt(target2);
         if (removes) return "elsewhere_settings_save";
         return dirty ? "tag_item_editor_lock_save" : "tag_item_editor_done";
       };
@@ -620,7 +592,7 @@
         const order = [...ordered.filter((g) => groupOn(g)), ...ordered.filter((g) => !groupOn(g))];
         const tucked = (group) => !serverMode && !groupOn(group);
         const rowHtml = (group) => {
-          const meta = own(GROUPS2, group);
+          const meta = export9(GROUPS, group);
           if (!meta) return "";
           const slot = slots[group] || "off";
           const on = slot !== "off";
@@ -646,8 +618,8 @@
                     <button type="button" class="je-tie-gopen" data-tie-open data-tie-key="${group}-open" aria-expanded="${open2}" aria-controls="${uid}-${group}-detail" aria-label="${tx("tag_item_editor_group_edit", { group: gname })}" ${on ? "" : "disabled"}>${tx("tag_shapes_edit")}<span class="material-icons" aria-hidden="true">expand_more</span></button>
                     <div class="je-tie-detail" id="${uid}-${group}-detail" ${open2 && on ? "" : "hidden"}><div class="je-tie-where">${where}</div>${stepper}</div></li>`;
         };
-        const shown = order.filter((g) => own(GROUPS2, g) && !tucked(g));
-        const hidden = order.filter((g) => own(GROUPS2, g) && tucked(g));
+        const shown = order.filter((g) => export9(GROUPS, g) && !tucked(g));
+        const hidden = order.filter((g) => export9(GROUPS, g) && tucked(g));
         const scopeNote = JE.core.tagSettingsMatrix?.offers("itemEditor", "quality", "scopes");
         groupsList.innerHTML = `<ul class="je-tie-groups">${shown.map(rowHtml).join("")}</ul>` + (typeof scopeNote === "string" ? `<p class="je-tie-hint" data-je-scope-na="itemEditor">${tx(scopeNote)}</p>` : "") + (hidden.length ? `<details class="je-tie-hidden" data-tie-hidden ${hiddenOpen ? "open" : ""}><summary class="je-tie-hidden-toggle"><span class="material-icons" aria-hidden="true">expand_more</span>${tx("tag_item_editor_hidden_groups", { n: hidden.length })}</summary><p class="je-tie-hint" id="${uid}HiddenHint">${tx("tag_item_editor_hidden_groups_hint")}</p><ul class="je-tie-groups">${hidden.map(rowHtml).join("")}</ul></details>` : "");
         if (!focusKey) return;
@@ -698,7 +670,7 @@
         const input = e.target;
         if (!(input instanceof HTMLInputElement)) return;
         if (input.name === `${uid}Layout`) {
-          draft.layout = normalizeLayout(input.value);
+          draft.layout = export23(input.value);
           describeLayout();
           renderGroups();
         } else if (input.name === `${uid}Density`) {
@@ -748,7 +720,7 @@
         const button = e.target.closest("[data-tie-step]");
         if (!button || button.disabled) return;
         const group = button.closest("[data-group]")?.dataset.group || "";
-        const meta = own(GROUPS2, group);
+        const meta = export9(GROUPS, group);
         if (!meta || singleChip(group)) return;
         const cap = draft.caps[group] ?? baseCap(group);
         const next = stepCap(cap, Number(button.dataset.tieStep), meta);
@@ -835,19 +807,19 @@
           if (ok) saved.scopes.add(scope2);
         };
         try {
-          const removedIds = [targetId, ...own2 ? [id] : []];
-          const lockDocument = record(JE.currentSettings?.tagLayoutLocks);
+          const removedIds = [targetId, ...own ? [id] : []];
+          const lockDocument = export10(JE.currentSettings?.tagLayoutLocks);
           const locksBefore = Object.fromEntries(removedIds.filter((key) => lockDocument[key]).map((key) => [key, JSON.parse(JSON.stringify(lockDocument[key]))]));
-          const hadLock = !!keptAt(targetId) || targetId !== id && !!own2;
+          const hadLock = !!keptAt(targetId) || targetId !== id && !!own;
           if (saved.scopes.has("personal")) {
           } else if (keep) {
-            const remove = targetId !== id && own2 ? [id] : [];
+            const remove = targetId !== id && own ? [id] : [];
             const ok = await look.editLocks({ [targetId]: chosen }, remove);
             if (!isCurrent()) return;
             note("personal", ok);
             if (ok) JE.toast?.(esc(JE.t("tag_item_editor_kept", { name: label })));
           } else if (hadLock) {
-            const ok = await look.editLocks({}, [targetId, ...own2 ? [id] : []]);
+            const ok = await look.editLocks({}, [targetId, ...own ? [id] : []]);
             if (!isCurrent()) return;
             note("personal", ok);
             if (ok) showUndo(JE.t("tag_item_editor_unlocked", { name: label }), () => look.restoreLocks(locksBefore), options.host);
@@ -918,7 +890,7 @@
   }
 
   // client/src/features/media-tags/editor/tag-item-editor-entry.ts
-  createItemEditor(tagRuntimeHost());
+  createItemEditor(export4());
 })();
 })();
 //# sourceMappingURL=tag-item-editor.js.map

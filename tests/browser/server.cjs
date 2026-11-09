@@ -24,6 +24,13 @@ http.createServer((req, res) => {
     res.once('close', () => { clearTimeout(timer); state.closed = true; });
     return;
   }
+  // canopy K1b: what the bundle's earlier scripts publish on JE.core.sharedModules (client/shared-modules.json), for
+  // pages that load a script without its provider (fixture.html, specs that build on it). Compiled from source.
+  if (pathname === '/tests/browser/shared-modules.js') {
+    res.setHeader('Content-Type', 'text/javascript');
+    res.end(require('../frontend/helpers/feature-context.cjs').sharedModulesInstaller());
+    return;
+  }
   const file = pathname === '/' ? path.join(__dirname, 'fixture.html') : path.resolve(root, '.' + pathname);
   if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
   fs.readFile(file, (error, data) => {

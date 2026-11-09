@@ -1,209 +1,42 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/details-providers/host.ts
-  function hostWindow() {
-    return window;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
-  }
-  function api() {
-    const client = hostWindow().ApiClient;
-    if (!client) throw new Error("Jellyfin ApiClient unavailable");
-    return client;
-  }
-  function hasApi() {
-    return hostWindow().ApiClient !== void 0;
-  }
-  function currentUserId() {
-    const id = hostWindow().ApiClient?.getCurrentUserId();
-    return typeof id === "string" && id ? id : null;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/details-providers/wire.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function field(value, key) {
-    return isRecord(value) ? value[key] : void 0;
-  }
-  function str(value) {
-    return typeof value === "string" ? value : void 0;
-  }
-  function num(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-  }
-  function int(value) {
-    return typeof value === "number" && Number.isInteger(value) ? value : void 0;
-  }
-  function bool(value) {
-    return typeof value === "boolean" ? value : void 0;
-  }
-  function list(value) {
-    return Array.isArray(value) ? value : [];
-  }
-  function stringList(value) {
-    return list(value).filter((entry) => typeof entry === "string");
-  }
-  function providerId(value) {
-    if (typeof value === "string") return value || void 0;
-    if (typeof value === "number" && Number.isFinite(value) && value !== 0) return String(value);
-    return void 0;
-  }
-  function decodeProviderIds(value) {
-    const ids = {};
-    if (!isRecord(value)) return ids;
-    const tmdb = providerId(value.Tmdb), imdb = providerId(value.Imdb), tvdb = providerId(value.Tvdb);
-    const aniList = providerId(value.AniList), anilist = providerId(value.Anilist);
-    if (tmdb !== void 0) ids.Tmdb = tmdb;
-    if (imdb !== void 0) ids.Imdb = imdb;
-    if (tvdb !== void 0) ids.Tvdb = tvdb;
-    if (aniList !== void 0) ids.AniList = aniList;
-    if (anilist !== void 0) ids.Anilist = anilist;
-    return ids;
-  }
-  function decodeStreams(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.filter(isRecord).map((stream) => {
-      const result = {};
-      const type = str(stream.Type), language = str(stream.Language);
-      if (type !== void 0) result.Type = type;
-      if (language !== void 0) result.Language = language;
-      return result;
-    });
-  }
-  function decodeSources(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.map((source) => {
-      const result = {};
-      const id = str(field(source, "Id")), streams = decodeStreams(field(source, "MediaStreams"));
-      if (id !== void 0) result.Id = id;
-      if (streams !== void 0) result.MediaStreams = streams;
-      return result;
-    });
-  }
-  function set(item, key, value) {
-    if (value !== void 0) item[key] = value;
-  }
-  function decodeDetailsItem(value) {
-    if (!isRecord(value)) return null;
-    const item = { ProviderIds: decodeProviderIds(value.ProviderIds), SeriesProviderIds: decodeProviderIds(value.SeriesProviderIds) };
-    set(item, "Id", str(value.Id));
-    set(item, "Type", str(value.Type));
-    set(item, "Name", str(value.Name));
-    set(item, "SeriesId", str(value.SeriesId));
-    set(item, "SeriesName", str(value.SeriesName));
-    set(item, "IndexNumber", num(value.IndexNumber));
-    set(item, "ParentIndexNumber", num(value.ParentIndexNumber));
-    set(item, "PremiereDate", str(value.PremiereDate));
-    set(item, "DisplayOrder", str(value.DisplayOrder));
-    set(item, "MediaSources", decodeSources(value.MediaSources));
-    set(item, "MediaStreams", decodeStreams(value.MediaStreams));
-    set(item, "FirstEpisodeId", str(field(value.FirstEpisode, "Id")));
-    if (Array.isArray(value.Tags)) item.Tags = stringList(value.Tags);
-    const userData = value.UserData;
-    set(item, "Played", bool(field(userData, "Played")));
-    set(item, "UnplayedItemCount", num(field(userData, "UnplayedItemCount")));
-    return item;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/details-providers/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "api");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bridge");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "currentUserId");
 
-  // client/src/features/details-providers/page.ts
-  function hashItemId(hash = window.location.hash) {
-    try {
-      return new URLSearchParams(hash.split("?")[1] ?? "").get("id");
-    } catch {
-      return null;
-    }
-  }
-  function visibleDetailPage() {
-    return document.querySelector("#itemDetailPage:not(.hide)");
-  }
-  function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
-    if (helpers?.getItemCached) {
-      return withUser ? helpers.getItemCached(itemId, { userId }) : helpers.getItemCached(itemId);
-    }
-    return api().getItem(userId, itemId);
-  }
-  async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
-    return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
-  }
-  function detailsLease(session, itemId, page) {
-    const sameSession = sessionLease(session);
-    return {
-      itemId,
-      page,
-      current: () => sameSession() && hashItemId() === itemId && page.isConnected && visibleDetailPage() === page
-    };
-  }
-  function sessionLease(session) {
-    const epoch = session?.getEpoch();
-    const userId = currentUserId();
-    const client = api();
-    const root = client.getUrl("/");
-    const token = client.accessToken();
-    return () => hasApi() && api() === client && client.getUrl("/") === root && client.accessToken() === token && (!session || epoch === void 0 || session.isCurrent(epoch)) && currentUserId() === userId;
-  }
-  function isDetailHook(element, hash) {
-    const hasItemId = window.location.hash.includes("id=") || typeof hash === "string" && hash.includes("id=");
-    const isItemDetailElement = !!element && (element.id === "itemDetailPage" || element.classList.contains("itemDetailPage"));
-    return hasItemId || isItemDetailElement;
-  }
-  function detailPageHook(enabled, unregister, process, retry) {
-    return async (_view, element, hash) => {
-      if (!enabled()) {
-        unregister();
-        return;
-      }
-      if (!isDetailHook(element, hash)) return;
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      const page = visibleDetailPage();
-      if (page) {
-        process(page);
-      } else if (retry) {
-        setTimeout(() => {
-          const retryPage = visibleDetailPage();
-          if (retryPage) process(retryPage);
-        }, 500);
-      }
-    };
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/page.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/details-providers/page");
+  var export02 = /* @__PURE__ */ sharedExport(shared2, "detailPageHook");
+  var export12 = /* @__PURE__ */ sharedExport(shared2, "detailsLease");
+  var export32 = /* @__PURE__ */ sharedExport(shared2, "hashItemId");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "lookupDetailsItem");
 
-  // client/src/features/shared/url-domain.ts
-  function safeExternalUrl(value, base) {
-    try {
-      const url = new URL(value, base);
-      return ["http:", "https:", "mailto:", "tel:", "ftp:", "blob:"].includes(url.protocol) ? value : "#";
-    } catch {
-      return "#";
-    }
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/links.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/details-providers/links");
+  var export03 = /* @__PURE__ */ sharedExport(shared3, "externalLink");
+  var export2 = /* @__PURE__ */ sharedExport(shared3, "pathSegment");
 
-  // client/src/features/details-providers/links.ts
-  function safeHref(url) {
-    return safeExternalUrl(url, window.location.href);
-  }
-  function externalLink(helpers, url, options = {}) {
-    const shared = helpers?.createExternalLink;
-    if (shared) return shared(url, options);
-    const anchor = document.createElement("a");
-    anchor.setAttribute("is", "emby-linkbutton");
-    anchor.href = safeHref(url);
-    anchor.target = "_blank";
-    anchor.rel = "noopener noreferrer";
-    if (options.title) anchor.title = options.title;
-    if (options.className) anchor.className = options.className;
-    if (options.text) anchor.textContent = options.text;
-    if (options.resetStyle) anchor.style.cssText = "padding:0;background:none;border-radius:0;min-width:0;";
-    if (typeof options.setup === "function") options.setup(anchor);
-    return anchor;
-  }
-  function pathSegment(id) {
-    return encodeURIComponent(id);
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/wire.ts
+  var shared4 = /* @__PURE__ */ sharedModule("features/details-providers/wire");
+  var export5 = /* @__PURE__ */ sharedExport(shared4, "field");
+  var export6 = /* @__PURE__ */ sharedExport(shared4, "int");
+  var export72 = /* @__PURE__ */ sharedExport(shared4, "isRecord");
+  var export8 = /* @__PURE__ */ sharedExport(shared4, "list");
+  var export9 = /* @__PURE__ */ sharedExport(shared4, "num");
+  var export11 = /* @__PURE__ */ sharedExport(shared4, "str");
 
   // client/src/features/details-providers/provider-domain.ts
   async function resolveProviderTarget(item, allowPerson, seriesLookup) {
@@ -228,27 +61,27 @@
     return tmdbId ? { tmdbId, mediaType } : null;
   }
   function isUnconfirmed(value) {
-    return field(value, "Confirmed") === false;
+    return export5(value, "Confirmed") === false;
   }
   function decodeDddEntry(value) {
-    if (!isRecord(value) || !value.Found) return null;
-    const topics = list(value.Topics).filter(isRecord).flatMap((topic) => {
-      const id = int(topic.Id);
-      return id === void 0 ? [] : [{ Id: id, Name: str(topic.Name) ?? "", Yes: num(topic.Yes) ?? 0, No: num(topic.No) ?? 0 }];
+    if (!export72(value) || !value.Found) return null;
+    const topics = export8(value.Topics).filter(export72).flatMap((topic) => {
+      const id = export6(topic.Id);
+      return id === void 0 ? [] : [{ Id: id, Name: export11(topic.Name) ?? "", Yes: export9(topic.Yes) ?? 0, No: export9(topic.No) ?? 0 }];
     });
-    return topics.length ? { ItemId: int(value.ItemId), Topics: topics } : null;
+    return topics.length ? { ItemId: export6(value.ItemId), Topics: topics } : null;
   }
   function decodeDddCatalog(value) {
-    return list(field(value, "Topics")).filter(isRecord).flatMap((topic) => {
-      const id = int(topic.Id);
-      return id === void 0 ? [] : [{ Id: id, Name: str(topic.Name) ?? "", Category: str(topic.Category) ?? "", Group: str(topic.Group) ?? "" }];
+    return export8(export5(value, "Topics")).filter(export72).flatMap((topic) => {
+      const id = export6(topic.Id);
+      return id === void 0 ? [] : [{ Id: id, Name: export11(topic.Name) ?? "", Category: export11(topic.Category) ?? "", Group: export11(topic.Group) ?? "" }];
     });
   }
   function decodeDddTriggers(value) {
-    if (!isRecord(value)) return null;
+    if (!export72(value)) return null;
     if (!Object.prototype.hasOwnProperty.call(value, "Triggers")) return [];
     if (!Array.isArray(value.Triggers)) return null;
-    const ids = value.Triggers.map(int);
+    const ids = value.Triggers.map(export6);
     if (ids.some((id) => id === void 0)) return null;
     return ids.filter((id) => id !== void 0);
   }
@@ -278,7 +111,7 @@
   }
 
   // client/src/features/details-providers/doesthedogdie.ts
-  var JE = bridge("DoesTheDogDie");
+  var JE = export1("DoesTheDogDie");
   JE.initializeDoesTheDogDieScript = function initializeDoesTheDogDieScript() {
     if (!JE.pluginConfig?.DoesTheDogDieEnabled) {
       console.log("🪼 Jellyfin Enhanced: DoesTheDogDie feature disabled.");
@@ -289,7 +122,7 @@
     const POWERED_BY = "Powered by DoesTheDogDie.com";
     let picked = null;
     let catalogPromise = null;
-    const owner = () => `${api().getUrl("/")}|${api().accessToken()}|${currentUserId() ?? ""}|${JE.session ? JE.session.getEpoch() : 0}`;
+    const owner = () => `${export0().getUrl("/")}|${export0().accessToken()}|${export3() ?? ""}|${JE.session ? JE.session.getEpoch() : 0}`;
     JE.session?.onUserChange("doesthedogdie", () => {
       picked = null;
       document.querySelectorAll(".je-ddd-modal").forEach((modal) => modal.remove());
@@ -312,7 +145,7 @@
       const key = owner();
       if (picked && picked.owner === key) return picked.ids;
       try {
-        const client = api();
+        const client = export0();
         const userId = client.getCurrentUserId();
         const doc = await client.ajax({
           type: "GET",
@@ -386,7 +219,7 @@
         }
         const foot = el("div", "je-ddd-foot");
         const href = `https://www.doesthedogdie.com/media/${entry.ItemId}`;
-        foot.appendChild(externalLink(JE.helpers, href, { text: POWERED_BY, resetStyle: true }));
+        foot.appendChild(export03(JE.helpers, href, { text: POWERED_BY, resetStyle: true }));
         body.appendChild(foot);
       };
       render();
@@ -406,15 +239,15 @@
       const search = el("input");
       search.type = "text";
       search.placeholder = JE.t("ddd_picker_search");
-      const list2 = el("div", "je-ddd-list");
-      list2.innerHTML = JE.core.ui.skeletonGridHtml(6, { minWidth: "100%", height: "2em", label: JE.t("ddd_picker_loading") });
+      const list = el("div", "je-ddd-list");
+      list.innerHTML = JE.core.ui.skeletonGridHtml(6, { minWidth: "100%", height: "2em", label: JE.t("ddd_picker_loading") });
       const cancel = el("button", null, JE.t("elsewhere_settings_cancel"));
       const save = el("button", "je-ddd-save", JE.t("elsewhere_settings_save"));
       cancel.type = save.type = "button";
       save.disabled = true;
       const buttons = el("div", "je-ddd-btns");
       buttons.append(cancel, save);
-      box.append(el("h3", null, JE.t("ddd_picker_title")), search, list2, buttons);
+      box.append(el("h3", null, JE.t("ddd_picker_title")), search, list, buttons);
       modal.appendChild(box);
       document.body.appendChild(modal);
       const close = () => modal.remove();
@@ -427,22 +260,22 @@
       try {
         [topics, current] = await Promise.all([getCatalog(), loadPicked()]);
       } catch {
-        list2.textContent = JE.t("ddd_picker_failed");
+        list.textContent = JE.t("ddd_picker_failed");
         return;
       }
       if (!modal.isConnected) return;
       if (!current || owner() !== key) {
-        list2.textContent = JE.t("ddd_picker_failed");
+        list.textContent = JE.t("ddd_picker_failed");
         return;
       }
       const draft = new Set(current);
       const fill = (query) => {
-        list2.replaceChildren();
+        list.replaceChildren();
         let lastGroup = null;
         for (const topic of filterCatalog(topics, query)) {
           const group = topic.Category ? `${topic.Group} / ${topic.Category}` : topic.Group;
           if (group !== lastGroup) {
-            list2.appendChild(el("div", "je-ddd-group", group));
+            list.appendChild(el("div", "je-ddd-group", group));
             lastGroup = group;
           }
           const row = el("label", "je-ddd-row");
@@ -454,7 +287,7 @@
             else draft.delete(topic.Id);
           });
           row.append(checkbox, el("span", null, capitalize(topic.Name)));
-          list2.appendChild(row);
+          list.appendChild(row);
         }
       };
       fill("");
@@ -483,8 +316,8 @@
         } catch (_) {
           if (owner() === key && modal.isConnected) {
             const key2 = "ddd_picker_save_failed";
-            const text2 = JE.t(key2);
-            failure.textContent = text2 && text2 !== key2 ? text2 : "Could not save your choices. Try again.";
+            const text = JE.t(key2);
+            failure.textContent = text && text !== key2 ? text : "Could not save your choices. Try again.";
           }
         } finally {
           saving = false;
@@ -514,7 +347,7 @@
     async function fetchEntry(type, tmdbId) {
       try {
         const cacheKey = `ddd:/${type}/${tmdbId}`;
-        const data = await JE.core.api.plugin(`/ddd/${type}/${pathSegment(tmdbId)}`, { cacheKey });
+        const data = await JE.core.api.plugin(`/ddd/${type}/${export2(tmdbId)}`, { cacheKey });
         if (isUnconfirmed(data)) JE.core.api.manager.clearCacheMatching(cacheKey);
         return decodeDddEntry(data);
       } catch (e) {
@@ -524,12 +357,12 @@
     }
     async function processPage(page) {
       try {
-        const itemId = hashItemId();
-        const userId = currentUserId();
+        const itemId = export32();
+        const userId = export3();
         if (!itemId || !userId) return;
-        const lease = detailsLease(JE.session, itemId, page);
-        const item = await lookupDetailsItem(JE.helpers, itemId, true, userId);
-        const { target } = await resolveProviderTarget(item, false, (seriesId) => lookupDetailsItem(JE.helpers, seriesId, true, userId));
+        const lease = export12(JE.session, itemId, page);
+        const item = await export7(JE.helpers, itemId, true, userId);
+        const { target } = await resolveProviderTarget(item, false, (seriesId) => export7(JE.helpers, seriesId, true, userId));
         if (!lease.current()) return;
         if (!target) {
           if (lease.current()) removeSection(page);
@@ -553,7 +386,7 @@
     }
     injectCss();
     const unregister = JE.helpers.onViewPage(
-      detailPageHook(() => !!JE.pluginConfig?.DoesTheDogDieEnabled, () => unregister?.(), (page) => {
+      export02(() => !!JE.pluginConfig?.DoesTheDogDieEnabled, () => unregister?.(), (page) => {
         void processPage(page);
       }, true),
       { pages: null, fetchItem: false, immediate: true }

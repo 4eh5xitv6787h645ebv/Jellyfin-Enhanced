@@ -1,20 +1,77 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function settingsUi(JE) {
-    return JE.internals?.enhancedUi;
-  }
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
 
-  // client/src/features/media-tags/rules-host.ts
-  function tagRulesHost() {
-    const host = window;
-    if (!host.JellyfinEnhanced)
-      throw new Error("Jellyfin Enhanced must load before tag rules");
-    return host.JellyfinEnhanced;
+  // client/src/host/context.ts
+  function publishSharedModules(modules) {
+    const JE = window.JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ?? (JE.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
+  }
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
   // client/src/features/media-tags/layout/layout-rules.ts
+  var layout_rules_exports = {};
+  __export(layout_rules_exports, {
+    DEFAULT_CAPS: () => DEFAULT_CAPS,
+    DEFAULT_ORDER: () => DEFAULT_ORDER,
+    DEFAULT_PROFILES: () => DEFAULT_PROFILES,
+    EDGE_SPACINGS: () => EDGE_SPACINGS,
+    ENABLED_SETTING: () => ENABLED_SETTING,
+    GROUPS: () => GROUPS,
+    LAYOUTS: () => LAYOUTS,
+    LAYOUT_SLOTS: () => LAYOUT_SLOTS,
+    MAX_CAP: () => MAX_CAP,
+    POSITION_SETTINGS: () => POSITION_SETTINGS,
+    POSITION_TO_SLOT: () => POSITION_TO_SLOT,
+    RECOMMENDED_SHAPES: () => RECOMMENDED_SHAPES,
+    SHAPES: () => SHAPES,
+    SLOT_TO_POSITION: () => SLOT_TO_POSITION,
+    TAG_GAPS: () => TAG_GAPS,
+    TAG_SCALES: () => TAG_SCALES,
+    hasOwn: () => hasOwn,
+    isLayout: () => isLayout,
+    isLegacySettings: () => isLegacySettings,
+    lookKeyOf: () => lookKeyOf,
+    lookSettings: () => lookSettings,
+    normalizeGroup: () => normalizeGroup,
+    normalizeGroupCaps: () => normalizeGroupCaps,
+    normalizeLayout: () => normalizeLayout,
+    normalizeSettings: () => normalizeSettings,
+    pick: () => pick,
+    positionSlot: () => positionSlot,
+    promoteLegacySettings: () => promoteLegacySettings,
+    readCap: () => readCap,
+    readEdge: () => readEdge,
+    readGap: () => readGap,
+    readOrder: () => readOrder,
+    readProfile: () => readProfile,
+    readScale: () => readScale,
+    readShapeLook: () => readShapeLook,
+    readShapeOverrides: () => readShapeOverrides,
+    shapesToWire: () => shapesToWire,
+    singleChipGroup: () => singleChipGroup,
+    validSlots: () => validSlots,
+    withShape: () => withShape
+  });
   var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
   function isLayout(value) {
     return LAYOUTS.some((layout2) => layout2 === value);
@@ -357,6 +414,21 @@
   function withoutPrototype(value) {
     Object.setPrototypeOf(value, null);
     return value;
+  }
+
+  // client/generated-shared/publish/js/core/tag-layout.js.ts
+  publishSharedModules({ "features/media-tags/layout/layout-rules": layout_rules_exports });
+
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "settingsUi");
+
+  // client/src/features/media-tags/rules-host.ts
+  function tagRulesHost() {
+    const host = window;
+    if (!host.JellyfinEnhanced)
+      throw new Error("Jellyfin Enhanced must load before tag rules");
+    return host.JellyfinEnhanced;
   }
 
   // client/src/features/media-tags/layout/state.ts
@@ -2614,7 +2686,7 @@ ${scoped} {${original}}`;
     t: (key, values) => bridge.t(key, values)
   });
   bridge.mediaTagsSettingsUi = { get registry() {
-    return settingsUi(bridge);
+    return export3(bridge);
   } };
   bridge.core.tagLayout = layout;
   bridge.reinitializeTagLayout = layout.reinitialize;

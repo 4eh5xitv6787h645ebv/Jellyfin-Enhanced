@@ -1,222 +1,48 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared(feature, core, slots);
   }
-
-  // client/src/features/seerr/host-core.ts
-  var coreContexts = /* @__PURE__ */ new WeakMap();
-  function seerrCoreContext(JE2) {
-    let ctx = coreContexts.get(JE2);
-    if (!ctx) {
-      ctx = featureContext("seerr", JE2, {
-        internalSlots: ["jellyseerrUi"],
-        internalsObject: () => JE2.internals || (JE2.internals = {})
-      });
-      coreContexts.set(JE2, ctx);
+  function publishSharedModules(modules) {
+    const JE2 = window.JellyfinEnhanced;
+    if (!JE2) return;
+    const core = JE2.core ?? (JE2.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
     }
-    return ctx;
-  }
-  function seerrCoreHost() {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error("Jellyfin Enhanced must be initialized before the Seerr core group");
-    return { JE: JE2, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
-  }
-
-  // client/src/features/seerr/core/decode.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
-  var isString = (value) => typeof value === "string";
-  var isBoolean = (value) => typeof value === "boolean";
-  var optional = (check) => (value) => value === void 0 || check(value);
-  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
-  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
-  var either = (...checks) => (value) => checks.some((check) => check(value));
-  function matches(value, checks) {
-    if (!isRecord(value)) return false;
-    const table = checks;
-    for (const [key, check] of Object.entries(table)) {
-      if (!check(value[key])) return false;
-    }
-    return true;
-  }
-  var seasonStatusChecks = {
-    seasonNumber: optional(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber)
-  };
-  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
-  var downloadChecks = {
-    title: nullable(isString),
-    status: nullable(isString),
-    size: nullable(isNumber),
-    sizeLeft: nullable(isNumber),
-    estimatedCompletionTime: nullable(isString),
-    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
-  };
-  var isDownload = (value) => matches(value, downloadChecks);
-  var requestSummaryChecks = {
-    is4k: nullable(isBoolean),
-    seasons: nullable(listOf((value) => matches(value, {
-      seasonNumber: optional(isNumber),
-      status: nullable(isNumber)
-    })))
-  };
-  var mediaInfoChecks = {
-    id: nullable(isNumber),
-    tvdbId: nullable(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber),
-    jellyfinMediaId: nullable(isString),
-    jellyfinMediaId4k: nullable(isString),
-    seasons: nullable(listOf(isSeasonStatus)),
-    downloadStatus: nullable(listOf(isDownload)),
-    downloadStatus4k: nullable(listOf(isDownload)),
-    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
-  };
-  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
-  var collectionChecks = {
-    id: nullable(isNumber),
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var isCollectionRef = (value) => matches(value, collectionChecks);
-  var mediaItemChecks = {
-    id: isNumber,
-    mediaType: isString,
-    title: nullable(isString),
-    name: nullable(isString),
-    originalTitle: nullable(isString),
-    originalName: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString),
-    overview: nullable(isString),
-    voteAverage: nullable(isNumber),
-    releaseDate: nullable(isString),
-    firstAirDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo),
-    collection: nullable(isCollectionRef)
-  };
-  var userStatusChecks = {
-    active: isBoolean,
-    userFound: isBoolean,
-    reason: optional(isString),
-    message: optional(isString),
-    jellyseerrUserId: optional(either(isString, isNumber)),
-    canRequestAdvanced: optional(isBoolean)
-  };
-  var quotaSideChecks = {
-    limit: nullable(isNumber),
-    used: nullable(isNumber),
-    remaining: nullable(isNumber),
-    days: nullable(isNumber),
-    restricted: nullable(isBoolean),
-    nextResetAt: nullable(isString)
-  };
-  var quotaChecks = {
-    movie: nullable((value) => matches(value, quotaSideChecks)),
-    tv: nullable((value) => matches(value, quotaSideChecks))
-  };
-  var overrideRuleChecks = {
-    id: nullable(either(isNumber, isString)),
-    radarrServiceId: nullable(isNumber),
-    sonarrServiceId: nullable(isNumber),
-    language: nullable(isString),
-    genre: nullable(isString),
-    keywords: nullable(isString),
-    users: nullable(isString),
-    profileId: nullable(isNumber),
-    rootFolder: nullable(isString),
-    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
-  };
-  var profileChecks = { id: isNumber, name: nullable(isString) };
-  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
-  var serviceChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    isDefault: nullable(isBoolean),
-    is4k: nullable(isBoolean),
-    activeProfileId: nullable(isNumber),
-    activeDirectory: nullable(isString)
-  };
-  var candidateChecks = {
-    tvdbId: isNumber,
-    title: nullable(isString),
-    year: nullable(either(isNumber, isString)),
-    overview: nullable(isString),
-    remotePoster: nullable(isString)
-  };
-  var movieCollectionChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var issueChecks = {
-    id: nullable(isNumber),
-    media: nullable((value) => matches(value, {
-      tmdbId: nullable(either(isNumber, isString)),
-      mediaType: nullable(isString)
-    }))
-  };
-  var tvSeasonChecks = {
-    seasonNumber: isNumber,
-    name: nullable(isString),
-    episodeCount: nullable(isNumber),
-    airDate: nullable(isString),
-    jeYear: nullable(isString)
-  };
-  var collectionPartChecks = {
-    id: isNumber,
-    title: nullable(isString),
-    posterPath: nullable(isString),
-    releaseDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo)
-  };
-
-  // client/src/features/seerr/core/runtime.ts
-  function groupInternals(JE2) {
-    const own = seerrCoreContext(JE2).own;
-    return own.jellyseerrUi || (own.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
-  }
-  function firstInstall(JE2, name) {
-    const internals = groupInternals(JE2);
-    const installed = internals.installed || (internals.installed = /* @__PURE__ */ new Set());
-    if (installed.has(name)) return false;
-    installed.add(name);
-    return true;
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
   }
 
   // client/src/features/seerr/core/status.ts
+  var status_exports = {};
+  __export(status_exports, {
+    DISPLAY: () => DISPLAY,
+    MEDIA: () => MEDIA,
+    REQUEST: () => REQUEST,
+    createStatusFacade: () => createStatusFacade,
+    effectiveMediaStatus: () => effectiveMediaStatus,
+    getBadgeConfig: () => getBadgeConfig,
+    getButtonConfig: () => getButtonConfig,
+    getChipConfig: () => getChipConfig,
+    getDisplayInfo: () => getDisplayInfo,
+    hasStatus: () => hasStatus,
+    isRequestable: () => isRequestable,
+    resolveDisplayStatus: () => resolveDisplayStatus
+  });
   var MEDIA = Object.freeze({
     UNKNOWN: 1,
     PENDING: 2,
@@ -370,6 +196,342 @@
       getDisplayInfo,
       getChipConfig
     };
+  }
+
+  // client/src/features/seerr/core/decode.ts
+  var decode_exports = {};
+  __export(decode_exports, {
+    SeerrDecodeError: () => SeerrDecodeError,
+    decodeAdvancedData: () => decodeAdvancedData,
+    decodeBelongsToCollection: () => decodeBelongsToCollection,
+    decodeCollectionParts: () => decodeCollectionParts,
+    decodeFolders: () => decodeFolders,
+    decodeIssuePage: () => decodeIssuePage,
+    decodeOverrideRules: () => decodeOverrideRules,
+    decodeProfiles: () => decodeProfiles,
+    decodeRelatedPage: () => decodeRelatedPage,
+    decodeRequestSettings: () => decodeRequestSettings,
+    decodeSearchPage: () => decodeSearchPage,
+    decodeSonarrCandidates: () => decodeSonarrCandidates,
+    decodeTvDetails: () => decodeTvDetails,
+    isBoolean: () => isBoolean,
+    isCollectionRef: () => isCollectionRef,
+    isMediaInfo: () => isMediaInfo,
+    isMediaItem: () => isMediaItem,
+    isMovieCollection: () => isMovieCollection,
+    isNumber: () => isNumber,
+    isRecord: () => isRecord,
+    isSafeTmdbImagePath: () => isSafeTmdbImagePath,
+    isServiceListing: () => isServiceListing,
+    isString: () => isString,
+    isUserQuota: () => isUserQuota,
+    isUserStatus: () => isUserStatus,
+    mediaItems: () => mediaItems,
+    parseItemAttribute: () => parseItemAttribute
+  });
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
+  var isString = (value) => typeof value === "string";
+  var isSafeTmdbImagePath = (path) => typeof path === "string" && /^\/[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|avif)$/i.test(path);
+  var isBoolean = (value) => typeof value === "boolean";
+  var optional = (check) => (value) => value === void 0 || check(value);
+  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
+  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
+  var either = (...checks) => (value) => checks.some((check) => check(value));
+  function matches(value, checks) {
+    if (!isRecord(value)) return false;
+    const table = checks;
+    for (const [key, check] of Object.entries(table)) {
+      if (!check(value[key])) return false;
+    }
+    return true;
+  }
+  var seasonStatusChecks = {
+    seasonNumber: optional(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber)
+  };
+  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
+  var downloadChecks = {
+    title: nullable(isString),
+    status: nullable(isString),
+    size: nullable(isNumber),
+    sizeLeft: nullable(isNumber),
+    estimatedCompletionTime: nullable(isString),
+    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
+  };
+  var isDownload = (value) => matches(value, downloadChecks);
+  var requestSummaryChecks = {
+    is4k: nullable(isBoolean),
+    seasons: nullable(listOf((value) => matches(value, {
+      seasonNumber: optional(isNumber),
+      status: nullable(isNumber)
+    })))
+  };
+  var mediaInfoChecks = {
+    id: nullable(isNumber),
+    tvdbId: nullable(isNumber),
+    status: nullable(isNumber),
+    status4k: nullable(isNumber),
+    jellyfinMediaId: nullable(isString),
+    jellyfinMediaId4k: nullable(isString),
+    seasons: nullable(listOf(isSeasonStatus)),
+    downloadStatus: nullable(listOf(isDownload)),
+    downloadStatus4k: nullable(listOf(isDownload)),
+    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
+  };
+  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
+  var collectionChecks = {
+    id: nullable(isNumber),
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var isCollectionRef = (value) => matches(value, collectionChecks);
+  var mediaItemChecks = {
+    id: isNumber,
+    mediaType: isString,
+    title: nullable(isString),
+    name: nullable(isString),
+    originalTitle: nullable(isString),
+    originalName: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString),
+    overview: nullable(isString),
+    voteAverage: nullable(isNumber),
+    releaseDate: nullable(isString),
+    firstAirDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo),
+    collection: nullable(isCollectionRef)
+  };
+  var isMediaItem = (value) => matches(value, mediaItemChecks);
+  function mediaItems(value) {
+    if (!Array.isArray(value)) return { items: [], dropped: 0 };
+    const items = [];
+    let dropped = 0;
+    for (const entry of value) {
+      if (isMediaItem(entry)) items.push(entry);
+      else dropped++;
+    }
+    return { items, dropped };
+  }
+  var SeerrDecodeError = class extends Error {
+    constructor(what) {
+      super(`Seerr response did not match the expected ${what}`);
+      this.name = "SeerrDecodeError";
+    }
+  };
+  function decodeSearchPage(value) {
+    if (!isRecord(value)) throw new SeerrDecodeError("search page");
+    if (value.results !== void 0 && !Array.isArray(value.results)) throw new SeerrDecodeError("search results");
+    const raw = Array.isArray(value.results) ? value.results : [];
+    const { items } = mediaItems(raw.filter((entry) => !(isRecord(entry) && entry.mediaType === "person")));
+    const page = { totalResults: items.length, results: items };
+    if (isNumber(value.page)) page.page = value.page;
+    if (isNumber(value.totalPages)) page.totalPages = value.totalPages;
+    return page;
+  }
+  function decodeRelatedPage(value) {
+    if (!isRecord(value)) throw new SeerrDecodeError("related page");
+    const { items } = mediaItems(value.results);
+    return {
+      page: isNumber(value.page) ? value.page : 1,
+      totalPages: isNumber(value.totalPages) ? value.totalPages : 0,
+      totalResults: isNumber(value.totalResults) ? value.totalResults : items.length,
+      results: items
+    };
+  }
+  var userStatusChecks = {
+    active: isBoolean,
+    userFound: isBoolean,
+    reason: optional(isString),
+    message: optional(isString),
+    jellyseerrUserId: optional(either(isString, isNumber)),
+    canRequestAdvanced: optional(isBoolean)
+  };
+  var isUserStatus = (value) => matches(value, userStatusChecks);
+  var quotaSideChecks = {
+    limit: nullable(isNumber),
+    used: nullable(isNumber),
+    remaining: nullable(isNumber),
+    days: nullable(isNumber),
+    restricted: nullable(isBoolean),
+    nextResetAt: nullable(isString)
+  };
+  var quotaChecks = {
+    movie: nullable((value) => matches(value, quotaSideChecks)),
+    tv: nullable((value) => matches(value, quotaSideChecks))
+  };
+  var isUserQuota = (value) => matches(value, quotaChecks);
+  function decodeRequestSettings(value) {
+    if (!isRecord(value)) throw new SeerrDecodeError("request settings");
+    return { partialRequestsEnabled: value.partialRequestsEnabled === true, enableSpecialEpisodes: value.enableSpecialEpisodes === true };
+  }
+  var overrideRuleChecks = {
+    id: nullable(either(isNumber, isString)),
+    radarrServiceId: nullable(isNumber),
+    sonarrServiceId: nullable(isNumber),
+    language: nullable(isString),
+    genre: nullable(isString),
+    keywords: nullable(isString),
+    users: nullable(isString),
+    profileId: nullable(isNumber),
+    rootFolder: nullable(isString),
+    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
+  };
+  function decodeOverrideRules(value) {
+    if (!Array.isArray(value)) return [];
+    return value.filter((rule) => matches(rule, overrideRuleChecks));
+  }
+  var profileChecks = { id: isNumber, name: nullable(isString) };
+  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
+  function decodeProfiles(value) {
+    return Array.isArray(value) ? value.filter((entry) => matches(entry, profileChecks)) : [];
+  }
+  function decodeFolders(value) {
+    return Array.isArray(value) ? value.filter((entry) => matches(entry, folderChecks)) : [];
+  }
+  var serviceChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    isDefault: nullable(isBoolean),
+    is4k: nullable(isBoolean),
+    activeProfileId: nullable(isNumber),
+    activeDirectory: nullable(isString)
+  };
+  var isServiceListing = (value) => matches(value, serviceChecks);
+  function decodeAdvancedData(value) {
+    if (!isRecord(value) || !Array.isArray(value.servers)) return { servers: [], tags: [] };
+    const servers = [];
+    for (const entry of value.servers) {
+      if (!isServiceListing(entry)) continue;
+      servers.push({ ...entry, qualityProfiles: decodeProfiles(entry.qualityProfiles), rootFolders: decodeFolders(entry.rootFolders) });
+    }
+    return { servers, tags: Array.isArray(value.tags) ? value.tags.filter(isNumber) : [] };
+  }
+  var candidateChecks = {
+    tvdbId: isNumber,
+    title: nullable(isString),
+    year: nullable(either(isNumber, isString)),
+    overview: nullable(isString),
+    remotePoster: nullable(isString)
+  };
+  function decodeSonarrCandidates(value) {
+    return Array.isArray(value) ? value.filter((entry) => matches(entry, candidateChecks)) : [];
+  }
+  var movieCollectionChecks = {
+    id: isNumber,
+    name: nullable(isString),
+    posterPath: nullable(isString),
+    backdropPath: nullable(isString)
+  };
+  var isMovieCollection = (value) => matches(value, movieCollectionChecks);
+  var issueChecks = {
+    id: nullable(isNumber),
+    media: nullable((value) => matches(value, {
+      tmdbId: nullable(either(isNumber, isString)),
+      mediaType: nullable(isString)
+    }))
+  };
+  function decodeIssuePage(value) {
+    if (!isRecord(value)) return { results: [] };
+    const results = Array.isArray(value.results) ? value.results.filter((issue) => matches(issue, issueChecks)) : [];
+    return { ...value, results };
+  }
+  var tvSeasonChecks = {
+    seasonNumber: isNumber,
+    name: nullable(isString),
+    episodeCount: nullable(isNumber),
+    airDate: nullable(isString),
+    jeYear: nullable(isString)
+  };
+  var isTvSeason = (value) => matches(value, tvSeasonChecks);
+  function decodeTvDetails(value) {
+    if (!isRecord(value) || !Array.isArray(value.seasons)) return null;
+    const externalIds = value.externalIds;
+    const externalTvdbId = isRecord(externalIds) && isNumber(externalIds.tvdbId) && externalIds.tvdbId > 0 ? externalIds.tvdbId : null;
+    const view = {
+      seasons: value.seasons.filter(isTvSeason),
+      externalTvdbId,
+      mediaInfo: isMediaInfo(value.mediaInfo) ? value.mediaInfo : null
+    };
+    if (isString(value.name)) view.name = value.name;
+    if (isString(value.title)) view.title = value.title;
+    if (isString(value.backdropPath)) view.backdropPath = value.backdropPath;
+    if (value.jeSpoilerGuard === true) view.jeSpoilerGuard = true;
+    return view;
+  }
+  function decodeBelongsToCollection(value) {
+    if (!isRecord(value)) return null;
+    const belongs = isRecord(value.belongs_to_collection) ? value.belongs_to_collection : isRecord(value.belongsToCollection) ? value.belongsToCollection : null;
+    if (!belongs) return null;
+    const id = isNumber(belongs.id) && belongs.id ? belongs.id : isNumber(belongs.tmdbId) && belongs.tmdbId ? belongs.tmdbId : null;
+    if (id === null) return null;
+    const pick = (a, b) => isString(a) && a ? a : isString(b) && b ? b : null;
+    return {
+      id,
+      name: isString(belongs.name) ? belongs.name : null,
+      posterPath: pick(belongs.poster_path, belongs.posterPath),
+      backdropPath: pick(belongs.backdrop_path, belongs.backdropPath)
+    };
+  }
+  function parseItemAttribute(raw) {
+    if (!raw) return null;
+    try {
+      const value = JSON.parse(raw);
+      return isMediaItem(value) ? value : null;
+    } catch {
+      return null;
+    }
+  }
+  var collectionPartChecks = {
+    id: isNumber,
+    title: nullable(isString),
+    posterPath: nullable(isString),
+    releaseDate: nullable(isString),
+    mediaInfo: nullable(isMediaInfo)
+  };
+  function decodeCollectionParts(details) {
+    if (!isRecord(details) || !Array.isArray(details.parts)) return [];
+    return details.parts.filter((part) => matches(part, collectionPartChecks));
+  }
+
+  // client/generated-shared/publish/js/jellyseerr/seerr-status.js.ts
+  publishSharedModules({ "features/seerr/core/status": status_exports, "features/seerr/core/decode": decode_exports });
+
+  // client/src/features/seerr/host-core.ts
+  var coreContexts = /* @__PURE__ */ new WeakMap();
+  function seerrCoreContext(JE2) {
+    let ctx = coreContexts.get(JE2);
+    if (!ctx) {
+      ctx = featureContext("seerr", JE2, {
+        internalSlots: ["jellyseerrUi"],
+        internalsObject: () => JE2.internals || (JE2.internals = {})
+      });
+      coreContexts.set(JE2, ctx);
+    }
+    return ctx;
+  }
+  function seerrCoreHost() {
+    const host = window;
+    const JE2 = host.JellyfinEnhanced;
+    if (!JE2) throw new Error("Jellyfin Enhanced must be initialized before the Seerr core group");
+    return { JE: JE2, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
+  }
+
+  // client/src/features/seerr/core/runtime.ts
+  function groupInternals(JE2) {
+    const own = seerrCoreContext(JE2).own;
+    return own.jellyseerrUi || (own.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
+  }
+  function firstInstall(JE2, name) {
+    const internals = groupInternals(JE2);
+    const installed = internals.installed || (internals.installed = /* @__PURE__ */ new Set());
+    if (installed.has(name)) return false;
+    installed.add(name);
+    return true;
   }
 
   // client/src/features/seerr/core/status-entry.ts

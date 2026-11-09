@@ -1,8 +1,9 @@
 import type { Ui } from '../core/ui/runtime';
+import type { FeatureContextCore } from './context';
 
 export interface ThemeVariables { secondaryBg?: string; primaryAccent?: string; blur?: string }
 export interface UiBridge {
-    core?: { ui?: Ui };
+    core?: { ui?: Ui } & FeatureContextCore;
     CONFIG?: { TOAST_DURATION?: number };
     themer?: { getThemeVariables(): ThemeVariables | null | undefined };
     escapeHtml?: Ui['escapeHtml'];

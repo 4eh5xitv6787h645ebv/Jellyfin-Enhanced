@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { runInNewContext } from 'node:vm';
@@ -185,6 +185,34 @@ test('bundle failure in a later entry writes none of the earlier outputs', async
   assert.equal(readFileSync(f.output, 'utf8'), '// runnable legacy');
 });
 
+test('a .css import bundles as its exact text; .js and out-of-tree inputs are still rejected (frontend.md §3 D1)', async t => {
+  const f = fixture(t);
+  // Backslashes, `${`, quotes, a backtick and non-ASCII must survive: the loader emits the file bytes as one string.
+  const css = '\n  .je-x::before { content: "\\e5cd"; }\n  .je-y { --v: `${a}`; font-family: \'Ünï\'; }\n';
+  f.put('client/src/types/css.d.ts', readFileSync(join(repositoryRoot, 'client/src/types/css.d.ts')));
+  f.put('client/src/styles.css', css);
+  f.put('client/src/entry.ts', 'import css from "./styles.css";\n(globalThis as unknown as { css: string }).css = css;\n');
+  await buildClient({ root: f.root });
+  await buildClient({ root: f.root, check: true });
+  const sandbox = {};
+  runInNewContext(readFileSync(f.output, 'utf8'), sandbox);
+  assert.equal(sandbox.css, css);
+  const ledger = JSON.parse(readFileSync(join(f.root, 'client/generated-manifest.json'), 'utf8'));
+  assert.deepEqual(ledger.entries.map(entry => entry.source), ['client/src/entry.ts']);
+
+  const javascript = fixture(t);
+  javascript.put('client/src/legacy.d.ts', 'export declare const value: string;\n');
+  javascript.put('client/src/legacy.js', 'export const value = "untyped";\n');
+  javascript.put('client/src/entry.ts', 'import { value } from "./legacy";\ndocument.title = value;\n');
+  await assert.rejects(buildClient({ root: javascript.root }), /checked TypeScript under client\/src/);
+
+  const outside = fixture(t);
+  outside.put('client/src/types/css.d.ts', readFileSync(join(repositoryRoot, 'client/src/types/css.d.ts')));
+  outside.put('client/outside.css', '.je-x {}\n');
+  outside.put('client/src/entry.ts', 'import css from "../outside.css";\ndocument.title = css;\n');
+  await assert.rejects(buildClient({ root: outside.root }), /checked TypeScript under client\/src/);
+});
+
 test('a removed mapping fails until retired artifacts are explicitly removed', async t => {
   const f = fixture(t);
   await buildClient({ root: f.root });
@@ -253,4 +281,28 @@ test('single-extension hyphenated filenames remain valid production resources', 
   assert.equal(new RegExp(schema.propertyNames.pattern).test('js/core/my-feature.js'), true);
   await buildClient({ root: f.root });
   await buildClient({ root: f.root, check: true });
+});
+
+test('component scripts get a runnable minified twin under min/ that --check keeps fresh (canopy K1)', async t => {
+  const f = fixture(t);
+  f.put('client/src/value.ts', 'export const title: string = "bundled   value";\n');
+  f.put('client/src/entry.ts', 'import { title } from "./value";\n// a comment the twin drops\ndocument.title = title;\n');
+  f.manifest({ 'js/core/entry.js': 'client/src/entry.ts', 'js/core/other.js': 'client/src/value.ts' });
+  f.put('Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json', JSON.stringify(['// a note', 'core/entry.js']));
+  await buildClient({ root: f.root });
+  const twin = join(f.root, 'Jellyfin.Plugin.JellyfinEnhanced/min/js/core/entry.js');
+  const code = readFileSync(twin, 'utf8');
+  assert.ok(code.length < readFileSync(f.output, 'utf8').length);
+  assert.doesNotMatch(code, /a comment the twin drops|sourceMappingURL/);
+  const sandbox = { document: { title: '' } };
+  runInNewContext(code, sandbox);
+  assert.equal(sandbox.document.title, 'bundled   value', 'string contents are kept');
+  const map = JSON.parse(readFileSync(`${twin}.map`, 'utf8'));
+  assert.equal(map.sourcesContent, undefined);
+  assert.deepEqual(map.sources, JSON.parse(readFileSync(`${f.output}.map`, 'utf8')).sources);
+  assert.equal(existsSync(join(f.root, 'Jellyfin.Plugin.JellyfinEnhanced/min/js/core/other.js')), false, 'not a component script');
+  const ledger = JSON.parse(readFileSync(join(f.root, 'client/generated-manifest.json'), 'utf8'));
+  assert.ok(ledger.outputs['Jellyfin.Plugin.JellyfinEnhanced/min/js/core/entry.js']);
+  f.put('Jellyfin.Plugin.JellyfinEnhanced/min/js/core/entry.js', 'stale');
+  await assert.rejects(buildClient({ root: f.root, check: true }), /min\/js\/core\/entry\.js/);
 });

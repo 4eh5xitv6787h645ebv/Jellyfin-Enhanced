@@ -3,30 +3,11 @@
 (() => {
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared(feature, core, slots);
   }
 
   // client/src/features/catchup/host.ts
@@ -40,7 +21,7 @@
     return { host, ctx: ctx2, getApi: () => host.ApiClient, Emby: host.Emby };
   }
 
-  // client/src/features/catchup/wire.ts
+  // client/src/features/shared/wire.ts
   function currentLease(session, getApi2) {
     const epoch = session?.getEpoch(), user = getApi2?.()?.getCurrentUserId(), server = getApi2?.()?.getUrl("/");
     return () => (epoch === void 0 || session?.isCurrent(epoch) === true) && user === getApi2?.()?.getCurrentUserId() && server === getApi2?.()?.getUrl("/");

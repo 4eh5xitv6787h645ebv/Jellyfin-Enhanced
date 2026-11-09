@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 import vm from 'node:vm';
 import { setImmediate as nextTurn } from 'node:timers/promises';
 import { createHarness, deferred, jsRoot, jsonResponse, plain } from '../../helpers/harness.mjs';
+import sharedRuntime from '../../helpers/feature-context.cjs';
+const { provideSharedRuntime } = sharedRuntime;
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const flush = async () => { for (let i = 0; i < 6; i++) await nextTurn(); };
@@ -470,7 +472,10 @@ test('colored ratings still load in the poster-parity sandbox (minimal VM global
     MutationObserver: class { observe() {} disconnect() {} }, setTimeout, clearTimeout, WeakSet, Map, Set, Object, String, RegExp, Boolean, addEventListener() {} };
   context.window = context;
   vm.createContext(context);
-  vm.runInContext(readFileSync(resolve(jsRoot, 'extras/colored-ratings.js'), 'utf8'), context, { filename: 'colored-ratings.js' });
+  const source = readFileSync(resolve(jsRoot, 'extras/colored-ratings.js'), 'utf8');
+  // As web-expected.mjs does: the shared modules other scripts publish in the bundle (canopy K1b).
+  provideSharedRuntime(code => vm.runInContext(code, context), source, 'extras/colored-ratings.js');
+  vm.runInContext(source, context, { filename: 'colored-ratings.js' });
   assert.equal(JE.normalizeOfficialRating('FSK 0'), 'FSK-0');
 });
 

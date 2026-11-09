@@ -20,6 +20,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import sharedRuntime from '../../frontend/helpers/feature-context.cjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const jsRoot = join(here, '..', '..', '..', 'Jellyfin.Plugin.JellyfinEnhanced', 'js');
@@ -255,7 +256,13 @@ function createSandbox(profile, pluginConfig, webSettings, reviews) {
     // Compiled modules narrow with instanceof; this stub DOM has one element class.
     context.HTMLElement = Element;
     vm.createContext(context);
-    for (const script of SCRIPTS) vm.runInContext(sources[script], context, { filename: script });
+    // What the bundle's other scripts publish before these (featureContext from core/ui-kit.js, canopy K1; the shared
+    // modules of client/shared-modules.json, canopy K1b), compiled from the same source.
+    const run = (code) => vm.runInContext(code, context);
+    for (const script of SCRIPTS) {
+        sharedRuntime.provideSharedRuntime(run, sources[script], script);
+        vm.runInContext(sources[script], context, { filename: script });
+    }
     return { context, JE, css };
 }
 

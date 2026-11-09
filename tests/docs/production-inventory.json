@@ -446,6 +446,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/MediaStreamLanguageResolver.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/Status/NativeStatusRefreshService.cs",
       "category": "Features"
     },
@@ -467,6 +471,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/Status/StatusTagsTrendingService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/SubtitleAccessibility.cs",
       "category": "Features"
     },
     {
@@ -883,14 +891,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Mdblist/MdblistRatings.cs",
-      "category": "Shared"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/MediaStreamLanguageResolver.cs",
-      "category": "Shared"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/SubtitleAccessibility.cs",
       "category": "Shared"
     },
     {

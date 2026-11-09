@@ -1,40 +1,29 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function hasApiClient() {
-    const host = window;
-    return host.ApiClient !== void 0 && host.ApiClient !== null;
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function records(value) {
-    return Array.isArray(value) ? value.filter(isRecord) : [];
-  }
-  function stringList(value) {
-    return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
-  }
-  function own(table, key) {
-    return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export9 = /* @__PURE__ */ sharedExport(shared2, "own");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "records");
+  var export12 = /* @__PURE__ */ sharedExport(shared2, "stringList");
 
   // client/src/features/media-tags/types/direct-play/device-profile.ts
   function profileWindow() {
@@ -529,13 +518,13 @@
 
   // client/src/features/media-tags/types/direct-play/tag-direct-play.ts
   function isTimedOut(error) {
-    return isRecord(error) && error.timedOut === true;
+    return export42(error) && error.timedOut === true;
   }
   function storedResult(value) {
     return {
       directPlay: value.directPlay === true,
       remux: value.remux === true,
-      reasons: stringList(value.reasons),
+      reasons: export12(value.reasons),
       container: typeof value.container === "string" ? value.container : null,
       video: typeof value.video === "string" ? value.video : null,
       audio: typeof value.audio === "string" ? value.audio : null
@@ -654,8 +643,8 @@
       return entry.source ? `${entry.id}@${entry.source}` : entry.id;
     }
     function scope() {
-      const server = JE.session?.getServerId?.() || hasApiClient() && apiClient().serverId?.() || "";
-      const user = JE.session?.getUserId?.() || hasApiClient() && apiClient().getCurrentUserId?.() || "";
+      const server = JE.session?.getServerId?.() || export1() && export0().serverId?.() || "";
+      const user = JE.session?.getUserId?.() || export1() && export0().getCurrentUserId?.() || "";
       return server && user ? `${server}:${user}` : "";
     }
     function storedSetting(name) {
@@ -671,7 +660,7 @@
       return value;
     }
     function currentUser() {
-      return hasApiClient() && apiClient().getCurrentUserId?.() || JE.session?.getUserId?.() || "";
+      return export1() && export0().getCurrentUserId?.() || JE.session?.getUserId?.() || "";
     }
     const profileSettings = { app: appSetting, user: userSetting };
     function userSetting(name) {
@@ -692,11 +681,11 @@ ${name}=${value}`;
     function userBitrate(profile) {
       let inNetwork = {};
       try {
-        inNetwork = hasApiClient() && apiClient().getSavedEndpointInfo?.() || {};
+        inNetwork = export1() && export0().getSavedEndpointInfo?.() || {};
       } catch {
         inNetwork = {};
       }
-      const net = String(record(inNetwork).IsInNetwork);
+      const net = String(export10(inNetwork).IsInNetwork);
       const saved = parseInt(appSetting(`maxbitrate-Video-${net}`) || "0", 10) || 0;
       if (saved > 0) return saved;
       return flag(appSetting(`enableautobitratebitrate-Video-${net}`), true) ? profile.MaxStreamingBitrate || DEFAULT_BITRATE : 15e5;
@@ -715,11 +704,11 @@ ${name}=${value}`;
       return isProfile(copy) ? copy : profile;
     }
     function isProfile(p) {
-      return isRecord(p) && Array.isArray(p.DirectPlayProfiles);
+      return export42(p) && Array.isArray(p.DirectPlayProfiles);
     }
     function build() {
       const b = browserFlags();
-      const own2 = ++builds;
+      const own = ++builds;
       const user = currentUser();
       const reads = /* @__PURE__ */ new Map();
       const recording = (fn) => {
@@ -736,11 +725,11 @@ ${name}=${value}`;
       let profile = null;
       try {
         const shell = typeof window !== "undefined" ? profileWindow().NativeShell?.AppHost : null;
-        const version = hasApiClient() && apiClient().appVersion?.() || "";
+        const version = export1() && export0().appVersion?.() || "";
         const native = typeof shell?.getDeviceProfile === "function" ? shell.getDeviceProfile(builder, version) : null;
-        if (isRecord(native) && typeof native.then === "function") {
+        if (export42(native) && typeof native.then === "function") {
           const pending = Promise.resolve(native).then((answer) => {
-            if (!isProfile(answer) || own2 !== builds) return;
+            if (!isProfile(answer) || own !== builds) return;
             const profile2 = recording(() => withHostSettings(profileSettings, clone(answer), b));
             if (settingsOf(reads.keys()) !== inputsOf(user, reads)) {
               rebuild();
@@ -791,16 +780,16 @@ ${name}=${value}`;
       return value;
     }
     function classify(info, sourceId = "") {
-      const answers = record(info).MediaSources;
+      const answers = export10(info).MediaSources;
       const sources = Array.isArray(answers) ? answers : [];
-      const source = sourceId && records(sources).find((s) => s.Id === sourceId) || sources[0] || null;
-      if (!isRecord(source)) return null;
-      let reasons = Array.isArray(source.TranscodeReasons) ? stringList(source.TranscodeReasons) : typeof source.TranscodeReasons === "string" ? source.TranscodeReasons.split(/[,\s]+/).filter(Boolean) : [];
+      const source = sourceId && export11(sources).find((s) => s.Id === sourceId) || sources[0] || null;
+      if (!export42(source)) return null;
+      let reasons = Array.isArray(source.TranscodeReasons) ? export12(source.TranscodeReasons) : typeof source.TranscodeReasons === "string" ? source.TranscodeReasons.split(/[,\s]+/).filter(Boolean) : [];
       if (!reasons.length && typeof source.TranscodingUrl === "string") {
         const match = /[?&]TranscodeReasons=([^&]+)/i.exec(source.TranscodingUrl);
         if (match?.[1]) reasons = decodeURIComponent(match[1]).split(",").filter(Boolean);
       }
-      const streams = records(source.MediaStreams);
+      const streams = export11(source.MediaStreams);
       const video = streams.find((s) => s.Type === "Video");
       const audio = streams.find((s) => s.Type === "Audio" && s.Index === source.DefaultAudioStreamIndex) || streams.find((s) => s.Type === "Audio");
       const directPlay = source.SupportsDirectPlay === true;
@@ -817,7 +806,7 @@ ${name}=${value}`;
     function describe(result, label) {
       const parts = [];
       for (const reason of result.reasons) {
-        const [key, fact] = own(REASONS, reason) || ["status_tag_dp_reason_other"];
+        const [key, fact] = export9(REASONS, reason) || ["status_tag_dp_reason_other"];
         const text = JE.t(key, { value: fact && result[fact] || "" }).trim();
         if (text && !parts.includes(text)) parts.push(text);
       }
@@ -915,8 +904,8 @@ ${name}=${value}`;
     }
     function watcher() {
       if (observer || typeof IntersectionObserver === "undefined") return observer;
-      const own2 = new IntersectionObserver((entries) => {
-        if (observer !== own2) return;
+      const own = new IntersectionObserver((entries) => {
+        if (observer !== own) return;
         for (const { target, isIntersecting } of entries) {
           if (!(target instanceof HTMLElement)) continue;
           const card = target;
@@ -932,7 +921,7 @@ ${name}=${value}`;
         scheduleSlice();
         armRetry();
       }, { rootMargin: "200px 0px" });
-      observer = own2;
+      observer = own;
       return observer;
     }
     function enqueue(card) {
@@ -1040,12 +1029,12 @@ ${name}=${value}`;
     }
     function requestHeaders() {
       const headers = { Accept: "application/json", "Content-Type": "application/json" };
-      const client = apiClient();
+      const client = export0();
       if (typeof client.setRequestHeaders === "function") {
         client.setRequestHeaders(headers);
         return headers;
       }
-      const fields = [["Client", apiClient().appName?.()], ["Device", apiClient().deviceName?.()], ["DeviceId", apiClient().deviceId?.()], ["Version", apiClient().appVersion?.()], ["Token", apiClient().accessToken?.()]].filter(([, value]) => value).map(([name, value]) => `${name}="${value}"`);
+      const fields = [["Client", export0().appName?.()], ["Device", export0().deviceName?.()], ["DeviceId", export0().deviceId?.()], ["Version", export0().appVersion?.()], ["Token", export0().accessToken?.()]].filter(([, value]) => value).map(([name, value]) => `${name}="${value}"`);
       if (fields.length) headers.Authorization = `MediaBrowser ${fields.join(", ")}`;
       return headers;
     }
@@ -1068,10 +1057,10 @@ ${name}=${value}`;
       return Promise.race([work, deadline]).finally(() => clearTimeout(timer));
     }
     async function launch(key, job) {
-      if (!hasApiClient()) return;
+      if (!export1()) return;
       const gen = generation;
       const { profile, bitrate } = current();
-      const userId = apiClient().getCurrentUserId?.() || JE.session?.getUserId?.() || "";
+      const userId = export0().getCurrentUserId?.() || JE.session?.getUserId?.() || "";
       const request = {};
       job.prior = memory.get(key);
       inFlight.set(key, job);
@@ -1080,7 +1069,7 @@ ${name}=${value}`;
       let value;
       try {
         const info = await askPlaybackInfo(
-          apiClient().getUrl(`Items/${encodeURIComponent(job.id)}/PlaybackInfo`, { UserId: userId, StartTimeTicks: 0, IsPlayback: false, AutoOpenLiveStream: false, MaxStreamingBitrate: bitrate, ...job.source ? { MediaSourceId: job.source } : {} }),
+          export0().getUrl(`Items/${encodeURIComponent(job.id)}/PlaybackInfo`, { UserId: userId, StartTimeTicks: 0, IsPlayback: false, AutoOpenLiveStream: false, MaxStreamingBitrate: bitrate, ...job.source ? { MediaSourceId: job.source } : {} }),
           JSON.stringify({ UserId: userId, DeviceProfile: profile, MaxStreamingBitrate: bitrate, EnableDirectPlay: true, EnableDirectStream: true, EnableTranscoding: true, AllowVideoStreamCopy: true, AllowAudioStreamCopy: true, IsPlayback: false, AutoOpenLiveStream: false, ...job.source ? { MediaSourceId: job.source } : {} })
         );
         value = { r: classify(info, job.source), t: Date.now(), m: job.media || "" };
@@ -1205,7 +1194,7 @@ ${name}=${value}`;
   }
 
   // client/src/features/media-tags/types/direct-play/tag-direct-play-entry.ts
-  createDirectPlay(tagRuntimeHost());
+  createDirectPlay(export4());
 })();
 })();
 //# sourceMappingURL=tag-direct-play.js.map

@@ -1,6 +1,6 @@
 import {readAdmin, readEvents, readSummary} from './model';
 import { catchupHost } from './host';
-import { errorMessage, currentLease } from './wire';
+import { errorMessage, currentLease } from '../shared/wire';
 /**
  * @file Catch Up admin activity panel: a feed and a summary of who swiped what.
  * Docked next to the deck on wide screens, a full-screen dialog otherwise. Only shown to

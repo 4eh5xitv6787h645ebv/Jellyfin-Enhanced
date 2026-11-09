@@ -9,7 +9,6 @@ using MediaBrowser.Model.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;

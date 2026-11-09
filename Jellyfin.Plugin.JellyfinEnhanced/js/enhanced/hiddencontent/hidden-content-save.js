@@ -1,6 +1,16 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -79,86 +89,11 @@
     return runtime(JE).queues.get(token.destination) ?? Promise.resolve();
   }
 
-  // client/src/features/hidden-content/model.ts
-  var defaults = {
-    enabled: true,
-    filterLibrary: true,
-    filterDiscovery: true,
-    filterUpcoming: true,
-    filterCalendar: true,
-    filterSearch: false,
-    filterRecommendations: true,
-    filterRequests: true,
-    filterNextUp: true,
-    filterContinueWatching: true,
-    showHideConfirmation: true,
-    showHideButtons: true,
-    showButtonJellyseerr: true,
-    showButtonLibrary: false,
-    showButtonDetails: true,
-    showButtonCast: false,
-    experimentalHideCollections: false
-  };
-  function record(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
-    return value;
-  }
-  var itemStrings = ["itemId", "name", "type", "posterPath", "seriesId", "seriesName", "hiddenAt", "hideScope"];
-  function field(source, name) {
-    return Object.prototype.hasOwnProperty.call(source, name) ? source[name] : source[name[0]?.toUpperCase() + name.slice(1)];
-  }
-  function decodeItem(value) {
-    const raw = record(value);
-    const item = { ...raw };
-    for (const key of [...itemStrings, "tmdbId", "seasonNumber", "episodeNumber"]) delete item[key];
-    for (const key of itemStrings) {
-      const v = field(raw, key);
-      if (v !== void 0 && v !== null) {
-        if (typeof v !== "string") throw new Error(`Invalid ${key}`);
-        item[key] = v;
-      }
-    }
-    const tmdb = field(raw, "tmdbId");
-    if (tmdb !== void 0 && tmdb !== null) {
-      if (typeof tmdb !== "string" && (typeof tmdb !== "number" || !Number.isFinite(tmdb))) throw new Error("Invalid tmdbId");
-      item.tmdbId = tmdb;
-    }
-    for (const key of ["seasonNumber", "episodeNumber"]) {
-      const v = field(raw, key);
-      if (v !== void 0) {
-        if (v !== null && (typeof v !== "number" || !Number.isFinite(v))) throw new Error(`Invalid ${key}`);
-        item[key] = v;
-      }
-    }
-    for (const key of [...itemStrings, "tmdbId", "seasonNumber", "episodeNumber"]) delete item[key[0]?.toUpperCase() + key.slice(1)];
-    return item;
-  }
-  function decodeDocument(value) {
-    const raw = record(value);
-    const rawItems = record(field(raw, "items"));
-    const rawSettings = field(raw, "settings");
-    const settings = rawSettings == null ? {} : { ...record(rawSettings) };
-    for (const key of Object.keys(defaults)) {
-      const v = field(settings, key);
-      if (v !== void 0 && typeof v !== "boolean") throw new Error(`Invalid setting ${key}`);
-      if (v !== void 0) settings[key] = v;
-      delete settings[key[0]?.toUpperCase() + key.slice(1)];
-    }
-    const items = Object.fromEntries(Object.entries(rawItems).map(([key, item]) => [key, decodeItem(item)]));
-    const document2 = { ...raw, items, settings };
-    delete document2.Items;
-    delete document2.Settings;
-    return document2;
-  }
-  function decodeUsers(value) {
-    const users = record(value).users;
-    if (!Array.isArray(users)) throw new Error("Invalid admin user list");
-    return users.map((value2) => {
-      const u = record(value2);
-      if (typeof u.userId !== "string" || typeof u.userName !== "string" || typeof u.count !== "number" || !Number.isInteger(u.count) || u.count < 0) throw new Error("Invalid admin user");
-      return { userId: u.userId, userName: u.userName, count: u.count };
-    });
-  }
+  // client/generated-shared/stub/client/src/features/hidden-content/model.ts
+  var shared = /* @__PURE__ */ sharedModule("features/hidden-content/model");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "decodeDocument");
+  var export6 = /* @__PURE__ */ sharedExport(shared, "decodeUsers");
+  var export11 = /* @__PURE__ */ sharedExport(shared, "record");
 
   // client/src/features/hidden-content/hidden-content-save.ts
   (function(JE) {
@@ -167,7 +102,7 @@
     const internal = registry(JE, "hiddenContent");
     const { getHiddenData, assertWritable } = internal;
     function decodeAdded(value) {
-      const added = record(value).added;
+      const added = export11(value).added;
       if (typeof added !== "number" || !Number.isInteger(added) || added < 0) throw new Error("Invalid hidden-content mutation response");
       return added;
     }
@@ -198,7 +133,7 @@
           url: api.getUrl("/JellyfinEnhanced/admin/hidden-content-users"),
           dataType: "json"
         });
-        return token.current() ? decodeUsers(res) : null;
+        return token.current() ? export6(res) : null;
       } catch (e) {
         if (e instanceof Object && "status" in e && e.status === 403) console.warn("🪼 Jellyfin Enhanced: Hidden Content admin user-list denied (not an admin).");
         return null;
@@ -214,7 +149,7 @@
           dataType: "json"
         });
         if (!token.current()) return null;
-        const hc = decodeDocument(record(res).hiddenContent);
+        const hc = export1(export11(res).hiddenContent);
         const items = hc.items;
         return Object.entries(items).map(([key, item]) => ({ ...item, _key: key }));
       } catch (e) {

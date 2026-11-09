@@ -2,210 +2,46 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
-    }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/details-providers/host.ts
-  function hostWindow() {
-    return window;
-  }
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
-  }
-  function api() {
-    const client = hostWindow().ApiClient;
-    if (!client) throw new Error("Jellyfin ApiClient unavailable");
-    return client;
-  }
-  function hasApi() {
-    return hostWindow().ApiClient !== void 0;
-  }
-  function currentUserId() {
-    const id = hostWindow().ApiClient?.getCurrentUserId();
-    return typeof id === "string" && id ? id : null;
-  }
-  function dashboard() {
-    return hostWindow().Dashboard;
-  }
-  function browserTranslator() {
-    return hostWindow().Translator;
-  }
-  function detailsContext(JE2) {
-    const holder = JE2;
-    return featureContext("details-providers", JE2, {
-      internalSlots: ["features"],
-      internalsObject: () => holder.internals ?? (holder.internals = {})
-    });
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/details-providers/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "api");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bridge");
+  var export2 = /* @__PURE__ */ sharedExport(shared, "browserTranslator");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "currentUserId");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "dashboard");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "detailsContext");
 
-  // client/src/features/details-providers/wire.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function field(value, key) {
-    return isRecord(value) ? value[key] : void 0;
-  }
-  function str(value) {
-    return typeof value === "string" ? value : void 0;
-  }
-  function text(value) {
-    return typeof value === "string" && value !== "" ? value : void 0;
-  }
-  function num(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-  }
-  function bool(value) {
-    return typeof value === "boolean" ? value : void 0;
-  }
-  function list(value) {
-    return Array.isArray(value) ? value : [];
-  }
-  function stringList(value) {
-    return list(value).filter((entry) => typeof entry === "string");
-  }
-  function providerId(value) {
-    if (typeof value === "string") return value || void 0;
-    if (typeof value === "number" && Number.isFinite(value) && value !== 0) return String(value);
-    return void 0;
-  }
-  function decodeProviderIds(value) {
-    const ids = {};
-    if (!isRecord(value)) return ids;
-    const tmdb = providerId(value.Tmdb), imdb = providerId(value.Imdb), tvdb = providerId(value.Tvdb);
-    const aniList = providerId(value.AniList), anilist = providerId(value.Anilist);
-    if (tmdb !== void 0) ids.Tmdb = tmdb;
-    if (imdb !== void 0) ids.Imdb = imdb;
-    if (tvdb !== void 0) ids.Tvdb = tvdb;
-    if (aniList !== void 0) ids.AniList = aniList;
-    if (anilist !== void 0) ids.Anilist = anilist;
-    return ids;
-  }
-  function decodeStreams(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.filter(isRecord).map((stream) => {
-      const result = {};
-      const type = str(stream.Type), language = str(stream.Language);
-      if (type !== void 0) result.Type = type;
-      if (language !== void 0) result.Language = language;
-      return result;
-    });
-  }
-  function decodeSources(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.map((source) => {
-      const result = {};
-      const id = str(field(source, "Id")), streams = decodeStreams(field(source, "MediaStreams"));
-      if (id !== void 0) result.Id = id;
-      if (streams !== void 0) result.MediaStreams = streams;
-      return result;
-    });
-  }
-  function set(item, key, value) {
-    if (value !== void 0) item[key] = value;
-  }
-  function decodeDetailsItem(value) {
-    if (!isRecord(value)) return null;
-    const item = { ProviderIds: decodeProviderIds(value.ProviderIds), SeriesProviderIds: decodeProviderIds(value.SeriesProviderIds) };
-    set(item, "Id", str(value.Id));
-    set(item, "Type", str(value.Type));
-    set(item, "Name", str(value.Name));
-    set(item, "SeriesId", str(value.SeriesId));
-    set(item, "SeriesName", str(value.SeriesName));
-    set(item, "IndexNumber", num(value.IndexNumber));
-    set(item, "ParentIndexNumber", num(value.ParentIndexNumber));
-    set(item, "PremiereDate", str(value.PremiereDate));
-    set(item, "DisplayOrder", str(value.DisplayOrder));
-    set(item, "MediaSources", decodeSources(value.MediaSources));
-    set(item, "MediaStreams", decodeStreams(value.MediaStreams));
-    set(item, "FirstEpisodeId", str(field(value.FirstEpisode, "Id")));
-    if (Array.isArray(value.Tags)) item.Tags = stringList(value.Tags);
-    const userData = value.UserData;
-    set(item, "Played", bool(field(userData, "Played")));
-    set(item, "UnplayedItemCount", num(field(userData, "UnplayedItemCount")));
-    return item;
-  }
-  function errorShape(error) {
-    const shape = {};
-    const status = num(field(error, "status")), message = str(field(error, "message"));
-    const json = field(error, "responseJSON");
-    const code = str(field(json, "code")), responseMessage = str(field(json, "message"));
-    const retry = num(field(json, "retryAfterSeconds"));
-    if (status !== void 0) shape.status = status;
-    if (message !== void 0) shape.message = message;
-    if (code !== void 0) shape.responseCode = code;
-    if (responseMessage !== void 0) shape.responseMessage = responseMessage;
-    if (retry !== void 0) shape.retryAfterSeconds = retry;
-    return shape;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/page.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/details-providers/page");
+  var export12 = /* @__PURE__ */ sharedExport(shared2, "detailsLease");
+  var export32 = /* @__PURE__ */ sharedExport(shared2, "hashItemId");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "lookupDetailsItem");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "visibleDetailPage");
 
-  // client/src/features/details-providers/page.ts
-  function hashItemId(hash = window.location.hash) {
-    try {
-      return new URLSearchParams(hash.split("?")[1] ?? "").get("id");
-    } catch {
-      return null;
-    }
-  }
-  function visibleDetailPage() {
-    return document.querySelector("#itemDetailPage:not(.hide)");
-  }
-  function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
-    if (helpers?.getItemCached) {
-      return withUser ? helpers.getItemCached(itemId, { userId }) : helpers.getItemCached(itemId);
-    }
-    return api().getItem(userId, itemId);
-  }
-  async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
-    return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
-  }
-  function detailsLease(session, itemId, page) {
-    const sameSession = sessionLease(session);
-    return {
-      itemId,
-      page,
-      current: () => sameSession() && hashItemId() === itemId && page.isConnected && visibleDetailPage() === page
-    };
-  }
-  function sessionLease(session) {
-    const epoch = session?.getEpoch();
-    const userId = currentUserId();
-    const client = api();
-    const root = client.getUrl("/");
-    const token = client.accessToken();
-    return () => hasApi() && api() === client && client.getUrl("/") === root && client.accessToken() === token && (!session || epoch === void 0 || session.isCurrent(epoch)) && currentUserId() === userId;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/links.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/details-providers/links");
+  var export22 = /* @__PURE__ */ sharedExport(shared3, "pathSegment");
 
-  // client/src/features/details-providers/links.ts
-  function pathSegment(id) {
-    return encodeURIComponent(id);
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/wire.ts
+  var shared4 = /* @__PURE__ */ sharedModule("features/details-providers/wire");
+  var export02 = /* @__PURE__ */ sharedExport(shared4, "bool");
+  var export13 = /* @__PURE__ */ sharedExport(shared4, "decodeDetailsItem");
+  var export42 = /* @__PURE__ */ sharedExport(shared4, "errorShape");
+  var export52 = /* @__PURE__ */ sharedExport(shared4, "field");
+  var export72 = /* @__PURE__ */ sharedExport(shared4, "isRecord");
+  var export8 = /* @__PURE__ */ sharedExport(shared4, "list");
+  var export9 = /* @__PURE__ */ sharedExport(shared4, "num");
+  var export112 = /* @__PURE__ */ sharedExport(shared4, "str");
+  var export132 = /* @__PURE__ */ sharedExport(shared4, "text");
 
   // client/src/features/details-providers/review-domain.ts
   function htmlToMarkdown(value) {
@@ -242,7 +78,7 @@
     while (html.includes(marker)) marker += "J";
     const protectedHtml = [];
     const protect = (content) => `${marker}${protectedHtml.push(content) - 1}\0`;
-    const emphasize = (text2) => text2.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/_(.+?)_/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>");
+    const emphasize = (text) => text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/_(.+?)_/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>");
     const anchor = (label, url) => `<a is="emby-linkbutton" href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     html = html.replace(
       /`([^`\n]+)`|\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s<]+)/gi,
@@ -301,7 +137,7 @@
     }
     if (inBlockquote) processed.push("<blockquote>" + blockquoteLines.join("<br>") + "</blockquote>");
     if (inList) processed.push("<ul>" + listItems.join("") + "</ul>");
-    return protectedHtml.reduce((text2, content, index) => text2.split(`${marker}${index}\0`).join(content), processed.join(""));
+    return protectedHtml.reduce((text, content, index) => text.split(`${marker}${index}\0`).join(content), processed.join(""));
   }
   var STAR_POLYGON = '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>';
   function starIconHtml(fillFraction) {
@@ -320,40 +156,40 @@
     return value ? new Date(value).toLocaleDateString(void 0, { year: "numeric", month: "short", day: "numeric" }) : "";
   }
   function decodeTmdbReviews(value) {
-    return list(field(value, "results")).filter(isRecord).map((review) => ({
-      author: str(review.author),
-      created_at: str(review.created_at),
-      content: str(review.content),
+    return export8(export52(value, "results")).filter(export72).map((review) => ({
+      author: export112(review.author),
+      created_at: export112(review.created_at),
+      content: export112(review.content),
       // Rendered into markup: only a finite number is a rating.
-      rating: num(field(review.author_details, "rating")) ?? null,
-      url: str(review.url)
+      rating: export9(export52(review.author_details, "rating")) ?? null,
+      url: export112(review.url)
     }));
   }
   function decodeAnilistReviews(value) {
-    return list(field(value, "Reviews")).filter(isRecord).map((review) => {
-      const content = str(review.Content);
-      const summary = str(review.Summary);
-      const score = num(review.Score);
+    return export8(export52(value, "Reviews")).filter(export72).map((review) => {
+      const content = export112(review.Content);
+      const summary = export112(review.Summary);
+      const score = export9(review.Score);
       return {
         source: "anilist",
-        author: text(review.Author) || "Anonymous",
-        created_at: str(review.CreatedAt),
+        author: export132(review.Author) || "Anonymous",
+        created_at: export112(review.CreatedAt),
         content: summary ? `**${summary}**
 
 ${content}` : content,
         rating: score ? Number((score / 10).toFixed(1)) : null,
-        url: str(review.Url)
+        url: export112(review.Url)
       };
     });
   }
   function decodeUserReviews(value) {
-    return list(field(value, "reviews")).filter(isRecord).map((review) => ({
-      userId: str(review.userId) ?? "",
-      userName: str(review.userName),
-      content: str(review.content),
-      rating: num(review.rating) ?? null,
-      createdAt: str(review.createdAt),
-      updatedAt: str(review.updatedAt)
+    return export8(export52(value, "reviews")).filter(export72).map((review) => ({
+      userId: export112(review.userId) ?? "",
+      userName: export112(review.userName),
+      content: export112(review.content),
+      rating: export9(review.rating) ?? null,
+      createdAt: export112(review.createdAt),
+      updatedAt: export112(review.updatedAt)
     }));
   }
   var sameUser = (a, b) => a.replace(/-/g, "") === b.replace(/-/g, "");
@@ -381,8 +217,8 @@ ${content}` : content,
   }
 
   // client/src/features/details-providers/reviews.ts
-  var JE = bridge("Reviews");
-  var ctx = detailsContext(JE);
+  var JE = export1("Reviews");
+  var ctx = export5(JE);
   var REVIEW_PREVIEW_LENGTH = 350;
   JE.initializeReviewsScript = function initializeReviewsScript() {
     const config = JE.pluginConfig;
@@ -433,7 +269,7 @@ ${content}` : content,
     }
     function removeReviewsSection(page) {
       try {
-        const root = page || visibleDetailPage() || document;
+        const root = page || export11() || document;
         root.querySelector(".tmdb-reviews-section")?.remove();
         root.querySelector(".je-avg-user-rating-chip")?.remove();
       } catch (e) {
@@ -442,9 +278,9 @@ ${content}` : content,
     }
     function fetchReviews(tmdbId, mediaType) {
       const apiMediaType = mediaType === "Series" ? "tv" : "movie";
-      const id = pathSegment(tmdbId);
+      const id = export22(tmdbId);
       const path = `/${apiMediaType}/${id}/reviews?language=en-US&page=1`;
-      const url = `${api().getUrl(`/JellyfinEnhanced/tmdb/${apiMediaType}/${id}/reviews`)}?language=en-US&page=1`;
+      const url = `${export0().getUrl(`/JellyfinEnhanced/tmdb/${apiMediaType}/${id}/reviews`)}?language=en-US&page=1`;
       return JE.core.api.fetch(url, { cacheKey: `tmdb:${path}` }).then(decodeTmdbReviews).catch((error) => {
         console.error(`${logPrefix} Failed to fetch reviews.`, error);
         return null;
@@ -455,7 +291,7 @@ ${content}` : content,
       const anilistId = parseInt(ids?.AniList || ids?.Anilist || "", 10);
       if (!anilistId) return Promise.resolve(null);
       const query = `anilistId=${anilistId}`;
-      return JE.core.api.fetch(`${api().getUrl("/JellyfinEnhanced/anilist/reviews")}?${query}`, { cacheKey: `anilist:${query}` }).then(decodeAnilistReviews).catch((error) => {
+      return JE.core.api.fetch(`${export0().getUrl("/JellyfinEnhanced/anilist/reviews")}?${query}`, { cacheKey: `anilist:${query}` }).then(decodeAnilistReviews).catch((error) => {
         console.error(`${logPrefix} Failed to fetch AniList reviews.`, error);
         return null;
       });
@@ -468,7 +304,7 @@ ${content}` : content,
       ]);
       return tmdb || anilist ? [...tmdb || [], ...anilist || []] : null;
     }
-    const keyPath = (tmdbKey) => tmdbKey.split(":").map(pathSegment).join(":");
+    const keyPath = (tmdbKey) => tmdbKey.split(":").map(export22).join(":");
     function fetchUserReviews(tmdbKey, mediaType) {
       return JE.core.api.plugin(`/reviews/${mediaType}/${keyPath(tmdbKey)}`).then(decodeUserReviews).catch((err) => {
         console.error(`${logPrefix} Failed to fetch user reviews.`, err);
@@ -479,7 +315,7 @@ ${content}` : content,
       try {
         return await JE.core.api.plugin(`/reviews/${mediaType}/${keyPath(tmdbKey)}`, { method: "POST", body: { content, rating: rating || null }, skipRetry: true });
       } catch (e) {
-        const shape = errorShape(e);
+        const shape = export42(e);
         throw new Error(shape.responseMessage || shape.message);
       }
     }
@@ -489,15 +325,15 @@ ${content}` : content,
     async function adminDeleteUserReview(targetUserId, tmdbKey, mediaType) {
       const userIdN = (targetUserId || "").replace(/-/g, "");
       try {
-        await JE.core.api.plugin(`/reviews/admin/${pathSegment(userIdN)}/${mediaType}/${keyPath(tmdbKey)}`, { method: "DELETE", skipRetry: true });
+        await JE.core.api.plugin(`/reviews/admin/${export22(userIdN)}/${mediaType}/${keyPath(tmdbKey)}`, { method: "DELETE", skipRetry: true });
       } catch (e) {
-        if (errorShape(e).status === 404) throw new Error("No matching review to delete (it may have already been removed).");
+        if (export42(e).status === 404) throw new Error("No matching review to delete (it may have already been removed).");
         throw e;
       }
     }
     function jeConfirm(message, title) {
       return new Promise((resolve) => {
-        const host = dashboard();
+        const host = export4();
         if (host && typeof host.confirm === "function") {
           try {
             host.confirm(message, title, resolve);
@@ -512,7 +348,7 @@ ${message}` : message));
       });
     }
     function jeAlert(message, title) {
-      const host = dashboard();
+      const host = export4();
       if (host && typeof host.alert === "function") {
         try {
           host.alert({ title: title || "", message: message || "" });
@@ -589,19 +425,19 @@ ${message}` : message);
     function getTranslationTargets() {
       let language = "";
       try {
-        language = localStorage.getItem(`${currentUserId()}-language`) || "";
+        language = localStorage.getItem(`${export3()}-language`) || "";
       } catch {
       }
       return translationTargets(language || document.documentElement.lang || "");
     }
     let translationLanguages = null;
     function getTranslationLanguages() {
-      translationLanguages ?? (translationLanguages = JE.core.api.plugin("/translate/languages", { skipRetry: true }).then((response) => list(field(response, "languages")).filter((code) => typeof code === "string")).catch(() => []));
+      translationLanguages ?? (translationLanguages = JE.core.api.plugin("/translate/languages", { skipRetry: true }).then((response) => export8(export52(response, "languages")).filter((code) => typeof code === "string")).catch(() => []));
       return translationLanguages;
     }
     async function browserCanTranslate(target) {
       try {
-        const translator = browserTranslator();
+        const translator = export2();
         if (!window.isSecureContext || !translator) return false;
         return await translator.availability({ sourceLanguage: "en", targetLanguage: target }) !== "unavailable";
       } catch {
@@ -609,7 +445,7 @@ ${message}` : message);
       }
     }
     async function translateInBrowser(value, target) {
-      const factory = browserTranslator();
+      const factory = export2();
       if (!factory) throw new Error("Browser translator unavailable");
       const translator = await factory.create({ sourceLanguage: "en", targetLanguage: target });
       try {
@@ -621,7 +457,7 @@ ${message}` : message);
       }
     }
     function translateFailedMessage(error) {
-      const shape = errorShape(error);
+      const shape = export42(error);
       if (shape.status === 429 || shape.responseCode === "translation_rate_limited") {
         const seconds = shape.retryAfterSeconds;
         return seconds !== void 0 && seconds > 0 ? JE.t("reviews_translate_rate_limited_wait", { seconds }) : JE.t("reviews_translate_rate_limited");
@@ -661,7 +497,7 @@ ${message}` : message);
             }
           }
           const response = await JE.core.api.plugin("/translate", { method: "POST", body: { text: value, target: targets.server }, skipRetry: true });
-          const translated = str(field(response, "text"));
+          const translated = export112(export52(response, "text"));
           if (translated === void 0) throw new Error("Invalid translation response");
           return translated;
         };
@@ -709,7 +545,7 @@ ${message}` : message);
       const content = review.content || "";
       const date = reviewDate(review.updatedAt) || reviewDate(review.createdAt);
       const ratingDisplay = review.rating ? `<span class="tmdb-review-rating je-user-review-rating">${renderUserStarRating(review.rating)}</span>` : "";
-      const avatarSrc = api().getUrl(`/Users/${pathSegment(review.userId)}/Images/Primary`) + "?width=48&quality=90";
+      const avatarSrc = export0().getUrl(`/Users/${export22(review.userId)}/Images/Primary`) + "?width=48&quality=90";
       const isOwn = sameUser(review.userId, viewer.id);
       const showModerationDelete = !isOwn && viewer.isAdmin;
       const editTitle = tWithFallback("reviews_edit", "Edit");
@@ -859,7 +695,7 @@ ${message}` : message);
       const ownReview = userReviews.find((review) => sameUser(review.userId, viewer.id));
       const reviewsSection = document.createElement("details");
       reviewsSection.className = "detailSection tmdb-reviews-section";
-      const owner = detailsLease(JE.session, hashItemId() || "", contextPage);
+      const owner = export12(JE.session, export32() || "", contextPage);
       const current = () => reviewsSection.isConnected && owner.current();
       if (JE.currentSettings?.reviewsExpandedByDefault) reviewsSection.setAttribute("open", "");
       const totalCount = (reviews ? reviews.length : 0) + userReviews.length;
@@ -911,7 +747,7 @@ ${message}` : message);
           if (!current()) return;
           console.error(`${logPrefix} Delete failed`, e);
           const errTitle = tWithFallback("reviews_delete_error_title", "Delete failed");
-          const errBody = tWithFallback("reviews_delete_error_body", "Could not delete the review: {err}", { err: errorShape(e).message || "Unknown error" });
+          const errBody = tWithFallback("reviews_delete_error_body", "Could not delete the review: {err}", { err: export42(e).message || "Unknown error" });
           jeAlert(errBody, errTitle);
           void refreshReviews(contextPage);
         }
@@ -969,7 +805,7 @@ ${message}` : message);
       return { tmdbKey: `${seriesTmdbId}:s${item.ParentIndexNumber}:e${item.IndexNumber}`, apiMediaType: "tv" };
     }
     async function fetchViewer() {
-      const client = api();
+      const client = export0();
       let user = null;
       try {
         user = client.getCurrentUser ? await client.getCurrentUser() : null;
@@ -977,19 +813,19 @@ ${message}` : message);
         user = null;
       }
       return {
-        id: str(field(user, "Id")) || client.getCurrentUserId() || "",
-        isAdmin: bool(field(field(user, "Policy"), "IsAdministrator")) === true
+        id: export112(export52(user, "Id")) || client.getCurrentUserId() || "",
+        isAdmin: export02(export52(export52(user, "Policy"), "IsAdministrator")) === true
       };
     }
     async function loadInto(page, seriesLookup, force = false) {
-      const itemId = hashItemId();
-      const userId = currentUserId();
+      const itemId = export32();
+      const userId = export3();
       if (!itemId || !userId) return;
-      const lease = detailsLease(JE.session, itemId, page);
+      const lease = export12(JE.session, itemId, page);
       const request = {};
       pageLoads.set(page, request);
       const current = () => lease.current() && pageLoads.get(page) === request;
-      const item = await lookupDetailsItem(JE.helpers, itemId, true, userId);
+      const item = await export7(JE.helpers, itemId, true, userId);
       if (!current()) return;
       const mediaType = item?.Type;
       if (!item || !mediaType) {
@@ -1022,7 +858,7 @@ ${message}` : message);
     }
     async function refreshReviews(contextPage) {
       try {
-        await loadInto(visibleDetailPage() || contextPage, async (userId, seriesId) => decodeDetailsItem(await api().getItem(userId, seriesId)), true);
+        await loadInto(export11() || contextPage, async (userId, seriesId) => export13(await export0().getItem(userId, seriesId)), true);
       } catch (err) {
         console.error(`${logPrefix} Failed to refresh reviews:`, err);
       }
@@ -1034,7 +870,7 @@ ${message}` : message);
         renderedOwners.delete(visiblePage);
       }
       try {
-        await loadInto(visiblePage, (userId, seriesId) => lookupDetailsItem(JE.helpers, seriesId, true, userId));
+        await loadInto(visiblePage, (userId, seriesId) => export7(JE.helpers, seriesId, true, userId));
       } catch (error) {
         console.error(`${logPrefix} Error processing page:`, error);
       }
@@ -1057,7 +893,7 @@ ${message}` : message);
       const isItemDetailElement = !!element && (element.id === "itemDetailPage" || element.classList.contains("itemDetailPage"));
       if (!hasItemId && !isItemDetailElement) return;
       await new Promise((resolve) => setTimeout(resolve, 150));
-      const visiblePage = visibleDetailPage();
+      const visiblePage = export11();
       if (visiblePage) void processPage(visiblePage);
     }, { pages: null, fetchItem: false, immediate: true });
   };

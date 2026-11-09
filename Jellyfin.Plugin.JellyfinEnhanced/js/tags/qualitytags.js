@@ -1,59 +1,34 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function hasApiClient() {
-    const host = window;
-    return host.ApiClient !== void 0 && host.ApiClient !== null;
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function records(value) {
-    return Array.isArray(value) ? value.filter(isRecord) : [];
-  }
-  function stringList(value) {
-    return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
-  }
-  function members(value) {
-    if (!value) return [];
-    if (!Array.isArray(value)) throw new TypeError("Expected a list");
-    return value;
-  }
-  function memberRecord(value) {
-    if (value === null || value === void 0) throw new TypeError("Read a missing list member");
-    return record(value);
-  }
-  function memberText(value) {
-    if (typeof value !== "string") throw new TypeError("Read a list member that is not text");
-    return value;
-  }
-  function text(value) {
-    return typeof value === "string" && value ? value : null;
-  }
-  function finite(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : null;
-  }
-  function own(table, key) {
-    return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export2 = /* @__PURE__ */ sharedExport(shared2, "finite");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export5 = /* @__PURE__ */ sharedExport(shared2, "memberRecord");
+  var export6 = /* @__PURE__ */ sharedExport(shared2, "memberText");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "members");
+  var export9 = /* @__PURE__ */ sharedExport(shared2, "own");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "records");
+  var export12 = /* @__PURE__ */ sharedExport(shared2, "stringList");
+  var export13 = /* @__PURE__ */ sharedExport(shared2, "text");
 
   // client/src/features/media-tags/types/quality/quality-data.ts
   var resolutionOrder = ["8K", "4K", "1440p", "1080p", "1080i", "720p", "576p", "576i", "480p", "480i", "LOW-RES", "SD"];
@@ -245,7 +220,7 @@
 
   // client/src/features/media-tags/types/quality/quality-rules.ts
   function listed(value) {
-    return value ? members(value).map((member) => member === null || member === void 0 ? null : record(member)) : null;
+    return value ? export7(value).map((member) => member === null || member === void 0 ? null : export10(member)) : null;
   }
   function createQualityRules(host) {
     function selectAudioStreamsForLanguage(audioStreams, preferred) {
@@ -293,7 +268,7 @@
     }
     function truthfulLegacyAudio(codec, channels, streams) {
       const tracks = streams.map((stream) => ({ label: detectCurrentAudioCodec([stream]), bucket: legacyBucket(trackChannels(stream)), stream }));
-      const holds = (track) => (codec === null || track.label !== null && (own(LEGACY_STANDS_FOR, codec) || []).includes(track.label)) && (channels === null || LEGACY_BUCKETS.indexOf(track.bucket ?? "") >= LEGACY_BUCKETS.indexOf(channels));
+      const holds = (track) => (codec === null || track.label !== null && (export9(LEGACY_STANDS_FOR, codec) || []).includes(track.label)) && (channels === null || LEGACY_BUCKETS.indexOf(track.bucket ?? "") >= LEGACY_BUCKETS.indexOf(channels));
       if (tracks.some(holds)) return { codec, channels };
       let best = null;
       for (const track of tracks) {
@@ -301,7 +276,7 @@
         if (label && (best === null || distinctRank(label, "audio") < distinctRank(best.text, "audio"))) best = { text: label, track };
       }
       if (!best) return { codec: null, channels: null };
-      return { codec: best.track.label === null ? null : own(LEGACY_NAME, best.track.label) ?? null, channels: best.track.bucket };
+      return { codec: best.track.label === null ? null : export9(LEGACY_NAME, best.track.label) ?? null, channels: best.track.bucket };
     }
     function getChannelTag(audioStreams) {
       if (audioStreams.length === 0) return null;
@@ -309,7 +284,7 @@
       let maxChannels = 0;
       let detectedLayoutTag = null;
       for (const stream of audioStreams) {
-        const channels = finite(stream.Channels) ?? 0;
+        const channels = export2(stream.Channels) ?? 0;
         if (channels > maxChannels) {
           maxChannels = channels;
         }
@@ -347,8 +322,8 @@
       if (!video) return labels;
       const parts = String(video.AspectRatio || "").trim().split(/[:/]/).map(Number);
       let ratio = parts.length === 1 ? parts[0] ?? 0 : parts.length === 2 ? (parts[0] ?? 0) / (parts[1] ?? 1) : 0;
-      const width = finite(video.Width) ?? 0;
-      const height = finite(video.Height) ?? 0;
+      const width = export2(video.Width) ?? 0;
+      const height = export2(video.Height) ?? 0;
       if (!Number.isFinite(ratio) || ratio <= 0) ratio = width > 0 && height > 0 ? width / height : 0;
       if (ratio >= 0.5 && ratio <= 4) {
         const snap = aspectRatios.filter(([value, tolerance]) => Math.abs(value - ratio) <= tolerance).sort((a, b) => Math.abs(a[0] - ratio) - Math.abs(b[0] - ratio))[0];
@@ -416,9 +391,9 @@
       const codec = String(stream.Codec || "").toLowerCase();
       if (/^(?:truehd|mlp)/.test(codec)) return "TRUEHD ATMOS";
       if (/^(?:e-?ac-?3|ddp)/.test(codec)) return "DD+ ATMOS";
-      const text2 = [stream.Codec, stream.Profile, stream.DisplayTitle].filter(Boolean).join(" ").toLowerCase();
-      if (/(?:^|[^a-z0-9_])(?:true[ .-]?hd|mlp)(?![a-z_])/.test(text2)) return "TRUEHD ATMOS";
-      if (/(?:^|[^a-z0-9_])(?:e[-_. ]?ac-?3|ddp(?:a|lus)?|dd\+|dolby\s*digital\s*(?:plus|\+))(?![a-z_])/.test(text2)) return "DD+ ATMOS";
+      const text = [stream.Codec, stream.Profile, stream.DisplayTitle].filter(Boolean).join(" ").toLowerCase();
+      if (/(?:^|[^a-z0-9_])(?:true[ .-]?hd|mlp)(?![a-z_])/.test(text)) return "TRUEHD ATMOS";
+      if (/(?:^|[^a-z0-9_])(?:e[-_. ]?ac-?3|ddp(?:a|lus)?|dd\+|dolby\s*digital\s*(?:plus|\+))(?![a-z_])/.test(text)) return "DD+ ATMOS";
       return label;
     }
     const NAMED_LAYOUTS = { mono: "1.0", stereo: "2.0", quad: "4.0", hexagonal: "6.0", octagonal: "8.0" };
@@ -430,7 +405,7 @@
         return !count || bed + lfe === count || bed + lfe + height === count;
       };
       const layout = String(stream.ChannelLayout || "").toLowerCase().replace(/\(.*\)$/, "").trim();
-      const namedLayout = own(NAMED_LAYOUTS, layout);
+      const namedLayout = export9(NAMED_LAYOUTS, layout);
       if (namedLayout && agrees(namedLayout)) return namedLayout;
       const numeric = /^(\d)\.(\d)(?:\.(\d))?$/.exec(layout);
       if (numeric && agrees(numeric.slice(1).filter(Boolean).join("."))) return numeric.slice(1).filter(Boolean).join(".");
@@ -438,7 +413,7 @@
       const named = /(?:^|[^a-z0-9_])([1-7])[. ]([01])(?:\.([246]))?(?![a-z0-9_])/.exec(title);
       const fromTitle = named ? named.slice(1).filter(Boolean).join(".") : /(?:^|[^a-z0-9_])stereo(?![a-z0-9_])/.test(title) ? "2.0" : /(?:^|[^a-z0-9_])mono(?![a-z0-9_])/.test(title) ? "1.0" : null;
       if (fromTitle && agrees(fromTitle)) return fromTitle;
-      return own(COUNT_LAYOUTS, String(stream.Channels)) || null;
+      return export9(COUNT_LAYOUTS, String(stream.Channels)) || null;
     }
     function trackAudioLabel(stream) {
       const codec = detectCurrentAudioCodec([stream]);
@@ -472,7 +447,7 @@
     };
     function videoRangeFacts(video) {
       const type = String(video?.VideoRangeType || "").toLowerCase();
-      const known = own(RANGE_TYPES, type);
+      const known = export9(RANGE_TYPES, type);
       if (known) return known;
       const title = `${String(video?.DisplayTitle || "")} ${type}`.toLowerCase();
       const word = (pattern) => new RegExp(`(?:^|[^a-z0-9_])(?:${pattern})(?![a-z0-9_])`).test(title);
@@ -546,7 +521,7 @@
       let mediaStreams = listed(rawStreams);
       let mediaSources = listed(rawSources);
       const versions = versionCount(mediaStreams, mediaSources);
-      const probed = (id) => !!id && (mediaStreams?.some((s) => s?.SourceId === id && (s.Type === "Video" || s.Type === "Audio")) || records(mediaSources?.find((s) => s?.Id === id)?.MediaStreams).some((s) => s.Type === "Video" || s.Type === "Audio"));
+      const probed = (id) => !!id && (mediaStreams?.some((s) => s?.SourceId === id && (s.Type === "Video" || s.Type === "Audio")) || export11(mediaSources?.find((s) => s?.Id === id)?.MediaStreams).some((s) => s.Type === "Video" || s.Type === "Audio"));
       const versionId = sourceId && (mediaStreams?.some((s) => s?.SourceId === sourceId) || mediaSources?.some((s) => s?.Id === sourceId)) ? sourceId : mediaSources?.find((s) => probed(s?.Id))?.Id || mediaSources?.find((s) => s?.Id)?.Id || mediaStreams?.find((s) => s?.SourceId)?.SourceId;
       if (versionId) {
         const version = mediaSources?.find((s) => s?.Id === versionId);
@@ -562,19 +537,19 @@
             Source: version.Source,
             Edition: version.Edition
           } : {},
-          DistinctQualities: itemData?.DistinctQualities ? members(itemData.DistinctQualities).map(memberRecord).filter((q) => q.SourceId === versionId) : void 0
+          DistinctQualities: itemData?.DistinctQualities ? export7(itemData.DistinctQualities).map(export5).filter((q) => q.SourceId === versionId) : void 0
         };
       }
       const qualities = /* @__PURE__ */ new Set();
       let videoStreams = [];
       let audioStreams = [];
       if (mediaStreams) {
-        const streams = mediaStreams.map(memberRecord);
+        const streams = mediaStreams.map(export5);
         videoStreams = streams.filter((s) => s.Type === "Video");
         audioStreams = streams.filter((s) => s.Type === "Audio");
       }
       if (mediaSources?.[0]?.MediaStreams) {
-        const sourceStreams = members(mediaSources[0].MediaStreams).map(memberRecord);
+        const sourceStreams = export7(mediaSources[0].MediaStreams).map(export5);
         videoStreams = videoStreams.concat(sourceStreams.filter((s) => s.Type === "Video"));
         audioStreams = audioStreams.concat(sourceStreams.filter((s) => s.Type === "Audio"));
       }
@@ -613,8 +588,8 @@
         const displayTitle = String(primaryVideoStream.DisplayTitle || "");
         const resolutionRegex = /\b(8k|4320p|4k|2160p|1440p|1080p|1080i|720p|576p|576i|480p|480i|360p|404p|384p|520p)\b/i;
         const resolutionMatch = displayTitle.match(resolutionRegex);
-        const streamHeight = finite(primaryVideoStream.Height) ?? 0;
-        const streamWidth = finite(primaryVideoStream.Width) ?? 0;
+        const streamHeight = export2(primaryVideoStream.Height) ?? 0;
+        const streamWidth = export2(primaryVideoStream.Width) ?? 0;
         const knownSize = streamHeight > 0 || streamWidth > 0;
         if (resolutionMatch && !knownSize) {
           const found = (resolutionMatch[1] ?? "").toLowerCase();
@@ -678,7 +653,7 @@
         if (audioTag) qualities.add(audioTag);
       } else {
         for (let i = 0; i < audioStreams.length; i++) {
-          const stream = record(audioStreams[i]);
+          const stream = export10(audioStreams[i]);
           const displayTitle = String(stream.DisplayTitle || "");
           const atmosRegex = /atmos/i;
           const truehd = /truehd/i;
@@ -699,7 +674,7 @@
         }
         if (!audioTag) {
           for (let i = 0; i < audioStreams.length; i++) {
-            const stream = record(audioStreams[i]);
+            const stream = export10(audioStreams[i]);
             const codec = String(stream.Codec || "").toLowerCase();
             const profile = String(stream.Profile || "").toLowerCase();
             if (codec.includes("truehd") || profile.includes("truehd")) {
@@ -735,7 +710,7 @@
       }
       if (mediaSources) {
         for (const member of mediaSources) {
-          const source = memberRecord(member);
+          const source = export5(member);
           const path = withoutReleaseGroup(String(source.Path || "")).toLowerCase();
           const has3D = /(?:^|[^a-z0-9])3d(?![a-z0-9])/.test(path);
           const has3DFormat = /(?:^|[^a-z0-9])(?:hsbs|fsbs|htab|ftab|mvc)(?![a-z0-9])/.test(path);
@@ -778,7 +753,7 @@
           qualities.add("Physical");
         }
       }
-      const namedSource = text(itemData?.Source);
+      const namedSource = export13(itemData?.Source);
       if (namedSource && sourceOrder.includes(namedSource)) {
         for (const source of sourceOrder) qualities.delete(source);
         qualities.add(namedSource);
@@ -786,17 +761,17 @@
       if (itemData?.Edition) qualities.add(EDITION_PREFIX + String(itemData.Edition));
       if (!singleTrack && versions > 1) qualities.add(`versions:${versions}`);
       if (!singleTrack && displayModeKey() !== "000") {
-        const distinct = itemData?.DistinctQualities ? members(itemData.DistinctQualities) : distinctQualities(videoStreams, audioStreams);
+        const distinct = itemData?.DistinctQualities ? export7(itemData.DistinctQualities) : distinctQualities(videoStreams, audioStreams);
         for (const category of ["audio", "videoCodec", "dynamicRange"]) {
           if (!allValues(category)) continue;
           for (const label of qualities) if (categorize(label) === category) qualities.delete(label);
           const facts = category === "audio" && legacyAudio ? distinctQualities([], audioStreams) : distinct;
-          let values = facts.map(memberRecord).filter((value) => value.Category === (category === "audio" ? "audioInfo" : category));
+          let values = facts.map(export5).filter((value) => value.Category === (category === "audio" ? "audioInfo" : category));
           if (category === "audio" && host.preferredAudioLanguage()) {
             const languages = new Set(audioStreams.map((stream) => stream.Language || null));
             values = values.filter((value) => languages.has(value.Language || null));
           }
-          for (const value of values) qualities.add(memberText(value.Label));
+          for (const value of values) qualities.add(export6(value.Label));
         }
       }
       return Array.from(qualities);
@@ -847,21 +822,21 @@
     function aggregateQualities(entry, representative) {
       const policy = aggregationPolicy();
       const summary = entry.QualitySummary;
-      if (entry.Type !== "Series" && entry.Type !== "Season" || !isRecord(summary) || policy === "representative") return representative;
+      if (entry.Type !== "Series" && entry.Type !== "Season" || !export42(summary) || policy === "representative") return representative;
       const categoryKeys = { resolution: "resolution", source: "source", dynamicRange: "dynamicRange", videoCodec: "videoCodec", audioInfo: "audio" };
-      const qualities = (policy === "latest" ? members(summary.LatestExtras) : representative.filter((label) => !Object.values(categoryKeys).includes(categorize(label) ?? ""))).map(memberText).filter((label) => !label.startsWith("versions:"));
+      const qualities = (policy === "latest" ? export7(summary.LatestExtras) : representative.filter((label) => !Object.values(categoryKeys).includes(categorize(label) ?? ""))).map(export6).filter((label) => !label.startsWith("versions:"));
       const preferred = host.preferredAudioLanguage();
       const match = host.language()?.matchesLanguage;
-      const audioVariants = Object.entries(record(legacyFullAudio() ? summary.LegacyAudioByLanguage : summary.AudioByLanguage));
-      const regionalFallbacks = Object.entries(record(legacyFullAudio() ? summary.LegacyAudioRegionFallback : summary.AudioRegionFallback));
+      const audioVariants = Object.entries(export10(legacyFullAudio() ? summary.LegacyAudioByLanguage : summary.AudioByLanguage));
+      const regionalFallbacks = Object.entries(export10(legacyFullAudio() ? summary.LegacyAudioRegionFallback : summary.AudioRegionFallback));
       const audio = preferred && typeof match === "function" ? (audioVariants.find(([language]) => match(language, preferred, { requireRegion: true })) || regionalFallbacks.find(([language]) => match(language, preferred)) || audioVariants.find(([language]) => !language.includes("-") && match(language, preferred)))?.[1] : null;
       let mixed = false;
-      for (const [key, category] of Object.entries(record(summary.Categories))) {
-        const facts = memberRecord(key === "audioInfo" ? audio || (legacyFullAudio() ? summary.LegacyAudio : category) || {} : category);
-        const categoryKey = own(categoryKeys, key) ?? "";
+      for (const [key, category] of Object.entries(export10(summary.Categories))) {
+        const facts = export5(key === "audioInfo" ? audio || (legacyFullAudio() ? summary.LegacyAudio : category) || {} : category);
+        const categoryKey = export9(categoryKeys, key) ?? "";
         const cat = CATEGORY_BY_KEY.get(categoryKey);
         if (allValues(categoryKey)) {
-          qualities.push(...members(policy === "latest" ? facts.LatestAll : policy === "shared" ? facts.Shared : facts.All).map(memberText));
+          qualities.push(...export7(policy === "latest" ? facts.LatestAll : policy === "shared" ? facts.Shared : facts.All).map(export6));
           mixed || (mixed = !facts.AllSetsAgree && !!cat && readBool(cat.settingKey, cat.fallback ?? true));
           continue;
         }
@@ -884,7 +859,7 @@
       return fallback;
     }
     function readInt(userKey, fallback) {
-      const userVal = finite(host.setting(userKey));
+      const userVal = export2(host.setting(userKey));
       if (userVal !== null) return userVal;
       return fallback;
     }
@@ -917,7 +892,7 @@
     let jellyfinAudioPreferenceUserId = null;
     let jellyfinAudioPreferencePromise = null;
     let jellyfinAudioPreferencePromiseUserId = null;
-    const currentUserId = () => hasApiClient() ? apiClient().getCurrentUserId?.() || null : null;
+    const currentUserId = () => export1() ? export0().getCurrentUserId?.() || null : null;
     function resolvePreferredAudioLanguage() {
       const choice = String(JE.currentSettings?.qualityTagsPreferredAudioLanguage || "").trim();
       const lowered = choice.toLowerCase();
@@ -940,9 +915,9 @@
       if (jellyfinAudioPreferencePromise && jellyfinAudioPreferencePromiseUserId === userId) {
         return jellyfinAudioPreferencePromise;
       }
-      const request = Promise.resolve().then(() => apiClient().getUser(userId)).then((user) => {
+      const request = Promise.resolve().then(() => export0().getUser(userId)).then((user) => {
         if (currentUserId() !== userId) return;
-        jellyfinAudioPreference = String(record(record(user).Configuration).AudioLanguagePreference || "").trim() || null;
+        jellyfinAudioPreference = String(export10(export10(user).Configuration).AudioLanguagePreference || "").trim() || null;
         jellyfinAudioPreferenceUserId = userId;
       }).catch((err) => {
         console.warn(`${logPrefix} Could not read the Jellyfin audio language preference`, err);
@@ -1090,22 +1065,22 @@
       return badge;
     }
     function editionLabel(label) {
-      const row = own(EDITIONS, label);
+      const row = export9(EDITIONS, label);
       return row?.[0] ? JE.t(row[0]) : label;
     }
     function compactEditionLabel(label) {
-      const row = own(EDITIONS, label);
+      const row = export9(EDITIONS, label);
       return row?.[1] ? row[1].startsWith("quality_") ? JE.t(row[1]) : row[1] : editionLabel(label);
     }
     function versionsText(count) {
       const n = Number(count);
-      const text2 = JE.t("quality_versions_count", { count: Number.isFinite(n) ? n : count });
-      return (text2 === "quality_versions_count" ? "{count} versions" : text2).replace("{count}", count);
+      const text = JE.t("quality_versions_count", { count: Number.isFinite(n) ? n : count });
+      return (text === "quality_versions_count" ? "{count} versions" : text).replace("{count}", count);
     }
     function runtimeText(label, compact) {
       const say = (key, params, fallback) => {
-        const text2 = JE.t(key, params);
-        return text2 === key ? fallback : Object.entries(params).reduce((out, [name, value]) => out.replace(`{${name}}`, value), text2);
+        const text = JE.t(key, params);
+        return text === key ? fallback : Object.entries(params).reduce((out, [name, value]) => out.replace(`{${name}}`, value), text);
       };
       const hours = /^(\d+)h (\d+)m$/.exec(label);
       if (hours?.[1] && hours[2]) return say(compact ? "quality_runtime_hours_compact" : "quality_runtime_hours", { hours: hours[1], minutes: hours[2] }, compact ? `${hours[1]}h${hours[2]}` : label);
@@ -1118,10 +1093,10 @@
       return label;
     }
     function qualitiesFromCache(cached, itemId) {
-      if (!isRecord(cached) || !matchesCache(cached, itemId)) return null;
-      if (cached.aggregationPolicy === aggregationPolicy() && cached.aggregationCategories === aggregationCategoriesKey() || cached.type && cached.type !== "Series" && cached.type !== "Season") return stringList(cached.qualities);
+      if (!export42(cached) || !matchesCache(cached, itemId)) return null;
+      if (cached.aggregationPolicy === aggregationPolicy() && cached.aggregationCategories === aggregationCategoriesKey() || cached.type && cached.type !== "Series" && cached.type !== "Season") return export12(cached.qualities);
       if (!cached.qualitySummary) return null;
-      return aggregateQualities({ Type: cached.type, QualitySummary: cached.qualitySummary }, stringList(cached.representativeQualities));
+      return aggregateQualities({ Type: cached.type, QualitySummary: cached.qualitySummary }, export12(cached.representativeQualities));
     }
     function insertOverlay(ctx, container, qualities) {
       if (!container) return;
@@ -1208,7 +1183,7 @@
           if (el.closest(".je-hidden")) return;
           if (isAudioPreferencePending()) return;
           const itemId = String(item.Id);
-          const hot = record(ctx.hot?.get(itemId));
+          const hot = export10(ctx.hot?.get(itemId));
           const hotQualities = typeof hot.timestamp === "number" && Date.now() - hot.timestamp < ctx.cacheTtl ? qualitiesFromCache(hot, itemId) : null;
           if (hotQualities) {
             if (hotQualities.length) insertOverlay(ctx, el, hotQualities);
@@ -1227,7 +1202,7 @@
           qualities = aggregateQualities(item, qualities);
           {
             const audioLang = audioPreferenceKey();
-            const record2 = {
+            const record = {
               qualities,
               representativeQualities,
               type: item.Type,
@@ -1241,8 +1216,8 @@
               aggregationPolicy: aggregationPolicy(),
               aggregationCategories: aggregationCategoriesKey()
             };
-            ctx.setPersistent(itemId, record2);
-            ctx.hot?.set(itemId, record2);
+            ctx.setPersistent(itemId, record);
+            ctx.hot?.set(itemId, record);
             if (qualities.length) insertOverlay(ctx, el, qualities);
           }
         },
@@ -1271,7 +1246,7 @@
           }
           const audioLang = audioPreferenceKey();
           const srcId = selectedSourceFor(itemId);
-          const sd = record(entry.StreamData);
+          const sd = export10(entry.StreamData);
           const representative = getEnhancedQuality(sd.Streams, sd.Sources, { Name: sd.ItemName, Path: sd.ItemPath, RunTimeTicks: sd.RunTimeTicks, Source: entry.Source, Edition: entry.Edition, DistinctQualities: sd.DistinctQualities }, false, srcId).filter((label) => !(entry.Type === "Series" || entry.Type === "Season") || !label.startsWith("versions:"));
           const qualities = aggregateQualities(entry, representative);
           serverQualityCache.set(itemId, { audioLang, srcId, qualities, entry, namingVersion: CACHE_NAMING_VERSION, legacyAudio: legacyFullAudio(), displayModeKey: displayModeKey(), aggregationPolicy: aggregationPolicy(), aggregationCategories: aggregationCategoriesKey() });
@@ -1348,7 +1323,7 @@
   }
 
   // client/src/features/media-tags/types/quality/qualitytags-entry.ts
-  createQualityTags(tagRuntimeHost());
+  createQualityTags(export4());
 })();
 })();
 //# sourceMappingURL=qualitytags.js.map

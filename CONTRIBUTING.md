@@ -143,6 +143,29 @@ On the backend, each feature folder has one controller, `Je<Feature>Controller`,
    - [ ] Verified no basic errors
    ```
 
+### Robustness and security rules
+
+Adapted from Jellyfin Canopy @17c80bc, GPL-3.0 (its `CONTRIBUTING.md` performance and security rules and its `src/test/*-guard.test.ts`). The guard tests in [`tests/frontend/guards/`](tests/frontend/guards/) read the TypeScript AST of `client/src` and run with `npm test`. Each guard is a ratchet: today's violations are recorded in `<guard>-baseline.json`, keyed by file, rule and enclosing function. A **new** violation, or a higher count, fails the test, and a lower count prints a note. After a fix, lower the baseline with `node tests/frontend/guards/record.mjs`. Never add an entry or raise a count. `node tests/frontend/guards/record.mjs --list` prints every recorded finding with its line.
+
+| Rule | What it asks | Enforced by |
+|---|---|---|
+| **R1** | Injected UI is ready before paint or takes reserved space. No insert-then-move. | review |
+| **R2** | Decorations on existing cards (tags, badges) are absolute overlays and never shift layout. | review |
+| **R3** | No new body-wide `MutationObserver` (`document.body` with `subtree: true`). Use `JE.helpers.onBodyMutation`, navigation events or a page-scoped observer that is torn down. | `performance-rules-guard` (R3-body-observer) |
+| **R4** | Layout reads are cached per navigation. There are none inside observer callbacks, and reads and writes never interleave in loops. | review |
+| **R5** | No `setInterval` for DOM detection. Data polls are page-scoped and stop when the page goes away. | `performance-rules-guard` (R5-interval-dom) |
+| **R6** | No remote assets at runtime. Scripts, styles, fonts and locales come from the plugin, not `http(s)://`. Content images and links the user clicks are exempt. | `performance-rules-guard` (R6-remote-asset) |
+| **R7** | Feature DOM is built off-DOM and inserted once. Late data fades in instead of swapping layout. | review |
+| **R8** | Synchronous work per mutation batch stays under about 2 ms. The rest moves to the async path. | review |
+| **R9** | Fail open: late beats never. A failed fetch surfaces an error. It is never returned, cached or rendered as an empty answer ("no results"). Readiness waits persist until the anchor mounts or navigation aborts them, and retries are bounded. | `error-as-empty-guard` (R9-fail-empty, R9-fail-cached, R9-fail-renders-empty); `leak-guard` (L5-retry-uncapped) |
+| **X1** | Every value interpolated into HTML is escaped with `JE.escapeHtml`/`esc`, coerced to a number, or a plugin-owned constant. This applies to `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write` and `JE.toast`, in both attribute and text positions. `JE.t()` does **not** escape its params. | `escape-guard` (X1) |
+| **X2** | Every config- or user-derived value that enters CSS is validated: style attributes, `cssText`, `addCSS`/`injectCss`, `<style>` text and `insertRule`. `escapeHtml` does not neutralise a CSS payload. Use numbers, constants, `isCssColor(v) ? v : fallback` or `CSS.escape`. | `css-injection-guard` (X2) |
+
+Two more guards come from Canopy's `leak-guard` and `ConfigControlCoverageTests`:
+
+- `leak-guard`: long-lived `Map`/`Set`/array/object caches that only grow (L1). `window`/`document` listeners with no `signal`, `once` or removal (L2). Observers that are never disconnected or tracked (L3). Raw `setInterval`s that are never cleared (L4). Uncapped self-rescheduling retries (L5). Object URLs that are never revoked (L6).
+- `config-control-guard` (C1): every settable `PluginConfiguration` property has a control on the admin configuration page.
+
 ### Pull Request Process
 
 1. **Fork and Branch**

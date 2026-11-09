@@ -35,9 +35,13 @@ for (const file of readdirSync(join(root, 'client/entries')).filter(file => file
     entries.set(target, { source, manifest: 'client/entries/' + file });
   }
 }
+// min/ (canopy K1) holds the generated minified twins of typed outputs, read only by the served bundle; they are not
+// scripts of their own (scripts/client-build.mjs, tests/client-build/feature-context.test.mjs).
+const minDirectory = join(root, plugin, 'min');
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
     if (['bin', 'obj', 'node_modules'].includes(entry.name)) return [];
+    if (join(directory, entry.name) === minDirectory) return [];
     const path = join(directory, entry.name);
     return entry.isDirectory() ? walk(path) : entry.isFile() ? [path] : [];
   });

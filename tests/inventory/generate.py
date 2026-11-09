@@ -46,6 +46,9 @@ def inventory():
     for path in sorted(PRODUCTION.rglob('*'), key=lambda p: p.relative_to(ROOT).as_posix()):
         if not path.is_file() or any(part in ('obj', 'bin') for part in path.relative_to(PRODUCTION).parts):
             continue
+        # min/ (canopy K1): generated minified twins of the js/ outputs listed here, read only by the served bundle.
+        if path.relative_to(PRODUCTION).parts[0] == 'min':
+            continue
         relative = path.relative_to(ROOT).as_posix()
         if path.suffix not in ('.cs', '.js', '.html', '.css', '.json'):
             continue

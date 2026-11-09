@@ -3,30 +3,19 @@
 (() => {
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared2 = core.core?.featureContext;
+    if (typeof shared2 !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared2(feature, core, slots);
+  }
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
   // client/src/features/hidden-content/host.ts
@@ -101,31 +90,10 @@
     } };
   }
 
-  // client/src/features/hidden-content/model.ts
-  function record(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
-    return value;
-  }
-  function decodeSeerrItem(value) {
-    const r = record(value), result = {};
-    for (const k of ["mediaType", "posterPath", "poster_path", "title", "name", "releaseDate", "firstAirDate"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "string") throw new Error(`Invalid Seerr ${k}`);
-        result[k] = v;
-      }
-    }
-    if (r.id != null) {
-      if (typeof r.id !== "number" || !Number.isFinite(r.id)) throw new Error("Invalid Seerr ID");
-      result.id = r.id;
-    }
-    return result;
-  }
-  function decodeSeerrSearch(value) {
-    const results = record(value).results;
-    if (!Array.isArray(results)) throw new Error("Invalid Seerr results");
-    return { results: results.map(decodeSeerrItem) };
-  }
+  // client/generated-shared/stub/client/src/features/hidden-content/model.ts
+  var shared = /* @__PURE__ */ sharedModule("features/hidden-content/model");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "decodeSeerrItem");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "decodeSeerrSearch");
 
   // client/src/features/hidden-content/hidden-content-panel.ts
   (function(JE) {
@@ -192,7 +160,7 @@
               img.style.display = "none";
             };
             const fetchFn = mediaType === "tv" ? featureCtx.peer("jellyseerrAPI").fetchTvShowDetails : featureCtx.peer("jellyseerrAPI").fetchMovieDetails;
-            fetchFn(parseInt(String(item.tmdbId), 10)).then(decodeSeerrItem).then(function(details) {
+            fetchFn(parseInt(String(item.tmdbId), 10)).then(export4).then(function(details) {
               if (!imageToken.current() || !img.isConnected) return;
               const path = details && (details.posterPath || details.poster_path);
               if (path) {
@@ -206,7 +174,7 @@
           } else if (item.type !== "Person" && item.name && featureCtx.peer("jellyseerrAPI") && featureCtx.peer("jellyseerrMoreInfo")) {
             self.style.display = "none";
             const wantType = item.type === "Series" || item.type === "Episode" || item.type === "Season" ? "tv" : "movie";
-            featureCtx.peer("jellyseerrAPI").search(item.name).then(decodeSeerrSearch).then(function(res) {
+            featureCtx.peer("jellyseerrAPI").search(item.name).then(export5).then(function(res) {
               if (!imageToken.current() || !img.isConnected) return;
               const results = res && res.results || [];
               const hit = results.find(function(r) {

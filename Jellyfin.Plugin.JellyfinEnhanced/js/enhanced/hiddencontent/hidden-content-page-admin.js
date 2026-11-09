@@ -3,30 +3,19 @@
 (() => {
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared2 = core.core?.featureContext;
+    if (typeof shared2 !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared2(feature, core, slots);
+  }
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
   // client/src/features/hidden-content/host.ts
@@ -106,61 +95,11 @@
     return { current: () => token.current() && state.adminLoadToken === version && state.selectedAdminUserId === uid && (!checkEditing || state.adminEditMode === editing) };
   }
 
-  // client/src/features/hidden-content/model.ts
-  function record(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid hidden-content object");
-    return value;
-  }
-  function decodeLibraryItem(value) {
-    const r = record(value);
-    const result = {};
-    for (const k of ["Id", "Name", "Type", "SeriesId", "SeriesName"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "string") throw new Error(`Invalid item ${k}`);
-        result[k] = v;
-      }
-    }
-    for (const k of ["ParentIndexNumber", "IndexNumber", "ProductionYear"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "number" || !Number.isFinite(v)) throw new Error(`Invalid item ${k}`);
-        result[k] = v;
-      }
-    }
-    if (r.ProviderIds != null) {
-      const ids = record(r.ProviderIds);
-      result.ProviderIds = {};
-      for (const k of ["Tmdb", "tmdb"]) {
-        const v = ids[k];
-        if (v != null) {
-          if (typeof v !== "string") throw new Error("Invalid provider ID");
-          result.ProviderIds[k] = v;
-        }
-      }
-    }
-    return result;
-  }
-  function decodeSeerrItem(value) {
-    const r = record(value), result = {};
-    for (const k of ["mediaType", "posterPath", "poster_path", "title", "name", "releaseDate", "firstAirDate"]) {
-      const v = r[k];
-      if (v != null) {
-        if (typeof v !== "string") throw new Error(`Invalid Seerr ${k}`);
-        result[k] = v;
-      }
-    }
-    if (r.id != null) {
-      if (typeof r.id !== "number" || !Number.isFinite(r.id)) throw new Error("Invalid Seerr ID");
-      result.id = r.id;
-    }
-    return result;
-  }
-  function decodeSeerrSearch(value) {
-    const results = record(value).results;
-    if (!Array.isArray(results)) throw new Error("Invalid Seerr results");
-    return { results: results.map(decodeSeerrItem) };
-  }
+  // client/generated-shared/stub/client/src/features/hidden-content/model.ts
+  var shared = /* @__PURE__ */ sharedModule("features/hidden-content/model");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "decodeLibraryItem");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "decodeSeerrSearch");
+  var export11 = /* @__PURE__ */ sharedExport(shared, "record");
 
   // client/src/features/hidden-content/hidden-content-page-admin.ts
   (function() {
@@ -483,12 +422,12 @@
           ImageTypeLimit: 1,
           EnableImageTypes: "Primary"
         })).then((res) => {
-          const items = record(res).Items;
+          const items = export11(res).Items;
           if (!Array.isArray(items)) throw new Error("Invalid item list");
-          return items.map(decodeLibraryItem);
+          return items.map(export3);
         }).catch(() => []);
         const seerrApi = featureCtx.peer("jellyseerrAPI");
-        const seerrP = seerrApi && seerrApi.search ? seerrApi.search(term).then(decodeSeerrSearch).then((res) => res.results).catch(() => []) : Promise.resolve([]);
+        const seerrP = seerrApi && seerrApi.search ? seerrApi.search(term).then(export5).then((res) => res.results).catch(() => []) : Promise.resolve([]);
         const [libItems, seerrItems] = await Promise.all([libP, seerrP]);
         if (token !== searchToken || !selection.current() || !overlay.isConnected) return;
         const normalized = [];

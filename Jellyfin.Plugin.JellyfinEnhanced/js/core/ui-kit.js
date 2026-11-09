@@ -209,6 +209,38 @@
     };
   }
 
+  // client/src/host/context.ts
+  function createFeatureContext(feature, core2, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core2);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core: core2,
+      own,
+      peer: (name) => core2[name]
+    };
+  }
+  function publishFeatureContext(core2) {
+    if (typeof core2.featureContext === "function") return;
+    Object.defineProperty(core2, "featureContext", { value: createFeatureContext, configurable: true, writable: true, enumerable: false });
+  }
+
   // client/src/host/ui-host.ts
   function uiBridge() {
     const host = window;
@@ -231,6 +263,7 @@
   // client/src/core/ui/entry.ts
   var bridge = uiBridge();
   var core = bridge.core ?? (bridge.core = {});
+  publishFeatureContext(core);
   var ui = core.ui ?? (core.ui = createUi(browserUiHost(bridge)));
   bridge.escapeHtml = ui.escapeHtml;
   bridge.toast = ui.toast;

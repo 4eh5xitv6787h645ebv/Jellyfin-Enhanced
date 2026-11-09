@@ -1,42 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
-    }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
-  }
-
-  // client/src/features/activity/host.ts
-  function activityHost() {
-    const host = window, JE = host.JellyfinEnhanced;
-    const ctx = JE && featureContext("activity", JE, {
-      facades: ["activityPage", "initializeActivityIcons", "stopActivityIconsMonitoring"]
-    });
-    return { host, ctx, getApi: () => host.ApiClient, Emby: host.Emby };
-  }
+  // client/src/features/shared/wire.ts
   function currentLease(session, getApi) {
     const epoch = session?.getEpoch(), user = getApi?.()?.getCurrentUserId(), server = getApi?.()?.getUrl("/");
     return () => (epoch === void 0 || session?.isCurrent(epoch) === true) && user === getApi?.()?.getCurrentUserId() && server === getApi?.()?.getUrl("/");
@@ -105,6 +70,24 @@
       const ps = v.PlayState == null ? {} : object(v.PlayState);
       return { UserId: string(v.UserId), UserName: string(v.UserName), UserHasPrimaryImage: optionalBoolean(v.UserHasPrimaryImage), NowPlayingItem: readItem(v.NowPlayingItem), PlayState: { IsPaused: optionalBoolean(ps.IsPaused), PositionTicks: optionalNumber(ps.PositionTicks) } };
     });
+  }
+
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
+    }
+    return shared(feature, core, slots);
+  }
+
+  // client/src/features/activity/host.ts
+  function activityHost() {
+    const host = window, JE = host.JellyfinEnhanced;
+    const ctx = JE && featureContext("activity", JE, {
+      facades: ["activityPage", "initializeActivityIcons", "stopActivityIconsMonitoring"]
+    });
+    return { host, ctx, getApi: () => host.ApiClient, Emby: host.Emby };
   }
 
   // client/src/features/activity/activity-page.ts

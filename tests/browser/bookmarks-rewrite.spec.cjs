@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');
-const path=require('node:path');
+const path=require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const root=path.resolve(__dirname,'../../Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks');
 async function setup(page) {
  await page.route('http://bookmarks.fixture/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><head></head><body><button id="opener">Open bookmarks</button><div class="sections bookmarks"></div></body></html>'}));
@@ -18,7 +18,7 @@ async function setup(page) {
   window.changeAccount=()=>{epoch++;window.JellyfinEnhanced.userConfig={bookmark:{bookmarks:{}}};callbacks.forEach(fn=>fn());};
   window.ApiClient={getUrl:path=>path,ajax:async request=>{if(request.type!=='POST'||!request.url.endsWith('/bookmark-document'))throw new Error('Unexpected request');window.saves++;if(window.conflict)throw {status:409};if(window.failSave)throw new Error('offline');return {Revision:'fixture:2'};},getCurrentUserId:()=> 'user',getItem:async(_,id)=>({Id:id,Type:'Movie',Name:id}),getImageUrl:()=>''};
  });
- for(const name of ['bookmarks','bookmarks-library-styles','bookmarks-library-render','bookmarks-library-items','bookmarks-library-modals'])await page.addScriptTag({path:path.join(root,name+'.js')});
+ await provideFeatureContext(page); for(const name of ['bookmarks','bookmarks-library-styles','bookmarks-library-render','bookmarks-library-items','bookmarks-library-modals'])await page.addScriptTag({path:path.join(root,name+'.js')});
 }
 test('bookmark offset failure is atomic; keyboard focus traps, Escape restores focus',async({page})=>{
  await setup(page);await page.locator('#opener').focus();
