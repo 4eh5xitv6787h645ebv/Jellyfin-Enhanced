@@ -193,12 +193,15 @@ async function bundle(esbuild, root, options) {
     write: false,
     logLevel: 'silent',
     metafile: true,
+    // frontend.md §3 D1: a `.css` import is its file's text, emitted as a string literal (static stylesheets only).
+    loader: { '.css': 'text' },
     ...options,
   });
-  // JS dependencies would evade strict checking; browser dependencies must be TS.
+  // JS dependencies would evade strict checking; browser dependencies must be TS, or CSS text imports.
   for (const input of Object.keys(result.metafile.inputs)) {
-    if (!input.startsWith('client/src/') || !input.endsWith('.ts') || input.endsWith('.d.ts')) {
-      throw new Error(`Bundle input must be checked TypeScript under client/src: ${input}`);
+    const typed = input.endsWith('.ts') && !input.endsWith('.d.ts');
+    if (!input.startsWith('client/src/') || !(typed || input.endsWith('.css'))) {
+      throw new Error(`Bundle input must be checked TypeScript under client/src (or a .css text import): ${input}`);
     }
     safePath(root, input);
   }
