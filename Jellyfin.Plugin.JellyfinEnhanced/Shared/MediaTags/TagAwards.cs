@@ -1,4 +1,4 @@
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
 {
     /// <summary>Immutable title-level facts; null ranks/years mean unknown, not a score-derived guess.</summary>
     public sealed record TagAwards

@@ -346,10 +346,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagAwards.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagCacheEntry.cs",
       "category": "Features"
     },
@@ -359,10 +355,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagLogo.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagQualitySummary.cs",
       "category": "Features"
     },
     {
@@ -1043,6 +1035,14 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/SeriesQualityAggregation.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/TagAwards.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/TagQualitySummary.cs",
       "category": "Shared"
     },
     {
