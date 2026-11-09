@@ -1,7 +1,7 @@
-import type { BookmarkOperation, BookmarkSaveReceipt, JsonValue } from '../contracts/generated';
-import { bootstrapSchema } from '../contracts/schema';
-import { validateSchema } from '../contracts/validate';
-import type { BookmarkApi,Item,Library,Owner } from '../features/bookmarks/types';
+import type { BookmarkOperation, BookmarkSaveReceipt, JsonValue } from '../../contracts/generated';
+import { bootstrapSchema } from '../../contracts/schema';
+import { validateSchema } from '../../contracts/validate';
+import type { BookmarkApi,Item,Library,Owner } from './types';
 interface Ajax { type: string; url: string; dataType?: string; contentType?: string; data?: string }
 export interface BookmarkHost {
  pluginConfig?: { BookmarksEnabled?: boolean; BookmarksUsePluginPages?: boolean; BookmarksUseCustomTabs?: boolean; BookmarksUseNativeTab?: boolean };

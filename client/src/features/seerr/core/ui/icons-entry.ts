@@ -1,4 +1,4 @@
-import { seerrCoreHost } from '../../../../host/seerr-core-host';
+import { seerrCoreHost } from '../../host-core';
 import { firstInstall, groupInternals } from '../runtime';
 import { ICONS } from './icon-markup';
 

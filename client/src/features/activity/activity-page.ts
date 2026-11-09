@@ -1,7 +1,7 @@
 import {readFeed, readSessions} from './model';
 import type {ActivityItem, Entry, Stream} from './model';
-import { activityHost } from '../../host/activity-host';
-import { currentLease, record } from '../../host/activity-host';
+import { activityHost } from './host';
+import { currentLease, record } from './host';
 // /js/extras/activity-page.js
 // Core Activity Feed renderer: three sections -- Active Streams (live, reuses
 // GET /JellyfinEnhanced/active-streams/sessions), Watch History (threshold-

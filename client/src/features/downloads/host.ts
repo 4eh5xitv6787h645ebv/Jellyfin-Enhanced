@@ -1,4 +1,4 @@
-import type { Page, PublicPage } from '../features/downloads/types';
+import type { Page, PublicPage } from './types';
 export interface DownloadsApi {
  getUrl(path:string,query?:Record<string,string|number>):string;getCurrentUserId():string;serverAddress?():string;accessToken?():string;serverId?:string|(()=>string);
  ajax(options:{type:string;url:string;dataType:string;headers:Record<string,string>}):Promise<unknown>;

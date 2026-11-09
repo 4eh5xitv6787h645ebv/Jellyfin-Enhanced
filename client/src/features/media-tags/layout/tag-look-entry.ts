@@ -1,4 +1,4 @@
-import { tagRulesHost, captureTagSession, lookApiClient } from '../../../host/tag-rules-host';
+import { tagRulesHost, captureTagSession, lookApiClient } from '../rules-host';
 import { createTagLook } from './tag-look';
 const bridge = tagRulesHost();
 bridge.core ??= {};

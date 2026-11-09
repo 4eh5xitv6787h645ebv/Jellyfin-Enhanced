@@ -1,5 +1,5 @@
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content Page — page CSS and its injector.
  * Split from hidden-content-page.js (code motion; CSS verbatim).

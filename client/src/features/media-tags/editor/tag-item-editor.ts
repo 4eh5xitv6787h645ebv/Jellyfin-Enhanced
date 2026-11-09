@@ -1,4 +1,4 @@
-import { apiClient, type TagRuntimeBridge } from '../../../host/tag-runtime-host';
+import { apiClient, type TagRuntimeBridge } from '../host';
 import { isRecord, own as tableEntry, record, type JsonRecord } from '../pipeline/dto';
 import { normalizeLayout, type Layout } from '../layout/layout-rules';
 import type { LayoutLock } from '../layout/tag-look';

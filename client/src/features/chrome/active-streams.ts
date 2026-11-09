@@ -1,4 +1,4 @@
-import { captureIdentity, isSameIdentity, type BodyMutationCallback, type ChromeLifecycle, type ChromeSession, type IdentityClient, type IdentitySnapshot, type Unsubscribe } from '../../host/chrome-host';
+import { captureIdentity, isSameIdentity, type BodyMutationCallback, type ChromeLifecycle, type ChromeSession, type IdentityClient, type IdentitySnapshot, type Unsubscribe } from './host';
 import { ACTIVE_STREAMS_CSS } from './active-streams-styles';
 
 /** Live Active Streams counter and sessions panel in the Jellyfin header (and the player OSD bar). */

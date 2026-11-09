@@ -1,6 +1,6 @@
 /** Pure logic for the admin *arr links and the *arr tag links. */
 import { field, int, isRecord, list, num, str } from './wire';
-import type { ArrInstanceConfig } from '../../host/details-providers-host';
+import type { ArrInstanceConfig } from './host';
 
 export interface UrlMapping { jellyfinUrl: string; arrUrl: string }
 /** `jellyfinUrl|arrUrl` lines. */

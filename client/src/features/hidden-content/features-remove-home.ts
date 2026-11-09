@@ -1,8 +1,8 @@
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { lease } from '../../host/hidden-content-host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { lease } from './host';
 import { isHomeSurface, errorMessage, type HomeSurface, type RemoveTarget, type SurfaceConfig } from './home-model';
 import { record } from './model';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Remove from Continue Watching / Next Up: surface detection, the server
  * POST + optimistic hide, and the per-item action-sheet Remove button.

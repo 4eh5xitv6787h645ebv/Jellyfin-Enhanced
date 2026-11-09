@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/seerr-details-host.ts
+  // client/src/features/seerr/host-details.ts
   function bridge() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new Error("Seerr details loaded before Jellyfin Enhanced");

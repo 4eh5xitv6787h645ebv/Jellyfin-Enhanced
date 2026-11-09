@@ -1,12 +1,8 @@
-import type { JsonValue } from '../contracts/generated';
-import type { SaveOptions, SettingsDocument } from './settings-host';
-import type { TagLayout } from '../features/media-tags/layout/tag-layout';
-import type { TagLook } from '../features/media-tags/layout/tag-look';
-import type { MediaLanguage } from '../features/media-tags/types/language/media-language';
-import type { RatingSources } from '../features/media-tags/types/ratings/rating-sources';
-import type { PosterColours } from '../features/media-tags/layout/poster-colours';
-import type { EnhancedUi } from '../features/settings-panel/registry';
-import type { createIcons } from '../features/shared/icons';
+import type { JsonValue } from '../../contracts/generated';
+import type { SaveOptions, SettingsDocument } from '../../host/context';
+import type { MediaLanguage, PosterColours, RatingSources, TagLayout, TagLook } from '../media-tags/public-api';
+import type { EnhancedUi } from './registry';
+import type { createIcons } from '../shared/icons';
 type Icons = ReturnType<typeof createIcons>;
 
 /**
@@ -106,8 +102,8 @@ export interface CoreSurface {
 }
 
 export interface SpoilerGuardSettings {
-    buildSettingsHtml?(ctx: import('../features/settings-panel/context').PanelContext): string;
-    wireSettings?(ctx: import('../features/settings-panel/context').PanelContext): void;
+    buildSettingsHtml?(ctx: import('./context').PanelContext): string;
+    wireSettings?(ctx: import('./context').PanelContext): void;
 }
 export interface Internals {
     enhancedUi?: EnhancedUi;

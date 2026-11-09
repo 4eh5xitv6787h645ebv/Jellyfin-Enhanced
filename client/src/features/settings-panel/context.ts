@@ -1,4 +1,4 @@
-import type { Shortcut } from '../../host/settings-panel-host';
+import type { Shortcut } from './host';
 
 /** Theme constants resolved when the panel opens (themer values may be absent). */
 export interface PanelTheme {

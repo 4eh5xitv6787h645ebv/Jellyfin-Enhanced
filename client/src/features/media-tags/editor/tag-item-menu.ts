@@ -1,4 +1,4 @@
-import { apiClient, type TagRuntimeBridge } from '../../../host/tag-runtime-host';
+import { apiClient, type TagRuntimeBridge } from '../host';
 import { isRecord, text, type JsonRecord } from '../pipeline/dto';
 
 /** The item whose menu is about to open, captured from the press that opens it. */

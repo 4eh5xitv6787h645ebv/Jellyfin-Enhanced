@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/activity-host.ts
+  // client/src/features/activity/host.ts
   function activityHost() {
     const host = window;
     return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };

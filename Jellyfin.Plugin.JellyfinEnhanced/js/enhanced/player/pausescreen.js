@@ -363,7 +363,7 @@
 
           `;
 
-  // client/src/host/player-host.ts
+  // client/src/features/player/host.ts
   function playerHost() {
     const host = window;
     const JE2 = host.JellyfinEnhanced;

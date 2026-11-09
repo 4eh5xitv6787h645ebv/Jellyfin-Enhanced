@@ -1,6 +1,6 @@
-import type { HomeSurfaceApi, HomeSurface } from '../features/hidden-content/home-model';
-import type { PageSurface } from '../features/hidden-content/page-model';
-import type { HiddenDocument, HiddenItem, ListedItem, Settings, AdminUser } from '../features/hidden-content/model';
+import type { HomeSurfaceApi, HomeSurface } from './home-model';
+import type { PageSurface } from './page-model';
+import type { HiddenDocument, HiddenItem, ListedItem, Settings, AdminUser } from './model';
 export interface DialogOptions { surface?: string; showEpisodeChoice?: boolean; onChooseScoped?(): void; onChooseShow?(): void }
 export interface HiddenDataSurface {
  hiddenIdSet: Set<string>;

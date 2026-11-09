@@ -1,5 +1,5 @@
-import type { CalendarLifetime } from '../features/calendar/lifetime';
-import type { CalendarEvent, CalendarInternal, CalendarFacade } from '../features/calendar/types';
+import type { CalendarLifetime } from './lifetime';
+import type { CalendarEvent, CalendarInternal, CalendarFacade } from './types';
 interface Settings { calendarDefaultViewMode?: string; calendarDisplayMode?: string }
 interface Lifecycle {
  track<T extends (() => void) | {disconnect(): void}>(resource: T): T;

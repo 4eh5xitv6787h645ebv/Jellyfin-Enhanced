@@ -1,4 +1,4 @@
-import { SEERR_LOG, taskScheduler, translator, type SeerrDetailsBridge } from '../../../../host/seerr-details-host';
+import { SEERR_LOG, taskScheduler, translator, type SeerrDetailsBridge } from '../../host-details';
 import { filled, record, str } from '../domain/json';
 import { detailsHref } from '../domain/links';
 

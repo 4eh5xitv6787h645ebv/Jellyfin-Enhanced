@@ -14,7 +14,7 @@
  * settings with Undo for a few seconds.
  */
 import type { JsonValue } from '../../../contracts/generated';
-import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge, type PanelApiClient } from '../../../host/settings-panel-host';
+import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge, type PanelApiClient } from '../../settings-panel/host';
 import type { PanelContext } from '../../settings-panel/public-api';
 import { closestTarget, focusElement, queryButton, queryElement, queryElements, setDisabled } from '../../shared/dom';
 import { decodePresets, decodePreview, exportedParts, isPresetSource, refusal, savedPreset, statusOf, type PortableChange, type Preset, type PresetList, type PresetSource } from './portable-model';

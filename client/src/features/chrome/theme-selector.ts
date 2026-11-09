@@ -1,4 +1,4 @@
-import type { ChromeSession, Unsubscribe, BodyMutationCallback } from '../../host/chrome-host';
+import type { ChromeSession, Unsubscribe, BodyMutationCallback } from './host';
 
 /** Jellyfish colour variants served by the plugin CDN route (jellyfish/colors/<file>). */
 export const THEMES: Readonly<Record<string, string>> = Object.freeze({

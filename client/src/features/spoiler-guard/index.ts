@@ -1,4 +1,4 @@
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal } = spoilerHost();
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';
     let installed = false;

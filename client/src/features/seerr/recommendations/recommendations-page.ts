@@ -1,6 +1,6 @@
 // /js/jellyseerr/recommendations/recommendations-page.js
 // Recommendations Page: the standalone (sidebar-link) page container and its show/hide lifecycle.
-import { translate } from '../../../host/seerr-discovery-host';
+import { translate } from '../host-discovery';
 import { LOG_PREFIX, OTHER_PAGE, PAGE_ID, part, recommendationsHost } from './stage';
 
 const HASH = '#/recommendations';

@@ -28,7 +28,7 @@
     return names.filter((n) => !names.some((o) => o !== n && o.toLowerCase().includes(n.toLowerCase()))).map((n) => n.replace(/(^|\s)(\S)/g, (_, sp, ch) => sp + ch.toUpperCase()));
   }
 
-  // client/src/host/player-host.ts
+  // client/src/features/player/host.ts
   function playerHost() {
     const host = window;
     const JE2 = host.JellyfinEnhanced;

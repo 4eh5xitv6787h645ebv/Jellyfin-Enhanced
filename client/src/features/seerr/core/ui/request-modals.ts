@@ -1,4 +1,4 @@
-import type { SeerrCoreHost } from '../../../../host/seerr-core-host';
+import type { SeerrCoreHost } from '../../host-core';
 import type { SeerrUiFacade } from '../contract';
 import { decodeCollectionParts, isRecord, isSafeTmdbImagePath, isString } from '../decode';
 import { MEDIA } from '../status';

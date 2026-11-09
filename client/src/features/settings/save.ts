@@ -4,7 +4,7 @@ import { validateSchema } from '../../contracts/validate';
 function isReceipt(value: unknown): value is SettingsSaveReceipt {
     return validateSchema(value, bootstrapSchema.$defs.SettingsSaveReceipt, bootstrapSchema.$defs);
 }
-import type { SettingsBridge, SettingsClient, SettingsDocument } from '../../host/settings-host';
+import type { SettingsBridge, SettingsClient, SettingsDocument } from './host';
 import { withInheritance } from './inheritance';
 export function installSave(JE: SettingsBridge, getClient: () => SettingsClient | undefined): void {
 const _lastSavedJson: Record<string, string | null | undefined> = {};

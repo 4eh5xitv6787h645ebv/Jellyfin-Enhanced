@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/tag-runtime-host.ts
+  // client/src/features/media-tags/host.ts
   function tagRuntimeHost() {
     const host = window;
     const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});

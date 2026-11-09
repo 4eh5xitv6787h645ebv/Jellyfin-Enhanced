@@ -3,7 +3,7 @@
 // paging. A category is one or more feeds paged side by side: a studio or network page reads a movie
 // feed and a series feed (interleaved into one list) and offers All | Movies | Series once both have
 // answered with results.
-import { bindToSession, filterOf, translate } from '../../../host/seerr-discovery-host';
+import { bindToSession, filterOf, translate } from '../host-discovery';
 import { clampPages, decodeFeedPage, estimateYield, isAbortError, resultKey, sortResults, unseenResults } from '../discovery/domain';
 import type { FeedPage, FilterMode, ScrollHint, ScrollResult, SeerrResult } from '../discovery/types';
 import { CATEGORY_PAGE_ID, FILTER_MODULE, LOG_PREFIX, OTHER_PAGE, part, recommendationsHost, SORT_MODULE } from './stage';

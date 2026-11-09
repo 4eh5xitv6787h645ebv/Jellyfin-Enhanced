@@ -1,4 +1,4 @@
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal } = spoilerHost();
     internal.injectStyles = function() {
         JE.core.ui.injectCss('je-spoiler-guard-styles', `

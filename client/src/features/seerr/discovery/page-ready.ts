@@ -1,4 +1,4 @@
-import type { SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import type { SeerrDiscoveryHost } from '../host-discovery';
 import type { PageReadyOptions } from './types';
 
 const LIST_GRACE_MS = 1500;

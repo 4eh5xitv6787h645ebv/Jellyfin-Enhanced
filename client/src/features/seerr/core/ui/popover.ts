@@ -1,5 +1,5 @@
 import { bindViewOrigin, isViewCurrent } from '../runtime';
-import type { SeerrCoreHost } from '../../../../host/seerr-core-host';
+import type { SeerrCoreHost } from '../../host-core';
 import type { InlineProgressInput, SeerrUiFacade } from '../contract';
 import { capitalize, formatEtaText, progressPercent } from '../display';
 import { DISPLAY, resolveDisplayStatus } from '../status';

@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/seerr-details-host.ts
+  // client/src/features/seerr/host-details.ts
   function bridgeOrNew() {
     const host = window;
     return host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});

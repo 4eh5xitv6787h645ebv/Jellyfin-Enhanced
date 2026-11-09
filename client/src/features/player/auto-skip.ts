@@ -1,6 +1,6 @@
-import { playerHost } from '../../host/player-host';
+import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment } from './wire';
-import type { AutoSkipDependencies, ResolverOptions, SkipEngine } from '../../host/player-host';
+import type { AutoSkipDependencies, ResolverOptions, SkipEngine } from './host';
 import { createPlayerLifetime } from './lifetime';
 const { JE, ApiClient } = playerHost();
 const lifetime = createPlayerLifetime(JE, 'auto-skip');

@@ -1,7 +1,7 @@
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { lease, type DialogOptions } from '../../host/hidden-content-host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { lease, type DialogOptions } from './host';
 import { decodeLibraryItem, type HiddenItem } from './model';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content — hide/unhide toggle buttons injected on native
  * library cards, including the scoped (Next Up / Continue Watching) flow.

@@ -7,8 +7,8 @@
  *   - randomSourceId: a pinned playlist/collection to pick from on every page.
  * Either falls back to the whole library (with a toast) when it yields nothing.
  */
-import { api, bridge, currentUserId, embyPage, dashboard, serverId } from '../../host/details-providers-host';
-import type { RandomBridge } from '../../host/details-providers-host';
+import { api, bridge, currentUserId, embyPage, dashboard, serverId } from './host';
+import type { RandomBridge } from './host';
 import { hashItemId, lookupDetailsItem, sessionLease } from './page';
 import { decodeItems, errorMessage } from './wire';
 import type { DetailsItem } from './wire';

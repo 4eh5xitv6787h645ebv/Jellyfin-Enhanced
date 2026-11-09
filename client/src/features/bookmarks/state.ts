@@ -1,4 +1,4 @@
-import { isMissingItem, lease, readItems, persistBookmarks, bookmarkOperation, type BookmarkApiClient, type BookmarkHost } from '../../host/bookmarks-host';
+import { isMissingItem, lease, readItems, persistBookmarks, bookmarkOperation, type BookmarkApiClient, type BookmarkHost } from './host';
 import { formatTimestamp } from './domain';
 import type { Bookmark, Details, IdentifiedBookmark, Owner } from './types';
 export function createBookmarkState(JE: BookmarkHost, getApi: () => BookmarkApiClient, getCurrentItemData: () => {itemId: string} | null) {

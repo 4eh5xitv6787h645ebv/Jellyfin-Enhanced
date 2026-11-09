@@ -1,4 +1,4 @@
-import type { MediaType, TmdbId } from '../../../../host/seerr-details-host';
+import type { MediaType, TmdbId } from '../../host-details';
 import { calendarYear } from './dates';
 import { filled, idText, isRecord, num, record, records, str, type JsonRecord } from './json';
 

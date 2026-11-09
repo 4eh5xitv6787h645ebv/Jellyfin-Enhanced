@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/chrome-host.ts
+  // client/src/features/chrome/host.ts
   function hostClient() {
     const host = window;
     return host.ApiClient;

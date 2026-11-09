@@ -16,7 +16,7 @@
     lifetime(JE).navigation++;
   }
 
-  // client/src/host/calendar-host.ts
+  // client/src/features/calendar/host.ts
   function calendarHost() {
     var _a;
     const host = window;

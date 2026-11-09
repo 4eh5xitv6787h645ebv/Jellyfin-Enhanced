@@ -1,4 +1,4 @@
-import { apiClient, hasApiClient, type TagApiClient, type TagRuntimeBridge, type UrlParams } from '../../../host/tag-runtime-host';
+import { apiClient, hasApiClient, type TagApiClient, type TagRuntimeBridge, type UrlParams } from '../host';
 import type { PipelineApi } from './contract';
 import { createDeltaSync } from './delta-sync';
 import type { JsonRecord } from './dto';
@@ -11,8 +11,8 @@ import { createSeriesLookup } from './series-lookup';
 import { createServerCache } from './server-cache';
 import { createPipelineState, logPrefix, type PipelineFns } from './state';
 
-// The pipeline modules reach host/ only through this file: they import these types from here and get
-// apiClient/hasApiClient through `deps` (feature-boundaries rule 1).
+// The pipeline modules reach the feature host (../host.ts) only through this file: they import these types from
+// here and get apiClient/hasApiClient through `deps` (feature-boundaries rule 1).
 export type { TagApiClient, TagRuntimeBridge, UrlParams };
 
 /**

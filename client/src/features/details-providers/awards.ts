@@ -1,6 +1,6 @@
 /** Awards banner (Wikidata via the plugin) on item details pages. */
-import { bridge, currentUserId } from '../../host/details-providers-host';
-import type { AwardsBridge } from '../../host/details-providers-host';
+import { bridge, currentUserId } from './host';
+import type { AwardsBridge } from './host';
 import { detailPageHook, detailsLease, hashItemId, lookupDetailsItem, removeFirst } from './page';
 import { pathSegment } from './links';
 import { awardBodyIcon, isUnconfirmed, normalizeAwardsData, resolveProviderTarget, sortAwards, sparklesSvg } from './provider-domain';

@@ -1,4 +1,4 @@
-import type { PlayerBridge } from '../../host/player-host';
+import type { PlayerBridge } from './host';
 type Translate = PlayerBridge['t'];
 export function renderPauseProgress(progressBar: HTMLElement, progressMeta: HTMLElement, current: number, duration: number, t: Translate) {
           const fill = progressBar.firstElementChild;

@@ -1,4 +1,4 @@
-import { tagRuntimeHost } from '../../../host/tag-runtime-host';
+import { tagRuntimeHost } from '../host';
 import { createTagRenderer } from './tag-renderer-base';
 
 createTagRenderer(tagRuntimeHost());

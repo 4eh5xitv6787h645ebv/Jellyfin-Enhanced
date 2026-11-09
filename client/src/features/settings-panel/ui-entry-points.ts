@@ -3,7 +3,7 @@
  * video-OSD settings button and the user-preferences menu link.
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
-import { panelHost, type PanelBridge } from '../../host/settings-panel-host';
+import { panelHost, type PanelBridge } from './host';
 
 /** Opens the panel through the facade at click time (the panel module loads later). */
 const openPanel = (JE: Pick<PanelBridge, 'showEnhancedPanel'>): void => { void JE.showEnhancedPanel?.(); };

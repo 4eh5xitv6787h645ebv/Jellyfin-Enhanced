@@ -1,4 +1,4 @@
-import type { TagRuntimeBridge } from '../../../../host/tag-runtime-host';
+import type { TagRuntimeBridge } from '../../host';
 import { members, memberText, record } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
 import { genreIconMap, genreLabelOfIcon, genreOtherLabel } from './genre-table';

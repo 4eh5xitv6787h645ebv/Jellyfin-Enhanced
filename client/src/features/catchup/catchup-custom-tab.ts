@@ -1,5 +1,5 @@
-import { catchupHost } from '../../host/catchup-host';
-import type { CatchHost } from '../../host/catchup-host';
+import { catchupHost } from './host';
+import type { CatchHost } from './host';
 /**
  * Catch Up tab. Puts <div class="jellyfinenhanced catchup"></div> into a tab panel, either one
  * from the Custom Tabs plugin (CatchUpUseCustomTabs) or one JE makes itself

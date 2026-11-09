@@ -1,4 +1,4 @@
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 import { normalizeId, pendingKey, kindOf } from './ids-logic';
 const { internal } = spoilerHost();
 internal.normalizeId = normalizeId;

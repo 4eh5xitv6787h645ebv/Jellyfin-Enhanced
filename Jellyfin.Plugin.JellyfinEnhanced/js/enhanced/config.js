@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/settings-host.ts
+  // client/src/features/settings/host.ts
   function settingsHost() {
     const host2 = window;
     if (!host2.JellyfinEnhanced) throw new Error("Settings require Jellyfin Enhanced");

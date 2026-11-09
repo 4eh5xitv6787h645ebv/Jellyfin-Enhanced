@@ -1,7 +1,7 @@
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { lease, policyLease } from '../../host/hidden-content-host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { lease, policyLease } from './host';
 import { record, decodeLibraryItem } from './model';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content — the client-side filter engine: scope-aware surface
  * detection, native card filtering, parent-series cascading, and the

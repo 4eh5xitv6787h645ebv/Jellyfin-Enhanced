@@ -137,7 +137,7 @@
     return { filters: Array.isArray(value.filters) ? value.filters.filter((v) => typeof v === "string") : [], mode: value.mode === "all" ? "all" : "any", invert: value.invert === true };
   }
 
-  // client/src/host/calendar-host.ts
+  // client/src/features/calendar/host.ts
   function calendarHost() {
     var _a;
     const host = window;

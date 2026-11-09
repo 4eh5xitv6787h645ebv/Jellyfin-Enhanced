@@ -1,5 +1,5 @@
-import type { SaveOptions } from './settings-host';
-import type { BootstrapArrInstance, BootstrapPrivateConfig, BootstrapPublicConfig, ElsewhereSettings } from '../contracts/generated';
+import type { SaveOptions } from '../../host/context';
+import type { BootstrapArrInstance, BootstrapPrivateConfig, BootstrapPublicConfig, ElsewhereSettings } from '../../contracts/generated';
 
 /**
  * Host boundary for the details-page provider features. Each entry names the

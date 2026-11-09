@@ -1,6 +1,7 @@
-import type { JsonValue } from '../contracts/generated';
-/** A JSON document boundary retains fields supplied by later plugin versions. */
-export type SettingsDocument = { [key: string]: JsonValue | undefined };
+import type { JsonValue } from '../../contracts/generated';
+import type { SaveOptions, SettingsDocument } from '../../host/context';
+// Declared in host/context.ts (the core settings service's types, frontend.md §2.3); re-exported for this feature.
+export type { SaveOptions, SettingsDocument };
 interface Shortcut { Name: string; Key: string }
 export interface SettingsBridge {
     CONFIG: { readonly TOAST_DURATION: JsonValue; readonly HELP_PANEL_AUTOCLOSE_DELAY: JsonValue };
@@ -23,11 +24,6 @@ export interface SettingsBridge {
     keyCombo(event: KeyboardEvent): string;
     normalizeShortcutKey(key: string): string;
     initializeShortcuts(): void;
-}
-export interface SaveOptions {
-    throwOnError?: boolean; beforeSave?(): void; onError?(error: unknown): void | Promise<void>; isCurrent?(): boolean;
-    /** Notification lifetime may end before an originating document's rollback does. */
-    notifyOnError?(): boolean;
 }
 export interface SettingsClient {
     getCurrentUserId(): string;

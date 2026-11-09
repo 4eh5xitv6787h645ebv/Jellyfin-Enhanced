@@ -1,8 +1,8 @@
-import { getApi, lease, invalidatePolicy } from '../../host/hidden-content-host';
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import type { HiddenDataSurface } from '../../host/hidden-content-host';
+import { getApi, lease, invalidatePolicy } from './host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import type { HiddenDataSurface } from './host';
 import { decodeDocument, settingsFor, normalizeId, widestScope, sameValue, earliestHiddenAt, aliasMetadata, mergeHomeScope as mergeCwScope, type HiddenDocument, type HiddenItem, type Settings } from './model';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content — data store, lookup sets, and the public data API.
  * Split from hidden-content.js (code motion; bodies verbatim). Owns the

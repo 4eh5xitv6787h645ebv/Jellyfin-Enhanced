@@ -1,4 +1,4 @@
-import type { SeerrCoreHost, SeerrFetchOptions } from '../../../host/seerr-core-host';
+import type { SeerrCoreHost, SeerrFetchOptions } from '../host-core';
 import type { FollowUpOptions, PageOrOptions, ReadOptions, SeerrApiFacade } from './contract';
 import {
     SeerrDecodeError, decodeAdvancedData, decodeBelongsToCollection, decodeFolders, decodeIssuePage, decodeOverrideRules,

@@ -1,4 +1,4 @@
-import { tagRulesHost } from '../../../host/tag-rules-host';
+import { tagRulesHost } from '../rules-host';
 import { createTagLayout } from './tag-layout';
 const bridge = tagRulesHost();
 bridge.core ??= {};

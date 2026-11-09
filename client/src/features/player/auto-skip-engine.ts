@@ -1,5 +1,5 @@
 import type { MediaSegment } from './wire';
-import type { AutoSkipDependencies, ResolverOptions } from '../../host/player-host';
+import type { AutoSkipDependencies, ResolverOptions } from './host';
 /** 1 tick = 100 ns; 10,000,000 ticks per second. */
     export const TICKS_PER_SECOND = 10000000;
 

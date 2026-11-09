@@ -1,4 +1,4 @@
-import { apiClient, bridge, identityLease, SEERR_LOG, translator, type MediaType, type ObserverFacade } from '../../../host/seerr-details-host';
+import { apiClient, bridge, identityLease, SEERR_LOG, translator, type MediaType, type ObserverFacade } from '../host-details';
 import { record } from './domain/json';
 import { seerrPage } from './domain/links';
 

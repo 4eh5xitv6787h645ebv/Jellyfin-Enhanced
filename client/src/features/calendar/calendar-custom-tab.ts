@@ -1,4 +1,4 @@
-import { calendarHost } from '../../host/calendar-host';
+import { calendarHost } from './host';
 import { invalidate, own } from './lifetime';
 
 (function () {

@@ -1,4 +1,4 @@
-import { tagRulesHost } from '../../../../host/tag-rules-host';
+import { tagRulesHost } from '../../rules-host';
 import { createRatingSources } from './rating-sources';
 const bridge = tagRulesHost();
 bridge.ratingSources = createRatingSources({

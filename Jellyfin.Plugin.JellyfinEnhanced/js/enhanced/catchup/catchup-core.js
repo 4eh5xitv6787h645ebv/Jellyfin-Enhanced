@@ -1,13 +1,13 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/catchup-host.ts
+  // client/src/features/catchup/host.ts
   function catchupHost() {
     const host = window;
     return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };
   }
 
-  // client/src/host/activity-host.ts
+  // client/src/features/activity/host.ts
   function currentLease(session, getApi2) {
     const epoch = session?.getEpoch(), user = getApi2?.()?.getCurrentUserId(), server = getApi2?.()?.getUrl("/");
     return () => (epoch === void 0 || session?.isCurrent(epoch) === true) && user === getApi2?.()?.getCurrentUserId() && server === getApi2?.()?.getUrl("/");

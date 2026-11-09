@@ -1,4 +1,4 @@
-import { catchupHost } from '../../host/catchup-host';
+import { catchupHost } from './host';
 /**
  * @file Catch Up styles. Everything sits under .je-catchup or the .je-catchup-modal overlay, so
  * nothing leaks into Jellyfin or other plugins. Flat surfaces, the theme accent and Jellyfin's

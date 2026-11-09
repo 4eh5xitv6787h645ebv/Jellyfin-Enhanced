@@ -1,4 +1,4 @@
-import type { RandomSettings } from '../../host/details-providers-host';
+import type { RandomSettings } from './host';
 import type { DetailsItem } from './wire';
 
 // Lucide dice-1..dice-6 faces, 24px to match the header's other icons.

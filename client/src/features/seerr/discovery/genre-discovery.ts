@@ -1,6 +1,6 @@
 // /js/jellyseerr/discovery/genre-discovery.js
 // "More [Genre]" on genre list pages. This module keeps the Jellyfin-genre → TMDB-genre resolution.
-import { baseOf, discoveryHost, filterOf, identityKey, translate, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { baseOf, discoveryHost, filterOf, identityKey, translate, type SeerrDiscoveryHost } from '../host-discovery';
 import { buildGenreMap, decodeNamedInfo, isNamedTmdbInfo, isUserActive, resolveGenreIds, throwIfAborted } from './domain';
 import { managedFetch, tolerant } from './lookups';
 import type { FeedIds, GenreListEntry, NamedTmdbInfo, ResolveContext, ResolvedFeeds } from './types';

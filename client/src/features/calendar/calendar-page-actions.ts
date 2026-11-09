@@ -1,5 +1,5 @@
 import { lease, cancelNavigation } from './lifetime';
-import { calendarHost } from '../../host/calendar-host';
+import { calendarHost } from './host';
 import type { CalendarEvent } from './types';
 // /js/arr/calendar/calendar-page-actions.js
 // Calendar Page — user actions: data refresh, view/display mode switching,

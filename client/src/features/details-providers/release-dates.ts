@@ -1,6 +1,6 @@
 /** Details-page release/air-date chips resolved from TMDB via the plugin proxy. */
-import { api, bridge, currentUserId } from '../../host/details-providers-host';
-import type { DetailsFeatures, ReleaseBridge, VisitHandle } from '../../host/details-providers-host';
+import { api, bridge, currentUserId } from './host';
+import type { DetailsFeatures, ReleaseBridge, VisitHandle } from './host';
 import { lookupDetailsItem, sessionLease } from './page';
 import { decodeDetailsItem } from './wire';
 import type { DetailsItem } from './wire';

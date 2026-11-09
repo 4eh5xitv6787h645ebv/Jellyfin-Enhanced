@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/details-providers-host.ts
+  // client/src/features/details-providers/host.ts
   function hostWindow() {
     return window;
   }

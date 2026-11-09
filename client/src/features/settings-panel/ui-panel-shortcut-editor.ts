@@ -3,7 +3,7 @@
  * Shortcuts tab (rebind, conflict shake, Backspace-to-reset).
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
-import { panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
+import { panelHost, registry, type PanelBridge } from './host';
 import type { PanelContext } from './context';
 import { queryElement, queryElements } from '../shared/dom';
 import { overrideFor, rejectsBinding } from './shortcut-rules';

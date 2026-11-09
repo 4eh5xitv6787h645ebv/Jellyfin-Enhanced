@@ -1,7 +1,7 @@
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { lease, onIdentityDispose, type DialogOptions } from '../../host/hidden-content-host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { lease, onIdentityDispose, type DialogOptions } from './host';
 import type { HiddenItem } from './model';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content — undo toast and the hide-confirmation dialogs
  * (standard, surface-scoped, and episode-choice variants).

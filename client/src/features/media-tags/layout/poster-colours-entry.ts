@@ -1,4 +1,4 @@
-import { tagRulesHost, posterScope } from '../../../host/tag-rules-host';
+import { tagRulesHost, posterScope } from '../rules-host';
 import { createPosterColours } from './poster-colours';
 const bridge = tagRulesHost();
 bridge.tagPosterColours = createPosterColours({

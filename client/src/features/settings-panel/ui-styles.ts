@@ -2,7 +2,7 @@
  * @file Global CSS injected once for plugin features (JE.injectGlobalStyles).
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
-import { panelHost, type PanelBridge } from '../../host/settings-panel-host';
+import { panelHost, type PanelBridge } from './host';
 
 export function installUiStyles(JE: Pick<PanelBridge, 'cdn' | 'injectGlobalStyles'>): void {
 

@@ -1,4 +1,4 @@
-import { apiClient, bridge, escaper, identityLease, SEERR_LOG, translator, type MediaType, type SeerrDetailsBridge, type TmdbId } from '../../../../host/seerr-details-host';
+import { apiClient, bridge, escaper, identityLease, SEERR_LOG, translator, type MediaType, type SeerrDetailsBridge, type TmdbId } from '../../host-details';
 import { filled, idText, list, record, records, str, type JsonRecord } from '../domain/json';
 import { backdropSource, currentPosition, groupIssues, inferredSeasons, isResolved, isSeasonOrEpisode, isSpecial, issueDate, itemYear, matchFromImdbSearch, matchFromTitleSearch, personName, reportEpisodes, reportSeasons, seriesIdOf, tmdbIdFromExternalUrls, type ReportSeason } from './issue-model';
 import { detailButtonContent, INDICATOR_CSS, reportFormHtml, tvControlsHtml, type IssueType } from './report-markup';

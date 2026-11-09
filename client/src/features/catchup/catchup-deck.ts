@@ -1,7 +1,7 @@
 import type {Item, Options, Direction, Gesture} from './types';
 import {readItems} from './model';
-import { catchupHost } from '../../host/catchup-host';
-import { errorMessage, currentLease } from '../../host/activity-host';
+import { catchupHost } from './host';
+import { errorMessage, currentLease } from '../activity/host';
 /**
  * @file Catch Up card deck: cards, drag and keyboard gestures, the season picker and undo.
  * Mounted by catchup-page.js through JE.internals.catchUp.deck.mount().

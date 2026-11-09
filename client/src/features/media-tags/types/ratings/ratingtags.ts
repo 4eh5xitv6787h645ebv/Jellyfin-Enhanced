@@ -1,4 +1,4 @@
-import type { TagRuntimeBridge } from '../../../../host/tag-runtime-host';
+import type { TagRuntimeBridge } from '../../host';
 import { finite, isRecord, own, record, type JsonRecord } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
 import type { ScopeId } from '../../pipeline/scopes';

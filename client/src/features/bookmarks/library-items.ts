@@ -1,4 +1,4 @@
-import { bookmarksHost, readItem, readSessions, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, readItem, readSessions, type BookmarkHost } from './host';
 import { createLifetime } from './lifetime';
 import type { Group, Library } from './types';
 const { JE, host, getApi } = bookmarksHost();

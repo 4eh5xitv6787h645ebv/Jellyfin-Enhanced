@@ -1,7 +1,7 @@
-import {catchupHost} from '../../host/catchup-host';
-import {currentLease, array, string} from '../../host/activity-host';
-import type {CatchHost} from '../../host/catchup-host';
-import type {SocialApi, RequestOptions} from '../../host/activity-host';
+import {catchupHost} from './host';
+import {currentLease, array, string} from '../activity/host';
+import type {CatchHost} from './host';
+import type {SocialApi, RequestOptions} from '../activity/host';
 import type {CatchRuntime, State, Item, Image, Gesture, Options} from './types';
 import {readItems} from './model';
 

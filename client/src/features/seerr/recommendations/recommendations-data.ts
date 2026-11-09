@@ -1,6 +1,6 @@
 // /js/jellyseerr/recommendations/recommendations-data.js
 // Recommendations Page: shared state, Seerr fetch helpers and the identity reset.
-import { filterOf, identityKey } from '../../../host/seerr-discovery-host';
+import { filterOf, identityKey } from '../host-discovery';
 import { decodeFeedPage, decodeGenreSlider } from '../discovery/domain';
 import type { FeedKind, GenreSliderEntry, ManagedFetchOptions } from '../discovery/types';
 import { FILTER_MODULE, LOG_PREFIX, part, PLUGIN_PAGE_LINK, recommendationsHost, SORT_MODULE } from './stage';

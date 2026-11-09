@@ -1,8 +1,8 @@
 import type {
     DiscoveryBaseFacade, DiscoveryConfigKey, DiscoveryFilterFacade, FeedKind, LoadMore, ScrollHint,
     ScrollOptions, ScrollState, SeerrResult
-} from '../features/seerr/discovery/types';
-import type { RecommendationsFacade, RecommendationsStage } from '../features/seerr/recommendations/types';
+} from './discovery/types';
+import type { RecommendationsFacade, RecommendationsStage } from './recommendations/types';
 
 type DiscoverySwitches = { readonly [K in DiscoveryConfigKey]?: boolean };
 export interface DiscoveryConfig extends DiscoverySwitches {

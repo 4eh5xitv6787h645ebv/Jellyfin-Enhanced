@@ -1,5 +1,5 @@
 import { releaseDate, dateKey } from './domain';
-import { calendarHost } from '../../host/calendar-host';
+import { calendarHost } from './host';
 import type { CalendarEvent } from './types';
 // /js/arr/calendar/calendar-page-render-views.js
 // Calendar Page — month/week/day/agenda view rendering, legend, sidebar

@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/bookmarks-host.ts
+  // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
     const JE2 = host2.JellyfinEnhanced;

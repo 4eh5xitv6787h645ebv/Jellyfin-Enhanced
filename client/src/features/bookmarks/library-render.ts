@@ -1,4 +1,4 @@
-import { bookmarksHost, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, type BookmarkHost } from './host';
 import { displayBookmarks, formatTimestamp, parseTimestampInput } from './domain';
 import { createLifetime } from './lifetime';
 import type { Group, Library, MediaTab } from './types';

@@ -1,4 +1,4 @@
-import type { MutationResult, Prefs } from '../../host/spoiler-host';
+import type { MutationResult, Prefs } from './host';
 export function record(value: unknown): Record<string, unknown> {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('Invalid Spoiler Guard object');
     return Object.fromEntries(Object.entries(value));

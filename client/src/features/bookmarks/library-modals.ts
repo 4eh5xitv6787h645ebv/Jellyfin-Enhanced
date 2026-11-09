@@ -1,4 +1,4 @@
-import { bookmarksHost, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, type BookmarkHost } from './host';
 import { required } from './dom';
 import { createLifetime } from './lifetime';
 import type { BookmarkMap, Details, Group, IdentifiedBookmark, Library } from './types';

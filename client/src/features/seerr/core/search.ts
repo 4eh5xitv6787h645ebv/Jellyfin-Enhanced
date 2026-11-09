@@ -1,4 +1,4 @@
-import type { Deduplicator, ScrollHint, ScrollState, SeerrCoreHost } from '../../../host/seerr-core-host';
+import type { Deduplicator, ScrollHint, ScrollState, SeerrCoreHost } from '../host-core';
 import type { SeerrApiFacade, SeerrUiFacade } from './contract';
 import { parseItemAttribute } from './decode';
 import {

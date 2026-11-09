@@ -1,12 +1,12 @@
-import type { LanguageConfig, LanguageSettings, MediaLanguage } from '../features/media-tags/types/language/media-language';
-import type { RatingConfig, RatingSettings, RatingSources } from '../features/media-tags/types/ratings/rating-sources';
+import type { LanguageConfig, LanguageSettings, MediaLanguage } from './types/language/media-language';
+import type { RatingConfig, RatingSettings, RatingSources } from './types/ratings/rating-sources';
 /** Only the legacy host surface consumed by this rule slice. Values remain untrusted at rule inputs. */
 export interface TagRulesBridge {
-    statusVocabulary?: typeof import('../features/media-tags/types/status/status-vocabulary').statusVocabulary;
+    statusVocabulary?: typeof import('./types/status/status-vocabulary').statusVocabulary;
     core?: {
         mediaLanguage?: MediaLanguage;
-        tagLook?: import('../features/media-tags/layout/tag-look').TagLook;
-        tagLayout?: import('../features/media-tags/layout/tag-layout').TagLayout;
+        tagLook?: import('./layout/tag-look').TagLook;
+        tagLayout?: import('./layout/tag-layout').TagLayout;
         ui?: {
             injectCss(id: string, css: string): unknown;
         };
@@ -20,16 +20,16 @@ export interface TagRulesBridge {
             excludes(group: string, element: HTMLElement): boolean;
         };
     };
-    currentSettings?: LanguageSettings & RatingSettings & import('../features/media-tags/layout/layout-rules').LayoutDocument;
-    pluginConfig?: LanguageConfig & RatingConfig & import('../features/media-tags/layout/layout-rules').LayoutDocument;
+    currentSettings?: LanguageSettings & RatingSettings & import('./layout/layout-rules').LayoutDocument;
+    pluginConfig?: LanguageConfig & RatingConfig & import('./layout/layout-rules').LayoutDocument;
     session?: {
         getUserId?(): string | null;
         getServerId?(): string | null;
         getEpoch?(): unknown;
         onUserChange?(name: string, callback: () => void): unknown;
     };
-    tagCacheStore?: import('../features/media-tags/layout/poster-colours').PosterColourStore;
-    tagPosterColours?: import('../features/media-tags/layout/poster-colours').PosterColours;
+    tagCacheStore?: import('./layout/poster-colours').PosterColourStore;
+    tagPosterColours?: import('./layout/poster-colours').PosterColours;
     cdn: {
         flagSvg(code: string): string;
         url?(bucket: string, file: string): string;
@@ -39,7 +39,7 @@ export interface TagRulesBridge {
     }): string;
     ratingSources?: RatingSources;
     normalizeOfficialRating?(text: string): unknown;
-    saveUserSettings?: import('../features/media-tags/layout/tag-look').LookHost['saveUserSettings'];
+    saveUserSettings?: import('./layout/tag-look').LookHost['saveUserSettings'];
     reinitializeTagLayout?(): unknown;
 }
 export function tagRulesHost(): TagRulesBridge {
@@ -87,7 +87,7 @@ interface LookApiClient {
         data: string;
         contentType: string;
         dataType: string;
-    }): ReturnType<import('../features/media-tags/layout/tag-look').ItemLookApi['patch']>;
+    }): ReturnType<import('./layout/tag-look').ItemLookApi['patch']>;
 }
 export function lookApiClient(): LookApiClient {
     const host: Window & {

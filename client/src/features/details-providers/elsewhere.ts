@@ -1,6 +1,6 @@
 /** "Jellyfin Elsewhere": streaming providers for a title, per region, on its details page. */
-import { api, bridge } from '../../host/details-providers-host';
-import type { ElsewhereBridge } from '../../host/details-providers-host';
+import { api, bridge } from './host';
+import type { ElsewhereBridge } from './host';
 import type { ElsewhereSettings } from '../../contracts/generated';
 import { sessionLease, hashItemId, lookupDetailsItem, visibleDetailPage } from './page';
 import { externalLink, pathSegment, safeHref } from './links';

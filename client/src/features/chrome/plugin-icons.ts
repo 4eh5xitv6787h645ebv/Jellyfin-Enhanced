@@ -1,4 +1,4 @@
-import { captureIdentity, isSameIdentity, type BodyMutationCallback, type ChromeCore, type ChromeSession, type IdentityClient, type Unsubscribe } from '../../host/chrome-host';
+import { captureIdentity, isSameIdentity, type BodyMutationCallback, type ChromeCore, type ChromeSession, type IdentityClient, type Unsubscribe } from './host';
 
 export interface PluginIconsBridge {
     cdn: { url(source: string, path: string): string };

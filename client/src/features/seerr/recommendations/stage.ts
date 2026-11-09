@@ -1,4 +1,4 @@
-import { discoveryHost, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { discoveryHost, type SeerrDiscoveryHost } from '../host-discovery';
 import type { RecommendationsInternals, RecommendationsStage } from './types';
 
 export const LOG_PREFIX = '🪼 Jellyfin Enhanced: Recommendations:';

@@ -1,4 +1,4 @@
-import { lease, type BookmarkHost } from '../../host/bookmarks-host';
+import { lease, type BookmarkHost } from './host';
 export interface BookmarkLifetime { dispose(): void }
 export function createLifetime(JE: BookmarkHost, name: string) {
  JE.internals ??= {};

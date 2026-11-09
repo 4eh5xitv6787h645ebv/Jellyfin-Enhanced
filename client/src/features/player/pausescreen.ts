@@ -1,7 +1,7 @@
 import { renderPauseProgress } from './pause-view';
 import { createPlayerLifetime } from './lifetime';
 import { pauseStyles } from './pause-styles';
-import { playerHost } from '../../host/player-host';
+import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment, record } from './wire';
 const { JE, ApiClient } = playerHost();
 const lifetime = createPlayerLifetime(JE, 'pause-screen');
@@ -30,7 +30,7 @@ JE.initializePauseScreen = function() {
         imgProbeCache = new Map<string, boolean>();
         itemCache = new Map<string, { item: Item; domain: string }>();
         fetchAbort: (AbortController) | null = null;
-        observer: (import('../../host/player-host').Subscription) | null = null;
+        observer: (import('./host').Subscription) | null = null;
         prevFocused: (Element) | null = null;
         pauseScreenDelayMs = (JE.currentSettings.pauseScreenDelaySeconds ?? 5) * 1000;
         pauseScreenTimer: (number) | null = null;

@@ -1,6 +1,6 @@
 import { safeExternalUrl } from '../shared/url-domain';
-import { dashboard } from '../../host/details-providers-host';
-import type { ExternalLinkFactory, ExternalLinkOptions } from '../../host/details-providers-host';
+import { dashboard } from './host';
+import type { ExternalLinkFactory, ExternalLinkOptions } from './host';
 
 /** Only navigable schemes reach an href built from configuration or upstream data. */
 export function safeHref(url: string): string {

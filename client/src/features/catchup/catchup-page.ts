@@ -1,4 +1,4 @@
-import { catchupHost } from '../../host/catchup-host';
+import { catchupHost } from './host';
 /**
  * @file Catch Up entry point. Exposes JE.catchUpPage = { injectStyles, renderPage }, used by
  * PluginPages/CatchUpPage.html and the tab.

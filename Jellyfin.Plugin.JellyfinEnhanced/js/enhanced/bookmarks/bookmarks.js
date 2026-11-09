@@ -4827,7 +4827,7 @@
     return json(value, 0) && matches(value, schema, 0);
   }
 
-  // client/src/host/bookmarks-host.ts
+  // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
     const JE2 = host2.JellyfinEnhanced;

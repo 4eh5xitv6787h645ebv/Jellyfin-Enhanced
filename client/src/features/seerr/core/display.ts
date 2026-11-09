@@ -1,4 +1,4 @@
-import type { Translate } from '../../../host/seerr-core-host';
+import type { Translate } from '../host-core';
 import type { QuotaLine, SeasonAnalysis } from './contract';
 import { isNumber, isRecord, isString } from './decode';
 import { MEDIA } from './status';

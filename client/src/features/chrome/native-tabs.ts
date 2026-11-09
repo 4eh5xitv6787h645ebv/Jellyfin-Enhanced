@@ -1,4 +1,4 @@
-import { captureIdentity, isSameIdentity, type ChromeSession, type IdentityClient, type IdentitySnapshot } from '../../host/chrome-host';
+import { captureIdentity, isSameIdentity, type ChromeSession, type IdentityClient, type IdentitySnapshot } from './host';
 
 /**
  * Shared registry for self-contained tabs on the Home page's native tab strip.

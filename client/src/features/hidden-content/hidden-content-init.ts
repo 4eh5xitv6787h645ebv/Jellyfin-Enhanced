@@ -1,5 +1,5 @@
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content — initialization: wires the modules together and
  * exposes the frozen JE.initializeHiddenContent / JE.hiddenContent surface.

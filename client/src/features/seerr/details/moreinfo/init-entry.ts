@@ -1,4 +1,4 @@
-import { bridge, moreInfoRegistry, SEERR_LOG, sibling, type MediaType, type ModalScope, type MoreInfoFacade, type MoreInfoModalElement, type TmdbId } from '../../../../host/seerr-details-host';
+import { bridge, moreInfoRegistry, SEERR_LOG, sibling, type MediaType, type ModalScope, type MoreInfoFacade, type MoreInfoModalElement, type TmdbId } from '../../host-details';
 import { detailOf, isRecord, type JsonRecord } from '../domain/json';
 import { ownMediaInfo, parseMediaType, replaceDetails, tmdbIdOf } from '../domain/media';
 import { createModalScope, isLive } from './scope';

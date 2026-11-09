@@ -1,6 +1,6 @@
 import { lease, invalidate, preferenceKey, own } from './lifetime';
 import { releaseDate, dateKey, calendarResponse, userDataResponse, requestsResponse, savedFilters, record } from './domain';
-import { calendarHost } from '../../host/calendar-host';
+import { calendarHost } from './host';
 import type { CalendarEvent, CalendarState, InstanceError } from './types';
 // /js/arr/calendar/calendar-page-data.js
 // Calendar Page — state, settings and data access (split from calendar-page.js).

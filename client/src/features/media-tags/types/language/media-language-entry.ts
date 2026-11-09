@@ -1,4 +1,4 @@
-import { tagRulesHost, localeCandidates } from '../../../../host/tag-rules-host';
+import { tagRulesHost, localeCandidates } from '../../rules-host';
 import { createMediaLanguage } from './media-language';
 const bridge = tagRulesHost();
 bridge.core ??= {};

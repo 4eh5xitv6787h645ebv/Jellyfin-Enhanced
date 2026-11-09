@@ -7,7 +7,7 @@
       __defProp(target, name, { get: all[name], enumerable: true });
   };
 
-  // client/src/host/tag-rules-host.ts
+  // client/src/features/media-tags/rules-host.ts
   function tagRulesHost() {
     const host = window;
     if (!host.JellyfinEnhanced)

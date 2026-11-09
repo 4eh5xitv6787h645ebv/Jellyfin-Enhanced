@@ -1,6 +1,6 @@
 /** Links for the *arr-synced item tags ("JE Arr Tag: …") on item details. */
-import { bridge, serverId } from '../../host/details-providers-host';
-import type { ArrTagLinksBridge } from '../../host/details-providers-host';
+import { bridge, serverId } from './host';
+import type { ArrTagLinksBridge } from './host';
 import { hashItemId, lookupDetailsItem, sessionLease, visibleDetailPage } from './page';
 import { navigateRoute, tagListRoute } from './links';
 import { relevantArrTags, slugifyTagName } from './arr-domain';

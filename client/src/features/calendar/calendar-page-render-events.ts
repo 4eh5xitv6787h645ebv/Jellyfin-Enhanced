@@ -1,5 +1,5 @@
 import { releaseDate, releaseDate as parseReleaseDate, dateKey } from './domain';
-import { calendarHost } from '../../host/calendar-host';
+import { calendarHost } from './host';
 import type { CalendarEvent, UrlMapping } from './types';
 // /js/arr/calendar/calendar-page-render-events.js
 // Calendar Page — date-range helpers, event formatting and single-event /

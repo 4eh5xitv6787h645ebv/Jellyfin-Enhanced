@@ -1,7 +1,7 @@
-import type { Session } from '../core/session';
-import type { Lifecycle } from '../core/lifecycle';
-import type { RequestOptions } from '../core/api/types';
-import type { SpoilerBlurUserPrefs } from '../contracts/generated';
+import type { Session } from '../../core/session';
+import type { Lifecycle } from '../../core/lifecycle';
+import type { RequestOptions } from '../../core/api/types';
+import type { SpoilerBlurUserPrefs } from '../../contracts/generated';
 export type Prefs = Partial<SpoilerBlurUserPrefs> & Record<string, boolean | null | undefined>;
 export interface MutationResult { promoted?: string; removedFrom?: string; jellyfinId?: string; removed?: boolean; prefs?: Prefs }
 export interface SettingsContext { presetBoxBackground: string; toggleAccentColor: string; help: Element; onClose?(callback: () => void): void; resetAutoCloseTimer(): void }

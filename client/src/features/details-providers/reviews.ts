@@ -1,6 +1,6 @@
 /** TMDB, AniList and Jellyfin Enhanced user reviews on item details pages. */
-import { api, bridge, browserTranslator, currentUserId, dashboard } from '../../host/details-providers-host';
-import type { ReviewsBridge } from '../../host/details-providers-host';
+import { api, bridge, browserTranslator, currentUserId, dashboard } from './host';
+import type { ReviewsBridge } from './host';
 import { detailsLease, hashItemId, lookupDetailsItem, visibleDetailPage } from './page';
 import { pathSegment } from './links';
 import { bool, decodeDetailsItem, errorShape, field, list, str } from './wire';

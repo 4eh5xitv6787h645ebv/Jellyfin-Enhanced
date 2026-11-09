@@ -5,7 +5,7 @@
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
 import type { JsonValue } from '../../contracts/generated';
-import { apiClient, optionalApiClient, panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge } from '../../host/settings-panel-host';
+import { apiClient, optionalApiClient, panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge } from './host';
 import type { PanelContext } from './context';
 import { closestTarget, controlChecked, controlValue, inputById, isDisabled, queryElements, queryInput, requireId, selectById, setDisabled } from '../shared/dom';
 import { audioLanguageOptions, decodeCultures } from './language-options';

@@ -1,5 +1,5 @@
 import { own } from './ownership';
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal, ApiClient } = spoilerHost();
 const owner = own(JE, 'identity', false);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';

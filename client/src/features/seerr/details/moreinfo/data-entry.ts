@@ -1,4 +1,4 @@
-import { apiClient, bridge, moreInfoRegistry, SEERR_LOG, type MediaType, type TmdbId } from '../../../../host/seerr-details-host';
+import { apiClient, bridge, moreInfoRegistry, SEERR_LOG, type MediaType, type TmdbId } from '../../host-details';
 import { isRecord, num } from '../domain/json';
 import { clearPhantom4k, contentRating } from '../domain/media';
 

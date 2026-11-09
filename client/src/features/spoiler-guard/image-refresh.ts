@@ -1,5 +1,5 @@
 import { own } from './ownership';
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal } = spoilerHost();
 const owner = own(JE, 'image-refresh', true);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';

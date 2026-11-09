@@ -1,4 +1,4 @@
-import type { PlayerBridge } from '../../host/player-host';
+import type { PlayerBridge } from './host';
 /** Each entry creates one owner. Importing this factory never creates shared state. */
 export function createPlayerLifetime(JE: PlayerBridge, name: string) {
     let generation = 0;

@@ -1,4 +1,4 @@
-import { hostClient, optionalBridge } from '../../host/chrome-host';
+import { hostClient, optionalBridge } from './host';
 import { createThemeSelector, type ThemeClient, type ThemeSelectorBridge } from './theme-selector';
 
 // Baseline reads JE.cdn at load (it must exist); the facade is only published when JE exists.

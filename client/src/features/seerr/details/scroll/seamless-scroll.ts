@@ -1,5 +1,5 @@
-import type { SeerrDetailsBridge } from '../../../../host/seerr-details-host';
-import { SEERR_LOG } from '../../../../host/seerr-details-host';
+import type { SeerrDetailsBridge } from '../../host-details';
+import { SEERR_LOG } from '../../host-details';
 import { record } from '../domain/json';
 
 /**

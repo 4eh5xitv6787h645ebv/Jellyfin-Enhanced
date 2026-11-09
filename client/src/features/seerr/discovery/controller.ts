@@ -4,7 +4,7 @@
 //   'dual-feed'    server-paginated TV + Movie feeds, interleaved, filter/sort, infinite scroll
 //   'client-paged' one fetched list chunk-rendered client-side, filter/sort, infinite scroll
 //   'one-shot'     a single render, no pagination
-import { bindToSession, filterOf, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { bindToSession, filterOf, type SeerrDiscoveryHost } from '../host-discovery';
 import {
     abortError, clampPages, decodeFeedPage, estimateYield, isAbortError, pageRange, planPagesPerFeed, resultKey, sortResults,
     throwIfAborted, unseenResults, type YieldStats

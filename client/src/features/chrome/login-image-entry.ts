@@ -1,4 +1,4 @@
-import { ensureBridge, hostClient } from '../../host/chrome-host';
+import { ensureBridge, hostClient } from './host';
 import { createLoginImage, type LoginClient, type LoginImageBridge } from './login-image';
 
 const loginImage = createLoginImage(() => hostClient<LoginClient>());

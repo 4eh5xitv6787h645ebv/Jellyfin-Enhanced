@@ -1,4 +1,4 @@
-import { apiClient, bridge, escaper, moreInfoRegistry, SEERR_LOG, translator, type FollowUpOptions, type MoreInfoModalElement, type TmdbId } from '../../../../host/seerr-details-host';
+import { apiClient, bridge, escaper, moreInfoRegistry, SEERR_LOG, translator, type FollowUpOptions, type MoreInfoModalElement, type TmdbId } from '../../host-details';
 import { calendarYear, isIsoDate } from '../domain/dates';
 import { filled, idText, isRecord, num, record, records, str, type JsonRecord } from '../domain/json';
 import { detailsHref, isPosterPath, tmdbImage } from '../domain/links';

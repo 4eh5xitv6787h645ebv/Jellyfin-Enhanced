@@ -1,6 +1,6 @@
 // /js/jellyseerr/discovery/discovery-filter-utils.js
 // Shared utilities for the discovery sections, published as JE.discoveryFilter.
-import { discoveryHost, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { discoveryHost, type SeerrDiscoveryHost } from '../host-discovery';
 import { createCardRendering } from './card-rendering';
 import { applyFilterVisibility, createControls, injectFilterStyles } from './controls';
 import {

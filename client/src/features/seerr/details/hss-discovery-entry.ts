@@ -1,4 +1,4 @@
-import { bridge, SEERR_LOG } from '../../../host/seerr-details-host';
+import { bridge, SEERR_LOG } from '../host-details';
 import { parseMediaType } from './domain/media';
 
 /**

@@ -1,5 +1,5 @@
-import { activityHost } from '../../host/activity-host';
-import type { ActivityHost } from '../../host/activity-host';
+import { activityHost } from './host';
+import type { ActivityHost } from './host';
 // /js/extras/colored-activity-icons.js
 // Replaces activity icons with Material Design icons and adds colors
 

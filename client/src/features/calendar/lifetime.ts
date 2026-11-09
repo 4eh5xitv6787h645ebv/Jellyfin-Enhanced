@@ -1,4 +1,4 @@
-import type {CalendarHost} from '../../host/calendar-host';
+import type {CalendarHost} from './host';
 export interface CalendarLifetime {
  view: number; navigation: number; refresh: number; events: number; userData: number; requests: number;
  initialized: boolean; disposers: Map<string, () => void>;

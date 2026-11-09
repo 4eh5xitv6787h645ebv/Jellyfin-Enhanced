@@ -1,4 +1,4 @@
-import { playerHost } from '../../host/player-host';
+import { playerHost } from './host';
 import { createPlayerLifetime } from './lifetime';
 import { getCurrentVideoItemId } from './identity';
 import { installFrameSeek } from './frame-seek';

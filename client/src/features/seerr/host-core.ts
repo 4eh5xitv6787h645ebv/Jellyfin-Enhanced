@@ -1,4 +1,4 @@
-import type { SeerrApiFacade, SeerrModalFacade, SeerrStatusFacade, SeerrUiFacade, SeerrUiInternals } from '../features/seerr/core/contract';
+import type { SeerrApiFacade, SeerrModalFacade, SeerrStatusFacade, SeerrUiFacade, SeerrUiInternals } from './core/contract';
 
 /**
  * The narrow legacy-global boundary of the Seerr core group. Each member is

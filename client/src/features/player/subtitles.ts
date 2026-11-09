@@ -1,9 +1,9 @@
-import { playerHost } from '../../host/player-host';
+import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment } from './wire';
 import { createPlayerLifetime } from './lifetime';
 const { JE, ApiClient } = playerHost();
 const lifetime = createPlayerLifetime(JE, 'subtitles');
-let subtitleObserver: import('../../host/player-host').Subscription | null = null;
+let subtitleObserver: import('./host').Subscription | null = null;
     let currentSubtitleStyle: { textColor: string; bgColor: string; fontSize: number; fontFamily: string; textShadow: string | undefined } = { textColor: '', bgColor: '', fontSize: 1.2, fontFamily: 'inherit', textShadow: undefined };
 
     // Marks elements this module has styled. Jellyfin's own Custom subtitle mode writes

@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/settings-panel-host.ts
+  // client/src/features/settings-panel/host.ts
   function panelHost() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new TypeError("Jellyfin Enhanced must load before the settings panel");

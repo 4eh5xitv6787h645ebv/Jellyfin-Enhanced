@@ -1,4 +1,4 @@
-import { chromeBridge } from '../../host/chrome-host';
+import { chromeBridge } from './host';
 import { createHeaderActions, type HeaderActionsBridge } from './header-actions';
 
 const JE = chromeBridge<HeaderActionsBridge>();

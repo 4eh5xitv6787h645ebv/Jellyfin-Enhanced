@@ -1,7 +1,7 @@
 // /js/jellyseerr/recommendations/recommendations-render.js
 // Recommendations Page: media rows, studio/network/genre tile rows and the content renderer shared
 // by the standalone page, Plugin Pages and the custom/native tabs.
-import { bindToSession, filterOf, translate, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { bindToSession, filterOf, translate, type SeerrDiscoveryHost } from '../host-discovery';
 import { isAbortError } from '../discovery/domain';
 import type { FeedKind, GenreSliderEntry, SeerrResult } from '../discovery/types';
 import { LOG_PREFIX, PAGE_ID, part, recommendationsHost } from './stage';

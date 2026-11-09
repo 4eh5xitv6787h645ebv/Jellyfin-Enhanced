@@ -4,7 +4,7 @@
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
 import type { JsonValue } from '../../contracts/generated';
-import { panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge, type SubtitlePreset, type TextEffectPreset } from '../../host/settings-panel-host';
+import { panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge, type SubtitlePreset, type TextEffectPreset } from './host';
 import type { PanelContext } from './context';
 import { entryAt, numeric } from '../shared/settings-values';
 import { PLAYER_COLUMN, pluginShortcutList } from './shortcut-rules';
