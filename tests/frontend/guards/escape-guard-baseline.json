@@ -227,8 +227,7 @@
     "X1 installRequestModals.showCollectionRequestModal": 1
   },
   "client/src/features/seerr/core/ui/season-modal.ts": {
-    "X1 installSeasonModal.showSeasonSelectionModal": 4,
-    "X1 installSeasonModal.showSeasonSelectionModal.fromItem": 1
+    "X1 installSeasonModal.showSeasonSelectionModal": 1
   },
   "client/src/features/seerr/details/issues/issue-reporter-entry.ts": {
     "X1 toast": 1
