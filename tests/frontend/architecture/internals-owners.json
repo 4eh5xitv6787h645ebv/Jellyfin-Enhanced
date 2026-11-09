@@ -1,0 +1,23 @@
+{
+  "_comment": "frontend.md §2.4 rule 3: which feature owns each JE.internals slot. Only a host file of an owning feature (features/<f>/host*.ts) may touch a slot. Evidence: the file that creates the slot. 'features' is created by both details-providers (details-page.ts, media-info.ts, release-dates.ts) and hidden-content (host/hidden-content-host.ts, features-remove-home.ts), so both own it until C3 splits it.",
+  "autoSkip": ["player"],
+  "bookmarkLifetimes": ["bookmarks"],
+  "bookmarksLibrary": ["bookmarks"],
+  "calendarLifetime": ["calendar"],
+  "calendarPage": ["calendar"],
+  "canonicalCombo": ["chrome"],
+  "catchUp": ["catchup"],
+  "enhancedUi": ["settings-panel"],
+  "features": ["details-providers", "hidden-content"],
+  "hiddenContent": ["hidden-content"],
+  "hiddenContentPage": ["hidden-content"],
+  "hiddenContentRuntime": ["hidden-content"],
+  "jellyseerrUi": ["seerr"],
+  "moreInfoModal": ["seerr"],
+  "nowPlaying": ["player"],
+  "peopleTags": ["media-tags"],
+  "player": ["player"],
+  "recommendationsPage": ["seerr"],
+  "requestsPage": ["downloads"],
+  "spoilerGuard": ["spoiler-guard"]
+}
