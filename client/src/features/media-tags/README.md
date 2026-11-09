@@ -2,7 +2,7 @@
 
 Media tags: the poster tag pipeline, cache store, renderer base and contracts (`pipeline/`), the item tag editor and menu (`editor/`), one folder per tag type (`types/<type>/`: quality, direct-play, language, people, status, ratings, age-rating, awards, genre, logo, custom), layout, looks, poster colours and tag styles (`layout/`), the user-settings panels (`settings/`) and the admin Media Tags page (`admin/`; formerly `features/admin-tags`).
 
-Owner: Jellyfin Enhanced maintainers. Backend counterpart: `Features/MediaTags/` (with `JeMediaTagsController.Admin.cs` and `Admin/`) (PLAN.md canonical feature list).
+Owner: Jellyfin Enhanced maintainers. Backend counterpart: `Features/MediaTags/` (admin routes in `JeMediaTagsController.Admin.cs`) (PLAN.md canonical feature list).
 
 ## Entry points → shipped files
 
