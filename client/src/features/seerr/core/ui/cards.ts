@@ -611,22 +611,25 @@ export function installCards(host: SeerrCoreHost): void {
             removeOverview(state);
         }
     }
-    /** mouseenter/mouseleave (capture): the hover overview, and the hidden item's "Unhide" title. */
+    /**
+     * mouseover/mouseout crossing the poster or the hide button: the hover overview, and the hidden item's
+     * "Unhide" title. Not mouseenter: Gecko sends it only to a page that had a mouseenter listener before
+     * the move, and this container is bound during the first move's mouseover.
+     */
     function onCardHoverBoundary(container: HTMLElement, event: MouseEvent, entering: boolean): void {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
-        const isScalable = target.classList.contains('cardScalable');
-        if (!isScalable && !target.classList.contains('je-hide-btn')) return;
         const hit = cardEventTarget(container, event);
         if (!hit) return;
-        const state = hit.state;
-        if (isScalable) {
-            if (target !== state.cardScalable) return;
+        const { state, target } = hit;
+        const related = event.relatedTarget instanceof Node ? event.relatedTarget : null;
+        const crosses = (element: HTMLElement | null): element is HTMLElement => !!element && element.contains(target) && !(related && element.contains(related));
+        if (crosses(state.cardScalable)) {
             // No preview when the poster just links straight to Jellyfin.
             if (!entering) removeOverview(state);
             else if (!state.overview && !state.linksAvailableToJellyfin) createOverview(state);
-        } else if (target.classList.contains('je-already-hidden')) {
-            target.title = (entering ? state.ctx.unhideLabel : state.ctx.hiddenLabel) ?? '';
+        }
+        const hideButton = inCard(hit.card, target, '.je-hide-btn');
+        if (crosses(hideButton) && hideButton.classList.contains('je-already-hidden')) {
+            hideButton.title = (entering ? state.ctx.unhideLabel : state.ctx.hiddenLabel) ?? '';
         }
     }
     /** A tap (not a swipe) on the poster shows the overview; preventDefault keeps it from activating at once. */
@@ -653,8 +656,8 @@ export function installCards(host: SeerrCoreHost): void {
         boundContainers.add(container);
         container.addEventListener('click', event => onCardClick(container, event));
         container.addEventListener('keydown', event => onCardKeydown(container, event));
-        container.addEventListener('mouseenter', event => onCardHoverBoundary(container, event, true), true);
-        container.addEventListener('mouseleave', event => onCardHoverBoundary(container, event, false), true);
+        container.addEventListener('mouseover', event => onCardHoverBoundary(container, event, true));
+        container.addEventListener('mouseout', event => onCardHoverBoundary(container, event, false));
         JE.core?.ui?.addDelegatedTouchTapListener?.(container, el => {
             const card = el.closest('.jellyseerr-card');
             const state = card instanceof HTMLElement && card.parentElement === container ? cardStates.get(card) : undefined;
