@@ -34,6 +34,12 @@ export function listSources(extensions = ['.ts']) {
 export const readSource = file => readFileSync(join(repoRoot, file), 'utf8');
 export const readJson = name => JSON.parse(readFileSync(join(here, name), 'utf8'));
 
+/** The canonical feature map (PLAN.md "Canonical feature list"), shared with the backend parity test. */
+export const featureMapPath = 'docs/feature-map.json';
+export const readFeatureMap = () => JSON.parse(readFileSync(join(repoRoot, featureMapPath), 'utf8'));
+/** The map's rows whose own folder is client/src/features/<name> (kind `feature`), in map order. */
+export const mappedFeatures = (map = readFeatureMap()) => map.features.filter(row => row.kind === 'feature');
+
 /** `wc -l` semantics (the plan's baseline command): the number of newline characters. */
 export const lineCount = text => text.split('\n').length - 1;
 
@@ -519,3 +525,19 @@ export function sizeOffenders(files = listSources(['.ts', '.css'])) {
 
 /** Drop `_comment`-style keys from a baseline or map file. */
 export const withoutComments = map => Object.fromEntries(Object.entries(map).filter(([key]) => !key.startsWith('_')));
+
+// ---------------------------------------------------------------------------------------------------------
+// Feature map → CONTRIBUTING.md "Where things live" (backend.md §7.6)
+
+/** The table rows of CONTRIBUTING.md's "Where things live" section, rendered from docs/feature-map.json. */
+export function whereThingsLiveRows(map = readFeatureMap()) {
+  const code = path => `\`${path}/\``;
+  return map.features.map(row => {
+    const name = `\`${row.name}\`${row.kind === 'area' ? ' (area)' : ''}`;
+    const client = row.client.map(path => code(path.slice(srcRoot.length + 1))).join(', ');
+    const backend = row.backend ? code(row.backend)
+      : row.backendServedBy ? `none (served by ${code(row.backendServedBy)})` : 'none';
+    const tests = [...row.tests.frontend, ...row.tests.backend].map(code).join(', ') || '–';
+    return `| ${name} | ${client} | ${backend} | ${tests} |`;
+  });
+}
