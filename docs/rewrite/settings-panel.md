@@ -30,7 +30,7 @@ under `client/src/features/settings-panel/`. Output paths, file names and the se
 
 ## Structure
 
-- `client/src/host/settings-panel-host.ts` is the only adapter to globals. `PanelBridge` lists the
+- `client/src/features/settings-panel/host.ts` is the only adapter to globals. `PanelBridge` lists the
   facade members the panel reads or provides; every module narrows it with `Pick` to what it uses.
   Server and configuration values stay JSON-typed or `unknown` until a reader narrows them. The
   layout, look, media-language, rating and poster-colour services are typed with the tag-rules
@@ -71,7 +71,7 @@ through the inheritance API so a save never pins an inherited administrator defa
 
 | ID | Classification | Defect | Evidence |
 | --- | --- | --- | --- |
-| SETTINGS-PANEL-01 | introduced (rewrite branch CAS integration) | Opening the panel replaced `userConfig.settings` from the unrevisioned `GET settings.json` but kept the old `settingsRevision`, so after another tab or device saved, the panel showed the new document and every panel save was refused as a conflict ("Reload before trying again"). The refresh also applied unvalidated content. | The panel now reads `GET settings-document`, validates it with the generated contract (`window.__JE_BOOTSTRAP_CONTRACT__.parseSettingsDocument`, caller authority from the host's user policy), and replaces content and revision together only when the server's revision differs from the one at request time and no local save advanced it meanwhile. `tests/frontend/features/settings-panel-rewrite.test.mjs` (SETTINGS-PANEL-01 cases, fail on the legacy file), `tests/browser/settings-panel-rewrite.spec.cjs`. |
+| SETTINGS-PANEL-01 | introduced (rewrite branch CAS integration) | Opening the panel replaced `userConfig.settings` from the unrevisioned `GET settings.json` but kept the old `settingsRevision`, so after another tab or device saved, the panel showed the new document and every panel save was refused as a conflict ("Reload before trying again"). The refresh also applied unvalidated content. | The panel now reads `GET settings-document`, validates it with the generated contract (`window.__JE_BOOTSTRAP_CONTRACT__.parseSettingsDocument`, caller authority from the host's user policy), and replaces content and revision together only when the server's revision differs from the one at request time and no local save advanced it meanwhile. `tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs` (SETTINGS-PANEL-01 cases, fail on the legacy file), `tests/browser/settings-panel-rewrite.spec.cjs`. |
 | SETTINGS-PANEL-02 | baseline | Each panel open added four document listeners (subtitle grid `mousemove`/`mouseup`/`touchmove`/`touchend`) that were never removed, keeping every closed panel's DOM alive and running handlers on every page-wide pointer move. | Listeners are released through `ctx.onClose`; a drag held at close is saved once. Frontend SETTINGS-PANEL-02 cases; browser journey (post-close drag changes nothing). |
 | SETTINGS-PANEL-03 | baseline | A stored subtitle size/font index the presets lack (e.g. 99, -1) made every style/size/font/effect preset click throw before saving (`JE.fontSizePresets[i].size` of undefined), while the template showed Normal. | Preset clicks fall back to Normal / the first font like the template. Frontend SETTINGS-PANEL-03 cases. |
 | SETTINGS-PANEL-04 | baseline | Rebinding or disabling a shortcut the plugin defaults do not list stored an override without `Name` (`{ Key }`), which the editor and key listener can never match again. | Overrides always carry the action name. Frontend shortcut case. |
@@ -83,10 +83,10 @@ through the inheritance API so a save never pins an inherited administrator defa
   `GET …/settings-document` (SETTINGS-PANEL-01). `tests/frontend/bootstrap/bootstrap-panel-resize.test.mjs`
   ("opening settings response is published only to its original identity") now loads the contract
   bundle and resolves a contract-valid `RevisionedSettingsResponse`; its assertions are unchanged.
-- `tests/frontend/features/features-media-tags-docs-links.test.mjs` reads the hub's tab list from the
+- `tests/frontend/features/media-tags/features-media-tags-docs-links.test.mjs` reads the hub's tab list from the
   TypeScript source (the generated bundle is reformatted by esbuild); its regular expressions and
   assertions are unchanged.
-- `tests/frontend/features/features-media-tags-strings.test.mjs` scans only `.js` files (the new
+- `tests/frontend/features/media-tags/features-media-tags-strings.test.mjs` scans only `.js` files (the new
   source maps embed TypeScript type syntax) and accepts either quote in the fixed parts of three
   patterns (esbuild writes double quotes). On the generated files the check matches as many sinks
   as on the legacy files (12) and finds nothing.
@@ -130,7 +130,7 @@ An acknowledged write may reconcile its same-account preference after the panel 
 a still-visible originating panel may show the success toast or reload. Account changes discard
 old completions. Optional GitHub work and reload timers are disposed with the panel.
 
-Permanent adversarial checks are in `tests/frontend/features/settings-panel-boundaries.test.mjs`.
+Permanent adversarial checks are in `tests/frontend/features/settings-panel/settings-panel-boundaries.test.mjs`.
 Root remediation evidence, before-source controls, fixture differences, and validation limits are
 under `artifacts/reviews/parent-remediation/settings-panel-r1/`. Independent re-review remains
 required before closing the new findings.

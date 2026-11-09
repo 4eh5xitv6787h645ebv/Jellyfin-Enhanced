@@ -26,7 +26,7 @@ All entries live in `client/src/features/details-providers/`.
 
 ## Boundaries
 
-`client/src/host/details-providers-host.ts` declares one finite facade slice per
+`client/src/features/details-providers/host.ts` declares one finite facade slice per
 entry (`RandomBridge`, `ReviewsBridge`, …); configuration fields are typed from the
 generated bootstrap contract (`BootstrapPublicConfig`, `BootstrapPrivateConfig`,
 `ElsewhereSettings`). There is no shared global bag. Every Jellyfin call reads the
@@ -116,12 +116,12 @@ remediation, controls and limits.
 ## Validation and remaining checks
 
 ```
-node --test tests/frontend/features/features-details-providers-rewrite.test.mjs \
-  tests/frontend/features/features-random.test.mjs tests/frontend/features/features-media-info.test.mjs \
-  tests/frontend/features/features-release-dates.test.mjs tests/frontend/features/features-details-prefetch.test.mjs \
+node --test tests/frontend/features/details-providers/features-details-providers-rewrite.test.mjs \
+  tests/frontend/features/details-providers/features-random.test.mjs tests/frontend/features/details-providers/features-media-info.test.mjs \
+  tests/frontend/features/details-providers/features-release-dates.test.mjs tests/frontend/features/details-providers/features-details-prefetch.test.mjs \
   tests/frontend/pages/pages-reviews.test.mjs tests/frontend/pages/pages-awards.test.mjs \
   tests/frontend/core/core-letterboxd.test.mjs tests/frontend/core/core-shared-boundaries.test.mjs \
-  tests/frontend/features/features-seerr-spoiler-guard.test.mjs tests/frontend/bootstrap/bootstrap-manifest.test.mjs
+  tests/frontend/features/spoiler-guard/features-seerr-spoiler-guard.test.mjs tests/frontend/bootstrap/bootstrap-manifest.test.mjs
 npx playwright test --config tests/browser/playwright.config.cjs tests/browser/details-providers-rewrite.spec.cjs
 ```
 

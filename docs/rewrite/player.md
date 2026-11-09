@@ -9,7 +9,7 @@ another player or copy another entry's mutable state.
 
 ## Boundaries and behavior
 
-`client/src/host/player-host.ts` enumerates the player settings, host operations,
+`client/src/features/player/host.ts` enumerates the player settings, host operations,
 legacy facades and sibling interfaces. API operations read the currently active
 Jellyfin client on each call. `wire.ts` projects unknown Jellyfin responses into
 narrow item, stream, session and media-segment records, rejecting malformed scalar
@@ -47,7 +47,7 @@ this slice. That owner and its calls into these facades were not changed.
 Focused existing/new compiled-output tests:
 
 ```
-node --test --test-concurrency=1 tests/frontend/features/features-playback.test.mjs tests/frontend/features/features-autoskip.test.mjs tests/frontend/features/features-subtitles.test.mjs tests/frontend/features/features-pause.test.mjs tests/frontend/features/features-player-rewrite.test.mjs
+node --test --test-concurrency=1 tests/frontend/features/player/features-playback.test.mjs tests/frontend/features/player/features-autoskip.test.mjs tests/frontend/features/player/features-subtitles.test.mjs tests/frontend/features/player/features-pause.test.mjs tests/frontend/features/player/features-player-rewrite.test.mjs
 ```
 
 50 tests pass. The dedicated `tests/browser/player-rewrite.spec.cjs` runs native DOM,

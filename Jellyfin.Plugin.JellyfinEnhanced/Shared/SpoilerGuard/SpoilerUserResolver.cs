@@ -13,7 +13,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     // Shared spoiler-state-load helper used by both SpoilerBlurImageFilter
     // and SpoilerFieldStripFilter, plus thin delegation into the plugin-wide
-    // RequestIdentityService (Services/Identity) — the "who is making this
+    // RequestIdentityService (Infrastructure/Identity) — the "who is making this
     // request?" ladder (ClaimsPrincipal → tag marker → cookie → session-by-IP)
     // lives THERE so every feature resolves identity through one documented,
     // choke point; this class owns only what is spoiler-specific

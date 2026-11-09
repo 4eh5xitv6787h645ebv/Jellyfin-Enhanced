@@ -105,7 +105,7 @@ These declarations are the tab's whole field list. `JE.adminTags.pageFields()` c
 1. Declare the field in the section that owns it, with the old id, and add its key to `tests/fixtures/admin-tags-page-fields.json`.
 2. Delete its markup, load/save lines, `PARENT_DEPS` entry and any helper from the form in `configPage.html` (and its schema entry in `Configuration/admin/sections.js`). `buildConfigFromForm` starts from the saved configuration, so a field the form no longer touches keeps its value.
 3. Run `python3 scripts/generate_config_flag_groups.py` and `python3 tests/inventory/generate.py`; commit the regenerated files.
-4. Add the field's behaviour to the appropriate `tests/frontend/features/features-admin-tags-page-*.test.mjs` concern file (the Groups file exercises every declared field automatically).
+4. Add the field's behaviour to the appropriate `tests/frontend/features/media-tags/admin/features-admin-tags-page-*.test.mjs` concern file (the Groups file exercises every declared field automatically).
 
 ## Integrated Tier 2 controls
 

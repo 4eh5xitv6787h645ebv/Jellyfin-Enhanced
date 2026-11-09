@@ -99,7 +99,7 @@ navigation that creates a second view is not handled.
 
 ## Tests
 
-- `tests/frontend/features/admin-config-rewrite.test.mjs`: the generated page and scripts, booted
+- `tests/frontend/admin/config/admin-config-rewrite.test.mjs`: the generated page and scripts, booted
   through the real start-up path, with `tests/frontend/helpers/admin-config-page.mjs`.
 - `tests/fixtures/admin-config-baseline.json`: ids, sections, per-user flags, main toggles and collected
   defaults recorded from the baseline scripts. Regenerate it only for an intentional schema change.

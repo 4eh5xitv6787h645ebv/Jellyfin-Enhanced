@@ -82,22 +82,11 @@ Jellyfin.Plugin.JellyfinEnhanced/
 │   │   ├── sections.css
 │   │   └── per-user.js                 # Generated list of settings users also hold personally
 │   └── whats-new-seed.json
-├── Features/                       # One folder per feature: Je<Feature>Controller.cs (+ partials), Services/, Models/, Tasks/
+├── Features/                         # One folder per feature (docs/feature-map.json): Je<Feature>Controller.cs (+ partials), Services/, Models/, Events/, Tasks/, PublicApi/
+├── Shared/                           # Code several features use, by area: Analytics/, Arr/, HiddenContent/, Host/, Library/, Maintenance/, Media/, MediaTags/, Parental/, Reviews/, Seerr/, Sessions/, SpoilerGuard/, Text/, Tmdb/
+├── Infrastructure/                   # Auth/, Extensions/ (repository, database and user API adapters), Hosting/ (event consumer and MVC filter registration), Http/ (JeControllerBase), Identity/, Persistence/
+├── Transport/                        # Bootstrap and bookmark wire records, TransportJson
 ├── PluginPages/                      # Seven embedded page wrappers
-├── Helpers/
-│   └── Jellyseerr/                   # Seerr HTTP, permissions, imports, parental rules
-├── Extensions/                       # Repository, database and user API adapters
-├── EventHandlers/                    # Playback and user topology consumers/hooks
-├── Model/
-│   ├── Arr/
-│   └── Jellyseerr/
-├── ScheduledTasks/                   # Dashboard tasks and MDBList fetch runner
-├── Services/
-│   ├── Identity/
-│   ├── PosterTags/
-│   │   ├── Rendering/
-│   │   └── Resolution/
-│   └── SpoilerGuard/
 ├── Assets/
 │   ├── PosterTags/                   # Generated, embedded rendering assets
 │   └── TagPresets/                   # Built-in Media Tags presets (embedded JSON)
@@ -135,7 +124,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 
 ### Build targets and logging
 
-`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Directory organization does not always match C# namespaces: for example, services in `Features/SpoilerGuard/Services/` and `Infrastructure/Identity/` use `Jellyfin.Plugin.JellyfinEnhanced.Services`. Check declarations rather than deriving namespaces from folders.
+`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Every file under `Features/<F>/` declares `Jellyfin.Plugin.JellyfinEnhanced.Features.<F>[.*]` (enforced by `tests/backend/Architecture/FolderNamespaceTests.cs`), except scheduled-task types, which keep `…ScheduledTasks` (and `StartupService`, which keeps `…Services`) because Jellyfin keys a task's saved triggers and history by its type's full name. Files under `Shared/` and `Infrastructure/` mostly declare `…Shared.<Area>` or `…Infrastructure.<Area>`, but some still use the older `…Services`, `…Helpers`, `…Model.Arr`, `…Extensions` and `…EventHandlers` namespaces. Check declarations rather than deriving namespaces from folders there.
 
 | `JellyfinTarget` | Jellyfin references | Framework | Compilation symbol |
 |---|---|---|---|
@@ -306,7 +295,7 @@ See [Seerr Features](../seerr/seerr-features.md) for permissions and integration
 
 `arr/calendar/` has seven modules: `calendar-page-styles.js`, `calendar-page-data.js`, `calendar-page-render-events.js`, `calendar-page-render-views.js`, `calendar-page-actions.js`, `calendar-page-init.js`, `calendar-custom-tab.js`.
 
-Calendar combines Radarr, Sonarr and Shoko data. Shoko retrieval lives in the main controller, with Jellyfin posters and deep-link handling in the calendar modules; there is no separate `ShokoService.cs`. Shoko is configured when both URL and API key are present. Check it alone and alongside *arr sources when changing calendar behavior. See [*arr Settings](../arr/arr-settings.md) for setup.
+Calendar combines Radarr, Sonarr and Shoko data. Shoko retrieval lives in `Features/Calendar/JeCalendarController.cs`, with Jellyfin posters and deep-link handling in the calendar modules; there is no separate `ShokoService.cs`. Shoko is configured when both URL and API key are present. Check it alone and alongside *arr sources when changing calendar behavior. See [*arr Settings](../arr/arr-settings.md) for setup.
 
 Administrator settings under **\*arr** → **Shoko**:
 
@@ -442,55 +431,57 @@ Repository-root `images/mdblist-logos/` supplies logos. See [Other Features](../
 
 The client interacts with server classes through endpoints, cookies and image responses, rather than referencing C# class names. `PluginServiceRegistrator.cs` is the source of truth for service lifetimes, event-consumer registrations and MVC filter order.
 
-### Root services: `Services/`
+### Server services by feature
+
+Paths are relative to `Jellyfin.Plugin.JellyfinEnhanced/`. `Features/<F>/` holds one feature's code; `Shared/<Area>/` holds code several features use.
 
 | Files | Responsibility |
 |---|---|
-| `RadarrService.cs`, `SonarrService.cs` | *arr integration access. Shoko handling is in the main controller. |
-| `AutoMovieRequestService.cs`, `AutoSeasonRequestService.cs` | Automatic next-collection-movie and next-season request decisions/execution. |
-| `AutoMovieRequestMonitor.cs`, `AutoSeasonRequestMonitor.cs` | Playback event subscriptions feeding those request services. |
-| `WatchlistMonitor.cs`, `SeerrScanTriggerService.cs` | Watchlist event handling and debounced library-add → Seerr recently-added scan bridge. |
-| `SeerrParentalFilter.cs` | Shared parental filtering for integration responses. |
-| `TmdbResponseCache.cs`, `TmdbCompanyTvDiscover.cs` | TMDB response caching/coalescing and studio-produced TV discovery shaped for Seerr consumers. |
-| `StatusTagsTrendingService.cs` | Server-wide trending ranks for Status Tags: TMDB daily trending, else Seerr weekly trending, cached for 30 minutes. |
-| `MovieCollectionsBatch.cs`, `WatchProvidersBatch.cs` | Parsing/shaping batched collection and regional streaming-provider lookups. Movie collections use Seerr first, then TMDB when needed. |
-| `ItemStatsService.cs` | Aggregate item/subtree size and watch-progress data for detail chips. |
-| `TagCacheService.cs`, `TagCacheMonitor.cs` | Builds/persists tag data at the current cache schema (`CurrentCacheSchemaVersion`), maintains it from library events and filters episode-derived facts using contributor IDs and `filterRevision`. |
-| `TagLogoService.cs`, `TagCacheLogos.cs` | Logos group data: daily TMDB lookups and the logo image proxy cache; projection into tag cache entries. |
-| `StatusTagsSeriesService.cs` | Authenticated caller-filtered series schedule endpoint support: six-hour TMDB cache, four concurrent lookups, 35 starts per ten seconds, season episode-type enrichment. No per-user storage. |
-| `StatusTagsEpisodeFacts.cs` | Shared episode aggregation for cache and user-filtered batch fallback: aired episode indexes, episode-one season premiere and season added span. |
-| `StatusTagsEpisodeLookup.cs` | The batch fallback's episode facts per Series/Season: one capped query for small containers, a fixed handful of sorted one-episode queries for large ones (bounded however many episodes tie), fed to `StatusTagsEpisodeFacts`. |
-| `LeavingSoonService.cs`, `TagCacheLeaving.cs` | Leaving soon facts: Maintainerr's `/api/collections` (delete date per item) or the administrator's leaving collections, refreshed on an interval with retry backoff into `leaving-soon.json` (no URL or key); projection into tag cache entries (`Leaving`), `/tag-data` and native posters. |
-| `TagCacheCustomTags.cs` | Custom tags in the tag cache: the rules each entry matches (`CustomTags`) from item and series tags and a pass over the collections a rule names; patches members after collection changes, series children after series changes, and re-matches the cache when the rules change. |
-| `ItemLibraryResolver.cs` | The library an item is in (seasons and episodes: their series'), stored as `LibraryId` in tag-cache entries and `tag-data` items for tag look rules. |
-| `TagCachePendingChanges.cs`, `TagCacheResponseBody.cs` | Coalesces pending item changes; assembles bulk response bytes and hashes the viewer's final body for its ETag. |
-| `HiddenContentResponseFilter.cs` | Filters supported Jellyfin item lists and Home Screen Sections responses using the viewer's hidden-content scopes. |
-| `ReviewAuthorCache.cs` | Cached author lookups for review visibility, invalidated by user changes/deletion/lockout. |
-| `CdnAssetService.cs` | Local routes and disk caching for third-party static assets; separate from generated embedded poster assets. |
-| `ScriptInjectionStartupFilter.cs`, `BrandingAssetStartupFilter.cs` | Request-time loader injection and custom branding asset delivery. |
-| `StartupService.cs`, `HostCompatibilityService.cs` | Scheduled startup initialization and build/host compatibility diagnostics. |
-| `WhatsNewService.cs` | Admin control-schema discovery and change-baseline persistence. |
-| `UsageEventCounterService.cs`, `AnalyticsReportingService.cs` | Usage counters and opt-in report construction/sending; see [Community Analytics](community-analytics.md). |
-| `WikidataAwardsService.cs`, `MdblistService.cs` | Awards and MDBList fetching/cache ownership. |
-| `ActivityService.cs`, `ActivityFavoriteMonitor.cs`, `ActivityFeedBuilder.cs`, `CatchUpLogService.cs` | Activity recording/selection and separate Catch Up action logs. |
-| `MaintenanceModeService.cs` | Maintenance state file, policy changes/restoration, message tokens `{countdown}` / `{ends_at}` and session popups. |
-| `MaintenanceScheduleService.cs` | Hosted 30-second timer for scheduled windows and timed-window expiry; distinct from scheduled tasks. |
+| `Shared/Arr/RadarrService.cs`, `Shared/Arr/SonarrService.cs` | *arr integration access. Shoko retrieval is in `Features/Calendar/JeCalendarController.cs`. |
+| `Features/Seerr/Services/AutoMovieRequestService.cs`, `AutoSeasonRequestService.cs` | Automatic next-collection-movie and next-season request decisions/execution. |
+| `Features/Seerr/Services/AutoMovieRequestMonitor.cs`, `AutoSeasonRequestMonitor.cs` | Playback event subscriptions feeding those request services. |
+| `Features/Seerr/Services/WatchlistMonitor.cs`, `SeerrScanTriggerService.cs` | Watchlist event handling and debounced library-add → Seerr recently-added scan bridge. |
+| `Shared/Parental/SeerrParentalFilter.cs` | Shared parental filtering for integration responses. |
+| `Shared/Tmdb/TmdbResponseCache.cs`, `Features/Seerr/Services/TmdbCompanyTvDiscover.cs` | TMDB response caching/coalescing and studio-produced TV discovery shaped for Seerr consumers. |
+| `Features/MediaTags/Services/Status/StatusTagsTrendingService.cs` | Server-wide trending ranks for Status Tags: TMDB daily trending, else Seerr weekly trending, cached for 30 minutes. |
+| `Features/Seerr/Services/MovieCollectionsBatch.cs`, `Shared/Tmdb/WatchProvidersBatch.cs` | Parsing/shaping batched collection and regional streaming-provider lookups. Movie collections use Seerr first, then TMDB when needed. |
+| `Features/DetailsProviders/Services/ItemStatsService.cs` | Aggregate item/subtree size and watch-progress data for detail chips. |
+| `TagCacheService.cs`, `TagCacheMonitor.cs` | In `Features/MediaTags/Services/TagCache/`. Builds/persists tag data at the current cache schema (`CurrentCacheSchemaVersion`), maintains it from library events and filters episode-derived facts using contributor IDs and `filterRevision`. |
+| `Features/MediaTags/Services/TagLogoService.cs`, `Features/MediaTags/Services/TagCache/TagCacheLogos.cs` | Logos group data: daily TMDB lookups and the logo image proxy cache; projection into tag cache entries. |
+| `Features/MediaTags/Services/Status/StatusTagsSeriesService.cs` | Authenticated caller-filtered series schedule endpoint support: six-hour TMDB cache, four concurrent lookups, 35 starts per ten seconds, season episode-type enrichment. No per-user storage. |
+| `Features/MediaTags/Services/Status/StatusTagsEpisodeFacts.cs` | Shared episode aggregation for cache and user-filtered batch fallback: aired episode indexes, episode-one season premiere and season added span. |
+| `Features/MediaTags/Services/Status/StatusTagsEpisodeLookup.cs` | The batch fallback's episode facts per Series/Season: one capped query for small containers, a fixed handful of sorted one-episode queries for large ones (bounded however many episodes tie), fed to `StatusTagsEpisodeFacts`. |
+| `Features/MediaTags/Services/LeavingSoonService.cs`, `Features/MediaTags/Services/TagCache/TagCacheLeaving.cs` | Leaving soon facts: Maintainerr's `/api/collections` (delete date per item) or the administrator's leaving collections, refreshed on an interval with retry backoff into `leaving-soon.json` (no URL or key); projection into tag cache entries (`Leaving`), `/tag-data` and native posters. |
+| `Features/MediaTags/Services/TagCache/TagCacheCustomTags.cs` | Custom tags in the tag cache: the rules each entry matches (`CustomTags`) from item and series tags and a pass over the collections a rule names; patches members after collection changes, series children after series changes, and re-matches the cache when the rules change. |
+| `Shared/Library/ItemLibraryResolver.cs` | The library an item is in (seasons and episodes: their series'), stored as `LibraryId` in tag-cache entries and `tag-data` items for tag look rules. |
+| `Features/MediaTags/Services/TagCache/TagCachePendingChanges.cs`, `TagCacheResponseBody.cs` | Coalesces pending item changes; assembles bulk response bytes and hashes the viewer's final body for its ETag. |
+| `Shared/HiddenContent/HiddenContentResponseFilter.cs` | Filters supported Jellyfin item lists and Home Screen Sections responses using the viewer's hidden-content scopes. |
+| `Features/DetailsProviders/Services/ReviewAuthorCache.cs` | Cached author lookups for review visibility, invalidated by user changes/deletion/lockout. |
+| `Features/Platform/Services/CdnAssetService.cs` | Local routes and disk caching for third-party static assets; separate from generated embedded poster assets. |
+| `Features/Platform/Services/ScriptInjectionStartupFilter.cs`, `Features/Chrome/Services/BrandingAssetStartupFilter.cs` | Request-time loader injection and custom branding asset delivery. |
+| `Features/Platform/Services/StartupService.cs`, `Shared/Host/HostCompatibilityService.cs` | Scheduled startup initialization and build/host compatibility diagnostics. |
+| `Features/Admin/Services/WhatsNewService.cs` | Admin control-schema discovery and change-baseline persistence. |
+| `Shared/Analytics/UsageEventCounterService.cs`, `Features/Platform/Services/AnalyticsReportingService.cs` | Usage counters and opt-in report construction/sending; see [Community Analytics](community-analytics.md). |
+| `Features/DetailsProviders/Services/WikidataAwardsService.cs`, `MdblistService.cs` | Awards and MDBList fetching/cache ownership. |
+| `Features/Activity/Services/ActivityService.cs`, `ActivityFavoriteMonitor.cs`, `ActivityFeedBuilder.cs`, `Features/Catchup/Services/CatchUpLogService.cs` | Activity recording/selection and separate Catch Up action logs. |
+| `Shared/Maintenance/MaintenanceModeService.cs` | Maintenance state file, policy changes/restoration, message tokens `{countdown}` / `{ends_at}` and session popups. |
+| `Features/Admin/Services/MaintenanceScheduleService.cs` | Hosted 30-second timer for scheduled windows and timed-window expiry; distinct from scheduled tasks. |
 
 ### Spoiler Guard and identity
 
-All files in this table are under `Features/SpoilerGuard/Services/`:
+Files in this table are under `Features/SpoilerGuard/Services/` unless the row names `Shared/SpoilerGuard/` (policy services other features also call):
 
 | File | Responsibility |
 |---|---|
 | `ImageBlurService.cs` | SkiaSharp Gaussian blur, stock cards and pre-encoded fail-closed JPEG fallback, with result caching. |
 | `SpoilerBlurImageFilter.cs` | Replaces protected image/trickplay responses with parent art, blur or fallback according to mode and availability. |
 | `SpoilerFieldStripFilter.cs` | Strips/rewrites supported unwatched-item metadata in Jellyfin API responses, honoring user state and overrides. |
-| `SpoilerIdentityService.cs`, `SpoilerIdentityTagFilter.cs` | Stable per-user markers and item DTO image-tag stamping for anonymous image requests. The tag filter also calls native poster stamping. |
-| `ImageTagDecoration.cs` | Shared parsing/composition of `[sb-{8hex}-]{jellyfinTag}[-jet{23hex}][-jeu{12hex}]`. |
-| `SpoilerUserResolver.cs` | Loads Spoiler Guard state for the resolved requester. |
+| `Shared/SpoilerGuard/SpoilerIdentityService.cs`, `Features/SpoilerGuard/Services/SpoilerIdentityTagFilter.cs` | Stable per-user markers and item DTO image-tag stamping for anonymous image requests. The tag filter also calls native poster stamping. |
+| `Shared/SpoilerGuard/ImageTagDecoration.cs` | Shared parsing/composition of `[sb-{8hex}-]{jellyfinTag}[-jet{23hex}][-jeu{12hex}]`. |
+| `Shared/SpoilerGuard/SpoilerUserResolver.cs` | Loads Spoiler Guard state for the resolved requester. |
 | `SpoilerNextUnwatchedService.cs` | Cached per-user/per-series next-unwatched boundary for advanced category reveals. |
-| `SpoilerTagDataStripper.cs` | Removes sensitive tag data, shared by web tag endpoints and native poster rendering. |
-| `SpoilerSeerrRedactor.cs` | Applies the same per-user policy to Seerr, TMDB and MDBList data, after parental filtering and on top of their shared caches, and to the Requests, Downloads and calendar rows JE builds itself. Must change with `SpoilerFieldStripFilter.cs`. |
+| `Shared/SpoilerGuard/SpoilerTagDataStripper.cs` | Removes sensitive tag data, shared by web tag endpoints and native poster rendering. |
+| `Shared/SpoilerGuard/SpoilerSeerrRedactor.cs` | Applies the same per-user policy to Seerr, TMDB and MDBList data, after parental filtering and on top of their shared caches, and to the Requests, Downloads and calendar rows JE builds itself. Must change with `SpoilerFieldStripFilter.cs`. |
 | `SpoilerAutoEnableFilter.cs` | Shared content-type/library scope gate for first-play, Seerr-request and library-add automation. |
 | `SpoilerAutoEnableArmer.cs` | Bulk arming for users with library access, including disabled accounts, with one locked `spoilerblur.json` update per user. |
 | `SpoilerLibraryAddAutoEnabler.cs` | Batches new-title library events into bulk arming. |
@@ -539,55 +530,57 @@ Per-user setting in the Enhanced panel:
 
 Missing or wrong-length keys are recreated; old URLs can serve original artwork until clients refresh metadata. Persistence failure logs a warning and uses a process-lifetime key, changing URLs after restart. Unix creation uses owner-only read/write permissions. This is internal state without an admin control.
 
-### Helpers, extensions and models
+### Shared helpers, extensions and models
 
 | Location | Files and responsibilities |
 |---|---|
-| `Helpers/` | `ArrUrlGuard.cs` checks integration URLs; `BuildAttestation.cs` handles release attestation; `PluginConfigurationPatch.cs` writes a few configuration fields on top of the live configuration and reports conflicting edits (the Media Tags tab's saves); `MediaTagsPageFields.cs` is the list of fields those saves may write, read from the page's section modules; `MediaTagsPortable.cs` reads and writes the versioned Media Tags documents (user and server export, import preview with the save paths' validators, presets: built-in, per-user and offered); `ProviderHelper.cs` and `UserHelper.cs` resolve provider/user identifiers; `ReviewVisibility.cs` applies author visibility; `TagEpisodeSelector.cs` chooses representative episodes with usable streams. |
-| `Helpers/` language handling | `MatroskaLanguageReader.cs`, `MediaStreamLanguageResolver.cs` recover stream language data; `MatroskaLanguageCache.cs` keeps each file's parsed languages (persisted, keyed by path, size and modification time) so unchanged files are not reopened; `AudioLanguageTagHelper.cs` maps base/regional codes to tag names and computes changes. |
+| Helpers | `Shared/Arr/ArrUrlGuard.cs` checks integration URLs; `Features/Platform/Services/BuildAttestation.cs` handles release attestation; `Shared/MediaTags/PluginConfigurationPatch.cs` writes a few configuration fields on top of the live configuration and reports conflicting edits (the Media Tags tab's saves); `Shared/MediaTags/MediaTagsPageFields.cs` is the list of fields those saves may write, read from the page's section modules; `Shared/MediaTags/MediaTagsPortable.cs` reads and writes the versioned Media Tags documents (user and server export, import preview with the save paths' validators, presets: built-in, per-user and offered); `Shared/Arr/ProviderHelper.cs` and `Infrastructure/Auth/UserHelper.cs` resolve provider/user identifiers; `Shared/Reviews/ReviewVisibility.cs` applies author visibility; `Features/MediaTags/Services/TagEpisodeSelector.cs` chooses representative episodes with usable streams. |
+| Language handling | `Features/MediaTags/Services/MatroskaLanguageReader.cs`, `Shared/Media/MediaStreamLanguageResolver.cs` recover stream language data; `Features/MediaTags/Services/MatroskaLanguageCache.cs` keeps each file's parsed languages (persisted, keyed by path, size and modification time) so unchanged files are not reopened; `Features/MediaTags/Services/AudioLanguageTagHelper.cs` maps base/regional codes to tag names and computes changes. |
 | `Shared/Seerr/`, `Shared/Parental/` | `Shared/Seerr/`: `SeerrHttpHelper.cs`, `JellyseerrPermissionHelper.cs`, `JellyseerrUserImportHelper.cs`: HTTP, permission and import helpers. `Shared/Parental/`: `ParentalRatingDecision.cs`, `ParentalTagDecision.cs`, `SeerrCertificationExtractor.cs`, `SeerrTagSignatureExtractor.cs`: shared parental decisions/extraction. |
-| `Extensions/` | `ItemRepositoryExtensions.cs`, `JellyfinDbContextExtensions.cs`, `UserManagerExtensions.cs`: repository/database provider lookups and compatible user enumeration across server API changes. |
+| `Infrastructure/Extensions/` | `ItemRepositoryExtensions.cs`, `JellyfinDbContextExtensions.cs`, `UserManagerExtensions.cs`: repository/database provider lookups and compatible user enumeration across server API changes. |
 | `Features/MediaTags/Services/MediaNamingTags.cs` | Server-side source/edition detection from file and immediate parent-folder names, physical-stub priority and resolution-ranked multi-version selection. Shared by the tag cache and `/tag-data`; only labels reach clients. |
 | `Features/MediaTags/Models/TagCacheEntry.cs` | Tag data at the current cache schema (`CurrentCacheSchemaVersion` in `Features/MediaTags/Services/TagCache/TagCacheService.cs`), including source/edition labels, named-source ratings, Custom rule matches, Logos (`Features/MediaTags/Models/TagLogo.cs`), series/season quality summaries, Status Tags facts and server-only contributor IDs for access filtering, plus precomputed item tag data, including parent-series IDs for Spoiler Guard filtering without per-entry library lookups. |
 | `Shared/MediaTags/TagQualitySummary.cs`, `Shared/MediaTags/SeriesQualityAggregation.cs` | Policy-independent container quality facts, bounded distinct values, audio-language variants and policy resolution; built from existing episode streams and recomputed through the cache access filter for restricted users. |
-| `Features/Platform/Models/AnalyticsData.cs`, `WhatsNewData.cs`, `Shared/Analytics/UsageCounterDiskFormat.cs` | Report records and inclusion/exclusion annotations; the usage-counter file format; configuration-schema and pending-change records. |
+| `Features/Platform/Models/AnalyticsData.cs`, `Features/Admin/Models/WhatsNewData.cs`, `Shared/Analytics/UsageCounterDiskFormat.cs` | Report records and inclusion/exclusion annotations; the usage-counter file format; configuration-schema and pending-change records. |
 | `Features/DetailsProviders/Models/AwardsData.cs`, `MdblistRatings.cs` | Awards cache records and MDBList cache/account models. |
 | `Shared/Arr/` | `ArrInstance.cs`, `ArrItem.cs`, `ArrType.cs`: integration instance/item/type models. |
 | `Shared/Seerr/` models | `JellyseerrPermission.cs`, `JellyseerrUser.cs`: Seerr permission/user models. |
 
-### Event handlers: `EventHandlers/`
+### Event consumers
+
+Event consumers live in each feature's `Events/` folder; `UserTopologyEvents.cs` is in `Infrastructure/Identity/`.
 
 | File | Responsibility |
 |---|---|
-| `ActivityPlaybackConsumer.cs` | Qualifying playback-stop activity recording. |
-| `ContinueWatchingPlaybackEvents.cs` | `ContinueWatchingPlaybackConsumer` clears Continue Watching-only hides on playback start and demotes combined Continue Watching/Next Up hides to Next Up-only. Global/Next Up-only hides remain. `ContinueWatchingLibraryHook` prunes removed item IDs from personal hidden-content documents. |
-| `MaintenancePlaybackReminder.cs` | `MaintenancePlaybackReminderConsumer` re-sends active-maintenance notifications on playback start, throttled per session. |
-| `SpoilerAutoEnableEvents.cs` | `SpoilerAutoEnableOnFirstPlayConsumer` arms a series on qualifying first-episode playback. |
-| `UserTopologyEvents.cs` | User creation/deletion invalidates identity caches; updates/deletions invalidate tag-access caches; updates/deletions/lockout invalidate review-author caches. |
+| `Features/Activity/Events/ActivityPlaybackConsumer.cs` | Qualifying playback-stop activity recording. |
+| `Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs` | `ContinueWatchingPlaybackConsumer` clears Continue Watching-only hides on playback start and demotes combined Continue Watching/Next Up hides to Next Up-only. Global/Next Up-only hides remain. `ContinueWatchingLibraryHook` prunes removed item IDs from personal hidden-content documents. |
+| `Features/Admin/Events/MaintenancePlaybackReminder.cs` | `MaintenancePlaybackReminderConsumer` re-sends active-maintenance notifications on playback start, throttled per session. |
+| `Features/SpoilerGuard/Events/SpoilerAutoEnableEvents.cs` | `SpoilerAutoEnableOnFirstPlayConsumer` arms a series on qualifying first-episode playback. |
+| `Infrastructure/Identity/UserTopologyEvents.cs` | User creation/deletion invalidates identity caches; updates/deletions invalidate tag-access caches; updates/deletions/lockout invalidate review-author caches. |
 
 ### Scheduled tasks
 
-The table lists task names as shown by Jellyfin and their default triggers. Files are under `ScheduledTasks/` unless stated otherwise.
+The table lists task names as shown by Jellyfin and their default triggers. Files are in each feature's `Tasks/` folder (`Features/<F>/Tasks/`), except `StartupService.cs`. Task types keep the namespace `Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks` (and `StartupService` keeps `…Services`) so admins' saved schedules and history survive the move.
 
 Feature gates still apply when a task runs. A task is hidden from the dashboard list while its feature is off and appears again once the feature is on, with no restart. Always listed: Refresh Translation Cache, Refresh CDN Assets and Jellyfin Enhanced Startup. Default triggers are distinct from an administrator's saved schedule.
 
 | File | Task name | Default triggers |
 |---|---|---|
-| `AnalyticsReportTask.cs` | **Send Anonymous Usage Report** | Every 24 hours; execution also checks the configured reporting interval. |
-| `ArrTagsSyncTask.cs` | **Sync Tags from \*arr to Jellyfin** | None |
-| `AudioLanguageTagsSyncTask.cs` | **Sync Audio Language Tags to Jellyfin** | None |
-| `BuildTagCacheTask.cs` | **Refresh Tag Cache** | Daily at 03:00 |
-| `ClearTranslationCacheTask.cs` | **Refresh Translation Cache** | Application startup |
-| `JellyfinToSeerrWatchlistSyncTask.cs` | **Sync Watchlist from Jellyfin to Seerr** | Daily at 03:30 |
-| `JellyseerrUserImportTask.cs` | **Import Jellyfin Users to Seerr** | Every six hours |
-| `JellyseerrWatchlistSyncTask.cs` | **Sync Watchlist from Seerr to Jellyfin** | Daily at 03:00 |
-| `MdblistRatingsFetchTask.cs` | **Fetch Ratings from MDBList** | None |
-| `MdblistRatingsSyncTask.cs` | **Sync Ratings from MDBList to Jellyfin** | None |
-| `RefreshCdnAssetsTask.cs` | **Refresh CDN Assets** | Application startup and every 24 hours |
-| `SpoilerApplyExistingTitlesTask.cs` | **Spoiler Guard: apply to existing titles** | None |
+| `Features/Platform/Tasks/AnalyticsReportTask.cs` | **Send Anonymous Usage Report** | Every 24 hours; execution also checks the configured reporting interval. |
+| `Features/MediaTags/Tasks/ArrTagsSyncTask.cs` | **Sync Tags from \*arr to Jellyfin** | None |
+| `Features/MediaTags/Tasks/AudioLanguageTagsSyncTask.cs` | **Sync Audio Language Tags to Jellyfin** | None |
+| `Features/MediaTags/Tasks/BuildTagCacheTask.cs` | **Refresh Tag Cache** | Daily at 03:00 |
+| `Features/DetailsProviders/Tasks/ClearTranslationCacheTask.cs` | **Refresh Translation Cache** | Application startup |
+| `Features/Seerr/Tasks/JellyfinToSeerrWatchlistSyncTask.cs` | **Sync Watchlist from Jellyfin to Seerr** | Daily at 03:30 |
+| `Features/Seerr/Tasks/JellyseerrUserImportTask.cs` | **Import Jellyfin Users to Seerr** | Every six hours |
+| `Features/Seerr/Tasks/JellyseerrWatchlistSyncTask.cs` | **Sync Watchlist from Seerr to Jellyfin** | Daily at 03:00 |
+| `Features/DetailsProviders/Tasks/MdblistRatingsFetchTask.cs` | **Fetch Ratings from MDBList** | None |
+| `Features/DetailsProviders/Tasks/MdblistRatingsSyncTask.cs` | **Sync Ratings from MDBList to Jellyfin** | None |
+| `Features/Platform/Tasks/RefreshCdnAssetsTask.cs` | **Refresh CDN Assets** | Application startup and every 24 hours |
+| `Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs` | **Spoiler Guard: apply to existing titles** | None |
 | `Features/Platform/Services/StartupService.cs` | **Jellyfin Enhanced Startup** | Application startup |
 
-`MdblistRatingsFetchRunner.cs` is shared fetching logic, not another task. Hosted timers/monitors listed above are separate from this dashboard task system.
+`Features/DetailsProviders/Tasks/MdblistRatingsFetchRunner.cs` is shared fetching logic, not another task. Hosted timers/monitors listed above are separate from this dashboard task system.
 
 Administrator setting under **Display**:
 
@@ -595,7 +588,7 @@ Administrator setting under **Display**:
 |---|---|---|
 | **Enable Audio Language Tags Sync** | Off (`AudioLanguageTagSyncEnabled=false`) | Gates the language-tag task's writes to movies/series. |
 
-`TagCacheService.cs` applies the same language tags when rebuilding entries after library events.
+`Features/MediaTags/Services/TagCache/TagCacheService.cs` applies the same language tags when rebuilding entries after library events.
 
 ## Repository documentation and tooling
 
@@ -696,18 +689,25 @@ tests/
 ├── run.py
 ├── README.md
 ├── backend/                          # JE.Tests.csproj + jf12 package lock
-│   ├── Api/
+│   ├── Architecture/                 # Guardrails: route/auth, registration and boundary snapshots, file size, folder = namespace, feature-map parity
+│   ├── Features/<F>/                 # One folder per backend feature (docs/feature-map.json)
+│   ├── Shared/
+│   ├── Api/                          # Cross-cutting: controller construction, routing, configuration endpoints
 │   ├── Core/
 │   ├── Integrations/
+│   ├── Persistence/
 │   ├── PosterTags/
-│   ├── Privacy/
 │   ├── ScheduledTasks/
 │   └── Support/                      # Shared storage/plugin/HTTP fixtures
 ├── frontend/
 │   ├── run.mjs
+│   ├── admin/                        # Admin configuration page (admin/config/)
+│   ├── architecture/                 # Guardrails: feature boundaries, max lines, generated markers, feature-map parity
 │   ├── bootstrap/
+│   ├── chrome/
+│   ├── contracts/
 │   ├── core/
-│   ├── features/
+│   ├── features/<f>/                 # One folder per client feature that has its own tests (docs/feature-map.json)
 │   ├── pages/
 │   ├── requests/
 │   ├── regressions/
@@ -760,7 +760,7 @@ The inventory at `tests/docs/production-inventory.json` records lexical producti
 
 `Configuration/TagLayoutSettings.cs` validates `TagScale` and `TagGap` for user settings and admin defaults; `TagShapeSettings.cs` reuses those validators for optional per-shape values. `js/core/tag-layout.js` resolves inheritance and writes `--je-tag-scale` / `--je-tag-gap` to hosts and caption outlets. The existing tag styles retain their responsive clamps and multiply their metrics by those properties. `preserveLegacySizing` derives the original declarations for version-0 hosts inside the same responsive rules, preserving exact legacy rasterization. The Media Tags hub controls save through `ui-panel-settings.js`; the preview uses the same card resolver.
 
-Native settings and cache digests are resolved in `Features/MediaTags/PosterTags/PosterTagSettings.cs`. `Rendering/PosterTagCss.cs` scales logical metrics, `PosterTagPlan.cs` places the resulting chips, and `PosterTagTileCache.cs` keys tiles by size and gap as well as image scale. `tests/backend/Core/CoreTagScaleSettingsTests.cs` covers validation, round trips, inherited defaults, native metrics and cache pixels; the existing frontend layout/hub suites and poster parity profiles cover web behavior and effective native settings. No new production module or tag-cache entry field is added.
+Native settings and cache digests are resolved in `Features/MediaTags/PosterTags/PosterTagSettings.cs`. `Rendering/PosterTagCss.cs` scales logical metrics, `PosterTagPlan.cs` places the resulting chips, and `PosterTagTileCache.cs` keys tiles by size and gap as well as image scale. `tests/backend/Features/MediaTags/CoreTagScaleSettingsTests.cs` covers validation, round trips, inherited defaults, native metrics and cache pixels; the existing frontend layout/hub suites and poster parity profiles cover web behavior and effective native settings. No new production module or tag-cache entry field is added.
 
 ### Awards poster tags
 
@@ -772,7 +772,7 @@ Native settings and cache digests are resolved in `Features/MediaTags/PosterTags
 - `js/tags/awardstags.js`: IIFE renderer and shared preview chips/logos, registered in the component manifest.
 - `Assets/PosterTags/award-icons.json`: generated logo paths loaded by `PosterTagAssets`; `scripts/build_poster_assets.py --awards-only` regenerates just those paths and manifest records. Source marks are nominative; project artwork is GPL-3.0 and trademarks remain with their owners.
 
-The layout, settings hub, Tag Styles and native resolver/plan/renderer use the same `awards` group id and five stable label ids. Native pixel/resolver versions retire old variants. Regression coverage is in `tests/backend/Features/MediaTags/PosterTags/AwardTagsTests.cs`, `tests/frontend/features/features-awards-tags.test.mjs` and the Awards offline parity profiles.
+The layout, settings hub, Tag Styles and native resolver/plan/renderer use the same `awards` group id and five stable label ids. Native pixel/resolver versions retire old variants. Regression coverage is in `tests/backend/Features/MediaTags/PosterTags/AwardTagsTests.cs`, `tests/frontend/features/media-tags/features-awards-tags.test.mjs` and the Awards offline parity profiles.
 `Features/MediaTags/Services/Status/NativeStatusRefreshService.cs` owns scheduled and stale-read-triggered background refreshes for native status snapshots (series schedules in batches through `StatusTagsSeriesService`'s four-slot, rate-limited lookups); image composition reads these snapshots without upstream requests.
 
 `scripts/generate_status_dates.mjs` generates `js/tags/status-short-dates.json` from browser Intl data for native Status month/day labels, with deduplicated formats and locale-to-format mappings for every shipped language and named territory. It also generates `tests/fixtures/native-status-dates.json` for four-date regional regressions; `generate_status_vocabulary.py --check` checks both tables.
@@ -790,11 +790,11 @@ The layout, settings hub, Tag Styles and native resolver/plan/renderer use the s
 
 `Features/MediaTags/PosterTags/Resolution/TechnicalQualityRules.cs` mirrors `qualitytags.js` runtime formatting, the aspect-ratio tolerance table and frame-rate snapping. `Shared/Media/SubtitleAccessibility.cs` detects whole-word SDH/CC title markers and the hearing-impaired flag; stream summaries and `SdhSubtitleLanguages` carry that fact through the existing tag cache, batch and native Language group. `Shared/Media/TrackRoles.cs` (mirrored by `isSecondaryAudio` in `js/tags/languagetags.js`) keeps commentary and audio-description tracks out of `AudioLanguages`; forced subtitle tracks never add a `SubtitleLanguages` entry. `Features/MediaTags/Services/Status/StatusTagsScenesService.cs` resolves daily TMDB movie keywords via `TmdbResponseCache`; `Features/MediaTags/Services/TagCache/TagCacheScenes.cs` warms and publishes those facts outside native image composition. The shared Status vocabulary includes both scene badges and is regenerated by `scripts/generate_status_vocabulary.py`. Formatting fixtures live in `tests/fixtures/technical-quality.json`; frontend, backend and offline parity consume them. The current tag cache schema (`CurrentCacheSchemaVersion` in `Features/MediaTags/Services/TagCache/TagCacheService.cs`) invalidates older entries.
 
-Per-genre Tag Styles labels come from `js/tags/genre-icons.json` (see above). `tests/fixtures/genre-styles.json` holds one Tag Styles document and, per genre, the label, glyph and colours web chips and native posters draw; `tests/backend/Features/MediaTags/PosterTags/GenreStyleTests.cs`, `tests/frontend/features/features-genre-styles.test.mjs` and `tests/browser/genre-styles.spec.cjs` read it, and the offline poster parity compares each genre chip's label too.
+Per-genre Tag Styles labels come from `js/tags/genre-icons.json` (see above). `tests/fixtures/genre-styles.json` holds one Tag Styles document and, per genre, the label, glyph and colours web chips and native posters draw; `tests/backend/Features/MediaTags/PosterTags/GenreStyleTests.cs`, `tests/frontend/features/media-tags/features-genre-styles.test.mjs` and `tests/browser/genre-styles.spec.cjs` read it, and the offline poster parity compares each genre chip's label too.
 
 The technical aspect-ratio tolerance table in `TechnicalQualityRules.cs` also generates the web table inside `js/tags/qualitytags.js` through `scripts/generate_technical_ratios.py` (`--check` verifies it). The shared `tests/fixtures/technical-quality.json` exercises full and compact native/web output and tolerance boundaries.
 
-Compact quality labels use `js/tags/quality-compact.json`, projected into `client/src/features/media-tags/rules/compact-quality.ts` and `Features/MediaTags/PosterTags/Resolution/QualityCompactLabels.g.cs` by `scripts/generate_quality_compact.py`. Run its `--check` mode after editing the source.
+Compact quality labels use `js/tags/quality-compact.json`, projected into `client/src/features/media-tags/types/quality/compact-quality.ts` and `Features/MediaTags/PosterTags/Resolution/QualityCompactLabels.g.cs` by `scripts/generate_quality_compact.py`. Run its `--check` mode after editing the source.
 
 `tests/fixtures/audio-stream-labels.json` checks real audio stream facts through the web renderer and native resolver in Full and Compact; the parity profiles include the same streams. `tests/fixtures/quality-detection-truth.json` is an independent truth table of Jellyfin stream shapes (Dolby Vision range types and base layers, HLG, misleading titles, codec/channel provenance across tracks, lossless audio, VC-1/VVC/ProRes) with the expected Highest, All and version-0 labels; `features-quality-detection-truth.test.mjs` and `QualityDetectionTruthTests.cs` assert it on both sides, so a shared mistake cannot pass as parity.
 

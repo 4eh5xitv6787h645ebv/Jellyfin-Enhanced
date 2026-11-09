@@ -448,7 +448,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models
         /// The track's role, derived from its titles before Spoiler Guard strips them ("secondary": a
         /// commentary or audio-description audio track), so main-audio selection is the same with and
         /// without the titles. Null in the cache, which keeps the titles it is read from
-        /// (Helpers/TrackRoles.cs, js/core/media-language.js isSecondaryAudio).
+        /// (Shared/Media/TrackRoles.cs, js/core/media-language.js isSecondaryAudio).
         /// </summary>
         public string? Role { get; set; }
 

@@ -13,7 +13,7 @@ styles, data, render helpers, cards, render, actions, init, then custom tab. No
 component manifest, core/session/API, settings, calendar, Arr-link family,
 backend, package or Plugin Pages wrapper was edited for this slice.
 
-Each entry supplies the narrow `client/src/host/downloads-host.ts` dependencies
+Each entry supplies the narrow `client/src/features/downloads/host.ts` dependencies
 to its installer. `JE.internals.requestsPage` is the single state and runtime
 owner. Importing the runtime into separate classic bundles does not create
 separate owners; repeated evaluation of an entry does not replace state or

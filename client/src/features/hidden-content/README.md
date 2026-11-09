@@ -44,10 +44,10 @@ Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.Je
 ## Tests
 
 ```bash
-node --test tests/frontend/features/features-hidden*.test.mjs tests/frontend/bootstrap/bootstrap-panel-resize.test.mjs
+node --test tests/frontend/features/hidden-content/*.test.mjs tests/frontend/bootstrap/bootstrap-panel-resize.test.mjs
 ```
 
-Step F1 mirrors these into `tests/frontend/features/hidden-content/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 

@@ -75,12 +75,12 @@ Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.Je
 ## Tests
 
 ```bash
-node --test tests/frontend/core/core-tag-*.test.mjs tests/frontend/core/core-media-language.test.mjs tests/frontend/features/features-tag-*.test.mjs tests/frontend/features/features-*-tags*.test.mjs tests/frontend/features/features-admin-tags-*.test.mjs tests/frontend/features/admin-tags-*.test.mjs tests/frontend/features/features-admin-config-media-tags-*.test.mjs tests/frontend/features/features-media-tags-*.test.mjs tests/frontend/features/features-{awards-tags,quality-*,rating-sources,language-display,genre-styles,technical-quality,series-quality-aggregation}.test.mjs tests/frontend/bootstrap/bootstrap-{tag-*,media-tags-*,custom-tags-hub}.test.mjs
+node --test tests/frontend/features/media-tags/*.test.mjs tests/frontend/features/media-tags/admin/*.test.mjs tests/frontend/core/core-media-language.test.mjs tests/frontend/bootstrap/bootstrap-{tag-*,media-tags-*,custom-tags-hub}.test.mjs
 ```
 
 Also: `tests/client-build/tag-data.test.mjs` (run by `npm run test:client-build`).
 
-Step F1 mirrors these into `tests/frontend/features/media-tags/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 

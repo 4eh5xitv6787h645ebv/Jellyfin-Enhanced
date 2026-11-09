@@ -52,7 +52,7 @@ def inventory():
         text = path.read_text(encoding='utf-8-sig')
         category = path.relative_to(PRODUCTION).parts[0]
         result['files'].append({'path': relative, 'category': category})
-        # Routes come from any plugin .cs file, wherever it lives (Controllers/ or Features/<F>/), that declares a
+        # Routes come from any plugin .cs file, wherever it lives (Features/<F>/ today; Controllers/ before the restructure), that declares a
         # public class named *Controller: a partial without a base list and a class deriving from a shared base
         # (JeControllerBase) count too. A base class whose name does not end in Controller contributes nothing.
         controllers = [(declaration.start(), next(iter(re.findall(r'\[Route\("([^"\n]*)"\)\]', declaration[1])), 'JellyfinEnhanced'))

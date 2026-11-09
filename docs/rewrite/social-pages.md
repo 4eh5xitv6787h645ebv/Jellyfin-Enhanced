@@ -9,7 +9,7 @@ This slice replaces nine production entries from baseline
 `client/entries/social-pages.json` maps the six `js/enhanced/catchup/*.js`
 resources and `js/extras/{activity-custom-tab,activity-page,colored-activity-icons}.js`
 to strict TypeScript under `client/src/features/{catchup,activity}`. The host
-boundaries are `client/src/host/catchup-host.ts` and `activity-host.ts`.
+boundaries are `client/src/features/catchup/host.ts` and `client/src/features/activity/host.ts`.
 The existing production paths and component-script order remain unchanged:
 Catch Up core, styles, deck, admin activity, page, then tab integration.
 

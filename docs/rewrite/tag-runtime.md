@@ -6,46 +6,46 @@ that the rewrite, or real-host validation of it, is complete. Baseline:
 `2e0f9251bfe833cb58866e9e245ba62be69a69ad`. Entries are owned by
 `client/entries/tag-runtime.json`.
 
-| Output (`js/…`) | Implementation under `client/src/features/media-tags/runtime/` |
+| Output (`js/…`) | Implementation under `client/src/features/media-tags/` |
 | --- | --- |
-| `core/tag-renderer-base.js` | `tag-renderer-base.ts`, `scopes.ts` |
-| `tags/tag-cache-store.js` | `tag-cache-store.ts` |
-| `tags/tag-pipeline.js` | `tag-pipeline.ts` |
-| `tags/tag-layout-styles.js` | `tag-layout-styles.ts` |
-| `tags/genretags.js` | `genretags.ts`, `genre-table.ts` |
-| `tags/languagetags.js` | `languagetags.ts` |
-| `tags/peopletags.js` | `peopletags.ts`, `people-model.ts`, `people-countries.ts` |
-| `tags/qualitytags.js` | `qualitytags.ts`, `quality-rules.ts`, `quality-data.ts` |
-| `tags/ratingtags.js`, `tags/ageratingtags.js` | `ratingtags.ts`, `ageratingtags.ts` |
-| `tags/awardstags.js` | `awardstags.ts`, `awards-data.ts` |
-| `tags/tag-direct-play.js` | `tag-direct-play.ts`, `device-profile.ts` |
-| `tags/statustags.js` | `statustags.ts`, `status-facts.ts` |
-| `tags/logotags.js`, `tags/customtags.js` | `logotags.ts`, `customtags.ts` |
-| `tags/tag-styles.js`, `tags/userreviewtags.js` | `tag-styles.ts`, `userreviewtags.ts` |
-| `tags/tag-item-editor.js`, `tags/tag-item-menu.js` | `tag-item-editor.ts`, `tag-item-menu.ts` |
+| `core/tag-renderer-base.js` | `pipeline/tag-renderer-base.ts`, `pipeline/scopes.ts` |
+| `tags/tag-cache-store.js` | `pipeline/tag-cache-store.ts` |
+| `tags/tag-pipeline.js` | `pipeline/tag-pipeline.ts` |
+| `tags/tag-layout-styles.js` | `layout/tag-layout-styles.ts` |
+| `tags/genretags.js` | `types/genre/genretags.ts`, `types/genre/genre-table.ts` |
+| `tags/languagetags.js` | `types/language/languagetags.ts` |
+| `tags/peopletags.js` | `types/people/peopletags.ts`, `types/people/people-model.ts`, `types/people/people-countries.ts` |
+| `tags/qualitytags.js` | `types/quality/qualitytags.ts`, `types/quality/quality-rules.ts`, `types/quality/quality-data.ts` |
+| `tags/ratingtags.js`, `tags/ageratingtags.js` | `types/ratings/ratingtags.ts`, `types/age-rating/ageratingtags.ts` |
+| `tags/awardstags.js` | `types/awards/awardstags.ts`, `types/awards/awards-data.ts` |
+| `tags/tag-direct-play.js` | `types/direct-play/tag-direct-play.ts`, `types/direct-play/device-profile.ts` |
+| `tags/statustags.js` | `types/status/statustags.ts`, `types/status/status-facts.ts` |
+| `tags/logotags.js`, `tags/customtags.js` | `types/logo/logotags.ts`, `types/custom/customtags.ts` |
+| `tags/tag-styles.js`, `tags/userreviewtags.js` | `layout/tag-styles.ts`, `types/ratings/userreviewtags.ts` |
+| `tags/tag-item-editor.js`, `tags/tag-item-menu.js` | `editor/tag-item-editor.ts`, `editor/tag-item-menu.ts` |
 
 Each output has a one-line `*-entry.ts` that runs its factory against the legacy global.
 
 ## Boundaries
 
-`client/src/host/tag-runtime-host.ts` is the only code that touches `window.JellyfinEnhanced`
+`client/src/features/media-tags/host.ts` is the only code that touches `window.JellyfinEnhanced`
 or `window.ApiClient`, and holds this slice's two type assertions (the global and its `core`).
 `TagRuntimeBridge` lists the members this slice reads and installs; nothing else is reachable.
 ApiClient is resolved at each call because jellyfin-web replaces it on a server switch.
 
-`dto.ts` is the network and storage boundary. Unvalidated JSON is `JsonRecord`, so every read is
+`pipeline/dto.ts` is the network and storage boundary. Unvalidated JSON is `JsonRecord`, so every read is
 `unknown` and the compiler forces a narrowing before use. Readers (`record`, `records`,
 `stringList`, `text`, `finite`) accept malformed input without throwing and never answer from
 `Object.prototype`. Objects stay raw rather than being copied into DTOs: the pipeline and
 renderers compare entries by identity and a full library holds tens of thousands of them.
 
-`contract.ts` holds the renderer contract (`TagSpec`, `TagCtx`) and the explicit pipeline and
+`pipeline/contract.ts` holds the renderer contract (`TagSpec`, `TagCtx`) and the explicit pipeline and
 renderer facades. Facades are interfaces rather than inferred return types, so a consumer and
 its dependency cannot form a circular inference.
 
-`scopes.ts`, `quality-rules.ts`, `people-model.ts`, `status-facts.ts` and `device-profile.ts` carry
+`pipeline/scopes.ts`, `types/quality/quality-rules.ts`, `types/people/people-model.ts`, `types/status/status-facts.ts` and `types/direct-play/device-profile.ts` carry
 the domain rules with no JE dependency; settings and language arrive through explicit hosts.
-`device-profile.ts` still asks the browser what it can play, which is what it is for.
+`types/direct-play/device-profile.ts` still asks the browser what it can play, which is what it is for.
 
 ## Behaviour kept
 
@@ -95,15 +95,15 @@ the browser script.
 
 | Table | Source | Projection | Generator |
 | --- | --- | --- | --- |
-| Genre icons and labels | `js/tags/genre-icons.json` | `runtime/genre-table.ts` | `scripts/generate_genre_labels.py` |
-| Aspect tolerances | `TechnicalQualityRules.cs` | `runtime/quality-data.ts` | `scripts/generate_technical_ratios.py` |
+| Genre icons and labels | `js/tags/genre-icons.json` | `types/genre/genre-table.ts` | `scripts/generate_genre_labels.py` |
+| Aspect tolerances | `TechnicalQualityRules.cs` | `types/quality/quality-data.ts` | `scripts/generate_technical_ratios.py` |
 
 Both generators keep their marker comments, write only the typed module, and fail `--check` when it is stale. After
 regenerating, run `npm run client:build`. Only tests enforce freshness of these two, as on the baseline; `tag-data.mjs`
 enforces status and compact quality in the build.
 
 `scripts/build_poster_assets.py` derives the poster assets from the typed tables through `TABLE_SOURCE`:
-`rules/media-language.ts`, `runtime/quality-data.ts`, `rules/rating-data.ts` and `runtime/awards-data.ts`. Its
+`types/language/media-language.ts`, `types/quality/quality-data.ts`, `types/ratings/rating-data.ts` and `types/awards/awards-data.ts`. Its
 `IN_REPO` table and the `inputs` of `Assets/PosterTags/manifest.json` keep naming the scripts that ship, which carry the
 same tables and are emitted deterministically. `--check` still ignores those hashes, as it did for hand-written JS.
 
@@ -116,15 +116,15 @@ card, and native posters mirror exactly where:
   label that is not text, and a null summary category. A later source after a 3D match is never read.
 - Language: a null audio code, or a null stream or source on the item path, ends the group. A language named after an
   `Object.prototype` member draws no group while it would show, in Flags style. `resolveFlag` still refuses those names;
-  `flagOf` in `languagetags.ts` carries the rule, because the outcome is the renderer's.
+  `flagOf` in `types/language/languagetags.ts` carries the rule, because the outcome is the renderer's.
 - Genre: a null genre ends the group, and still counts as the item having genres.
 
-`members`, `memberRecord` and `memberText` in `dto.ts` are for these reads. `records` and `stringList` are for lists whose
+`members`, `memberRecord` and `memberText` in `pipeline/dto.ts` are for these reads. `records` and `stringList` are for lists whose
 bad members really are ignored. The status media key keeps null members in, since it files stored verdicts.
 
 ## Verification
 
-`tests/frontend/features/features-tag-runtime-regressions.test.mjs`, `features-tag-runtime-consumers.test.mjs`,
+`tests/frontend/features/media-tags/features-tag-runtime-regressions.test.mjs`, `features-tag-runtime-consumers.test.mjs`,
 `features-tag-runtime-lifecycle.test.mjs` and `features-tag-runtime-malformed.test.mjs` drive the emitted scripts;
 `features-tag-runtime-generators.test.mjs` holds the source boundary above;
 `tests/browser/tag-runtime-journey.spec.cjs` covers real IndexedDB and a library page across a user

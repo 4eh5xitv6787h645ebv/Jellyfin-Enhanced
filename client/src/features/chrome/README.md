@@ -37,7 +37,7 @@ None in this folder. Any toggles are in the settings-panel shell (`settings-pane
 node --test tests/frontend/chrome/*.test.mjs tests/frontend/bootstrap/bootstrap-{header,native-tabs}.test.mjs tests/frontend/core/core-theme.test.mjs
 ```
 
-Step F1 mirrors these into `tests/frontend/features/chrome/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 
