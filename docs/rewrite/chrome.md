@@ -14,7 +14,7 @@ Status: typed replacement of nine production scripts. Baseline `2e0f9251bfe833cb
 | `js/extras/login-image.js` | `client/src/features/chrome/login-image-entry.ts` | own script tag, pre-login (`plugin.js`) |
 | `js/others/splashscreen.js` | `client/src/features/chrome/splashscreen-entry.ts` | own script tag, early (`plugin.js`) |
 
-Manifest: `client/entries/chrome.json`. Host adapter: `client/src/host/chrome-host.ts`.
+Manifest: `client/entries/chrome.json`. Host adapter: `client/src/features/chrome/host.ts`.
 
 ## Contracts kept
 

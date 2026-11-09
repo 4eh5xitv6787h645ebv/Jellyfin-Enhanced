@@ -2014,7 +2014,7 @@
         "artifacts/rewrite-settings/stale-failure-regression.log",
         "artifacts/tag-rules/handoff.json",
         "artifacts/tag-rules/final-tests.log",
-        "tests/frontend/core/core-tag-rules-runtime.test.mjs"
+        "tests/frontend/features/media-tags/core-tag-rules-runtime.test.mjs"
       ],
       "test_evidence": "133/135 affected cases with two adapter failures reported; final 346/346 includes real loader-order POST and rejected-write rollback.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2352,7 +2352,7 @@
       "evidence": [
         "artifacts/tag-rules/handoff.json",
         "artifacts/tag-rules/final-tests.log",
-        "tests/frontend/core/core-tag-rules-runtime.test.mjs"
+        "tests/frontend/features/media-tags/core-tag-rules-runtime.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2370,7 +2370,7 @@
       "evidence": [
         "artifacts/tag-rules/handoff.json",
         "artifacts/tag-rules/final-tests.log",
-        "tests/frontend/core/core-tag-rules-runtime.test.mjs"
+        "tests/frontend/features/media-tags/core-tag-rules-runtime.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2388,7 +2388,7 @@
       "evidence": [
         "artifacts/tag-rules/handoff.json",
         "artifacts/tag-rules/final-tests.log",
-        "tests/frontend/core/core-tag-rules-runtime.test.mjs"
+        "tests/frontend/features/media-tags/core-tag-rules-runtime.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2406,7 +2406,7 @@
       "evidence": [
         "artifacts/tag-rules/handoff.json",
         "artifacts/tag-rules/final-tests.log",
-        "tests/frontend/core/core-tag-rules-runtime.test.mjs"
+        "tests/frontend/features/media-tags/core-tag-rules-runtime.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2424,7 +2424,7 @@
       "evidence": [
         "artifacts/tag-rules/handoff.json",
         "artifacts/tag-rules/final-tests.log",
-        "tests/frontend/core/core-tag-rules-runtime.test.mjs"
+        "tests/frontend/features/media-tags/core-tag-rules-runtime.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2560,7 +2560,7 @@
       "evidence": [
         "artifacts/player-rewrite/REPORT.md",
         "artifacts/player-rewrite/production-tests.txt",
-        "tests/frontend/features/features-player-rewrite.test.mjs"
+        "tests/frontend/features/player/features-player-rewrite.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2578,7 +2578,7 @@
       "evidence": [
         "artifacts/player-rewrite/REPORT.md",
         "artifacts/player-rewrite/production-tests.txt",
-        "tests/frontend/features/features-player-rewrite.test.mjs"
+        "tests/frontend/features/player/features-player-rewrite.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2596,7 +2596,7 @@
       "evidence": [
         "artifacts/player-rewrite/REPORT.md",
         "artifacts/player-rewrite/production-tests.txt",
-        "tests/frontend/features/features-player-rewrite.test.mjs"
+        "tests/frontend/features/player/features-player-rewrite.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2614,7 +2614,7 @@
       "evidence": [
         "artifacts/player-rewrite/REPORT.md",
         "artifacts/player-rewrite/production-tests.txt",
-        "tests/frontend/features/features-player-rewrite.test.mjs"
+        "tests/frontend/features/player/features-player-rewrite.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2632,7 +2632,7 @@
       "evidence": [
         "artifacts/player-rewrite/REPORT.md",
         "artifacts/player-rewrite/production-tests.txt",
-        "tests/frontend/features/features-player-rewrite.test.mjs"
+        "tests/frontend/features/player/features-player-rewrite.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -2650,7 +2650,7 @@
       "evidence": [
         "artifacts/player-rewrite/REPORT.md",
         "artifacts/player-rewrite/production-tests.txt",
-        "tests/frontend/features/features-player-rewrite.test.mjs"
+        "tests/frontend/features/player/features-player-rewrite.test.mjs"
       ],
       "test_evidence": "See cited completed handoff/log; not rerun by this audit.",
       "independent_validation": "No separate independent acceptance of this extra ID established. Slice review or a combined pass is not automatic per-bug verification.",
@@ -3119,7 +3119,7 @@
         "artifacts/rewrite-settings-panel/handoff.md"
       ],
       "test_evidence": [
-        "tests/frontend/features/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-01 cases; fail on legacy JS)",
+        "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-01 cases; fail on legacy JS)",
         "tests/browser/settings-panel-rewrite.spec.cjs (chromium, firefox)",
         "tests/frontend/bootstrap/bootstrap-panel-resize.test.mjs identity cases (fixture moved to the revisioned contract)"
       ],
@@ -3136,7 +3136,7 @@
         "status": "fixed_awaiting_review",
         "discovery": "implementation",
         "tests": [
-          "tests/frontend/features/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-01 cases; fail on legacy JS)",
+          "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-01 cases; fail on legacy JS)",
           "tests/browser/settings-panel-rewrite.spec.cjs (chromium, firefox)",
           "tests/frontend/bootstrap/bootstrap-panel-resize.test.mjs identity cases (fixture moved to the revisioned contract)"
         ],
@@ -3158,7 +3158,7 @@
         "artifacts/rewrite-settings-panel/handoff.md"
       ],
       "test_evidence": [
-        "tests/frontend/features/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-02 cases; fail on legacy JS)",
+        "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-02 cases; fail on legacy JS)",
         "tests/browser/settings-panel-rewrite.spec.cjs (post-close drag changes nothing)"
       ],
       "independent_validation": "artifacts/reviews/settings-panel-r1/candidate-dispositions.json",
@@ -3173,7 +3173,7 @@
         "status": "fixed_awaiting_review",
         "discovery": "implementation",
         "tests": [
-          "tests/frontend/features/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-02 cases; fail on legacy JS)",
+          "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-02 cases; fail on legacy JS)",
           "tests/browser/settings-panel-rewrite.spec.cjs (post-close drag changes nothing)"
         ],
         "evidence": "artifacts/rewrite-settings-panel/logs/new-tests-against-legacy-js.log"
@@ -3194,7 +3194,7 @@
         "artifacts/rewrite-settings-panel/handoff.md"
       ],
       "test_evidence": [
-        "tests/frontend/features/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-03 cases; fail on legacy JS)"
+        "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-03 cases; fail on legacy JS)"
       ],
       "independent_validation": "artifacts/reviews/settings-panel-r1/candidate-dispositions.json",
       "deduplication": "Counted once under SETTINGS-PANEL-03; historical candidate is not another finding.",
@@ -3208,7 +3208,7 @@
         "status": "fixed_awaiting_review",
         "discovery": "implementation",
         "tests": [
-          "tests/frontend/features/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-03 cases; fail on legacy JS)"
+          "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (SETTINGS-PANEL-03 cases; fail on legacy JS)"
         ],
         "evidence": "artifacts/rewrite-settings-panel/logs/new-tests-against-legacy-js.log"
       }
@@ -3228,7 +3228,7 @@
         "artifacts/rewrite-settings-panel/handoff.md"
       ],
       "test_evidence": [
-        "tests/frontend/features/settings-panel-rewrite.test.mjs (rebound shortcut case; fails on legacy JS)"
+        "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (rebound shortcut case; fails on legacy JS)"
       ],
       "independent_validation": "artifacts/reviews/settings-panel-r1/candidate-dispositions.json",
       "deduplication": "Counted once under SETTINGS-PANEL-04; historical candidate is not another finding.",
@@ -3242,7 +3242,7 @@
         "status": "fixed_awaiting_review",
         "discovery": "implementation",
         "tests": [
-          "tests/frontend/features/settings-panel-rewrite.test.mjs (rebound shortcut case; fails on legacy JS)"
+          "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (rebound shortcut case; fails on legacy JS)"
         ],
         "evidence": "artifacts/rewrite-settings-panel/logs/new-tests-against-legacy-js.log"
       }
@@ -3262,7 +3262,7 @@
         "artifacts/rewrite-settings-panel/handoff.md"
       ],
       "test_evidence": [
-        "tests/frontend/features/settings-panel-rewrite.test.mjs (release notes case; fails on legacy JS)"
+        "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (release notes case; fails on legacy JS)"
       ],
       "independent_validation": "artifacts/reviews/settings-panel-r1/candidate-dispositions.json",
       "deduplication": "Counted once under SETTINGS-PANEL-05; historical candidate is not another finding.",
@@ -3277,7 +3277,7 @@
         "status": "fixed_awaiting_review",
         "discovery": "implementation",
         "tests": [
-          "tests/frontend/features/settings-panel-rewrite.test.mjs (release notes case; fails on legacy JS)"
+          "tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs (release notes case; fails on legacy JS)"
         ],
         "evidence": "artifacts/rewrite-settings-panel/logs/new-tests-against-legacy-js.log"
       }
@@ -3779,7 +3779,7 @@
       "id": "DETAILS-PROVIDERS-018",
       "severity": "low",
       "summary": "A chip's own release lookup that fails after an account switch is cached as 'no dates' for the next account for up to an hour.",
-      "trigger": "tests/frontend/features/features-release-dates.test.mjs 'the chip's own lookup failing after a user switch is logged and cached as no dates, as before' asserts this behaviour.",
+      "trigger": "tests/frontend/features/details-providers/features-release-dates.test.mjs 'the chip's own lookup failing after a user switch is logged and cached as no dates, as before' asserts this behaviour.",
       "impact": "A chip's own release lookup that fails after an account switch is cached as 'no dates' for the next account for up to an hour.",
       "baseline": "inherited",
       "evidence_tier": "independently_verified",
@@ -3799,7 +3799,7 @@
         "status": "unresolved-by-existing-assertion",
         "legacy": "js/enhanced/itemdetails/features-release-dates.js:278-284",
         "defect": "A chip's own release lookup that fails after an account switch is cached as 'no dates' for the next account for up to an hour.",
-        "repro": "tests/frontend/features/features-release-dates.test.mjs 'the chip's own lookup failing after a user switch is logged and cached as no dates, as before' asserts this behaviour.",
+        "repro": "tests/frontend/features/details-providers/features-release-dates.test.mjs 'the chip's own lookup failing after a user switch is logged and cached as no dates, as before' asserts this behaviour.",
         "fix": "Not changed: an existing assertion preserves it ('as before'); changing it needs an intentional protocol change.",
         "test": "existing assertion"
       }

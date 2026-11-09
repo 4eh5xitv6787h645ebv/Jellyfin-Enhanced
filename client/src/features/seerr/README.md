@@ -68,10 +68,10 @@ None in this folder. Any toggles are in the settings-panel shell (`settings-pane
 ## Tests
 
 ```bash
-node --test tests/frontend/pages/pages-seerr-*.test.mjs tests/frontend/pages/pages-{moreinfo,scroll}.test.mjs tests/frontend/pages/pages-{discovery,recommendations}*.test.mjs tests/frontend/requests/*.test.mjs tests/frontend/features/features-seerr-spoiler-guard.test.mjs
+node --test tests/frontend/pages/pages-seerr-*.test.mjs tests/frontend/pages/pages-{moreinfo,scroll}.test.mjs tests/frontend/pages/pages-{discovery,recommendations}*.test.mjs tests/frontend/requests/*.test.mjs tests/frontend/features/spoiler-guard/features-seerr-spoiler-guard.test.mjs
 ```
 
-Step F1 mirrors these into `tests/frontend/features/seerr/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 

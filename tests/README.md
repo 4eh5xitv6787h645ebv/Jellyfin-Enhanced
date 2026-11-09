@@ -8,17 +8,24 @@ All test code, fixtures, harnesses, runners, browser configuration and testing d
 tests/
 ├── run.py                 # Entry point for every suite
 ├── backend/               # One xUnit project for Jellyfin 12
+│   ├── Architecture/      # Structure guardrails and route/auth/registration snapshots
+│   ├── Features/<F>/      # One folder per backend feature (docs/feature-map.json)
+│   ├── Shared/
 │   ├── Api/
 │   ├── Core/
 │   ├── Integrations/
+│   ├── Persistence/
 │   ├── PosterTags/
-│   ├── Privacy/
 │   ├── ScheduledTasks/
 │   └── Support/           # Shared plugin, storage and HTTP fixtures
 ├── frontend/              # Actual JavaScript modules in isolated jsdom realms
+│   ├── admin/             # Admin configuration page
+│   ├── architecture/      # Structure guardrails (boundaries, sizes, generated markers, feature map)
 │   ├── bootstrap/
+│   ├── chrome/
+│   ├── contracts/
 │   ├── core/
-│   ├── features/
+│   ├── features/<f>/      # One folder per client feature with its own tests (docs/feature-map.json)
 │   ├── pages/
 │   ├── requests/
 │   ├── regressions/       # Historical cases spanning several features

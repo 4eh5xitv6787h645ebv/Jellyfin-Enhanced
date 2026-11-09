@@ -151,7 +151,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         /// <summary>
         /// Drops the cached single-user answer so the next request re-checks
         /// the user set. Called by the user-created/deleted event consumers
-        /// (EventHandlers/UserTopologyEvents) — a stale "there is only user A"
+        /// (Infrastructure/Identity/UserTopologyEvents) — a stale "there is only user A"
         /// after user B was created would attribute B's anonymous requests to
         /// A, which is exactly the accidental misattribution the design
         /// forbids. The TTL remains as belt-and-braces only.

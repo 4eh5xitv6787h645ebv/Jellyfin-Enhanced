@@ -11,7 +11,7 @@ Jellyfin or Seerr host parity. The Seerr core (`api.js`, `ui/*`, `modal.js`,
 `client/entries/seerr-details.json` maps the thirteen original resource paths to
 `client/src/features/seerr/details/`. `component-scripts.json` and the load order are
 unchanged, and generated JavaScript and maps come from the shared client builder.
-`client/src/host/seerr-details-host.ts` is the only boundary with the JE global: it
+`client/src/features/seerr/host-details.ts` is the only boundary with the JE global: it
 names each facade member this slice uses and types every reply as `unknown`.
 
 | Output | Entry |

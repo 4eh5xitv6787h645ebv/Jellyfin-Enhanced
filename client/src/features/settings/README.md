@@ -29,7 +29,7 @@ None in this folder. Any toggles are in the settings-panel shell (`settings-pane
 node --test tests/frontend/bootstrap/settings-revisions.test.mjs tests/frontend/bootstrap/bootstrap.test.mjs tests/frontend/bootstrap/bootstrap-loader-rewrite.test.mjs
 ```
 
-Step F1 mirrors these into `tests/frontend/features/settings/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 

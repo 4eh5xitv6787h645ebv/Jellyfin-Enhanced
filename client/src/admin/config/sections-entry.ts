@@ -1,11 +1,11 @@
 import { requireEngine } from '../../host/admin-config-host';
 import { defineAllSections } from './sections';
 
-/*! Lexical index of the schema's setting ids, in the order Services/WhatsNewService.cs read them from the
+/*! Lexical index of the schema's setting ids, in the order Features/Admin/Services/WhatsNewService.cs read them from the
  *  JavaScript module. That reader parses this file as text, and bundled output prints double quotes and
  *  its own layout, which its pattern no longer matches: new settings would go unannounced, and a dismissed
  *  baseline would lose every id here. Not code. esbuild keeps comments starting with an exclamation mark.
- *  tests/frontend/features/admin-config-rewrite.test.mjs keeps it equal to the schema: add a new setting here.
+ *  tests/frontend/admin/config/admin-config-rewrite.test.mjs keeps it equal to the schema: add a new setting here.
  *  { id: 'showWatchProgress', type: 'toggle' }
  *  { id: 'watchProgressDefaultMode', type: 'select' }
  *  { id: 'watchProgressTimeFormat', type: 'select' }

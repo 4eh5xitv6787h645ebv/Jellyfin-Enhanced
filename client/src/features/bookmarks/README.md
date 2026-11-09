@@ -33,10 +33,10 @@ None in this folder. Any toggles are in the settings-panel shell (`settings-pane
 ## Tests
 
 ```bash
-node --test tests/frontend/features/features-bookmark*.test.mjs
+node --test tests/frontend/features/bookmarks/*.test.mjs
 ```
 
-Step F1 mirrors these into `tests/frontend/features/bookmarks/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 

@@ -5,7 +5,8 @@
     "backend: the folder under backendRoot (backend.md §7.4: feature folders = this column; there is no kebab-to-Pascal rule). null = no backend folder; backendServedBy names the folder that serves it.",
     "controller: the feature's controller type (Je<Feature>Controller, partials Je<Feature>Controller.<Area>.cs allowed); null = none.",
     "tests.frontend / tests.backend: repo-relative test folders. Step F1 mirrored feature tests into tests/frontend/features/<name> where they had a by-prefix home; the rest stay in the cross-cutting folders F1 kept (bootstrap, core, pages, requests, chrome), which a row then names.",
-    "Read by tests/frontend/architecture/feature-map.test.mjs and feature-readme.test.mjs (frontend), the backend folder-name parity test (backend S3) and the CONTRIBUTING.md 'Where things live' table. admin-tags is folded into media-tags on both sides."
+    "tests.backend names only the feature's own tests/backend/Features/<backend> folder (FeatureMapParityTests.BackendTestFoldersMatchTheMap rejects another feature's folder). A feature whose backend tests sit in other folders' mixed files lists none, and its notes say where they are.",
+    "Read by tests/frontend/architecture/feature-map.test.mjs and feature-readme.test.mjs (frontend), tests/backend/Architecture/FeatureMapParityTests.cs (backend) and the CONTRIBUTING.md 'Where things live' table. admin-tags is folded into media-tags on both sides."
   ],
   "backendRoot": "Jellyfin.Plugin.JellyfinEnhanced/Features",
   "features": [
@@ -16,7 +17,7 @@
       "backend": "Activity",
       "controller": "JeActivityController",
       "tests": { "frontend": ["tests/frontend/pages"], "backend": [] },
-      "notes": "Its frontend tests (pages-activity, pages-social-*, pages-plugin-pages-features) stay in the cross-cutting pages/ folder, which F1 kept."
+      "notes": "Its frontend tests (pages-activity, pages-social-*, pages-plugin-pages-features) stay in the cross-cutting pages/ folder, which F1 kept. Backend: no tests/backend/Features/Activity folder; its tests sit in mixed files, tests/backend/Features/DetailsProviders/ReviewActivityVisibilityTests.cs (ActivityFeedBuilder and review visibility in the feed) and tests/backend/Core/CoreSharedStoresTests.cs (the activity store)."
     },
     {
       "name": "bookmarks",
@@ -42,7 +43,7 @@
       "backend": "Catchup",
       "controller": "JeCatchupController",
       "tests": { "frontend": ["tests/frontend/pages"], "backend": [] },
-      "notes": "Its frontend tests (pages-social-*) stay in the cross-cutting pages/ folder, which F1 kept."
+      "notes": "Its frontend tests (pages-social-*) stay in the cross-cutting pages/ folder, which F1 kept. Backend: no tests/backend/Features/Catchup folder; JeCatchupController is covered only by tests/backend/Architecture/ControllerActivationTests.cs and the route/auth snapshots."
     },
     {
       "name": "chrome",
@@ -67,7 +68,8 @@
       "client": ["client/src/features/downloads"],
       "backend": "Downloads",
       "controller": "JeDownloadsController",
-      "tests": { "frontend": ["tests/frontend/features/downloads"], "backend": [] }
+      "tests": { "frontend": ["tests/frontend/features/downloads"], "backend": [] },
+      "notes": "Backend: no tests/backend/Features/Downloads folder; the arr/queue, arr/history and arr/requests routes are tested through JeDownloadsController in tests/backend/Features/Seerr/ApiSeerrTests.cs, which shares the Seerr fixture."
     },
     {
       "name": "hidden-content",

@@ -47,8 +47,8 @@ here.
 The focused generated-output suite is:
 
 ```sh
-node --test tests/frontend/features/features-bookmarks.test.mjs \
-  tests/frontend/features/features-bookmarks-rewrite.test.mjs \
+node --test tests/frontend/features/bookmarks/features-bookmarks.test.mjs \
+  tests/frontend/features/bookmarks/features-bookmarks-rewrite.test.mjs \
   tests/frontend/bootstrap/settings-revisions.test.mjs
 ```
 

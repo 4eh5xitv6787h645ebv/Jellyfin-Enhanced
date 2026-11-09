@@ -8,31 +8,31 @@ This is not the whole Media Tags rewrite.
 
 ## Source boundaries
 
-`client/src/features/media-tags/rules/` contains the implementation:
+The implementation is under `client/src/features/media-tags/` (`layout/` and `types/<type>/`):
 
-- `layout-rules.ts`: legacy promotion, position/profile inheritance, caps, scales,
+- `layout/layout-rules.ts`: legacy promotion, position/profile inheritance, caps, scales,
   gaps, edge spacing, shape overrides and derived look settings, with explicit
-  document inputs. `layout-fitting.ts` owns DOM-free row budgets, chip fitting,
+  document inputs. `layout/layout-fitting.ts` owns DOM-free row budgets, chip fitting,
   compact quality labels and shape/size calculations.
-- `tag-layout.ts` and `layout-runtime-types.ts`: the existing card presentation
+- `layout/tag-layout.ts` and `layout/layout-runtime-types.ts`: the existing card presentation
   lifecycle over typed HTML elements, fitting queues, observers and per-card
   contexts. It calls the pure rules and retains one owner for layout caches,
   controllers, waits and event subscriptions.
-- `tag-look.ts`: validated rule/lock/item-look documents, matching, precedence
+- `layout/tag-look.ts`: validated rule/lock/item-look documents, matching, precedence
   inputs, wire projections and session-bound saves with rollback. Its host supplies
   settings, the official-rating normalizer, session capture and persistence.
-- `media-language.ts`: curated ISO/flag registries, region/script parsing,
+- `types/language/media-language.ts`: curated ISO/flag registries, region/script parsing,
   canonical audio equivalences, priorities and secondary-audio rules, plus a
   presentation factory with injected translations, locale candidates and flag URLs.
-- `rating-data.ts`, `rating-sources.ts`, `rating-view.ts`: source vocabulary,
+- `types/ratings/rating-data.ts`, `types/ratings/rating-sources.ts`, `types/ratings/rating-view.ts`: source vocabulary,
   nullable personal preferences, native-unit scores, score colours and injected
   DOM chip rendering.
-- `poster-colour-rules.ts`: dominant histogram, contrast/palette arithmetic and
-  artwork keys. `poster-colours.ts` owns the asynchronous sampler, decode queues,
+- `layout/poster-colour-rules.ts`: dominant histogram, contrast/palette arithmetic and
+  artwork keys. `layout/poster-colours.ts` owns the asynchronous sampler, decode queues,
   watches, generation and scoped store writes.
-- `status-vocabulary.ts`: the full shared status vocabulary.
+- `types/status/status-vocabulary.ts`: the full shared status vocabulary.
 
-The six `*-entry.ts` modules install these bridges once. `client/src/host/tag-rules-host.ts`
+The six `*-entry.ts` modules install these bridges once. `client/src/features/media-tags/rules-host.ts`
 is the narrow host boundary. Services installed later in loader order are resolved
 at call time: particularly `saveUserSettings`, tag looks, poster colours and CDN URLs.
 Missing settings persistence returns failure and rolls back; it never reports a save.
@@ -65,7 +65,7 @@ The shared status/compact JSON tables now project into TypeScript via
 `generate_status_vocabulary.py --table-only` updates the TS vocabulary without
 regenerating the separately pinned ICU date/number tables; its default invocation
 still regenerates/checks those tables too. `generate_quality_compact.py` updates
-`compact-quality.ts` and the native C# projection. Neither writes executable JS.
+`types/quality/compact-quality.ts` and the native C# projection. Neither writes executable JS.
 Run the client builder afterward to regenerate JS/maps. Build, freshness, typecheck
 and the MSBuild guard reject stale data projections before bundling, including
 native compact labels. Generator tests exercise isolated JSON changes, rejection,

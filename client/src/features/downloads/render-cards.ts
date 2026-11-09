@@ -428,7 +428,7 @@ export function install(deps: Dependencies) {
     return defaultUrl.replace(/\/$/, '');
   }
 
-  // Must match ArrLinksBatchMaxIds in JellyfinEnhancedController (arr/links).
+  // Must match ArrLinksBatchMaxIds in JeDetailsProvidersController.Arr.cs (arr/links).
   const ARR_LINKS_BATCH_MAX_IDS = 100;
   // Ids per service looked up in the first (on-screen cards) request.
   const ARR_LINKS_FIRST_CHUNK = 6;

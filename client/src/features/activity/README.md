@@ -31,7 +31,7 @@ None in this folder. Any toggles are in the settings-panel shell (`settings-pane
 node --test tests/frontend/pages/pages-activity.test.mjs tests/frontend/pages/pages-social-*.test.mjs tests/frontend/pages/pages-plugin-pages-features.test.mjs
 ```
 
-Step F1 mirrors these into `tests/frontend/features/activity/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 

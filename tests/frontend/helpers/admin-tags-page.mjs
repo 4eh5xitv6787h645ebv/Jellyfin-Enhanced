@@ -44,7 +44,7 @@ const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 /**
  * POST JellyfinEnhanced/admin/configuration as the server answers it
- * (Features/Admin/Services/PluginConfigurationPatch.cs): refused with the server's values when
+ * (Shared/MediaTags/PluginConfigurationPatch.cs): refused with the server's values when
  * an expected field moved on (and is not already the requested value),
  * otherwise only the changed fields are written.
  * @param {object} server

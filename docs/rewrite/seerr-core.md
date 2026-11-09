@@ -20,7 +20,7 @@ unchanged `component-scripts.json` order, to `client/src/features/seerr/core/`:
 | `ui/ui-icons.js` … `ui/ui-season-modal.js` | `ui/*-entry.ts` | `JE.jellyseerrUI`, `JE.internals.jellyseerrUi` |
 | `modal.js` | `modal-entry.ts` | `JE.jellyseerrModal` |
 
-`client/src/host/seerr-core-host.ts` is the only access to the legacy global:
+`client/src/features/seerr/host-core.ts` is the only access to the legacy global:
 a structurally optional bridge (no assertions) naming each host API and
 sibling facade the group reads. Facade types for other owners are exported
 from `client/src/features/seerr/core/contract.ts`; status rules (`status.ts`),

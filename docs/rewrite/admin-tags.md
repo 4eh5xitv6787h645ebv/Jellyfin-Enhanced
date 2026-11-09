@@ -7,7 +7,7 @@ completion, real-host parity or release readiness.
 ## Scope and outputs
 
 `client/entries/admin-tags.json` maps the group's 20 production files to TypeScript entries under
-`client/src/features/admin-tags/`. Output paths and file names are unchanged. They are not in
+`client/src/features/media-tags/admin/` (formerly `client/src/features/admin-tags/`). Output paths and file names are unchanged. They are not in
 `js/component-scripts.json`: the configuration page loads `admin-tags.js`, and `mountTab` loads the
 other 19 lazily, one after another, in `SECTION_FILES` order (two editors, then the sections).
 
@@ -20,7 +20,7 @@ other 19 lazily, one after another, in `SECTION_FILES` order (two editors, then 
 
 ## Structure
 
-- `client/src/host/admin-tags-host.ts` is the only adapter to globals: the JE facade members the tab
+- `client/src/features/media-tags/admin/host.ts` is the only adapter to globals: the JE facade members the tab
   reads (narrowed with `Pick` from the tag-rules, tag-runtime and settings-panel slices' exported
   types: `TagLayout`, `TagLook`, `TagScopes`, `TagStyles`, `RatingSources`, `PosterColours`,
   `ItemEditorOptions`, `EnhancedUi`), Jellyfin's `ApiClient` and `Dashboard`, and the page's
@@ -50,7 +50,7 @@ other 19 lazily, one after another, in `SECTION_FILES` order (two editors, then 
 longer match: the allowlist would be empty and every save refused. Each section entry therefore
 starts with a `/*! Lexical index … */` comment (esbuild keeps `/*!` comments verbatim) holding those
 lines in the baseline module's order. It was extracted from the baseline JavaScript, not written by
-hand, and `tests/frontend/features/admin-tags-rewrite.test.mjs` holds it to two oracles:
+hand, and `tests/frontend/features/media-tags/admin/admin-tags-rewrite.test.mjs` holds it to two oracles:
 
 - the three readers (ported verbatim in `tests/frontend/helpers/admin-tags-declarations.mjs`) read
   exactly what they read from the baseline modules (`admin-tags-rewrite.declarations.json`: 123

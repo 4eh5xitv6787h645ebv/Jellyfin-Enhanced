@@ -4,7 +4,7 @@ This slice replaces 15 production entries from baseline `2e0f9251bfe833cb58866e9
 
 ## Ownership and runtime
 
-`client/entries/discovery-recommendations.json` maps the seven `js/jellyseerr/discovery/*.js` and eight `js/jellyseerr/recommendations/*.js` resources to strict TypeScript under `client/src/features/seerr/{discovery,recommendations}`. The host boundary is `client/src/host/seerr-discovery-host.ts`. Production paths and component-script order are unchanged, and no endpoint was added.
+`client/entries/discovery-recommendations.json` maps the seven `js/jellyseerr/discovery/*.js` and eight `js/jellyseerr/recommendations/*.js` resources to strict TypeScript under `client/src/features/seerr/{discovery,recommendations}`. The host boundary is `client/src/features/seerr/host-discovery.ts`. Production paths and component-script order are unchanged, and no endpoint was added.
 
 Each entry is bundled separately, so state lives where only one copy can exist. `JE.discoveryFilter` owns filter/sort choices and the session-cache purge. `createDiscovery` owns one section's machine. `JE.internals.recommendationsPage` holds the page state, published entry by entry in component order. `stage.ts` reads each part at call time, because the entries depend on each other at runtime. Consumers read `JE.discoveryFilter` at call time too, since it is the published owner.
 

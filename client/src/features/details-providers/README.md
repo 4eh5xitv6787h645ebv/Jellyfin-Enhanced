@@ -38,10 +38,10 @@ None in this folder. Any toggles are in the settings-panel shell (`settings-pane
 ## Tests
 
 ```bash
-node --test tests/frontend/features/features-details-*.test.mjs tests/frontend/features/features-{media-info,random,release-dates}.test.mjs tests/frontend/core/core-letterboxd.test.mjs tests/frontend/pages/pages-{awards,reviews}.test.mjs
+node --test tests/frontend/features/details-providers/*.test.mjs tests/frontend/core/core-letterboxd.test.mjs tests/frontend/pages/pages-{awards,reviews}.test.mjs
 ```
 
-Step F1 mirrors these into `tests/frontend/features/details-providers/`. `npm test` runs them all.
+[`docs/feature-map.json`](../../../../docs/feature-map.json) lists this feature's test folders. `npm test` runs them all.
 
 ## Generated files here (do not edit)
 

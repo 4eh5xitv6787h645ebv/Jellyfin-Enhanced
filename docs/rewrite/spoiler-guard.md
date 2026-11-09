@@ -3,7 +3,7 @@
 The twelve ordered `js/enhanced/spoilerguard/*.js` entry paths remain registered in
 `client/entries/spoiler-guard.json`. Their implementations live under
 `client/src/features/spoiler-guard`, with the browser boundary in
-`client/src/host/spoiler-host.ts`. This is one implementation slice of the ongoing
+`client/src/features/spoiler-guard/host.ts`. This is one implementation slice of the ongoing
 Jellyfin 12 rewrite, not a product completion or release claim.
 
 `state.ts` is the only owner of enabled series, movies, collections, pending TMDB
@@ -42,10 +42,10 @@ Focused verification runs actual emitted scripts with the existing browser
 harness and real emitted core session/lifecycle scripts:
 
 ```sh
-node --test tests/frontend/features/features-spoiler-rewrite.test.mjs \
-  tests/frontend/features/features-spoiler.test.mjs \
-  tests/frontend/features/features-spoiler-ui.test.mjs \
-  tests/frontend/features/features-seerr-spoiler-guard.test.mjs
+node --test tests/frontend/features/spoiler-guard/features-spoiler-rewrite.test.mjs \
+  tests/frontend/features/spoiler-guard/features-spoiler.test.mjs \
+  tests/frontend/features/spoiler-guard/features-spoiler-ui.test.mjs \
+  tests/frontend/features/spoiler-guard/features-seerr-spoiler-guard.test.mjs
 flock /home/jake/projects/je-v12-client-build.lock npm run client:check
 ```
 

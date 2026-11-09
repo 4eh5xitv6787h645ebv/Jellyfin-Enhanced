@@ -290,7 +290,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/backend/Features/MediaTags/PosterTags/PosterRegressionTests.cs",
-      "tests/frontend/core/core-tag-renderer.test.mjs"
+      "tests/frontend/features/media-tags/core-tag-renderer.test.mjs"
     ],
     "assessment": "Production tag renderer and stream-height resolution tested; original TV-mode div-card and 1328x720 fixture not all replayed. Width-sensitive threshold may escape height-only test."
   },
@@ -700,7 +700,7 @@
     "title": "🐛[BUG] Pause Screen backdrop is still blurred after disabling backdrop",
     "status": "partial-existing",
     "tests": [
-      "tests/frontend/features/features-pause.test.mjs"
+      "tests/frontend/features/player/features-pause.test.mjs"
     ],
     "assessment": "Disabled initial mount and pause lifecycle covered; administrator precedence/backdrop unblur/mouse-delay original reports need separate fixtures."
   },
@@ -1165,7 +1165,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/backend/Features/MediaTags/PosterTags/PosterRegressionTests.cs",
-      "tests/frontend/core/core-tag-renderer.test.mjs"
+      "tests/frontend/features/media-tags/core-tag-renderer.test.mjs"
     ],
     "assessment": "Production tag renderer and stream-height resolution tested; original TV-mode div-card and 1328x720 fixture not all replayed. Width-sensitive threshold may escape height-only test."
   },
@@ -1296,7 +1296,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/backend/Features/MediaTags/PosterTags/PosterRegressionTests.cs",
-      "tests/frontend/core/core-tag-renderer.test.mjs"
+      "tests/frontend/features/media-tags/core-tag-renderer.test.mjs"
     ],
     "assessment": "Production tag renderer and stream-height resolution tested; original TV-mode div-card and 1328x720 fixture not all replayed. Width-sensitive threshold may escape height-only test."
   },
@@ -1811,7 +1811,7 @@
     "title": "🐛[BUG] Custom Pause Screen not working if moving mouse before default delay",
     "status": "partial-existing",
     "tests": [
-      "tests/frontend/features/features-pause.test.mjs"
+      "tests/frontend/features/player/features-pause.test.mjs"
     ],
     "assessment": "Disabled initial mount and pause lifecycle covered; administrator precedence/backdrop unblur/mouse-delay original reports need separate fixtures."
   },
@@ -2296,7 +2296,7 @@
     "title": "🐛[BUG] Disabling custom pause screen does not disable custom pause screen.",
     "status": "partial-existing",
     "tests": [
-      "tests/frontend/features/features-pause.test.mjs"
+      "tests/frontend/features/player/features-pause.test.mjs"
     ],
     "assessment": "Disabled initial mount and pause lifecycle covered; administrator precedence/backdrop unblur/mouse-delay original reports need separate fixtures."
   },
@@ -2336,7 +2336,7 @@
     "title": "🐛[BUG] Random Unwatched only option not working",
     "status": "partial-existing",
     "tests": [
-      "tests/frontend/features/features-random.test.mjs"
+      "tests/frontend/features/details-providers/features-random.test.mjs"
     ],
     "assessment": "Pinned collection unwatched-empty fallback covered; full historical only-unwatched API filter contract not proven."
   },
@@ -2870,7 +2870,7 @@
     "title": "feat: per-user hidden content system",
     "status": "partial-existing",
     "tests": [
-      "tests/frontend/features/features-hidden.test.mjs",
+      "tests/frontend/features/hidden-content/features-hidden.test.mjs",
       "tests/backend/Features/HiddenContent/PrivacyHiddenContentTests.cs"
     ],
     "assessment": "Current hidden-state isolation/filtering covered; all nine surfaces plus dialogs/undo/native-host paths are not exhaustively exercised."

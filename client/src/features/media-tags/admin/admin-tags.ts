@@ -12,7 +12,7 @@
  * keep tracking it), `key` the PluginConfiguration field it reads and writes.
  * These declarations, and each section's `writes`, are the only fields the
  * page writes: pageFields() collects them, and the server's patch
- * (Features/MediaTags/Admin/MediaTagsPageFields.cs) accepts the same list and nothing else.
+ * (Shared/MediaTags/MediaTagsPageFields.cs) accepts the same list and nothing else.
  *
  * Every change writes the field into the page's working copy and saves it on
  * its own after a short pause (save-store.ts). The configuration page's own
@@ -103,7 +103,7 @@ const DOCS_ANCHORS = { overview: 'set-up-your-tags', layout: 'layouts', groups: 
 
 /**
  * The tag settings a new user's document copies from the configuration
- * (Controllers/JellyfinEnhancedController.cs LoadUserSettingsDocument and
+ * (Features/Settings/JeSettingsController.cs LoadUserSettingsDocument and
  * the ApplyDefaults helpers it calls), PascalCase on the server.
  */
 const SEEDED_KEYS = [
