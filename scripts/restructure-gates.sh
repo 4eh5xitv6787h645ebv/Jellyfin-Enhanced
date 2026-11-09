@@ -2,8 +2,10 @@
 # Gates for the v12 restructure (artifacts/restructure-plan/PLAN.md "Gates", backend.md §4 "Commands",
 # frontend.md §3 gate G). Each gate runs in a `set -e` subshell; the script exits non-zero on the first failure.
 #
-#   scripts/restructure-gates.sh be              backend B, G, T, F + INV + TOOL
+#   scripts/restructure-gates.sh be              backend B, G, T, F + INV + TOOL (T and the frontend suite run at once)
 #   scripts/restructure-gates.sh fe              frontend gate G (includes INV and TOOL)
+#   scripts/restructure-gates.sh all             be, then fe without a second frontend-suite run (merge points)
+#   scripts/restructure-gates.sh browser         npm run test:browser, failures ratcheted vs baselines/browser-failures.txt
 #   scripts/restructure-gates.sh r <pattern>     no stale references: fails if `git grep -nE <pattern>` matches outside artifacts/
 #   scripts/restructure-gates.sh h               poster harness builds + gen-resolution-data --check
 #   scripts/restructure-gates.sh inv             generate.py --check + route list == baselines/inventory-routes.txt (never regenerates)
@@ -14,8 +16,11 @@
 #
 # Pre-existing test failures are ratcheted, not fixed: a dotnet or node test run passes when every failing test is
 # listed in baselines/{dotnet,npm}-failures.txt and the total and passed counts are >= baselines/{dotnet,npm}-tests.txt.
+# The browser suite passes when every failing test is listed in baselines/browser-failures.txt.
 #
-# Run dotnet gates one worktree at a time on the 16 GB worker (PLAN.md "Worktrees and parallelism").
+# Run dotnet gates one worktree at a time on the 16 GB worker (PLAN.md "Worktrees and parallelism"). Inside `be` one
+# dotnet build or test runs at a time; the node frontend suite runs beside T. JE_TEST_CONCURRENCY (node test files at
+# once; default max(4, cores - 1)) and JE_BROWSER_WORKERS (Playwright workers; `browser` uses 6 unless set) tune them.
 set -euo pipefail
 
 ROOT=$(git rev-parse --show-toplevel)
@@ -143,11 +148,12 @@ gate_tool() (
   if [ -n "$new" ]; then echo "New mutation/history path failures:" >&2; echo "$new"; false; fi
 )
 
-gate_be() (
+# B and G: plugin build (warning ratchet), then the Architecture gates.
+be_build_and_g() (
   set -e
   no_snapshot_updates
   step "B: build plugin (--no-incremental, so every warning is reported) + warnings vs $BASELINES/build-warnings.txt"
-  local log res new rc=0
+  local log new
   log=$(mktemp)
   dotnet build "$PLUGIN" -c Release -p:JellyfinTarget=jf12 --no-restore --no-incremental -tl:off | tee "$log"
   new=$(build_warnings <"$log" | LC_ALL=C comm -23 - "$BASELINES/build-warnings.txt")
@@ -159,6 +165,12 @@ gate_be() (
   else
     step "G: skipped (tests/backend/Architecture does not exist yet; added by backend S0)"
   fi
+)
+
+# T, plus the verify:rewrite backend part (coverage floors on T's results).
+be_t() (
+  set -e
+  local res rc=0
   step "T: full backend suite (failure ratchet vs $BASELINES/dotnet-failures.txt, dotnet-tests.txt)"
   res=$(mktemp -d)
   dotnet test "$TESTS" -c Release --no-restore -p:JellyfinTarget=jf12 \
@@ -176,18 +188,55 @@ gate_be() (
   step "F: verify:rewrite backend part: coverage floors on T's results (tests/runner/coverage.py)"
   python3 tests/runner/coverage.py "$res"
   rm -rf "$res"
-  step "F: frontend (ratcheted) + contracts + path readers"
-  frontend_tests
+)
+
+# T and the ratcheted frontend suite at the same time, each in its own subshell with its own log. The frontend suite
+# runs no dotnet, so dotnet still builds and tests one process at a time. Both tails are printed; either failing fails.
+be_t_and_frontend() (
+  set -e
+  local dir tpid fpid trc=0 frc=0
+  dir=$(mktemp -d)
+  step "T and F's frontend suite, concurrently (separate logs; tails below)"
+  ( be_t ) >"$dir/t.log" 2>&1 &
+  tpid=$!
+  ( step "F: frontend suite (ratcheted)"; frontend_tests ) >"$dir/frontend.log" 2>&1 &
+  fpid=$!
+  wait "$tpid" || trc=$?
+  wait "$fpid" || frc=$?
+  step "T log: summary and tail (exit $trc)"
+  grep -E '^(Passed|Failed)!|^T \(dotnet test\)|^  JE\.|"passed"' "$dir/t.log" >&2 || true
+  if [ "$trc" = 0 ]; then tail -n 4 "$dir/t.log" >&2; else tail -n 150 "$dir/t.log" >&2; fi
+  step "F frontend suite log: summary and tail (exit $frc)"
+  grep -E '^ℹ (tests|pass|fail|duration_ms) ' "$dir/frontend.log" >&2 || true
+  if [ "$frc" = 0 ]; then tail -n 4 "$dir/frontend.log" >&2; else tail -n 250 "$dir/frontend.log" >&2; fi
+  rm -rf "$dir"
+  [ "$trc" = 0 ] && [ "$frc" = 0 ]
+)
+
+# The rest of F: client-build tests, contracts, path readers.
+be_f_rest() (
+  set -e
+  step "F: client-build tests + contracts + path readers"
   npm run test:client-build
   npm run contracts:check
   npm run test:contract-boundary
   npm run client:check
   npm run inventory:rewrite:check
+)
+
+gate_be() (
+  set -e
+  be_build_and_g
+  be_t_and_frontend
+  be_f_rest
   gate_inv
   gate_tool
 )
 
-gate_fe() (
+gate_fe() ( set -e; fe_checks with-frontend-suite )
+
+# $1 = with-frontend-suite | without-frontend-suite (`all`, where be already ran it).
+fe_checks() (
   set -e
   step "FE G: typecheck, build, inventory"
   npm run client:typecheck
@@ -200,13 +249,77 @@ gate_fe() (
   step "FE G: client-build tests, bootstrap manifest, npm test (ratcheted)"
   npm run test:client-build
   node --test tests/frontend/bootstrap/bootstrap-manifest.test.mjs
-  frontend_tests
+  if [ "$1" = with-frontend-suite ]; then frontend_tests; else step "FE G: npm test already ran in be"; fi
   step "FE G: component-scripts.json and client/entries output keys vs restructure-base"
   git diff --exit-code restructure-base -- Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json
   local f
   for f in client/entries/*.json; do
     diff <(git show "restructure-base:$f" | jq -S keys) <(jq -S keys "$f")
   done
+)
+
+# Merge points: be, then fe without running the frontend suite a second time. fe regenerates (client:build,
+# inventory:rewrite); be's frontend-suite run covers fe's tree only if that leaves the working tree as it was.
+gate_all() (
+  set -e
+  local before after
+  gate_be
+  before=$(tree_state)
+  fe_checks without-frontend-suite
+  after=$(tree_state)
+  if [ "$before" != "$after" ]; then
+    echo "all: fe's regeneration changed the working tree after be ran, so be's results do not cover it:" >&2
+    git status --short >&2
+    false
+  fi
+)
+
+tree_state() { { git status --porcelain=v1 -uall; git diff HEAD; } | sha256sum; }
+
+# Playwright JSON report -> `PASS|FAIL|SKIP <identity>` per test, identity = `[project] › <repo-relative file>:<line>:<col>
+# › <describe titles › test title>`, as the list reporter prints it. unexpected and flaky (retries are 0) are FAIL.
+browser_results() { python3 - "$1" "$ROOT" <<'PY'
+import json, os, sys
+data = json.load(open(sys.argv[1]))
+root_dir = data['config']['rootDir']
+def walk(suite, titles):
+    for spec in suite.get('specs', []):
+        path = os.path.relpath(os.path.join(root_dir, spec['file']), sys.argv[2])
+        for test in spec['tests']:
+            status = test['status']
+            outcome = 'FAIL' if status in ('unexpected', 'flaky') else 'SKIP' if status == 'skipped' else 'PASS'
+            print(outcome, f"[{test['projectName']}] › {path}:{spec['line']}:{spec['column']} › {' › '.join(titles + [spec['title']])}")
+    for child in suite.get('suites', []):
+        walk(child, titles + [child['title']])
+for file_suite in data['suites']:   # the top level is one suite per file; its title is the file, not a describe
+    walk(file_suite, [])
+PY
+}
+
+# BROWSER (PLAN.md): npm run test:browser with a failure ratchet. New failures fail by name; a listed test that passes
+# is a note (remove it from the list). Never add a line to baselines/browser-failures.txt.
+gate_browser() (
+  set -e
+  local dir rc=0 new gone
+  export JE_BROWSER_WORKERS=${JE_BROWSER_WORKERS:-6}
+  dir=$(mktemp -d)
+  step "BROWSER: npm run test:browser ($JE_BROWSER_WORKERS workers), failures vs $BASELINES/browser-failures.txt"
+  PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/results.json" npm run test:browser -- --reporter=list,json || rc=$?
+  [ -s "$dir/results.json" ] || { echo "BROWSER: no JSON report written (exit $rc)" >&2; rm -rf "$dir"; false; }
+  browser_results "$dir/results.json" > "$dir/results"
+  new=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -23 - "$BASELINES/browser-failures.txt")
+  gone=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -13 - "$BASELINES/browser-failures.txt")
+  echo "BROWSER: $(wc -l < "$dir/results") tests, passed $(grep -c '^PASS ' "$dir/results" || true), failed $(grep -c '^FAIL ' "$dir/results" || true) (baseline list $(wc -l < "$BASELINES/browser-failures.txt")), skipped $(grep -c '^SKIP ' "$dir/results" || true)" >&2
+  if [ -n "$gone" ]; then
+    echo "BROWSER: note: listed in $BASELINES/browser-failures.txt but did not fail (remove it from the list):" >&2
+    printf '  %s\n' "$gone" >&2
+  fi
+  rm -rf "$dir"
+  if [ -n "$new" ]; then
+    echo "BROWSER: $(printf '%s\n' "$new" | wc -l) failing test(s) not in $BASELINES/browser-failures.txt:" >&2
+    printf '  %s\n' "$new" >&2
+    false
+  fi
 )
 
 gate_r() (
@@ -279,12 +392,12 @@ gate_image() (
   echo "image: $tag = $digest" >&2
 )
 
-usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
 case "$cmd" in
-  be|fe|h|inv|tool) [ $# -eq 0 ] || usage; "gate_$cmd" ;;
+  be|fe|all|browser|h|inv|tool) [ $# -eq 0 ] || usage; "gate_$cmd" ;;
   r) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_r "$1" ;;
   bundle) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_bundle "$1" ;;
   bundle-hash) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_bundle_hash "$1"; exit 0 ;;
