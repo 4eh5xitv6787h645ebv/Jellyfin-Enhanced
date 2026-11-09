@@ -63,119 +63,42 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
     public class JellyfinEnhancedController : JeControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly Shared.Parental.SeerrParentalFilter _parentalFilter;
-        private readonly Shared.SpoilerGuard.SpoilerSeerrRedactor _spoilerSeerrRedactor;
-        private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
-        private readonly IDtoService _dtoService;
-        private readonly IItemRepository _itemRepository;
-        private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
-        private readonly Features.MediaTags.Services.TagCacheService _tagCacheService;
-        private readonly MediaBrowser.Controller.Session.ISessionManager _sessionManager;
         private readonly Features.Admin.Services.MaintenanceModeService _maintenanceModeService;
         private readonly Services.CdnAssetService _cdnAssetService;
-        private readonly Shared.SpoilerGuard.SpoilerUserResolver _spoilerResolver;
-        private readonly Shared.SpoilerGuard.SpoilerTagDataStripper _spoilerTagDataStripper;
-        private readonly Features.DetailsProviders.Services.WikidataAwardsService _wikidataAwardsService;
-        private readonly Features.DetailsProviders.Services.AnilistReviewsService _anilistReviewsService;
-        private readonly Features.DetailsProviders.Services.ReviewTranslationService _reviewTranslationService;
-        private readonly Features.DetailsProviders.Services.MdblistService _mdblistService;
-        private readonly Features.DetailsProviders.Services.DoesTheDogDieService _doesTheDogDieService;
-        private readonly Features.Admin.Services.WhatsNewService _whatsNewService;
         private readonly Services.UsageEventCounterService _usageEventCounterService;
         private readonly Services.AnalyticsReportingService _analyticsReportingService;
-        private readonly Services.HostCompatibilityService _hostCompatibility;
-        private readonly Shared.Tmdb.TmdbResponseCache _tmdbResponseCache;
-        private readonly Features.DetailsProviders.Services.ItemStatsService _itemStats;
-        private readonly IServerConfigurationManager _serverConfigurationManager;
-        private readonly INetworkManager _networkManager;
-        private readonly Features.SpoilerGuard.Services.SpoilerExistingTitlesApplier _spoilerExistingApplier;
-        private readonly MediaBrowser.Model.Tasks.ITaskManager _taskManager;
         private readonly IPluginManager _pluginManager;
-        private readonly Features.MediaTags.Services.MatroskaLanguageCache _matroskaLanguageCache;
         private readonly UserDisplayResolver _userDisplayResolver;
         private readonly ArrInstanceClient _arrInstanceClient;
         private readonly ActiveSessionsService _activeSessionsService;
         private readonly HiddenContentDocumentService _hiddenContentDocumentService;
-        private readonly LibraryItemLookup _libraryItemLookup;
-        private readonly Shared.Seerr.SeerrUserLookup _seerrUserLookup;
-        private readonly Shared.SpoilerGuard.SpoilerPendingService _spoilerPendingService;
 
         public JellyfinEnhancedController(
             IHttpClientFactory httpClientFactory,
             Logger logger,
             IUserManager userManager,
-            IUserDataManager userDataManager,
             ILibraryManager libraryManager,
-            IDtoService dtoService,
             UserConfigurationManager userConfigurationManager,
-            IItemRepository itemRepository,
-            IDbContextFactory<JellyfinDbContext> dbContextFactory,
-            Features.MediaTags.Services.TagCacheService tagCacheService,
             MediaBrowser.Controller.Session.ISessionManager sessionManager,
             Features.Admin.Services.MaintenanceModeService maintenanceModeService,
             Services.CdnAssetService cdnAssetService,
-            Shared.SpoilerGuard.SpoilerUserResolver spoilerResolver,
-            Shared.SpoilerGuard.SpoilerTagDataStripper spoilerTagDataStripper,
-            Features.DetailsProviders.Services.WikidataAwardsService wikidataAwardsService,
-            Features.DetailsProviders.Services.AnilistReviewsService anilistReviewsService,
-            Features.DetailsProviders.Services.ReviewTranslationService reviewTranslationService,
-            Features.DetailsProviders.Services.MdblistService mdblistService,
-            Features.DetailsProviders.Services.DoesTheDogDieService doesTheDogDieService,
-            Shared.Parental.SeerrParentalFilter parentalFilter,
-            Shared.SpoilerGuard.SpoilerSeerrRedactor spoilerSeerrRedactor,
-            Features.Admin.Services.WhatsNewService whatsNewService,
             Services.UsageEventCounterService usageEventCounterService,
             Services.AnalyticsReportingService analyticsReportingService,
-            Services.HostCompatibilityService hostCompatibility,
-            Shared.Tmdb.TmdbResponseCache tmdbResponseCache,
-            Features.DetailsProviders.Services.ItemStatsService itemStats,
-            IServerConfigurationManager serverConfigurationManager,
-            INetworkManager networkManager,
-            Features.SpoilerGuard.Services.SpoilerExistingTitlesApplier spoilerExistingApplier,
-            MediaBrowser.Model.Tasks.ITaskManager taskManager,
-            IPluginManager pluginManager,
-            Features.MediaTags.Services.MatroskaLanguageCache matroskaLanguageCache)
+            IPluginManager pluginManager)
             : base(userManager, logger, userConfigurationManager)
         {
             _httpClientFactory = httpClientFactory;
-            _userDataManager = userDataManager;
             _libraryManager = libraryManager;
-            _dtoService = dtoService;
-            _itemRepository = itemRepository;
-            _dbContextFactory = dbContextFactory;
-            _tagCacheService = tagCacheService;
-            _sessionManager = sessionManager;
             _maintenanceModeService = maintenanceModeService;
             _cdnAssetService = cdnAssetService;
-            _spoilerResolver = spoilerResolver;
-            _spoilerTagDataStripper = spoilerTagDataStripper;
-            _wikidataAwardsService = wikidataAwardsService;
-            _anilistReviewsService = anilistReviewsService;
-            _reviewTranslationService = reviewTranslationService;
-            _mdblistService = mdblistService;
-            _doesTheDogDieService = doesTheDogDieService;
-            _parentalFilter = parentalFilter;
-            _spoilerSeerrRedactor = spoilerSeerrRedactor;
-            _whatsNewService = whatsNewService;
             _usageEventCounterService = usageEventCounterService;
             _analyticsReportingService = analyticsReportingService;
-            _hostCompatibility = hostCompatibility;
-            _tmdbResponseCache = tmdbResponseCache;
-            _itemStats = itemStats;
-            _serverConfigurationManager = serverConfigurationManager;
-            _networkManager = networkManager;
-            _spoilerExistingApplier = spoilerExistingApplier;
-            _taskManager = taskManager;
             _pluginManager = pluginManager;
-            _matroskaLanguageCache = matroskaLanguageCache;
             _userDisplayResolver = new UserDisplayResolver(userManager);
             _arrInstanceClient = new ArrInstanceClient(httpClientFactory, logger);
             _activeSessionsService = new ActiveSessionsService(sessionManager);
             _hiddenContentDocumentService = new HiddenContentDocumentService(userConfigurationManager, logger, _userDisplayResolver);
-            _libraryItemLookup = new LibraryItemLookup(libraryManager, logger);
-            _seerrUserLookup = new Shared.Seerr.SeerrUserLookup(httpClientFactory, logger, _userDisplayResolver);
-            _spoilerPendingService = new Shared.SpoilerGuard.SpoilerPendingService(userConfigurationManager, logger, _userDisplayResolver, _libraryItemLookup);
         }
 
         [HttpGet("script")]
