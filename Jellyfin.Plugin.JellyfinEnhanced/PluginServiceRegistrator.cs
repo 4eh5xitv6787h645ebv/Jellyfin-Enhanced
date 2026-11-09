@@ -1,6 +1,7 @@
 using System.Net.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering;
@@ -128,9 +129,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Maintenance Mode extras: a 30s timer that opens/closes the daily scheduled window
             // and expires timed manual windows, plus the per-playback-start reminder popup.
             serviceCollection.AddHostedService<MaintenanceScheduleService>();
-            serviceCollection.AddScoped<IEventConsumer<PlaybackStartEventArgs>, MaintenancePlaybackReminderConsumer>();
+            serviceCollection.AddJeEventConsumers();
             serviceCollection.AddSingleton<HiddenContentResponseFilter>();
-            serviceCollection.AddScoped<IEventConsumer<PlaybackStartEventArgs>, ContinueWatchingPlaybackConsumer>();
             serviceCollection.AddHostedService<ContinueWatchingLibraryHook>();
 
             // Activity Feed: recently watched / favorited / reviewed, gated by
@@ -139,7 +139,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // constructor (see StartupService, which forces its construction).
             serviceCollection.AddSingleton<ActivityService>();
             serviceCollection.AddSingleton<ActivityFavoriteMonitor>();
-            serviceCollection.AddScoped<IEventConsumer<PlaybackStopEventArgs>, ActivityPlaybackConsumer>();
 
             // Spoiler Guard: an MVC action filter on the Image controller blurs
             // guarded-episode image bytes, so every client gets them via the native image API.
@@ -160,16 +159,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<SpoilerFieldStripFilter>();
             // The same policy for the Seerr, TMDB and MDBList data JE shows itself.
             serviceCollection.AddSingleton<SpoilerSeerrRedactor>();
-            // Auto-enable spoiler mode for a series on first play of S1E1.
-            // Gated by SpoilerAutoEnableOnFirstPlay; runs on every PlaybackStart.
-            serviceCollection.AddScoped<IEventConsumer<PlaybackStartEventArgs>, SpoilerAutoEnableOnFirstPlayConsumer>();
-            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserCreatedEventArgs>, UserCreatedIdentityInvalidator>();
-            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserDeletedEventArgs>, UserDeletedIdentityInvalidator>();
-            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserUpdatedEventArgs>, ReviewAuthorCacheInvalidator>();
-            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserDeletedEventArgs>, ReviewAuthorCacheInvalidator>();
-            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserLockedOutEventArgs>, ReviewAuthorCacheInvalidator>();
-            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserUpdatedEventArgs>, TagCacheAccessInvalidator>();
-            serviceCollection.AddScoped<IEventConsumer<Jellyfin.Data.Events.Users.UserDeletedEventArgs>, TagCacheAccessInvalidator>();
 
             // Promotes pending pre-acquisition Spoiler Guard entries (PendingTmdb)
             // into real Series/Movies entries when matching library items land.
@@ -207,20 +196,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<NativePosterTagStamper>();
             serviceCollection.AddSingleton<PosterTagImageFilter>();
 
-            serviceCollection.Configure<MvcOptions>(o =>
-            {
-                // All are IAsyncActionFilters that rewrite the response after
-                // `await next()`, so post-processing runs in REVERSE registration order.
-                // Identity-tag stamping must run after field-strip cache-busting so
-                // clients echo the final "sb-...-jet...-jeu..." tag on image requests.
-                // The poster tag image filter is registered BEFORE the blur filter so
-                // it post-processes AFTER it: tags are drawn on Spoiler Guard's output.
-                o.Filters.AddService<HiddenContentResponseFilter>();
-                o.Filters.AddService<SpoilerIdentityTagFilter>();
-                o.Filters.AddService<SpoilerFieldStripFilter>();
-                o.Filters.AddService<PosterTagImageFilter>();
-                o.Filters.AddService<SpoilerBlurImageFilter>();
-            });
+            serviceCollection.AddJeMvcFilters();
         }
     }
 }

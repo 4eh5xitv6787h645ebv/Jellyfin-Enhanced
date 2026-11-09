@@ -678,6 +678,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCaches.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCertificationExtractor.cs",
       "category": "Features"
     },
@@ -830,6 +834,14 @@
       "category": "Infrastructure"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Hosting/EventConsumerRegistration.cs",
+      "category": "Infrastructure"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Hosting/MvcFilterRegistration.cs",
+      "category": "Infrastructure"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Http/JeControllerBase.cs",
       "category": "Infrastructure"
     },
@@ -890,6 +902,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ArrInstanceClient.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ArrItem.cs",
       "category": "Shared"
     },
@@ -914,6 +930,14 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Library/LibraryItemLookup.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Library/UserDisplayResolver.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/MediaStreamLanguageResolver.cs",
       "category": "Shared"
     },
@@ -923,6 +947,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/TrackRoles.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Text/IsoDates.cs",
       "category": "Shared"
     },
     {
@@ -9770,19 +9798,19 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved enhanced bookmarks for {ResolveUserDisplay(authorizedUserId)} to bookmark.json",
+      "literal": "Saved enhanced bookmarks for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to bookmark.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved hidden content for {ResolveUserDisplay(authorizedUserId)} to hidden-content.json",
+      "literal": "Saved hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to hidden-content.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved user elsewhere settings for {ResolveUserDisplay(authorizedUserId)} to elsewhere.json",
+      "literal": "Saved user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to elsewhere.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved user shortcuts for {ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
+      "literal": "Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -10282,7 +10310,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 482,
+    "files": 489,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 88,

@@ -137,5 +137,31 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
 
             return true;
         }
+
+        // Logging variants used by the controllers (restructure S2.0b, moved from JellyfinEnhancedController).
+        public static bool IsAllowedUrl(string url, Logger logger)
+        {
+            var allowed = Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrl(url);
+            if (!allowed && !string.IsNullOrWhiteSpace(url))
+            {
+                // Log at Error so admins can diagnose "instance doesn't return data"
+                // issues caused by a URL that hits the block list (e.g. metadata endpoints, loopback).
+                logger.Error($"IsAllowedUrl rejected outbound URL: {url}");
+            }
+            return allowed;
+        }
+
+        // Async variant used by request-path fan-out helpers so the DNS resolution inside the
+        // shared guard doesn't block the request thread before the first await — otherwise N
+        // instances serialize their DNS lookups in the Select() prelude (Codex pass-3 P2).
+        public static async Task<bool> IsAllowedUrlAsync(string url, Logger logger, CancellationToken ct)
+        {
+            var allowed = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrlAsync(url, ct).ConfigureAwait(false);
+            if (!allowed && !string.IsNullOrWhiteSpace(url))
+            {
+                logger.Error($"IsAllowedUrl rejected outbound URL: {url}");
+            }
+            return allowed;
+        }
     }
 }

@@ -40,6 +40,10 @@ using MediaBrowser.Controller.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Text;
+using static Jellyfin.Plugin.JellyfinEnhanced.Services.SeerrCaches;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -83,34 +87,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly MediaBrowser.Model.Tasks.ITaskManager _taskManager;
         private readonly IPluginManager _pluginManager;
         private readonly Helpers.MatroskaLanguageCache _matroskaLanguageCache;
-
-        // Server-side cache for proxied avatar images to avoid re-fetching from
-        // upstream Seerr on every request. Entries expire after 1 hour.
-        private static readonly ConcurrentDictionary<string, (byte[] Content, string ContentType, string ETag, DateTime CachedAt)> _avatarCache = new();
-        private static readonly TimeSpan _avatarCacheDuration = TimeSpan.FromHours(1);
-
-        // Cache for Seerr user ID lookups (JellyfinUserId -> SeerrUserId)
-        private static readonly Dictionary<string, (string JellyseerrUserId, DateTime CachedAt)> _userIdCache = new();
-        private static readonly object _userIdCacheLock = new();
-
-        // Cache for Seerr user lookups (JellyfinUserId -> full Seerr user payload, null = negative cache)
-        private static readonly Dictionary<string, (JellyseerrUser? User, DateTime CachedAt)> _userCache = new();
-        private static readonly object _userCacheLock = new();
-
-        // Cache for Seerr proxy responses (discovery/search endpoints)
-        private static readonly Dictionary<string, (string Content, DateTime CachedAt)> _responseCache = new();
-        private static readonly object _responseCacheLock = new();
-
-        // Throttle for manual user import
-        private static DateTime _lastManualImport = DateTime.MinValue;
-        private static readonly object _importThrottleLock = new();
-
-        // cache the result of /api/v1/status probes so a Seerr outage
-        // doesn't cause every failed proxy call to issue a fresh status check.
-        // Negative-cached for 30s; positive results expire on the same TTL.
-        private static (bool Active, DateTime CachedAt)? _seerrStatusCache;
-        private static readonly object _seerrStatusCacheLock = new();
-        private static readonly TimeSpan _seerrStatusCacheTtl = TimeSpan.FromSeconds(30);
+        private readonly UserDisplayResolver _userDisplayResolver;
+        private readonly ArrInstanceClient _arrInstanceClient;
+        private readonly LibraryItemLookup _libraryItemLookup;
 
         private async Task<bool> IsSeerrReachableCached()
         {
@@ -126,58 +105,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 _seerrStatusCache = (active, DateTime.UtcNow);
             }
             return active;
-        }
-
-        /// <summary>
-        /// The answer <see cref="IsSeerrReachableCached"/> would give right now if it
-        /// can be given from the probe cache alone; null when a probe would be needed.
-        /// </summary>
-        private static bool? TryGetCachedSeerrReachability()
-        {
-            lock (_seerrStatusCacheLock)
-            {
-                if (_seerrStatusCache.HasValue
-                    && DateTime.UtcNow - _seerrStatusCache.Value.CachedAt < _seerrStatusCacheTtl)
-                {
-                    return _seerrStatusCache.Value.Active;
-                }
-            }
-
-            return null;
-        }
-
-        // Cache for request-page TMDB enrichments (movie/tv detail lookups via Jellyseerr)
-        private static readonly Dictionary<string, (TmdbEnrichmentResult Data, DateTime CachedAt)> _tmdbEnrichmentCache = new();
-        private static readonly object _tmdbEnrichmentCacheLock = new();
-        private static readonly ConcurrentDictionary<string, Task<TmdbEnrichmentResult>> _tmdbEnrichmentInFlight = new();
-
-        private static TimeSpan GetResponseCacheTtl()
-        {
-            var minutes = JellyfinEnhanced.Instance?.Configuration?.JellyseerrResponseCacheTtlMinutes ?? 10;
-            return TimeSpan.FromMinutes(Math.Max(1, minutes));
-        }
-
-        private static TimeSpan GetUserIdCacheTtl()
-        {
-            var minutes = JellyfinEnhanced.Instance?.Configuration?.JellyseerrUserIdCacheTtlMinutes ?? 30;
-            return TimeSpan.FromMinutes(Math.Max(1, minutes));
-        }
-
-        private static TimeSpan GetTmdbEnrichmentCacheTtl()
-        {
-            var minutes = JellyfinEnhanced.Instance?.Configuration?.JellyseerrResponseCacheTtlMinutes ?? 10;
-            return TimeSpan.FromMinutes(Math.Max(1, minutes));
-        }
-
-        private sealed class TmdbEnrichmentResult
-        {
-            public string? Title { get; init; }
-            public int? Year { get; init; }
-            public string? PosterUrl { get; init; }
-            public string? DigitalReleaseDate { get; init; }
-            public string? TheatricalReleaseDate { get; init; }
-            public string? InitialAirDate { get; init; }
-            public string? NextAirDate { get; init; }
         }
 
         private static readonly HashSet<string> BrandingFileNames = new(new[]
@@ -257,6 +184,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _taskManager = taskManager;
             _pluginManager = pluginManager;
             _matroskaLanguageCache = matroskaLanguageCache;
+            _userDisplayResolver = new UserDisplayResolver(userManager);
+            _arrInstanceClient = new ArrInstanceClient(httpClientFactory, logger);
+            _libraryItemLookup = new LibraryItemLookup(libraryManager, logger);
         }
 
         /// <summary>
@@ -419,7 +349,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var importDefinite = false;
             if (allowAutoImport && config.JellyseerrAutoImportUsers)
             {
-                _logger.Info($"User not found in Jellyseerr. Attempting just-in-time import for Jellyfin User ID {ResolveUserDisplay(jellyfinUserId)}...");
+                _logger.Info($"User not found in Jellyseerr. Attempting just-in-time import for Jellyfin User ID {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)}...");
                 var (importedUser, definite) = await TryAutoImportJellyseerrUser(jellyfinUserId, urls, httpClient);
                 importDefinite = definite;
                 if (importedUser != null)
@@ -447,7 +377,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
             }
 
-            _logger.Warning($"Could not find or import a matching Seerr user for Jellyfin User ID {ResolveUserDisplay(jellyfinUserId)} after checking all URLs.");
+            _logger.Warning($"Could not find or import a matching Seerr user for Jellyfin User ID {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)} after checking all URLs.");
             return null;
         }
 
@@ -483,7 +413,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         if (!string.IsNullOrEmpty(importError.Message)
                             && importError.Message.Contains("UNIQUE constraint failed: user.email", StringComparison.OrdinalIgnoreCase))
                         {
-                            _logger.Warning($"Could not auto-import Jellyfin User ID {ResolveUserDisplay(jellyfinUserId)}: an existing Jellyseerr account has a conflicting email (possibly from a previous user that was renamed or deleted). Remove the conflicting user in Jellyseerr to resolve this.");
+                            _logger.Warning($"Could not auto-import Jellyfin User ID {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)}: an existing Jellyseerr account has a conflicting email (possibly from a previous user that was renamed or deleted). Remove the conflicting user in Jellyseerr to resolve this.");
                             return (null, true);
                         }
 
@@ -497,7 +427,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var user = importedUsers?.FirstOrDefault(u => string.Equals(u.JellyfinUserId, normalizedUserId, StringComparison.OrdinalIgnoreCase));
                     if (user != null)
                     {
-                        _logger.Info($"Auto-imported Seerr user ID {user.Id} for Jellyfin User {ResolveUserDisplay(jellyfinUserId)}");
+                        _logger.Info($"Auto-imported Seerr user ID {user.Id} for Jellyfin User {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)}");
                         return (user, true);
                     }
 
@@ -518,7 +448,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             var found = allUsers?.FirstOrDefault(u => string.Equals(u.JellyfinUserId, normalizedUserId, StringComparison.OrdinalIgnoreCase));
                             if (found != null)
                             {
-                                _logger.Info($"Found Seerr user ID {found.Id} for Jellyfin User {ResolveUserDisplay(jellyfinUserId)} via fresh lookup");
+                                _logger.Info($"Found Seerr user ID {found.Id} for Jellyfin User {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)} via fresh lookup");
                                 return (found, true);
                             }
                         }
@@ -534,12 +464,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 catch (HttpRequestException ex)
                 {
                     // Network errors, timeouts, etc. are transient — try the next URL
-                    _logger.Debug($"Connection error during auto-import for Jellyfin User {ResolveUserDisplay(jellyfinUserId)} at {url}: {ex.Message}");
+                    _logger.Debug($"Connection error during auto-import for Jellyfin User {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)} at {url}: {ex.Message}");
                 }
                 catch (JsonException ex)
                 {
                     // Invalid Jellyseerr response — log warning but try next URL
-                    _logger.Warning($"Invalid response from Jellyseerr during auto-import for Jellyfin User {ResolveUserDisplay(jellyfinUserId)} at {url}: {ex.Message}");
+                    _logger.Warning($"Invalid response from Jellyseerr during auto-import for Jellyfin User {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)} at {url}: {ex.Message}");
                 }
             }
 
@@ -560,40 +490,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return blockedIds.Contains(normalizedId);
         }
 
-        internal static void ClearUserCaches()
-        {
-            lock (_userCacheLock)
-            {
-                _userCache.Clear();
-            }
+        internal static void ClearUserCaches() => Services.SeerrCaches.ClearUserCaches();
 
-            lock (_userIdCacheLock)
-            {
-                _userIdCache.Clear();
-            }
-        }
-
-        public static void ClearAllSeerrCachesOnConfigChange()
-        {
-            ClearUserCaches();
-            lock (_responseCacheLock)
-            {
-                _responseCache.Clear();
-            }
-            lock (_tmdbEnrichmentCacheLock)
-            {
-                _tmdbEnrichmentCache.Clear();
-            }
-            // Avatar cache may reference the OLD Seerr URL — clear it too.
-            _avatarCache.Clear();
-            // also flush the cached status probe so admins see fresh
-            // reachability immediately after fixing config.
-            lock (_seerrStatusCacheLock) { _seerrStatusCache = null; }
-            // Arr instance URLs/keys may have just changed too — drop the merged
-            // queue/history caches rather than waiting out their TTL.
-            lock (_arrQueueCacheLock) { _arrQueueCache = null; }
-            lock (_arrHistoryCacheLock) { _arrHistoryCache = null; }
-        }
+        // Forwarder kept for the test call sites and JellyfinEnhanced.cs (restructure S2.0b; S2.14 removes it).
+        public static void ClearAllSeerrCachesOnConfigChange() => Services.SeerrCaches.ClearAllSeerrCachesOnConfigChange();
 
         /// <summary>
         /// The Seerr user id for a Jellyfin user when it is in the user-id cache
@@ -897,7 +797,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var jellyseerrUserId = seerrUser?.Id.ToString();
             if (string.IsNullOrEmpty(jellyseerrUserId))
             {
-                _logger.Warning($"Could not find a Jellyseerr user for Jellyfin user {ResolveUserDisplay(jellyfinUserId)}. Aborting request.");
+                _logger.Warning($"Could not find a Jellyseerr user for Jellyfin user {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)}. Aborting request.");
                 // When GetJellyseerrUserId returns null because every Seerr URL
                 // is returning a Cloudflare/proxy HTML challenge, the generic
                 // "user not linked" message misleads the admin. Do one quick
@@ -1059,7 +959,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                 if (!isQuietEndpoint)
                 {
-                    var userDisplay = ResolveUserDisplay(jellyfinUserId);
+                    var userDisplay = _userDisplayResolver.ResolveUserDisplay(jellyfinUserId);
                     if (isIssuePolling)
                         LogPollingRequest(userDisplay, requestUri, $"{jellyfinUserId}:{apiPath}");
                     else
@@ -1150,7 +1050,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             : Content(json, "application/json");
                     }
 
-                    _logger.Warning($"Seerr request failed for user {ResolveUserDisplay(jellyfinUserId)} at {trimmedUrl}: code={error!.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
+                    _logger.Warning($"Seerr request failed for user {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)} at {trimmedUrl}: code={error!.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
 
                     // Map structured error → HTTP status + structured envelope.
                     // The frontend can switch on `code` to display a meaningful
@@ -1190,7 +1090,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"Failed to connect to Seerr URL for user {ResolveUserDisplay(jellyfinUserId)}: {trimmedUrl}. Error: {ex.Message}");
+                    _logger.Error($"Failed to connect to Seerr URL for user {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)}: {trimmedUrl}. Error: {ex.Message}");
                     var message = IsAdminUser()
                         ? $"Failed to reach {trimmedUrl}: {ex.Message}"
                         : "Can't reach Seerr right now. Please try again in a moment.";
@@ -1362,7 +1262,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(apiKey))
                 return BadRequest(new { ok = false, message = "Missing url or apiKey" });
 
-            if (!IsAllowedUrl(url))
+            if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { ok = false, message = "Invalid URL" });
 
             var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
@@ -1426,7 +1326,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(apiKey))
                 return BadRequest(new { ok = false, message = "Missing url or apiKey" });
 
-            if (!IsAllowedUrl(url))
+            if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { ok = false, message = "Invalid URL" });
 
             var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
@@ -2032,7 +1932,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var summary = AddSpoilerBlurPendingInternal(userId, jUser, mediaType, canonicalTmdb, displayName: null);
                 if (summary.WroteSomething)
                 {
-                    _logger.Info($"Spoiler Guard auto-on-request {summary.Promoted} for {mediaType}:{canonicalTmdb} by {ResolveUserDisplay(userId.ToString("N"))}");
+                    _logger.Info($"Spoiler Guard auto-on-request {summary.Promoted} for {mediaType}:{canonicalTmdb} by {_userDisplayResolver.ResolveUserDisplay(userId.ToString("N"))}");
                 }
             }
             catch (Exception ex)
@@ -2454,7 +2354,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var inLibrary = new List<(int TmdbId, Guid ItemId)>();
                     foreach (var tmdbId in Services.TmdbCompanyTvDiscover.ReadRowIds(response.Content))
                     {
-                        var item = FindLibraryItemByTmdb(jUser, "tv", tmdbId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        var item = _libraryItemLookup.FindLibraryItemByTmdb(jUser, "tv", tmdbId.ToString(System.Globalization.CultureInfo.InvariantCulture));
                         if (item != null) inLibrary.Add((tmdbId, item.Id));
                     }
                     var seerrInfo = await Task.WhenAll(inLibrary.Select(row => GetSeerrTvMediaInfoAsync(row.TmdbId)));
@@ -3015,7 +2915,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // Parse birth date
                 if (jsonElement.TryGetProperty("birthday", out var birthdayProp) &&
                     birthdayProp.ValueKind != JsonValueKind.Null &&
-                    TryParseIso(birthdayProp.GetString()) is DateTime birth)
+                    IsoDates.TryParseIso(birthdayProp.GetString()) is DateTime birth)
                 {
                     birthDate = birth;
                 }
@@ -3024,7 +2924,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 if (jsonElement.TryGetProperty("deathday", out var deathdayProp) &&
                     deathdayProp.ValueKind != JsonValueKind.Null &&
                     deathdayProp.GetString() is string deathStr &&
-                    TryParseIso(deathStr) is DateTime death)
+                    IsoDates.TryParseIso(deathStr) is DateTime death)
                 {
                     deathDate = death;
                 }
@@ -3769,7 +3669,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         {
             // Check + log corruption so admins who never hit one of the action endpoints
             // still see a server-side error entry on private-config load.
-            WarnIfArrInstancesCorrupt(config);
+            _arrInstanceClient.WarnIfArrInstancesCorrupt(config);
 
             return new BootstrapPrivateConfig
             {
@@ -4431,7 +4331,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"Bootstrap: failed to load {fileName} for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Bootstrap: failed to load {fileName} for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return null;
             }
         }
@@ -5216,7 +5116,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save user DoesTheDogDie settings for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save user DoesTheDogDie settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save user DoesTheDogDie settings." });
             }
         }
@@ -5436,61 +5336,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return new FileStreamResult(stream, contentType + "; charset=utf-8");
         }
 
-        private bool IsAllowedUrl(string url)
-        {
-            var allowed = Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrl(url);
-            if (!allowed && !string.IsNullOrWhiteSpace(url))
-            {
-                // Log at Error so admins can diagnose "instance doesn't return data"
-                // issues caused by a URL that hits the block list (e.g. metadata endpoints, loopback).
-                _logger.Error($"IsAllowedUrl rejected outbound URL: {url}");
-            }
-            return allowed;
-        }
-
-        // Async variant used by request-path fan-out helpers so the DNS resolution inside the
-        // shared guard doesn't block the request thread before the first await — otherwise N
-        // instances serialize their DNS lookups in the Select() prelude (Codex pass-3 P2).
-        private async Task<bool> IsAllowedUrlAsync(string url, CancellationToken ct)
-        {
-            var allowed = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrlAsync(url, ct).ConfigureAwait(false);
-            if (!allowed && !string.IsNullOrWhiteSpace(url))
-            {
-                _logger.Error($"IsAllowedUrl rejected outbound URL: {url}");
-            }
-            return allowed;
-        }
-
-        // Once-per-value dedup so corrupted instance config logs at Error on first hit and stops
-        // spamming on subsequent reads. Keyed by the raw stored JSON so a corrupt→fix→corrupt
-        // cycle gets a fresh log entry.
-        private static readonly HashSet<string> _loggedCorruptArrConfig = new();
-        private static readonly object _loggedCorruptArrConfigLock = new();
-
-        private void WarnIfArrInstancesCorrupt(PluginConfiguration config)
-        {
-            if (config.IsSonarrInstancesCorrupt())
-            {
-                var key = "sonarr:" + (config.SonarrInstances ?? "");
-                bool firstSeen;
-                lock (_loggedCorruptArrConfigLock) firstSeen = _loggedCorruptArrConfig.Add(key);
-                if (firstSeen)
-                    _logger.Error("SonarrInstances config is corrupt JSON — instance list is effectively empty. "
-                        + "Endpoints will return no Sonarr data until the admin opens the config page and resets it. "
-                        + $"Raw value (first 200 chars): {(config.SonarrInstances ?? "").Substring(0, Math.Min(200, (config.SonarrInstances ?? "").Length))}");
-            }
-            if (config.IsRadarrInstancesCorrupt())
-            {
-                var key = "radarr:" + (config.RadarrInstances ?? "");
-                bool firstSeen;
-                lock (_loggedCorruptArrConfigLock) firstSeen = _loggedCorruptArrConfig.Add(key);
-                if (firstSeen)
-                    _logger.Error("RadarrInstances config is corrupt JSON — instance list is effectively empty. "
-                        + "Endpoints will return no Radarr data until the admin opens the config page and resets it. "
-                        + $"Raw value (first 200 chars): {(config.RadarrInstances ?? "").Substring(0, Math.Min(200, (config.RadarrInstances ?? "").Length))}");
-            }
-        }
-
         private bool TryResolveBrandingFilePath(string requestedFileName, out string normalizedFileName, out string filePath)
         {
             normalizedFileName = Path.GetFileName(requestedFileName ?? string.Empty);
@@ -5614,7 +5459,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to read user elsewhere settings for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to read user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { message = "Elsewhere settings could not be read. The stored document has been preserved." });
             }
         }
@@ -5679,14 +5524,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         Services.TagCacheService.Instance?.OnRatingSourceSettingsChanged();
 
                     if (changes.Count > 0)
-                        _logger.Info($"Saved user settings for {ResolveUserDisplay(authorizedUserId)}: {string.Join(", ", changes)}");
+                        _logger.Info($"Saved user settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {string.Join(", ", changes)}");
                 }
 
                 return Ok(new { success = true, file = "settings.json" });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save user settings for user {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save user settings for user {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save user settings." });
             }
         }
@@ -5799,7 +5644,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save a Media Tags preset for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save a Media Tags preset for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { error = "save" });
             }
 
@@ -5826,7 +5671,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to delete a Media Tags preset for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to delete a Media Tags preset for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { error = "save" });
             }
 
@@ -5863,12 +5708,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             try
             {
                 _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "shortcuts.json", userConfiguration);
-                _logger.Info($"Saved user shortcuts for {ResolveUserDisplay(authorizedUserId)} to shortcuts.json");
+                _logger.Info($"Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json");
                 return Ok(new { success = true, file = "shortcuts.json" });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save user shortcuts for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save user shortcuts." });
             }
         }
@@ -5933,12 +5778,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             try
             {
                 _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "bookmark.json", userConfiguration);
-                _logger.Info($"Saved enhanced bookmarks for {ResolveUserDisplay(authorizedUserId)} to bookmark.json");
+                _logger.Info($"Saved enhanced bookmarks for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to bookmark.json");
                 return Ok(new { success = true, file = "bookmark.json" });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save enhanced bookmarks for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save enhanced bookmarks for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save enhanced bookmarks." });
             }
         }
@@ -5997,12 +5842,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     };
                     return 1;
                 });
-                _logger.Info($"Added bookmark {bookmarkId} for {ResolveUserDisplay(authorizedUserId)}");
+                _logger.Info($"Added bookmark {bookmarkId} for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}");
                 return Ok(new { success = true, id = bookmarkId });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to add bookmark for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to add bookmark for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to add bookmark." });
             }
         }
@@ -6037,12 +5882,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     return NotFound(new { success = false, removed = false, message = "No matching bookmark to remove." });
                 }
 
-                _logger.Info($"Removed bookmark {bookmarkId} for {ResolveUserDisplay(authorizedUserId)}");
+                _logger.Info($"Removed bookmark {bookmarkId} for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}");
                 return Ok(new { success = true, removed = true });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to remove bookmark {bookmarkId} for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to remove bookmark {bookmarkId} for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to remove bookmark." });
             }
         }
@@ -6071,12 +5916,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     return Conflict(new { success = false, message = "Elsewhere settings are being changed by another request. Try again." });
                 }
 
-                _logger.Info($"Saved user elsewhere settings for {ResolveUserDisplay(authorizedUserId)} to elsewhere.json");
+                _logger.Info($"Saved user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to elsewhere.json");
                 return Ok(new { success = true, file = "elsewhere.json" });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save user elsewhere settings for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save user elsewhere settings." });
             }
         }
@@ -6115,13 +5960,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             // Re-check inside the lock: another writer may have created the file in the meantime.
                             if (hc.Items.Count > 0) return 0;
                             hc.Settings = BuildHcDefaultSettings(defaultConfig);
-                            _logger.Info($"Seeded default hidden-content.json for new user {ResolveUserDisplay(authorizedUserId)} from plugin configuration.");
+                            _logger.Info($"Seeded default hidden-content.json for new user {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} from plugin configuration.");
                             return 1;
                         });
                 }
                 catch (Exception ex)
                 {
-                    _logger.Warning($"Failed to seed hidden-content.json for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                    _logger.Warning($"Failed to seed hidden-content.json for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 }
             }
 
@@ -6181,24 +6026,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     catch (Exception strictEx) when (strictEx is InvalidDataException
                                                   || strictEx is Newtonsoft.Json.JsonException)
                     {
-                        _logger.Warning($"hidden-content.json corrupt for {ResolveUserDisplay(authorizedUserId)} (backed up): {strictEx.Message}");
+                        _logger.Warning($"hidden-content.json corrupt for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} (backed up): {strictEx.Message}");
                         return StatusCode(503, new { success = false, message = "Hidden-content store is corrupt; backed up. Please retry." });
                     }
                     catch (IOException ioEx)
                     {
-                        _logger.Warning($"hidden-content.json temporarily unreadable for {ResolveUserDisplay(authorizedUserId)}: {ioEx.Message}");
+                        _logger.Warning($"hidden-content.json temporarily unreadable for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ioEx.Message}");
                         return StatusCode(500, new { success = false, message = "Hidden-content store is temporarily unavailable. Please retry." });
                     }
 
                     _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "hidden-content.json", userConfiguration);
                 }
                 Services.HiddenContentResponseFilter.InvalidateUser(authorizedUserId);
-                _logger.Info($"Saved hidden content for {ResolveUserDisplay(authorizedUserId)} to hidden-content.json");
+                _logger.Info($"Saved hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to hidden-content.json");
                 return Ok(new { success = true, file = "hidden-content.json" });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save hidden content for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save hidden content." });
             }
         }
@@ -6262,7 +6107,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 || userConfiguration.Collections.Count > MaxSpoilerEntriesPerDict
                 || userConfiguration.PendingTmdb.Count > MaxSpoilerEntriesPerDict)
             {
-                _logger.Warning($"Rejecting oversized Spoiler Guard payload for {ResolveUserDisplay(authorizedUserId)} (series={userConfiguration.Series.Count}, movies={userConfiguration.Movies.Count}, collections={userConfiguration.Collections.Count}, pending={userConfiguration.PendingTmdb.Count}; cap {MaxSpoilerEntriesPerDict}).");
+                _logger.Warning($"Rejecting oversized Spoiler Guard payload for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} (series={userConfiguration.Series.Count}, movies={userConfiguration.Movies.Count}, collections={userConfiguration.Collections.Count}, pending={userConfiguration.PendingTmdb.Count}; cap {MaxSpoilerEntriesPerDict}).");
                 return StatusCode(413, new { success = false, message = $"Spoiler Guard list exceeds the maximum of {MaxSpoilerEntriesPerDict} entries per category." });
             }
 
@@ -6294,12 +6139,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     catch (Exception strictEx) when (strictEx is InvalidDataException
                                                   || strictEx is Newtonsoft.Json.JsonException)
                     {
-                        _logger.Warning($"{fileName} corrupt for {ResolveUserDisplay(authorizedUserId)} (backed up): {strictEx.Message}");
+                        _logger.Warning($"{fileName} corrupt for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} (backed up): {strictEx.Message}");
                         return StatusCode(503, new { success = false, message = "Spoiler Guard store is corrupt; backed up. Please retry." });
                     }
                     catch (IOException ioEx)
                     {
-                        _logger.Warning($"{fileName} temporarily unreadable for {ResolveUserDisplay(authorizedUserId)}: {ioEx.Message}");
+                        _logger.Warning($"{fileName} temporarily unreadable for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ioEx.Message}");
                         return StatusCode(500, new { success = false, message = "Spoiler Guard store is temporarily unavailable. Please retry." });
                     }
 
@@ -6324,12 +6169,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     }
                 }
 
-                _logger.Info($"Saved Spoiler Guard state for {ResolveUserDisplay(authorizedUserId)} to {fileName}");
+                _logger.Info($"Saved Spoiler Guard state for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to {fileName}");
                 return Ok(new { success = true, file = fileName });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save Spoiler Guard state for {ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
+                _logger.Error($"Failed to save Spoiler Guard state for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save Spoiler Guard state." });
             }
         }
@@ -6398,7 +6243,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 catch (Exception ex)
                 {
                     // Per-user guard: one unreadable config must not break the whole list.
-                    _logger.Warning($"Skipping user {ResolveUserDisplay(userIdN)} in hidden-content-users: {ex.Message}");
+                    _logger.Warning($"Skipping user {_userDisplayResolver.ResolveUserDisplay(userIdN)} in hidden-content-users: {ex.Message}");
                 }
             }
 
@@ -6448,7 +6293,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Warning($"Admin hidden-content read failed for {ResolveUserDisplay(userId)}: {ex.Message}");
+                _logger.Warning($"Admin hidden-content read failed for {_userDisplayResolver.ResolveUserDisplay(userId)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to load hidden content." });
             }
         }
@@ -6504,22 +6349,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                 if (removed > 0)
                     Services.HiddenContentResponseFilter.InvalidateUser(userIdN);
-                _logger.Info($"Admin unhid {removed} item(s) for {ResolveUserDisplay(userIdN)}.");
+                _logger.Info($"Admin unhid {removed} item(s) for {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                 return Ok(new { success = true, removed });
             }
             catch (Exception ex) when (ex is InvalidDataException || ex is Newtonsoft.Json.JsonException)
             {
-                _logger.Warning($"hidden-content.json corrupt for {ResolveUserDisplay(userIdN)} during admin unhide (backed up): {ex.Message}");
+                _logger.Warning($"hidden-content.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userIdN)} during admin unhide (backed up): {ex.Message}");
                 return StatusCode(503, new { success = false, message = "Hidden-content store is corrupt; backed up. Please retry." });
             }
             catch (IOException ioEx)
             {
-                _logger.Warning($"hidden-content.json temporarily unreadable for {ResolveUserDisplay(userIdN)}: {ioEx.Message}");
+                _logger.Warning($"hidden-content.json temporarily unreadable for {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ioEx.Message}");
                 return StatusCode(500, new { success = false, message = "Hidden-content store is temporarily unavailable. Please retry." });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Admin unhide failed for {ResolveUserDisplay(userIdN)}: {ex.Message}");
+                _logger.Error($"Admin unhide failed for {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to update hidden content." });
             }
         }
@@ -6595,22 +6440,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                 if (added > 0)
                     Services.HiddenContentResponseFilter.InvalidateUser(userIdN);
-                _logger.Info($"Admin hid {added} item(s) for {ResolveUserDisplay(userIdN)}.");
+                _logger.Info($"Admin hid {added} item(s) for {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                 return Ok(new { success = true, added });
             }
             catch (Exception ex) when (ex is InvalidDataException || ex is Newtonsoft.Json.JsonException)
             {
-                _logger.Warning($"hidden-content.json corrupt for {ResolveUserDisplay(userIdN)} during admin hide (backed up): {ex.Message}");
+                _logger.Warning($"hidden-content.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userIdN)} during admin hide (backed up): {ex.Message}");
                 return StatusCode(503, new { success = false, message = "Hidden-content store is corrupt; backed up. Please retry." });
             }
             catch (IOException ioEx)
             {
-                _logger.Warning($"hidden-content.json temporarily unreadable for {ResolveUserDisplay(userIdN)}: {ioEx.Message}");
+                _logger.Warning($"hidden-content.json temporarily unreadable for {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ioEx.Message}");
                 return StatusCode(500, new { success = false, message = "Hidden-content store is temporarily unavailable. Please retry." });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Admin hide failed for {ResolveUserDisplay(userIdN)}: {ex.Message}");
+                _logger.Error($"Admin hide failed for {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to update hidden content." });
             }
         }
@@ -6754,7 +6599,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 CancellationToken.None,
                 TaskContinuationOptions.OnlyOnFaulted,
                 TaskScheduler.Default);
-            _logger.Info($"SpoilerApplyExisting: run started from the config page by {ResolveUserDisplay(UserHelper.GetCurrentUserId(User)?.ToString("N") ?? string.Empty)} (skip started: {skipStarted})");
+            _logger.Info($"SpoilerApplyExisting: run started from the config page by {_userDisplayResolver.ResolveUserDisplay(UserHelper.GetCurrentUserId(User)?.ToString("N") ?? string.Empty)} (skip started: {skipStarted})");
             return Accepted(new { success = true, taskId = worker.Id, completedRuns });
         }
 
@@ -6858,14 +6703,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
         }
@@ -6895,14 +6740,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
         }
@@ -6948,19 +6793,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save Spoiler Guard user prefs for {ResolveUserDisplay(userKey)}: {ex.GetType().Name}: {ex.Message}");
+                _logger.Error($"Failed to save Spoiler Guard user prefs for {_userDisplayResolver.ResolveUserDisplay(userKey)}: {ex.GetType().Name}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save user prefs." });
             }
         }
@@ -7032,19 +6877,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     };
                     return 1;
                 });
-                _logger.Info($"Spoiler Guard enabled for series '{series.Name}' ({key}) by {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard enabled for series '{series.Name}' ({key}) by {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return Ok(new { success = true, seriesId = key, name = series.Name });
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7085,22 +6930,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 {
                     // Log so a client/server desync (two tabs, stale cache) is
                     // observable instead of silently returning success.
-                    _logger.Info($"Spoiler Guard disable was a no-op for series {key} by {ResolveUserDisplay(userKey)} — series was not in the user's spoiler-blur list.");
+                    _logger.Info($"Spoiler Guard disable was a no-op for series {key} by {_userDisplayResolver.ResolveUserDisplay(userKey)} — series was not in the user's spoiler-blur list.");
                     return Ok(new { success = true, seriesId = key, removed = false });
                 }
-                _logger.Info($"Spoiler Guard disabled for series {key} by {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard disabled for series {key} by {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return Ok(new { success = true, seriesId = key, removed = true });
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7191,19 +7036,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     };
                     return 1;
                 });
-                _logger.Info($"Spoiler Guard enabled for movie '{movie.Name}' ({key}) by {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard enabled for movie '{movie.Name}' ({key}) by {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return Ok(new { success = true, movieId = key, name = movie.Name });
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7242,22 +7087,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 });
                 if (!removed)
                 {
-                    _logger.Info($"Spoiler Guard disable was a no-op for movie {key} by {ResolveUserDisplay(userKey)} — movie was not in the user's spoiler-blur list.");
+                    _logger.Info($"Spoiler Guard disable was a no-op for movie {key} by {_userDisplayResolver.ResolveUserDisplay(userKey)} — movie was not in the user's spoiler-blur list.");
                     return Ok(new { success = true, movieId = key, removed = false });
                 }
-                _logger.Info($"Spoiler Guard disabled for movie {key} by {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard disabled for movie {key} by {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return Ok(new { success = true, movieId = key, removed = true });
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7341,19 +7186,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     };
                     return 1;
                 });
-                _logger.Info($"Spoiler Guard enabled for collection '{boxSet.Name}' ({key}) by {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard enabled for collection '{boxSet.Name}' ({key}) by {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return Ok(new { success = true, collectionId = key, name = boxSet.Name });
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7392,22 +7237,22 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 });
                 if (!removed)
                 {
-                    _logger.Info($"Spoiler Guard disable was a no-op for collection {key} by {ResolveUserDisplay(userKey)} — collection was not in the user's spoiler-blur list.");
+                    _logger.Info($"Spoiler Guard disable was a no-op for collection {key} by {_userDisplayResolver.ResolveUserDisplay(userKey)} — collection was not in the user's spoiler-blur list.");
                     return Ok(new { success = true, collectionId = key, removed = false });
                 }
-                _logger.Info($"Spoiler Guard disabled for collection {key} by {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard disabled for collection {key} by {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return Ok(new { success = true, collectionId = key, removed = true });
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7480,15 +7325,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             catch (InvalidDataException strictEx)
             {
                 var ukey = userId.Value.ToString("N");
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(ukey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(ukey, ResolveUserDisplay(ukey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(ukey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(ukey, _userDisplayResolver.ResolveUserDisplay(ukey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
                 var ukey = userId.Value.ToString("N");
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(ukey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(ukey, ResolveUserDisplay(ukey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(ukey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(ukey, _userDisplayResolver.ResolveUserDisplay(ukey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7511,7 +7356,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var pendingKey = $"{mediaType}:{canonicalTmdb}";
             var userKey = userId.ToString("N");
             var fileName = Services.SpoilerBlurImageFilter.SpoilerBlurFileName;
-            var existingItem = FindLibraryItemByTmdb(jUser, mediaType, canonicalTmdb);
+            var existingItem = _libraryItemLookup.FindLibraryItemByTmdb(jUser, mediaType, canonicalTmdb);
 
             if (existingItem is MediaBrowser.Controller.Entities.TV.Series existingSeries)
             {
@@ -7532,7 +7377,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // The pending row (if any) was just consumed — keep the
                 // promoter's gate consistent so it stops sweeping this user.
                 Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId);
-                _logger.Info($"Spoiler Guard pending resolved to existing series '{existingSeries.Name}' ({seriesKey}) for {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard pending resolved to existing series '{existingSeries.Name}' ({seriesKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return new SpoilerBlurPendingResult("series", seriesKey, existingSeries.Name, changed > 0);
             }
             if (existingItem is MediaBrowser.Controller.Entities.Movies.Movie existingMovie)
@@ -7552,7 +7397,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         return 1;
                     });
                 Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId);
-                _logger.Info($"Spoiler Guard pending resolved to existing movie '{existingMovie.Name}' ({movieKey}) for {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard pending resolved to existing movie '{existingMovie.Name}' ({movieKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return new SpoilerBlurPendingResult("movie", movieKey, existingMovie.Name, changed > 0);
             }
 
@@ -7586,13 +7431,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 });
             if (capExceeded[0])
             {
-                _logger.Warning($"Spoiler Guard pending: cap of {MaxPendingTmdbPerUser} reached for {ResolveUserDisplay(userKey)} — rejecting new {pendingKey}");
+                _logger.Warning($"Spoiler Guard pending: cap of {MaxPendingTmdbPerUser} reached for {_userDisplayResolver.ResolveUserDisplay(userKey)} — rejecting new {pendingKey}");
                 return new SpoilerBlurPendingResult("cap-exceeded", null, null, false);
             }
             // Prime the promoter's fast-path gate so the next ItemAdded
             // matching this TMDB id sweeps THIS user instead of bailing.
             Services.SpoilerSeerrPendingPromoter.RegisterPending(pendingKey, userId);
-            _logger.Info($"Spoiler Guard pending recorded {pendingKey} for {ResolveUserDisplay(userKey)} (not yet in library)");
+            _logger.Info($"Spoiler Guard pending recorded {pendingKey} for {_userDisplayResolver.ResolveUserDisplay(userKey)} (not yet in library)");
 
             // TOCTOU recovery: the scanner may have added the item between the
             // top-of-method lookup and this write — ItemAdded fired before our
@@ -7600,7 +7445,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // once and promote inline if so.
             try
             {
-                var raceItem = FindLibraryItemByTmdb(jUser, mediaType, canonicalTmdb);
+                var raceItem = _libraryItemLookup.FindLibraryItemByTmdb(jUser, mediaType, canonicalTmdb);
                 if (raceItem is MediaBrowser.Controller.Entities.TV.Series rs)
                 {
                     return PromotePendingToSeries(userKey, fileName, rs, pendingKey);
@@ -7643,7 +7488,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, promotedSeriesUserId);
             }
-            _logger.Info($"Spoiler Guard pending TOCTOU-promoted to series '{series.Name}' ({seriesKey}) for {ResolveUserDisplay(userKey)}");
+            _logger.Info($"Spoiler Guard pending TOCTOU-promoted to series '{series.Name}' ({seriesKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
             return new SpoilerBlurPendingResult("series", seriesKey, series.Name, true);
         }
 
@@ -7669,7 +7514,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, promotedMovieUserId);
             }
-            _logger.Info($"Spoiler Guard pending TOCTOU-promoted to movie '{movie.Name}' ({movieKey}) for {ResolveUserDisplay(userKey)}");
+            _logger.Info($"Spoiler Guard pending TOCTOU-promoted to movie '{movie.Name}' ({movieKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
             return new SpoilerBlurPendingResult("movie", movieKey, movie.Name, true);
         }
 
@@ -7708,7 +7553,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             try
             {
                 var existingItem = jUser != null
-                    ? FindLibraryItemByTmdb(jUser, normalizedType, canonicalTmdb)
+                    ? _libraryItemLookup.FindLibraryItemByTmdb(jUser, normalizedType, canonicalTmdb)
                     : null;
                 var seriesKeyToRemove = (existingItem as MediaBrowser.Controller.Entities.TV.Series)?.Id.ToString("N");
                 var movieKeyToRemove = (existingItem as MediaBrowser.Controller.Entities.Movies.Movie)?.Id.ToString("N");
@@ -7732,19 +7577,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 {
                     return Ok(new { success = true, removed = false, removedFrom = "none" });
                 }
-                _logger.Info($"Spoiler Guard pending DELETE removed {pendingKey} ({removedFrom}) for {ResolveUserDisplay(userKey)}");
+                _logger.Info($"Spoiler Guard pending DELETE removed {pendingKey} ({removedFrom}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return Ok(new { success = true, removed = true, removedFrom, jellyfinId = removedJellyfinId });
             }
             catch (InvalidDataException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Newtonsoft.Json.JsonException strictEx)
             {
-                _logger.Warning($"spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), strictEx.Message);
+                _logger.Warning($"spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {strictEx.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), strictEx.Message);
                 return StatusCode(503, new { success = false, message = "Spoiler Guard data was corrupt and has been backed up. Your stored values have been reset to defaults — please reconfigure." });
             }
             catch (Exception ex)
@@ -7752,42 +7597,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 _logger.Error($"Failed to remove spoiler-blur pending {pendingKey}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save spoiler-blur pending state." });
             }
-        }
-
-        // Returns the library item matching the TMDB id + media type, filtered by
-        // the user's access (null when not found/accessible). Uses HasAnyProviderId
-        // so the DB does the matching (indexed) rather than scanning client-side.
-        private MediaBrowser.Controller.Entities.BaseItem? FindLibraryItemByTmdb(
-            Jellyfin.Database.Implementations.Entities.User user,
-            string mediaType,
-            string tmdbId)
-        {
-            var kind = mediaType == "movie"
-                ? Jellyfin.Data.Enums.BaseItemKind.Movie
-                : Jellyfin.Data.Enums.BaseItemKind.Series;
-            try
-            {
-                var query = new MediaBrowser.Controller.Entities.InternalItemsQuery(user)
-                {
-                    IncludeItemTypes = new[] { kind },
-                    HasAnyProviderId = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                    {
-                        { "Tmdb", tmdbId },
-                    },
-                    Recursive = true,
-                    Limit = 1,
-                };
-                var items = _libraryManager.GetItemList(query);
-                if (items != null && items.Count > 0)
-                {
-                    return items[0];
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning($"FindLibraryItemByTmdb({mediaType}, {tmdbId}) threw {ex.GetType().Name}: {ex.Message}");
-            }
-            return null;
         }
 
         // Clamp + strip control / format chars so a poisoned modal
@@ -7853,18 +7662,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         private static string? EarliestHiddenAt(string? a, string? b)
         {
-            DateTime? da = TryParseIso(a);
-            DateTime? db = TryParseIso(b);
+            DateTime? da = IsoDates.TryParseIso(a);
+            DateTime? db = IsoDates.TryParseIso(b);
             if (da == null) return b ?? a;
             if (db == null) return a;
             return da <= db ? a : b;
-        }
-
-        private static DateTime? TryParseIso(string? s)
-        {
-            if (string.IsNullOrWhiteSpace(s)) return null;
-            return DateTime.TryParse(s, System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.RoundtripKind, out var dt) ? (DateTime?)dt : null;
         }
 
         // Widens an existing HC scope to also cover a new targetScope (continuewatching|nextup)
@@ -8350,13 +8152,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var now = DateTime.UtcNow.ToString("o");
                 var previousRating = _userConfigurationManager.UpsertReview(
                     userIdN, mediaType, tmdbId, normalizedContent, payload.Rating, now);
-                _logger.Info($"Saved review for {mediaType}:{tmdbId} by user {ResolveUserDisplay(userIdN)}.");
+                _logger.Info($"Saved review for {mediaType}:{tmdbId} by user {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                 MirrorReviewRatingToUserData(userIdN, mediaType, tmdbId, previousRating, payload.Rating);
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to save review for user {ResolveUserDisplay(userIdN)}: {ex.Message}");
+                _logger.Error($"Failed to save review for user {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save review." });
             }
         }
@@ -8397,13 +8199,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var now = DateTime.UtcNow.ToString("o");
                 var previousRating = _userConfigurationManager.UpsertReview(
                     userIdN, mediaType, tmdbId, normalizedContent, payload.Rating, now);
-                _logger.Info($"Admin saved review for {mediaType}:{tmdbId} on behalf of {ResolveUserDisplay(userIdN)}.");
+                _logger.Info($"Admin saved review for {mediaType}:{tmdbId} on behalf of {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                 MirrorReviewRatingToUserData(userIdN, mediaType, tmdbId, previousRating, payload.Rating);
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Admin failed to save review for user {ResolveUserDisplay(userIdN)}: {ex.Message}");
+                _logger.Error($"Admin failed to save review for user {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to save review." });
             }
         }
@@ -8427,14 +8229,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 if (_userConfigurationManager.DeleteReview(userIdN, mediaType, tmdbId, out var removedRating))
                 {
-                    _logger.Info($"Deleted review for {mediaType}:{tmdbId} by user {ResolveUserDisplay(userIdN)}.");
+                    _logger.Info($"Deleted review for {mediaType}:{tmdbId} by user {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                     MirrorReviewRatingToUserData(userIdN, mediaType, tmdbId, removedRating, null);
                 }
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.Error($"Failed to delete review for user {ResolveUserDisplay(userIdN)}: {ex.Message}");
+                _logger.Error($"Failed to delete review for user {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to delete review." });
             }
         }
@@ -8481,10 +8283,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var user = _userManager.GetUserById(userGuid);
                 if (user == null) return;
 
-                var item = FindLibraryItemByTmdb(user, mediaType, tmdbId);
+                var item = _libraryItemLookup.FindLibraryItemByTmdb(user, mediaType, tmdbId);
                 if (item == null)
                 {
-                    _logger.Debug($"[ReviewRatingMirror] No library item for {mediaType}:{tmdbId}; nothing to mirror for {ResolveUserDisplay(userIdN)}.");
+                    _logger.Debug($"[ReviewRatingMirror] No library item for {mediaType}:{tmdbId}; nothing to mirror for {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                     return;
                 }
 
@@ -8498,7 +8300,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                     userData.Rating = jellyfinRating;
                     _userDataManager.SaveUserData(user, item, userData, UserDataSaveReason.UpdateUserRating, default);
-                    _logger.Info($"[ReviewRatingMirror] Set Jellyfin rating {jellyfinRating} on '{item.Name}' for {ResolveUserDisplay(userIdN)} from their review.");
+                    _logger.Info($"[ReviewRatingMirror] Set Jellyfin rating {jellyfinRating} on '{item.Name}' for {_userDisplayResolver.ResolveUserDisplay(userIdN)} from their review.");
                     return;
                 }
 
@@ -8506,13 +8308,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 if (!userData.Rating.HasValue) return;
                 if (Math.Abs(userData.Rating.Value - mirroredRating) >= 0.01)
                 {
-                    _logger.Debug($"[ReviewRatingMirror] Jellyfin rating {userData.Rating.Value} on '{item.Name}' no longer matches the review's {mirroredRating}; leaving it for {ResolveUserDisplay(userIdN)}.");
+                    _logger.Debug($"[ReviewRatingMirror] Jellyfin rating {userData.Rating.Value} on '{item.Name}' no longer matches the review's {mirroredRating}; leaving it for {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                     return;
                 }
 
                 userData.Rating = null;
                 _userDataManager.SaveUserData(user, item, userData, UserDataSaveReason.UpdateUserRating, default);
-                _logger.Info($"[ReviewRatingMirror] Cleared Jellyfin rating {mirroredRating} on '{item.Name}' for {ResolveUserDisplay(userIdN)} after their review rating was removed.");
+                _logger.Info($"[ReviewRatingMirror] Cleared Jellyfin rating {mirroredRating} on '{item.Name}' for {_userDisplayResolver.ResolveUserDisplay(userIdN)} after their review rating was removed.");
             }
             catch (Exception ex)
             {
@@ -8657,7 +8459,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var removed = _userConfigurationManager.DeleteReview(userIdN, mediaType, tmdbId, out var removedRating);
                 if (removed)
                 {
-                    _logger.Info($"Admin deleted review for {mediaType}:{tmdbId} by user {ResolveUserDisplay(userIdN)}.");
+                    _logger.Info($"Admin deleted review for {mediaType}:{tmdbId} by user {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                     MirrorReviewRatingToUserData(userIdN, mediaType, tmdbId, removedRating, null);
                     return Ok(new { success = true, removed = true });
                 }
@@ -8670,7 +8472,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error($"Admin failed to delete review for {mediaType}:{tmdbId} user {ResolveUserDisplay(userIdN)}: {ex.Message}");
+                _logger.Error($"Admin failed to delete review for {mediaType}:{tmdbId} user {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "Failed to delete review." });
             }
         }
@@ -8816,7 +8618,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.Warning($"Skipping settings.json reset for {ResolveUserDisplay(userId)}: {ex.Message}");
+                    _logger.Warning($"Skipping settings.json reset for {_userDisplayResolver.ResolveUserDisplay(userId)}: {ex.Message}");
                     skippedSettings.Add(userId);
                 }
 
@@ -8836,7 +8638,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                         || ex is IOException
                                         || ex is UnauthorizedAccessException)
                 {
-                    _logger.Warning($"Skipping HC settings reset for {ResolveUserDisplay(userId)}: {ex.Message}");
+                    _logger.Warning($"Skipping HC settings reset for {_userDisplayResolver.ResolveUserDisplay(userId)}: {ex.Message}");
                     skippedHc.Add(userId);
                 }
 
@@ -8862,7 +8664,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                         || ex is IOException
                                         || ex is UnauthorizedAccessException)
                 {
-                    _logger.Warning($"Skipping Spoiler Guard prefs reset for {ResolveUserDisplay(userId)}: {ex.Message}");
+                    _logger.Warning($"Skipping Spoiler Guard prefs reset for {_userDisplayResolver.ResolveUserDisplay(userId)}: {ex.Message}");
                 }
             }
 
@@ -9008,7 +8810,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                         || ex is IOException
                                         || ex is UnauthorizedAccessException)
                 {
-                    _logger.Warning($"Skipping selected settings apply for {ResolveUserDisplay(userId)}: {ex.Message}");
+                    _logger.Warning($"Skipping selected settings apply for {_userDisplayResolver.ResolveUserDisplay(userId)}: {ex.Message}");
                     skipped.Add(userId);
                 }
             }
@@ -10591,7 +10393,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(apiKey))
                 return BadRequest(new { ok = false, message = $"Missing {serviceName} URL or API key" });
 
-            if (!IsAllowedUrl(url))
+            if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { ok = false, message = "Invalid URL" });
 
             var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
@@ -10632,7 +10434,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (string.IsNullOrWhiteSpace(url))
                 return BadRequest(new { reachable = false, service = "unknown" });
 
-            if (!IsAllowedUrl(url))
+            if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { reachable = false, service = "unknown" });
 
             var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
@@ -10757,7 +10559,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (config == null)
                 return StatusCode(500, new { error = "Plugin configuration not available" });
 
-            WarnIfArrInstancesCorrupt(config);
+            _arrInstanceClient.WarnIfArrInstancesCorrupt(config);
             var instances = config.GetEnabledSonarrInstances();
             if (instances.Count == 0)
             {
@@ -10766,7 +10568,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return NotFound(new { error = "Sonarr is not configured" });
             }
 
-            var outcome = await FetchSeriesInfoFromInstance(instances[0], tvdbId, HttpContext.RequestAborted);
+            var outcome = await _arrInstanceClient.FetchSeriesInfoFromInstance(instances[0], tvdbId, HttpContext.RequestAborted);
             if (outcome.Error != null)
                 return StatusCode(502, new { error = $"Sonarr fetch failed: {outcome.Error}" });
             if (outcome.Match == null)
@@ -10794,13 +10596,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (config == null)
                 return StatusCode(500, new { error = "Plugin configuration not available" });
 
-            WarnIfArrInstancesCorrupt(config);
+            _arrInstanceClient.WarnIfArrInstancesCorrupt(config);
             var instances = config.GetEnabledSonarrInstances();
             if (instances.Count == 0)
                 return Ok(BuildNoArrInstancesResult("Sonarr", config.IsSonarrInstancesCorrupt(), config.GetSonarrInstances().Count > 0));
 
             var ct = HttpContext.RequestAborted;
-            var outcomes = await Task.WhenAll(instances.Select(i => FetchSeriesInfoFromInstance(i, tvdbId, ct)));
+            var outcomes = await Task.WhenAll(instances.Select(i => _arrInstanceClient.FetchSeriesInfoFromInstance(i, tvdbId, ct)));
             return Ok(BuildArrLookupResult(instances, outcomes));
         }
 
@@ -10883,20 +10685,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (config == null)
                 return StatusCode(500, new { error = "Plugin configuration not available" });
 
-            WarnIfArrInstancesCorrupt(config);
+            _arrInstanceClient.WarnIfArrInstancesCorrupt(config);
             var ct = HttpContext.RequestAborted;
 
             var moviesTask = LookupArrLinksBatchAsync(
                 movieIds,
                 movieIds.Count > 0 ? config.GetEnabledRadarrInstances() : new List<ArrInstance>(),
                 () => BuildNoArrInstancesResult("Radarr", config.IsRadarrInstancesCorrupt(), config.GetRadarrInstances().Count > 0),
-                FetchMovieInfoFromInstance,
+                _arrInstanceClient.FetchMovieInfoFromInstance,
                 ct);
             var seriesTask = LookupArrLinksBatchAsync(
                 seriesIds,
                 seriesIds.Count > 0 ? config.GetEnabledSonarrInstances() : new List<ArrInstance>(),
                 () => BuildNoArrInstancesResult("Sonarr", config.IsSonarrInstancesCorrupt(), config.GetSonarrInstances().Count > 0),
-                FetchSeriesInfoFromInstance,
+                _arrInstanceClient.FetchSeriesInfoFromInstance,
                 ct);
             try
             {
@@ -10997,127 +10799,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 || error == "URL rejected by SSRF guard"
                 || error.StartsWith("authentication failed", StringComparison.Ordinal);
 
-        private struct ArrFetchOutcome
-        {
-            public object? Match;
-            public string? Error;
-        }
-
-        private async Task<(T Result, string? Error)> FetchAndMapAsync<T>(
-            ArrInstance instance,
-            string endpointPath,
-            Func<dynamic?, T> mapper,
-            T emptyResult,
-            TimeSpan timeout,
-            string contextLabel,
-            CancellationToken ct,
-            string authHeaderName = "X-Api-Key")
-        {
-            if (!await IsAllowedUrlAsync(instance.Url, ct).ConfigureAwait(false))
-                return (emptyResult, "URL rejected by SSRF guard");
-
-            try
-            {
-                var url = instance.Url.TrimEnd('/');
-                // Arr (Sonarr/Radarr) instances are commonly fronted by reverse proxies that
-                // 301/302 between http↔https or trailing-slash variants. Use the default
-                // factory client so redirects are followed — the Seerr-specific named client
-                // (SeerrHttpHelper.NamedClient, AllowAutoRedirect=false) is only appropriate
-                // for Seerr where a 302 to a login URL is a security signal, not a normal
-                // canonicalization.
-                // DefaultRequestHeaders mutations remain thread-unsafe for pooled instances,
-                // so the API key continues to be set per-request via HttpRequestMessage below.
-                var client = _httpClientFactory.CreateClient();
-                client.Timeout = timeout;
-
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{url}{endpointPath}");
-                request.Headers.TryAddWithoutValidation(authHeaderName, instance.ApiKey);
-                var response = await client.SendAsync(request, ct);
-
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized
-                    || response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                {
-                    // Before the FetchAndMapAsync consolidation this path only surfaced via the
-                    // response envelope, so a bad API key would leave no server-side trail. Log
-                    // at Error to keep diagnosability on par with the exception branches below.
-                    _logger.Error($"Authentication failed for {contextLabel} from {instance.Name}: HTTP {(int)response.StatusCode}");
-                    return (emptyResult, $"authentication failed ({(int)response.StatusCode})");
-                }
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.Error($"Upstream error fetching {contextLabel} from {instance.Name}: HTTP {(int)response.StatusCode}");
-                    return (emptyResult, $"HTTP {(int)response.StatusCode}");
-                }
-
-                var json = await response.Content.ReadAsStringAsync(ct);
-                var data = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json);
-                return (mapper(data), null);
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
-            catch (HttpRequestException ex)
-            {
-                _logger.Error($"Network error fetching {contextLabel} from {instance.Name}: {ex.Message}");
-                return (emptyResult, "network error");
-            }
-            catch (TaskCanceledException ex)
-            {
-                _logger.Error($"Timeout fetching {contextLabel} from {instance.Name}: {ex.Message}");
-                return (emptyResult, "timeout");
-            }
-            catch (Newtonsoft.Json.JsonException ex)
-            {
-                _logger.Error($"Invalid JSON from {contextLabel} {instance.Name}: {ex.Message}");
-                return (emptyResult, "invalid response");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Unexpected error fetching {contextLabel} from {instance.Name}: {ex.Message}");
-                return (emptyResult, "internal error");
-            }
-        }
-
-        private static dynamic? SingleItemOrNull(dynamic? data)
-        {
-            if (data is Newtonsoft.Json.Linq.JArray arr)
-                return arr.Count > 0 ? arr[0] : null;
-            return data;
-        }
-
-        private async Task<ArrFetchOutcome> FetchSeriesInfoFromInstance(ArrInstance instance, int tvdbId, CancellationToken ct)
-        {
-            var (match, error) = await FetchAndMapAsync<object?>(
-                instance,
-                $"/api/v3/series?tvdbId={tvdbId}",
-                data =>
-                {
-                    var item = SingleItemOrNull(data);
-                    if (item == null) return null;
-                    var titleSlug = (string?)item.titleSlug;
-                    // Treat empty/missing titleSlug as "no match" rather than returning a record
-                    // that would render a broken `/series/null` link on the frontend. The legacy
-                    // single-instance endpoint already had this guard; preserve it here.
-                    if (string.IsNullOrEmpty(titleSlug)) return null;
-                    return new
-                    {
-                        instanceName = instance.Name,
-                        instanceUrl = instance.Url,
-                        titleSlug,
-                        urlMappings = instance.UrlMappings,
-                        episodeFileCount = (int?)item.statistics?.episodeFileCount ?? 0,
-                        episodeCount = (int?)item.statistics?.episodeCount ?? 0,
-                        percentOfEpisodes = (double?)item.statistics?.percentOfEpisodes ?? 0,
-                        sizeOnDisk = (long?)item.statistics?.sizeOnDisk ?? 0,
-                        rootFolderPath = GetRootFolderFromPath((string?)item.path)
-                    };
-                },
-                emptyResult: null,
-                timeout: TimeSpan.FromSeconds(10),
-                contextLabel: $"Sonarr series (TVDB {tvdbId})",
-                ct: ct).ConfigureAwait(false);
-            return new ArrFetchOutcome { Match = match, Error = error };
-        }
-
         [HttpGet("arr/movie-instances")]
         [Authorize]
         public async Task<IActionResult> GetMovieInstances([FromQuery] int tmdbId)
@@ -11132,40 +10813,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (config == null)
                 return StatusCode(500, new { error = "Plugin configuration not available" });
 
-            WarnIfArrInstancesCorrupt(config);
+            _arrInstanceClient.WarnIfArrInstancesCorrupt(config);
             var instances = config.GetEnabledRadarrInstances();
             if (instances.Count == 0)
                 return Ok(BuildNoArrInstancesResult("Radarr", config.IsRadarrInstancesCorrupt(), config.GetRadarrInstances().Count > 0));
 
             var ct = HttpContext.RequestAborted;
-            var outcomes = await Task.WhenAll(instances.Select(i => FetchMovieInfoFromInstance(i, tmdbId, ct)));
+            var outcomes = await Task.WhenAll(instances.Select(i => _arrInstanceClient.FetchMovieInfoFromInstance(i, tmdbId, ct)));
             return Ok(BuildArrLookupResult(instances, outcomes));
-        }
-
-        private async Task<ArrFetchOutcome> FetchMovieInfoFromInstance(ArrInstance instance, int tmdbId, CancellationToken ct)
-        {
-            var (match, error) = await FetchAndMapAsync<object?>(
-                instance,
-                $"/api/v3/movie?tmdbId={tmdbId}",
-                data =>
-                {
-                    var item = SingleItemOrNull(data);
-                    if (item == null) return null;
-                    return new
-                    {
-                        instanceName = instance.Name,
-                        instanceUrl = instance.Url,
-                        urlMappings = instance.UrlMappings,
-                        hasFile = (bool?)item.hasFile ?? false,
-                        sizeOnDisk = (long?)item.sizeOnDisk ?? 0,
-                        rootFolderPath = GetRootFolderFromPath((string?)item.path)
-                    };
-                },
-                emptyResult: null,
-                timeout: TimeSpan.FromSeconds(10),
-                contextLabel: $"Radarr movie (TMDB {tmdbId})",
-                ct: ct).ConfigureAwait(false);
-            return new ArrFetchOutcome { Match = match, Error = error };
         }
 
         // ==================== Active Streams ====================
@@ -11331,23 +10986,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return Ok(new { sent, skipped, errors });
         }
 
-        private string ResolveUserDisplay(string userId)
-        {
-            try
-            {
-                // Accept both dashed and dashless GUIDs
-                if (Guid.TryParse(userId, out var guid) ||
-                    Guid.TryParseExact(userId, "N", out guid))
-                {
-                    var user = _userManager.GetUserById(guid);
-                    if (user != null)
-                        return $"{user.Username} ({userId})";
-                }
-            }
-            catch { /* non-fatal */ }
-            return userId;
-        }
-
         // Dedup tracker for high-frequency polling log lines.
         // Key = (userId, apiPath), Value = (last logged message, count since last log, last log time)
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string LastMsg, int Count, DateTime LastLogged)>
@@ -11376,23 +11014,23 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 _spoilerResolver.WarnRateLimited(
                     "tagstrip-corrupt:" + userKey,
-                    $"Spoiler Guard tag-strip: spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {ex.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), ex.Message);
+                    $"Spoiler Guard tag-strip: spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {ex.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), ex.Message);
                 return null;
             }
             catch (Newtonsoft.Json.JsonException ex)
             {
                 _spoilerResolver.WarnRateLimited(
                     "tagstrip-corrupt:" + userKey,
-                    $"Spoiler Guard tag-strip: spoilerblur.json corrupt for {ResolveUserDisplay(userKey)} (backed up): {ex.Message}");
-                Services.SpoilerUserResolver.RecordCorruption(userKey, ResolveUserDisplay(userKey), ex.Message);
+                    $"Spoiler Guard tag-strip: spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {ex.Message}");
+                Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), ex.Message);
                 return null;
             }
             catch (IOException ex)
             {
                 _spoilerResolver.WarnRateLimited(
                     "tagstrip-io:" + ex.GetType().FullName,
-                    $"Spoiler Guard tag-strip: IO error reading state for {ResolveUserDisplay(userKey)}: {ex.Message}");
+                    $"Spoiler Guard tag-strip: IO error reading state for {_userDisplayResolver.ResolveUserDisplay(userKey)}: {ex.Message}");
                 return null;
             }
             catch (Exception ex)
@@ -11405,7 +11043,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // failure mode stays observable without taking down the unrelated surface.
                 _spoilerResolver.WarnRateLimited(
                     "tagstrip-unexpected:" + ex.GetType().FullName,
-                    $"Spoiler Guard tag-strip: unexpected {ex.GetType().Name} reading state for {ResolveUserDisplay(userKey)}: {ex.Message}");
+                    $"Spoiler Guard tag-strip: unexpected {ex.GetType().Name} reading state for {_userDisplayResolver.ResolveUserDisplay(userKey)}: {ex.Message}");
                 return null;
             }
         }
@@ -11468,15 +11106,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return (false, new HashSet<(int, string)>(userRequests.Select(r => (r.TmdbId, r.MediaType))));
         }
 
-        // Merged, unfiltered (all-instances) results are cached process-wide for a short TTL
-        // tied to the admin's own poll interval — per-user visibility (DownloadsFilterByUserRequests /
-        // DownloadsHistoryAdminOnly) is always applied fresh, AFTER the cache read, so nothing
-        // user-specific is ever stored in these caches.
-        private static (List<object> Items, List<object> Errors, DateTime CachedAt)? _arrQueueCache;
-        private static readonly object _arrQueueCacheLock = new();
-        private static (List<dynamic> Items, DateTime CachedAt)? _arrHistoryCache;
-        private static readonly object _arrHistoryCacheLock = new();
-
         private static TimeSpan GetArrPollCacheTtl(PluginConfiguration config)
         {
             return TimeSpan.FromSeconds(Math.Clamp(config.DownloadsPollIntervalSeconds, 5, 300));
@@ -11522,7 +11151,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (blocked)
                 return Ok(new { items = new List<object>(), errors = new List<object>() });
 
-            WarnIfArrInstancesCorrupt(config);
+            _arrInstanceClient.WarnIfArrInstancesCorrupt(config);
             var sonarrInstances = config.GetEnabledSonarrInstances();
             var radarrInstances = config.GetEnabledRadarrInstances();
 
@@ -11682,7 +11311,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         private Task<(List<object> Items, string? Error)> FetchSonarrQueue(ArrInstance instance, CancellationToken ct)
         {
-            return FetchAndMapAsync<List<object>>(
+            return _arrInstanceClient.FetchAndMapAsync<List<object>>(
                 instance,
                 "/api/v3/queue?includeEpisode=true&includeSeries=true&sortKey=timeleft&sortDirection=ascending&pageSize=1000",
                 data =>
@@ -11723,7 +11352,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         private Task<(List<object> Items, string? Error)> FetchRadarrQueue(ArrInstance instance, CancellationToken ct)
         {
-            return FetchAndMapAsync<List<object>>(
+            return _arrInstanceClient.FetchAndMapAsync<List<object>>(
                 instance,
                 "/api/v3/queue?includeMovie=true&pageSize=1000",
                 data =>
@@ -11862,7 +11491,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         private Task<(List<dynamic> Items, string? Error)> FetchSonarrHistory(ArrInstance instance, CancellationToken ct)
         {
-            return FetchAndMapAsync<List<dynamic>>(
+            return _arrInstanceClient.FetchAndMapAsync<List<dynamic>>(
                 instance,
                 $"/api/v3/history?pageSize={HistoryWindowSize}&sortKey=date&sortDirection=descending&includeSeries=true&includeEpisode=true",
                 data =>
@@ -11954,7 +11583,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         private Task<(List<dynamic> Items, string? Error)> FetchRadarrHistory(ArrInstance instance, CancellationToken ct)
         {
-            return FetchAndMapAsync<List<dynamic>>(
+            return _arrInstanceClient.FetchAndMapAsync<List<dynamic>>(
                 instance,
                 $"/api/v3/history?pageSize={HistoryWindowSize}&sortKey=date&sortDirection=descending&includeMovie=true",
                 data =>
@@ -12046,7 +11675,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                 if (jellyseerrUser == null)
                 {
-                    _logger.Warning($"Could not find a Seerr user for Jellyfin user {ResolveUserDisplay(jellyfinUserId)}. Aborting request.");
+                    _logger.Warning($"Could not find a Seerr user for Jellyfin user {_userDisplayResolver.ResolveUserDisplay(jellyfinUserId)}. Aborting request.");
                     return NotFound(new { message = "Current Jellyfin user is not linked to a Seerr user." });
                 }
 
@@ -12331,16 +11960,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                 var today = DateTime.UtcNow.Date;
 
                                 // For TV shows, use nextAirDate
-                                if (r.type == "tv" && !string.IsNullOrEmpty(r.nextAirDate) && TryParseIso(r.nextAirDate) is DateTime airDate && airDate.Date > today)
+                                if (r.type == "tv" && !string.IsNullOrEmpty(r.nextAirDate) && IsoDates.TryParseIso(r.nextAirDate) is DateTime airDate && airDate.Date > today)
                                 {
                                     bestDate = airDate;
                                 }
                                 else
                                 {
                                     // For movies, use digital or theatrical date
-                                    if (!string.IsNullOrEmpty(r.digitalReleaseDate) && TryParseIso(r.digitalReleaseDate) is DateTime dd && dd.Date > today)
+                                    if (!string.IsNullOrEmpty(r.digitalReleaseDate) && IsoDates.TryParseIso(r.digitalReleaseDate) is DateTime dd && dd.Date > today)
                                         bestDate = dd;
-                                    if (!string.IsNullOrEmpty(r.theatricalReleaseDate) && TryParseIso(r.theatricalReleaseDate) is DateTime td && td.Date > today)
+                                    if (!string.IsNullOrEmpty(r.theatricalReleaseDate) && IsoDates.TryParseIso(r.theatricalReleaseDate) is DateTime td && td.Date > today)
                                     {
                                         if (bestDate == null || td < bestDate)
                                             bestDate = td;
@@ -12420,8 +12049,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (instances.Count == 0) return false;
 
             var outcomes = await Task.WhenAll(instances.Select(i => isTv
-                ? FetchSeriesInfoFromInstance(i, id.Value, ct)
-                : FetchMovieInfoFromInstance(i, id.Value, ct)));
+                ? _arrInstanceClient.FetchSeriesInfoFromInstance(i, id.Value, ct)
+                : _arrInstanceClient.FetchMovieInfoFromInstance(i, id.Value, ct)));
             var missing = outcomes.All(o => o.Error == null && o.Match == null);
             OrphanCheckCache[key] = (missing, DateTime.UtcNow.AddMinutes(5));
             return missing;
@@ -12439,7 +12068,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private static bool IsComingSoonRequest(string? status, string? type, string? nextAirDate, string? digitalReleaseDate, string? theatricalReleaseDate)
         {
             var today = DateTime.UtcNow.Date;
-            static bool IsFuture(string? value, DateTime day) => TryParseIso(value) is DateTime date && date.Date > day;
+            static bool IsFuture(string? value, DateTime day) => IsoDates.TryParseIso(value) is DateTime date && date.Date > day;
 
             var normalized = (status ?? "").ToLower();
             if (type == "tv")
@@ -12612,7 +12241,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             // Fetch calendar events from all configured instances in parallel
-            WarnIfArrInstancesCorrupt(config);
+            _arrInstanceClient.WarnIfArrInstancesCorrupt(config);
             var sonarrInstances = config.GetEnabledSonarrInstances();
             var radarrInstances = config.GetEnabledRadarrInstances();
             var ct = HttpContext.RequestAborted;
@@ -12862,7 +12491,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             ArrInstance instance, string startIso, string endIso,
             Func<object?, DateTime?> parseDate, CancellationToken ct)
         {
-            return FetchAndMapAsync<List<ArrItem>>(
+            return _arrInstanceClient.FetchAndMapAsync<List<ArrItem>>(
                 instance,
                 $"/api/v3/calendar?includeSeries=true&unmonitored=true&start={startIso}&end={endIso}",
                 data =>
@@ -12919,7 +12548,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                             BackdropUrl = seriesBackdropUrl,
                             EpisodeTvdbId = (int?)episode.tvdbId,
                             EpisodeImdbId = (string?)episode.imdbId,
-                            RootFolderPath = GetRootFolderFromPath((string?)episode.series?.path)
+                            RootFolderPath = ArrInstanceClient.GetRootFolderFromPath((string?)episode.series?.path)
                         });
                     }
                     return items;
@@ -12939,7 +12568,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             Action<Dictionary<string, DateTime>, string, object?> addRelease,
             CancellationToken ct)
         {
-            return FetchAndMapAsync<List<ArrItem>>(
+            return _arrInstanceClient.FetchAndMapAsync<List<ArrItem>>(
                 instance,
                 $"/api/v3/calendar?unmonitored=true&start={startIso}&end={endIso}",
                 data =>
@@ -13010,7 +12639,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                                 BackdropUrl = backdropUrl,
                                 TmdbId = (int?)movie.tmdbId,
                                 ImdbId = (string?)movie.imdbId,
-                                RootFolderPath = GetRootFolderFromPath((string?)movie.path)
+                                RootFolderPath = ArrInstanceClient.GetRootFolderFromPath((string?)movie.path)
                             });
                         }
                     }
@@ -13030,7 +12659,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         {
             var startParam = startDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
             var endParam = endDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-            return FetchAndMapAsync<List<ArrItem>>(
+            return _arrInstanceClient.FetchAndMapAsync<List<ArrItem>>(
                 instance,
                 $"/api/v3/Dashboard/CalendarEpisodes?startDate={startParam}&endDate={endParam}&includeMissing=false&includeRestricted=false",
                 data =>
@@ -13080,19 +12709,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 contextLabel: "Shoko calendar",
                 authHeaderName: "apikey",
                 ct: ct);
-        }
-
-        private static string? GetRootFolderFromPath(string? path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                return null;
-
-            var trimmed = path.TrimEnd('/');
-            var lastSlash = trimmed.LastIndexOf('/');
-            if (lastSlash <= 0)
-                return trimmed;
-
-            return trimmed.Substring(0, lastSlash);
         }
 
         [HttpPost("arr/calendar/user-data")]
