@@ -1,6 +1,6 @@
 // /js/jellyseerr/recommendations/recommendations-catalog.js
 // Recommendations Page: the fixed row/studio/network catalogue and the category-key resolver.
-import { translate } from '../../../host/seerr-discovery-host';
+import { translate } from '../host-discovery';
 import { part, recommendationsHost } from './stage';
 import type { CatalogEntry, CategorySource, ResolvedCategory, RowDefinition } from './types';
 

@@ -1,4 +1,4 @@
-import { bridge, escaper, moreInfoRegistry, translator, type MediaType, type TmdbId } from '../../../../host/seerr-details-host';
+import { bridge, escaper, moreInfoRegistry, translator, type MediaType, type TmdbId } from '../../host-details';
 import { filled, num, record, str, type JsonRecord } from '../domain/json';
 import { detailsHref, safeHttpUrl, seerrPage } from '../domain/links';
 import { downloadPercent, uniqueDownloads } from '../domain/media';

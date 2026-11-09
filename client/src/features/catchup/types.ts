@@ -1,4 +1,4 @@
-import type { RequestOptions } from '../../host/activity-host';
+import type { RequestOptions } from '../activity/host';
 export interface Item {Id: string; Name: string; Type?: string | undefined; SeriesId?: string | undefined; SeriesPrimaryImageTag?: string | undefined;
  ImageTags?: {Primary?: string | undefined} | undefined; Genres?: string[] | undefined; Overview?: string | undefined;
  ChildCount?: number | undefined; RunTimeTicks?: number | undefined; ProductionYear?: number | undefined; CommunityRating?: number | undefined;

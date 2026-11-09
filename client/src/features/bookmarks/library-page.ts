@@ -1,17 +1,17 @@
-import { bookmarksHost, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, type BookmarkHost } from './host';
 import { createLifetime } from './lifetime';
 import type { Library } from './types';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 /**
  * Bookmarks Library View — standalone page + sidebar navigation.
  * Typed entry retaining the established library DOM and public bridge.
  */
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'library-page');
+  const lifetime = createLifetime(ctx, 'library-page');
   const setInterval = lifetime.interval;
 
   
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
+  const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
 
   if (!JE?.pluginConfig?.BookmarksEnabled) return;
 
@@ -333,4 +333,4 @@ function install(JE: BookmarkHost) {
   });
 
 }
-install(JE);
+install(ctx.core);

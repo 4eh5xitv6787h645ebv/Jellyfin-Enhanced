@@ -16,7 +16,7 @@
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
 
-  // client/src/host/calendar-host.ts
+  // client/src/features/calendar/host.ts
   function calendarHost() {
     var _a;
     const host = window;

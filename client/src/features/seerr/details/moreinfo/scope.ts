@@ -1,4 +1,4 @@
-import type { ActionContext, ModalScope, MoreInfoModalElement, MoreInfoState } from '../../../../host/seerr-details-host';
+import type { ActionContext, ModalScope, MoreInfoModalElement, MoreInfoState } from '../../host-details';
 
 /** What a modal owns: cancellation for its requests, and teardown for what it put outside itself. */
 export function createModalScope(): ModalScope {

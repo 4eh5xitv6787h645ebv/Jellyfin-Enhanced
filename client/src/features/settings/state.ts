@@ -1,4 +1,4 @@
-import type { SettingsBridge } from '../../host/settings-host';
+import type { SettingsBridge } from './host';
 export function installState(JE: SettingsBridge): void {
     JE.CONFIG = {
         // Use getters so values always reflect the latest pluginConfig even if assigned later

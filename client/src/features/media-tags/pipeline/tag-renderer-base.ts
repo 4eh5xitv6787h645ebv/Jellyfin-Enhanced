@@ -1,4 +1,4 @@
-import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../../host/tag-runtime-host';
+import { apiClient, hasApiClient, type TagRuntimeBridge } from '../host';
 import { finite, isRecord, text as nonEmptyText } from './dto';
 import type { PipelineRendererConfig, RendererApi, ResolvedPosition, TagCtx, TagHot, TagSpec } from './contract';
 import { createSettingsMatrix, createTagScopes } from './scopes';

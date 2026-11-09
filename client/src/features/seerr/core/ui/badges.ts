@@ -1,4 +1,4 @@
-import type { SeerrCoreHost } from '../../../../host/seerr-core-host';
+import type { SeerrCoreHost } from '../../host-core';
 import type { SeasonAnalysis } from '../contract';
 import { isRecord, isSafeTmdbImagePath, isString } from '../decode';
 import { analyzeSeasonStatuses, hasDownloads } from '../display';

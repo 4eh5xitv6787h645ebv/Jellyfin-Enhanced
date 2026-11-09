@@ -1,5 +1,5 @@
-import { currentUserId, api, hasApi } from '../../host/details-providers-host';
-import type { DetailsSession, ItemCacheHelper, ViewHook } from '../../host/details-providers-host';
+import { currentUserId, api, hasApi } from './host';
+import type { DetailsSession, ItemCacheHelper, ViewHook } from './host';
 import { decodeDetailsItem } from './wire';
 import type { DetailsItem } from './wire';
 

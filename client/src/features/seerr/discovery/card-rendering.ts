@@ -1,4 +1,4 @@
-import type { SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import type { SeerrDiscoveryHost } from '../host-discovery';
 import { mediaInfoOf, selectCardResults } from './domain';
 import type { AppendCardsOptions, AppendSliceOptions, SeerrResult } from './types';
 

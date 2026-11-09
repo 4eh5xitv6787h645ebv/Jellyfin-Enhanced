@@ -1,6 +1,6 @@
 // /js/jellyseerr/recommendations/recommendations-init.js
 // Recommendations Page: sidebar link injection, navigation wiring, public surface and bootstrap.
-import { translate } from '../../../host/seerr-discovery-host';
+import { translate } from '../host-discovery';
 import { CATEGORY_PAGE_ID, LOG_PREFIX, PAGE_ID, part, PLUGIN_PAGE_LINK, recommendationsHost } from './stage';
 
 (function () {

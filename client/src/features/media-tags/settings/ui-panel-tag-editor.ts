@@ -13,7 +13,7 @@
  */
 import type { JsonValue } from '../../../contracts/generated';
 import type { Group, Layout, LayoutSettings } from '../layout/layout-rules';
-import { panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../../host/settings-panel-host';
+import { panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../settings-panel/host';
 import type { PanelContext } from '../../settings-panel/public-api';
 import { closestTarget, focusElement, isDisabled, queryButton, queryElement, queryElements, queryInput, querySelect, setDisabled, targetElement } from '../../shared/dom';
 import { clampCap, stepCap, type CapPolicy } from './tag-caps';

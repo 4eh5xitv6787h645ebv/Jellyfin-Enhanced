@@ -1,4 +1,4 @@
-import { bridge, escaper, moreInfoRegistry, sibling, translator, type MediaType, type TmdbId } from '../../../../host/seerr-details-host';
+import { bridge, escaper, moreInfoRegistry, sibling, translator, type MediaType, type TmdbId } from '../../host-details';
 import { longDate } from '../domain/dates';
 import { filled, idText, isRecord, record, records, str, type JsonRecord } from '../domain/json';
 import { safeHttpUrl, tmdbImage } from '../domain/links';

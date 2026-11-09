@@ -1,6 +1,6 @@
 /** Letterboxd links for movies (via IMDb id) and people (via name slug) on item details. */
-import { bridge } from '../../host/details-providers-host';
-import type { LetterboxdBridge, ObserverHandleLike } from '../../host/details-providers-host';
+import { bridge } from './host';
+import type { LetterboxdBridge, ObserverHandleLike } from './host';
 import { hashItemId, lookupItem, sessionLease, visibleDetailPage } from './page';
 import { externalLink, pathSegment } from './links';
 import { decodeDetailsItem } from './wire';

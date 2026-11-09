@@ -1,4 +1,4 @@
-import type { SeerrCoreHost } from '../../../../host/seerr-core-host';
+import type { SeerrCoreHost } from '../../host-core';
 import type { SeerrUiFacade } from '../contract';
 import { decodeTvDetails, isNumber, isRecord, isString } from '../decode';
 import { MEDIA, REQUEST, effectiveMediaStatus, getDisplayInfo, isRequestable } from '../status';

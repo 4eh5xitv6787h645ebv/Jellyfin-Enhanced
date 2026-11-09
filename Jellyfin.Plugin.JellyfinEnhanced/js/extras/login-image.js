@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/chrome-host.ts
+  // client/src/features/chrome/host.ts
   function ensureBridge() {
     const host = window;
     if (!host.JellyfinEnhanced) host.JellyfinEnhanced = {};

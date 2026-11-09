@@ -115,7 +115,7 @@
     } };
   }
 
-  // client/src/host/spoiler-host.ts
+  // client/src/features/spoiler-guard/host.ts
   function spoilerHost() {
     var _a;
     const host = window;

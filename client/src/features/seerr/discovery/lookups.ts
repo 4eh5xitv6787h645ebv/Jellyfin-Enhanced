@@ -1,4 +1,4 @@
-import { discoveryHost, filterOf, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { discoveryHost, filterOf, type SeerrDiscoveryHost } from '../host-discovery';
 import { hasItemType, isAbortError, throwIfAborted } from './domain';
 import type { ManagedFetchOptions } from './types';
 

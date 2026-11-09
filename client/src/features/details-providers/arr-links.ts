@@ -1,6 +1,6 @@
 /** Admin-only Sonarr/Radarr/Bazarr links (with library status) on item details. */
-import { api, bridge, hasApi } from '../../host/details-providers-host';
-import type { ArrLinksBridge, ObserverHandleLike } from '../../host/details-providers-host';
+import { api, bridge, hasApi } from './host';
+import type { ArrLinksBridge, ObserverHandleLike } from './host';
 import { hashItemId, lookupDetailsItem, visibleDetailPage } from './page';
 import { externalLink } from './links';
 import {

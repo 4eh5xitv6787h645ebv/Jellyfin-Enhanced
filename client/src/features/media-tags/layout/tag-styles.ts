@@ -1,4 +1,4 @@
-import { apiClient, type TagRuntimeBridge } from '../../../host/tag-runtime-host';
+import { apiClient, type TagRuntimeBridge } from '../host';
 import { isRecord, record, records, type JsonRecord } from '../pipeline/dto';
 
 export interface TagStyles {

@@ -1,7 +1,8 @@
-import type { BookmarkOperation, BookmarkSaveReceipt, JsonValue } from '../contracts/generated';
-import { bootstrapSchema } from '../contracts/schema';
-import { validateSchema } from '../contracts/validate';
-import type { BookmarkApi,Item,Library,Owner } from '../features/bookmarks/types';
+import type { BookmarkOperation, BookmarkSaveReceipt, JsonValue } from '../../contracts/generated';
+import { bootstrapSchema } from '../../contracts/schema';
+import { validateSchema } from '../../contracts/validate';
+import { featureContext, type FeatureContext } from '../../host/context';
+import type { BookmarkApi,Item,Library,Owner } from './types';
 interface Ajax { type: string; url: string; dataType?: string; contentType?: string; data?: string }
 export interface BookmarkHost {
  pluginConfig?: { BookmarksEnabled?: boolean; BookmarksUsePluginPages?: boolean; BookmarksUseCustomTabs?: boolean; BookmarksUseNativeTab?: boolean };
@@ -31,17 +32,44 @@ interface Api {
  getImageUrl(id: string, options: {type: string; maxWidth: number; tag?: string | undefined}): string;
  _deviceId?: string; deviceId(): string;
 }
-interface HostWindow extends Window {
+export interface HostWindow extends Window {
  JellyfinEnhanced?: BookmarkHost; JE?: BookmarkHost; ApiClient?: Api;
  ConnectionManager?: {currentApiClient(): Api | undefined};
  Emby?: {Page?: {show(path: string): void}};
 }
+/** bookmarks' own slots (frontend.md §2.3): the facades it publishes on JE and its JE.internals slots. */
+export type BookmarksOwn = Pick<BookmarkHost, 'bookmarks' | 'initializeBookmarks' | 'cleanupBookmarks'> & BookmarkHost['internals'];
+/** bookmarks reads no other feature's facade. */
+export type BookmarksPeers = Record<never, never>;
+export type BookmarksContext = FeatureContext<BookmarksOwn, BookmarksPeers, BookmarkHost>;
 export function bookmarksHost() {
  const host: HostWindow = window;
  const JE = host.JellyfinEnhanced;
  if (!JE) throw new Error('Bookmarks loaded before Jellyfin Enhanced');
+ const ctx: BookmarksContext = featureContext<BookmarksOwn, BookmarksPeers, BookmarkHost>('bookmarks', JE, {
+  facades: ['bookmarks', 'initializeBookmarks', 'cleanupBookmarks'],
+  internalSlots: ['bookmarksLibrary', 'bookmarkLifetimes'],
+  internalsObject: () => JE.internals ??= {},
+ });
  const getApi = () => { const api = host.ApiClient || host.ConnectionManager?.currentApiClient(); if (!api) throw new Error('API client not available'); return api; };
- return { JE, host, getApi };
+ return { ctx, host, getApi };
+}
+/** The bridge the library boot waits for (library-init.ts): this window's, else a same-origin parent frame's. */
+export function findBridge(host: HostWindow): BookmarkHost | null {
+    // Try common globals first
+    if (host.JE) return host.JE;
+    if (host.JellyfinEnhanced) return host.JellyfinEnhanced;
+
+    // Optional same-origin frame bridge; cross-origin frames are not readable.
+    for (const frame of [window.parent, window.top]) {
+      try {
+        const parent: (Window & {JE?: BookmarkHost; JellyfinEnhanced?: BookmarkHost}) | null = frame;
+        const candidate = parent?.JE || parent?.JellyfinEnhanced;
+        if (candidate) return candidate;
+      } catch { /* Cross-origin frame: use local host only. */ }
+    }
+
+    return null;
 }
 export function record(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value); }
 export function readItem(value: unknown): Item {

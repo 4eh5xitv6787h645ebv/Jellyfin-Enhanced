@@ -1,4 +1,4 @@
-import { tagRuntimeHost } from '../../../host/tag-runtime-host';
+import { tagRuntimeHost } from '../host';
 import { createItemEditor } from './tag-item-editor';
 
 createItemEditor(tagRuntimeHost());

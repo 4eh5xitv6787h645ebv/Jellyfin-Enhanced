@@ -1,4 +1,4 @@
-import { apiClient, type TagRuntimeBridge } from '../../../../host/tag-runtime-host';
+import { apiClient, type TagRuntimeBridge } from '../../host';
 import { errorStatus, isRecord, record, type JsonRecord } from '../../pipeline/dto';
 import { COUNTRY_MAP } from './people-countries';
 import { describePerson, evictOldest, factsFromResponse, loadPeopleStore, parseCalendarDate, serializePeopleStore, todayDate, type CalendarDate, type PersonFacts, type PersonView, type StoredPerson } from './people-model';

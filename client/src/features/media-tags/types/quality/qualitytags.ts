@@ -1,4 +1,4 @@
-import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../../../host/tag-runtime-host';
+import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../host';
 import { isRecord, own, record, stringList, type JsonRecord } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
 import { CATEGORY_BY_KEY, EDITIONS, EDITION_PREFIX, audioOrder, codecOrder, dynamicRangeOrder, qualityCss, resolutionOrder, specialFormatOrder } from './quality-data';

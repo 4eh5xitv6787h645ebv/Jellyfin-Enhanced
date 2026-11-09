@@ -50,9 +50,9 @@ export interface MediaTagsSettingsUi {
     createTagPreview?: (mount: HTMLElement | null, options?: TagPreviewOptions) => TagPreview | null;
     tagPreviewData?: TagPreviewData;
 }
-// Types code outside this folder imports today (host/tag-runtime-host.ts, host/tag-rules-host.ts,
-// host/settings-panel-host.ts; added in S2). C1 moves the first two into this feature; the settings-panel host
-// moves to settings-panel/ and then needs these through this file.
+// Types code outside this folder imported in S2 (host/tag-runtime-host.ts, host/tag-rules-host.ts,
+// host/settings-panel-host.ts). C1 moved the first two into this feature (host.ts, rules-host.ts); the moved
+// settings-panel/host.ts takes MediaLanguage, PosterColours, RatingSources, TagLayout and TagLook from here.
 export type { LanguageConfig, LanguageSettings, MediaLanguage } from './types/language/media-language';
 export type { PosterColours } from './layout/poster-colours';
 export type { RatingConfig, RatingSettings, RatingSources } from './types/ratings/rating-sources';

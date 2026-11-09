@@ -1,4 +1,4 @@
-import { seerrCoreHost } from '../../../host/seerr-core-host';
+import { seerrCoreHost } from '../host-core';
 
 // The frozen JE.requestManager alias of the shared core request manager (retry,
 // dedup, concurrency and cache live in core/api-client.js, which owns the

@@ -1,7 +1,7 @@
 // /js/jellyseerr/discovery/tag-discovery.js
 // "More [Tag]" on tag list pages. This module keeps the tag → TMDB-keyword resolution; both feeds
 // share the same keyword id.
-import { baseOf, discoveryHost, filterOf, translate, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { baseOf, discoveryHost, filterOf, translate, type SeerrDiscoveryHost } from '../host-discovery';
 import { isPositiveInt, isUserActive, parseTagName, pickKeyword } from './domain';
 import { managedFetch, tolerant } from './lookups';
 import type { ResolveContext, ResolvedFeeds } from './types';

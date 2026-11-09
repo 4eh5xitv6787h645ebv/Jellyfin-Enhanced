@@ -1,4 +1,4 @@
-import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../../../host/tag-runtime-host';
+import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../host';
 import { isRecord, record } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
 

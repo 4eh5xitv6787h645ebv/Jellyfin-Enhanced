@@ -1,4 +1,4 @@
-import { chromeBridge, hostClient } from '../../host/chrome-host';
+import { chromeBridge, hostClient } from './host';
 import { createActiveStreams, type ActiveStreamsBridge, type ActiveStreamsClient } from './active-streams';
 
 const JE = chromeBridge<ActiveStreamsBridge>();

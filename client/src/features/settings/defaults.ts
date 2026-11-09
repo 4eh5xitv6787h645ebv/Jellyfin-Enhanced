@@ -1,4 +1,4 @@
-import type { SettingsBridge, SettingsDocument } from '../../host/settings-host';
+import type { SettingsBridge, SettingsDocument } from './host';
 import { INHERITED_KEYS, inheritance } from './inheritance';
 export function loadSettings(JE: SettingsBridge): SettingsDocument {
         const userSettings = JE.userConfig?.settings || {};

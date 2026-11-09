@@ -1,4 +1,4 @@
-import { bridge, escaper, identityLease, moreInfoRegistry, SEERR_LOG, sibling, translator, type ActionContext, type MediaType, type MoreInfoModalElement } from '../../../../host/seerr-details-host';
+import { bridge, escaper, identityLease, moreInfoRegistry, SEERR_LOG, sibling, translator, type ActionContext, type MediaType, type MoreInfoModalElement } from '../../host-details';
 import { idText, isRecord, num, record, type JsonRecord } from '../domain/json';
 import { anyTitle, mediaState, ownMediaInfo, requesters, tmdbIdOf, type MediaState } from '../domain/media';
 import { attachFourKPopup, silent, splitButton } from './four-k-popup';

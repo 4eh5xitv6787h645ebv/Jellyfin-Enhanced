@@ -1,17 +1,50 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/bookmarks-host.ts
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
+  // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
-    const JE2 = host2.JellyfinEnhanced;
-    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const JE = host2.JellyfinEnhanced;
+    if (!JE) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("bookmarks", JE, {
+      facades: ["bookmarks", "initializeBookmarks", "cleanupBookmarks"],
+      internalSlots: ["bookmarksLibrary", "bookmarkLifetimes"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
     const getApi2 = () => {
       const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
       if (!api) throw new Error("API client not available");
       return api;
     };
-    return { JE: JE2, host: host2, getApi: getApi2 };
+    return { ctx: ctx2, host: host2, getApi: getApi2 };
   }
   function record(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -41,17 +74,16 @@
     if (!Array.isArray(value)) throw new Error("Invalid sessions response");
     return value.flatMap((entry) => record(entry) && typeof entry.Id === "string" && typeof entry.DeviceId === "string" ? [{ Id: entry.Id, DeviceId: entry.DeviceId }] : []);
   }
-  function lease(JE2) {
-    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
-    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
+  function lease(JE) {
+    const owner = JE.userConfig, epoch = JE.session?.getEpoch();
+    return () => JE.userConfig === owner && (epoch === void 0 || JE.session?.isCurrent(epoch) === true);
   }
 
   // client/src/features/bookmarks/lifetime.ts
-  function createLifetime(JE2, name) {
-    var _a;
-    JE2.internals ?? (JE2.internals = {});
-    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
-    JE2.internals.bookmarkLifetimes[name]?.dispose();
+  function createLifetime(ctx2, name) {
+    const JE = ctx2.core, own = ctx2.own;
+    own.bookmarkLifetimes ?? (own.bookmarkLifetimes = {});
+    own.bookmarkLifetimes[name]?.dispose();
     const cleanup = /* @__PURE__ */ new Set();
     const dialogs = /* @__PURE__ */ new Set();
     let disposed = false;
@@ -75,7 +107,7 @@
       cleanup.add(() => target.removeEventListener(event, callback, capture));
     };
     const timeout = (callback, delay) => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       const cancel = () => {
         window.clearTimeout(id);
         cleanup.delete(cancel);
@@ -151,11 +183,11 @@
       cleanup.clear();
     };
     const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       return () => !disposed && generation === version && current();
     } };
-    JE2.internals.bookmarkLifetimes[name] = result;
-    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+    own.bookmarkLifetimes[name] = result;
+    keep(JE.session?.onUserChange("bookmarks-" + name, () => {
       for (const close of dialogs) close();
       document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
       document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
@@ -165,12 +197,12 @@
   }
 
   // client/src/features/bookmarks/library-items.ts
-  var { JE, host, getApi } = bookmarksHost();
-  function install(JE2) {
-    const lifetime = createLifetime(JE2, "library-items");
+  var { ctx, host, getApi } = bookmarksHost();
+  function install(JE) {
+    const lifetime = createLifetime(ctx, "library-items");
     const setTimeout = lifetime.timeout;
-    const internal = JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
-    if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+    const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
+    if (!JE?.pluginConfig?.BookmarksEnabled) return;
     const formatTimestamp = (...args) => {
       const fn = internal.formatTimestamp;
       if (!fn) throw new Error("Missing bookmark module: formatTimestamp");
@@ -198,7 +230,7 @@
     };
     const renderSerial = /* @__PURE__ */ new WeakMap();
     const logPrefix = "🪼 Jellyfin Enhanced: Bookmarks Library:";
-    const escapeHtml = JE2.escapeHtml;
+    const escapeHtml = JE.escapeHtml;
     async function renderBookmarkItems(container, groupedByItem, currentTab) {
       const isCurrent = lifetime.current();
       const serial = (renderSerial.get(container) ?? 0) + 1;
@@ -215,7 +247,7 @@
         const itemId = group.details.itemId;
         if (itemId) {
           itemPromises.push(
-            (JE2.helpers?.getItemCached ? JE2.helpers.getItemCached(itemId, { userId }) : apiClient.getItem(userId, itemId)).then((value) => ({ key, group, item: readItem(value), orphaned: false })).catch((err) => {
+            (JE.helpers?.getItemCached ? JE.helpers.getItemCached(itemId, { userId }) : apiClient.getItem(userId, itemId)).then((value) => ({ key, group, item: readItem(value), orphaned: false })).catch((err) => {
               console.warn(`Failed to fetch item ${itemId}:`, err);
               return { key, group, item: null, orphaned: true };
             })
@@ -233,8 +265,8 @@
         return true;
       });
       if (filtered.length === 0) {
-        const emptyTitle = currentTab === "tv" ? JE2.t("bookmark_empty_tv") : currentTab === "movie" ? JE2.t("bookmark_empty_movie") : JE2.t("bookmark_empty_other");
-        const emptyHint = JE2.t("bookmark_empty_hint");
+        const emptyTitle = currentTab === "tv" ? JE.t("bookmark_empty_tv") : currentTab === "movie" ? JE.t("bookmark_empty_movie") : JE.t("bookmark_empty_other");
+        const emptyHint = JE.t("bookmark_empty_hint");
         container.innerHTML = `
         <div class="je-bookmarks-empty">
           <div class="je-bookmarks-empty-icon material-icons" aria-hidden="true">bookmark_border</div>
@@ -270,17 +302,17 @@
           <div class="je-bookmark-item-info">
             <a href="/web/#/details?id=${encodeURIComponent(group.details.itemId || "")}" class="je-bookmark-item-title">${titleDisplay}</a>
             <div class="je-bookmark-item-meta">
-              ${JE2.t("bookmark_count").replace("{count}", String(group.bookmarks.length))}
-              ${orphaned ? ` • <span style="color: #ff9800;">${JE2.t("bookmark_orphaned")}</span>` : ""}
+              ${JE.t("bookmark_count").replace("{count}", String(group.bookmarks.length))}
+              ${orphaned ? ` • <span style="color: #ff9800;">${JE.t("bookmark_orphaned")}</span>` : ""}
             </div>
           </div>
           ${orphaned && (group.details.tmdbId || group.details.tvdbId) ? `
-            <button class="btnFindReplacement je-btn-find-replacement" data-group-key="${escapeHtml(key)}" title="${JE2.t("bookmark_find_replacement")}">
+            <button class="btnFindReplacement je-btn-find-replacement" data-group-key="${escapeHtml(key)}" title="${JE.t("bookmark_find_replacement")}">
               <span class="material-icons" aria-hidden="true">find_replace</span>
             </button>
           ` : ""}
           ${!orphaned && group.bookmarks.some((bm) => bm.syncedFrom) ? `
-            <button class="btnAdjustOffset je-offset-icon" data-group-key="${escapeHtml(key)}" title="${JE2.t("bookmark_adjust_offset")}">
+            <button class="btnAdjustOffset je-offset-icon" data-group-key="${escapeHtml(key)}" title="${JE.t("bookmark_adjust_offset")}">
               <span class="material-icons" aria-hidden="true">schedule</span>
             </button>
           ` : ""}
@@ -358,12 +390,12 @@
             timeInput.type = "text";
             timeInput.className = "je-input";
             timeInput.value = formatTimestamp(bm.timestamp);
-            timeInput.placeholder = JE2.t("bookmark_time_placeholder");
+            timeInput.placeholder = JE.t("bookmark_time_placeholder");
             const labelInput = document.createElement("input");
             labelInput.type = "text";
             labelInput.className = "je-input je-input-label";
             labelInput.value = bm.label || "";
-            labelInput.placeholder = JE2.t("bookmark_label_placeholder");
+            labelInput.placeholder = JE.t("bookmark_label_placeholder");
             labelInput.maxLength = 100;
             const saveBtn = document.createElement("button");
             saveBtn.className = "je-btn-action";
@@ -407,29 +439,29 @@
               if (!isCurrent()) return;
               const parsedTime = parseTimestampInput(timeInput.value);
               if (parsedTime === null) {
-                if (isCurrent()) JE2.toast(JE2.t("bookmark_time_format_hint"), 3e3);
+                if (isCurrent()) JE.toast(JE.t("bookmark_time_format_hint"), 3e3);
                 return;
               }
               saveBtn.disabled = true;
               if (editBtn) editBtn.disabled = true;
               try {
-                const ok = await JE2.bookmarks.update(bm.id, {
+                const ok = await ctx.own.bookmarks.update(bm.id, {
                   timestamp: parsedTime,
                   label: labelInput.value.trim()
                 });
                 if (!isCurrent()) return;
                 if (ok) {
-                  if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_updated"), 2e3);
+                  if (isCurrent()) JE.toast(JE.t("toast_bookmark_updated"), 2e3);
                   const bookmarksSection = document.querySelector(".sections.bookmarks");
                   if (bookmarksSection) {
                     renderBookmarksLibrary(bookmarksSection);
                   }
                 } else {
-                  if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_save_failed"), 3e3);
+                  if (isCurrent()) JE.toast(JE.t("toast_bookmark_save_failed"), 3e3);
                 }
               } catch (err) {
                 console.error("Bookmark update failed", err);
-                if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_save_failed"), 3e3);
+                if (isCurrent()) JE.toast(JE.t("toast_bookmark_save_failed"), 3e3);
               } finally {
                 saveBtn.disabled = false;
                 if (editBtn) editBtn.disabled = false;
@@ -442,16 +474,16 @@
               deleteBtn.disabled = true;
               let deleted;
               try {
-                deleted = await JE2.bookmarks.delete(bookmarkId);
+                deleted = await ctx.own.bookmarks.delete(bookmarkId);
               } finally {
                 deleteBtn.disabled = false;
               }
               if (!isCurrent() || deleted === null) return;
               if (!deleted) {
-                if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_delete_failed"), 3e3);
+                if (isCurrent()) JE.toast(JE.t("toast_bookmark_delete_failed"), 3e3);
                 return;
               }
-              if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_deleted"), 2e3);
+              if (isCurrent()) JE.toast(JE.t("toast_bookmark_deleted"), 2e3);
               const bookmarksSection = document.querySelector(".sections.bookmarks");
               if (bookmarksSection) {
                 renderBookmarksLibrary(bookmarksSection);
@@ -475,7 +507,7 @@
         const apiClient = getApi();
         if (!apiClient) {
           console.warn(`${logPrefix} API client not available`);
-          if (isCurrent()) JE2.toast(JE2.t("toast_api_client_unavailable"), 3e3);
+          if (isCurrent()) JE.toast(JE.t("toast_api_client_unavailable"), 3e3);
           return;
         }
         const deviceId = apiClient._deviceId || apiClient.deviceId();
@@ -491,7 +523,7 @@
         const currentSession = sessions.find((s) => s.DeviceId === deviceId);
         if (!currentSession) {
           console.warn(`${logPrefix} Could not find current session`);
-          if (isCurrent()) JE2.toast(JE2.t("toast_session_not_found"), 3e3);
+          if (isCurrent()) JE.toast(JE.t("toast_session_not_found"), 3e3);
           return;
         }
         const sessionId = currentSession.Id;
@@ -505,7 +537,7 @@
         });
         if (!isCurrent()) return;
         console.log(`${logPrefix} Playback started successfully`);
-        if (isCurrent()) JE2.toast(JE2.t("toast_playing"), 2e3);
+        if (isCurrent()) JE.toast(JE.t("toast_playing"), 2e3);
         setTimeout(() => {
           if (host.JE?.isVideoPage?.() && typeof host.JE.bookmarks?.updateMarkers === "function") {
             console.log(`${logPrefix} Triggering bookmark marker update after playback start`);
@@ -514,12 +546,12 @@
         }, 1500);
       } catch (e) {
         console.error(`${logPrefix} Failed to play item:`, e);
-        if (isCurrent()) JE2.toast(JE2.t("toast_playback_failed").replace("{error}", e instanceof Error ? e.message : "Unknown error"), 3e3);
+        if (isCurrent()) JE.toast(JE.t("toast_playback_failed").replace("{error}", e instanceof Error ? e.message : "Unknown error"), 3e3);
       }
     }
     Object.assign(internal, { renderBookmarkItems });
   }
-  install(JE);
+  install(ctx.core);
 })();
 })();
 //# sourceMappingURL=bookmarks-library-items.js.map

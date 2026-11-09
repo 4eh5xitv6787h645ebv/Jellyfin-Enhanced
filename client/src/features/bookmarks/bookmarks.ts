@@ -1,13 +1,13 @@
-import { bookmarksHost, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, type BookmarkHost } from './host';
 import { required } from './dom';
 import { createLifetime } from './lifetime';
 import { createBookmarkState } from './state';
 import type { IdentifiedBookmark } from './types';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 // /js/enhanced/bookmarks/bookmarks.js
 // Enhanced bookmarks system with multi-bookmark support, TMDB/TVDB tracking, and visual markers
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'bookmarks');
+  const lifetime = createLifetime(ctx, 'bookmarks');
   const setTimeout = lifetime.timeout;
 
   if (!JE.pluginConfig?.BookmarksEnabled) {
@@ -668,7 +668,7 @@ function install(JE: BookmarkHost) {
   }
 
   // Public API
-  JE.bookmarks = {
+  ctx.own.bookmarks = {
     add: addBookmark,
     update: updateBookmark,
     delete: deleteBookmark,
@@ -717,7 +717,7 @@ function install(JE: BookmarkHost) {
   /**
    * Initialize bookmarks system
    */
-  JE.initializeBookmarks = (function() {
+  ctx.own.initializeBookmarks = (function() {
     let initialized = false;
     let cleanupFunctions: (() => void)[] = [];
 
@@ -829,7 +829,7 @@ function install(JE: BookmarkHost) {
       }
 
       // Store cleanup function globally
-      JE.cleanupBookmarks = function() {
+      ctx.own.cleanupBookmarks = function() {
         lifetime.cancelPending();
         cleanupFunctions.forEach(fn => fn());
         document.querySelectorAll('.je-bookmark-marker, #jeBookmarkBtn, .je-bm-player-modal-overlay').forEach(el => el.remove());
@@ -840,10 +840,10 @@ function install(JE: BookmarkHost) {
         console.log(`${logPrefix} Cleaned up`);
       };
 
-      lifetime.keep(JE.cleanupBookmarks);
+      lifetime.keep(ctx.own.cleanupBookmarks);
       console.log(`${logPrefix} ✓ Initialized`);
     };
   })();
 
 }
-install(JE);
+install(ctx.core);

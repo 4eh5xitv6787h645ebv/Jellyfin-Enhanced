@@ -1,6 +1,6 @@
 /** Content warnings (DoesTheDogDie votes) on item-details pages, with a per-user trigger picker. */
-import { api, bridge, currentUserId } from '../../host/details-providers-host';
-import type { DddBridge } from '../../host/details-providers-host';
+import { api, bridge, currentUserId } from './host';
+import type { DddBridge } from './host';
 import { detailPageHook, detailsLease, hashItemId, lookupDetailsItem } from './page';
 import type { DetailsLease } from './page';
 import { externalLink, pathSegment } from './links';

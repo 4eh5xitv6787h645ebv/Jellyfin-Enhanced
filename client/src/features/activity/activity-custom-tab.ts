@@ -1,5 +1,5 @@
-import { activityHost } from '../../host/activity-host';
-import type { ActivityHost } from '../../host/activity-host';
+import { activityHost } from './host';
+import type { ActivityHost } from './host';
 /**
  * Activity Feed Custom Tab
  * Creates <div class="jellyfinenhanced activity"></div>, either inside a tab

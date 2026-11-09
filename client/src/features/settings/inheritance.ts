@@ -1,4 +1,4 @@
-import type { SettingsBridge, SettingsDocument } from '../../host/settings-host';
+import type { SettingsBridge, SettingsDocument } from './host';
     export const INHERITED_KEYS = [
         'showEditionTag', 'editionTagOrder', 'showLowQualitySourceTag',
         'resolutionTagOrder', 'sourceTagOrder', 'dynamicRangeTagOrder', 'specialFormatTagOrder',

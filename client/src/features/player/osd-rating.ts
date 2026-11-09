@@ -1,4 +1,4 @@
-import { playerHost } from '../../host/player-host';
+import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment } from './wire';
 import { createPlayerLifetime } from './lifetime';
 const { JE, ApiClient } = playerHost();
@@ -16,7 +16,7 @@ const logPrefix = '🪼 Jellyfin Enhanced: OSD Rating:';
     pendingRatings.clear();
   });
   let scheduledUpdate: number | null = null;
-  let osdObserver: import('../../host/player-host').Subscription | null = null;
+  let osdObserver: import('./host').Subscription | null = null;
 
   function isEnabled() {
     // Controlled by server config; default true unless explicitly disabled

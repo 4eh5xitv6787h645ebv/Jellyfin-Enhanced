@@ -1,4 +1,4 @@
-import { seerrCoreHost } from '../../../host/seerr-core-host';
+import { seerrCoreHost } from '../host-core';
 import { installApi } from './api';
 
 installApi(seerrCoreHost());

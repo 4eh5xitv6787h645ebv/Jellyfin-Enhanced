@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/details-providers-host.ts
+  // client/src/features/details-providers/host.ts
   function bridge(feature) {
     const host = window;
     const JE2 = host.JellyfinEnhanced;

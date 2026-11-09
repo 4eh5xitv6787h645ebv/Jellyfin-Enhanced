@@ -1,4 +1,4 @@
-import { settingsHost } from '../../host/settings-host';
+import { settingsHost } from './host';
 import { installState } from './state';
 import { installInheritance } from './inheritance';
 import { loadSettings } from './defaults';

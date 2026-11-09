@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/chrome-host.ts
+  // client/src/features/chrome/host.ts
   function chromeBridge() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new Error("Jellyfin Enhanced must initialize before chrome modules");

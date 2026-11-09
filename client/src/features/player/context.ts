@@ -1,4 +1,4 @@
-import type { playerHost } from '../../host/player-host';
+import type { playerHost } from './host';
 import type { PlayerLifetime } from './lifetime';
 export type TrackKind = 'subtitle' | 'audio';
 export interface PlayerContext {

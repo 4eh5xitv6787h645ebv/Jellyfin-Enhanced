@@ -10,7 +10,7 @@
  * and the controls are hidden. Only the panel's outer box changes: the header
  * and footer keep their height and the columns inside reflow.
  */
-import { currentUserKey, panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
+import { currentUserKey, panelHost, registry, type PanelBridge } from './host';
 import type { PanelContext } from './context';
 import { queryElement, queryElements } from '../shared/dom';
 import { GUTTER, KEY_STEPS, PANEL_SIZE_PRESETS, STORE_PREFIX, clampSize as clampTo, isPreset, parseSize, resolveSize as resolveIn, sizeBounds as boundsIn, type Box, type PanelSize, type PanelSizePreset } from './panel-size';

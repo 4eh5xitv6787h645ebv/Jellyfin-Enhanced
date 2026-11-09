@@ -1,5 +1,5 @@
 import { pickAdvisories } from './advisories';
-import { playerHost } from '../../host/player-host';
+import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment } from './wire';
 import { createPlayerLifetime } from './lifetime';
 const { JE, ApiClient } = playerHost();

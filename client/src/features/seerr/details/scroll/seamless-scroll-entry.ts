@@ -1,4 +1,4 @@
-import { bridgeOrNew } from '../../../../host/seerr-details-host';
+import { bridgeOrNew } from '../../host-details';
 import { CONFIG, cardsNeeded, createDeduplicator, createScrollEngine } from './seamless-scroll';
 
 const JE = bridgeOrNew();

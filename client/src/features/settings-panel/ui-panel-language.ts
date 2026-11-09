@@ -3,7 +3,7 @@
  * clear-translation-cache button in the settings panel.
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
-import { apiClient, panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
+import { apiClient, panelHost, registry, type PanelBridge } from './host';
 import type { PanelContext } from './context';
 import { selectById } from '../shared/dom';
 import { decodeCultures, decodeLocaleCodes, displayLanguageOptions, githubLocaleCodes, mergeLocaleCodes, normalizeLangCode, normalizeSavedLanguage, type Culture } from './language-options';

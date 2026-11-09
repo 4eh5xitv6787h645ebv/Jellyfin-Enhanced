@@ -5,5 +5,5 @@
  */
 export type { PanelContext, SearchHit } from './context';
 export type { EnhancedUi, SettingsSection } from './registry';
-// S2: nothing else is imported from outside this folder today (host/settings-panel-host.ts takes `EnhancedUi`
-// from registry.ts directly until C1 moves it here).
+// S2: nothing else is imported from outside this folder today (C1 moved host/settings-panel-host.ts here as
+// host.ts, which takes `EnhancedUi` from registry.ts directly).

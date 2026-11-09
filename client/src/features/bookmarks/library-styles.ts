@@ -1,6 +1,6 @@
-import { bookmarksHost, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, type BookmarkHost } from './host';
 import { createLifetime } from './lifetime';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 /**
  * Bookmarks Library View — styles.
  * Existing library CSS plus explicit search visibility.
@@ -8,10 +8,10 @@ const { JE, host, getApi } = bookmarksHost();
  * (see bookmarks-library-init.js for the boot sequence).
  */
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'library-styles');
+  const lifetime = createLifetime(ctx, 'library-styles');
 
   
-  JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
+  ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
 
   if (!JE?.pluginConfig?.BookmarksEnabled) {
     console.log('🪼 Jellyfin Enhanced: Bookmarks library feature is disabled');
@@ -861,4 +861,4 @@ function install(JE: BookmarkHost) {
   lifetime.keep(() => backdropStyle.remove());
 
 }
-install(JE);
+install(ctx.core);

@@ -1,4 +1,4 @@
-import type { TagRuntimeBridge } from '../../../../host/tag-runtime-host';
+import type { TagRuntimeBridge } from '../../host';
 import { isRecord, text as nonEmpty } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
 // /js/tags/ageratingtags.js

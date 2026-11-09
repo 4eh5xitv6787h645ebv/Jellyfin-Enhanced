@@ -1,4 +1,4 @@
-import { bridge, escaper, moreInfoRegistry, translator, type ActionContext } from '../../../../host/seerr-details-host';
+import { bridge, escaper, moreInfoRegistry, translator, type ActionContext } from '../../host-details';
 import { idText, record } from '../domain/json';
 import { anyTitle, mediaState, tmdbIdOf } from '../domain/media';
 import { attachFourKPopup, silent, splitButton } from './four-k-popup';

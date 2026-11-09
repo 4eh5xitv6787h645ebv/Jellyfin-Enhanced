@@ -1,4 +1,4 @@
-import type { SpoilerHost } from '../../host/spoiler-host';
+import type { SpoilerHost } from './host';
 /** Each installed component owns its listeners and timers; state.ts alone owns policy state. */
 export function own(JE: SpoilerHost, name: string, navigation = true) {
     let controller = new AbortController();

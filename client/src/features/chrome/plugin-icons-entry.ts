@@ -1,4 +1,4 @@
-import { optionalBridge } from '../../host/chrome-host';
+import { optionalBridge } from './host';
 import { createPluginIcons, type PluginIconsBridge } from './plugin-icons';
 
 const JE = optionalBridge<PluginIconsBridge>();

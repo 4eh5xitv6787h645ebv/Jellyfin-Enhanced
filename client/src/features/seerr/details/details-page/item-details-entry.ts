@@ -1,4 +1,4 @@
-import { apiClient, bridge, identityLease, SEERR_LOG, translator, type MediaType, type UnrequestedSeasonsCheck } from '../../../../host/seerr-details-host';
+import { apiClient, bridge, identityLease, SEERR_LOG, translator, type MediaType, type UnrequestedSeasonsCheck } from '../../host-details';
 import { filled, idText, isRecord, record, records, str, type JsonRecord } from '../domain/json';
 import { anyTitle, tmdbIdOf } from '../domain/media';
 import { createDetailRows, detailsItemIdFromHash, findDetailPage, type DetailPage } from './rows';

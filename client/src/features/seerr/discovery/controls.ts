@@ -1,4 +1,4 @@
-import type { SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import type { SeerrDiscoveryHost } from '../host-discovery';
 import { FILTER_MODES, isFilterMode, SORT_OPTIONS, tvSortValue } from './domain';
 import type { FilterChange, FilterMode, SortChange } from './types';
 

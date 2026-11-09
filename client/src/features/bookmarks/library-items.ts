@@ -1,17 +1,17 @@
-import { bookmarksHost, readItem, readSessions, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, readItem, readSessions, type BookmarkHost } from './host';
 import { createLifetime } from './lifetime';
 import type { Group, Library } from './types';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 /**
  * Bookmarks Library View — per-item card rendering + bookmark playback.
  * Typed entry retaining the established library DOM and public bridge.
  */
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'library-items');
+  const lifetime = createLifetime(ctx, 'library-items');
   const setTimeout = lifetime.timeout;
 
   
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
+  const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
 
   if (!JE?.pluginConfig?.BookmarksEnabled) return;
 
@@ -300,7 +300,7 @@ const parseTimestampInput = (...args: Parameters<Library["parseTimestampInput"]>
             saveBtn.disabled = true;
             if (editBtn) editBtn.disabled = true;
             try {
-              const ok = await JE.bookmarks.update(bm.id, {
+              const ok = await ctx.own.bookmarks.update(bm.id, {
                 timestamp: parsedTime,
                 label: labelInput.value.trim()
               });
@@ -331,7 +331,7 @@ const parseTimestampInput = (...args: Parameters<Library["parseTimestampInput"]>
             deleteBtn.disabled = true;
             let deleted;
             try {
-              deleted = await JE.bookmarks.delete(bookmarkId);
+              deleted = await ctx.own.bookmarks.delete(bookmarkId);
             } finally {
               deleteBtn.disabled = false;
             }
@@ -438,4 +438,4 @@ const parseTimestampInput = (...args: Parameters<Library["parseTimestampInput"]>
   Object.assign(internal, { renderBookmarkItems });
 
 }
-install(JE);
+install(ctx.core);

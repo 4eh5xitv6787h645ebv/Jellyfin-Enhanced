@@ -1,9 +1,9 @@
 import { normalizeId, pendingKey } from './ids-logic';
-import type { Prefs } from '../../host/spoiler-host';
+import type { Prefs } from './host';
 import type { RequestOptions } from '../../core/api/types';
 import { decodeState, decodeMutation, decodePrefs, record } from './wire';
 import { own } from './ownership';
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal } = spoilerHost();
 const owner = own(JE, 'state', false);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';

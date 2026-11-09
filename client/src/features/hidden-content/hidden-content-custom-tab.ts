@@ -1,8 +1,8 @@
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { lease } from '../../host/hidden-content-host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { lease } from './host';
 import { record, decodeLibraryItem, decodeSeerrItem, decodeSeerrSearch, type HiddenItem, type ListedItem } from './model';
 import type { PageState, Group, SearchResult, PageSurface } from './page-model';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * Hidden Content Custom Tab
  * Creates <div class="jellyfinenhanced hidden-content"></div>, either inside a

@@ -1,4 +1,4 @@
-import type { TagRuntimeBridge, TagRuntimeCore } from '../../../../host/tag-runtime-host';
+import type { TagRuntimeBridge, TagRuntimeCore } from '../../host';
 import { isRecord, record, type JsonRecord } from '../../pipeline/dto';
 import type { RenderExtras } from '../../pipeline/contract';
 

@@ -7,7 +7,7 @@
  * is open, focus given back on close, and
  * the settings search (sections add their controls through ctx.registerSearch).
  */
-import { apiClient, panelHost, registry, settingsDocumentContract, type PanelBridge } from '../../host/settings-panel-host';
+import { apiClient, panelHost, registry, settingsDocumentContract, type PanelBridge } from './host';
 import type { PanelContext, SearchHit, SearchProvider } from './context';
 import { closestTarget, queryButton, queryElement, queryElements, querySelect, queryInput } from '../shared/dom';
 import { isTextEntryType, paneSlug, shouldApplyRefresh } from './panel-refresh';

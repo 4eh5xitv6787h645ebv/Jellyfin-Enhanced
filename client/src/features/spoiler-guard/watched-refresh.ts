@@ -1,4 +1,4 @@
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 import { own } from './ownership';
 const { JE, internal } = spoilerHost();
 const owner = own(JE, 'watched');

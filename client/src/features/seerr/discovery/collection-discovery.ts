@@ -1,6 +1,6 @@
 // /js/jellyseerr/discovery/collection-discovery.js
 // Shows missing collection movies on BoxSet detail pages with request buttons.
-import { baseOf, discoveryHost, filterOf, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { baseOf, discoveryHost, filterOf, type SeerrDiscoveryHost } from '../host-discovery';
 import { decodeCollection, decodeNamedInfo, isUserActive, positiveInt } from './domain';
 import { isItemType, managedFetch, tolerant } from './lookups';
 import type { NamedTmdbInfo, OneShotContext } from './types';

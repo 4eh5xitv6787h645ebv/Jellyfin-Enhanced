@@ -1,4 +1,4 @@
-import { ensureBridge, optionalBridge } from '../../host/chrome-host';
+import { ensureBridge, optionalBridge } from './host';
 import { createSplashScreen, type SplashBridge } from './splashscreen';
 
 const JE = ensureBridge<SplashBridge>();

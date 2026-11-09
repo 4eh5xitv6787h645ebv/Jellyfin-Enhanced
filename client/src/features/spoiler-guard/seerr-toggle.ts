@@ -1,6 +1,6 @@
 import { decodeSeerr } from './wire';
 import { own } from './ownership';
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal } = spoilerHost();
 const owner = own(JE, 'seerr-toggle', true);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';

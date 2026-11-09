@@ -1,18 +1,18 @@
-import { bookmarksHost, type BookmarkHost } from '../../host/bookmarks-host';
+import { bookmarksHost, type BookmarkHost } from './host';
 import { required } from './dom';
 import { createLifetime } from './lifetime';
 import type { BookmarkMap, Details, Group, IdentifiedBookmark, Library } from './types';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 /**
  * Bookmarks Library View — offset-adjustment and duplicate-merge modals.
  * Typed entry retaining the established library DOM and public bridge.
  */
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'library-modals');
+  const lifetime = createLifetime(ctx, 'library-modals');
   const setTimeout = lifetime.timeout;
 
   
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
+  const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
 
   if (!JE?.pluginConfig?.BookmarksEnabled) return;
 
@@ -101,7 +101,7 @@ function install(JE: BookmarkHost) {
       required<HTMLElement>(btn, 'span:last-child').innerHTML = '<span class="material-icons" style="animation: spin 1s linear infinite; font-size: 18px;">refresh</span>';
 
       try {
-        const updatedCount = await JE.bookmarks.adjustOffsets(syncedBookmarks, offset);
+        const updatedCount = await ctx.own.bookmarks.adjustOffsets(syncedBookmarks, offset);
         if (!isCurrent()) return;
 
         if (updatedCount > 0) {
@@ -325,7 +325,7 @@ function install(JE: BookmarkHost) {
           };
 
           // Sync old bookmarks to primary
-          const synced = await JE.bookmarks.syncBookmarks(oldBookmarks, primaryDetails, 0);
+          const synced = await ctx.own.bookmarks.syncBookmarks(oldBookmarks, primaryDetails, 0);
           if (!isCurrent()) return;
           if (isCurrent()) JE.toast(JE.t('bookmark_merge_success').replace('{count}', String(synced.length)), 3000);
 
@@ -351,4 +351,4 @@ function install(JE: BookmarkHost) {
   Object.assign(internal, { showOffsetAdjustmentModal, showDuplicatesSyncModal });
 
 }
-install(JE);
+install(ctx.core);

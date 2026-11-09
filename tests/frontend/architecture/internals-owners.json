@@ -1,5 +1,5 @@
 {
-  "_comment": "frontend.md §2.4 rule 3: which feature owns each JE.internals slot. Only a host file of an owning feature (features/<f>/host*.ts) may touch a slot. Evidence: the file that creates the slot. 'features' is created by both details-providers (details-page.ts, media-info.ts, release-dates.ts) and hidden-content (host/hidden-content-host.ts, features-remove-home.ts), so both own it until C3 splits it.",
+  "_comment": "frontend.md §2.4 rule 3: which feature owns each JE.internals slot. Only a host file of an owning feature (features/<f>/host*.ts) may touch a slot. Evidence: the file that creates the slot. 'features' is created by both details-providers (details-page.ts, media-info.ts, release-dates.ts) and hidden-content (hidden-content/host.ts, features-remove-home.ts), so both own it until C3 splits it.",
   "autoSkip": ["player"],
   "bookmarkLifetimes": ["bookmarks"],
   "bookmarksLibrary": ["bookmarks"],

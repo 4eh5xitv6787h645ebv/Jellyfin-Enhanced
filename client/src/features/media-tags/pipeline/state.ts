@@ -191,7 +191,7 @@ export function createPipelineState(JE: TagRuntimeBridge): PipelineState {
 
 /** The pipeline modules' functions other modules call (through `deps`), the published api and the host's ApiClient readers. */
 export interface PipelineFns {
-    /** host/tag-runtime-host's ApiClient readers, injected by createTagPipeline (the pipeline's only import of host/). */
+    /** media-tags/host.ts's ApiClient readers, injected by createTagPipeline (the pipeline's only import of host/). */
     apiClient: () => TagApiClient;
     hasApiClient: () => boolean;
     advanceBatchGeneration: () => void;

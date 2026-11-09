@@ -1,4 +1,4 @@
-import type { SeerrCoreHost } from '../../../host/seerr-core-host';
+import type { SeerrCoreHost } from '../host-core';
 import type { ModalInstance, ModalOptions, SeerrModalFacade } from './contract';
 import { decodeAdvancedData, isRecord, isSafeTmdbImagePath } from './decode';
 import type { RootFolder } from './types';

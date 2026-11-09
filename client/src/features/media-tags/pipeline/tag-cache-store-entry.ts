@@ -1,4 +1,4 @@
-import { tagRuntimeHost } from '../../../host/tag-runtime-host';
+import { tagRuntimeHost } from '../host';
 import { createTagCacheStore } from './tag-cache-store';
 
 tagRuntimeHost().tagCacheStore = createTagCacheStore();

@@ -3,8 +3,8 @@
  * from MdblistService's server cache: GET /JellyfinEnhanced/mdblist-ratings/{type}/{tmdbId}.
  * Display only; MdblistRatingsSyncTask fills Jellyfin's own rating fields.
  */
-import { bridge, currentUserId } from '../../host/details-providers-host';
-import type { MdblistBridge } from '../../host/details-providers-host';
+import { bridge, currentUserId } from './host';
+import type { MdblistBridge } from './host';
 import { detailPageHook, detailsLease, hashItemId, lookupDetailsItem, removeFirst } from './page';
 import { externalLink, pathSegment } from './links';
 import { RUNTIME_PATTERN, configuredSources, decodeMdblistEntry, isUnconfirmed, mdblistBadges, resolveProviderTarget } from './provider-domain';

@@ -2,7 +2,7 @@
  * @file Latest-release notes notification panel fetched from GitHub.
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
-import { panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
+import { panelHost, registry, type PanelBridge } from './host';
 import { decodeRelease, markdownToHtml, releaseNotesText, type ReleaseView } from './release-markdown';
 
 export function installUiReleaseNotes(JE: Pick<PanelBridge, 'internals' | 'escapeHtml' | 'toast' | 'icon' | 'IconName' | 'themer'>): void {

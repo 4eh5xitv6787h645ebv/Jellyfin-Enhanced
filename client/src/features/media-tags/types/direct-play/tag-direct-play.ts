@@ -1,4 +1,4 @@
-import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../../../host/tag-runtime-host';
+import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../host';
 import { isRecord, own, record, records, stringList, type JsonRecord } from '../../pipeline/dto';
 import type { DirectPlayResult } from '../../pipeline/contract';
 import { baseOptions, browserFlags, flag, profileWindow, webProfile, withHostSettings, type DeviceProfile, type ProfileOptions } from './device-profile';

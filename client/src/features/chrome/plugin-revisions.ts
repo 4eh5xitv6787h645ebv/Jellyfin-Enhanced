@@ -1,4 +1,4 @@
-import type { ChromeCore } from '../../host/chrome-host';
+import type { ChromeCore } from './host';
 
 export interface PluginRevisionsBridge {
     core: ChromeCore;

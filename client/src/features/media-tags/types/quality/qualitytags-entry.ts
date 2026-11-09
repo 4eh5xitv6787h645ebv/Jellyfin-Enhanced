@@ -1,4 +1,4 @@
-import { tagRuntimeHost } from '../../../../host/tag-runtime-host';
+import { tagRuntimeHost } from '../../host';
 import { createQualityTags } from './qualitytags';
 
 createQualityTags(tagRuntimeHost());

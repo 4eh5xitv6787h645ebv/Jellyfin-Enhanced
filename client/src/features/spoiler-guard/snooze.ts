@@ -1,4 +1,4 @@
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal, ApiClient } = spoilerHost();
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';
     const snoozeMs = 15 * 60 * 1000;

@@ -1,5 +1,5 @@
 import { filled, idText, isRecord, list, num, record, records, str, type JsonRecord } from '../domain/json';
-import type { MediaType } from '../../../../host/seerr-details-host';
+import type { MediaType } from '../../host-details';
 
 /** Jellyfin items carry their numbering under several names, depending on the version. */
 function firstInt(...values: unknown[]): number {

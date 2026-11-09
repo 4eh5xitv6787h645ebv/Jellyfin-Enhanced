@@ -1,5 +1,5 @@
 import { own } from './ownership';
-import { spoilerHost } from '../../host/spoiler-host';
+import { spoilerHost } from './host';
 const { JE, internal, host } = spoilerHost();
 const owner = own(JE, 'dialog', true);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';

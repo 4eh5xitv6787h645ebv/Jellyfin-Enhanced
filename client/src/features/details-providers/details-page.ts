@@ -2,8 +2,8 @@
  * Details-page dispatcher: the debounced item-details observer, the Hide
  * button on detail pages, and the per-item-type feature gating.
  */
-import { bridge, currentUserId, api } from '../../host/details-providers-host';
-import type { DetailsFeatures, DetailsPageBridge, HiddenContentFacade, HiddenItemData } from '../../host/details-providers-host';
+import { bridge, currentUserId, api } from './host';
+import type { DetailsFeatures, DetailsPageBridge, HiddenContentFacade, HiddenItemData } from './host';
 import { detailsLease, hashItemId, lookupDetailsItem, lookupItem, visibleDetailPage } from './page';
 import { decodeDetailsItem, field } from './wire';
 import type { DetailsItem } from './wire';

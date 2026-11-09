@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/downloads-host.ts
+  // client/src/features/downloads/host.ts
   function downloadsHost() {
     var _a;
     const host = window;

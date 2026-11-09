@@ -1,6 +1,6 @@
-import type { Session } from '../core/session';
-import type { Lifecycle } from '../core/lifecycle';
-import type { MediaSegment } from '../features/player/wire';
+import type { Session } from '../../core/session';
+import type { Lifecycle } from '../../core/lifecycle';
+import type { MediaSegment } from './wire';
 export interface Subscription { unsubscribe(): void }
 export interface PlayerSettings {
     longPress2xEnabled?: boolean; autoSkipIntro?: boolean; autoSkipOutro?: boolean;

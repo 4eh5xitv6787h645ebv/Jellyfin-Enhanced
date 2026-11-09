@@ -4,7 +4,7 @@
 // native-tabs registry (RecommendationsUseNativeTab). Nothing below depends on which created it.
 // The watcher remounts whenever the home page DOM is rebuilt, and a mount that stops being the active
 // container is disposed: it holds no requests, observers or cards while nobody can see it.
-import { translate } from '../../../host/seerr-discovery-host';
+import { translate } from '../host-discovery';
 import { part, recommendationsHost } from './stage';
 
 const CONTAINER_SELECTOR = '.jellyfinenhanced.recommendations';

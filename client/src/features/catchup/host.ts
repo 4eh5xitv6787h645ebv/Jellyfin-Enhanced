@@ -1,5 +1,5 @@
-import type { CatchRuntime } from '../features/catchup/types';
-import type { SocialApi, SocialSession, RequestOptions } from './activity-host';
+import type { CatchRuntime } from './types';
+import type { SocialApi, SocialSession, RequestOptions } from '../activity/public-api';
 export interface CatchHost {
  pluginConfig?: {CatchUpEnabled?: boolean; CatchUpUseCustomTabs?: boolean; CatchUpUseNativeTab?: boolean};
  themer?: {getThemeVariables(): {primaryAccent?: string; panelBg?: string; secondaryBg?: string}};

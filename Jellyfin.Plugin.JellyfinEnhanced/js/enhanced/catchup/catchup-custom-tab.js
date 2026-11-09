@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/catchup-host.ts
+  // client/src/features/catchup/host.ts
   function catchupHost() {
     const host = window;
     return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };

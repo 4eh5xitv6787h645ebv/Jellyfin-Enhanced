@@ -1,7 +1,7 @@
 // /js/jellyseerr/discovery/person-discovery.js
 // "More from [Actor]" on person detail pages. This module keeps the TMDB person resolution and the
 // credits fetch; the base owns chunked pagination, filter/sort controls and lifecycle wiring.
-import { baseOf, discoveryHost, filterOf, translate, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { baseOf, discoveryHost, filterOf, translate, type SeerrDiscoveryHost } from '../host-discovery';
 import {
     decodeCredits, decodeNamedInfo, isAbortError, isNamedTmdbInfo, isPositiveInt, isUserActive, pickPerson, positiveInt,
     throwIfAborted

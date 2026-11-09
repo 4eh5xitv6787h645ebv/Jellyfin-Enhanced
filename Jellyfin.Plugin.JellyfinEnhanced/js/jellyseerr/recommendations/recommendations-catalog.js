@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/seerr-discovery-host.ts
+  // client/src/features/seerr/host-discovery.ts
   function discoveryHost() {
     const host = window;
     const JE = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});

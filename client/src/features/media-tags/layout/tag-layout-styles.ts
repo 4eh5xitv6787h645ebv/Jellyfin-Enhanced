@@ -1,4 +1,4 @@
-import type { TagRuntimeBridge } from '../../../host/tag-runtime-host';
+import type { TagRuntimeBridge } from '../host';
 // /js/tags/tag-layout-styles.js
 // The one stylesheet for every poster tag layout (core/tag-layout.js). It
 // keys only off stable hooks — .je-tag-host[data-je-layout], .je-tag-slot

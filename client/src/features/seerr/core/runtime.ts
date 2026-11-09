@@ -1,4 +1,4 @@
-import type { SeerrCoreBridge, SeerrCoreHost } from '../../../host/seerr-core-host';
+import type { SeerrCoreBridge, SeerrCoreHost } from '../host-core';
 import type { RequestOutcome, SeerrUiInternals } from './contract';
 import { isNumber, isRecord, isString } from './decode';
 

@@ -1,5 +1,5 @@
 import type { JsonValue } from '../../contracts/generated';
-import type { Shortcut } from '../../host/settings-panel-host';
+import type { Shortcut } from './host';
 
 /** Actions that only fire on the video player page (see JE.keyListener). */
 export const PLAYER_ACTIONS: ReadonlySet<string> = new Set([

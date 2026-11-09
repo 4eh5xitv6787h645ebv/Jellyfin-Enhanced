@@ -1,4 +1,4 @@
-import { chromeBridge, hostClient } from '../../host/chrome-host';
+import { chromeBridge, hostClient } from './host';
 import { createNativeTabs, type NativeTabsBridge, type NativeTabsClient } from './native-tabs';
 
 const JE = chromeBridge<NativeTabsBridge>();

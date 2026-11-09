@@ -1,4 +1,4 @@
-import { chromeBridge } from '../../host/chrome-host';
+import { chromeBridge } from './host';
 import { canonicalCombo, createEvents, type EventsBridge } from './events';
 
 const JE = chromeBridge<EventsBridge>();

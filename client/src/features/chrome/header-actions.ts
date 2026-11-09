@@ -1,4 +1,4 @@
-import type { BodyMutationCallback, ChromeSession } from '../../host/chrome-host';
+import type { BodyMutationCallback, ChromeSession } from './host';
 
 /**
  * Keeps Random handy and collapses the remaining JE actions into a More menu

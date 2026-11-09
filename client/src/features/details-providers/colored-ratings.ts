@@ -1,6 +1,6 @@
 /** Color-coded backgrounds for official media ratings on the item details page. */
-import { bridge } from '../../host/details-providers-host';
-import type { ColoredRatingsBridge, ObserverHandleLike, Unregister } from '../../host/details-providers-host';
+import { bridge } from './host';
+import type { ColoredRatingsBridge, ObserverHandleLike, Unregister } from './host';
 import { normalizeRating } from './rating-domain';
 
 const JE = bridge<ColoredRatingsBridge>('Colored ratings');

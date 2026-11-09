@@ -1,4 +1,4 @@
-import { captureIdentity, hostClient, isSameIdentity, type ChromeSession, type IdentitySnapshot, type BodyMutationCallback, type Unsubscribe } from '../../host/chrome-host';
+import { captureIdentity, hostClient, isSameIdentity, type ChromeSession, type IdentitySnapshot, type BodyMutationCallback, type Unsubscribe } from './host';
 
 /** Home surface context captured on a card's menu trigger for the next action sheet. */
 export interface RemoveContext { itemId: string; surface: unknown; card: Element; ts: number }

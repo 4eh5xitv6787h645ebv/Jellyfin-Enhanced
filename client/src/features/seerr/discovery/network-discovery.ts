@@ -2,7 +2,7 @@
 // "More from [Network]" on studio/network list pages. This module keeps the studio → TMDB
 // network/company resolution and picks the series feed: Seerr's network feed for a known network,
 // the plugin's TMDB-backed series-by-company feed for any other studio.
-import { baseOf, discoveryHost, filterOf, translate, type SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import { baseOf, discoveryHost, filterOf, translate, type SeerrDiscoveryHost } from '../host-discovery';
 import {
     decodeNamedInfo, getKnownNetworkId, isNamedTmdbInfo, isNullablePositiveInt, isUserActive, pickCompany, positiveInt
 } from './domain';

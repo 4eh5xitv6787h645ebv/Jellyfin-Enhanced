@@ -1,9 +1,9 @@
-import { lease, type BookmarkHost } from '../../host/bookmarks-host';
+import { lease, type BookmarksContext } from './host';
 export interface BookmarkLifetime { dispose(): void }
-export function createLifetime(JE: BookmarkHost, name: string) {
- JE.internals ??= {};
- JE.internals.bookmarkLifetimes ??= {};
- JE.internals.bookmarkLifetimes[name]?.dispose();
+export function createLifetime(ctx: BookmarksContext, name: string) {
+ const JE = ctx.core, own = ctx.own;
+ own.bookmarkLifetimes ??= {};
+ own.bookmarkLifetimes[name]?.dispose();
  const cleanup = new Set<() => void>();
  const dialogs = new Set<() => void>();
  let disposed = false;
@@ -71,7 +71,7 @@ export function createLifetime(JE: BookmarkHost, name: string) {
  const result = {dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
   const current = lease(JE), version = generation; return () => !disposed && generation === version && current();
  }};
- JE.internals.bookmarkLifetimes[name] = result;
+ own.bookmarkLifetimes[name] = result;
  keep(JE.session?.onUserChange('bookmarks-' + name, () => {
   for (const close of dialogs) close();
   document.querySelectorAll('.je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker').forEach(el => el.remove());

@@ -1,4 +1,4 @@
-import { seerrCoreHost } from '../../../../host/seerr-core-host';
+import { seerrCoreHost } from '../../host-core';
 import { firstInstall } from '../runtime';
 import { MAIN_CSS, MAIN_STYLE_ID, SEASON_MODAL_CSS, SEASON_MODAL_STYLE_ID } from './styles-css';
 

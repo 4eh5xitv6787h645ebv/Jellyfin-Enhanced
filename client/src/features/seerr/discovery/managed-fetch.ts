@@ -1,4 +1,4 @@
-import type { DiscoveryApiClient, SeerrDiscoveryHost } from '../../../host/seerr-discovery-host';
+import type { DiscoveryApiClient, SeerrDiscoveryHost } from '../host-discovery';
 import { abortError, decodeGenreList, isGenreEntry, isRecord, throwIfAborted } from './domain';
 import type { FeedKind, GenreListEntry, ManagedFetchOptions } from './types';
 

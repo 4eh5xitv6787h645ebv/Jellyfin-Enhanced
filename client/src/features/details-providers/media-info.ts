@@ -1,6 +1,6 @@
 /** Details-page media-info chips: watch progress, file size and audio languages. */
-import { api, bridge, currentUserId, serverId } from '../../host/details-providers-host';
-import type { ChipSelection, DetailsFeatures, MediaInfoBridge, MediaLanguage, VisitHandle } from '../../host/details-providers-host';
+import { api, bridge, currentUserId, serverId } from './host';
+import type { ChipSelection, DetailsFeatures, MediaInfoBridge, MediaLanguage, VisitHandle } from './host';
 import { lookupItem } from './page';
 import { decodeDetailsItem, field, isRecord, list, num, str } from './wire';
 import type { DetailsItem, MediaStream } from './wire';

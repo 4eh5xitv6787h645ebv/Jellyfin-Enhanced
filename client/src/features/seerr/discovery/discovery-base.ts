@@ -1,6 +1,6 @@
 // /js/jellyseerr/discovery/discovery-base.js
 // Published as JE.discoveryBase { createDiscovery, idFromDetailUrl, idFromListParam }.
-import { discoveryHost } from '../../../host/seerr-discovery-host';
+import { discoveryHost } from '../host-discovery';
 import { createDiscoveryController } from './controller';
 import { parseDetailId, parseListParam } from './domain';
 

@@ -1,4 +1,4 @@
-import type { DownloadsHost, DownloadsWindow, DownloadsApi } from '../../host/downloads-host';
+import type { DownloadsHost, DownloadsWindow, DownloadsApi } from './host';
 export type List = 'requests' | 'issues' | 'history';
 export interface Item {
  id?: string | number | undefined;

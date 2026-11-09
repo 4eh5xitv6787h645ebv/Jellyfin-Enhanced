@@ -1,5 +1,5 @@
 import { invalidate, lifetime, own, disposeCalendar } from './lifetime';
-import { calendarHost } from '../../host/calendar-host';
+import { calendarHost } from './host';
 // /js/arr/calendar/calendar-page-init.js
 // Calendar Page — initialization, navigation interception, page show/hide
 // and the public JE.calendarPage surface (split from calendar-page.js).

@@ -1,8 +1,8 @@
-import { getApi } from '../../host/hidden-content-host';
-import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from '../../host/hidden-content-host';
-import { lease } from '../../host/hidden-content-host';
+import { getApi } from './host';
+import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
+import { lease } from './host';
 import { decodeSeerrItem, decodeSeerrSearch, type HiddenItem } from './model';
-import { host, registry, type HiddenHost } from '../../host/hidden-content-host';
+import { host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content — management panel overlay (searchable grid of hidden
  * items with unhide actions) and the shared hidden-item card factory.

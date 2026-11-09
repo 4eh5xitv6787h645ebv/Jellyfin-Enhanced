@@ -1,4 +1,4 @@
-import { calendarHost } from '../../host/calendar-host';
+import { calendarHost } from './host';
 // /js/arr/calendar/calendar-page-styles.js
 // Calendar Page — CSS and theme-color injection (split from calendar-page.js).
 // Owns the single injection site for the feature's styles; all former call
