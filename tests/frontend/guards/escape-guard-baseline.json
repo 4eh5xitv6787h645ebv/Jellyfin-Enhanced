@@ -47,7 +47,7 @@
     "X1 install.renderBookmarksLibrary": 1
   },
   "client/src/features/bookmarks/library-replacements.ts": {
-    "X1 install.showReplacementSelectionModal": 3
+    "X1 install.showReplacementSelectionModal": 2
   },
   "client/src/features/calendar/calendar-page-render-views.ts": {
     "X1 renderAgendaView": 1,
