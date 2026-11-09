@@ -4,11 +4,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
-using static Jellyfin.Plugin.JellyfinEnhanced.Services.SeerrCaches;
+using static Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrCaches;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
 {
     /// <summary>
     /// Seerr user lookup for a Jellyfin user, over the process-wide <see cref="SeerrCaches"/> user caches

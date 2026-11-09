@@ -20,7 +20,7 @@ using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
-using static Jellyfin.Plugin.JellyfinEnhanced.Services.SeerrCaches;
+using static Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrCaches;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
 {

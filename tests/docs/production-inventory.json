@@ -714,19 +714,11 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCaches.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCsrfHandler.cs",
       "category": "Features"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrScanTriggerService.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrUserLookup.cs",
       "category": "Features"
     },
     {
@@ -1030,11 +1022,19 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/SeerrCaches.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/SeerrHttpHelper.cs",
       "category": "Shared"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/SeerrRequestOutcome.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/SeerrUserLookup.cs",
       "category": "Shared"
     },
     {

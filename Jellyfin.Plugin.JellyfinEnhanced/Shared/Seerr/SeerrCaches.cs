@@ -2,9 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
 {
     /// <summary>
     /// Process-wide Seerr caches (restructure S2.0b, moved verbatim from JellyfinEnhancedController, backend.md §6 R3).

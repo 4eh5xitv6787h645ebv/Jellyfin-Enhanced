@@ -46,7 +46,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Text;
-using static Jellyfin.Plugin.JellyfinEnhanced.Services.SeerrCaches;
+using static Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrCaches;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -96,7 +96,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly ActiveSessionsService _activeSessionsService;
         private readonly HiddenContentDocumentService _hiddenContentDocumentService;
         private readonly LibraryItemLookup _libraryItemLookup;
-        private readonly Services.SeerrUserLookup _seerrUserLookup;
+        private readonly Shared.Seerr.SeerrUserLookup _seerrUserLookup;
         private readonly Shared.SpoilerGuard.SpoilerPendingService _spoilerPendingService;
 
         private async Task<bool> IsSeerrReachableCached()
@@ -188,14 +188,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _activeSessionsService = new ActiveSessionsService(sessionManager);
             _hiddenContentDocumentService = new HiddenContentDocumentService(userConfigurationManager, logger, _userDisplayResolver);
             _libraryItemLookup = new LibraryItemLookup(libraryManager, logger);
-            _seerrUserLookup = new Services.SeerrUserLookup(httpClientFactory, logger, _userDisplayResolver);
+            _seerrUserLookup = new Shared.Seerr.SeerrUserLookup(httpClientFactory, logger, _userDisplayResolver);
             _spoilerPendingService = new Shared.SpoilerGuard.SpoilerPendingService(userConfigurationManager, logger, _userDisplayResolver, _libraryItemLookup);
         }
 
-        internal static void ClearUserCaches() => Services.SeerrCaches.ClearUserCaches();
+        internal static void ClearUserCaches() => Shared.Seerr.SeerrCaches.ClearUserCaches();
 
         // Forwarder kept for the test call sites and JellyfinEnhanced.cs (restructure S2.0b; S2.14 removes it).
-        public static void ClearAllSeerrCachesOnConfigChange() => Services.SeerrCaches.ClearAllSeerrCachesOnConfigChange();
+        public static void ClearAllSeerrCachesOnConfigChange() => Shared.Seerr.SeerrCaches.ClearAllSeerrCachesOnConfigChange();
 
         // Seerr's discover API accepts these params (verified live against
         // Seerr 3.2.0). The correct names are `keywords`, `watchProviders`,
@@ -459,7 +459,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         : "Can't reach Seerr right now. Please try again in a moment.";
                     return StatusCode(502, Shared.Seerr.SeerrProxyErrorResponse.Create("unreachable", unreachableMsg, notSent));
                 }
-                if (Services.SeerrUserLookup.IsJellyseerrImportBlocked(jellyfinUserId, JellyfinEnhanced.Instance?.Configuration ?? new Configuration.PluginConfiguration()))
+                if (Shared.Seerr.SeerrUserLookup.IsJellyseerrImportBlocked(jellyfinUserId, JellyfinEnhanced.Instance?.Configuration ?? new Configuration.PluginConfiguration()))
                 {
                     return StatusCode(403, Shared.Seerr.SeerrProxyErrorResponse.Create("blocked", "Your administrator has disabled Seerr for your account.", notSent));
                 }
@@ -1030,12 +1030,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return new { active = false, userFound = false, reason = "no_user" };
             }
 
-            if (Services.SeerrUserLookup.IsJellyseerrImportBlocked(jellyfinUserId, config))
+            if (Shared.Seerr.SeerrUserLookup.IsJellyseerrImportBlocked(jellyfinUserId, config))
             {
                 return new { active = true, userFound = false, reason = "blocked" };
             }
 
-            var cachedId = Services.SeerrUserLookup.TryGetCachedJellyseerrUserId(jellyfinUserId);
+            var cachedId = Shared.Seerr.SeerrUserLookup.TryGetCachedJellyseerrUserId(jellyfinUserId);
             if (cachedId == null) return null;
 
             // canRequestAdvanced: an admin always may; anyone else needs their
