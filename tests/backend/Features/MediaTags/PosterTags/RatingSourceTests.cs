@@ -20,6 +20,8 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace JE.Tests.Features.MediaTags;
 

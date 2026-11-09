@@ -2,7 +2,7 @@
 
 Server side of SEERR-CORE-06 / SRC-R1-004. Jellyfin 12.x only.
 
-`ProxyJellyseerrRequest` in `Controllers/JellyfinEnhancedController.cs` forwards the browser's Seerr calls. Its only writes are `POST /api/v1/request` (`jellyseerr/request` and `jellyseerr/request/tv/{tmdbId}/seasons`) and `POST /api/v1/issue` (`jellyseerr/issue`). Seerr has no idempotency key, so a write that may already have been applied must not be repeated, and the browser must be told when the proxy cannot know whether it was applied.
+`ProxyJellyseerrRequest` in `Features/Seerr/JeSeerrController.cs` forwards the browser's Seerr calls. Its only writes are `POST /api/v1/request` (`jellyseerr/request` and `jellyseerr/request/tv/{tmdbId}/seasons`) and `POST /api/v1/issue` (`jellyseerr/issue`). Seerr has no idempotency key, so a write that may already have been applied must not be repeated, and the browser must be told when the proxy cannot know whether it was applied.
 
 ## Contract
 
@@ -18,7 +18,7 @@ A failed write returns the existing failure envelope with one more property:
 | `rejected` | Seerr answered with its own JSON 4xx (other than 408): quota, permission, duplicate (409), validation, rate limit, API key (401/403). | Definite failure. |
 | `not_sent` | JE refused or failed the write before any byte reached a Seerr URL. | Definite failure; retrying is safe. |
 
-- The property name is lowercase `requestOutcome` under every host serializer (default, PascalCase, CamelCase profile); the value is exactly one of the three strings. The typed contract is `Features/Seerr/Services/SeerrRequestOutcome.cs`: `SeerrRequestOutcome` (enum, pinned wire names), `SeerrRequestOutcomes.PropertyName`, and `SeerrProxyErrorResponse` (the envelope).
+- The property name is lowercase `requestOutcome` under every host serializer (default, PascalCase, CamelCase profile); the value is exactly one of the three strings. The typed contract is `Shared/Seerr/SeerrRequestOutcome.cs`: `SeerrRequestOutcome` (enum, pinned wire names), `SeerrRequestOutcomes.PropertyName`, and `SeerrProxyErrorResponse` (the envelope).
 - Successful writes are unchanged: Seerr's JSON body is returned as-is (`ContentResult`, `application/json`) with no envelope.
 - Reads never carry `requestOutcome`; their envelopes are byte-for-byte what they were.
 - `code`, `message`, `error`, `httpStatus` and the HTTP status keep their existing values. Non-admins get the sanitized message only; Jellyfin administrators also get the technical message, `url` and `cfRay`, as before.
@@ -60,8 +60,8 @@ A successful `POST /api/v1/request` evicts the title's cached `/movie/{id}` and 
 
 ## Tests
 
-- `tests/backend/Api/ApiSeerrProxyOutcomeTests.cs` drives the real `JellyseerrRequest` / `ReportJellyseerrIssue` / `GetMovie` / `GetTvShow` routes with two configured Seerr URLs through the production client shape (`SeerrCsrfHandler` over the primary handler). Synthetic-transport cases cover every row of the table above, admin/non-admin message privacy, cache eviction, read retry/failover and browser cancellation. Real-socket cases use a loopback HTTP/1.1 server and the production primary handler (`HttpClientHandler`, no redirects, no cookies): an accepted write whose connection is dropped or whose body is cut short is `unknown` with exactly one POST across both URLs; the same on a reused pooled keep-alive connection is still sent once; a refused port fails over and the second URL receives the only POST; refusal on every URL is `not_sent`. These tests only read the serialized envelope, so they also compile against the baseline controller.
-- `tests/backend/Api/SeerrRequestOutcomeContractTests.cs` pins the wire values and property names under Jellyfin's default, PascalCase and CamelCase serializer options, checks read envelopes are identical to the old anonymous shapes, and tables the classification rules.
+- `tests/backend/Features/Seerr/ApiSeerrProxyOutcomeTests.cs` drives the real `JellyseerrRequest` / `ReportJellyseerrIssue` / `GetMovie` / `GetTvShow` routes with two configured Seerr URLs through the production client shape (`SeerrCsrfHandler` over the primary handler). Synthetic-transport cases cover every row of the table above, admin/non-admin message privacy, cache eviction, read retry/failover and browser cancellation. Real-socket cases use a loopback HTTP/1.1 server and the production primary handler (`HttpClientHandler`, no redirects, no cookies): an accepted write whose connection is dropped or whose body is cut short is `unknown` with exactly one POST across both URLs; the same on a reused pooled keep-alive connection is still sent once; a refused port fails over and the second URL receives the only POST; refusal on every URL is `not_sent`. These tests only read the serialized envelope, so they also compile against the baseline controller.
+- `tests/backend/Shared/SeerrRequestOutcomeContractTests.cs` pins the wire values and property names under Jellyfin's default, PascalCase and CamelCase serializer options, checks read envelopes are identical to the old anonymous shapes, and tables the classification rules.
 
 ## Not covered
 

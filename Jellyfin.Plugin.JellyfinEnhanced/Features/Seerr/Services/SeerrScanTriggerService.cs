@@ -9,7 +9,7 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services
 {
     // Debounced bridge from Jellyfin's library ItemAdded event to Seerr's
     // /api/v1/settings/jobs/jellyfin-recently-added-scan/run endpoint, so admins can
@@ -169,13 +169,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var endpoint = $"{url.TrimEnd('/')}/api/v1/settings/jobs/{ScanJobId}/run";
             try
             {
-                var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var http = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
                 http.Timeout = TimeSpan.FromSeconds(15);
-                using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Post, endpoint, apiKey, bodyJson: "{}");
 
                 using var response = await http.SendAsync(request).ConfigureAwait(false);
-                var (json, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, endpoint).ConfigureAwait(false);
+                var (json, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, endpoint).ConfigureAwait(false);
                 return new DispatchResult
                 {
                     Url = url,

@@ -68,7 +68,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
     }
 
     // Spoiler Guard's stripping of JE tag data, shared by GET /tag-cache, POST
-    // /tag-data (JellyfinEnhancedController) and native poster tags (so a
+    // /tag-data (JeMediaTagsController) and native poster tags (so a
     // poster baked for a guarded item shows exactly what the web overlays
     // would: nothing that the web hides). Extracted verbatim from the
     // controller; the decisions mirror SpoilerBlurImageFilter and

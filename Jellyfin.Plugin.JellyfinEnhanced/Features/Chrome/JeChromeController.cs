@@ -12,6 +12,7 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Sessions;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome
 {

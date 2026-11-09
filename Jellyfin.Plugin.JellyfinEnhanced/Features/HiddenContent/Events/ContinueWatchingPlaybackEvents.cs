@@ -12,6 +12,7 @@ using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Hosting;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Analytics;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.Events
 {

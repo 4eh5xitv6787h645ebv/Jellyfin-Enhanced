@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
 {

@@ -5,6 +5,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace JE.Tests.Features.Bookmarks;
 

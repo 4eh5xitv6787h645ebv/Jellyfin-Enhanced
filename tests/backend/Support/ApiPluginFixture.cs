@@ -4,6 +4,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Serialization;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
 using Plugin = Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced;
 
 namespace JE.Tests;

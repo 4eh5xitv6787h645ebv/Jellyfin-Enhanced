@@ -3,7 +3,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -23,6 +22,9 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace JE.Tests.Features.MediaTags;
 
@@ -44,7 +46,7 @@ public class PerfRound2TagCacheResponseTests
         public readonly HashSet<Guid> AlicePlayed = [];
         public readonly Mock<ILibraryManager> Library = new();
         public readonly TagCacheService Cache;
-        public readonly JellyfinEnhancedController Controller;
+        public readonly JePlatformController Controller;
         private readonly ServiceProvider _provider;
 
         public Endpoint(Func<Endpoint, Dictionary<string, TagCacheEntry>>? extraItems = null)

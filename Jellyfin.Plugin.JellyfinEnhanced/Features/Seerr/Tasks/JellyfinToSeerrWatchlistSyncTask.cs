@@ -102,7 +102,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 return;
             }
 
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
             var jellyseerrUserMap = await GetJellyseerrUserMap(httpClient, jellyseerrUrl, config.JellyseerrApiKey);
             if (jellyseerrUserMap.Count == 0)
@@ -110,7 +110,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 _logger.Warning("[Jellyfin→Seerr Watchlist Sync] Unable to build Jellyseerr user map.");
             }
 
-            var blockedIds = Helpers.Jellyseerr.JellyseerrUserImportHelper
+            var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
                 .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
             var allUsers = _userManager.GetAllUsers().ToList();
             var jellyfinUsers = allUsers
@@ -258,9 +258,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 while (true)
                 {
                     var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user?take={pageSize}&skip={skip}";
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(HttpMethod.Get, requestUri, apiKey);
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(HttpMethod.Get, requestUri, apiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error != null)
                     {
@@ -310,9 +310,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 while (true)
                 {
                     var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user/{jellyseerrUserId}/watchlist?take={pageSize}&page={page}";
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(HttpMethod.Get, requestUri, apiKey, jellyseerrUserId);
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(HttpMethod.Get, requestUri, apiKey, jellyseerrUserId);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error != null)
                     {
@@ -353,9 +353,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             {
                 var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/watchlist";
                 var body = JsonSerializer.Serialize(new { tmdbId, mediaType, title });
-                using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(HttpMethod.Post, requestUri, apiKey, jellyseerrUserId, body);
+                using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(HttpMethod.Post, requestUri, apiKey, jellyseerrUserId, body);
                 using var response = await httpClient.SendAsync(request);
-                var (_, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                var (_, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                 if (error != null)
                 {

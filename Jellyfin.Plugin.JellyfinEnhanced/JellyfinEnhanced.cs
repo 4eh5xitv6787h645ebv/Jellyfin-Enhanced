@@ -30,7 +30,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
         private readonly IApplicationPaths _applicationPaths;
         private readonly IServerConfigurationManager _serverConfigurationManager;
         private readonly Logger _logger;
-        private readonly Services.AnalyticsReportingService _analyticsReportingService;
+        private readonly Features.Platform.Services.AnalyticsReportingService _analyticsReportingService;
         private const string PluginName = "Jellyfin Enhanced";
 
         public JellyfinEnhanced(
@@ -38,8 +38,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             IServerConfigurationManager serverConfigurationManager,
             IXmlSerializer xmlSerializer,
             Logger logger,
-            Services.AnalyticsReportingService analyticsReportingService,
-            Services.HostCompatibilityService hostCompatibility) : base(applicationPaths, xmlSerializer)
+            Features.Platform.Services.AnalyticsReportingService analyticsReportingService,
+            Shared.Host.HostCompatibilityService hostCompatibility) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
             _applicationPaths = applicationPaths;
@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
             // Set the User-Agent used by every Seerr/TMDB outbound HTTP call.
             // Cloudflare's Browser Integrity Check / Bot Fight Mode flags
-            // empty UA as bot �            Helpers.Jellyseerr.SeerrHttpHelper.UserAgent = $"JellyfinEnhanced/{Version}";
+            // empty UA as bot �            Shared.Seerr.SeerrHttpHelper.UserAgent = $"JellyfinEnhanced/{Version}";
             CleanupOldScript();
             CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
             BackfillMissingDefaultShortcuts();
@@ -396,7 +396,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
             try
             {
-                Controllers.JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+                Shared.Seerr.SeerrCaches.ClearAllSeerrCachesOnConfigChange();
                 _logger.Info("Jellyfin Enhanced: configuration updated — Seerr caches cleared.");
             }
             catch (Exception ex)

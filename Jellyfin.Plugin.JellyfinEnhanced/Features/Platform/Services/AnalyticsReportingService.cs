@@ -14,8 +14,11 @@ using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Analytics;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
 {
     /// <summary>
     /// Builds and sends the opt-in usage report. BuildPayload is the single
@@ -310,7 +313,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.PropertyType == typeof(bool)
                     && !p.Name.StartsWith("Analytics", StringComparison.Ordinal)
-                    && p.GetCustomAttribute<Model.AnalyticsExcludeAttribute>() == null)
+                    && p.GetCustomAttribute<Features.Platform.Models.AnalyticsExcludeAttribute>() == null)
                 .ToDictionary(p => p.Name, p => (bool)p.GetValue(config)!);
 
             flags["TmdbEnabled"] = !string.IsNullOrWhiteSpace(config.TMDB_API_KEY);
@@ -332,7 +335,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         {
             var settings = typeof(PluginConfiguration)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.PropertyType == typeof(string) && p.GetCustomAttribute<Model.AnalyticsIncludeAttribute>() != null)
+                .Where(p => p.PropertyType == typeof(string) && p.GetCustomAttribute<Features.Platform.Models.AnalyticsIncludeAttribute>() != null)
                 .Select(p => new { p.Name, Value = p.GetValue(config) as string })
                 .Where(x => !string.IsNullOrEmpty(x.Value))
                 .ToDictionary(x => x.Name, x => x.Value!);
@@ -365,7 +368,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var excludedClients = (config.NativePosterTagsWebClientNames ?? string.Empty)
                 .Split(new[] { '\n', '\r', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Where(t => System.Text.RegularExpressions.Regex.IsMatch(t, @"^[A-Za-z0-9][A-Za-z0-9 ._+\-]{0,39}$"))
-                .Where(t => !Features.MediaTags.PosterTags.NativeClientPolicy.BuiltInWebClients.Contains(t, StringComparer.OrdinalIgnoreCase))
+                .Where(t => !Features.MediaTags.PublicApi.MediaTagsApi.NativeClients.BuiltInWebClients.Contains(t, StringComparer.OrdinalIgnoreCase))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Take(20);
             var joinedClients = string.Join(",", excludedClients);

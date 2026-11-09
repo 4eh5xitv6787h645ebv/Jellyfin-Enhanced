@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit.Abstractions;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;
 
 namespace JE.Tests.Architecture;
 

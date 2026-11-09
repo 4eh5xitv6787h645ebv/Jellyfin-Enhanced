@@ -1,16 +1,17 @@
 using System.Text;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace JE.Tests;
 
 public class ApiAssetTests
 {
-    internal static JellyfinEnhancedController Controller(CoreFixture fixture, params object[] services)
-        => (JellyfinEnhancedController)Controller(typeof(JellyfinEnhancedController), fixture, services);
+    internal static JePlatformController Controller(CoreFixture fixture, params object[] services)
+        => (JePlatformController)Controller(typeof(JePlatformController), fixture, services);
 
     // Any plugin controller type: each constructor parameter is filled from `services` (first instance of a matching
     // type), the fixture logger, or an inert SpoilerSeerrRedactor; anything else is null.
@@ -24,8 +25,13 @@ public class ApiAssetTests
             : p.ParameterType == typeof(Jellyfin.Plugin.JellyfinEnhanced.Logger) ? (object)fixture.Logger : services.FirstOrDefault(p.ParameterType.IsInstanceOfType)).ToArray();
         var controller = (ControllerBase)constructor.Invoke(arguments);
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+        Built.AddOrUpdate(controller, Tuple.Create(fixture, services));
         return controller;
     }
+
+    // The fixture and services each controller above was built from, so SiblingOf can build a feature controller from
+    // the same inputs (restructure S2.15: the main controller no longer holds the feature services as fields).
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ControllerBase, Tuple<CoreFixture, object[]>> Built = new();
 
     // A feature controller sharing `controller`'s ControllerContext (its HTTP context and signed-in user), for a test
     // that drives actions a restructure step moved off `controller` alongside actions that stayed on it.
@@ -39,9 +45,13 @@ public class ApiAssetTests
     // A feature controller built from the constructor arguments `controller` holds (its injected fields, base class
     // included) and sharing its ControllerContext, so it sees the same services and signed-in user. For tests whose
     // fixture exposes only the main controller (restructure S2.11). Call it per action: a later SignIn replaces the
-    // main controller's context.
+    // main controller's context. A controller built by Controller(...) is rebuilt from its recorded fixture and services.
     internal static T SiblingOf<T>(ControllerBase controller) where T : ControllerBase
     {
+        // Built by Controller(...): the same fixture and services give every constructor parameter the instance the
+        // controller's own constructor received (each feature controller's parameter types were all parameters of the
+        // old main controller's constructor), without depending on which fields the controller keeps.
+        if (Built.TryGetValue(controller, out var built)) return Sibling<T>(controller, built.Item1, built.Item2);
         var values = new List<object>();
         for (var type = controller.GetType(); type != null && type != typeof(ControllerBase); type = type.BaseType)
             values.AddRange(type.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly)

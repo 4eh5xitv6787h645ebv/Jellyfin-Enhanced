@@ -17,7 +17,7 @@ CASES = [
     dict(name='explicit-user-authorization', layer='backend', file=PLUGIN+'Infrastructure/Auth/UserHelper.cs',
          before='if (isAdministrator || (!currentUserId.IsNullOrEmpty() && userId.Equals(currentUserId)))',
          after='if (true)', test='ExplicitUserSelectionRequiresSelfOrAdministrator', assertion='Assert.Null'),
-    dict(name='blocked-tags-precedence', layer='backend', file=PLUGIN+'Features/Seerr/Services/ParentalTagDecision.cs',
+    dict(name='blocked-tags-precedence', layer='backend', file=PLUGIN+'Shared/Parental/ParentalTagDecision.cs',
          before='return false; // blocked wins, even over an allowed match',
          after='return true; // MUTATION: allow a blocked title',
          test='TagsUseWholeValuesBlockedWinsAndGenresCannotGrantAccess', assertion='Assert.Equal'),

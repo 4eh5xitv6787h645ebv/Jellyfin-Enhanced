@@ -14,7 +14,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services
 {
     // Monitors library additions to automatically add requested media to user watchlists.
     // Queries Jellyseerr API directly to check if added items were requested by users.
@@ -168,7 +168,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     return;
                 }
 
-                var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
                 // Fetch all requests at once (no X-Api-User header = all requests)
                 var allRequests = await GetAllJellyseerrRequests(httpClient, jellyseerrUrl, config.JellyseerrApiKey);
@@ -192,7 +192,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 // filter out users in the import
                 // blocklist so a blocked user's existing requests don't keep
                 // syncing to their Jellyfin watchlist (defeats admin intent).
-                var blockedIds = Helpers.Jellyseerr.JellyseerrUserImportHelper
+                var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
                     .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
 
                 var requesterIds = matchingRequests
@@ -277,10 +277,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     var requestUri = $"{cacheKey}/api/v1/request?take=1000&skip=0&sort=added&filter=all";
 
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, apiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
                     if (error != null)
                     {
                         _logger.Warning($"[Watchlist] Failed to fetch requests from Jellyseerr: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");

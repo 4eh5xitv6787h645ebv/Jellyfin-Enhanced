@@ -5,6 +5,7 @@ using MediaBrowser.Controller;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit.Abstractions;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform;
 
 namespace JE.Tests.Architecture;
 
@@ -102,7 +103,7 @@ public class ControllerActivationTests(ITestOutputHelper output)
             catch (Exception e) { failures.Add($"{controller.Name}: {e}"); }
         }
         foreach (var failure in failures) output.WriteLine(failure);
-        Assert.True(controllers.Length >= 2, "expected at least JellyfinEnhancedController and JeCatchupController");
+        Assert.True(controllers.Length >= 2, "expected at least JePlatformController and JeCatchupController");
         Assert.Empty(failures);
     }
 }

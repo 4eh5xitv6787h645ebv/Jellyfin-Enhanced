@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services
 {
     /// <summary>
     /// Adds Seerr's CSRF cookie + header to write requests when Settings > Network >

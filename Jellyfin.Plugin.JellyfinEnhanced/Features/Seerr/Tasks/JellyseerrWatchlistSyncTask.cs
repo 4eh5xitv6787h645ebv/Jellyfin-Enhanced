@@ -15,6 +15,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 {
@@ -127,7 +128,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 return null;
             }
 
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
             // Use the first configured URL that answers, as the Seerr proxy and the
             // auto-request services do (WatchlistMonitor and the Jellyfin→Seerr sync
@@ -155,7 +156,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 
             // Get all Jellyfin users, then filter out the JellyseerrImportBlockedUsers
             // so blocked users don't get watchlist sync.
-            var blockedIds = Helpers.Jellyseerr.JellyseerrUserImportHelper
+            var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
                 .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
             var allUsers = _userManager.GetAllUsers().ToList();
             var jellyfinUsers = allUsers
@@ -328,10 +329,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 while (true)
                 {
                     var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user?take={pageSize}&skip={skip}";
-                    using var request = Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, apiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error != null)
                     {
@@ -395,10 +396,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             try
             {
                 var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user/{jellyseerrUserId}/watchlist";
-                using var request = Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Get, requestUri, apiKey, jellyseerrUserId);
                 using var response = await httpClient.SendAsync(request);
-                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                 if (error == null && content != null)
                 {
@@ -451,10 +452,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             try
             {
                 var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/request?take=500&skip=0&sort=added&filter=all";
-                using var request = Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Get, requestUri, apiKey, jellyseerrUserId);
                 using var response = await httpClient.SendAsync(request);
-                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                 if (error != null)
                 {

@@ -156,7 +156,7 @@ JellyfinEnhancedUserSettings ReadSettingsText(string json)
     }
 }
 
-// JellyfinEnhancedController.GetUserSettingsSettings default construction, copied verbatim.
+// JeSettingsController.GetUserSettingsSettings default construction, copied verbatim.
 static JellyfinEnhancedUserSettings ControllerDefaults(PluginConfiguration defaultConfig) => new()
 {
     AutoPauseEnabled = defaultConfig.AutoPauseEnabled,

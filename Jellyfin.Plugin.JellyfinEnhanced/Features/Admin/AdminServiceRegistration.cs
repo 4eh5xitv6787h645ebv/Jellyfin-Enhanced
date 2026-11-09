@@ -1,5 +1,6 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
 {
