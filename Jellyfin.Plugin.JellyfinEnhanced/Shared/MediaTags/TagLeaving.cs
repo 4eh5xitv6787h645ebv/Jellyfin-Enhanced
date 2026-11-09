@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
 {
     /// <summary>
     /// Leaving soon facts (Status group, schema v20): the item is in a Maintainerr

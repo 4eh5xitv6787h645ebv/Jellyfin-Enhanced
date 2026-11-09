@@ -18,7 +18,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using Newtonsoft.Json.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 var mode = args.Length > 0 ? args[0] : "resolve";

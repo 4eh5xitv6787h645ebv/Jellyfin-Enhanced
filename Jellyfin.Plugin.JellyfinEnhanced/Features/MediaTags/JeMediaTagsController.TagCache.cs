@@ -41,7 +41,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 
@@ -94,7 +93,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // across page loads (tag-cache-store.js), so every guarded entry
             // rides along with each delta: a guard list's worth of entries,
             // stripped below exactly like a full load, instead of the whole cache.
-            Func<string, Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry, bool>? guardedRider =
+            Func<string, Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry, bool>? guardedRider =
                 since.HasValue && spPolicy != null
                     ? (key, e) => _spoilerTagDataStripper.GetGuardedKind(spPolicy.State, key, e) != null
                     : null;
@@ -192,7 +191,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // LastUpdated, so they ride along freshly projected; the walk runs again only on that mismatch.
             if (since.HasValue && known != null && !string.Equals(known, FilterRevisionOf(accessRevision), StringComparison.Ordinal))
             {
-                Func<string, Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry, bool> reconcileRider = guardedRider == null
+                Func<string, Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry, bool> reconcileRider = guardedRider == null
                     ? (_, e) => Services.TagCacheService.ProjectsAccess(e)
                     : (key, e) => Services.TagCacheService.ProjectsAccess(e) || guardedRider(key, e);
                 items = _tagCacheService.GetCacheForUser(user, out cacheVersion, out cacheTimestamp, out accessRevision, out removed, since, reconcileRider);
@@ -322,15 +321,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     options.TypeInfoResolver ?? new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
                     static typeInfo =>
                     {
-                        if (typeInfo.Type != typeof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry)) return;
+                        if (typeInfo.Type != typeof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry)) return;
                         foreach (var property in typeInfo.Properties)
                         {
                             // By CLR name: the JSON name follows the host's naming policy.
                             if (property.AttributeProvider is System.Reflection.PropertyInfo clrProperty
-                                && (clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.LatestEpisodeId)
-                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.StatusEpisodeIds)
-                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.QualityEpisodeIds)
-                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.NextEpisodePremiere)))
+                                && (clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.LatestEpisodeId)
+                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.StatusEpisodeIds)
+                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.QualityEpisodeIds)
+                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.NextEpisodePremiere)))
                             {
                                 property.ShouldSerialize = static (_, _) => false;
                             }

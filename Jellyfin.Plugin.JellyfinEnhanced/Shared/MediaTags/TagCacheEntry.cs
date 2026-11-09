@@ -3,7 +3,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
 {
     /// <summary>
     /// Pre-computed tag data for a single library item.

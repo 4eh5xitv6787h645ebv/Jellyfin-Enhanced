@@ -159,7 +159,7 @@ public class PosterCentreAnchorTests
                 TagLayouts = new() { Corners = new() { Groups = [new() { Group = "logos", Slot = slot }, new() { Group = "status", Slot = slot == "ml" ? "mr" : "ml" }] } },
             };
             var now = new DateTimeOffset(2026, 10, 31, 0, 0, 0, TimeSpan.Zero);
-            var entry = new Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry
+            var entry = new Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry
             {
                 Type = "Movie", DateCreated = now.ToUnixTimeMilliseconds(),
                 Logos = [new() { Kind = "studio", Name = row.GetProperty("name").GetString()! }],

@@ -196,7 +196,7 @@ public class PosterEdgeSpacingTests
     {
         var settings = PosterTagSettings.FromUserSettings(
             new JellyfinEnhancedUserSettings { TagLayoutSettingsVersion = 1, RatingTagsEnabled = true, TagEdgeSpacing = "flush" }, new PluginConfiguration());
-        var entry = new Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry { Type = "Movie", CommunityRating = 8.1f };
+        var entry = new Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry { Type = "Movie", CommunityRating = 8.1f };
         var layout = PosterTagResolver.Resolve(entry, settings, new PosterTagItemContext("Movie", false, null, null, null), false);
         Assert.NotNull(layout);
         Assert.Equal(0f, layout!.EdgeInset);

@@ -1,6 +1,6 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using System.Net;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;

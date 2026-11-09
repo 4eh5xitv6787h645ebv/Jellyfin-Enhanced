@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Mdblist
 {
     /// <summary>
     /// One rating source entry as returned by MDBList's API, e.g. source

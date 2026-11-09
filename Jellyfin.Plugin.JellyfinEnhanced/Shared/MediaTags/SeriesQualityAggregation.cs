@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 

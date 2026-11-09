@@ -340,7 +340,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolut
             .Select(code => (code, code.ToUpperInvariant())).ToArray();
 
         /// <summary>Language chips in the combined cap order: badge, audio, subtitles.</summary>
-        internal static List<PosterTag>? ResolveGroup(Models.TagCacheEntry entry, PosterTagSettings settings)
+        internal static List<PosterTag>? ResolveGroup(Shared.MediaTags.TagCacheEntry entry, PosterTagSettings settings)
         {
             bool codes = settings.LanguageStyle == "codes";
             List<FlagInfo>? ResolveTracks(string[]? tracks, string[]? partial, bool asCodes) => Resolve(

@@ -254,10 +254,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Models/MdblistRatings.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/AnilistReviewsService.cs",
       "category": "Features"
     },
@@ -343,22 +339,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/MediaTagsServiceRegistration.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagCacheEntry.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagLeaving.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagLogo.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Models/TagSourceRatings.cs",
       "category": "Features"
     },
     {
@@ -1006,6 +986,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Mdblist/MdblistRatings.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/MediaStreamLanguageResolver.cs",
       "category": "Shared"
     },
@@ -1042,7 +1026,23 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/TagCacheEntry.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/TagLeaving.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/TagLogo.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/TagQualitySummary.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/TagSourceRatings.cs",
       "category": "Shared"
     },
     {

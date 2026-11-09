@@ -21,7 +21,6 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
