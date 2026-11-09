@@ -95,26 +95,6 @@
     "internals *": 2,
     "internals peopleTags": 1
   },
-  "client/src/features/player/auto-skip.ts": {
-    "internals *": 2,
-    "internals autoSkip": 1,
-    "internals player": 2
-  },
-  "client/src/features/player/now-playing.ts": {
-    "internals *": 2,
-    "internals nowPlaying": 1,
-    "internals player": 1
-  },
-  "client/src/features/player/pausescreen.ts": {
-    "internals nowPlaying": 1
-  },
-  "client/src/features/player/playback-rating-badge.ts": {
-    "internals nowPlaying": 1
-  },
-  "client/src/features/player/playback.ts": {
-    "internals *": 2,
-    "internals player": 2
-  },
   "client/src/features/seerr/core/api.ts": {
     "raw-global JellyfinEnhanced": 2
   },

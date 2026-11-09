@@ -1,11 +1,43 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/player/host.ts
   function playerHost() {
     const host = window;
     const JE2 = host.JellyfinEnhanced;
     if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("player", JE2, {
+      internalSlots: ["player", "nowPlaying", "autoSkip"],
+      internalsObject: () => JE2.internals = JE2.internals || {}
+    });
     const requireApi = () => {
       if (!host.ApiClient) throw new Error("Jellyfin API unavailable");
       return host.ApiClient;
@@ -22,7 +54,7 @@
       ajax: (options) => requireApi().ajax(options),
       getItem: (userId, itemId) => requireApi().getItem(userId, itemId)
     };
-    return { JE: JE2, ApiClient: ApiClient2 };
+    return { JE: JE2, ApiClient: ApiClient2, ctx: ctx2 };
   }
 
   // client/src/features/player/lifetime.ts
@@ -1148,7 +1180,7 @@
   }
 
   // client/src/features/player/playback.ts
-  var { JE, ApiClient } = playerHost();
+  var { JE, ApiClient, ctx } = playerHost();
   var lifetime = createPlayerLifetime(JE, "playback");
   var getVideo = () => document.querySelector("video");
   var _tFallbackWarned = /* @__PURE__ */ new Set();
@@ -1228,8 +1260,7 @@
   installAspect(context);
   installPlaybackInfo(context, tracks.probeOwnSession, tracks.trackDisplayName);
   installLongPress(context);
-  JE.internals = JE.internals || {};
-  JE.internals.player = Object.assign(JE.internals.player || {}, { getVideo, getCurrentVideoItemId });
+  ctx.own.player = Object.assign(ctx.own.player || {}, { getVideo, getCurrentVideoItemId });
 })();
 })();
 //# sourceMappingURL=playback.js.map

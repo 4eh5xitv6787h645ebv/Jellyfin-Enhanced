@@ -363,11 +363,43 @@
 
           `;
 
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/player/host.ts
   function playerHost() {
     const host = window;
     const JE2 = host.JellyfinEnhanced;
     if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("player", JE2, {
+      internalSlots: ["player", "nowPlaying", "autoSkip"],
+      internalsObject: () => JE2.internals = JE2.internals || {}
+    });
     const requireApi = () => {
       if (!host.ApiClient) throw new Error("Jellyfin API unavailable");
       return host.ApiClient;
@@ -384,7 +416,7 @@
       ajax: (options) => requireApi().ajax(options),
       getItem: (userId, itemId) => requireApi().getItem(userId, itemId)
     };
-    return { JE: JE2, ApiClient: ApiClient2 };
+    return { JE: JE2, ApiClient: ApiClient2, ctx: ctx2 };
   }
 
   // client/src/features/player/wire.ts
@@ -409,7 +441,7 @@
   }
 
   // client/src/features/player/pausescreen.ts
-  var { JE, ApiClient } = playerHost();
+  var { JE, ApiClient, ctx } = playerHost();
   var lifetime = createPlayerLifetime(JE, "pause-screen");
   JE.initializePauseScreen = function() {
     if (!JE.currentSettings.pauseScreenEnabled) {
@@ -419,7 +451,7 @@
     }
     if (JE.pauseScreenInstance?.overlay?.isConnected) return;
     JE.pauseScreenInstance?.destroy();
-    const nowPlaying = () => JE.internals.nowPlaying;
+    const nowPlaying = () => ctx.own.nowPlaying;
     class JellyfinPauseScreen {
       constructor() {
         this.generation = 0;
@@ -799,8 +831,9 @@
               clearTimeout(this.pauseScreenTimer);
               this.pauseScreenTimer = null;
             }
-            if (typeof JE?.resumeRatingsPolling === "function") {
-              JE.resumeRatingsPolling();
+            const resumeRatingsPolling = ctx.peer("resumeRatingsPolling");
+            if (typeof resumeRatingsPolling === "function") {
+              resumeRatingsPolling();
             }
             this._dismissedThisPause = false;
             this.lastUserInteractionAt = Date.now();
@@ -813,8 +846,9 @@
               clearTimeout(this.pauseScreenTimer);
               this.pauseScreenTimer = null;
             }
-            if (typeof JE?.pauseRatingsPolling === "function") {
-              JE.pauseRatingsPolling();
+            const pauseRatingsPolling = ctx.peer("pauseRatingsPolling");
+            if (typeof pauseRatingsPolling === "function") {
+              pauseRatingsPolling();
             }
             this.hideOverlay();
           }
