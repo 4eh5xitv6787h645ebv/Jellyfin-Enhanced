@@ -310,6 +310,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs",
       "category": "Features"
     },
@@ -759,6 +763,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrTagSignatureExtractor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrUserLookup.cs",
       "category": "Features"
     },
     {
@@ -3392,53 +3400,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/queue",
-      "method": "GetDownloadQueue",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/history",
-      "method": "GetDownloadHistory",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/requests",
-      "method": "GetRequests",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/arr/requests/{requestId}/approve",
-      "method": "ActOnRequest",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "HttpPost(\"arr/requests/{requestId}/decline\")",
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/arr/requests/{requestId}/decline",
-      "method": "ActOnRequest",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/proxy/avatar",
       "method": "ProxyAvatar",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3727,6 +3688,53 @@
       "path": "/JellyfinEnhanced/active-streams/broadcast",
       "method": "BroadcastMessage",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/queue",
+      "method": "GetDownloadQueue",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/history",
+      "method": "GetDownloadHistory",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/requests",
+      "method": "GetRequests",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/arr/requests/{requestId}/approve",
+      "method": "ActOnRequest",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
+      "following_attributes": [
+        "HttpPost(\"arr/requests/{requestId}/decline\")",
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/arr/requests/{requestId}/decline",
+      "method": "ActOnRequest",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
       "following_attributes": [
         "Authorize"
       ]
@@ -10398,7 +10406,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 505,
+    "files": 507,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 94,

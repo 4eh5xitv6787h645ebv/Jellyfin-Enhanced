@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Configuration;
@@ -62,6 +63,13 @@ public class ApiSeerrTests
             var calendar = (JeCalendarController)ApiAssetTests.Controller(typeof(JeCalendarController), Plugin.Core, services);
             calendar.ControllerContext = Controller.ControllerContext;
             return calendar;
+        }
+        // The Downloads actions live on JeDownloadsController (restructure S2.10); same services, same HTTP context.
+        public JeDownloadsController Downloads()
+        {
+            var downloads = (JeDownloadsController)ApiAssetTests.Controller(typeof(JeDownloadsController), Plugin.Core, services);
+            downloads.ControllerContext = Controller.ControllerContext;
+            return downloads;
         }
         public void SetUser(Guid user, bool admin = false) => Controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
             new Claim("Jellyfin-UserId", user.ToString()), new Claim(ClaimTypes.Role, admin ? "Administrator" : "User")], "test"));
@@ -366,13 +374,13 @@ public class ApiSeerrTests
         using var f = GuardedSeerr(out _);
         f.Reply = _ => IntegrationTransport.Response("{\"records\":[{\"id\":1,\"series\":{\"title\":\"Show\",\"tvdbId\":71663},\"episode\":{\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\"},\"status\":\"downloading\",\"size\":100,\"sizeleft\":50}]}");
         f.SetUser(f.UserId, admin: true);
-        var guarded = Rows(await f.Controller.GetDownloadQueue(), "items")[0];
+        var guarded = Rows(await f.Downloads().GetDownloadQueue(), "items")[0];
         Assert.Equal("S02E05", guarded.GetProperty("subtitle").GetString());
         Assert.Equal("Show", guarded.GetProperty("title").GetString());
         f.SetUser(f.OtherUserId, admin: true);
-        Assert.Equal("S02E05 - Secret title", Rows(await f.Controller.GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
+        Assert.Equal("S02E05 - Secret title", Rows(await f.Downloads().GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
         f.SetUser(f.UserId, admin: true);
-        Assert.Equal("S02E05", Rows(await f.Controller.GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
+        Assert.Equal("S02E05", Rows(await f.Downloads().GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
     }
 
     [Fact]
@@ -384,7 +392,7 @@ public class ApiSeerrTests
             + "{\"eventType\":\"downloadFolderImported\",\"date\":\"2026-11-01T00:00:00Z\",\"downloadId\":\"a\",\"series\":{\"title\":\"Show\",\"tvdbId\":71663},\"episode\":{\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\"}},"
             + "{\"eventType\":\"downloadFolderImported\",\"date\":\"2026-10-01T00:00:00Z\",\"downloadId\":\"b\",\"series\":{\"title\":\"Other\",\"tvdbId\":7},\"episode\":{\"seasonNumber\":1,\"episodeNumber\":1,\"title\":\"Open title\"}}]}");
         f.SetUser(f.UserId, admin: true);
-        var rows = Rows(await f.Controller.GetDownloadHistory(), "items");
+        var rows = Rows(await f.Downloads().GetDownloadHistory(), "items");
         Assert.Equal("S02E05", rows[0].GetProperty("subtitle").GetString());
         Assert.Equal("S01E01 - Open title", rows[1].GetProperty("subtitle").GetString());
         Assert.False(string.IsNullOrEmpty(rows[0].GetProperty("date").GetString()));
@@ -414,12 +422,12 @@ public class ApiSeerrTests
         const string Show = "{\"name\":\"Show\",\"firstAirDate\":\"2005-02-06\",\"posterPath\":\"/p.jpg\",\"nextEpisodeToAir\":{\"airDate\":\"2099-01-01\"}}";
         f.Reply = request => IntegrationTransport.Response(request.RequestUri!.AbsolutePath == "/api/v1/tv/1433" ? Show : Requests);
         f.SetUser(f.UserId, admin: true);
-        var row = Rows(await f.Controller.GetRequests(), "requests")[0];
+        var row = Rows(await f.Downloads().GetRequests(), "requests")[0];
         Assert.Equal(JsonValueKind.Null, row.GetProperty("nextAirDate").ValueKind);
         Assert.Equal(JsonValueKind.Null, row.GetProperty("initialAirDate").ValueKind);
         Assert.True(row.GetProperty("isComingSoon").GetBoolean());
         Assert.Equal("Show", row.GetProperty("title").GetString());
         f.SetUser(f.OtherUserId, admin: true);
-        Assert.Equal("2099-01-01", Rows(await f.Controller.GetRequests(), "requests")[0].GetProperty("nextAirDate").GetString());
+        Assert.Equal("2099-01-01", Rows(await f.Downloads().GetRequests(), "requests")[0].GetProperty("nextAirDate").GetString());
     }
 }

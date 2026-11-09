@@ -150,5 +150,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
                 return id;
             return Guid.Empty;
         }
+
+        protected IActionResult ParentalBlockedResult()
+        {
+            return StatusCode(403, new
+            {
+                error = true,
+                code = "parental_block",
+                message = "This title is above your parental rating limit."
+            });
+        }
     }
 }
