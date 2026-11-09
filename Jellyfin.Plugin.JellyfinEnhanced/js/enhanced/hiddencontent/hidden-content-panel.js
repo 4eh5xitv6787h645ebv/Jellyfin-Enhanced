@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -21,6 +49,13 @@
       if (value === void 0) throw new Error(`Missing hidden-content loader dependency: ${key}`);
       return value;
     } });
+  }
+  function hiddenContentContext(JE) {
+    return featureContext("hidden-content", JE, {
+      internalSlots: ["hiddenContent", "hiddenContentPage", "hiddenContentRuntime", "features"],
+      // Same expression as registry() and runtime() below.
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
   }
   function runtime(JE) {
     const internals = JE.internals ?? (JE.internals = {});
@@ -97,6 +132,7 @@
     if (!installOnce(JE, "hidden-content-panel")) return;
     "use strict";
     const internal = registry(JE, "hiddenContent");
+    const featureCtx = hiddenContentContext(JE);
     const { getHiddenData, unhideItem, unhideAll } = internal;
     const POSTER_MAX_WIDTH = 300;
     function createManagementHeader(count) {
@@ -143,7 +179,7 @@
         img.loading = "lazy";
         img.onerror = function() {
           const self = img;
-          if (hasTmdbId && JE.jellyseerrMoreInfo) {
+          if (hasTmdbId && featureCtx.peer("jellyseerrMoreInfo")) {
             card.dataset.jellyfinRemoved = "1";
           }
           if (hasTmdbId && item.posterPath) {
@@ -151,11 +187,11 @@
             self.onerror = function() {
               img.style.display = "none";
             };
-          } else if (hasTmdbId && JE.jellyseerrAPI) {
+          } else if (hasTmdbId && featureCtx.peer("jellyseerrAPI")) {
             self.onerror = function() {
               img.style.display = "none";
             };
-            const fetchFn = mediaType === "tv" ? JE.jellyseerrAPI.fetchTvShowDetails : JE.jellyseerrAPI.fetchMovieDetails;
+            const fetchFn = mediaType === "tv" ? featureCtx.peer("jellyseerrAPI").fetchTvShowDetails : featureCtx.peer("jellyseerrAPI").fetchMovieDetails;
             fetchFn(parseInt(String(item.tmdbId), 10)).then(decodeSeerrItem).then(function(details) {
               if (!imageToken.current() || !img.isConnected) return;
               const path = details && (details.posterPath || details.poster_path);
@@ -167,10 +203,10 @@
             }).catch(function() {
               self.style.display = "none";
             });
-          } else if (item.type !== "Person" && item.name && JE.jellyseerrAPI && JE.jellyseerrMoreInfo) {
+          } else if (item.type !== "Person" && item.name && featureCtx.peer("jellyseerrAPI") && featureCtx.peer("jellyseerrMoreInfo")) {
             self.style.display = "none";
             const wantType = item.type === "Series" || item.type === "Episode" || item.type === "Season" ? "tv" : "movie";
-            JE.jellyseerrAPI.search(item.name).then(decodeSeerrSearch).then(function(res) {
+            featureCtx.peer("jellyseerrAPI").search(item.name).then(decodeSeerrSearch).then(function(res) {
               if (!imageToken.current() || !img.isConnected) return;
               const results = res && res.results || [];
               const hit = results.find(function(r) {
@@ -222,15 +258,15 @@
       for (const link of navigableLinks) {
         link.addEventListener("click", (e) => {
           const removedId = card.dataset.jellyfinRemoved === "1" ? hasTmdbId ? item.tmdbId : card.dataset.resolvedTmdbId : "";
-          if (hasJellyfinId && removedId && JE.jellyseerrMoreInfo) {
+          if (hasJellyfinId && removedId && featureCtx.peer("jellyseerrMoreInfo")) {
             e.preventDefault();
-            JE.jellyseerrMoreInfo.open(parseInt(String(removedId), 10), hasTmdbId ? mediaType : card.dataset.resolvedMediaType || mediaType);
+            featureCtx.peer("jellyseerrMoreInfo").open(parseInt(String(removedId), 10), hasTmdbId ? mediaType : card.dataset.resolvedMediaType || mediaType);
             if (onNavigate) onNavigate();
           } else if (hasJellyfinId) {
             if (onNavigate) onNavigate();
-          } else if (hasTmdbId && JE.jellyseerrMoreInfo) {
+          } else if (hasTmdbId && featureCtx.peer("jellyseerrMoreInfo")) {
             e.preventDefault();
-            JE.jellyseerrMoreInfo.open(parseInt(String(item.tmdbId), 10), mediaType);
+            featureCtx.peer("jellyseerrMoreInfo").open(parseInt(String(item.tmdbId), 10), mediaType);
             if (onNavigate) onNavigate();
           } else if (!hasJellyfinId) {
             e.preventDefault();

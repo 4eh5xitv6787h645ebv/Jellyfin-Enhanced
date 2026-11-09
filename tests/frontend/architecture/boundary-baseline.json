@@ -55,9 +55,6 @@
   "client/src/features/details-providers/release-dates.ts": {
     "internals *": 1
   },
-  "client/src/features/hidden-content/features-remove-home.ts": {
-    "internals hiddenContent": 1
-  },
   "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts": {
     "import client/src/features/settings-panel/host.ts": 1
   },

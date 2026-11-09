@@ -1,3 +1,4 @@
+import { featureContext, type FeatureContext } from '../../host/context';
 import type { HomeSurfaceApi, HomeSurface } from './home-model';
 import type { PageSurface } from './page-model';
 import type { HiddenDocument, HiddenItem, ListedItem, Settings, AdminUser } from './model';
@@ -86,6 +87,22 @@ export function registry(JE:HiddenHost, name:'hiddenContent'|'hiddenContentPage'
   if (value===undefined) throw new Error(`Missing hidden-content loader dependency: ${key}`);
   return value;
  }});
+}
+/** hidden-content's own slots (frontend.md §2.3): its owner-only `JE.internals` slots (internals-owners.json). */
+export type HiddenContentOwn = Pick<NonNullable<HiddenHost['internals']>, 'hiddenContent' | 'hiddenContentPage' | 'hiddenContentRuntime' | 'features'>;
+/**
+ * Other features' facades hidden-content reads: seerr's `jellyseerrAPI` and `jellyseerrMoreInfo`. seerr's
+ * public-api.ts types the full facades; the structural types on `HiddenHost` (only the members read here) type them.
+ */
+export type HiddenContentPeers = Required<Pick<HiddenHost, 'jellyseerrAPI' | 'jellyseerrMoreInfo'>>;
+export type HiddenContentContext = FeatureContext<HiddenContentOwn, HiddenContentPeers, HiddenHost>;
+/** The context a hidden-content module gets (step C3): `core` is the bridge the module already holds. */
+export function hiddenContentContext(JE:HiddenHost):HiddenContentContext {
+ return featureContext<HiddenContentOwn, HiddenContentPeers, HiddenHost>('hidden-content', JE, {
+  internalSlots: ['hiddenContent', 'hiddenContentPage', 'hiddenContentRuntime', 'features'],
+  // Same expression as registry() and runtime() below.
+  internalsObject: () => JE.internals??={},
+ });
 }
 interface Runtime { modules:Set<string>; view:number; policy:number; queues:Map<string,Promise<unknown>>; cleanups:Set<()=>void>; identityCleanups:Set<()=>void> }
 function runtime(JE:HiddenHost):Runtime {
