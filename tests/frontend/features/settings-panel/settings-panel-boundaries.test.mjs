@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHarness, deferred, jsonResponse } from '../../helpers/harness.mjs';
+import { createHarness, deferred } from '../../helpers/harness.mjs';
 import { contractValue } from '../../contracts/fixtures.mjs';
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
@@ -74,20 +74,20 @@ for(const cancel of ['navigation','second toggle'])test(`pending panel opening i
  assert.equal(callbacks.size,0,'cancel releases subscription even while GET is pending');
  response.resolve(null);await opening;assert.equal(h.panel(),null);assert.equal(h.document.querySelector('[inert]'),null);
 });
-function languageHarness(t,{post=async()=>({Revision:'r2'}),github=async()=>({ok:false})}={}){
+function languageHarness(t,{post=async()=>({Revision:'r2'}),github=async()=>({ok:false}),locales=async()=>['fr','de']}={}){
  let user='user-a',epoch=0;const closes=[],toasts=[],timers=[],posts=[];
- const h=createHarness({html:'<select id="displayLanguageSelect"><option value="">Auto</option></select>',JE:{pluginConfig:{},userConfig:{settings:{displayLanguage:'fr'},settingsRevision:'r1',shortcuts:{Shortcuts:[]}},t:k=>k,toast:m=>toasts.push(m),session:{getEpoch:()=>epoch}},apiClient:{getCurrentUserId:()=>user,ajax:async req=>{if(req.type==='POST'){posts.push(req);return post(req);}return req.url.endsWith('/locales')?['fr','de']:[];}},fetch:github});
+ const h=createHarness({html:'<select id="displayLanguageSelect"><option value="">Auto</option></select>',JE:{pluginConfig:{},userConfig:{settings:{displayLanguage:'fr'},settingsRevision:'r1',shortcuts:{Shortcuts:[]}},t:k=>k,toast:m=>toasts.push(m),session:{getEpoch:()=>epoch}},apiClient:{getCurrentUserId:()=>user,ajax:async req=>{if(req.type==='POST'){posts.push(req);return post(req);}return req.url.endsWith('/locales')?locales():[];}},fetch:github});
  t.after(()=>h.close());h.load('enhanced/config.js');h.JE.currentSettings=h.JE.loadSettings();
  h.window.setTimeout=(fn,ms)=>{timers.push({fn,ms});return timers.length;};h.window.clearTimeout=()=>{};
  h.load('enhanced/settingspanel/ui-panel-language.js');h.JE.internals.enhancedUi.wireLanguageControls({resetAutoCloseTimer(){},onClose:fn=>closes.push(fn)});
  return {...h,select:h.document.querySelector('select'),toasts,timers,posts,close:()=>closes.forEach(fn=>fn()),switchUser(){epoch++;user='user-b';h.JE.userConfig={settings:{displayLanguage:'en'},settingsRevision:'b1',shortcuts:{Shortcuts:[]}};h.JE.currentSettings=h.JE.loadSettings();}};
 }
-test('bundled locale choices render without GitHub, late enrichment preserves the chosen language',async t=>{
- const github=deferred();const h=languageHarness(t,{github:()=>github.promise});await tick();
+// BUG-015: the choices are the plugin's embedded locales only; the panel never asks GitHub.
+test('bundled locale choices render with no GitHub request and keep the chosen language',async t=>{
+ const fetched=[];const h=languageHarness(t,{github:url=>{fetched.push(String(url));return new Promise(()=>{});}});await tick();
  assert.deepEqual(Array.from(h.select.options,o=>o.value),['','de','fr']);assert.equal(h.select.value,'fr');
- h.select.value='de';h.select.dispatchEvent(new h.window.Event('change'));await tick();
- github.resolve(jsonResponse([{name:'es.json'},{name:'de.json'}]));await tick();await tick();
- assert.equal(h.select.value,'de');assert.equal([...h.select.options].filter(o=>o.value==='de').length,1);assert.ok([...h.select.options].some(o=>o.value==='es'));
+ h.select.value='de';h.select.dispatchEvent(new h.window.Event('change'));await tick();await tick();
+ assert.equal(h.select.value,'de');assert.equal([...h.select.options].filter(o=>o.value==='de').length,1);assert.deepEqual(fetched,[]);
 });
 test('rejected language write rolls back and reports no success or reload',async t=>{
  const h=languageHarness(t,{post:async()=>{throw Error('409 conflict');}});await tick();h.select.value='de';h.select.dispatchEvent(new h.window.Event('change'));await tick();await tick();
@@ -99,9 +99,9 @@ for(const reason of ['closed','account changed'])test(`language acknowledgement 
  if(reason==='closed')h.close();else h.switchUser();receipt.resolve({Revision:'r2'});await tick();await tick();
  assert.equal(h.window.localStorage.getItem('user-a-language'),reason==='closed'?'de':null);assert.equal(h.window.localStorage.getItem('user-b-language'),null);assert.equal(h.toasts.includes('toast_language_changed'),false);assert.equal(h.timers.some(x=>x.ms===1500),false);
 });
-test('closed language panel aborts optional discovery and ignores its late payload',async t=>{
- const github=deferred();let signal;const h=languageHarness(t,{github:(_,o)=>{signal=o?.signal;return github.promise;}});await tick();h.close();assert.equal(signal.aborted,true);
- github.resolve(jsonResponse([{name:'es.json'}]));await tick();await tick();assert.equal([...h.select.options].some(o=>o.value==='es'),false);
+test('closed language panel ignores a late locale list',async t=>{
+ const late=deferred();const h=languageHarness(t,{locales:()=>late.promise});await tick();h.close();
+ late.resolve(['es','fr']);await tick();await tick();assert.equal([...h.select.options].some(o=>o.value==='es'),false);
 });
 
 test('rejected language write after close still restores its document',async t=>{

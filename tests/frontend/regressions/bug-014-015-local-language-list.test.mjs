@@ -7,7 +7,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { bootGenerated, settle } from '../helpers/admin-config-page.mjs';
+import { createHarness } from '../helpers/harness.mjs';
 
+const tick = () => new Promise(resolve => setImmediate(resolve));
 const EMBEDDED = ['en', 'de', 'fr', 'zh-HK'];
 const CULTURES = [
   { TwoLetterISOLanguageName: 'de', DisplayName: 'German' },
@@ -49,4 +51,34 @@ test('BUG-014: the admin Default Language list renders from the embedded locales
   assert.equal(select.querySelector('option[value="zh-HK"]').textContent, 'Chinese (Hong Kong)');
   assert.deepEqual(net.urls.filter(u => u.includes('api.github.com')), [], 'no request to api.github.com');
   assert.deepEqual(net.remote(), [], 'no request leaves the Jellyfin server');
+});
+
+test('BUG-015: the settings panel Display Language list makes no GitHub request and renders offline', async t => {
+  const net = offlineFetch('http://jellyfin.test');
+  const h = createHarness({
+    html: '<select id="displayLanguageSelect"><option value="">Auto</option></select>',
+    JE: { pluginConfig: {}, userConfig: { settings: { displayLanguage: 'fr' }, settingsRevision: 'r1', shortcuts: { Shortcuts: [] } }, t: k => k, toast() {}, session: { getEpoch: () => 0 } },
+    apiClient: {
+      getCurrentUserId: () => 'user-a',
+      ajax: async request => (request.url.endsWith('/JellyfinEnhanced/locales') ? EMBEDDED : request.url.endsWith('/Localization/Cultures') ? CULTURES : []),
+    },
+    fetch: net.fetch,
+  });
+  t.after(() => h.close());
+  h.load('enhanced/config.js');
+  h.JE.currentSettings = h.JE.loadSettings();
+  h.load('enhanced/settingspanel/ui-panel-language.js');
+  const closes = [];
+  // Opened twice: every panel open used to ask GitHub again.
+  for (let open = 0; open < 2; open++) {
+    h.JE.internals.enhancedUi.wireLanguageControls({ resetAutoCloseTimer() {}, onClose: fn => closes.push(fn) });
+    await tick(); await tick();
+  }
+
+  const select = h.document.getElementById('displayLanguageSelect');
+  assert.deepEqual(Array.from(select.options, o => o.value).filter(Boolean).sort(), [...EMBEDDED].sort());
+  assert.equal(select.value, 'fr', 'the saved language stays selected');
+  assert.deepEqual(net.urls.filter(u => u.includes('api.github.com')), [], 'no request to api.github.com');
+  assert.deepEqual(net.remote(), [], 'no request leaves the Jellyfin server');
+  closes.forEach(fn => fn());
 });

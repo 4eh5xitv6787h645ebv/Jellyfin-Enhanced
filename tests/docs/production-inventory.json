@@ -10302,10 +10302,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-details-media-info.js"
     },
     {
-      "literal": "en.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js"
-    },
-    {
       "literal": "settings.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js"
     },
@@ -10545,7 +10541,7 @@
     "files": 539,
     "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 96,
+    "storage_references": 95,
     "scheduled_tasks": 15,
     "locales": 33
   }

@@ -6,7 +6,7 @@
 import { apiClient, panelHost, registry, type PanelBridge } from './host';
 import type { PanelContext } from './context';
 import { selectById } from '../shared/dom';
-import { decodeCultures, decodeLocaleCodes, displayLanguageOptions, githubLocaleCodes, mergeLocaleCodes, normalizeLangCode, normalizeSavedLanguage, type Culture } from './language-options';
+import { decodeCultures, decodeLocaleCodes, displayLanguageOptions, normalizeLangCode, normalizeSavedLanguage, type Culture } from './language-options';
 
 type Deps = Pick<PanelBridge, 'internals' | 'currentSettings' | 'userConfig' | 'session' | 'saveUserSettings' | 'toast' | 't'>;
 
@@ -39,7 +39,6 @@ export function installUiPanelLanguage(JE: Deps): void {
             const server = serverId();
             let closed = false;
             let reloadTimer: ReturnType<typeof setTimeout> | null = null;
-            const controller = new AbortController();
             const sameDocument = () => apiClient() === client
                 && client.getCurrentUserId() === userId && client.getUrl('/') === serverRoot
                 && client.accessToken?.() === token && serverId() === server && JE.session?.getEpoch() === epoch
@@ -47,7 +46,6 @@ export function installUiPanelLanguage(JE: Deps): void {
             const current = () => !closed && displayLanguageSelect.isConnected && sameDocument();
             const dispose = () => {
                 closed = true;
-                controller.abort();
                 if (reloadTimer !== null) clearTimeout(reloadTimer);
                 displayLanguageSelect.removeEventListener('change', saveLanguage);
             };
@@ -74,22 +72,15 @@ export function installUiPanelLanguage(JE: Deps): void {
                 const normalized = normalizeSavedLanguage(selected, Array.from(displayLanguageSelect.options, option => option.value));
                 displayLanguageSelect.value = Array.from(displayLanguageSelect.options).find(option => option.value.toLowerCase() === normalized.toLowerCase())?.value ?? '';
             };
-            // Each response enhances the selector independently. Optional discovery or
-            // culture-name lookup must never hold the bundled language choices hostage.
+            // The choices are the plugin's embedded locales only (BUG-015: no runtime GitHub
+            // listing). Each response enhances the selector independently: the culture-name
+            // lookup must never hold the bundled language choices hostage.
             void client.ajax({ type: 'GET', url: client.getUrl('/JellyfinEnhanced/locales'), dataType: 'json' })
-                .then(response => { if (current()) { localeCodes = mergeLocaleCodes(decodeLocaleCodes(response), localeCodes); renderOptions(); } })
+                .then(response => { if (current()) { localeCodes = decodeLocaleCodes(response); renderOptions(); } })
                 .catch(err => { if (current()) console.warn('🪼 Jellyfin Enhanced: Failed to load language options:', err); });
             void client.ajax({ type: 'GET', url: client.getUrl('/Localization/Cultures'), dataType: 'json' })
                 .then(response => { if (current()) { cultures = decodeCultures(response); renderOptions(); } })
                 .catch(() => undefined);
-            void fetch('https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales', { signal: controller.signal })
-                .then(async response => {
-                    if (!response.ok || !current()) return;
-                    const data: unknown = await response.json();
-                    if (!current()) return;
-                    localeCodes = mergeLocaleCodes(localeCodes, githubLocaleCodes(data));
-                    renderOptions();
-                }).catch(() => undefined);
 
             async function saveLanguage(): Promise<void> {
                 if (!current() || saving) return;
