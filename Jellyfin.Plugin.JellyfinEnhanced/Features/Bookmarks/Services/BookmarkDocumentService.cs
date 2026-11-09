@@ -5,7 +5,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using Newtonsoft.Json.Linq;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks.Services;
 
 public sealed class BookmarkDocumentService(UserConfigurationManager store)
 {

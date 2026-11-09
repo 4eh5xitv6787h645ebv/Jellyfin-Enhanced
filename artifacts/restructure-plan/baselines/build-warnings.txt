@@ -1,1 +1,1 @@
-CS8604 Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs
+CS8604 Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs

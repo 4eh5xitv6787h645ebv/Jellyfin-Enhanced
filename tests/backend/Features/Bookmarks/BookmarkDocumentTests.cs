@@ -1,10 +1,11 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Bookmarks;
 
 [Collection("Plugin singleton")]
 public class BookmarkDocumentTests
@@ -96,7 +97,7 @@ public class BookmarkDocumentTests
     {
         using var fixture = new ApiPluginFixture(); var user = Guid.NewGuid();
         var maintenance = new MaintenanceModeService(Moq.Mock.Of<MediaBrowser.Controller.Library.IUserManager>(), Moq.Mock.Of<MediaBrowser.Controller.Session.ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
-        var controller = ApiAssetTests.Controller(fixture.Core, maintenance, fixture.Core.Manager);
+        var controller = (JeBookmarksController)ApiAssetTests.Controller(typeof(JeBookmarksController), fixture.Core, maintenance, fixture.Core.Manager);
         controller.HttpContext.User = new System.Security.Claims.ClaimsPrincipal();
         controller.Request.Headers.Cookie = "je-admin=true; userId=" + user.ToString("N");
         controller.Request.Headers["X-JE-Admin"] = "true";

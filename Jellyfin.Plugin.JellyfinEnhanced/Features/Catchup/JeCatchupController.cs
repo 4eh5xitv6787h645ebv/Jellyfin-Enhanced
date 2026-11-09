@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using Jellyfin.Data;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup.Services;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup
 {
     /// <summary>Body of POST /JellyfinEnhanced/catchup/event.</summary>
     public class CatchUpEventRequest
@@ -36,13 +36,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
     /// </summary>
     [ApiController]
     [Route("JellyfinEnhanced/catchup")]
-    public class CatchUpController : ControllerBase
+    public class JeCatchupController : ControllerBase
     {
         private readonly CatchUpLogService _log;
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
 
-        public CatchUpController(CatchUpLogService log, IUserManager userManager, ILibraryManager libraryManager)
+        public JeCatchupController(CatchUpLogService log, IUserManager userManager, ILibraryManager libraryManager)
         {
             _log = log;
             _userManager = userManager;

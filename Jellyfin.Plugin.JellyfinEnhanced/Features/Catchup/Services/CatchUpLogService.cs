@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MediaBrowser.Common.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup.Services
 {
     /// <summary>One line of the Catch Up activity log (catchup-log.jsonl).</summary>
     public class CatchUpEvent

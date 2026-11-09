@@ -7,7 +7,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Model.Entities;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
 
 /// <summary>A merged activity row; preserves the existing activity endpoint's JSON shape.</summary>
 internal sealed class ActivityFeedItem

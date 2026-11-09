@@ -1,7 +1,7 @@
 using System;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services
 {
     /// <summary>
     /// Business-logic layer for the Activity Feed's "recently watched" and

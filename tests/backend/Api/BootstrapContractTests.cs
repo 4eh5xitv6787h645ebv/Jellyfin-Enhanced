@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using MediaBrowser.Controller.Library;
@@ -43,7 +44,9 @@ public class BootstrapContractTests
         Assert.Equal(user.ToString("N"), body.UserId);
         Assert.Equal(admin, body.UserSettings.Settings!.IsAdmin);
         Assert.Equal(admin, body.PrivateConfig != null);
-        var bookmarkRead = Assert.IsType<BookmarkDocumentResponse>(Assert.IsType<JsonResult>(controller.GetBookmarkDocument(user.ToString("N"))).Value);
+        var bookmarks = (JeBookmarksController)ApiAssetTests.Controller(typeof(JeBookmarksController), fixture.Core, fixture.Core.Manager);
+        bookmarks.HttpContext.User = controller.HttpContext.User;
+        var bookmarkRead = Assert.IsType<BookmarkDocumentResponse>(Assert.IsType<JsonResult>(bookmarks.GetBookmarkDocument(user.ToString("N"))).Value);
         Assert.Equal(bookmarkRead.Revision, body.UserSettings.BookmarkSnapshot!.Revision);
         Assert.Equal(bookmarkRead.Document, body.UserSettings.BookmarkSnapshot.Document);
         Assert.Contains("mine", body.UserSettings.BookmarkSnapshot!.Document);

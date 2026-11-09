@@ -83,8 +83,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 │   │   └── per-user.js                 # Generated list of settings users also hold personally
 │   └── whats-new-seed.json
 ├── Controllers/
-│   ├── JellyfinEnhancedController.cs  # Most plugin endpoints
-│   └── CatchUpController.cs           # Catch Up event recording and admin reads
+│   └── JellyfinEnhancedController.cs  # Most plugin endpoints
 ├── PluginPages/                      # Seven embedded page wrappers
 ├── Helpers/
 │   └── Jellyseerr/                   # Seerr HTTP, permissions, imports, parental rules

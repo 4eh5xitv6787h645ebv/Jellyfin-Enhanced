@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Configuration;
@@ -25,6 +26,7 @@ public class ApiSeerrTests
         public Func<HttpRequestMessage, HttpResponseMessage> Reply { get; set; } = _ => IntegrationTransport.Response("{\"id\":99}");
         public IntegrationTransport Transport { get; }
         public JellyfinEnhancedController Controller { get; }
+        private readonly object[] services;
         public SeerrFixture(Func<SeerrFixture, IUserManager, object[]>? extraServices = null)
         {
             JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
@@ -50,8 +52,16 @@ public class ApiSeerrTests
             var filter = new SeerrParentalFilter(Transport, users, Mock.Of<ILocalizationManager>(), Mock.Of<IServerConfigurationManager>(), Plugin.Core.Logger);
             var services = new List<object> { Transport, users, filter };
             if (extraServices != null) services.AddRange(extraServices(this, users));
-            Controller = ApiAssetTests.Controller(Plugin.Core, services.ToArray());
+            this.services = services.ToArray();
+            Controller = ApiAssetTests.Controller(Plugin.Core, this.services);
             SetUser(UserId);
+        }
+        // The calendar actions live on JeCalendarController (restructure S2.5); same services, same HTTP context.
+        public JeCalendarController Calendar()
+        {
+            var calendar = (JeCalendarController)ApiAssetTests.Controller(typeof(JeCalendarController), Plugin.Core, services);
+            calendar.ControllerContext = Controller.ControllerContext;
+            return calendar;
         }
         public void SetUser(Guid user, bool admin = false) => Controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
             new Claim("Jellyfin-UserId", user.ToString()), new Claim(ClaimTypes.Role, admin ? "Administrator" : "User")], "test"));
@@ -260,7 +270,7 @@ public class ApiSeerrTests
             var identities = new RequestIdentityService(Mock.Of<MediaBrowser.Controller.Session.ISessionManager>(), users,
                 new SpoilerIdentityService(users, fixture.Plugin.Core.Logger), fixture.Plugin.Core.Logger);
             var resolver = new SpoilerUserResolver(fixture.Plugin.Core.Manager, library.Object, fixture.Plugin.Core.Logger, identities);
-            return [resolver, new IntegrationCalendarTests.CalendarDatabase(), new SpoilerSeerrRedactor(resolver, library.Object, users, Mock.Of<IUserDataManager>(), new SpoilerNextUnwatchedService(library.Object, users, Mock.Of<IUserDataManager>(), fixture.Plugin.Core.Logger)), new TmdbResponseCache(new IntegrationTransport((_, _) => Task.FromResult(IntegrationTransport.Response(TmdbBody))), TimeProvider.System)];
+            return [resolver, new JE.Tests.Features.Calendar.IntegrationCalendarTests.CalendarDatabase(), new SpoilerSeerrRedactor(resolver, library.Object, users, Mock.Of<IUserDataManager>(), new SpoilerNextUnwatchedService(library.Object, users, Mock.Of<IUserDataManager>(), fixture.Plugin.Core.Logger)), new TmdbResponseCache(new IntegrationTransport((_, _) => Task.FromResult(IntegrationTransport.Response(TmdbBody))), TimeProvider.System)];
         });
         f.Plugin.Plugin.Configuration.SpoilerBlurEnabled = true;
         var state = new Jellyfin.Plugin.JellyfinEnhanced.Configuration.UserSpoilerBlur();
@@ -387,8 +397,9 @@ public class ApiSeerrTests
         f.Plugin.Plugin.Configuration.CalendarFilterByLibraryAccess = false;
         f.Reply = _ => IntegrationTransport.Response("[{\"id\":1,\"seriesId\":3,\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\",\"overview\":\"Secret plot\",\"airDateUtc\":\"2026-11-10T00:00:00Z\",\"series\":{\"title\":\"Show\",\"tvdbId\":71663}},"
             + "{\"id\":2,\"seriesId\":4,\"seasonNumber\":1,\"episodeNumber\":1,\"title\":\"Open title\",\"airDateUtc\":\"2026-11-10T00:00:00Z\",\"series\":{\"title\":\"Other\",\"tvdbId\":7}}]");
-        f.Controller.Request.QueryString = new Microsoft.AspNetCore.Http.QueryString("?start=2026-11-01&end=2026-11-30");
-        var events = Rows(await f.Controller.GetCalendarEvents(), "events").EnumerateArray().ToList();
+        var calendar = f.Calendar();
+        calendar.Request.QueryString = new Microsoft.AspNetCore.Http.QueryString("?start=2026-11-01&end=2026-11-30");
+        var events = Rows(await calendar.GetCalendarEvents(), "events").EnumerateArray().ToList();
         var guarded = events.Single(e => e.GetProperty("title").GetString() == "Show");
         Assert.Equal("S02E05", guarded.GetProperty("subtitle").GetString());
         Assert.False(string.IsNullOrEmpty(guarded.GetProperty("releaseDate").GetString()));
