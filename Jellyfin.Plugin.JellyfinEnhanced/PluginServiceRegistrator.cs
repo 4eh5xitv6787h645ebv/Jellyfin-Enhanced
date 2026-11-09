@@ -1,6 +1,7 @@
 using System.Net.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
@@ -60,7 +61,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<AutoMovieRequestService>();
             serviceCollection.AddSingleton<AutoMovieRequestMonitor>();
             serviceCollection.AddSingleton<WatchlistMonitor>();
-            serviceCollection.AddSingleton<CatchUpLogService>();
+            serviceCollection.AddJeCatchup();
             serviceCollection.AddSingleton<SeerrScanTriggerService>();
             // Matroska track languages per file (size + mtime), so tag-cache
             // rebuilds and tag-data requests don't reopen unchanged media files

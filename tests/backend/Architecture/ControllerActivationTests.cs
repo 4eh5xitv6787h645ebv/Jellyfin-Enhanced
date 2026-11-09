@@ -102,7 +102,7 @@ public class ControllerActivationTests(ITestOutputHelper output)
             catch (Exception e) { failures.Add($"{controller.Name}: {e}"); }
         }
         foreach (var failure in failures) output.WriteLine(failure);
-        Assert.True(controllers.Length >= 2, "expected at least JellyfinEnhancedController and CatchUpController");
+        Assert.True(controllers.Length >= 2, "expected at least JellyfinEnhancedController and JeCatchupController");
         Assert.Empty(failures);
     }
 }

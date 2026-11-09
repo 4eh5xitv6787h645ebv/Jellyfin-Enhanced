@@ -182,6 +182,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/CatchupServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/JeCatchupController.cs",
       "category": "Features"
     },
@@ -10310,7 +10314,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 489,
+    "files": 490,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 88,
