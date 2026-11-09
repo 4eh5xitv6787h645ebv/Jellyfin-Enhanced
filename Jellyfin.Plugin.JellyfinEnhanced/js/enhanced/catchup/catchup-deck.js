@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/activity/host.ts
+  // client/src/features/catchup/wire.ts
   function currentLease(session, getApi) {
     const epoch = session?.getEpoch(), user = getApi?.()?.getCurrentUserId(), server = getApi?.()?.getUrl("/");
     return () => (epoch === void 0 || session?.isCurrent(epoch) === true) && user === getApi?.()?.getCurrentUserId() && server === getApi?.()?.getUrl("/");
@@ -59,20 +59,53 @@
     return array(object(value).Items, readItem);
   }
 
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/catchup/host.ts
   function catchupHost() {
-    const host = window;
-    return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };
+    const host = window, JE = host.JellyfinEnhanced;
+    const ctx = JE && featureContext("catchup", JE, {
+      facades: ["catchUpPage"],
+      internalSlots: ["catchUp"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
+    return { host, ctx, getApi: () => host.ApiClient, Emby: host.Emby };
   }
 
   // client/src/features/catchup/catchup-deck.ts
   (function() {
     "use strict";
-    const { JE: candidate, getApi } = catchupHost();
-    if (!candidate) return;
-    const JE = candidate;
+    const { ctx: context, getApi } = catchupHost();
+    if (!context) return;
+    const ctx = context, JE = ctx.core;
     if (!JE?.pluginConfig?.CatchUpEnabled) return;
-    const runtime = JE.internals.catchUp;
+    const runtime = ctx.own.catchUp;
     if (!runtime) return;
     const S = runtime;
     const { state, tt, h, icon, ACTIONS, ACT_NAME } = S;

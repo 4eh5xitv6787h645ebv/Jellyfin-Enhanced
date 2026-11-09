@@ -9,7 +9,7 @@ import type { CalendarEvent, CalendarState, InstanceError } from './types';
 (function () {
   "use strict";
 
-  const { JE, P } = calendarHost();
+  const { JE, ctx, P } = calendarHost();
 
   if (P.state) return; // Exactly one data owner across repeated entry evaluation.
 
@@ -145,7 +145,7 @@ import type { CalendarEvent, CalendarState, InstanceError } from './types';
   // and requested-item highlighting are per-user — clear them on a user switch
   // so the calendar re-derives everything for the new user on its next render.
   JE.session?.onUserChange('calendar-page', () => {
-    invalidate(JE);
+    invalidate(ctx);
     state.activeFilters.clear(); state.expandedGroups.clear(); state.filtersRestored = false;
     state.filterMatchMode = 'any'; state.filterInvert = false; state.error = null; state.requestError = null;
     state._customTabContainer?.replaceChildren();
@@ -212,7 +212,7 @@ import type { CalendarEvent, CalendarState, InstanceError } from './types';
     // The backend filters events by the signed-in user's library access — a
     // response (or failure) resolving after a user switch must not replace the
     // new user's events or toast the previous user's instance errors.
-    const current = lease(JE, "events");
+    const current = lease(ctx, "events");
     try {
       const query = new URLSearchParams({
         start: startDate.toISOString(),
@@ -280,7 +280,7 @@ import type { CalendarEvent, CalendarState, InstanceError } from './types';
   async function fetchUserData() {
     // Favorites/watched state is per-user — drop a response that resolves
     // after a user switch instead of refilling the freshly reset map.
-    const current = lease(JE, "userData");
+    const current = lease(ctx, "userData");
     if (!state.settings.highlightFavorites && !state.settings.highlightWatchedSeries) {
       state.userDataMap = new Map();
       return;
@@ -338,7 +338,7 @@ import type { CalendarEvent, CalendarState, InstanceError } from './types';
     state.requestedLoading = true;
     // Same per-user guard: the finally below must not install the previous
     // user's requested-set (or mark it loaded) after a switch.
-    const current = lease(JE, "requests");
+    const current = lease(ctx, "requests");
     let succeeded = false;
     const requested = new Set<string>();
     const pageSize = 200;
@@ -485,7 +485,7 @@ import type { CalendarEvent, CalendarState, InstanceError } from './types';
    * @returns {Promise<string|null>} Item ID or null if not found
    */
   async function searchFromProviders(event: CalendarEvent, options: {preferSeries?: boolean} = {}) {
-    const current = lease(JE);
+    const current = lease(ctx);
     const preferSeries = !!options.preferSeries;
     const episodeProviders: Record<string, string> = {};
     const seriesProviders: Record<string, string> = {};

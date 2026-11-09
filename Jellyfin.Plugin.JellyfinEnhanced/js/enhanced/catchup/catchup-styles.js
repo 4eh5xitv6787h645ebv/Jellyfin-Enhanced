@@ -1,20 +1,53 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/catchup/host.ts
   function catchupHost() {
-    const host = window;
-    return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };
+    const host = window, JE = host.JellyfinEnhanced;
+    const ctx = JE && featureContext("catchup", JE, {
+      facades: ["catchUpPage"],
+      internalSlots: ["catchUp"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
+    return { host, ctx, getApi: () => host.ApiClient, Emby: host.Emby };
   }
 
   // client/src/features/catchup/catchup-styles.ts
   (function() {
     "use strict";
-    const { JE: candidate } = catchupHost();
-    if (!candidate) return;
-    const JE = candidate;
+    const { ctx: context } = catchupHost();
+    if (!context) return;
+    const ctx = context, JE = ctx.core;
     if (!JE?.pluginConfig?.CatchUpEnabled) return;
-    const internal = JE.internals.catchUp;
+    const internal = ctx.own.catchUp;
     if (!internal) return;
     const CSS = `
 .je-catchup { --sw-accent:var(--je-catchup-accent,#00a4dc); --sw-text:#fff; --sw-panel-bg:linear-gradient(var(--je-catchup-panel,#202020),var(--je-catchup-panel,#202020)) #181818;

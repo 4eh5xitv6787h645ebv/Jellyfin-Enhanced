@@ -1,13 +1,46 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/catchup/host.ts
-  function catchupHost() {
-    const host = window;
-    return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
   }
 
-  // client/src/features/activity/host.ts
+  // client/src/features/catchup/host.ts
+  function catchupHost() {
+    const host = window, JE2 = host.JellyfinEnhanced;
+    const ctx2 = JE2 && featureContext("catchup", JE2, {
+      facades: ["catchUpPage"],
+      internalSlots: ["catchUp"],
+      internalsObject: () => JE2.internals ?? (JE2.internals = {})
+    });
+    return { host, ctx: ctx2, getApi: () => host.ApiClient, Emby: host.Emby };
+  }
+
+  // client/src/features/catchup/wire.ts
   function currentLease(session, getApi2) {
     const epoch = session?.getEpoch(), user = getApi2?.()?.getCurrentUserId(), server = getApi2?.()?.getUrl("/");
     return () => (epoch === void 0 || session?.isCurrent(epoch) === true) && user === getApi2?.()?.getCurrentUserId() && server === getApi2?.()?.getUrl("/");
@@ -173,10 +206,10 @@
     const logSwipe = (item, dir, opts, ok) => logEvent({ type: "swipe", action: ACT_NAME[dir], itemId: item.Id, ok, seasons: dir === "right" && item.Type === "Series" ? opts?.numbers ?? ["all"] : void 0 });
     return { LOG: "🪼 Jellyfin Enhanced: Catch Up:", state, tt, h, icon, userId, jf, imageOf, imageUrl, navigateToItem: navigate, loadDismissed, saveDismissed, isHidden, refill, ACTIONS, ACT_NAME, logEvent, logSwipe, reset, lease };
   }
-  var { JE, getApi, Emby } = catchupHost();
-  if (JE?.pluginConfig?.CatchUpEnabled) {
-    JE.internals = JE.internals || {};
-    if (!JE.internals.catchUp) {
+  var { ctx, getApi, Emby } = catchupHost();
+  var JE = ctx?.core;
+  if (ctx && JE?.pluginConfig?.CatchUpEnabled) {
+    if (!ctx.own.catchUp) {
       const runtime = createCatchUp(JE, () => {
         const api = getApi();
         if (!api) throw Error("Jellyfin API unavailable");
@@ -191,7 +224,7 @@
         }
         window.location.hash = `#!/details?id=${id}`;
       });
-      JE.internals.catchUp = runtime;
+      ctx.own.catchUp = runtime;
       JE.session?.onUserChange("catchup", () => {
         runtime.deck?.dispose();
         runtime.reset();

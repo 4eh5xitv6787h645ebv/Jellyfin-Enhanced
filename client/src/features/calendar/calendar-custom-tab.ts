@@ -2,7 +2,7 @@ import { calendarHost } from './host';
 import { invalidate, own } from './lifetime';
 
 (function () {
- const {JE} = calendarHost();
+ const {JE, ctx} = calendarHost();
  const config = JE.pluginConfig;
  if (!config?.CalendarPageEnabled || !config.CalendarUseCustomTabs && !config.CalendarUseNativeTab) return;
  const lifecycle = JE.core.lifecycle.register('arr-calendar-custom-owner');
@@ -22,10 +22,10 @@ import { invalidate, own } from './lifetime';
   if (timer !== undefined) clearInterval(timer);
   watcher?.teardown(); style.remove();
   if (clicks) document.removeEventListener('click',clicks);
-  if (lastMountedContainer) invalidate(JE);
+  if (lastMountedContainer) invalidate(ctx);
   lastMountedContainer = null;
  };
- own(JE,'custom-tab',dispose);
+ own(ctx,'custom-tab',dispose);
  lifecycle.track(dispose);
  function isHome() {
   return /^(?:#\/home(?:\.html)?(?:\?.*)?)?$/.test(window.location.hash);
@@ -36,8 +36,8 @@ import { invalidate, own } from './lifetime';
   const container = candidates.reverse().find(el => JE.helpers.isActiveTabContainer(el)) ?? null;
   if (!container) {
    if (lastMountedContainer) {
-    invalidate(JE);
-    const state = JE.internals.calendarPage?.state;
+    invalidate(ctx);
+    const state = ctx.own.calendarPage?.state;
     if (state) state._customTabContainer = null;
    }
    lastMountedContainer = null;
@@ -46,7 +46,7 @@ import { invalidate, own } from './lifetime';
   if (container === lastMountedContainer && container.hasChildNodes()) return;
   const page = JE.calendarPage;
   if (!page) return;
-  invalidate(JE);
+  invalidate(ctx);
   container.classList.remove('hide'); container.style.display = '';
   const child = document.createElement('div'); child.id = 'je-calendar-container-tab';
   container.replaceChildren(child);

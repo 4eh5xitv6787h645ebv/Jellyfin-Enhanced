@@ -1,10 +1,41 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/activity/host.ts
   function activityHost() {
-    const host = window;
-    return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };
+    const host = window, JE = host.JellyfinEnhanced;
+    const ctx = JE && featureContext("activity", JE, {
+      facades: ["activityPage", "initializeActivityIcons", "stopActivityIconsMonitoring"]
+    });
+    return { host, ctx, getApi: () => host.ApiClient, Emby: host.Emby };
   }
   function currentLease(session, getApi) {
     const epoch = session?.getEpoch(), user = getApi?.()?.getCurrentUserId(), server = getApi?.()?.getUrl("/");
@@ -79,9 +110,9 @@
   // client/src/features/activity/activity-page.ts
   (function() {
     "use strict";
-    const { JE: candidate, getApi, Emby } = activityHost();
-    if (!candidate) return;
-    const JE = candidate;
+    const { ctx: context, getApi, Emby } = activityHost();
+    if (!context) return;
+    const ctx = context, JE = ctx.core;
     const ApiClient = () => {
       const apiCandidate = getApi();
       if (!apiCandidate) throw Error("Jellyfin API unavailable");
@@ -481,7 +512,7 @@
     let activeIdentity = () => true;
     let removeRouteListener;
     let disconnectObserver;
-    JE.activityPage?.stopPolling();
+    ctx.own.activityPage?.stopPolling();
     JE.session?.onUserChange("activity-page", stopActiveStreamsPolling);
     function stopActiveStreamsPolling() {
       pollGeneration++;
@@ -691,7 +722,7 @@
         }, ACTIVE_STREAMS_POLL_MS);
       }
     }
-    JE.activityPage = {
+    ctx.own.activityPage = {
       injectStyles,
       renderForCustomTab,
       stopPolling: stopActiveStreamsPolling

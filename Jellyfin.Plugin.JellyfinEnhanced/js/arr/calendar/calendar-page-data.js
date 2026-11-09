@@ -2,20 +2,20 @@
 "use strict";
 (() => {
   // client/src/features/calendar/lifetime.ts
-  function lifetime(JE) {
+  function lifetime(ctx) {
     var _a;
-    return (_a = JE.internals).calendarLifetime || (_a.calendarLifetime = { view: 0, navigation: 0, refresh: 0, events: 0, userData: 0, requests: 0, initialized: false, disposers: /* @__PURE__ */ new Map() });
+    return (_a = ctx.own).calendarLifetime || (_a.calendarLifetime = { view: 0, navigation: 0, refresh: 0, events: 0, userData: 0, requests: 0, initialized: false, disposers: /* @__PURE__ */ new Map() });
   }
-  function lease(JE, channel) {
-    const owner = lifetime(JE), view = owner.view, epoch = JE.session?.getEpoch(), session = JE.session?.createLease?.();
+  function lease(ctx, channel) {
+    const JE = ctx.core, owner = lifetime(ctx), view = owner.view, epoch = JE.session?.getEpoch(), session = JE.session?.createLease?.();
     const serial = channel ? ++owner[channel] : 0;
-    const container = JE.internals.calendarPage?.state?._customTabContainer;
+    const container = ctx.own.calendarPage?.state?._customTabContainer;
     return () => owner.view === view && (!channel || owner[channel] === serial) && (epoch === void 0 || JE.session?.isCurrent(epoch) === true) && (!session || session.isCurrent()) && (!container || container.isConnected && JE.helpers.isActiveTabContainer(container));
   }
-  function invalidate(JE) {
-    const owner = lifetime(JE);
+  function invalidate(ctx) {
+    const owner = lifetime(ctx);
     owner.view++;
-    const state = JE.internals.calendarPage?.state;
+    const state = ctx.own.calendarPage?.state;
     if (state) {
       state.isLoading = false;
       state.requestedLoading = false;
@@ -137,6 +137,34 @@
     return { filters: Array.isArray(value.filters) ? value.filters.filter((v) => typeof v === "string") : [], mode: value.mode === "all" ? "all" : "any", invert: value.invert === true };
   }
 
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own2 = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own2, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own: own2,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/calendar/host.ts
   function calendarHost() {
     var _a;
@@ -146,13 +174,18 @@
     JE.internals || (JE.internals = {});
     const partial = (_a = JE.internals).calendarPage || (_a.calendarPage = {});
     const P = partial;
-    return { JE, host, P };
+    const ctx = featureContext("calendar", JE, {
+      facades: ["initializeCalendarPage"],
+      internalSlots: ["calendarLifetime", "calendarPage"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+    return { JE, ctx, host, P };
   }
 
   // client/src/features/calendar/calendar-page-data.ts
   (function() {
     "use strict";
-    const { JE, P } = calendarHost();
+    const { JE, ctx, P } = calendarHost();
     if (P.state) return;
     const renderPage = (target) => P.renderPage(target);
     const logPrefix = "🪼 Jellyfin Enhanced: Calendar Page:";
@@ -260,7 +293,7 @@
       _customTabContainer: null
     };
     JE.session?.onUserChange("calendar-page", () => {
-      invalidate(JE);
+      invalidate(ctx);
       state.activeFilters.clear();
       state.expandedGroups.clear();
       state.filtersRestored = false;
@@ -314,7 +347,7 @@
       }
     }
     async function fetchCalendarEvents(startDate, endDate) {
-      const current = lease(JE, "events");
+      const current = lease(ctx, "events");
       try {
         const query = new URLSearchParams({
           start: startDate.toISOString(),
@@ -363,7 +396,7 @@
       });
     }
     async function fetchUserData() {
-      const current = lease(JE, "userData");
+      const current = lease(ctx, "userData");
       if (!state.settings.highlightFavorites && !state.settings.highlightWatchedSeries) {
         state.userDataMap = /* @__PURE__ */ new Map();
         return;
@@ -409,7 +442,7 @@
         return;
       }
       state.requestedLoading = true;
-      const current = lease(JE, "requests");
+      const current = lease(ctx, "requests");
       let succeeded = false;
       const requested = /* @__PURE__ */ new Set();
       const pageSize = 200;
@@ -513,7 +546,7 @@
       return grouped;
     }
     async function searchFromProviders(event, options = {}) {
-      const current = lease(JE);
+      const current = lease(ctx);
       const preferSeries = !!options.preferSeries;
       const episodeProviders = {};
       const seriesProviders = {};

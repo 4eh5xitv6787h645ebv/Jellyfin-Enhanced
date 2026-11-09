@@ -12,6 +12,34 @@
     return new Date(value);
   }
 
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/calendar/host.ts
   function calendarHost() {
     var _a;
@@ -21,13 +49,18 @@
     JE.internals || (JE.internals = {});
     const partial = (_a = JE.internals).calendarPage || (_a.calendarPage = {});
     const P = partial;
-    return { JE, host, P };
+    const ctx = featureContext("calendar", JE, {
+      facades: ["initializeCalendarPage"],
+      internalSlots: ["calendarLifetime", "calendarPage"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+    return { JE, ctx, host, P };
   }
 
   // client/src/features/calendar/calendar-page-render-views.ts
   (function() {
     "use strict";
-    const { JE, P } = calendarHost();
+    const { JE, ctx, P } = calendarHost();
     const state = P.state;
     const STATUS_COLORS = P.STATUS_COLORS;
     const filterEvents = P.filterEvents;
@@ -80,7 +113,8 @@
       const daysInMonth = getDaysInMonth(anchor);
       const firstDay = getFirstDayOfMonth(anchor);
       let filteredEvents = filterEvents(state.events);
-      if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+      const hiddenContent = ctx.peer("hiddenContent");
+      if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
       const groupedEvents = groupEventsByDate(filteredEvents);
       if (filteredEvents.length === 0) {
         return `<div class="je-calendar-empty">${JE.t("calendar_no_releases")}</div>`;
@@ -128,7 +162,8 @@
       const { start } = getRangeForView(state.currentDate, "week");
       const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
       let filteredEvents = filterEvents(state.events);
-      if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+      const hiddenContent = ctx.peer("hiddenContent");
+      if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
       const groupedEvents = groupEventsByDate(filteredEvents);
       if (filteredEvents.length === 0) {
         return `<div class="je-calendar-empty">${JE.t("calendar_no_releases")}</div>`;
@@ -162,7 +197,8 @@
     }
     function renderAgendaView() {
       let filteredEvents = filterEvents(state.events);
-      if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+      const hiddenContent = ctx.peer("hiddenContent");
+      if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
       const groupedEvents = groupEventsByDate(filteredEvents);
       const dates = Object.keys(groupedEvents).sort();
       if (dates.length === 0) {
@@ -193,7 +229,8 @@
     }
     function renderDayView() {
       let filteredEvents = filterEvents(state.events);
-      if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+      const hiddenContent = ctx.peer("hiddenContent");
+      if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
       const groupedEvents = groupEventsByDate(filteredEvents);
       const current = new Date(state.currentDate);
       const dateKey2 = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}-${String(current.getDate()).padStart(2, "0")}`;

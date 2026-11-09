@@ -2,36 +2,64 @@
 "use strict";
 (() => {
   // client/src/features/calendar/lifetime.ts
-  function lifetime(JE) {
+  function lifetime(ctx) {
     var _a;
-    return (_a = JE.internals).calendarLifetime || (_a.calendarLifetime = { view: 0, navigation: 0, refresh: 0, events: 0, userData: 0, requests: 0, initialized: false, disposers: /* @__PURE__ */ new Map() });
+    return (_a = ctx.own).calendarLifetime || (_a.calendarLifetime = { view: 0, navigation: 0, refresh: 0, events: 0, userData: 0, requests: 0, initialized: false, disposers: /* @__PURE__ */ new Map() });
   }
-  function invalidate(JE) {
-    const owner = lifetime(JE);
+  function invalidate(ctx) {
+    const owner = lifetime(ctx);
     owner.view++;
-    const state = JE.internals.calendarPage?.state;
+    const state = ctx.own.calendarPage?.state;
     if (state) {
       state.isLoading = false;
       state.requestedLoading = false;
     }
   }
-  function own(JE, key, dispose) {
-    const owner = lifetime(JE);
+  function own(ctx, key, dispose) {
+    const owner = lifetime(ctx);
     owner.disposers.get(key)?.();
     owner.disposers.set(key, dispose);
   }
-  function disposeCalendar(JE) {
-    invalidate(JE);
-    const owner = lifetime(JE);
+  function disposeCalendar(ctx) {
+    invalidate(ctx);
+    const owner = lifetime(ctx);
     for (const dispose of owner.disposers.values()) dispose();
     owner.disposers.clear();
     owner.initialized = false;
-    const state = JE.internals.calendarPage?.state;
+    const state = ctx.own.calendarPage?.state;
     if (state) {
       state._customTabContainer = null;
       state.pageVisible = false;
       state.locationUnsubscribe = null;
     }
+  }
+
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own2 = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own2, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own: own2,
+      peer: (name) => core[name]
+    };
   }
 
   // client/src/features/calendar/host.ts
@@ -43,13 +71,18 @@
     JE.internals || (JE.internals = {});
     const partial = (_a = JE.internals).calendarPage || (_a.calendarPage = {});
     const P = partial;
-    return { JE, host, P };
+    const ctx = featureContext("calendar", JE, {
+      facades: ["initializeCalendarPage"],
+      internalSlots: ["calendarLifetime", "calendarPage"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+    return { JE, ctx, host, P };
   }
 
   // client/src/features/calendar/calendar-page-init.ts
   (function() {
     "use strict";
-    const { JE, P } = calendarHost();
+    const { JE, ctx, P } = calendarHost();
     const state = P.state;
     const injectStyles = P.injectStyles;
     const loadSettings = P.loadSettings;
@@ -64,15 +97,15 @@
     );
     const logPrefix = "🪼 Jellyfin Enhanced: Calendar Page:";
     function initialize() {
-      if (lifetime(JE).initialized) return;
+      if (lifetime(ctx).initialized) return;
       console.log(`${logPrefix} Initializing calendar page module`);
       const config = JE.pluginConfig || {};
       if (!config.CalendarPageEnabled) {
         console.log(`${logPrefix} Calendar page is disabled`);
         return;
       }
-      lifetime(JE).initialized = true;
-      lifecycle.track(() => disposeCalendar(JE));
+      lifetime(ctx).initialized = true;
+      lifecycle.track(() => disposeCalendar(ctx));
       injectStyles();
       loadSettings();
       const usingPluginPages = pluginPagesExists && config.CalendarUsePluginPages;
@@ -131,7 +164,7 @@
       const config = JE.pluginConfig || {};
       if (!config.CalendarPageEnabled) return;
       if (pluginPagesExists && config.CalendarUsePluginPages) return;
-      invalidate(JE);
+      invalidate(ctx);
       state._customTabContainer = null;
       state.pageVisible = true;
       loadSettings();
@@ -175,7 +208,7 @@
     }
     function hidePage() {
       if (!state.pageVisible) return;
-      invalidate(JE);
+      invalidate(ctx);
       const page = document.getElementById("je-calendar-page");
       if (page) {
         page.classList.add("hide");
@@ -264,7 +297,7 @@
       if (pluginPagesExists && config.CalendarUsePluginPages) return;
       if (config.CalendarUseCustomTabs) return;
       if (config.CalendarUseNativeTab) return;
-      own(JE, "sidebar", JE.helpers.onSidebarRebuilt("calendar", ".je-nav-calendar-item", () => {
+      own(ctx, "sidebar", JE.helpers.onSidebarRebuilt("calendar", ".je-nav-calendar-item", () => {
         const currentConfig = JE.pluginConfig || {};
         if (currentConfig.CalendarUseCustomTabs) return;
         if (currentConfig.CalendarUseNativeTab) return;
@@ -274,7 +307,7 @@
       }));
     }
     function renderForCustomTab(targetContainer) {
-      if (state._customTabContainer !== targetContainer) invalidate(JE);
+      if (state._customTabContainer !== targetContainer) invalidate(ctx);
       injectStyles();
       loadSettings();
       renderPage(targetContainer);
@@ -298,7 +331,7 @@
       handleEventClick,
       setDisplayMode: P.setDisplayMode
     };
-    JE.initializeCalendarPage = initialize;
+    ctx.own.initializeCalendarPage = initialize;
   })();
 })();
 })();
