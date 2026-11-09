@@ -2,7 +2,7 @@ import type { Dependencies, Item, Issue, SeasonGroup, Links, LinkEntry } from ".
 import { readLinks, response, safeUrl, serviceUrl } from "./validation";
 import { runtime } from './runtime';
 export function install(deps: Dependencies) {
-  const {JE, P, host, getApi} = deps;
+  const {JE, P, host, ctx, getApi} = deps;
   const life = runtime(deps);
   if(life.installed.has('render-cards'))return;
   life.installed.add('render-cards');
@@ -126,7 +126,7 @@ export function install(deps: Dependencies) {
     let seerrLinkHtml = "";
     const seerrLinksEnabled = JE.pluginConfig?.JellyseerrEnabled !== false
       && JE.pluginConfig?.JellyseerrShowDetailPageLink !== false;
-    const seerrBase = safeUrl(JE.jellyseerrAPI?.resolveJellyseerrBaseUrl?.() || '',host.location.href);
+    const seerrBase = safeUrl(ctx.peer('jellyseerrAPI')?.resolveJellyseerrBaseUrl?.() || '',host.location.href);
     if (item.tmdbId && seerrLinksEnabled && seerrBase) {
       const mediaType = item.type === 'tv' ? 'tv' : 'movie';
       const seerrLabel = JE.t?.('jellyseerr_card_view_on_jellyseerr') || 'View on Seerr';

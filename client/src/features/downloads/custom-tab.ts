@@ -2,7 +2,7 @@ import type { Dependencies } from "./types";
 import { record } from "./validation";
 import { runtime } from './runtime';
 export function install(deps: Dependencies) {
-  const {JE, P, host, getApi} = deps;
+  const {JE, P, host, ctx, getApi} = deps;
   const life = runtime(deps);
   if(life.installed.has('custom-tab'))return;
   life.installed.add('custom-tab');
@@ -56,7 +56,7 @@ export function install(deps: Dependencies) {
     var check = setInterval(function () {
       if (++attempts > 300) { clearInterval(check); return; }
       
-      if (JE?.downloadsPage) {
+      if (ctx.own.downloadsPage) {
         clearInterval(check);
         callback();
       }
@@ -96,7 +96,7 @@ export function install(deps: Dependencies) {
     container.textContent = '';
     container.appendChild(child);
 
-    JE.downloadsPage.renderForCustomTab?.(child);
+    ctx.own.downloadsPage.renderForCustomTab?.(child);
 
     lastMountedContainer = container;
   }
@@ -118,9 +118,9 @@ export function install(deps: Dependencies) {
       // timer's own visibility guard doesn't keep it alive.
       if (!onHome) {
         if (wasOnHomePage) {
-          JE.downloadsPage.stopPolling?.();
-          if (JE.downloadsPage._state) {
-            JE.downloadsPage._state._customTabMode = false;
+          ctx.own.downloadsPage.stopPolling?.();
+          if (ctx.own.downloadsPage._state) {
+            ctx.own.downloadsPage._state._customTabMode = false;
           }
           lastMountedContainer = null;
         }
@@ -139,9 +139,9 @@ export function install(deps: Dependencies) {
         // (user switched to a sibling tab like Home/Favorites) -- stop
         // polling so it doesn't keep running against a hidden tab.
         if (lastMountedContainer) {
-          JE.downloadsPage.stopPolling?.();
-          if (JE.downloadsPage._state) {
-            JE.downloadsPage._state._customTabMode = false;
+          ctx.own.downloadsPage.stopPolling?.();
+          if (ctx.own.downloadsPage._state) {
+            ctx.own.downloadsPage._state._customTabMode = false;
           }
         }
         lastMountedContainer = null;
