@@ -1,5 +1,5 @@
 import { spoilerHost } from './host';
-const { JE, internal } = spoilerHost();
+const { JE, internal, ctx } = spoilerHost();
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';
     let installed = false;
 
@@ -15,7 +15,7 @@ const { JE, internal } = spoilerHost();
         void internal.loadState();
     }
 
-    JE.spoilerBlur = {
+    ctx.own.spoilerBlur = {
         init,
         addSpoilerBlurButton: internal.addSpoilerBlurButton,
         isEnabledFor: internal.isEnabledFor,

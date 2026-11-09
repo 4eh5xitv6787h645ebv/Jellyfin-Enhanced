@@ -1,13 +1,46 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/spoiler-guard/host.ts
   function spoilerHost() {
     var _a;
     const host = window;
     const JE2 = host.JellyfinEnhanced;
     if (!JE2) throw new Error("Spoiler Guard loaded before Jellyfin Enhanced");
-    const registry = (_a = JE2.internals ?? (JE2.internals = {})).spoilerGuard ?? (_a.spoilerGuard = {});
+    const ctx2 = featureContext("spoiler-guard", JE2, {
+      facades: ["spoilerBlur"],
+      internalSlots: ["spoilerGuard"],
+      internalsObject: () => JE2.internals ?? (JE2.internals = {})
+    });
+    const registry = (_a = ctx2.own).spoilerGuard ?? (_a.spoilerGuard = {});
     function required(key) {
       const value = registry[key];
       if (value == null) throw new Error(`Spoiler Guard loader dependency missing: ${key}`);
@@ -262,11 +295,11 @@
       }
     };
     const ApiClient = { getCurrentUserId: () => host.ApiClient?.getCurrentUserId() ?? null };
-    return { JE: JE2, internal: internal2, ApiClient, host };
+    return { JE: JE2, internal: internal2, ApiClient, host, ctx: ctx2 };
   }
 
   // client/src/features/spoiler-guard/index.ts
-  var { JE, internal } = spoilerHost();
+  var { JE, internal, ctx } = spoilerHost();
   var logPrefix = "🪼 Jellyfin Enhanced [SpoilerGuard]:";
   var installed = false;
   function init() {
@@ -283,7 +316,7 @@
     }
     void internal.loadState();
   }
-  JE.spoilerBlur = {
+  ctx.own.spoilerBlur = {
     init,
     addSpoilerBlurButton: internal.addSpoilerBlurButton,
     isEnabledFor: internal.isEnabledFor,

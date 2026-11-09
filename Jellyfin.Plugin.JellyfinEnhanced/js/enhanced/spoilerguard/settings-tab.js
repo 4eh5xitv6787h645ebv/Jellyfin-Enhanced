@@ -56,13 +56,46 @@
     } };
   }
 
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own2 = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own2, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own: own2,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/spoiler-guard/host.ts
   function spoilerHost() {
     var _a;
     const host = window;
     const JE2 = host.JellyfinEnhanced;
     if (!JE2) throw new Error("Spoiler Guard loaded before Jellyfin Enhanced");
-    const registry = (_a = JE2.internals ?? (JE2.internals = {})).spoilerGuard ?? (_a.spoilerGuard = {});
+    const ctx = featureContext("spoiler-guard", JE2, {
+      facades: ["spoilerBlur"],
+      internalSlots: ["spoilerGuard"],
+      internalsObject: () => JE2.internals ?? (JE2.internals = {})
+    });
+    const registry = (_a = ctx.own).spoilerGuard ?? (_a.spoilerGuard = {});
     function required(key) {
       const value = registry[key];
       if (value == null) throw new Error(`Spoiler Guard loader dependency missing: ${key}`);
@@ -317,7 +350,7 @@
       }
     };
     const ApiClient = { getCurrentUserId: () => host.ApiClient?.getCurrentUserId() ?? null };
-    return { JE: JE2, internal: internal2, ApiClient, host };
+    return { JE: JE2, internal: internal2, ApiClient, host, ctx };
   }
 
   // client/src/features/spoiler-guard/settings-tab.ts
