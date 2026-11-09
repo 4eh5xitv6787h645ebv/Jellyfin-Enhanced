@@ -88,8 +88,6 @@ Listed in `GENERATED_SOURCES` (`tests/frontend/architecture/scan.mjs`). Scripts 
 
 - `types/status/status-vocabulary.ts`
 - `types/quality/compact-quality.ts`
-- `types/quality/quality-data.ts`
 - `types/genre/genre-table.ts`
-- `types/awards/awards-data.ts`
-- `types/ratings/rating-data.ts`
-- `types/language/media-language.ts`
+
+Hand-written source-of-truth tables, not generated (E1 decision (a)): `types/awards/awards-data.ts`, `types/ratings/rating-data.ts` and `types/language/media-language.ts` (`scripts/build_poster_assets.py` only reads them), and `types/quality/quality-data.ts`, whose aspect-ratio region alone is rewritten by `scripts/generate_technical_ratios.py` between its in-body markers. Edit them by hand.

@@ -417,12 +417,13 @@ export const GENERATED_SOURCES = [
   'status-vocabulary.ts',
   'compact-quality.ts',
   'per-user-props.ts',
-  'quality-data.ts',
   'genre-table.ts',
-  'awards-data.ts',
-  'rating-data.ts',
-  'media-language.ts',
 ];
+// Not listed (coordinator decision E1 (a), step-logs/lane-lm.md): awards-data.ts, rating-data.ts and
+// media-language.ts are hand-written source-of-truth tables (no generator; scripts/build_poster_assets.py only
+// reads them), and quality-data.ts is hand-written apart from the aspect-ratio region that
+// scripts/generate_technical_ratios.py rewrites between its in-body markers. None carries a file header or
+// linguist-generated, and all four stay under the file-size guardrail.
 
 /** Other generated outputs that must carry `linguist-generated` in .gitattributes (§5.3). */
 export const GENERATED_OUTPUTS = [
