@@ -16,7 +16,7 @@ using Moq;
 namespace JE.Tests;
 
 /// <summary>
-/// Media Tags import, export and presets (Helpers/MediaTagsPortable.cs): the versioned documents, field-by-field
+/// Media Tags import, export and presets (Features/MediaTags/Services/MediaTagsPortable.cs): the versioned documents, field-by-field
 /// validation with the save paths' validators, secret exclusion, preset caps and the administrator allowlist.
 /// </summary>
 [Collection("Plugin singleton")]

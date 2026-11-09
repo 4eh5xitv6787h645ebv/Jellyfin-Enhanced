@@ -2,7 +2,7 @@
 """
 Build the embedded assets of the native poster tag renderer (issue #590).
 
-The renderer (Services/PosterTags/Rendering) draws JE's card tags into poster
+The renderer (Features/MediaTags/PosterTags/Rendering) draws JE's card tags into poster
 images with SkiaSharp. It needs jellyfin-web's own font, the Material icon
 glyphs, the flag-icons flags and JE's colour tables. This script regenerates all
 of them, reproducibly, into Jellyfin.Plugin.JellyfinEnhanced/Assets/PosterTags/.

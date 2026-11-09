@@ -79,7 +79,7 @@ class RegressionToolingTests(unittest.TestCase):
         self.assertEqual('failed', json.loads(summary.read_text())[0]['status'])
 
     def test_mutation_manifest_cannot_target_original_checkout(self):
-        original = ROOT / 'Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/NativeClientPolicy.cs'
+        original = ROOT / 'Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/PosterTags/NativeClientPolicy.cs'
         before = original.read_bytes()
         for path in (str(original), '../outside.cs'):
             with self.subTest(path=path):

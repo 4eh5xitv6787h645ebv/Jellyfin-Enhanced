@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const sourceDirectory = 'Jellyfin.Plugin.JellyfinEnhanced/js/tags';
 const typescriptDirectory = 'client/src/features/media-tags/rules';
-const nativePath = 'Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/QualityCompactLabels.g.cs';
+const nativePath = 'Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/PosterTags/Resolution/QualityCompactLabels.g.cs';
 const csharpString = value => JSON.stringify(value).replace(/[\u007f-\uffff]/g, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`);
 
 /** One projection owner; client-build alone owns executable JS and its source maps. */

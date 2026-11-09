@@ -204,7 +204,7 @@ for (const schema of [undefined, 9, 20, 21, 22, 11, 12, 13, 14, 15, 16, 17, 18, 
 });
 
 test('a stored tag cache copy with the current entry schema is restored and only the delta is fetched', async t => {
-  const { calls, cleared } = await loadWithStoredCopy(t, { schema: Number(readFileSync(`${jsRoot}/../Services/TagCacheService.cs`, 'utf8').match(/CurrentCacheSchemaVersion = (\d+);/)[1]) });
+  const { calls, cleared } = await loadWithStoredCopy(t, { schema: Number(readFileSync(`${jsRoot}/../Features/MediaTags/Services/TagCache/TagCacheService.cs`, 'utf8').match(/CurrentCacheSchemaVersion = (\d+);/)[1]) });
   assert.deepEqual(cleared, []);
   assert.ok(calls.some(url => url.includes('since=40')), 'the delta since the stored cursor');
 });

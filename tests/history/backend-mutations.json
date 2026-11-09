@@ -30,7 +30,7 @@
   {
     "name": "issue-905-jellium-exclusion",
     "layer": "backend",
-    "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/NativeClientPolicy.cs",
+    "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/PosterTags/NativeClientPolicy.cs",
     "before": "            \"Jellium Desktop\",\n",
     "after": "",
     "test": "ReportedDesktopShellMustNotReceiveNativeTags",

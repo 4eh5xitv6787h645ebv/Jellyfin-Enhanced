@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Generates Services/PosterTags/Resolution/ResolutionData.g.cs: the English
+// Generates Features/MediaTags/PosterTags/Resolution/ResolutionData.g.cs: the English
 // language display names (what the web reads from Intl.DisplayNames) and the
 // JavaScript full case mappings the native poster tag resolver needs to match
 // the web's tag logic without ICU.
@@ -17,7 +17,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const target = join(here, '..', '..', '..', 'Jellyfin.Plugin.JellyfinEnhanced', 'Services', 'PosterTags', 'Resolution', 'ResolutionData.g.cs');
+const target = join(here, '..', '..', '..', 'Jellyfin.Plugin.JellyfinEnhanced', 'Features', 'MediaTags', 'PosterTags', 'Resolution', 'ResolutionData.g.cs');
 
 const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
 
