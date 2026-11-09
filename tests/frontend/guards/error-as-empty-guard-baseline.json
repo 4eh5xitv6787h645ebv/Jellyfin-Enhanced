@@ -6,9 +6,6 @@
   "client/src/bootstrap/loader/boot.ts": {
     "R9-fail-empty loadPluginData": 1
   },
-  "client/src/bootstrap/loader/component-loader.ts": {
-    "R9-fail-empty getComponentScriptList": 1
-  },
   "client/src/features/calendar/calendar-page-data.ts": {
     "R9-fail-empty fetchUserData": 1
   },

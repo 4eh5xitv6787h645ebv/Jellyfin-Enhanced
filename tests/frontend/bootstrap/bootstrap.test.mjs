@@ -357,3 +357,41 @@ test('bookmark snapshot loading preserves uppercase record IDs and pairs content
   assert.equal(h.plugin.userConfig.bookmark.bookmarks.Bm_UPPER.timestamp, 2.5);
   assert.equal(h.plugin.userConfig.bookmarkBinding.userId, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
 });
+
+// BUG-008: the per-file fallback needs the component-script manifest. A failed manifest request is retried once
+// after a delay; if it fails again boot reports one clear error instead of "All component scripts loaded" + FATAL.
+function manifestFailure(t, failures, expectedConsoleErrors = []) {
+  let manifestRequests = 0;
+  const h = setup(t, { bundle: 'error', expectedConsoleErrors, ajax: async path => {
+    if (path.endsWith('/bootstrap')) return payload({ ComponentScripts: null });
+    if (path.endsWith('/component-scripts.json')) { if (++manifestRequests <= failures) throw new Error('manifest offline'); return modules; }
+    throw new Error(`Unexpected endpoint ${path}`);
+  } });
+  const logs = [], delays = [];
+  const setTimer = h.window.setTimeout.bind(h.window);
+  for (const level of ['log', 'error']) {
+    const write = h.window.console[level].bind(h.window.console);
+    h.window.console[level] = (...args) => { logs.push(args.map(String).join(' ')); write(...args); };
+  }
+  // The retry waits about a second; run it at once and record the requested delay instead.
+  h.window.setTimeout = (fn, ms, ...rest) => { delays.push(ms); return setTimer(fn, ms >= 500 ? 0 : ms, ...rest); };
+  return { ...h, logs, delays, get manifestRequests() { return manifestRequests; } };
+}
+
+test('a component-script manifest that fails once is retried after a delay and the fallback scripts load', async t => {
+  const h = manifestFailure(t, 1);
+  await until(() => h.plugin.initialized);
+  assert.equal(h.manifestRequests, 2);
+  assert.ok(h.delays.some(ms => ms >= 500), 'the retry waits before asking again');
+  assert.equal(h.scripts.filter(s => modules.some(name => s.src.includes(name))).length, 3);
+});
+
+test('a component-script manifest that keeps failing ends boot with one clear error, not "All component scripts loaded"', async t => {
+  const h = manifestFailure(t, Infinity, [/CRITICAL INITIALIZATION FAILURE.*component-script manifest/]);
+  await until(() => h.logs.some(line => /CRITICAL|FATAL|All components initialized/.test(line)));
+  assert.equal(h.manifestRequests, 2, 'one bounded retry');
+  assert.equal(h.logs.some(line => line.includes('All component scripts loaded')), false);
+  assert.equal(h.logs.filter(line => /CRITICAL|FATAL/.test(line)).length, 1);
+  assert.equal(h.logs.some(line => line.includes('All components initialized')), false);
+  assert.equal(h.plugin.initialized, undefined);
+});
