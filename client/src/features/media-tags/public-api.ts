@@ -2,11 +2,54 @@
  * media-tags' public API (frontend.md §2.3): types only, no runtime code. Another feature imports these with
  * `import type … from '…/media-tags/public-api'` (feature-boundaries rule 1).
  */
-// The Media Tags settings panels' registry members (settings-panel/registry.ts `EnhancedUi`).
+import type { PanelContext } from '../settings-panel/public-api';
+import type { TagGroupEditorApi, TagGroupEditorData } from './settings/ui-panel-tag-editor';
+import type { TagLooksPanel } from './settings/ui-panel-tag-looks';
+import type { TagPortableReopen, TagPortableTools, WireTagPortable } from './settings/ui-panel-tag-portable';
+import type {
+    PreviewInteraction, PreviewInteractionOptions, TagPreview, TagPreviewData, TagPreviewOptions,
+} from './settings/ui-panel-tag-preview';
+
+// The Media Tags settings panels' registry members and their types.
 export type { TagGroupEditorApi, TagGroupEditorData } from './settings/ui-panel-tag-editor';
 export type { TagLooksPanel } from './settings/ui-panel-tag-looks';
 export type { TagPortableReopen, TagPortableTools, WireTagPortable } from './settings/ui-panel-tag-portable';
 export type { PreviewInteraction, PreviewInteractionOptions, TagPreview, TagPreviewData, TagPreviewOptions } from './settings/ui-panel-tag-preview';
+
+/** The open hub's controls other sections and tests drive (settings/ui-panel-media-tags.ts). */
+export interface MediaTagsHubApi {
+    openTab(tab: string, options?: { focus?: boolean; focusTab?: boolean }): boolean;
+    announce(message: string): void;
+    refreshPreview(): void;
+    hasPreview(): boolean;
+    searchIndex(): Array<{ label: string; path: string; el: HTMLElement }>;
+    reveal(el: HTMLElement): void;
+    dispose(): void;
+}
+
+/**
+ * The Media Tags panels' members of `JE.internals.enhancedUi` (settings-panel/registry.ts `EnhancedUi` extends
+ * this; same runtime object and key). Every member is optional: each settings/ module fills its own part when it
+ * loads, in manifest order.
+ */
+export interface MediaTagsSettingsUi {
+    buildMediaTagsHubHtml?: (ctx: PanelContext) => string;
+    wireMediaTagsHub?: (ctx: PanelContext) => void;
+    wireTagLooks?: (ctx: PanelContext) => void;
+    tagLooksPanel?: TagLooksPanel;
+    tagPortable?: TagPortableTools;
+    buildTagPortableHtml?: () => string;
+    wireTagPortable?: WireTagPortable;
+    tagPortableReopen?: TagPortableReopen | null;
+    wireTagGroupEditor?: (ctx: PanelContext) => void;
+    buildTagGroupEditorHtml?: (ctx: PanelContext) => string;
+    tagGroupEditor?: TagGroupEditorApi | null;
+    tagGroupEditorData?: TagGroupEditorData;
+    mediaTagsHub?: MediaTagsHubApi | null;
+    bindTagPreviewInteraction?: (cards: readonly HTMLElement[], view: HTMLElement, options?: PreviewInteractionOptions) => PreviewInteraction;
+    createTagPreview?: (mount: HTMLElement | null, options?: TagPreviewOptions) => TagPreview | null;
+    tagPreviewData?: TagPreviewData;
+}
 // Types code outside this folder imports today (host/tag-runtime-host.ts, host/tag-rules-host.ts,
 // host/settings-panel-host.ts; added in S2). C1 moves the first two into this feature; the settings-panel host
 // moves to settings-panel/ and then needs these through this file.

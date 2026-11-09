@@ -21,7 +21,8 @@
  */
 import type { Group, Layout, Shape, ShapeLook } from '../layout/layout-rules';
 import { apiClient, currentUserKey, optionalApiClient, panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../../host/settings-panel-host';
-import type { MediaTagsHubApi, PanelContext, SearchHit } from '../../settings-panel/public-api';
+import type { MediaTagsHubApi } from '../public-api';
+import type { PanelContext, SearchHit } from '../../settings-panel/public-api';
 import { closestTarget, controlValue, focusElement, isDisabled, queryElement, queryElements, targetElement } from '../../shared/dom';
 import type { TagPreview } from './ui-panel-tag-preview';
 import { isJson } from '../../shared/settings-values';

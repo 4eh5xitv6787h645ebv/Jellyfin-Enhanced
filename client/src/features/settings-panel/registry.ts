@@ -1,15 +1,24 @@
 import type { PanelContext } from './context';
-import type {
-    PreviewInteraction, PreviewInteractionOptions, TagGroupEditorApi, TagGroupEditorData, TagLooksPanel, TagPortableReopen,
-    TagPortableTools, TagPreview, TagPreviewData, TagPreviewOptions, WireTagPortable,
-} from '../media-tags/public-api';
+import type { FeatureName } from '../../host/context';
+import type { MediaTagsSettingsUi } from '../media-tags/public-api';
+
+/**
+ * A feature's own section of the settings panel, registered under `EnhancedUi.sections[<feature>]`
+ * (frontend.md §1a). Nothing registers one yet; step A5 moves per-feature toggles here.
+ */
+export interface SettingsSection {
+    buildHtml?: (ctx: PanelContext) => string;
+    wire?: (ctx: PanelContext) => void;
+}
 
 /**
  * `JE.internals.enhancedUi`: the registry the split panel modules share
  * (and that admin pages and the item editor read). Every member is optional:
  * each module fills its own part when it loads, in manifest order.
+ * The shell's members are declared here; the Media Tags panels' members are
+ * `MediaTagsSettingsUi` (media-tags/public-api.ts), on the same runtime object.
  */
-export interface EnhancedUi {
+export interface EnhancedUi extends MediaTagsSettingsUi {
     GITHUB_REPO?: string;
     showReleaseNotesNotification?: () => Promise<void>;
     buildPanelHtml?: (ctx: PanelContext) => string;
@@ -23,31 +32,5 @@ export interface EnhancedUi {
     syncSubtitlePreviewTextShadow?: (bgColor: string) => void;
     wireHiddenContentListeners?: (ctx: PanelContext) => void;
     wireLanguageControls?: (ctx: PanelContext) => void;
-    buildMediaTagsHubHtml?: (ctx: PanelContext) => string;
-    wireMediaTagsHub?: (ctx: PanelContext) => void;
-    wireTagLooks?: (ctx: PanelContext) => void;
-    tagLooksPanel?: TagLooksPanel;
-    tagPortable?: TagPortableTools;
-    buildTagPortableHtml?: () => string;
-    wireTagPortable?: WireTagPortable;
-    tagPortableReopen?: TagPortableReopen | null;
-    wireTagGroupEditor?: (ctx: PanelContext) => void;
-    buildTagGroupEditorHtml?: (ctx: PanelContext) => string;
-    tagGroupEditor?: TagGroupEditorApi | null;
-    tagGroupEditorData?: TagGroupEditorData;
-    mediaTagsHub?: MediaTagsHubApi | null;
-    bindTagPreviewInteraction?: (cards: readonly HTMLElement[], view: HTMLElement, options?: PreviewInteractionOptions) => PreviewInteraction;
-    createTagPreview?: (mount: HTMLElement | null, options?: TagPreviewOptions) => TagPreview | null;
-    tagPreviewData?: TagPreviewData;
-}
-
-/** The open hub's controls other sections and tests drive (ui-panel-media-tags.ts). */
-export interface MediaTagsHubApi {
-    openTab(tab: string, options?: { focus?: boolean; focusTab?: boolean }): boolean;
-    announce(message: string): void;
-    refreshPreview(): void;
-    hasPreview(): boolean;
-    searchIndex(): Array<{ label: string; path: string; el: HTMLElement }>;
-    reveal(el: HTMLElement): void;
-    dispose(): void;
+    sections?: Partial<Record<FeatureName, SettingsSection>>;
 }
