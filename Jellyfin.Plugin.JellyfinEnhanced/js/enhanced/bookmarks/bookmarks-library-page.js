@@ -1,29 +1,61 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
-    const JE2 = host2.JellyfinEnhanced;
-    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const JE = host2.JellyfinEnhanced;
+    if (!JE) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("bookmarks", JE, {
+      facades: ["bookmarks", "initializeBookmarks", "cleanupBookmarks"],
+      internalSlots: ["bookmarksLibrary", "bookmarkLifetimes"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
     const getApi2 = () => {
       const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
       if (!api) throw new Error("API client not available");
       return api;
     };
-    return { JE: JE2, host: host2, getApi: getApi2 };
+    return { ctx: ctx2, host: host2, getApi: getApi2 };
   }
-  function lease(JE2) {
-    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
-    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
+  function lease(JE) {
+    const owner = JE.userConfig, epoch = JE.session?.getEpoch();
+    return () => JE.userConfig === owner && (epoch === void 0 || JE.session?.isCurrent(epoch) === true);
   }
 
   // client/src/features/bookmarks/lifetime.ts
-  function createLifetime(JE2, name) {
-    var _a;
-    JE2.internals ?? (JE2.internals = {});
-    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
-    JE2.internals.bookmarkLifetimes[name]?.dispose();
+  function createLifetime(ctx2, name) {
+    const JE = ctx2.core, own = ctx2.own;
+    own.bookmarkLifetimes ?? (own.bookmarkLifetimes = {});
+    own.bookmarkLifetimes[name]?.dispose();
     const cleanup = /* @__PURE__ */ new Set();
     const dialogs = /* @__PURE__ */ new Set();
     let disposed = false;
@@ -47,7 +79,7 @@
       cleanup.add(() => target.removeEventListener(event, callback, capture));
     };
     const timeout = (callback, delay) => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       const cancel = () => {
         window.clearTimeout(id);
         cleanup.delete(cancel);
@@ -123,11 +155,11 @@
       cleanup.clear();
     };
     const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       return () => !disposed && generation === version && current();
     } };
-    JE2.internals.bookmarkLifetimes[name] = result;
-    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+    own.bookmarkLifetimes[name] = result;
+    keep(JE.session?.onUserChange("bookmarks-" + name, () => {
       for (const close of dialogs) close();
       document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
       document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
@@ -137,12 +169,12 @@
   }
 
   // client/src/features/bookmarks/library-page.ts
-  var { JE, host, getApi } = bookmarksHost();
-  function install(JE2) {
-    const lifetime = createLifetime(JE2, "library-page");
+  var { ctx, host, getApi } = bookmarksHost();
+  function install(JE) {
+    const lifetime = createLifetime(ctx, "library-page");
     const setInterval = lifetime.interval;
-    const internal = JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
-    if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+    const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
+    if (!JE?.pluginConfig?.BookmarksEnabled) return;
     const renderIfSectionExists = (...args) => {
       const fn = internal.renderIfSectionExists;
       if (!fn) throw new Error("Missing bookmark module: renderIfSectionExists");
@@ -157,7 +189,7 @@
       locationTimer: null
     };
     function isPluginPagesActive() {
-      const config = JE2?.pluginConfig || {};
+      const config = JE?.pluginConfig || {};
       if (!config.BookmarksUsePluginPages) return false;
       const sb = document.querySelector(".mainDrawer-scrollContainer");
       return !!sb?.querySelector('a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]');
@@ -193,8 +225,8 @@
     function showPage() {
       if (pageState.pageVisible) return;
       if (isPluginPagesActive()) return;
-      if (JE2?.pluginConfig?.BookmarksUseCustomTabs) return;
-      if (JE2?.pluginConfig?.BookmarksUseNativeTab) return;
+      if (JE?.pluginConfig?.BookmarksUseCustomTabs) return;
+      if (JE?.pluginConfig?.BookmarksUseNativeTab) return;
       pageState.pageVisible = true;
       startLocationWatcher();
       const page = createPageContainer();
@@ -308,10 +340,10 @@
       }
     }
     function injectNavigation() {
-      if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+      if (!JE?.pluginConfig?.BookmarksEnabled) return;
       if (isPluginPagesActive()) return;
-      if (JE2?.pluginConfig?.BookmarksUseCustomTabs) return;
-      if (JE2?.pluginConfig?.BookmarksUseNativeTab) return;
+      if (JE?.pluginConfig?.BookmarksUseCustomTabs) return;
+      if (JE?.pluginConfig?.BookmarksUseNativeTab) return;
       const sb = document.querySelector(".mainDrawer-scrollContainer");
       const pluginPageItem = sb?.querySelector(
         'a[is="emby-linkbutton"][data-itemid="Jellyfin.Plugin.JellyfinEnhanced.BookmarksPage"]'
@@ -332,7 +364,7 @@
         navItem.appendChild(iconSpan);
         const textSpan = document.createElement("span");
         textSpan.className = "sectionName navMenuOptionText";
-        textSpan.textContent = JE2.t("bookmarks_library_title") !== "bookmarks_library_title" ? JE2.t("bookmarks_library_title") : "Bookmarks";
+        textSpan.textContent = JE.t("bookmarks_library_title") !== "bookmarks_library_title" ? JE.t("bookmarks_library_title") : "Bookmarks";
         navItem.appendChild(textSpan);
         navItem.addEventListener("click", (e) => {
           e.preventDefault();
@@ -350,11 +382,11 @@
       }
     }
     function setupNavigationWatcher() {
-      if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+      if (!JE?.pluginConfig?.BookmarksEnabled) return;
       if (isPluginPagesActive()) return;
-      if (JE2?.pluginConfig?.BookmarksUseCustomTabs) return;
-      if (JE2?.pluginConfig?.BookmarksUseNativeTab) return;
-      lifetime.keep(JE2.helpers.onSidebarRebuilt("bookmarks", ".je-nav-bookmarks-item", () => {
+      if (JE?.pluginConfig?.BookmarksUseCustomTabs) return;
+      if (JE?.pluginConfig?.BookmarksUseNativeTab) return;
+      lifetime.keep(JE.helpers.onSidebarRebuilt("bookmarks", ".je-nav-bookmarks-item", () => {
         if (isPluginPagesActive()) return;
         injectNavigation();
       }));
@@ -370,7 +402,7 @@
       handleNavClick
     });
   }
-  install(JE);
+  install(ctx.core);
 })();
 })();
 //# sourceMappingURL=bookmarks-library-page.js.map

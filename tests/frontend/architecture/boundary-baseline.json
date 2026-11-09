@@ -7,32 +7,6 @@
   "client/src/core/lifecycle-entry.ts": {
     "raw-global JellyfinEnhanced": 1
   },
-  "client/src/features/bookmarks/library-init.ts": {
-    "internals bookmarksLibrary": 2,
-    "raw-global JellyfinEnhanced": 3
-  },
-  "client/src/features/bookmarks/library-items.ts": {
-    "internals bookmarksLibrary": 2
-  },
-  "client/src/features/bookmarks/library-modals.ts": {
-    "internals bookmarksLibrary": 2
-  },
-  "client/src/features/bookmarks/library-page.ts": {
-    "internals bookmarksLibrary": 2
-  },
-  "client/src/features/bookmarks/library-render.ts": {
-    "internals bookmarksLibrary": 2
-  },
-  "client/src/features/bookmarks/library-replacements.ts": {
-    "internals bookmarksLibrary": 2
-  },
-  "client/src/features/bookmarks/library-styles.ts": {
-    "internals bookmarksLibrary": 2
-  },
-  "client/src/features/bookmarks/lifetime.ts": {
-    "internals *": 1,
-    "internals bookmarkLifetimes": 3
-  },
   "client/src/features/calendar/calendar-custom-tab.ts": {
     "internals calendarPage": 1
   },

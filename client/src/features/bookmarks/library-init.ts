@@ -1,6 +1,6 @@
-import { bookmarksHost, type BookmarkHost } from './host';
+import { bookmarksHost, findBridge, type BookmarkHost } from './host';
 import { createLifetime } from './lifetime';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 /**
  * Bookmarks Library View — initialization / boot.
  * Typed entry retaining the established library DOM and public bridge.
@@ -8,11 +8,11 @@ const { JE, host, getApi } = bookmarksHost();
  * observer, and the optional native tab, then triggers the first render.
  */
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'library-init');
+  const lifetime = createLifetime(ctx, 'library-init');
   const setInterval = lifetime.interval;
 
   
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
+  const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
 
   if (!JE?.pluginConfig?.BookmarksEnabled) return;
 
@@ -33,20 +33,8 @@ function install(JE: BookmarkHost) {
   const logPrefix = '🪼 Jellyfin Enhanced: Bookmarks Library:';
 
   function getJE() {
-    // Try common globals first
-    if (host.JE) return host.JE;
-    if (host.JellyfinEnhanced) return host.JellyfinEnhanced;
-
-    // Optional same-origin frame bridge; cross-origin frames are not readable.
-    for (const frame of [window.parent, window.top]) {
-      try {
-        const parent: (Window & {JE?: BookmarkHost; JellyfinEnhanced?: BookmarkHost}) | null = frame;
-        const candidate = parent?.JE || parent?.JellyfinEnhanced;
-        if (candidate) return candidate;
-      } catch { /* Cross-origin frame: use local host only. */ }
-    }
-
-    return null;
+    // This window's bridge, else a same-origin parent frame's (host.ts findBridge).
+    return findBridge(host);
   }
 
   /**
@@ -134,4 +122,4 @@ function install(JE: BookmarkHost) {
   }
 
 }
-install(JE);
+install(ctx.core);

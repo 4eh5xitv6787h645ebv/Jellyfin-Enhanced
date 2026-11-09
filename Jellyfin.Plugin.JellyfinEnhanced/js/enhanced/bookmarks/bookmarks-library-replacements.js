@@ -1,17 +1,50 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
-    const JE2 = host2.JellyfinEnhanced;
-    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const JE = host2.JellyfinEnhanced;
+    if (!JE) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("bookmarks", JE, {
+      facades: ["bookmarks", "initializeBookmarks", "cleanupBookmarks"],
+      internalSlots: ["bookmarksLibrary", "bookmarkLifetimes"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
     const getApi2 = () => {
       const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
       if (!api) throw new Error("API client not available");
       return api;
     };
-    return { JE: JE2, host: host2, getApi: getApi2 };
+    return { ctx: ctx2, host: host2, getApi: getApi2 };
   }
   function record(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -42,9 +75,9 @@
     if (!record(value) || !Array.isArray(value.Items)) throw new Error("Invalid items response");
     return value.Items.map(readItem);
   }
-  function lease(JE2) {
-    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
-    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
+  function lease(JE) {
+    const owner = JE.userConfig, epoch = JE.session?.getEpoch();
+    return () => JE.userConfig === owner && (epoch === void 0 || JE.session?.isCurrent(epoch) === true);
   }
 
   // client/src/features/bookmarks/dom.ts
@@ -55,11 +88,10 @@
   }
 
   // client/src/features/bookmarks/lifetime.ts
-  function createLifetime(JE2, name) {
-    var _a;
-    JE2.internals ?? (JE2.internals = {});
-    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
-    JE2.internals.bookmarkLifetimes[name]?.dispose();
+  function createLifetime(ctx2, name) {
+    const JE = ctx2.core, own = ctx2.own;
+    own.bookmarkLifetimes ?? (own.bookmarkLifetimes = {});
+    own.bookmarkLifetimes[name]?.dispose();
     const cleanup = /* @__PURE__ */ new Set();
     const dialogs = /* @__PURE__ */ new Set();
     let disposed = false;
@@ -83,7 +115,7 @@
       cleanup.add(() => target.removeEventListener(event, callback, capture));
     };
     const timeout = (callback, delay) => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       const cancel = () => {
         window.clearTimeout(id);
         cleanup.delete(cancel);
@@ -159,11 +191,11 @@
       cleanup.clear();
     };
     const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       return () => !disposed && generation === version && current();
     } };
-    JE2.internals.bookmarkLifetimes[name] = result;
-    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+    own.bookmarkLifetimes[name] = result;
+    keep(JE.session?.onUserChange("bookmarks-" + name, () => {
       for (const close of dialogs) close();
       document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
       document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
@@ -173,19 +205,19 @@
   }
 
   // client/src/features/bookmarks/library-replacements.ts
-  var { JE, host, getApi } = bookmarksHost();
-  function install(JE2) {
-    const lifetime = createLifetime(JE2, "library-replacements");
+  var { ctx, host, getApi } = bookmarksHost();
+  function install(JE) {
+    const lifetime = createLifetime(ctx, "library-replacements");
     lifetime.listen(document, "viewshow", lifetime.cancelPending, true);
     const setTimeout = lifetime.timeout;
-    const internal = JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
-    if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+    const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
+    if (!JE?.pluginConfig?.BookmarksEnabled) return;
     const renderBookmarksLibrary = (...args) => {
       const fn = internal.renderBookmarksLibrary;
       if (!fn) throw new Error("Missing bookmark module: renderBookmarksLibrary");
       return fn(...args);
     };
-    const escapeHtml = JE2.escapeHtml;
+    const escapeHtml = JE.escapeHtml;
     async function searchForReplacementItem(tmdbId, tvdbId, mediaType, seasonNumber = null, episodeNumber = null) {
       const isCurrent = lifetime.current();
       const apiClient = getApi();
@@ -197,7 +229,7 @@
         const seen = /* @__PURE__ */ new Set();
         for (let start = 0; ; start += 500) {
           const url = `Users/${encodeURIComponent(userId || "")}/Items?Recursive=true${itemTypes ? `&IncludeItemTypes=${itemTypes}` : ""}&Fields=ProviderIds&SortBy=DateCreated&SortOrder=Descending&Limit=500&StartIndex=${start}`;
-          const response = await JE2.core.api.fetch(apiClient.getUrl(url));
+          const response = await JE.core.api.fetch(apiClient.getUrl(url));
           if (!isCurrent()) return null;
           const batch = readItems(response);
           const unseen = batch.filter((item) => !seen.has(item.Id));
@@ -243,7 +275,7 @@
       );
       if (!isCurrent()) return;
       if (!matches || matches.length === 0) {
-        if (isCurrent()) JE2.toast(JE2.t("bookmark_no_replacement"), 3e3);
+        if (isCurrent()) JE.toast(JE.t("bookmark_no_replacement"), 3e3);
         triggerBtn.disabled = false;
         return;
       }
@@ -344,7 +376,7 @@
         required(btn, "span:last-child").textContent = "Migrating...";
         try {
           const userId = apiClient.getCurrentUserId();
-          const fullItem = readItem(JE2.helpers?.getItemCached ? await JE2.helpers.getItemCached(selectedItem.Id, { userId }) : await apiClient.getItem(userId, selectedItem.Id));
+          const fullItem = readItem(JE.helpers?.getItemCached ? await JE.helpers.getItemCached(selectedItem.Id, { userId }) : await apiClient.getItem(userId, selectedItem.Id));
           if (!isCurrent()) return;
           const newDetails = {
             itemId: fullItem.Id,
@@ -355,9 +387,9 @@
             seasonNumber: fullItem.Type === "Episode" ? fullItem.ParentIndexNumber ?? null : null,
             episodeNumber: fullItem.Type === "Episode" ? fullItem.IndexNumber ?? null : null
           };
-          const synced = await JE2.bookmarks.syncBookmarks(oldGroup.bookmarks, newDetails, 0, { replaceOriginals: true });
+          const synced = await ctx.own.bookmarks.syncBookmarks(oldGroup.bookmarks, newDetails, 0, { replaceOriginals: true });
           if (!isCurrent()) return;
-          if (isCurrent()) JE2.toast(JE2.t("bookmark_migrated").replace("{count}", String(synced.length)).replace("{name}", fullItem.Name || ""), 4e3);
+          if (isCurrent()) JE.toast(JE.t("bookmark_migrated").replace("{count}", String(synced.length)).replace("{name}", fullItem.Name || ""), 4e3);
           closeDialog();
           const container = document.querySelector(".sections.bookmarks");
           if (container) {
@@ -365,16 +397,16 @@
           }
         } catch (e) {
           console.error("Migration failed:", e);
-          if (isCurrent()) JE2.toast(JE2.t("bookmark_migration_failed"), 3e3);
+          if (isCurrent()) JE.toast(JE.t("bookmark_migration_failed"), 3e3);
           btn.disabled = false;
-          required(btn, "span:last-child").textContent = JE2.t("bookmark_migrate");
+          required(btn, "span:last-child").textContent = JE.t("bookmark_migrate");
         }
       });
       setTimeout(() => modal.style.opacity = "1", 10);
     }
     Object.assign(internal, { findAndOfferReplacement });
   }
-  install(JE);
+  install(ctx.core);
 })();
 })();
 //# sourceMappingURL=bookmarks-library-replacements.js.map

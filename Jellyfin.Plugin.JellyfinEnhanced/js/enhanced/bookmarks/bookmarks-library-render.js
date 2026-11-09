@@ -1,21 +1,54 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
-    const JE2 = host2.JellyfinEnhanced;
-    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const JE = host2.JellyfinEnhanced;
+    if (!JE) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("bookmarks", JE, {
+      facades: ["bookmarks", "initializeBookmarks", "cleanupBookmarks"],
+      internalSlots: ["bookmarksLibrary", "bookmarkLifetimes"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
     const getApi2 = () => {
       const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
       if (!api) throw new Error("API client not available");
       return api;
     };
-    return { JE: JE2, host: host2, getApi: getApi2 };
+    return { ctx: ctx2, host: host2, getApi: getApi2 };
   }
-  function lease(JE2) {
-    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
-    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
+  function lease(JE) {
+    const owner = JE.userConfig, epoch = JE.session?.getEpoch();
+    return () => JE.userConfig === owner && (epoch === void 0 || JE.session?.isCurrent(epoch) === true);
   }
 
   // client/src/features/bookmarks/domain.ts
@@ -40,11 +73,10 @@
   }
 
   // client/src/features/bookmarks/lifetime.ts
-  function createLifetime(JE2, name) {
-    var _a;
-    JE2.internals ?? (JE2.internals = {});
-    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
-    JE2.internals.bookmarkLifetimes[name]?.dispose();
+  function createLifetime(ctx2, name) {
+    const JE = ctx2.core, own = ctx2.own;
+    own.bookmarkLifetimes ?? (own.bookmarkLifetimes = {});
+    own.bookmarkLifetimes[name]?.dispose();
     const cleanup = /* @__PURE__ */ new Set();
     const dialogs = /* @__PURE__ */ new Set();
     let disposed = false;
@@ -68,7 +100,7 @@
       cleanup.add(() => target.removeEventListener(event, callback, capture));
     };
     const timeout = (callback, delay) => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       const cancel = () => {
         window.clearTimeout(id);
         cleanup.delete(cancel);
@@ -144,11 +176,11 @@
       cleanup.clear();
     };
     const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       return () => !disposed && generation === version && current();
     } };
-    JE2.internals.bookmarkLifetimes[name] = result;
-    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+    own.bookmarkLifetimes[name] = result;
+    keep(JE.session?.onUserChange("bookmarks-" + name, () => {
       for (const close of dialogs) close();
       document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
       document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
@@ -158,11 +190,11 @@
   }
 
   // client/src/features/bookmarks/library-render.ts
-  var { JE, host, getApi } = bookmarksHost();
-  function install(JE2) {
-    const lifetime = createLifetime(JE2, "library-render");
-    const internal = JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
-    if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+  var { ctx, host, getApi } = bookmarksHost();
+  function install(JE) {
+    const lifetime = createLifetime(ctx, "library-render");
+    const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
+    if (!JE?.pluginConfig?.BookmarksEnabled) return;
     const renderBookmarkItems = (...args) => {
       const fn = internal.renderBookmarkItems;
       if (!fn) throw new Error("Missing bookmark module: renderBookmarkItems");
@@ -176,7 +208,7 @@
     const logPrefix = "🪼 Jellyfin Enhanced: Bookmarks Library:";
     let isRendering = false;
     let lastMountedContainer = null;
-    lifetime.keep(JE2.session?.onUserChange("bookmarks-library-render-state", () => {
+    lifetime.keep(JE.session?.onUserChange("bookmarks-library-render-state", () => {
       lastMountedContainer = null;
     }));
     function invalidateBookmarks() {
@@ -214,12 +246,12 @@
       const all = document.querySelectorAll(".sections.bookmarks");
       for (let i = all.length - 1; i >= 0; i--) {
         const el = all[i];
-        if (el && JE2.helpers.isActiveTabContainer(el)) return el;
+        if (el && JE.helpers.isActiveTabContainer(el)) return el;
       }
       return null;
     }
     function hookViewEvents() {
-      lifetime.keep(JE2.core.navigation.onViewPage((v, el, hash, itemPromise, rawEvent) => {
+      lifetime.keep(JE.core.navigation.onViewPage((v, el, hash, itemPromise, rawEvent) => {
         const e = rawEvent;
         if (!e) return;
         if (isRendering) return;
@@ -234,7 +266,7 @@
     async function renderBookmarksLibrary(container) {
       const isCurrent = lifetime.current();
       console.log(`${logPrefix} Rendering bookmarks library...`);
-      const bookmarks = displayBookmarks(JE2.userConfig?.bookmark?.bookmarks);
+      const bookmarks = displayBookmarks(JE.userConfig?.bookmark?.bookmarks);
       const bookmarkEntries = Object.entries(bookmarks);
       const groupedByItem = /* @__PURE__ */ Object.create(null);
       const typeCounts = {
@@ -274,13 +306,13 @@
         <input type="search" class="je-bookmark-search je-input" aria-label="Search bookmarks" placeholder="Search bookmarks">
         <div class="je-bookmark-tabs">
           <button class="je-tab ${currentTab === "movie" ? "active" : ""}" data-tab="movie">
-            ${JE2.t("bookmarks_library_tab_movies")}
+            ${JE.t("bookmarks_library_tab_movies")}
           </button>
           <button class="je-tab ${currentTab === "tv" ? "active" : ""}" data-tab="tv">
-            ${JE2.t("bookmarks_library_tab_series")}
+            ${JE.t("bookmarks_library_tab_series")}
           </button>
           <button class="je-tab ${currentTab === "other" ? "active" : ""}" data-tab="other">
-            ${JE2.t("bookmarks_library_tab_others")}
+            ${JE.t("bookmarks_library_tab_others")}
           </button>
         </div>
 
@@ -288,23 +320,23 @@
           ${totalBookmarks === 0 ? `
             <div class="je-bookmarks-empty">
               <div class="je-bookmarks-empty-icon material-icons" aria-hidden="true">bookmark_border</div>
-              <div class="je-bookmarks-empty-title">${JE2.t("bookmarks_library_empty_title")}</div>
-              <div class="je-bookmarks-empty-hint">${JE2.t("bookmarks_library_empty_hint")}</div>
+              <div class="je-bookmarks-empty-title">${JE.t("bookmarks_library_empty_title")}</div>
+              <div class="je-bookmarks-empty-hint">${JE.t("bookmarks_library_empty_hint")}</div>
             </div>
           ` : `
             <div class="je-bookmarks-grid" id="bookmarks-items-container"></div>
             <div class="je-bookmark-actions-footer">
               <button class="btnFindDuplicates je-btn-footer">
                 <span class="material-icons" aria-hidden="true">merge</span>
-                <span>${JE2.t("bookmarks_library_button_find_duplicates")}</span>
+                <span>${JE.t("bookmarks_library_button_find_duplicates")}</span>
               </button>
               <button class="btnCleanupBookmarks je-btn-footer">
                 <span class="material-icons" aria-hidden="true">cleaning_services</span>
-                <span>${JE2.t("bookmarks_library_button_cleanup")}</span>
+                <span>${JE.t("bookmarks_library_button_cleanup")}</span>
               </button>
               <button class="btnDeleteAllBookmarks je-btn-footer je-btn-footer-delete">
                 <span class="material-icons" aria-hidden="true">delete</span>
-                <span>${JE2.t("bookmarks_library_button_delete_all")}</span>
+                <span>${JE.t("bookmarks_library_button_delete_all")}</span>
               </button>
             </div>
           `}
@@ -340,13 +372,13 @@
         const origText = label?.innerHTML;
         if (label) label.innerHTML = '<span class="material-icons" style="animation: spin 1s linear infinite;">refresh</span>';
         try {
-          const result = await JE2.bookmarks.cleanupOrphaned();
+          const result = await ctx.own.bookmarks.cleanupOrphaned();
           if (!isCurrent()) return;
-          if (isCurrent()) JE2.toast(JE2.t("bookmark_cleanup_complete").replace("{count}", String(result.cleaned)), 4e3);
+          if (isCurrent()) JE.toast(JE.t("bookmark_cleanup_complete").replace("{count}", String(result.cleaned)), 4e3);
           renderBookmarksLibrary(container);
         } catch (error) {
           console.error("Cleanup failed:", error);
-          if (isCurrent()) JE2.toast(JE2.t("bookmark_cleanup_failed"), 3e3);
+          if (isCurrent()) JE.toast(JE.t("bookmark_cleanup_failed"), 3e3);
         } finally {
           cleanupBtn.disabled = false;
           if (label && origText) label.innerHTML = origText;
@@ -354,18 +386,18 @@
       });
       deleteAllBtn?.addEventListener("click", async () => {
         if (!isCurrent()) return;
-        if (!confirm(JE2.t("bookmark_delete_all_confirm"))) return;
+        if (!confirm(JE.t("bookmark_delete_all_confirm"))) return;
         deleteAllBtn.disabled = true;
         const label = deleteAllBtn.querySelector("span:last-child");
         const origText = label?.innerHTML;
         if (label) label.innerHTML = '<span class="material-icons" style="animation: spin 1s linear infinite;">refresh</span>';
         try {
-          if (!await JE2.bookmarks.deleteAll() || !isCurrent()) return;
-          if (isCurrent()) JE2.toast(JE2.t("bookmark_deleted_all"), 3e3);
+          if (!await ctx.own.bookmarks.deleteAll() || !isCurrent()) return;
+          if (isCurrent()) JE.toast(JE.t("bookmark_deleted_all"), 3e3);
           renderBookmarksLibrary(container);
         } catch (error) {
           console.error("Delete failed:", error);
-          if (isCurrent()) JE2.toast(JE2.t("bookmark_delete_failed"), 3e3);
+          if (isCurrent()) JE.toast(JE.t("bookmark_delete_failed"), 3e3);
         } finally {
           deleteAllBtn.disabled = false;
           if (label && origText) label.innerHTML = origText;
@@ -406,7 +438,7 @@
       parseTimestampInput
     });
   }
-  install(JE);
+  install(ctx.core);
 })();
 })();
 //# sourceMappingURL=bookmarks-library-render.js.map

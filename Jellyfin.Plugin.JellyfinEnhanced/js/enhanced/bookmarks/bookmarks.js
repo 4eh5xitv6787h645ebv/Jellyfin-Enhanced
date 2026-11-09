@@ -4827,17 +4827,50 @@
     return json(value, 0) && matches(value, schema, 0);
   }
 
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
-    const JE2 = host2.JellyfinEnhanced;
-    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const JE = host2.JellyfinEnhanced;
+    if (!JE) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("bookmarks", JE, {
+      facades: ["bookmarks", "initializeBookmarks", "cleanupBookmarks"],
+      internalSlots: ["bookmarksLibrary", "bookmarkLifetimes"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
     const getApi2 = () => {
       const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
       if (!api) throw new Error("API client not available");
       return api;
     };
-    return { JE: JE2, host: host2, getApi: getApi2 };
+    return { ctx: ctx2, host: host2, getApi: getApi2 };
   }
   function record(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -4868,9 +4901,9 @@
     if (!record(value) || !Array.isArray(value.Items)) throw new Error("Invalid items response");
     return value.Items.map(readItem);
   }
-  function lease(JE2) {
-    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
-    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
+  function lease(JE) {
+    const owner = JE.userConfig, epoch = JE.session?.getEpoch();
+    return () => JE.userConfig === owner && (epoch === void 0 || JE.session?.isCurrent(epoch) === true);
   }
   function isMissingItem(error) {
     return record(error) && (error.status === 404 || error.statusCode === 404) || record(error) && typeof error.message === "string" && /^404(?:\b|$)/.test(error.message);
@@ -4888,13 +4921,13 @@
   function isReceipt(value) {
     return validateSchema(value, bootstrapSchema.$defs.BookmarkSaveReceipt, bootstrapSchema.$defs);
   }
-  async function persistBookmarks(JE2, getApi2, owner, Operations) {
-    const api = getApi2(), userId = api.getCurrentUserId(), token = api.accessToken?.(), baseUrl = api.getUrl("/"), current = lease(JE2);
-    if (!current() || JE2.userConfig !== owner || !userId) throw new Error("Bookmark owner changed before saving");
+  async function persistBookmarks(JE, getApi2, owner, Operations) {
+    const api = getApi2(), userId = api.getCurrentUserId(), token = api.accessToken?.(), baseUrl = api.getUrl("/"), current = lease(JE);
+    if (!current() || JE.userConfig !== owner || !userId) throw new Error("Bookmark owner changed before saving");
     const binding = owner.bookmarkBinding;
     if (binding && (binding.client !== api || binding.userId !== userId || binding.token !== token || binding.baseUrl !== baseUrl)) throw new Error("Bookmark identity changed. Reload before saving again.");
     if (!owner.bookmarkRevision) {
-      JE2.toast("Bookmarks were not loaded safely. Reload before saving again.", 5e3);
+      JE.toast("Bookmarks were not loaded safely. Reload before saving again.", 5e3);
       throw new Error("Loaded bookmark revision required. Reload before saving again.");
     }
     try {
@@ -4912,7 +4945,7 @@
         const conflict = record(error) && (error.status === 409 || error.statusCode === 409);
         if (conflict) window.setTimeout(() => {
           if (current() && getApi2() === api && api.getCurrentUserId() === userId && api.accessToken?.() === token && api.getUrl("/") === baseUrl)
-            JE2.toast("Bookmarks changed in another tab or on the server. Reload before saving again.", 5e3);
+            JE.toast("Bookmarks changed in another tab or on the server. Reload before saving again.", 5e3);
         }, 0);
       }
       throw error;
@@ -4927,11 +4960,10 @@
   }
 
   // client/src/features/bookmarks/lifetime.ts
-  function createLifetime(JE2, name) {
-    var _a;
-    JE2.internals ?? (JE2.internals = {});
-    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
-    JE2.internals.bookmarkLifetimes[name]?.dispose();
+  function createLifetime(ctx2, name) {
+    const JE = ctx2.core, own = ctx2.own;
+    own.bookmarkLifetimes ?? (own.bookmarkLifetimes = {});
+    own.bookmarkLifetimes[name]?.dispose();
     const cleanup = /* @__PURE__ */ new Set();
     const dialogs = /* @__PURE__ */ new Set();
     let disposed = false;
@@ -4955,7 +4987,7 @@
       cleanup.add(() => target.removeEventListener(event, callback, capture));
     };
     const timeout = (callback, delay) => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       const cancel = () => {
         window.clearTimeout(id);
         cleanup.delete(cancel);
@@ -5031,11 +5063,11 @@
       cleanup.clear();
     };
     const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       return () => !disposed && generation === version && current();
     } };
-    JE2.internals.bookmarkLifetimes[name] = result;
-    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+    own.bookmarkLifetimes[name] = result;
+    keep(JE.session?.onUserChange("bookmarks-" + name, () => {
       for (const close of dialogs) close();
       document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
       document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
@@ -5052,7 +5084,7 @@
   }
 
   // client/src/features/bookmarks/state.ts
-  function createBookmarkState(JE2, getApi2, getCurrentItemData) {
+  function createBookmarkState(JE, getApi2, getCurrentItemData) {
     const logPrefix = "🪼 Jellyfin Enhanced: Bookmarks:";
     function emitBookmarksUpdated(reason = "updated") {
       try {
@@ -5070,8 +5102,8 @@
     }
     let itemDetailsCache = null;
     async function fetchItemDetails(itemId) {
-      const owner = JE2.userConfig;
-      const epoch = JE2.session ? JE2.session.getEpoch() : 0;
+      const owner = JE.userConfig;
+      const epoch = JE.session ? JE.session.getEpoch() : 0;
       if (!itemDetailsCache || itemDetailsCache.owner !== owner || itemDetailsCache.epoch !== epoch || itemDetailsCache.itemId !== itemId) {
         itemDetailsCache = { owner, epoch, itemId, data: null, pending: null };
       }
@@ -5094,7 +5126,7 @@
             }),
             dataType: "json"
           }));
-          if (JE2.userConfig !== owner || JE2.session && !JE2.session.isCurrent(epoch)) return null;
+          if (JE.userConfig !== owner || JE.session && !JE.session.isCurrent(epoch)) return null;
           const item = result[0];
           if (!item) return null;
           let sourceItem = item;
@@ -5138,7 +5170,7 @@
             seasonNumber,
             episodeNumber
           };
-          if (JE2.userConfig !== owner || JE2.session && !JE2.session.isCurrent(epoch)) return null;
+          if (JE.userConfig !== owner || JE.session && !JE.session.isCurrent(epoch)) return null;
           cache.data = details;
           return details;
         } catch (e) {
@@ -5156,7 +5188,7 @@
       return `bm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
     function findBookmarksForItem(itemId, tmdbId, tvdbId, seasonNumber = null, episodeNumber = null) {
-      const allBookmarks = JE2.userConfig?.bookmark?.bookmarks || {};
+      const allBookmarks = JE.userConfig?.bookmark?.bookmarks || {};
       const exactMatches = [];
       const providerMatches = [];
       const isEpisode = episodeNumber !== null;
@@ -5184,17 +5216,17 @@
     }
     async function addBookmark(timestamp, label = "") {
       if (!Number.isFinite(timestamp) || timestamp < 0) throw new Error("Invalid bookmark timestamp");
-      const owner = JE2.userConfig;
-      const isCurrentOwner = lease(JE2);
+      const owner = JE.userConfig;
+      const isCurrentOwner = lease(JE);
       const itemData = getCurrentItemData();
       if (!itemData) {
-        JE2.toast(JE2.t("toast_bookmark_no_item"), 3e3);
+        JE.toast(JE.t("toast_bookmark_no_item"), 3e3);
         return null;
       }
       const details = await fetchItemDetails(itemData.itemId);
       if (!isCurrentOwner()) return null;
       if (!details) {
-        JE2.toast(JE2.t("toast_bookmark_fetch_failed"), 3e3);
+        JE.toast(JE.t("toast_bookmark_fetch_failed"), 3e3);
         return null;
       }
       return queueBookmarkMutation(owner, async () => {
@@ -5224,7 +5256,7 @@
         const bookmarks = owner.bookmark.bookmarks;
         bookmarks[bookmarkId] = bookmark;
         try {
-          await persistBookmarks(JE2, getApi2, owner, [bookmarkOperation("create", bookmarkId, bookmark)]);
+          await persistBookmarks(JE, getApi2, owner, [bookmarkOperation("create", bookmarkId, bookmark)]);
           console.log(`${logPrefix} Bookmark added:`, bookmarkId, bookmark);
           if (isCurrentOwner()) emitBookmarksUpdated("add");
           return { ...bookmark, id: bookmarkId };
@@ -5237,9 +5269,9 @@
     }
     async function updateBookmark(bookmarkId, updates) {
       if (updates.timestamp !== void 0 && (!Number.isFinite(updates.timestamp) || updates.timestamp < 0)) return false;
-      const owner = JE2.userConfig;
-      const isCurrentOwner = lease(JE2);
-      if (!JE2.userConfig?.bookmark?.bookmarks?.[bookmarkId]) {
+      const owner = JE.userConfig;
+      const isCurrentOwner = lease(JE);
+      if (!JE.userConfig?.bookmark?.bookmarks?.[bookmarkId]) {
         console.warn(`${logPrefix} Bookmark not found:`, bookmarkId);
         return false;
       }
@@ -5254,7 +5286,7 @@
         const bookmark = { ...original, ...Object.fromEntries(Object.entries(updates).filter(([, value]) => value !== void 0)), updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
         bookmarks[bookmarkId] = bookmark;
         try {
-          await persistBookmarks(JE2, getApi2, owner, [bookmarkOperation("edit", bookmarkId, updates, original.itemId)]);
+          await persistBookmarks(JE, getApi2, owner, [bookmarkOperation("edit", bookmarkId, updates, original.itemId)]);
           console.log(`${logPrefix} Bookmark updated:`, bookmarkId);
           if (isCurrentOwner()) emitBookmarksUpdated("update");
           return true;
@@ -5271,9 +5303,9 @@
       return deleteCheckedBookmark(bookmarkId);
     }
     async function deleteCheckedBookmark(bookmarkId, expectedItemId) {
-      const owner = JE2.userConfig;
-      const isCurrentOwner = lease(JE2);
-      if (!JE2.userConfig?.bookmark?.bookmarks?.[bookmarkId]) {
+      const owner = JE.userConfig;
+      const isCurrentOwner = lease(JE);
+      if (!JE.userConfig?.bookmark?.bookmarks?.[bookmarkId]) {
         console.warn(`${logPrefix} Bookmark not found:`, bookmarkId);
         return null;
       }
@@ -5288,7 +5320,7 @@
         if (expectedItemId !== void 0 && original.itemId !== expectedItemId) return null;
         delete bookmarks[bookmarkId];
         try {
-          await persistBookmarks(JE2, getApi2, owner, [bookmarkOperation("delete", bookmarkId, void 0, original.itemId)]);
+          await persistBookmarks(JE, getApi2, owner, [bookmarkOperation("delete", bookmarkId, void 0, original.itemId)]);
           console.log(`${logPrefix} Bookmark deleted:`, bookmarkId);
           if (isCurrentOwner()) emitBookmarksUpdated("delete");
           return true;
@@ -5302,8 +5334,8 @@
       });
     }
     async function deleteAllBookmarks() {
-      const owner = JE2.userConfig;
-      const isCurrentOwner = lease(JE2);
+      const owner = JE.userConfig;
+      const isCurrentOwner = lease(JE);
       return queueBookmarkMutation(owner, async () => {
         if (!isCurrentOwner()) return false;
         if (!owner.bookmark) owner.bookmark = { bookmarks: {} };
@@ -5311,7 +5343,7 @@
         const cleared = {};
         owner.bookmark.bookmarks = cleared;
         try {
-          await persistBookmarks(JE2, getApi2, owner, [bookmarkOperation("delete-all")]);
+          await persistBookmarks(JE, getApi2, owner, [bookmarkOperation("delete-all")]);
           console.log(`${logPrefix} All bookmarks deleted`);
           return true;
         } catch (e) {
@@ -5322,8 +5354,8 @@
       });
     }
     async function syncBookmarks(oldBookmarks, newItemDetails, timeOffset = 0, { replaceOriginals = false } = {}) {
-      const owner = JE2.userConfig;
-      const isCurrentOwner = lease(JE2);
+      const owner = JE.userConfig;
+      const isCurrentOwner = lease(JE);
       if (!Number.isFinite(timeOffset)) throw new Error("Invalid bookmark offset");
       const selection = oldBookmarks.map((bookmark) => ({ ...bookmark }));
       return queueBookmarkMutation(owner, async () => {
@@ -5373,7 +5405,7 @@
           synced.push({ ...newBookmark, id: newBookmarkId });
         }
         try {
-          await persistBookmarks(JE2, getApi2, owner, synced.map((copy, index) => {
+          await persistBookmarks(JE, getApi2, owner, synced.map((copy, index) => {
             const source = sources[index];
             if (!source?.id) throw new Error("Stored bookmark identity required for copying");
             return { ...bookmarkOperation(replaceOriginals ? "replace" : "copy", copy.id, {
@@ -5401,7 +5433,7 @@
     }
     async function adjustOffsets(selected, offset) {
       if (!Number.isFinite(offset)) throw new Error("Invalid offset");
-      const owner = JE2.userConfig, current = lease(JE2);
+      const owner = JE.userConfig, current = lease(JE);
       return queueBookmarkMutation(owner, async () => {
         if (!current()) throw new Error("Bookmark owner changed before offset adjustment");
         const records = owner.bookmark?.bookmarks;
@@ -5420,7 +5452,7 @@
         }
         if (!changes.length) return 0;
         try {
-          await persistBookmarks(JE2, getApi2, owner, changes.map(([id, original]) => ({ ...bookmarkOperation("offset", id, void 0, original.itemId), Offset: offset })));
+          await persistBookmarks(JE, getApi2, owner, changes.map(([id, original]) => ({ ...bookmarkOperation("offset", id, void 0, original.itemId), Offset: offset })));
           if (current()) emitBookmarksUpdated("offset");
           return changes.length;
         } catch (error) {
@@ -5430,8 +5462,8 @@
       });
     }
     async function backfillEpisodeMetadata() {
-      const owner = JE2.userConfig;
-      const isCurrentOwner = lease(JE2);
+      const owner = JE.userConfig;
+      const isCurrentOwner = lease(JE);
       const allBookmarks = owner?.bookmark?.bookmarks || {};
       const candidates = Object.entries(allBookmarks).filter(
         ([, bm]) => bm?.mediaType === "tv" && bm.itemId && bm.episodeNumber == null
@@ -5467,7 +5499,7 @@
         }
         if (applied.length === 0) return;
         try {
-          await persistBookmarks(JE2, getApi2, owner, applied.map(([id, original, filled]) => bookmarkOperation("backfill", id, {
+          await persistBookmarks(JE, getApi2, owner, applied.map(([id, original, filled]) => bookmarkOperation("backfill", id, {
             seasonNumber: filled.seasonNumber,
             episodeNumber: filled.episodeNumber,
             ...filled.tvdbId ? { tvdbId: filled.tvdbId } : {}
@@ -5482,8 +5514,8 @@
       });
     }
     async function cleanupOrphanedBookmarks() {
-      const isCurrentOwner = lease(JE2);
-      const allBookmarks = JE2.userConfig?.bookmark?.bookmarks || {};
+      const isCurrentOwner = lease(JE);
+      const allBookmarks = JE.userConfig?.bookmark?.bookmarks || {};
       const itemIds = /* @__PURE__ */ new Set();
       const toDelete = [];
       for (const bookmark of Object.values(allBookmarks)) {
@@ -5495,7 +5527,7 @@
       let errors = 0;
       for (const itemId of itemIds) {
         try {
-          await (JE2.helpers?.getItemCached ? JE2.helpers.getItemCached(itemId, { userId }) : getApi2().getItem(userId, itemId));
+          await (JE.helpers?.getItemCached ? JE.helpers.getItemCached(itemId, { userId }) : getApi2().getItem(userId, itemId));
           if (!isCurrentOwner()) return { cleaned: 0, errors: 0 };
         } catch (e) {
           if (!isCurrentOwner()) return { cleaned: 0, errors: 0 };
@@ -5527,11 +5559,11 @@
   }
 
   // client/src/features/bookmarks/bookmarks.ts
-  var { JE, host, getApi } = bookmarksHost();
-  function install(JE2) {
-    const lifetime = createLifetime(JE2, "bookmarks");
+  var { ctx, host, getApi } = bookmarksHost();
+  function install(JE) {
+    const lifetime = createLifetime(ctx, "bookmarks");
     const setTimeout = lifetime.timeout;
-    if (!JE2.pluginConfig?.BookmarksEnabled) {
+    if (!JE.pluginConfig?.BookmarksEnabled) {
       console.log("🪼 Jellyfin Enhanced: Bookmarks feature is disabled");
       return;
     }
@@ -5550,8 +5582,8 @@
         return null;
       }
     }
-    const escapeHtml = JE2.escapeHtml;
-    const { addBookmark, updateBookmark, deleteBookmark, deleteAllBookmarks, syncBookmarks, backfillEpisodeMetadata, cleanupOrphanedBookmarks, findBookmarksForItem, fetchItemDetails, formatTimestamp: formatTimestamp2, adjustOffsets } = createBookmarkState(JE2, getApi, getCurrentItemData);
+    const escapeHtml = JE.escapeHtml;
+    const { addBookmark, updateBookmark, deleteBookmark, deleteAllBookmarks, syncBookmarks, backfillEpisodeMetadata, cleanupOrphanedBookmarks, findBookmarksForItem, fetchItemDetails, formatTimestamp: formatTimestamp2, adjustOffsets } = createBookmarkState(JE, getApi, getCurrentItemData);
     function createBookmarkMarkers(video, bookmarksList) {
       const isCurrent = lifetime.current();
       console.log(`${logPrefix} createBookmarkMarkers called - video:`, !!video, "bookmarks:", bookmarksList.length);
@@ -5614,14 +5646,14 @@
         pointer-events: none;
       `;
         marker.appendChild(icon);
-        const labelText = bookmark.label || JE2.t("bookmark_no_label");
-        const versionNote = !bookmark.exactMatch ? ` ${JE2.t("bookmark_file_changed")}` : "";
+        const labelText = bookmark.label || JE.t("bookmark_no_label");
+        const versionNote = !bookmark.exactMatch ? ` ${JE.t("bookmark_file_changed")}` : "";
         marker.title = `${labelText} - ${formatTimestamp2(bookmark.timestamp)}${versionNote}`;
         marker.addEventListener("click", (e) => {
           if (!isCurrent() || !video.isConnected) return;
           e.stopPropagation();
           video.currentTime = bookmark.timestamp;
-          JE2.toast(`${JE2.t("toast_jumped_to_bookmark")}: ${formatTimestamp2(bookmark.timestamp)}`, 2e3);
+          JE.toast(`${JE.t("toast_jumped_to_bookmark")}: ${formatTimestamp2(bookmark.timestamp)}`, 2e3);
         });
         sliderContainer.appendChild(marker);
       });
@@ -5665,13 +5697,13 @@
       const currentTime = video?.currentTime || 0;
       const itemData = getCurrentItemData();
       if (!itemData) {
-        if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_no_item"), 3e3);
+        if (isCurrent()) JE.toast(JE.t("toast_bookmark_no_item"), 3e3);
         return;
       }
       const details = await fetchItemDetails(itemData.itemId);
       if (!isCurrent() || getCurrentItemData()?.itemId !== itemData.itemId) return;
       if (!details) {
-        if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_fetch_failed"), 3e3);
+        if (isCurrent()) JE.toast(JE.t("toast_bookmark_fetch_failed"), 3e3);
         return;
       }
       const { bookmarks: existingBookmarks } = findBookmarksForItem(
@@ -5682,7 +5714,7 @@
         details.episodeNumber
       );
       const isEdit = mode === "edit" && existingBookmark;
-      const title = isEdit ? JE2.t("bookmark_edit_title") : mode === "view" ? "Your Bookmarks" : JE2.t("bookmark_add_title");
+      const title = isEdit ? JE.t("bookmark_edit_title") : mode === "view" ? "Your Bookmarks" : JE.t("bookmark_add_title");
       const timestamp = isEdit ? existingBookmark.timestamp : currentTime;
       const label = isEdit ? existingBookmark.label : "";
       const formHtml = `
@@ -5972,7 +6004,7 @@
         </div>
         <div class="je-bookmark-form-grid">
           <div class="je-bookmark-input-group">
-            <label for="bookmark-time">${JE2.t("bookmark_time_label")}</label>
+            <label for="bookmark-time">${JE.t("bookmark_time_label")}</label>
             <input
               type="text"
               id="bookmark-time"
@@ -5981,12 +6013,12 @@
               readonly>
           </div>
           <div class="je-bookmark-input-group">
-            <label for="bookmark-label">${JE2.t("bookmark_label_label")}</label>
+            <label for="bookmark-label">${JE.t("bookmark_label_label")}</label>
             <input
               type="text"
               id="bookmark-label"
               class="je-bookmark-input"
-              placeholder="${JE2.t("bookmark_label_placeholder")}"
+              placeholder="${JE.t("bookmark_label_placeholder")}"
               value="${escapeHtml(label)}"
               maxlength="100">
           </div>
@@ -5994,7 +6026,7 @@
         ${existingBookmarks.length > 0 ? `
           <div class="je-bookmark-list">
             <div class="je-bookmark-list-header">
-              <div class="je-bookmark-list-title">${JE2.t("bookmark_existing_title")}</div>
+              <div class="je-bookmark-list-title">${JE.t("bookmark_existing_title")}</div>
               <div class="je-bookmark-list-count">${existingBookmarks.length}</div>
             </div>
             ${existingBookmarks.map((bm) => `
@@ -6003,13 +6035,13 @@
                 <div class="je-bookmark-item-content">
                   <div class="je-bookmark-item-time">${formatTimestamp2(bm.timestamp)}</div>
                   ${bm.label ? `<div class="je-bookmark-item-label">${escapeHtml(bm.label)}</div>` : ""}
-                  ${!bm.exactMatch ? `<div class="je-bookmark-item-warning">${JE2.t("bookmark_file_changed")}</div>` : ""}
+                  ${!bm.exactMatch ? `<div class="je-bookmark-item-warning">${JE.t("bookmark_file_changed")}</div>` : ""}
                 </div>
                 <div class="je-bookmark-item-actions">
-                  <button class="je-bookmark-btn je-bookmark-btn-jump" data-bookmark-id="${escapeHtml(bm.id)}" title="${JE2.t("bookmark_jump")}">
+                  <button class="je-bookmark-btn je-bookmark-btn-jump" data-bookmark-id="${escapeHtml(bm.id)}" title="${JE.t("bookmark_jump")}">
                     <span class="material-icons">forward</span>
                   </button>
-                  <button class="je-bookmark-btn je-bookmark-btn-delete" data-bookmark-id="${escapeHtml(bm.id)}" title="${JE2.t("bookmark_delete_confirm")}">
+                  <button class="je-bookmark-btn je-bookmark-btn-delete" data-bookmark-id="${escapeHtml(bm.id)}" title="${JE.t("bookmark_delete_confirm")}">
                     <span class="material-icons">delete</span>
                   </button>
                 </div>
@@ -6018,7 +6050,7 @@
           </div>
         ` : `
           <div class="je-bookmark-empty">
-            <div>${JE2.t("bookmark_none")}</div>
+            <div>${JE.t("bookmark_none")}</div>
           </div>
         `}
       </div>
@@ -6030,7 +6062,7 @@
         <button class="je-bookmark-modal-close">×</button>
         ${formHtml}
         <div class="je-bookmark-modal-actions">
-          <button class="je-bookmark-btn-submit">${isEdit ? JE2.t("bookmark_save") : JE2.t("bookmark_add")}</button>
+          <button class="je-bookmark-btn-submit">${isEdit ? JE.t("bookmark_save") : JE.t("bookmark_add")}</button>
           <button class="je-bookmark-btn-cancel">
             <span class="material-icons" aria-hidden="true" style="font-size: 18px;">close</span>
             <span>Cancel</span>
@@ -6060,19 +6092,19 @@
         try {
           if (isEdit && existingBookmark) {
             if (!await updateBookmark(existingBookmark.id, { label: labelInput })) {
-              if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_save_failed"), 3e3);
+              if (isCurrent()) JE.toast(JE.t("toast_bookmark_save_failed"), 3e3);
               return;
             }
-            if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_updated"), 2e3);
+            if (isCurrent()) JE.toast(JE.t("toast_bookmark_updated"), 2e3);
           } else {
             if (!await addBookmark(timestamp, labelInput)) return;
-            if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_updated"), 2e3);
+            if (isCurrent()) JE.toast(JE.t("toast_bookmark_updated"), 2e3);
           }
           if (!isCurrent()) return;
           updateBookmarkMarkersForCurrentVideo();
           closeDialog();
         } catch (e) {
-          if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_save_failed"), 3e3);
+          if (isCurrent()) JE.toast(JE.t("toast_bookmark_save_failed"), 3e3);
         }
       });
       modal.querySelectorAll(".je-bookmark-btn-jump").forEach((btn) => {
@@ -6082,7 +6114,7 @@
           const bookmark = existingBookmarks.find((bm) => bm.id === bookmarkId);
           if (bookmark && video) {
             video.currentTime = bookmark.timestamp;
-            if (isCurrent()) JE2.toast(`${JE2.t("toast_jumped_to_bookmark")}: ${formatTimestamp2(bookmark.timestamp)}`, 2e3);
+            if (isCurrent()) JE.toast(`${JE.t("toast_jumped_to_bookmark")}: ${formatTimestamp2(bookmark.timestamp)}`, 2e3);
             closeDialog();
           }
         });
@@ -6101,17 +6133,17 @@
           }
           if (!isCurrent() || deleted === null) return;
           if (!deleted) {
-            if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_delete_failed"), 3e3);
+            if (isCurrent()) JE.toast(JE.t("toast_bookmark_delete_failed"), 3e3);
             return;
           }
-          if (isCurrent()) JE2.toast(JE2.t("toast_bookmark_deleted"), 2e3);
+          if (isCurrent()) JE.toast(JE.t("toast_bookmark_deleted"), 2e3);
           updateBookmarkMarkersForCurrentVideo();
           closeDialog();
           setTimeout(() => showBookmarkModal(mode, existingBookmark), 300);
         });
       });
     }
-    JE2.bookmarks = {
+    ctx.own.bookmarks = {
       add: addBookmark,
       update: updateBookmark,
       delete: deleteBookmark,
@@ -6135,7 +6167,7 @@
       bookmarkBtn.id = "jeBookmarkBtn";
       bookmarkBtn.setAttribute("is", "paper-icon-button-light");
       bookmarkBtn.className = "autoSize paper-icon-button-light";
-      bookmarkBtn.title = JE2.t("shortcut_BookmarkCurrentTime");
+      bookmarkBtn.title = JE.t("shortcut_BookmarkCurrentTime");
       bookmarkBtn.innerHTML = '<span class="largePaperIconButton material-icons" aria-hidden="true">bookmark_add</span>';
       bookmarkBtn.onclick = (e) => {
         e.stopPropagation();
@@ -6144,7 +6176,7 @@
       nativeSettingsButton.parentElement?.insertBefore(bookmarkBtn, nativeSettingsButton);
       console.log(`${logPrefix} ✓ Added OSD bookmark button`);
     }
-    JE2.initializeBookmarks = /* @__PURE__ */ (function() {
+    ctx.own.initializeBookmarks = /* @__PURE__ */ (function() {
       let initialized = false;
       let cleanupFunctions = [];
       return function() {
@@ -6179,7 +6211,7 @@
           };
         }
         const debouncedOsdInjection = debounce(() => {
-          if (!JE2.isVideoPage()) return;
+          if (!JE.isVideoPage()) return;
           const osdBottom = document.querySelector(".videoOsdBottom");
           const video = document.querySelector(".videoPlayerContainer video");
           const currentOsdKey = getOsdKey();
@@ -6191,11 +6223,11 @@
           }
         }, 200);
         function ensureOsdObserver() {
-          if (!JE2.isVideoPage()) {
-            JE2.helpers.disconnectObserver(osdObserverId);
+          if (!JE.isVideoPage()) {
+            JE.helpers.disconnectObserver(osdObserverId);
             return;
           }
-          JE2.helpers.createObserver(
+          JE.helpers.createObserver(
             osdObserverId,
             debouncedOsdInjection,
             document.body,
@@ -6203,24 +6235,24 @@
           );
         }
         const handlePlayingEvent = debounce((e) => {
-          if (e.target instanceof HTMLVideoElement && JE2.isVideoPage()) {
+          if (e.target instanceof HTMLVideoElement && JE.isVideoPage()) {
             debouncedOsdInjection();
           }
         }, 300);
         const handleMetadataEvent = debounce((e) => {
-          if (e.target instanceof HTMLVideoElement && JE2.isVideoPage()) {
+          if (e.target instanceof HTMLVideoElement && JE.isVideoPage()) {
             debouncedOsdInjection();
           }
         }, 300);
         const handleViewShow = () => {
-          if (JE2.isVideoPage()) {
+          if (JE.isVideoPage()) {
             lastInjectedOsdKey = null;
             ensureOsdObserver();
             debouncedOsdInjection();
           } else {
             lastInjectedOsdKey = null;
-            JE2.helpers.disconnectObserver(osdObserverId);
-            JE2.helpers.disconnectObserver(videoObserverId);
+            JE.helpers.disconnectObserver(osdObserverId);
+            JE.helpers.disconnectObserver(videoObserverId);
           }
         };
         document.addEventListener("playing", handlePlayingEvent, true);
@@ -6229,26 +6261,26 @@
         cleanupFunctions.push(() => document.removeEventListener("loadedmetadata", handleMetadataEvent, true));
         document.addEventListener("viewshow", handleViewShow);
         cleanupFunctions.push(() => document.removeEventListener("viewshow", handleViewShow));
-        if (JE2.isVideoPage()) {
+        if (JE.isVideoPage()) {
           ensureOsdObserver();
           debouncedOsdInjection();
         }
-        JE2.cleanupBookmarks = function() {
+        ctx.own.cleanupBookmarks = function() {
           lifetime.cancelPending();
           cleanupFunctions.forEach((fn) => fn());
           document.querySelectorAll(".je-bookmark-marker, #jeBookmarkBtn, .je-bm-player-modal-overlay").forEach((el) => el.remove());
           cleanupFunctions = [];
-          JE2.helpers.disconnectObserver(osdObserverId);
-          JE2.helpers.disconnectObserver(videoObserverId);
+          JE.helpers.disconnectObserver(osdObserverId);
+          JE.helpers.disconnectObserver(videoObserverId);
           initialized = false;
           console.log(`${logPrefix} Cleaned up`);
         };
-        lifetime.keep(JE2.cleanupBookmarks);
+        lifetime.keep(ctx.own.cleanupBookmarks);
         console.log(`${logPrefix} ✓ Initialized`);
       };
     })();
   }
-  install(JE);
+  install(ctx.core);
 })();
 })();
 //# sourceMappingURL=bookmarks.js.map

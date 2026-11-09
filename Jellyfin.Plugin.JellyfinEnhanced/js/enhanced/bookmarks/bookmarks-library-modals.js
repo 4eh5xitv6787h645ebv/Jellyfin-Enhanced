@@ -1,21 +1,54 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/bookmarks/host.ts
   function bookmarksHost() {
     const host2 = window;
-    const JE2 = host2.JellyfinEnhanced;
-    if (!JE2) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const JE = host2.JellyfinEnhanced;
+    if (!JE) throw new Error("Bookmarks loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("bookmarks", JE, {
+      facades: ["bookmarks", "initializeBookmarks", "cleanupBookmarks"],
+      internalSlots: ["bookmarksLibrary", "bookmarkLifetimes"],
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
     const getApi2 = () => {
       const api = host2.ApiClient || host2.ConnectionManager?.currentApiClient();
       if (!api) throw new Error("API client not available");
       return api;
     };
-    return { JE: JE2, host: host2, getApi: getApi2 };
+    return { ctx: ctx2, host: host2, getApi: getApi2 };
   }
-  function lease(JE2) {
-    const owner = JE2.userConfig, epoch = JE2.session?.getEpoch();
-    return () => JE2.userConfig === owner && (epoch === void 0 || JE2.session?.isCurrent(epoch) === true);
+  function lease(JE) {
+    const owner = JE.userConfig, epoch = JE.session?.getEpoch();
+    return () => JE.userConfig === owner && (epoch === void 0 || JE.session?.isCurrent(epoch) === true);
   }
 
   // client/src/features/bookmarks/dom.ts
@@ -26,11 +59,10 @@
   }
 
   // client/src/features/bookmarks/lifetime.ts
-  function createLifetime(JE2, name) {
-    var _a;
-    JE2.internals ?? (JE2.internals = {});
-    (_a = JE2.internals).bookmarkLifetimes ?? (_a.bookmarkLifetimes = {});
-    JE2.internals.bookmarkLifetimes[name]?.dispose();
+  function createLifetime(ctx2, name) {
+    const JE = ctx2.core, own = ctx2.own;
+    own.bookmarkLifetimes ?? (own.bookmarkLifetimes = {});
+    own.bookmarkLifetimes[name]?.dispose();
     const cleanup = /* @__PURE__ */ new Set();
     const dialogs = /* @__PURE__ */ new Set();
     let disposed = false;
@@ -54,7 +86,7 @@
       cleanup.add(() => target.removeEventListener(event, callback, capture));
     };
     const timeout = (callback, delay) => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       const cancel = () => {
         window.clearTimeout(id);
         cleanup.delete(cancel);
@@ -130,11 +162,11 @@
       cleanup.clear();
     };
     const result = { dispose, cancelPending, keep: keepTeardown, listen, timeout, interval, modal, current: () => {
-      const current = lease(JE2), version = generation;
+      const current = lease(JE), version = generation;
       return () => !disposed && generation === version && current();
     } };
-    JE2.internals.bookmarkLifetimes[name] = result;
-    keep(JE2.session?.onUserChange("bookmarks-" + name, () => {
+    own.bookmarkLifetimes[name] = result;
+    keep(JE.session?.onUserChange("bookmarks-" + name, () => {
       for (const close of dialogs) close();
       document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
       document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
@@ -144,12 +176,12 @@
   }
 
   // client/src/features/bookmarks/library-modals.ts
-  var { JE, host, getApi } = bookmarksHost();
-  function install(JE2) {
-    const lifetime = createLifetime(JE2, "library-modals");
+  var { ctx, host, getApi } = bookmarksHost();
+  function install(JE) {
+    const lifetime = createLifetime(ctx, "library-modals");
     const setTimeout = lifetime.timeout;
-    const internal = JE2.internals.bookmarksLibrary = JE2.internals.bookmarksLibrary || {};
-    if (!JE2?.pluginConfig?.BookmarksEnabled) return;
+    const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
+    if (!JE?.pluginConfig?.BookmarksEnabled) return;
     const formatTimestamp = (...args) => {
       const fn = internal.formatTimestamp;
       if (!fn) throw new Error("Missing bookmark module: formatTimestamp");
@@ -160,12 +192,12 @@
       if (!fn) throw new Error("Missing bookmark module: renderBookmarksLibrary");
       return fn(...args);
     };
-    const escapeHtml = JE2.escapeHtml;
+    const escapeHtml = JE.escapeHtml;
     function showOffsetAdjustmentModal(group) {
       const isCurrent = lifetime.current();
       const syncedBookmarks = group.bookmarks.filter((bm) => bm.syncedFrom);
       if (syncedBookmarks.length === 0) {
-        if (isCurrent()) JE2.toast(JE2.t("bookmark_no_synced"), 2e3);
+        if (isCurrent()) JE.toast(JE.t("bookmark_no_synced"), 2e3);
         return;
       }
       const modal = document.createElement("div");
@@ -177,28 +209,28 @@
           <div class="je-bookmarks-modal-header">
             <span class="material-icons" aria-hidden="true" style="font-size: 48px; color: #2196f3; flex-shrink: 0;">schedule</span>
             <div style="flex: 1;">
-              <h2 class="je-modal-title">${JE2.t("bookmark_adjust_offset")}</h2>
-              <p class="je-modal-subtitle">${JE2.t("bookmark_synced_count").replace("{count}", String(syncedBookmarks.length))} ${JE2.t("bookmark_for_item").replace("{name}", escapeHtml(group.details.name))}</p>
+              <h2 class="je-modal-title">${JE.t("bookmark_adjust_offset")}</h2>
+              <p class="je-modal-subtitle">${JE.t("bookmark_synced_count").replace("{count}", String(syncedBookmarks.length))} ${JE.t("bookmark_for_item").replace("{name}", escapeHtml(group.details.name))}</p>
             </div>
           </div>
 
           <div class="je-modal-info-box">
-            <div class="je-modal-info-title"><span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span> ${JE2.t("bookmark_synced_info_title")}</div>
-            <div class="je-modal-info-text">${JE2.t("bookmark_synced_info_body")}</div>
+            <div class="je-modal-info-title"><span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span> ${JE.t("bookmark_synced_info_title")}</div>
+            <div class="je-modal-info-text">${JE.t("bookmark_synced_info_body")}</div>
           </div>
 
           <div style="margin-bottom: 24px;">
-            <label for="offset-adjustment-input" class="je-modal-label"><span class="material-icons" style="font-size: 14px; vertical-align: middle;">schedule</span> ${JE2.t("bookmark_offset_label")}</label>
+            <label for="offset-adjustment-input" class="je-modal-label"><span class="material-icons" style="font-size: 14px; vertical-align: middle;">schedule</span> ${JE.t("bookmark_offset_label")}</label>
             <input type="number" id="offset-adjustment-input" value="0" step="0.1" placeholder="0" class="je-modal-input">
-            <div class="je-modal-help-text">${JE2.t("bookmark_offset_help")}</div>
+            <div class="je-modal-help-text">${JE.t("bookmark_offset_help")}</div>
           </div>
 
           <div class="je-modal-list-container">
-            <div class="je-modal-list-title">${JE2.t("bookmark_offset_affected")}</div>
+            <div class="je-modal-list-title">${JE.t("bookmark_offset_affected")}</div>
             ${syncedBookmarks.map((bm) => `
               <div class="je-modal-list-item">
-                <div class="je-modal-list-item-title">${escapeHtml(bm.label || JE2.t("bookmark_unlabeled"))}</div>
-                <div class="je-modal-list-item-meta">${formatTimestamp(bm.timestamp)} • ${JE2.t("bookmark_from").replace("{source}", escapeHtml(bm.syncedFrom || ""))}</div>
+                <div class="je-modal-list-item-title">${escapeHtml(bm.label || JE.t("bookmark_unlabeled"))}</div>
+                <div class="je-modal-list-item-meta">${formatTimestamp(bm.timestamp)} • ${JE.t("bookmark_from").replace("{source}", escapeHtml(bm.syncedFrom || ""))}</div>
               </div>
             `).join("")}
           </div>
@@ -211,7 +243,7 @@
           </button>
           <button class="btnApplyOffset je-modal-btn-primary">
             <span class="material-icons" aria-hidden="true" style="font-size: 18px;">check</span>
-            <span>${JE2.t("bookmark_apply_offset")}</span>
+            <span>${JE.t("bookmark_apply_offset")}</span>
           </button>
         </div>
       </div>
@@ -230,26 +262,26 @@
         btn.disabled = true;
         required(btn, "span:last-child").innerHTML = '<span class="material-icons" style="animation: spin 1s linear infinite; font-size: 18px;">refresh</span>';
         try {
-          const updatedCount = await JE2.bookmarks.adjustOffsets(syncedBookmarks, offset);
+          const updatedCount = await ctx.own.bookmarks.adjustOffsets(syncedBookmarks, offset);
           if (!isCurrent()) return;
           if (updatedCount > 0) {
-            const message = offset === 0 ? JE2.t("bookmark_offset_cleared").replace("{count}", String(updatedCount)) : JE2.t("bookmark_offset_applied").replace("{count}", String(updatedCount)).replace("{offset}", `${offset > 0 ? "+" : ""}${offset}s`);
-            if (isCurrent()) JE2.toast(message, 3e3);
+            const message = offset === 0 ? JE.t("bookmark_offset_cleared").replace("{count}", String(updatedCount)) : JE.t("bookmark_offset_applied").replace("{count}", String(updatedCount)).replace("{offset}", `${offset > 0 ? "+" : ""}${offset}s`);
+            if (isCurrent()) JE.toast(message, 3e3);
             closeDialog();
             const container = document.querySelector(".sections.bookmarks");
             if (container) {
               setTimeout(() => renderBookmarksLibrary(container), 300);
             }
           } else {
-            if (isCurrent()) JE2.toast(JE2.t("bookmark_update_failed"), 3e3);
+            if (isCurrent()) JE.toast(JE.t("bookmark_update_failed"), 3e3);
             btn.disabled = false;
-            required(btn, "span:last-child").textContent = JE2.t("bookmark_apply_offset");
+            required(btn, "span:last-child").textContent = JE.t("bookmark_apply_offset");
           }
         } catch (e) {
           console.error("Failed to apply offset:", e);
-          if (isCurrent()) JE2.toast(JE2.t("bookmark_offset_failed"), 3e3);
+          if (isCurrent()) JE.toast(JE.t("bookmark_offset_failed"), 3e3);
           btn.disabled = false;
-          required(btn, "span:last-child").textContent = JE2.t("bookmark_apply_offset");
+          required(btn, "span:last-child").textContent = JE.t("bookmark_apply_offset");
         }
       });
       setTimeout(() => modal.style.opacity = "1", 10);
@@ -288,7 +320,7 @@
       const isCurrent = lifetime.current();
       const duplicates = findDuplicateBookmarks(bookmarks);
       if (duplicates.length === 0) {
-        if (isCurrent()) JE2.toast(JE2.t("bookmark_no_duplicates"), 3e3);
+        if (isCurrent()) JE.toast(JE.t("bookmark_no_duplicates"), 3e3);
         return;
       }
       const modal = document.createElement("div");
@@ -301,8 +333,8 @@
           <div class="je-bookmarks-modal-header" style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px;">
             <span class="material-icons" aria-hidden="true" style="font-size: 48px; color: #ff9800; flex-shrink: 0;">merge</span>
             <div style="flex: 1;">
-              <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #fff;">${JE2.t("bookmark_duplicate_title")}</h2>
-              <p style="margin: 0; font-size: 13px; color: #aaa;">${JE2.t("bookmark_duplicate_subtitle").replace("{count}", String(duplicates.length))}</p>
+              <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #fff;">${JE.t("bookmark_duplicate_title")}</h2>
+              <p style="margin: 0; font-size: 13px; color: #aaa;">${JE.t("bookmark_duplicate_subtitle").replace("{count}", String(duplicates.length))}</p>
             </div>
           </div>
           <div style="margin-top: 20px;">
@@ -312,31 +344,31 @@
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                   <div style="font-weight: 600; margin-bottom: 12px; color: #ff9800;">${escapeHtml(dup.name)}</div>
                   <div style="font-size: 12px; color: #888; margin-bottom: 12px;">
-                    ${JE2.t("bookmark_split_versions").replace("{count}", String(dup.totalBookmarks)).replace("{versions}", String(itemIds.length))}
+                    ${JE.t("bookmark_split_versions").replace("{count}", String(dup.totalBookmarks)).replace("{versions}", String(itemIds.length))}
                   </div>
                   ${itemIds.map((itemId, versionIdx) => {
           const bms = dup.itemGroups[itemId] ?? [];
           return `
                       <div style="background: rgba(255,255,255,0.02); border-left: 3px solid ${versionIdx === 0 ? "#4caf50" : "#ff9800"}; padding: 8px 12px; margin-bottom: 8px; border-radius: 4px;">
                         <div style="font-size: 11px; color: ${versionIdx === 0 ? "#4caf50" : "#ff9800"}; font-weight: 600; margin-bottom: 4px;">
-                          ${versionIdx === 0 ? JE2.t("bookmark_primary_version") : JE2.t("bookmark_old_version")}
+                          ${versionIdx === 0 ? JE.t("bookmark_primary_version") : JE.t("bookmark_old_version")}
                         </div>
                         <div style="font-size: 12px; color: #ccc; margin-bottom: 6px;">
-                          ${JE2.t("bookmark_item_id")}: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px;">${escapeHtml(itemId.substring(0, 16))}...</code>
+                          ${JE.t("bookmark_item_id")}: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 11px;">${escapeHtml(itemId.substring(0, 16))}...</code>
                         </div>
                         <div style="font-size: 12px; color: #aaa; margin-bottom: 8px;">
-                          ${JE2.t("bookmark_bookmark_count").replace("{count}", String(bms.length))} ${bms.map((b) => formatTimestamp(b.timestamp)).join(", ")}
+                          ${JE.t("bookmark_bookmark_count").replace("{count}", String(bms.length))} ${bms.map((b) => formatTimestamp(b.timestamp)).join(", ")}
                         </div>
                         <button class="je-btn" data-sync-from="${versionIdx}" data-dup-index="${idx}" style="background: rgba(33, 150, 243, 0.15); border-color: #2196f3; color: #2196f3; font-size: 11px;">
                           <span class="material-icons" aria-hidden="true" style="font-size: 14px;">schedule</span>
-                          <span>${JE2.t("bookmark_adjust_offset")}</span>
+                          <span>${JE.t("bookmark_adjust_offset")}</span>
                         </button>
                       </div>
                     `;
         }).join("")}
                   <button class="je-btn" data-dup-index="${idx}" style="margin-top: 8px; background: rgba(255, 152, 0, 0.15); border-color: #ff9800; color: #ff9800;">
                     <span class="material-icons" aria-hidden="true" style="font-size: 16px;">merge</span>
-                    <span>${JE2.t("bookmark_merge_primary")}</span>
+                    <span>${JE.t("bookmark_merge_primary")}</span>
                   </button>
                 </div>
               `;
@@ -392,7 +424,7 @@
           const primary = dup.itemGroups[primaryItemId]?.[0];
           if (!primary) return;
           const oldBookmarks = oldItemIds.flatMap((id) => dup.itemGroups[id] ?? []);
-          if (!confirm(JE2.t("bookmark_merge_confirm").replace("{count}", String(oldBookmarks.length)))) {
+          if (!confirm(JE.t("bookmark_merge_confirm").replace("{count}", String(oldBookmarks.length)))) {
             return;
           }
           btn.disabled = true;
@@ -407,9 +439,9 @@
               seasonNumber: primary.seasonNumber ?? null,
               episodeNumber: primary.episodeNumber ?? null
             };
-            const synced = await JE2.bookmarks.syncBookmarks(oldBookmarks, primaryDetails, 0);
+            const synced = await ctx.own.bookmarks.syncBookmarks(oldBookmarks, primaryDetails, 0);
             if (!isCurrent()) return;
-            if (isCurrent()) JE2.toast(JE2.t("bookmark_merge_success").replace("{count}", String(synced.length)), 3e3);
+            if (isCurrent()) JE.toast(JE.t("bookmark_merge_success").replace("{count}", String(synced.length)), 3e3);
             closeDialog();
             const container = document.querySelector(".sections.bookmarks");
             if (container) {
@@ -417,9 +449,9 @@
             }
           } catch (e) {
             console.error("Merge failed:", e);
-            if (isCurrent()) JE2.toast(JE2.t("bookmark_merge_failed"), 3e3);
+            if (isCurrent()) JE.toast(JE.t("bookmark_merge_failed"), 3e3);
             btn.disabled = false;
-            required(btn, "span:last-child").textContent = JE2.t("bookmark_merge_primary");
+            required(btn, "span:last-child").textContent = JE.t("bookmark_merge_primary");
           }
         });
       });
@@ -427,7 +459,7 @@
     }
     Object.assign(internal, { showOffsetAdjustmentModal, showDuplicatesSyncModal });
   }
-  install(JE);
+  install(ctx.core);
 })();
 })();
 //# sourceMappingURL=bookmarks-library-modals.js.map

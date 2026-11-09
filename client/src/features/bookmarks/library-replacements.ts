@@ -2,18 +2,18 @@ import { bookmarksHost, readItem, readItems, type BookmarkHost } from './host';
 import { required } from './dom';
 import { createLifetime } from './lifetime';
 import type { Group, Item, Library } from './types';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 /**
  * Bookmarks Library View — orphaned-bookmark replacement search + migration modals.
  * Typed entry retaining the established library DOM and public bridge.
  */
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'library-replacements');
+  const lifetime = createLifetime(ctx, 'library-replacements');
   lifetime.listen(document, 'viewshow', lifetime.cancelPending, true);
   const setTimeout = lifetime.timeout;
 
   
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
+  const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
 
   if (!JE?.pluginConfig?.BookmarksEnabled) return;
 
@@ -243,7 +243,7 @@ function install(JE: BookmarkHost) {
 
         // Move the bookmarks to the new item (no offset). The old records are removed
         // in the same save, before the re-render it triggers, and come back if it fails.
-        const synced = await JE.bookmarks.syncBookmarks(oldGroup.bookmarks, newDetails, 0, { replaceOriginals: true });
+        const synced = await ctx.own.bookmarks.syncBookmarks(oldGroup.bookmarks, newDetails, 0, { replaceOriginals: true });
         if (!isCurrent()) return;
 
         if (isCurrent()) JE.toast(JE.t('bookmark_migrated').replace('{count}', String(synced.length)).replace('{name}', fullItem.Name || ''), 4000);
@@ -269,4 +269,4 @@ function install(JE: BookmarkHost) {
   Object.assign(internal, { findAndOfferReplacement });
 
 }
-install(JE);
+install(ctx.core);

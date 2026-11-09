@@ -2,17 +2,17 @@ import { bookmarksHost, type BookmarkHost } from './host';
 import { displayBookmarks, formatTimestamp, parseTimestampInput } from './domain';
 import { createLifetime } from './lifetime';
 import type { Group, Library, MediaTab } from './types';
-const { JE, host, getApi } = bookmarksHost();
+const { ctx, host, getApi } = bookmarksHost();
 /**
  * Bookmarks Library View — mount detection + main library rendering,
  * plus the small shared time/type helpers.
  * Typed entry retaining the established library DOM and public bridge.
  */
 function install(JE: BookmarkHost) {
-  const lifetime = createLifetime(JE, 'library-render');
+  const lifetime = createLifetime(ctx, 'library-render');
 
   
-  const internal = JE.internals.bookmarksLibrary = JE.internals.bookmarksLibrary || {};
+  const internal = ctx.own.bookmarksLibrary = ctx.own.bookmarksLibrary || {};
 
   if (!JE?.pluginConfig?.BookmarksEnabled) return;
 
@@ -253,7 +253,7 @@ function install(JE: BookmarkHost) {
       if (label) label.innerHTML = '<span class="material-icons" style="animation: spin 1s linear infinite;">refresh</span>';
 
       try {
-        const result = await JE.bookmarks.cleanupOrphaned();
+        const result = await ctx.own.bookmarks.cleanupOrphaned();
         if (!isCurrent()) return;
         if (isCurrent()) JE.toast(JE.t('bookmark_cleanup_complete').replace('{count}', String(result.cleaned)), 4000);
         renderBookmarksLibrary(container);
@@ -277,7 +277,7 @@ function install(JE: BookmarkHost) {
 
       try {
         // Queued behind the user's other bookmark mutations; restores them if the save fails.
-        if (!await JE.bookmarks.deleteAll() || !isCurrent()) return;
+        if (!await ctx.own.bookmarks.deleteAll() || !isCurrent()) return;
         if (isCurrent()) JE.toast(JE.t('bookmark_deleted_all'), 3000);
         renderBookmarksLibrary(container);
       } catch (error) {
@@ -336,4 +336,4 @@ function install(JE: BookmarkHost) {
   });
 
 }
-install(JE);
+install(ctx.core);
