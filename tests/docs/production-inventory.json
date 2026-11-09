@@ -342,6 +342,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.TagCache.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
       "category": "Features"
     },
@@ -3566,6 +3570,26 @@
     },
     {
       "verb": "GET",
+      "path": "/JellyfinEnhanced/tag-cache/{userId}",
+      "method": "GetTagCache",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.TagCache.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/tag-data/{userId}",
+      "method": "GetTagData",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.TagCache.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
       "path": "/JellyfinEnhanced/tag-styles",
       "method": "GetTagStyles",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
@@ -3657,26 +3681,6 @@
       "verb": "DELETE",
       "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets/{presetId}",
       "method": "DeleteMediaTagsPreset",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tag-cache/{userId}",
-      "method": "GetTagCache",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/tag-data/{userId}",
-      "method": "GetTagData",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
       "following_attributes": [
         "Authorize",
@@ -10466,7 +10470,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 520,
+    "files": 521,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,
