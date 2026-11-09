@@ -4,7 +4,7 @@ using System.Linq;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Library
 {
     /// <summary>
     /// The library (top-level collection folder / virtual folder) an item sits

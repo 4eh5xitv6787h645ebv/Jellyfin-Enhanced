@@ -15,9 +15,14 @@ namespace JE.Tests.Architecture;
 //   - a file in Features/<F>/Tasks/ that declares only namespace …ScheduledTasks;
 //   - Features/Platform/Services/StartupService.cs, namespace …Services (the "Jellyfin Enhanced Startup" task).
 // The exemption cannot hide a non-task type: every type an exempt file declares must be an IScheduledTask (or nested
-// in one), and namespace …ScheduledTasks holds nothing else (both checked by reflection below). The legacy namespace
-// …Services itself is not checked: Phase 1 moved Shared/ and Infrastructure/ files with their namespaces, and §7.3
-// covers only Features/.
+// in one), and namespace …ScheduledTasks holds nothing else (both checked by reflection below).
+//
+// Round 13: the same rule covers the layers. A file under Shared/<Area>/ declares …Shared.<Area>[.*] and a file under
+// Infrastructure/<Area>/ declares …Infrastructure.<Area>[.*]. Round 13 renamed the 17 files Phase 1 had moved with
+// their legacy namespaces (…Helpers, …Services, …Model.Arr, …Extensions, …EventHandlers). LayerExemptions is empty:
+// no Shared/ or Infrastructure/ type is a scheduled task or startup task, and none has its full type name persisted or
+// reflected (no logger category, serializer type name, Jellyfin task id or configuration key uses it;
+// PluginConfiguration's XML names ArrInstance elements by property and type name, without the namespace).
 public partial class FolderNamespaceTests(ITestOutputHelper output)
 {
     public static readonly string[] RetiredFolders = ["Services", "Helpers", "Model", "ScheduledTasks", "EventHandlers", "Controllers", "Extensions"];
@@ -60,6 +65,29 @@ public partial class FolderNamespaceTests(ITestOutputHelper output)
         output.WriteLine($"files under Features/: {files.Count(p => p.StartsWith("Features/", StringComparison.Ordinal))}; exempt scheduled-task files: {exempt.Count}; mismatches: {mismatches.Count}");
         foreach (var line in exempt) output.WriteLine("exempt (§7.8): " + line);
         Assert.True(mismatches.Count == 0, "Folder/namespace mismatches (backend.md §7.3):\n" + string.Join("\n", mismatches));
+    }
+
+    // Files under Shared/ or Infrastructure/ allowed to keep another namespace, with the reason. Empty (see above).
+    public static readonly IReadOnlyDictionary<string, string> LayerExemptions = new Dictionary<string, string>(StringComparer.Ordinal);
+
+    [Fact]
+    public void LayerFilesDeclareTheirFolderNamespace()
+    {
+        var files = FileSizeTests.SourceFiles().Select(f => f.Path)
+            .Where(p => p.StartsWith("Shared/", StringComparison.Ordinal) || p.StartsWith("Infrastructure/", StringComparison.Ordinal)).ToList();
+        var mismatches = new List<string>();
+        foreach (var path in files)
+        {
+            var parts = path.Split('/');
+            var expected = parts.Length > 2 ? $"{Arch.PluginNamespace}.{parts[0]}.{parts[1]}" : $"{Arch.PluginNamespace}.{parts[0]}";
+            var declared = NamespaceDeclaration().Matches(File.ReadAllText(Path.Combine(Arch.PluginSource, path))).Select(m => m.Groups[1].Value).ToList();
+            if (declared.Count > 0 && declared.All(ns => ns == expected || ns.StartsWith(expected + ".", StringComparison.Ordinal))) continue;
+            if (LayerExemptions.ContainsKey(path)) continue;
+            mismatches.Add($"{path}: namespace {(declared.Count == 0 ? "(none)" : string.Join(", ", declared))}, expected {expected}[.*]");
+        }
+        foreach (var stale in LayerExemptions.Keys.Where(k => !files.Contains(k))) mismatches.Add($"{stale}: exempt but not a Shared/ or Infrastructure/ file");
+        output.WriteLine($"files under Shared/ and Infrastructure/: {files.Count}; exemptions: {LayerExemptions.Count}; mismatches: {mismatches.Count}");
+        Assert.True(mismatches.Count == 0, "Folder/namespace mismatches in Shared/ or Infrastructure/ (round 13):\n" + string.Join("\n", mismatches));
     }
 
     [Fact]

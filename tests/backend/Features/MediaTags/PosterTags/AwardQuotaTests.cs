@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Mdblist;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;

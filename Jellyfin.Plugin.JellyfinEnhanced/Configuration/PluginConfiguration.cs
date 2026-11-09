@@ -1,6 +1,5 @@
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using MediaBrowser.Model.Plugins;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Models;
 

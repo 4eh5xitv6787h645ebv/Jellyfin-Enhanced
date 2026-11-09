@@ -6,7 +6,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;

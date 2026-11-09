@@ -1,6 +1,6 @@
 using System.Net.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;

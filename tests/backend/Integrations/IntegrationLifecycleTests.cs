@@ -1,4 +1,3 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Library;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;

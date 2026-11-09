@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;

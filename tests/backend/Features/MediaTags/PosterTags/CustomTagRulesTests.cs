@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text.Json;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;

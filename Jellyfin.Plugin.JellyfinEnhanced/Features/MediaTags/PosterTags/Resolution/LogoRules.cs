@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;

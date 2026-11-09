@@ -7,7 +7,6 @@ using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;

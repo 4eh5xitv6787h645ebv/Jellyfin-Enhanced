@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using Newtonsoft.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Models;

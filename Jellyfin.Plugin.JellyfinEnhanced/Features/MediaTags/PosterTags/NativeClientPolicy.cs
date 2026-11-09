@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {

@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
-using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;

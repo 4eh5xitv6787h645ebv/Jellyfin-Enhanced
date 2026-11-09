@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
 
 /// <summary>
 /// Which tracks count as a title's languages (js/tags/languagetags.js isSecondaryAudio mirrors it): a

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 

@@ -3,7 +3,6 @@ using System.Globalization;
 using SkiaSharp;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Rendering
 {

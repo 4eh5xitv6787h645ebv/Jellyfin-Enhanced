@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Jellyfin.Database.Implementations.Entities;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;

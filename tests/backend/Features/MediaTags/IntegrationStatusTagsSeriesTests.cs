@@ -1,4 +1,3 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;

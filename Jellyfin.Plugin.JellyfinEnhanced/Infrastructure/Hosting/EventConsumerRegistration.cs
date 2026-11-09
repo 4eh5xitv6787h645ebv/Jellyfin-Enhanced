@@ -1,6 +1,5 @@
-using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Events;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Text.Json.Serialization;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Mdblist;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags

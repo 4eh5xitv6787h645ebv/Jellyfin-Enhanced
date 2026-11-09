@@ -4,7 +4,6 @@ using System.Linq;
 using SkiaSharp;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Rendering;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering

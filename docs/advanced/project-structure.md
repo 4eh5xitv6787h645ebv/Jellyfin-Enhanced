@@ -124,7 +124,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 
 ### Build targets and logging
 
-`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Every file under `Features/<F>/` declares `Jellyfin.Plugin.JellyfinEnhanced.Features.<F>[.*]` (enforced by `tests/backend/Architecture/FolderNamespaceTests.cs`), except scheduled-task types, which keep `…ScheduledTasks` (and `StartupService`, which keeps `…Services`) because Jellyfin keys a task's saved triggers and history by its type's full name. Files under `Shared/` and `Infrastructure/` mostly declare `…Shared.<Area>` or `…Infrastructure.<Area>`, but some still use the older `…Services`, `…Helpers`, `…Model.Arr`, `…Extensions` and `…EventHandlers` namespaces. Check declarations rather than deriving namespaces from folders there.
+`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Every file under `Features/<F>/` declares `Jellyfin.Plugin.JellyfinEnhanced.Features.<F>[.*]` (enforced by `tests/backend/Architecture/FolderNamespaceTests.cs`), except scheduled-task types, which keep `…ScheduledTasks` (and `StartupService`, which keeps `…Services`) because Jellyfin keys a task's saved triggers and history by its type's full name. Files under `Shared/<Area>/` and `Infrastructure/<Area>/` declare `…Shared.<Area>[.*]` and `…Infrastructure.<Area>[.*]` (enforced by the same test since round 13; no exemptions).
 
 | `JellyfinTarget` | Jellyfin references | Framework | Compilation symbol |
 |---|---|---|---|

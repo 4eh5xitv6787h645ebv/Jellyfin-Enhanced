@@ -1,5 +1,5 @@
 using System.Text;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Dto;

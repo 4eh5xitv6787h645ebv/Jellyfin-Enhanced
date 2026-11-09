@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Model.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 

@@ -17,9 +17,8 @@ using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
 using MediaBrowser.Common.Net;
@@ -158,7 +157,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
             }
 
             var baseUrl = config.ReviewTranslationUrl.Trim().TrimEnd('/');
-            if (!await Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
+            if (!await Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
             {
                 return BadRequest("The translation URL is not allowed.");
             }
@@ -196,7 +195,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
             }
 
             var baseUrl = config.ReviewTranslationUrl.Trim().TrimEnd('/');
-            if (!await Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
+            if (!await Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
             {
                 return BadRequest("The translation URL is not allowed.");
             }

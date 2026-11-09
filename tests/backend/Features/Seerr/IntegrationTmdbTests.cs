@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;

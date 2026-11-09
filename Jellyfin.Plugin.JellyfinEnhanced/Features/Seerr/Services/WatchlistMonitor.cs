@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;

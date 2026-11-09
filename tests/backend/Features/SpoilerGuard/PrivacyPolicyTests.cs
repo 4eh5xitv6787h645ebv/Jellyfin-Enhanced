@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using Xunit;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;

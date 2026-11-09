@@ -29,7 +29,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;

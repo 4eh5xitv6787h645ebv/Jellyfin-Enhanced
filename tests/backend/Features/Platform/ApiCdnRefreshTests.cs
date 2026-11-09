@@ -1,4 +1,3 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;
 
 namespace JE.Tests.Features.Platform;

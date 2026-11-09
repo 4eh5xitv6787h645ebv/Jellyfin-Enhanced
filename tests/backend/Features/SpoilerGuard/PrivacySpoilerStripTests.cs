@@ -1,7 +1,5 @@
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;

@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -358,7 +357,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         {
             var baseUrl = config.LeavingSoonMaintainerrUrl.Trim().TrimEnd('/');
             var url = baseUrl + "/api/collections";
-            if (!await Helpers.ArrUrlGuard.IsAllowedUrlAsync(url, token).ConfigureAwait(false)) throw new UnauthorizedAccessException();
+            if (!await Shared.Arr.ArrUrlGuard.IsAllowedUrlAsync(url, token).ConfigureAwait(false)) throw new UnauthorizedAccessException();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
             timeout.CancelAfter(Timeout);
             var client = _http.CreateClient(ClientName);

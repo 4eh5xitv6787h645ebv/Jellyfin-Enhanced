@@ -1,8 +1,5 @@
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;

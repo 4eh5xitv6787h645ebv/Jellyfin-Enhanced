@@ -1,4 +1,4 @@
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr
 {
     public enum ArrType
     {

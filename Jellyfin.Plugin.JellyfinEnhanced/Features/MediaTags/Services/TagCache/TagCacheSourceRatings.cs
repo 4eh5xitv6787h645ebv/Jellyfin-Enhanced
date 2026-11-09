@@ -4,12 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Tasks;
 

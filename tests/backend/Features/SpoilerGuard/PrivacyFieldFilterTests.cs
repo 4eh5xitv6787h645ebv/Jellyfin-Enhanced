@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Dto;

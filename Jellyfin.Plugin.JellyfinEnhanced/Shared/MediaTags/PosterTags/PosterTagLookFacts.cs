@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
 {

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;

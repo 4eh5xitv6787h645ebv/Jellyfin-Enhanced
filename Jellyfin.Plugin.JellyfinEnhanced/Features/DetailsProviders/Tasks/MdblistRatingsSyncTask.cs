@@ -11,7 +11,6 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Tasks;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks

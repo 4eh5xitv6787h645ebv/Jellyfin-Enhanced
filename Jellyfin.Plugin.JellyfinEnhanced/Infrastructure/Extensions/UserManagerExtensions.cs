@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Extensions
+namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions
 {
     /// <summary>User enumeration through the supported Jellyfin 12 API.</summary>
     internal static class UserManagerExtensions

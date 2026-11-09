@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Jellyfin.Data;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup.Services;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;

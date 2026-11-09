@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using MediaBrowser.Controller.Entities;

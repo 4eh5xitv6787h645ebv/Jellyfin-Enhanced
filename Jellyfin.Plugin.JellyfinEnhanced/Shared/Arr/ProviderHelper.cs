@@ -1,4 +1,4 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr
 {

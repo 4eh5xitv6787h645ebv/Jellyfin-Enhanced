@@ -29,7 +29,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
@@ -415,7 +415,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // Library id for the tag look rules, as the server tag cache stores
             // it (Seasons/Episodes take their Series'), memoized per series.
             var seriesLibraryMemo = new Dictionary<Guid, string?>();
-            string? TagDataLibraryId(BaseItem tagItem) => Jellyfin.Plugin.JellyfinEnhanced.Services.ItemLibraryResolver.Resolve(_libraryManager, tagItem, null, seriesLibraryMemo);
+            string? TagDataLibraryId(BaseItem tagItem) => Jellyfin.Plugin.JellyfinEnhanced.Shared.Library.ItemLibraryResolver.Resolve(_libraryManager, tagItem, null, seriesLibraryMemo);
             // Custom tag rule ids, as the server tag cache stores them, with collection
             // matches only for collections this user can access. The Spoiler Guard stubs
             // drop them with the genres (SpoilerStripTags): a tag or collection label can

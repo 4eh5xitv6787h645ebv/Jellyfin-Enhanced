@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Jellyfin.Data.Events.Users;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Reviews;

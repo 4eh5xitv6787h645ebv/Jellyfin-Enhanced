@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Text;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using Xunit;
 

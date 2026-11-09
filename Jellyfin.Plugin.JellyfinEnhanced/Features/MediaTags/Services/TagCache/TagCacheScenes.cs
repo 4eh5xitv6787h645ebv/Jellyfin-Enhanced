@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;

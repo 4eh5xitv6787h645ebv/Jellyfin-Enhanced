@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 

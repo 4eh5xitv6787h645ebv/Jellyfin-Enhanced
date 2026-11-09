@@ -2,7 +2,6 @@ using System.Net;
 using System.Text.Json;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering;

@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Text.Json;
 using SkiaSharp;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Rendering;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering

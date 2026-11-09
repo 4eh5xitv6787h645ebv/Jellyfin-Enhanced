@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
@@ -265,7 +264,7 @@ public static class StatusRules
 
     /// <summary>
     /// <see cref="Text(string, CultureInfo)"/> for a count: the `key_one`, `key_few` … form of the count's CLDR
-    /// category (<see cref="Helpers.PluralRules"/>) in the language the string is written in, else `key_other`,
+    /// category (<see cref="Shared.Text.PluralRules"/>) in the language the string is written in, else `key_other`,
     /// else the key's own string, by JE.t's rule (js/plugin.js): a form comes from the same locale as the key's
     /// string (English forms for an English fallback, or for any kind of English).
     /// </summary>
@@ -277,7 +276,7 @@ public static class StatusRules
         var keyIsOwn = own.TryGetValue(key, out var ownValue) && !string.IsNullOrEmpty(ownValue);
         var source = keyIsOwn ? own : english;
         var language = keyIsOwn ? name : "en";
-        var category = Helpers.PluralRules.Category(language, count);
+        var category = Shared.Text.PluralRules.Category(language, count);
         foreach (var variant in new[] { key + "_" + category, key + "_other" })
         {
             if (source.TryGetValue(variant, out var form) && !string.IsNullOrEmpty(form)) return form;

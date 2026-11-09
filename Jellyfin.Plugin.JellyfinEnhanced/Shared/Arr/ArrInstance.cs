@@ -1,4 +1,4 @@
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr
 {
     /// <summary>
     /// Represents a single Sonarr or Radarr instance configuration.

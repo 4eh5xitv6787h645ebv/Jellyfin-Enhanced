@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;

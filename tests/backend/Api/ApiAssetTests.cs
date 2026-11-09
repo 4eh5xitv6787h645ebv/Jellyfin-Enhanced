@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services;

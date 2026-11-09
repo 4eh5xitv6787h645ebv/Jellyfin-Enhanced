@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Reflection;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
