@@ -210,6 +210,18 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/ChromeServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/Services/ActiveSessionsService.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/Services/BrandingAssetStartupFilter.cs",
       "category": "Features"
     },
@@ -3528,42 +3540,6 @@
       ]
     },
     {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/UploadBrandingImage",
-      "method": "UploadBrandingImage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/BrandingStatus",
-      "method": "GetBrandingStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/BrandingImage",
-      "method": "GetBrandingImage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/DeleteBrandingImage",
-      "method": "DeleteBrandingImage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
       "verb": "GET",
       "path": "/JellyfinEnhanced/arr/validate/sonarr",
       "method": "ValidateSonarr",
@@ -3621,24 +3597,6 @@
       "verb": "GET",
       "path": "/JellyfinEnhanced/arr/movie-instances",
       "method": "GetMovieInstances",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/active-streams/sessions",
-      "method": "GetActiveSessions",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/active-streams/broadcast",
-      "method": "BroadcastMessage",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize"
@@ -3861,6 +3819,60 @@
       "path": "/JellyfinEnhanced/catchup/summary",
       "method": "GetSummary",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/JeCatchupController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/UploadBrandingImage",
+      "method": "UploadBrandingImage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/BrandingStatus",
+      "method": "GetBrandingStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/BrandingImage",
+      "method": "GetBrandingImage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/DeleteBrandingImage",
+      "method": "DeleteBrandingImage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/active-streams/sessions",
+      "method": "GetActiveSessions",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/active-streams/broadcast",
+      "method": "BroadcastMessage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
       "following_attributes": [
         "Authorize"
       ]
@@ -10334,7 +10346,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 494,
+    "files": 497,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 89,

@@ -1,23 +1,23 @@
 using System.Security.Claims;
-using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Plugin = Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Chrome;
 
 [Collection("Plugin singleton")]
 public class ApiBrandingTests
 {
     private static readonly byte[] Png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=");
-    private static JellyfinEnhancedController Controller(ApiPluginFixture f, bool admin = true)
+    private static JeChromeController Controller(ApiPluginFixture f, bool admin = true)
     {
-        var c = ApiAssetTests.Controller(f.Core);
+        var c = (JeChromeController)ApiAssetTests.Controller(typeof(JeChromeController), f.Core);
         c.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Role, admin ? "Administrator" : "User")], "test"));
         return c;
     }
-    private static void Form(JellyfinEnhancedController c, string? name, string mime = "image/png", long? length = null, bool withFile = true)
+    private static void Form(JeChromeController c, string? name, string mime = "image/png", long? length = null, bool withFile = true)
     {
         var files = new FormFileCollection();
         if (withFile) files.Add(new FormFile(new MemoryStream(Png), 0, length ?? Png.Length, "file", "client-name.png") { Headers = new HeaderDictionary(), ContentType = mime });

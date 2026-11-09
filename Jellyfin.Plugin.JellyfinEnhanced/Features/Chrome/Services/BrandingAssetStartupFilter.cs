@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Primitives;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome.Services
 {
     /// <summary>
     /// Replaces jellyfin-web's branding assets (logo / banner / favicon / touch icon)

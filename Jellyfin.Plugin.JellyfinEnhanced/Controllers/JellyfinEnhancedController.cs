@@ -39,6 +39,7 @@ using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
@@ -89,6 +90,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly Helpers.MatroskaLanguageCache _matroskaLanguageCache;
         private readonly UserDisplayResolver _userDisplayResolver;
         private readonly ArrInstanceClient _arrInstanceClient;
+        private readonly ActiveSessionsService _activeSessionsService;
         private readonly LibraryItemLookup _libraryItemLookup;
 
         private async Task<bool> IsSeerrReachableCached()
@@ -106,15 +108,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
             return active;
         }
-
-        private static readonly HashSet<string> BrandingFileNames = new(new[]
-        {
-            "icon-transparent.png",
-            "banner-light.png",
-            "banner-dark.png",
-            "favicon.ico",
-            "apple-touch-icon.png"
-        }, StringComparer.OrdinalIgnoreCase);
 
         public JellyfinEnhancedController(
             IHttpClientFactory httpClientFactory,
@@ -186,6 +179,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             _matroskaLanguageCache = matroskaLanguageCache;
             _userDisplayResolver = new UserDisplayResolver(userManager);
             _arrInstanceClient = new ArrInstanceClient(httpClientFactory, logger);
+            _activeSessionsService = new ActiveSessionsService(sessionManager);
             _libraryItemLookup = new LibraryItemLookup(libraryManager, logger);
         }
 
@@ -4300,7 +4294,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             {
                 try
                 {
-                    activeStreamSessions = BuildActiveSessionList(isAdmin);
+                    activeStreamSessions = _activeSessionsService.BuildActiveSessionList(isAdmin);
                 }
                 catch (Exception ex)
                 {
@@ -5334,38 +5328,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // Say it is UTF-8: these files carry characters such as "·" and "★", and a script or stylesheet
             // with no charset is decoded with the page's encoding, which has shown them as "Â·" and "â˜…".
             return new FileStreamResult(stream, contentType + "; charset=utf-8");
-        }
-
-        private bool TryResolveBrandingFilePath(string requestedFileName, out string normalizedFileName, out string filePath)
-        {
-            normalizedFileName = Path.GetFileName(requestedFileName ?? string.Empty);
-            filePath = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(normalizedFileName) || !BrandingFileNames.Contains(normalizedFileName))
-            {
-                return false;
-            }
-
-            var brandingDir = JellyfinEnhanced.BrandingDirectory;
-            if (string.IsNullOrWhiteSpace(brandingDir))
-            {
-                return false;
-            }
-
-            // The allowlist is case-insensitive, but the middleware and status endpoint
-            // use fixed lowercase names. Normalize accepted aliases on case-sensitive hosts.
-            normalizedFileName = normalizedFileName.ToLowerInvariant();
-            var fullBrandingDir = Path.GetFullPath(brandingDir);
-            var candidateFilePath = Path.GetFullPath(Path.Combine(fullBrandingDir, normalizedFileName));
-            var candidateDirectory = Path.GetDirectoryName(candidateFilePath);
-
-            if (!string.Equals(candidateDirectory, fullBrandingDir, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            filePath = candidateFilePath;
-            return true;
         }
 
         [HttpGet("user-settings/{userId}/settings.json")]
@@ -10012,159 +9974,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return await ProxyJellyseerrRequest("/api/v1/issue", HttpMethod.Post, issueBody.ToString());
         }
 
-        [HttpPost("UploadBrandingImage")]
-        [Authorize]
-        public async Task<IActionResult> UploadBrandingImage()
-        {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
-
-            try
-            {
-                if (Request.Form.Files.Count == 0)
-                    return BadRequest("No file uploaded");
-
-                var uploadedFile = Request.Form.Files[0];
-
-                // Get fileName from form data
-                string? fileName = Request.Form["fileName"].FirstOrDefault();
-                if (string.IsNullOrWhiteSpace(fileName))
-                {
-                    return BadRequest("fileName parameter is required in form data");
-                }
-
-                if (!TryResolveBrandingFilePath(fileName, out var normalizedFileName, out var filePath))
-                {
-                    return BadRequest($"fileName must be one of: {string.Join(", ", BrandingFileNames)}");
-                }
-
-                // Validate file type - accept only image files
-                if (!uploadedFile.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
-                    return BadRequest("Only image files are allowed");
-
-                const long maxFileSize = 10 * 1024 * 1024; // 10MB
-                if (uploadedFile.Length > maxFileSize)
-                    return BadRequest($"File too large (max 10MB)");
-
-                // Get branding directory from central location
-                var brandingDir = JellyfinEnhanced.BrandingDirectory;
-                if (string.IsNullOrWhiteSpace(brandingDir))
-                    return StatusCode(500, "Could not determine branding directory");
-
-                Directory.CreateDirectory(brandingDir);
-
-                // Save file
-                using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                {
-                    await uploadedFile.CopyToAsync(stream);
-                }
-
-                _logger.Info($"Successfully uploaded branding image: {normalizedFileName} ({uploadedFile.Length} bytes) to {brandingDir}");
-                return Ok("File uploaded successfully");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.Error($"Permission denied when uploading branding image: {ex.Message}");
-                return StatusCode(403, "Permission denied when uploading branding image.");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error uploading branding image: {ex.Message}");
-                return StatusCode(500, "An error occurred while uploading the branding image.");
-            }
-        }
-
-        /// <summary>
-        /// Which of the fixed branding slots have a custom image uploaded, in one request.
-        /// </summary>
-        [HttpGet("BrandingStatus")]
-        [Authorize]
-        public IActionResult GetBrandingStatus()
-        {
-            var brandingDir = JellyfinEnhanced.BrandingDirectory;
-            var status = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-            foreach (var name in BrandingFileNames)
-            {
-                status[name] = !string.IsNullOrWhiteSpace(brandingDir)
-                    && System.IO.File.Exists(Path.Combine(brandingDir, name));
-            }
-
-            return Ok(status);
-        }
-
-        [HttpGet("BrandingImage")]
-        [Authorize]
-        public IActionResult GetBrandingImage([FromQuery] string? fileName)
-        {
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                return BadRequest("fileName query parameter is required");
-            }
-
-            if (!TryResolveBrandingFilePath(fileName, out _, out var filePath))
-            {
-                return BadRequest($"fileName must be one of: {string.Join(", ", BrandingFileNames)}");
-            }
-
-            if (!System.IO.File.Exists(filePath))
-                return NotFound();
-
-            var provider = new FileExtensionContentTypeProvider();
-            if (!provider.TryGetContentType(filePath, out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-
-            return PhysicalFile(filePath, contentType);
-        }
-
-        [HttpPost("DeleteBrandingImage")]
-        [Authorize]
-        public IActionResult DeleteBrandingImage()
-        {
-            if (!IsAdminUser())
-            {
-                return Forbid();
-            }
-
-            try
-            {
-                string? fileName = Request.Form["fileName"].FirstOrDefault();
-                if (string.IsNullOrWhiteSpace(fileName))
-                {
-                    return BadRequest("fileName parameter is required in form data");
-                }
-
-                if (!TryResolveBrandingFilePath(fileName, out var normalizedFileName, out var filePath))
-                {
-                    return BadRequest($"fileName must be one of: {string.Join(", ", BrandingFileNames)}");
-                }
-
-                var brandingDir = JellyfinEnhanced.BrandingDirectory;
-                if (string.IsNullOrWhiteSpace(brandingDir))
-                    return StatusCode(500, "Could not determine branding directory");
-
-                if (!System.IO.File.Exists(filePath))
-                    return NotFound("File not found");
-
-                System.IO.File.Delete(filePath);
-                _logger.Info($"Deleted branding image: {normalizedFileName} from {brandingDir}");
-                return Ok("File deleted successfully");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.Error($"Permission denied when deleting branding image: {ex.Message}");
-                return StatusCode(403, "Permission denied when deleting branding image.");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error deleting branding image: {ex.Message}");
-                return StatusCode(500, "An error occurred while deleting the branding image.");
-            }
-        }
-
         // ==================== Arr Links ====================
 
         [HttpGet("arr/validate/sonarr")]
@@ -10619,31 +10428,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return Ok(BuildArrLookupResult(instances, outcomes));
         }
 
-        // ==================== Active Streams ====================
-
-        [HttpGet("active-streams/sessions")]
-        [Authorize]
-        public IActionResult GetActiveSessions()
-        {
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            if (config == null || !config.ActiveStreamsEnabled)
-                return StatusCode(503, "Active Streams is not enabled.");
-
-            // Non-admins only allowed if ActiveStreamsAllUsers is on
-            if (!IsAdminUser() && !config.ActiveStreamsAllUsers)
-                return Forbid();
-
-            try
-            {
-                return Ok(BuildActiveSessionList(IsAdminUser()));
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Failed to get active sessions: {ex.Message}");
-                return StatusCode(500, "Failed to retrieve sessions.");
-            }
-        }
-
         /// <summary>
         /// Whether the caller may read the active-streams session list: the feature
         /// is on and the caller is an admin or ActiveStreamsAllUsers is set. The same
@@ -10651,136 +10435,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// </summary>
         private static bool CanReadActiveSessions(Configuration.PluginConfiguration config, bool isAdmin)
             => config.ActiveStreamsEnabled && (isAdmin || config.ActiveStreamsAllUsers);
-
-        /// <summary>
-        /// The now-playing sessions as GET active-streams/sessions returns them
-        /// (client IPs only for admins). Callers apply the access gate first.
-        /// </summary>
-        private List<object> BuildActiveSessionList(bool isAdmin)
-        {
-            var sessions = _sessionManager.Sessions
-                .Where(s => s.NowPlayingItem != null)
-                .Select(s => new
-                {
-                    UserId = s.UserId,
-                    UserName = s.UserName,
-                    UserHasPrimaryImage = s.UserPrimaryImageTag != null,
-                    Client = s.Client,
-                    DeviceName = s.DeviceName,
-                    // IP only for admins
-                    RemoteEndPoint = isAdmin ? s.RemoteEndPoint : null,
-                    LastActivityDate = s.LastActivityDate,
-                    NowPlayingItem = s.NowPlayingItem == null ? null : new
-                    {
-                        Id = s.NowPlayingItem.Id.ToString("N"),
-                        Type = s.NowPlayingItem.Type.ToString(),
-                        s.NowPlayingItem.Name,
-                        s.NowPlayingItem.SeriesName,
-                        s.NowPlayingItem.RunTimeTicks,
-                        s.NowPlayingItem.ProductionYear,
-                        ParentIndexNumber = s.NowPlayingItem.ParentIndexNumber,
-                        IndexNumber = s.NowPlayingItem.IndexNumber,
-                        ImageTags = s.NowPlayingItem.ImageTags != null
-                            ? s.NowPlayingItem.ImageTags.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value)
-                            : null,
-                        SeriesId = s.NowPlayingItem.SeriesId?.ToString("N"),
-                        SeriesPrimaryImageTag = s.NowPlayingItem.SeriesPrimaryImageTag,
-                        // Materialized here (not during serialization) so a failure
-                    // surfaces to the caller's try/catch.
-                    MediaStreams = s.NowPlayingItem.MediaStreams?.Select(ms => new
-                        {
-                            ms.Type,
-                            ms.Codec,
-                            ms.BitRate
-                        }).ToList()
-                    },
-                    PlayState = s.PlayState == null ? null : new
-                    {
-                        s.PlayState.IsPaused,
-                        s.PlayState.PositionTicks,
-                        s.PlayState.PlayMethod
-                    },
-                    TranscodingInfo = s.TranscodingInfo == null ? null : new
-                    {
-                        s.TranscodingInfo.IsVideoDirect,
-                        s.TranscodingInfo.VideoCodec,
-                        s.TranscodingInfo.AudioCodec,
-                        s.TranscodingInfo.Bitrate,
-                        s.TranscodingInfo.TranscodeReasons,
-                        s.TranscodingInfo.CompletionPercentage,
-                        s.TranscodingInfo.Width,
-                        s.TranscodingInfo.Height,
-                        s.TranscodingInfo.Framerate
-                    }
-                });
-
-            return sessions.ToList<object>();
-        }
-
-        [HttpPost("active-streams/broadcast")]
-        [Authorize]
-        public async Task<IActionResult> BroadcastMessage([FromBody] BroadcastMessageRequest request)
-        {
-            if (!IsAdminUser())
-                return Forbid();
-
-            if (request == null || string.IsNullOrWhiteSpace(request.Text))
-                return BadRequest("Message text is required.");
-
-            var config = JellyfinEnhanced.Instance?.Configuration;
-            if (config == null || !config.ActiveStreamsEnabled)
-                return StatusCode(503, "Active Streams is not enabled.");
-
-            var sent = 0;
-            var skipped = 0;
-            var errors = new List<string>();
-
-            // Use the current session as the controlling session (admin's own session)
-            var controllingSessionId = string.Empty;
-            try
-            {
-                var adminSession = _sessionManager.Sessions
-                    .FirstOrDefault(s => s.UserId == GetCurrentUserId());
-                controllingSessionId = adminSession?.Id ?? string.Empty;
-            }
-            catch { /* non-fatal — empty string is accepted */ }
-
-            var command = new MediaBrowser.Model.Session.MessageCommand
-            {
-                Header = request.Header,
-                Text = request.Text,
-                TimeoutMs = request.TimeoutMs
-            };
-
-            foreach (var session in _sessionManager.Sessions)
-            {
-                // Skip sessions with no real user
-                if (string.IsNullOrWhiteSpace(session.UserName) ||
-                    string.Equals(session.UserName, "Unknown", StringComparison.OrdinalIgnoreCase))
-                {
-                    skipped++;
-                    continue;
-                }
-
-                try
-                {
-                    await _sessionManager.SendMessageCommand(
-                        controllingSessionId,
-                        session.Id,
-                        command,
-                        CancellationToken.None).ConfigureAwait(false);
-                    sent++;
-                }
-                catch (Exception ex)
-                {
-                    _logger.Warning($"Broadcast: failed to send to session {session.Id} ({session.UserName}): {ex.Message}");
-                    errors.Add($"{session.UserName}: {ex.Message}");
-                    skipped++;
-                }
-            }
-
-            return Ok(new { sent, skipped, errors });
-        }
 
         // Dedup tracker for high-frequency polling log lines.
         // Key = (userId, apiPath), Value = (last logged message, count since last log, last log time)
@@ -12376,15 +12030,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         public DateTime? BirthDate { get; set; }
         public DateTime? DeathDate { get; set; }
         public string? BirthPlace { get; set; }
-    }
-
-    public class BroadcastMessageRequest
-    {
-        public string? Header { get; set; }
-
-        public string Text { get; set; } = string.Empty;
-
-        public long? TimeoutMs { get; set; }
     }
 
     public class MaintenanceModeRequest

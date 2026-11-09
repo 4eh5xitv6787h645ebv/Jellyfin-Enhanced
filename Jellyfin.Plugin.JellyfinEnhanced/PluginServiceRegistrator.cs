@@ -3,6 +3,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
@@ -34,7 +35,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             //     Both are kill-switchable via config and no-op safely when there's
             //     nothing to do.
             serviceCollection.AddSingleton<IStartupFilter, ScriptInjectionStartupFilter>();
-            serviceCollection.AddSingleton<IStartupFilter, BrandingAssetStartupFilter>();
+            serviceCollection.AddJeChrome();
 
             serviceCollection.AddHttpClient();
 
