@@ -15,6 +15,7 @@ using Moq;
 using Newtonsoft.Json;
 using JsonElement = System.Text.Json.JsonElement;
 using StjSerializer = System.Text.Json.JsonSerializer;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -669,7 +670,7 @@ public class ApiMediaTagsPageTests
         var userId = Guid.NewGuid();
         var id = userId.ToString("N");
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(userId) } };
-        Assert.IsType<OkObjectResult>(controller.GetUserSettingsSettings(id));
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).GetUserSettingsSettings(id));
         var own = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(id, "settings.json");
         own.ShowFileSizes = false;
         own.QualityTagsEnabled = false;
@@ -680,7 +681,7 @@ public class ApiMediaTagsPageTests
         f.Plugin.Configuration.QualityTagsPosition = "bottom-right";
 
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin: true) } };
-        var result = Assert.IsType<OkObjectResult>(controller.ApplyUserSettings(new JellyfinEnhancedController.ApplyUserSettingsRequest
+        var result = Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).ApplyUserSettings(new JeSettingsController.ApplyUserSettingsRequest
         {
             Properties = new List<string> { "ShowFileSizes", "QualityTagsEnabled", "QualityTagsPosition" },
         }));

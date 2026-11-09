@@ -1,6 +1,6 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services
 {
     /// <summary>
     /// The settings a user starts with, seeded from the plugin configuration. Moved verbatim from
@@ -76,7 +76,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 TagsHideOnHover = defaultConfig.TagsHideOnHover,
                 QualityTagsPosition = defaultConfig.QualityTagsPosition,
                 // Series/season quality aggregation default.
-                SeriesQualityAggregation = Services.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
+                SeriesQualityAggregation = Jellyfin.Plugin.JellyfinEnhanced.Services.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
                 QualityHideSdr = defaultConfig.QualityHideSdr,
                 QualityMinimumResolution = QualityDisplayRules.Minimum(defaultConfig.QualityMinimumResolution),
                 QualityHdrDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityHdrDisplayMode),

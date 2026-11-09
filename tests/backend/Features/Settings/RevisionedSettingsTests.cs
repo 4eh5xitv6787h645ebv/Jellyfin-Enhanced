@@ -3,8 +3,10 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using Newtonsoft.Json.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Settings;
 
 [Collection("Plugin singleton")]
 public class RevisionedSettingsTests
@@ -64,7 +66,7 @@ public class RevisionedSettingsTests
         using var fixture = new ApiPluginFixture();
         var user = Guid.NewGuid();
         var maintenance = new MaintenanceModeService(Moq.Mock.Of<MediaBrowser.Controller.Library.IUserManager>(), Moq.Mock.Of<MediaBrowser.Controller.Session.ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
-        var controller = ApiAssetTests.Controller(fixture.Core, maintenance, fixture.Core.Manager);
+        var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), fixture.Core, maintenance, fixture.Core.Manager);
         controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user, false);
         Assert.IsType<Microsoft.AspNetCore.Mvc.ForbidResult>(controller.GetRevisionedSettings(Guid.NewGuid().ToString("N")));
         var loaded = Assert.IsType<RevisionedSettingsResponse>(Assert.IsType<Microsoft.AspNetCore.Mvc.JsonResult>(controller.GetRevisionedSettings(user.ToString("N"))).Value);

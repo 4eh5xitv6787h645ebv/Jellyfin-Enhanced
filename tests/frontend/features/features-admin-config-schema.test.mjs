@@ -66,18 +66,19 @@ test('load and collect round-trip a section without touching its manual fields',
     assert.equal(out.Untouched, 'kept');
 });
 
-// The per-user list drives the icon and the apply-to-all banner. It is generated from the controller; this fails when the
-// controller changed and scripts/generate_per_user_props.py was not run.
+// The per-user list drives the icon and the apply-to-all banner. It is generated from ResetAllUsersSettings and
+// BuildHcDefaultSettings; this fails when either changed and scripts/generate_per_user_props.py was not run.
 test('the per-user setting list matches the controller', () => {
-    const controller = readFileSync(join(root, 'Controllers', 'JellyfinEnhancedController.cs'), 'utf8');
+    const controller = readFileSync(join(root, 'Features', 'Settings', 'JeSettingsController.cs'), 'utf8');
+    const defaults = readFileSync(join(root, 'Shared', 'HiddenContent', 'HiddenContentDefaults.cs'), 'utf8');
     const a = controller.indexOf('[HttpPost("reset-all-users-settings")]');
     const b = controller.indexOf('Reset settings for', a);
-    const c = controller.indexOf('private static HiddenContentSettings BuildHcDefaultSettings');
-    const d = controller.indexOf('[HttpPost', c);
+    const c = defaults.indexOf('public static HiddenContentSettings BuildHcDefaultSettings');
+    const d = defaults.indexOf('\n        }\n', c);
     assert.ok(a >= 0 && b > a && c >= 0 && d > c, 'the reset-all-users-settings or BuildHcDefaultSettings block was not found');
     const expected = new Set([
         ...controller.slice(a, b).matchAll(/=\s*defaultConfig\.(\w+)/g),
-        ...controller.slice(c, d).matchAll(/=\s*src\.(\w+)/g)
+        ...defaults.slice(c, d).matchAll(/=\s*src\.(\w+)/g)
     ].map((m) => m[1]));
     assert.ok(expected.size >= 98, `expected at least 98 per-user settings, found ${expected.size}`);
     const generated = readFileSync(join(root, '..', 'client', 'src', 'admin', 'config', 'per-user-props.ts'), 'utf8');

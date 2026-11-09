@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Data;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
@@ -93,7 +94,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
         }
 
         protected RevisionedSettingsResponse LoadRevisionedSettings(string userId)
-            => new Services.SettingsDocumentService(_userConfigurationManager).Read(userId, SettingsDefaults.Create, IsAdminUser());
+            => new Features.Settings.Services.SettingsDocumentService(_userConfigurationManager).Read(userId, SettingsDefaults.Create, IsAdminUser());
 
         /// <summary>
         /// Per-request state for deciding which reviews a viewer may see.

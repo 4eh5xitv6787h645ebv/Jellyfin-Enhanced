@@ -760,6 +760,8 @@ Fixtures under `tests/fixtures/*` are embedded by `LogicalName` in `JE.Tests.csp
    - Routes stay under `[Route("JellyfinEnhanced")]` with no feature prefix change (changing a route = contract change = snapshot update).
 5. **One controller per feature:** a test asserts that each `Features/<F>` contains at most one controller type (partials allowed).
 6. **Docs:** add a 10-line "where things live" table to `CONTRIBUTING.md` that names, for each feature, the client folder, the backend folder and the test folder.
+7. **Cross-feature helpers go to `Shared/<area>/` (coordinator decision, step 7).** When a feature controller needs a helper another feature owns, and a step's namespace change would make `FeatureBoundaryTests` fail, the helper moves to `Shared/<area>/` as a pure rename (or, for a new extraction, is created there) in that step. The controller rule is never widened and no allow-list entry is added. Moves so far:
+   - **S2.8:** `BuildHcDefaultSettings` → `Shared/HiddenContent/HiddenContentDefaults` (not `Features/HiddenContent/Services/`, the §4 row's target). Settings' `reset-all-users-settings` and HiddenContent's `hidden-content.json`/continue-watching routes both call it, and the Settings controller is enforced from S2.8.
 
 ---
 

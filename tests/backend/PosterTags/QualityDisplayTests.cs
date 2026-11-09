@@ -11,6 +11,7 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -280,6 +281,9 @@ public class QualityDisplayTests
         Assert.False(MediaTagsPageFields.TryNormalize(field, invalid, out _, out _));
     }
 
+    private static JeSettingsController SettingsController(ApiPluginFixture f, Claim claim)
+        => ApiAssetTests.Sibling<JeSettingsController>(Controller(f, claim), f.Core, f.Core.Manager);
+
     private static Jellyfin.Plugin.JellyfinEnhanced.Controllers.JellyfinEnhancedController Controller(ApiPluginFixture f, Claim claim)
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
@@ -316,7 +320,7 @@ public class QualityDisplayTests
         config.QualityAudioDisplayMode = "all"; config.QualityVideoCodecDisplayMode = "all"; config.QualityHdrDisplayMode = "all";
         config.QualityMinimumResolution = "4k"; config.QualityHideSdr = true;
         var id = Guid.NewGuid().ToString("N");
-        var user = Controller(f, new Claim("Jellyfin-UserId", id));
+        var user = SettingsController(f, new Claim("Jellyfin-UserId", id));
         Assert.IsType<OkObjectResult>(user.GetUserSettingsSettings(id));
         var seeded = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(id, "settings.json");
         Assert.Equal("all", seeded.QualityAudioDisplayMode); Assert.Equal("all", seeded.QualityVideoCodecDisplayMode);
@@ -329,7 +333,7 @@ public class QualityDisplayTests
         Assert.Null(saved.QualityHdrDisplayMode); Assert.Equal("off", saved.QualityMinimumResolution); Assert.Null(saved.QualityHideSdr);
         Assert.Equal("all", PosterTagSettings.FromUserSettings(saved, config, null).QualityHdrDisplayMode);
         var admin = Controller(f, new Claim(ClaimTypes.Role, "Administrator"));
-        Assert.IsType<OkObjectResult>(admin.ResetAllUsersSettings());
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(admin, f.Core, f.Core.Manager).ResetAllUsersSettings());
         var reset = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(id, "settings.json");
         Assert.Equal("all", reset.QualityAudioDisplayMode); Assert.Equal("4k", reset.QualityMinimumResolution); Assert.True(reset.QualityHideSdr);
         var legacy = new JellyfinEnhancedUserSettings();

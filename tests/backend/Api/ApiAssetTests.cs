@@ -27,6 +27,15 @@ public class ApiAssetTests
         return controller;
     }
 
+    // A feature controller sharing `controller`'s ControllerContext (its HTTP context and signed-in user), for a test
+    // that drives actions a restructure step moved off `controller` alongside actions that stayed on it.
+    internal static T Sibling<T>(ControllerBase controller, CoreFixture fixture, params object[] services) where T : ControllerBase
+    {
+        var sibling = (T)Controller(typeof(T), fixture, services);
+        sibling.ControllerContext = controller.ControllerContext;
+        return sibling;
+    }
+
     [Fact]
     public async Task EveryManifestModuleIsEmbeddedAndServedWithJavascriptMime()
     {

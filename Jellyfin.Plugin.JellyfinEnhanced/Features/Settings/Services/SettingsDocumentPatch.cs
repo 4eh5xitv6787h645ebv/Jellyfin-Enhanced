@@ -7,7 +7,7 @@ using System.Text.Json.Serialization.Metadata;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Newtonsoft.Json.Linq;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services;
 
 /// <summary>
 /// Update the authoritative typed fields while retaining raw extension members of retained objects.

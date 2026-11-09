@@ -7,6 +7,7 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -22,7 +23,7 @@ public class ApiConfigurationTests
         using var fixture = new ApiPluginFixture();
         fixture.Plugin.Configuration.SeriesQualityAggregation = configured;
         var userId = Guid.NewGuid().ToString("N");
-        var controller = ApiAssetTests.Controller(fixture.Core, fixture.Core.Manager, Mock.Of<IUserManager>());
+        var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), fixture.Core, fixture.Core.Manager, Mock.Of<IUserManager>());
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("Jellyfin-UserId", userId)], "test"));
         var first = Assert.IsType<OkObjectResult>(controller.GetUserSettingsSettings(userId));
         using var seeded = JsonDocument.Parse(JsonSerializer.Serialize(first.Value));

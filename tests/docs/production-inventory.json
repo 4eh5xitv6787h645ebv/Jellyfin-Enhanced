@@ -782,6 +782,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDefaults.cs",
       "category": "Features"
     },
@@ -967,6 +971,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/SonarrService.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentDefaults.cs",
       "category": "Shared"
     },
     {
@@ -2836,61 +2844,12 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
-      "method": "GetUserSettingsSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
-      "method": "GetRevisionedSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
-      "method": "SaveRevisionedSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
-      "method": "GetUserSettingsShortcuts",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/user-settings/{userId}/elsewhere.json",
       "method": "GetUserSettingsElsewhere",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize",
         "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
-      "method": "SaveUserSettingsSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
       ]
     },
     {
@@ -2941,16 +2900,6 @@
       "verb": "DELETE",
       "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets/{presetId}",
       "method": "DeleteMediaTagsPreset",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
-      "method": "SaveUserSettingsShortcuts",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize",
@@ -3336,24 +3285,6 @@
       "following_attributes": [
         "Authorize",
         "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/reset-all-users-settings",
-      "method": "ResetAllUsersSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/apply-user-settings",
-      "method": "ApplyUserSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
       ]
     },
     {
@@ -3885,6 +3816,83 @@
       "path": "/JellyfinEnhanced/active-streams/broadcast",
       "method": "BroadcastMessage",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
+      "method": "GetUserSettingsSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
+      "method": "GetRevisionedSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings-document",
+      "method": "SaveRevisionedSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
+      "method": "GetUserSettingsShortcuts",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/settings.json",
+      "method": "SaveUserSettingsSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/shortcuts.json",
+      "method": "SaveUserSettingsShortcuts",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/reset-all-users-settings",
+      "method": "ResetAllUsersSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/apply-user-settings",
+      "method": "ApplyUserSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
       "following_attributes": [
         "Authorize"
       ]
@@ -9850,10 +9858,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
       "literal": "bookmark.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
@@ -9891,14 +9895,6 @@
     },
     {
       "literal": "user-settings/{userId}/hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/settings.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/shortcuts.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -10072,6 +10068,30 @@
     {
       "literal": "tmdb-cache.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs"
+    },
+    {
+      "literal": "Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "shortcuts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/shortcuts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
     },
     {
       "literal": "settings.json",
@@ -10358,10 +10378,10 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 500,
+    "files": 502,
     "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 89,
+    "storage_references": 92,
     "scheduled_tasks": 15,
     "locales": 33
   }

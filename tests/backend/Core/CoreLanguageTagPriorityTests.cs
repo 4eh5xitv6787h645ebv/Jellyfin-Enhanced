@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -55,7 +56,7 @@ public class CoreLanguageTagPriorityTests
     {
         using var f = new ApiPluginFixture();
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
-        var controller = ApiAssetTests.Controller(f.Core, maintenance, f.Core.Manager);
+        var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), f.Core, maintenance, f.Core.Manager);
         var user = Guid.NewGuid();
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user) } };
         var bound = JsonSerializer.Deserialize<JellyfinEnhancedUserSettings>("{\"languageTagsPriority\":[\"jpn\",\"eng\",\"en\"],\"languageTagsPriorityStrict\":false}", new JsonSerializerOptions(JsonSerializerDefaults.Web))!;

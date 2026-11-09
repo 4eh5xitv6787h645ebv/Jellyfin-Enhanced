@@ -15,6 +15,7 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 
 namespace JE.Tests;
 
@@ -115,7 +116,7 @@ public class ApiMediaTagsPortableTests
         var target = JsonNode.Parse(JsonSerializer.Serialize(f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(other, "settings.json")))!.AsObject();
         foreach (var change in preview["changes"]!.AsArray()) target[(string)change!["field"]!] = change["to"]?.DeepClone();
         var bound = JsonSerializer.Deserialize<JellyfinEnhancedUserSettings>(target.ToJsonString(), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
-        Assert.IsType<OkObjectResult>(controller.SaveUserSettingsSettings(other, bound));
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).SaveUserSettingsSettings(other, bound));
         var again = (JsonObject)Body(controller.ExportUserMediaTags(other));
         Assert.True(JsonNode.DeepEquals(exported, again), $"{exported.ToJsonString()}\n{again.ToJsonString()}");
         Assert.Equal("fr", f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(other, "settings.json").DisplayLanguage);
@@ -131,7 +132,7 @@ public class ApiMediaTagsPortableTests
             TagGroupCaps = new() { Status = 9, AgeRating = 0, Genre = 2 } };
         f.Core.Manager.SaveUserConfiguration(id, "settings.json", source);
         source.DisplayLanguage = "fr";
-        Assert.IsType<OkObjectResult>(controller.SaveUserSettingsSettings(id, source));
+        Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).SaveUserSettingsSettings(id, source));
         var saved = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(id, "settings.json");
         Assert.Equal(9, saved.TagGroupCaps!.Status);
         Assert.Equal(0, saved.TagGroupCaps.AgeRating);
