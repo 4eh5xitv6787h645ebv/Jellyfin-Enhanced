@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 /// <summary>Hearing-impaired subtitle detection, independent of language spelling and rendering style.</summary>
 internal static class SubtitleAccessibility
