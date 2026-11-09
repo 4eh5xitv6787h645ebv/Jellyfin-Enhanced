@@ -85,7 +85,7 @@ public class ElsewhereDocumentTests
                 services.AddRouting();
                 services.AddAuthentication("test").AddScheme<AuthenticationSchemeOptions, HeaderAuthentication>("test", _ => { });
                 services.AddAuthorization();
-                services.AddControllers().AddApplicationPart(typeof(JellyfinEnhancedController).Assembly).AddJsonOptions(options =>
+                services.AddControllers().AddApplicationPart(typeof(Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced).Assembly).AddJsonOptions(options =>
                 {
                     // Applies the real JsonDefaults package values, whose string converter accepts numbers.
                     // How the host wires them is assumed here; the route's strictness does not depend on it.

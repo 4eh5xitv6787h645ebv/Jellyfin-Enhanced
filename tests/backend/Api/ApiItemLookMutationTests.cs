@@ -88,7 +88,7 @@ public class ApiItemLookMutationTests(ITestOutputHelper output)
         builder.WebHost.UseKestrel().UseUrls("http://127.0.0.1:0");
         builder.Services.AddAuthentication("test").AddScheme<AuthenticationSchemeOptions, Authentication>("test", _ => { });
         builder.Services.AddAuthorization();
-        builder.Services.AddControllers().AddApplicationPart(typeof(JellyfinEnhancedController).Assembly);
+        builder.Services.AddControllers().AddApplicationPart(typeof(Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced).Assembly);
         builder.Services.AddSingleton<IControllerActivator>(new Activator(fixture.Core));
         await using var app = builder.Build();
         app.UseAuthentication();
@@ -179,7 +179,7 @@ public class ApiItemLookMutationTests(ITestOutputHelper output)
         builder.WebHost.UseKestrel().UseUrls("http://127.0.0.1:0");
         builder.Services.AddAuthentication("test").AddScheme<AuthenticationSchemeOptions, Authentication>("test", _ => { });
         builder.Services.AddAuthorization();
-        builder.Services.AddControllers().AddApplicationPart(typeof(JellyfinEnhancedController).Assembly);
+        builder.Services.AddControllers().AddApplicationPart(typeof(Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced).Assembly);
         builder.Services.AddSingleton<IControllerActivator>(new Activator(fixture.Core));
         await using var app = builder.Build();
         app.UseAuthentication();
