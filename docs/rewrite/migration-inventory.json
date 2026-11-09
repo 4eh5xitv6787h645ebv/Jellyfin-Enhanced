@@ -869,7 +869,7 @@
       "orderedComponent": true,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/settings-panel/ui-panel-hidden-content.ts",
+      "source": "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {

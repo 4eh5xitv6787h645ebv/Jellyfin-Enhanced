@@ -3,9 +3,9 @@
  * surface filters, experimental options, manage button).
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
-import { panelHost, registry, type HiddenContentSettingKey, type PanelBridge } from '../../host/settings-panel-host';
-import type { PanelContext } from './public-api';
-import { inputById } from '../shared/dom';
+import { panelHost, registry, type HiddenContentSettingKey, type PanelBridge } from '../../../host/settings-panel-host';
+import type { PanelContext } from '../../settings-panel/public-api';
+import { inputById } from '../../shared/dom';
 
 type Deps = Pick<PanelBridge, 'internals' | 'hiddenContent' | 'hiddenContentPage' | 'pluginConfig'>;
 

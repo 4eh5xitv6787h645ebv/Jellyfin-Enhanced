@@ -18,7 +18,7 @@
     return element instanceof HTMLInputElement ? element : null;
   }
 
-  // client/src/features/settings-panel/ui-panel-hidden-content.ts
+  // client/src/features/hidden-content/settings/ui-panel-hidden-content.ts
   var HIDDEN_BUTTON_TOGGLES = [
     ["hiddenShowButtonJellyseerr", "showButtonJellyseerr"],
     ["hiddenShowButtonLibrary", "showButtonLibrary"],

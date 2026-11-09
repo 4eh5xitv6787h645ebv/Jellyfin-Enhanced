@@ -6,7 +6,7 @@
   "js/enhanced/settingspanel/ui-panel-shortcut-editor.js": "client/src/features/settings-panel/ui-panel-shortcut-editor.ts",
   "js/enhanced/settingspanel/ui-panel-settings.js": "client/src/features/settings-panel/ui-panel-settings.ts",
   "js/enhanced/settingspanel/ui-panel-tag-editor.js": "client/src/features/settings-panel/ui-panel-tag-editor.ts",
-  "js/enhanced/settingspanel/ui-panel-hidden-content.js": "client/src/features/settings-panel/ui-panel-hidden-content.ts",
+  "js/enhanced/settingspanel/ui-panel-hidden-content.js": "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts",
   "js/enhanced/settingspanel/ui-panel-language.js": "client/src/features/settings-panel/ui-panel-language.ts",
   "js/enhanced/settingspanel/ui-panel-tag-looks.js": "client/src/features/settings-panel/ui-panel-tag-looks.ts",
   "js/enhanced/settingspanel/ui-panel-tag-preview.js": "client/src/features/settings-panel/ui-panel-tag-preview.ts",

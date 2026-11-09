@@ -360,6 +360,9 @@
   "client/src/features/hidden-content/hidden-content-styles.ts": {
     "import client/src/host/hidden-content-host.ts": 2
   },
+  "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
   "client/src/features/media-tags/rules/media-language-entry.ts": {
     "import client/src/host/tag-rules-host.ts": 1
   },
@@ -751,9 +754,6 @@
     "import client/src/host/settings-panel-host.ts": 1
   },
   "client/src/features/settings-panel/ui-entry-points.ts": {
-    "import client/src/host/settings-panel-host.ts": 1
-  },
-  "client/src/features/settings-panel/ui-panel-hidden-content.ts": {
     "import client/src/host/settings-panel-host.ts": 1
   },
   "client/src/features/settings-panel/ui-panel-language.ts": {

@@ -527,7 +527,7 @@
     },
     {
       "output": "js/enhanced/settingspanel/ui-panel-hidden-content.js",
-      "source": "client/src/features/settings-panel/ui-panel-hidden-content.ts",
+      "source": "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
@@ -1505,8 +1505,8 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/subtitles.js": "b465f51a71804c66207bb962f0f34bfeded37dcaaa3b06def93c06cedf9055c6",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-entry-points.js.map": "40462089af7a407ca57926034aa04e915a12c89aad9d803cdb7473c78d126adc",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-entry-points.js": "76310195201f21e41004b0b7662d1e58bcf264023dbd914503a7ed7d10117f5b",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-hidden-content.js.map": "3d0afc0467eb859fc0e42b717aff925a664734006b5af28e73395814966e7b8b",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-hidden-content.js": "27930afa7ea3819046f0ecae112a3027154256e398cf16282ddff7e9b8af787e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-hidden-content.js.map": "58249749ef26153ea7f9894d540a6fad92dcefeddf1422ebfd01c350d2152c19",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-hidden-content.js": "4e2dc8054598de953e3f5d0e8f3743a0959dac372e778f8eebbed6677bb29769",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js.map": "48aa5cd5a2590b2372fff6f7902c58be5a1dfe47e3b38a9a2418a6c9f082d789",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js": "060fd3c166c7f82a9946eace56780e8c20d5370caa050f0fce053e0224eacd26",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js.map": "b54ee6df4bc12ccd05dcb4542cfc1bf296d08b5bf7b76c73db9a9ab5ee182b36",
