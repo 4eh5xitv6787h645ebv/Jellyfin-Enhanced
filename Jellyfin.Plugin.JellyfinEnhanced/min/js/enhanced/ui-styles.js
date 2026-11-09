@@ -1,5 +1,5 @@
 (() => {
-"use strict";(()=>{function i(){let e=window;if(!e.JellyfinEnhanced)throw new TypeError("Jellyfin Enhanced must load before the settings panel");return e.JellyfinEnhanced}function o(e){e.injectGlobalStyles=()=>{let t="jellyfin-enhanced-styles";if(document.getElementById(t))return;let n=document.createElement("style");n.id=t,n.innerHTML=`
+"use strict";(()=>{function t(){let e=window;if(!e.JellyfinEnhanced)throw new TypeError("Jellyfin Enhanced must load before the settings panel");return e.JellyfinEnhanced}function o(e){e.injectGlobalStyles=()=>{let i="jellyfin-enhanced-styles";if(document.getElementById(i))return;let n=document.createElement("style");n.id=i,n.innerHTML=`
             @keyframes dice { 0%, 100% { transform: rotate(0deg) scale(1); } 10%, 30%, 50% { transform: rotate(-10deg) scale(1.1); } 20%, 40% { transform: rotate(10deg) scale(1.1); } 60% { transform: rotate(360deg) scale(1); } }
             #randomItemButton { display: inline-flex; align-items: center; justify-content: center; }
             #randomItemButton .je-dice-spin,
@@ -297,5 +297,5 @@
                 opacity: 0.35;
                 cursor: not-allowed;
             }
-        `,document.head.appendChild(n)}}o(i());})();
+        `,document.head.appendChild(n)}}o(t());})();
 })();
