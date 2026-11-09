@@ -146,10 +146,6 @@
       "category": "EventHandlers"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/SpoilerAutoEnableEvents.cs",
-      "category": "EventHandlers"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/UserTopologyEvents.cs",
       "category": "EventHandlers"
     },
@@ -191,6 +187,74 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/Services/CatchUpLogService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Events/SpoilerAutoEnableEvents.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/ImageBlurService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/ImageTagDecoration.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerAutoEnableArmer.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerAutoEnableFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerBlurImageFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerExistingTitlesApplier.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerFieldStripFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerIdentityService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerIdentityTagFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerLibraryAddAutoEnabler.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerNextUnwatchedService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerSeerrPendingPromoter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerSeerrRedactor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerTagDataStripper.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerUserResolver.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs",
       "category": "Features"
     },
     {
@@ -455,10 +519,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/RefreshLeavingSoonTagsTask.cs",
-      "category": "ScheduledTasks"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/SpoilerApplyExistingTitlesTask.cs",
       "category": "ScheduledTasks"
     },
     {
@@ -751,66 +811,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SonarrService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/ImageBlurService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/ImageTagDecoration.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerAutoEnableArmer.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerAutoEnableFilter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerBlurImageFilter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerExistingTitlesApplier.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerFieldStripFilter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerIdentityService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerIdentityTagFilter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerLibraryAddAutoEnabler.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerNextUnwatchedService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerSeerrPendingPromoter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerSeerrRedactor.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerTagDataStripper.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerUserResolver.cs",
       "category": "Services"
     },
     {
@@ -9834,6 +9834,10 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs"
     },
     {
+      "literal": "spoilerblur.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerBlurImageFilter.cs"
+    },
+    {
       "literal": "matroska-languages.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MatroskaLanguageCache.cs"
     },
@@ -9948,10 +9952,6 @@
     {
       "literal": "settings.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentService.cs"
-    },
-    {
-      "literal": "spoilerblur.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerBlurImageFilter.cs"
     },
     {
       "literal": "settings.json",
@@ -10088,6 +10088,11 @@
   ],
   "scheduled_tasks": [
     {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs",
+      "class": "SpoilerApplyExistingTitlesTask",
+      "key": "JellyfinEnhancedSpoilerApplyExistingTitles"
+    },
+    {
       "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/AnalyticsReportTask.cs",
       "class": "AnalyticsReportTask",
       "key": "JellyfinEnhancedAnalyticsReport"
@@ -10151,11 +10156,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/RefreshLeavingSoonTagsTask.cs",
       "class": "RefreshLeavingSoonTagsTask",
       "key": "JellyfinEnhancedRefreshLeavingSoonTags"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/SpoilerApplyExistingTitlesTask.cs",
-      "class": "SpoilerApplyExistingTitlesTask",
-      "key": "JellyfinEnhancedSpoilerApplyExistingTitles"
     },
     {
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/StartupService.cs",

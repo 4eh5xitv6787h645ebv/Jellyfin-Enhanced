@@ -137,7 +137,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 
 ### Build targets and logging
 
-`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Directory organization does not always match C# namespaces: for example, services in `Services/SpoilerGuard/` and `Services/Identity/` use `Jellyfin.Plugin.JellyfinEnhanced.Services`. Check declarations rather than deriving namespaces from folders.
+`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Directory organization does not always match C# namespaces: for example, services in `Features/SpoilerGuard/Services/` and `Services/Identity/` use `Jellyfin.Plugin.JellyfinEnhanced.Services`. Check declarations rather than deriving namespaces from folders.
 
 | `JellyfinTarget` | Jellyfin references | Framework | Compilation symbol |
 |---|---|---|---|
@@ -480,7 +480,7 @@ The client interacts with server classes through endpoints, cookies and image re
 
 ### Spoiler Guard and identity
 
-All files in this table are under `Services/SpoilerGuard/`:
+All files in this table are under `Features/SpoilerGuard/Services/`:
 
 | File | Responsibility |
 |---|---|
@@ -496,7 +496,7 @@ All files in this table are under `Services/SpoilerGuard/`:
 | `SpoilerAutoEnableFilter.cs` | Shared content-type/library scope gate for first-play, Seerr-request and library-add automation. |
 | `SpoilerAutoEnableArmer.cs` | Bulk arming for users with library access, including disabled accounts, with one locked `spoilerblur.json` update per user. |
 | `SpoilerLibraryAddAutoEnabler.cs` | Batches new-title library events into bulk arming. |
-| `SpoilerExistingTitlesApplier.cs` | Preview/application for existing titles, run by `ScheduledTasks/SpoilerApplyExistingTitlesTask.cs`. |
+| `SpoilerExistingTitlesApplier.cs` | Preview/application for existing titles, run by `Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs`. |
 | `SpoilerSeerrPendingPromoter.cs` | Converts pending pre-acquisition protection into library-item entries when content arrives. |
 
 `Services/Identity/RequestIdentityService.cs` resolves authenticated claims first, then image markers, the single-user shortcut, validated cookies and session-by-IP candidates. Consumers distinguish confident identity from ambiguous shared-IP candidates.
