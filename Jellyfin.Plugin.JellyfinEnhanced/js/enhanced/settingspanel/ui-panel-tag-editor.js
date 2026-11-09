@@ -49,7 +49,7 @@
     if (node instanceof HTMLElement || node instanceof SVGElement) node.focus(options);
   }
 
-  // client/src/features/settings-panel/tag-caps.ts
+  // client/src/features/media-tags/settings/tag-caps.ts
   var MAX_CAP = 10;
   function stepCap(cap, dir, meta) {
     if (meta.capFixed) return null;
@@ -72,7 +72,7 @@
     return false;
   }
 
-  // client/src/features/settings-panel/ui-panel-tag-editor.ts
+  // client/src/features/media-tags/settings/ui-panel-tag-editor.ts
   var GROUP_META = {
     awards: { toggleId: "awardsTagsToggle", settingKey: "awardsTagsEnabled", nameKey: "awards_label", descKey: "awards_tags_description", color: "#d7ae52", capAll: true },
     status: { toggleId: "statusTagsToggle", settingKey: "statusTagsEnabled", nameKey: "panel_settings_ui_tag_group_status", descKey: "panel_settings_ui_status_tags_desc", color: "#e53935", capFixed: true },

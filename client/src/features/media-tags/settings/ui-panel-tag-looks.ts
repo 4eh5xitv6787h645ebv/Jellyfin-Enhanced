@@ -14,11 +14,11 @@
  * or unlock, the list's empty state when nothing is left, the new rule after
  * Add rule. Everything is built with DOM APIs (textContent), never innerHTML.
  */
-import type { Layout } from '../media-tags/rules/layout-rules';
-import type { LookRule } from '../media-tags/rules/tag-look';
-import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
-import type { PanelContext } from './public-api';
-import { focusElement, queryElements, querySelect } from '../shared/dom';
+import type { Layout } from '../rules/layout-rules';
+import type { LookRule } from '../rules/tag-look';
+import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge } from '../../../host/settings-panel-host';
+import type { PanelContext } from '../../settings-panel/public-api';
+import { focusElement, queryElements, querySelect } from '../../shared/dom';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'session' | 'currentSettings' | 't' | 'toast' | 'tagPipeline' | 'normalizeOfficialRating' | 'tagItemEditor'>;
 type TagLookApi = NonNullable<PanelBridge['core']['tagLook']>;

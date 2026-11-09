@@ -5,7 +5,7 @@
  * page context a section draws with, and the `JE.adminTags` facade.
  */
 import type { JsonValue } from '../../contracts/generated';
-import type { TagPreview } from '../settings-panel/ui-panel-tag-preview';
+import type { TagPreview } from '../media-tags/settings/ui-panel-tag-preview';
 import type { AdminTagLayout } from '../../host/admin-tags-host';
 import type { Fmt, FmtParams, WordTables } from './format';
 import type { Config } from './values';

@@ -33,7 +33,7 @@
     if (node instanceof HTMLElement || node instanceof SVGElement) node.focus(options);
   }
 
-  // client/src/features/settings-panel/ui-panel-tag-looks.ts
+  // client/src/features/media-tags/settings/ui-panel-tag-looks.ts
   var LAYOUTS = ["corners", "bands", "caption", "summary", "minimal"];
   var TITLE_BATCH = 50;
   var CONFIRM_MS = 4e3;

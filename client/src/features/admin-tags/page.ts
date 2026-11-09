@@ -5,7 +5,7 @@
  */
 import type { JsonValue } from '../../contracts/generated';
 import { apiClient, cdnUrl, type AdminTagsBridge } from '../../host/admin-tags-host';
-import type { TagPreview } from '../settings-panel/ui-panel-tag-preview';
+import type { TagPreview } from '../media-tags/settings/ui-panel-tag-preview';
 import { activeElement, all, allAs, closest, find, focus, isDisabled, must, targetOf } from './dom';
 import { controlValue, fieldValue, fieldsHtml, type TextKit } from './fields';
 import { fmt, word, WORDS } from './format';

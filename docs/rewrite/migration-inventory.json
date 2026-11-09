@@ -885,7 +885,7 @@
       "orderedComponent": true,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/settings-panel/ui-panel-media-tags.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-media-tags.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
@@ -917,7 +917,7 @@
       "orderedComponent": true,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/settings-panel/ui-panel-tag-editor.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-editor.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
@@ -925,7 +925,7 @@
       "orderedComponent": true,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/settings-panel/ui-panel-tag-looks.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-looks.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
@@ -933,7 +933,7 @@
       "orderedComponent": true,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/settings-panel/ui-panel-tag-portable.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-portable.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
@@ -941,7 +941,7 @@
       "orderedComponent": true,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/settings-panel/ui-panel-tag-preview.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-preview.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {

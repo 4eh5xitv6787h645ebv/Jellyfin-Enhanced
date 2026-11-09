@@ -19,12 +19,12 @@
  * the section shows and disposed with the panel. The panel's settings search
  * finds each control here through the provider this module registers.
  */
-import type { Group, Layout, Shape, ShapeLook } from '../media-tags/rules/layout-rules';
-import { apiClient, currentUserKey, optionalApiClient, panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../host/settings-panel-host';
-import type { MediaTagsHubApi, PanelContext, SearchHit } from './public-api';
-import { closestTarget, controlValue, focusElement, isDisabled, queryElement, queryElements, targetElement } from '../shared/dom';
+import type { Group, Layout, Shape, ShapeLook } from '../rules/layout-rules';
+import { apiClient, currentUserKey, optionalApiClient, panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../../host/settings-panel-host';
+import type { MediaTagsHubApi, PanelContext, SearchHit } from '../../settings-panel/public-api';
+import { closestTarget, controlValue, focusElement, isDisabled, queryElement, queryElements, targetElement } from '../../shared/dom';
 import type { TagPreview } from './ui-panel-tag-preview';
-import { isJson } from '../shared/settings-values';
+import { isJson } from '../../shared/settings-values';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'currentSettings' | 'pluginConfig' | 'escapeHtml' | 't' | 'helpers' | 'icon' | 'IconName'
     | 'genreTags' | 'tagPosterColours' | 'saveUserSettings' | 'reinitializeTagLayout'>;

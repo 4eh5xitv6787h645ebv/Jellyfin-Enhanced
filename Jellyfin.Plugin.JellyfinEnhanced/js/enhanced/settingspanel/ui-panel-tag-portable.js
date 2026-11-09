@@ -47,7 +47,7 @@
     if (node instanceof HTMLElement || node instanceof SVGElement) node.focus(options);
   }
 
-  // client/src/features/settings-panel/portable-model.ts
+  // client/src/features/media-tags/settings/portable-model.ts
   var record = (value) => value !== null && typeof value === "object" ? value : {};
   var get = (value, key) => Reflect.get(record(value), key);
   var list = (value) => Array.isArray(value) ? value : [];
@@ -94,7 +94,7 @@
     return false;
   }
 
-  // client/src/features/settings-panel/ui-panel-tag-portable.ts
+  // client/src/features/media-tags/settings/ui-panel-tag-portable.ts
   var PRESET_KIND = "je-media-tags-preset";
   var UNDO_MS = 1e4;
   var MAX_NAME = 60;

@@ -25,7 +25,7 @@
     return found instanceof HTMLElement ? found : null;
   }
 
-  // client/src/features/settings-panel/ui-panel-tag-preview.ts
+  // client/src/features/media-tags/settings/ui-panel-tag-preview.ts
   var ENABLED = {
     status: "statusTagsEnabled",
     awards: "awardsTagsEnabled",

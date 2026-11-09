@@ -58,7 +58,7 @@
     return false;
   }
 
-  // client/src/features/settings-panel/ui-panel-media-tags.ts
+  // client/src/features/media-tags/settings/ui-panel-media-tags.ts
   var LAYOUTS = ["corners", "bands", "caption", "summary", "minimal"];
   var isLayout = (value) => LAYOUTS.some((id) => id === value);
   var PRESETS = ["default", "glass", "outline", "dark", "light", "mono", "poster"];

@@ -537,7 +537,7 @@
     },
     {
       "output": "js/enhanced/settingspanel/ui-panel-media-tags.js",
-      "source": "client/src/features/settings-panel/ui-panel-media-tags.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-media-tags.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
@@ -557,22 +557,22 @@
     },
     {
       "output": "js/enhanced/settingspanel/ui-panel-tag-editor.js",
-      "source": "client/src/features/settings-panel/ui-panel-tag-editor.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-editor.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
       "output": "js/enhanced/settingspanel/ui-panel-tag-looks.js",
-      "source": "client/src/features/settings-panel/ui-panel-tag-looks.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-looks.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
       "output": "js/enhanced/settingspanel/ui-panel-tag-portable.js",
-      "source": "client/src/features/settings-panel/ui-panel-tag-portable.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-portable.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
       "output": "js/enhanced/settingspanel/ui-panel-tag-preview.js",
-      "source": "client/src/features/settings-panel/ui-panel-tag-preview.ts",
+      "source": "client/src/features/media-tags/settings/ui-panel-tag-preview.ts",
       "manifest": "client/entries/settings-panel.json"
     },
     {
@@ -1365,7 +1365,7 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/elsewhere.js": "9b65990abda9c7c934bd5da780ccd7e8521bf6776abf2a52bf97afd3ab9bb594",
     "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/reviews.js.map": "3fcc7941605091869adc24016d6030089bd5ba94607fae76ee7d925ad4a4d568",
     "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/reviews.js": "a0648654ce4d62c34e78086b872e8419d2015db4d58426cbbd81434d0f4e26c7",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js.map": "49811a4cb5a0585746aa8242be80f73c0226c7de2504766cdbc70a0a59677132",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js.map": "54bd1d0219038ccb3d0299cd922fa40c75117837222e1a344744fa4a2cc54f90",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js": "2dc0abb5e92f6582d5be20f618b99065a8734259b59bf437f612f9bddae464cd",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js.map": "29f02bb1e0304a9b8e313fe4830c0ee076ca99a48ede734f9674c2540a884184",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js": "ccf3837852be94d840d2e135aad3e8725a9af4adb6a3f19d46c87cdf8986188d",
@@ -1391,7 +1391,7 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/overview.js": "f1554907558d15d312870c9ab683f4944ac7cb624e52e5dacd69cdb595b19cbc",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js.map": "641a90f5edfba4c0bfdf1d0dbf682feed858bb7fc7ee426018c9f8a662578082",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js": "481084eee619dfa016f9f79764f43bf07dd78d077c861376092c1a8049e9029b",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js.map": "e655164827f2f24ecec6bfe6f3810c2024f25b17427c3cb6fe23e0f66cf1d443",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js.map": "f3400216abdc6160fc09c534ae27d8d3f77d43cd6712e8376214482ef849b1d7",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js": "b217703fd99dace2dd7b67041f53f4c9abffcf859d4ec14c9e9de2fcb34a6d5d",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js.map": "a0a00f3fdae191544a9e1c181543f1f3fc00df7d2355e81f8453e0821523808f",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js": "4703c0aa849b758d2624fe0aa75185dce305e6c2ecd2d471653b877e72ce49ec",
@@ -1509,22 +1509,22 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-hidden-content.js": "4e2dc8054598de953e3f5d0e8f3743a0959dac372e778f8eebbed6677bb29769",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js.map": "48aa5cd5a2590b2372fff6f7902c58be5a1dfe47e3b38a9a2418a6c9f082d789",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-language.js": "060fd3c166c7f82a9946eace56780e8c20d5370caa050f0fce053e0224eacd26",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js.map": "b54ee6df4bc12ccd05dcb4542cfc1bf296d08b5bf7b76c73db9a9ab5ee182b36",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js": "77ff399dc0680531814dc04860dc0343bf54dc7601f678a6d11405817e5016d6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js.map": "f11080d0cef975a0bbfa284c630d96aed2b4aec2f900fa4e8caf2efd05854d21",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-media-tags.js": "2f1a6e22cfe5f2456257957df1e2e7584988a18f22d9076b56a5dc77936d82a2",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-resize.js.map": "8400741058350c55e34e26a785697d6b058d14744dd646cef41cf5de1971515b",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-resize.js": "3f8779a9eb8b21fb8f9d63acdfa0aa233a742b9c4fe2af92d30c00dceab90d5f",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-settings.js.map": "f940131b30b8cab38be8adb87e323c4641a4c42084c23b7b99a9c53bfc26701b",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-settings.js": "6bc51a512f4d83a960c6cfc8f09ae082bcdbc45bf6bdb26325c740fb9d2cb269",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-shortcut-editor.js.map": "d38fe1c5966e319aad89f31d87fa3f223c0ffc7b4f609af2c9967951fd8444ba",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-shortcut-editor.js": "38e7ef3283ca6d7b27a3804763ab2fbbe8d9decb7f4d65cd9cf427901f6d592e",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-editor.js.map": "8088fb13d7f14d4adeff37aeb64a8c47a1a73d588b91f70491eab2e87e3915eb",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-editor.js": "3e5e7cb4d098a162e7c7e7df0dfda42753c54128a83ff50db63a7c44438f1fff",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-looks.js.map": "dcafdc719cdf458e2a752be355e431818cdba643dd1adeee08d49de96f4a373e",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-looks.js": "f7dd77701a1c02b945f76cbac2fbbe25f19ee638937f50254cee95e6014fef5d",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-portable.js.map": "b98acd9acfa2800abe27f69f4b9a2ad9b9034344e6cc70ecf8c5c0cbe2d9ab8d",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-portable.js": "cce781ed0250e9b7e166798bfe7799e9984063e453750faecc58c70dbdad364e",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-preview.js.map": "50a51e0c228526960e560f5c758d7d3d8214f483ccf3a1f705bb2c115b2b9c9d",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-preview.js": "58a025295b6a01b8b25d1a4b0a451f91458ff3a869e5eb56a3d72640b54b5d2c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-editor.js.map": "99efb570f783a6bf1ba255fa3fe344faf5a646a2db82621320412098fc7db0e7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-editor.js": "fc8dbc19a8c3c3708322761b045bae25bf0cab43ab69d8cdae4a355c87480cc8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-looks.js.map": "0c9088dfdb308b265b6e1a1877f72305231004165a6de8296625756fc2462349",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-looks.js": "0947e85979f8266901985df7f19b4466cfd7669f32d465d0c17812bd1b162f8f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-portable.js.map": "147798f6e1d90a7b440ae5d15dd5d88b1c42f8e0e088bfb0801a0d570535b8e7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-portable.js": "8bac587fcf6b208866bdd707ebeadc35a22a655fc54ee869d8f04ffbdce98c82",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-preview.js.map": "4620916bf475e43d924b0288315f0a352563c193ce0a9c05b7acfa7347b73fd3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-preview.js": "3cd002490cc1048d3b84d369b110c0dc0a70f6e031234af7c7b727fdad09c8ef",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-template.js.map": "8e5d0d6943fef4076016c64545296a7e027fffd4698a992e46e65f76e0c28e9c",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-template.js": "adc668bb5ee9a769943b3e71942768787c814ea243a4067a927c1f34901a049e",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel.js.map": "bf6f6a950d042237db074d5c1540394d9d1f135abf220f31023a24926b6af459",
