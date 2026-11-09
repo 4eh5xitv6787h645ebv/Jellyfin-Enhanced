@@ -195,6 +195,25 @@ test('SETTINGS-PANEL-02: a drag still held when the panel closes is saved, once'
   assert.equal(h.writes.length, 1);
 });
 
+test('a crafted subtitle colour never breaks out of the panel preview style attributes', t => {
+  const h = createHarness({ JE: { pluginConfig: { HelpPanelAutocloseDelay: 60000 }, userConfig: { settings: {}, shortcuts: { Shortcuts: [] } }, currentSettings: {}, state: { activeShortcuts: {} }, pauseScreenInstance: {}, t: k => k, toast() {} } });
+  t.after(() => h.close());
+  for (const file of ['core/ui-kit.js', 'tags/rating-sources.js', 'enhanced/config.js', 'enhanced/icons.js', 'enhanced/helpers.js', 'enhanced/player/subtitles.js']) h.load(file);
+  h.JE.currentSettings = h.JE.loadSettings();
+  h.JE.currentSettings.customSubtitleTextColor = 'red" onmouseover="window.pwned=1" data-x="';
+  h.JE.currentSettings.customSubtitleBgColor = 'red; background-image: url(https://tracker.invalid/x)';
+  h.JE.themer = { getThemeVariables: () => ({}) };
+  for (const file of ['ui-panel-settings.js', 'ui-panel-template.js']) h.load(`enhanced/settingspanel/${file}`);
+  const tpl = h.document.createElement('template');
+  tpl.innerHTML = h.JE.internals.enhancedUi.buildPanelHtml({});
+  for (const id of ['subtitleColorPreview', 'subtitlePositionPreview']) {
+    const el = tpl.content.getElementById(id);
+    assert.equal(el.getAttribute('onmouseover'), null, `${id}: no attribute from the stored colour`);
+    assert.doesNotMatch(el.getAttribute('style'), /tracker\.invalid|background-image/, `${id}: no declaration from the stored colour`);
+  }
+  assert.equal(tpl.content.getElementById('customSubtitleTextColorPicker').value, '#ffffff');
+});
+
 /** The subtitle preset grids the template renders, with the real preset lists' shape. */
 function presetHarness(t, settings) {
   const applied = [];

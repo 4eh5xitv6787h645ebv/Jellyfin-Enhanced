@@ -193,8 +193,8 @@ for(const operation of ['update','deleteAll','backfill']){
  });
 }
 /** Loads the replacement modal and migrates `group` to the single offered item. */
-async function migrate(h,group){
-  const replacement={Id:'new-item-0000000000000000',Name:'New cut',Type:'Movie',ProviderIds:{Tmdb:'42'}};
+async function migrate(h,group,name='New cut'){
+  const replacement={Id:'new-item-0000000000000000',Name:name,Type:'Movie',ProviderIds:{Tmdb:'42'}};
   h.JE.core={api:{fetch:async()=>({Items:[replacement]})}};h.JE.helpers={getItemCached:async()=>replacement};h.window.ApiClient.getImageUrl=()=>'';
   h.load('enhanced/bookmarks/bookmarks-library-replacements.js');
   await h.JE.internals.bookmarksLibrary.findAndOfferReplacement(group,h.document.createElement('button'));
@@ -220,6 +220,20 @@ test('successful bookmark migration replaces the old group in one save',async t=
   const records=Object.values(h.JE.userConfig.bookmark.bookmarks);
   assert.equal(saved.length,1);assert.deepEqual(Object.keys(saved[0].bookmarks),Object.keys(h.JE.userConfig.bookmark.bookmarks));
   assert.deepEqual(records.map(bm=>[bm.itemId,bm.timestamp,bm.syncedFrom]),[['new-item-0000000000000000',5,'old-item-0000000000000000']]);
+});
+test('a replacement item name holding HTML shows in the migration toast as text, never as markup',async t=>{
+  const h=setup(t,{a:{itemId:'old-item-0000000000000000',timestamp:5}},async()=>{});
+  const name='<img src=x id=pwn onerror="window.pwned=1">';
+  // The real escaper, and the translator's raw {param} insertion into a toast rendered as HTML.
+  h.load('core/ui-kit.js');
+  h.JE.escapeHtml=h.JE.core.ui.escapeHtml;
+  h.JE.t=(key,params={})=>Object.entries(params||{}).reduce((text,[k,v])=>text.replace(new RegExp(`{${k}}`,'g'),()=>String(v)),key==='bookmark_migrated'?'Migrated {count} bookmark(s) to {name}':key);
+  const shown=[];h.JE.toast=html=>{const el=h.document.createElement('div');el.innerHTML=html;shown.push(el);};
+  await migrate(h,orphanGroup(h.JE.userConfig.bookmark.bookmarks),name);
+  await settle(()=>shown.some(el=>el.textContent.startsWith('Migrated')));
+  const toast=shown.find(el=>el.textContent.startsWith('Migrated'));
+  assert.equal(toast.querySelector('img'),null,'no element from the item name');
+  assert.equal(toast.textContent,`Migrated 1 bookmark(s) to ${name}`);
 });
 test('orphan cleanup counts only deletes that were saved',async t=>{
   let fail=true;const h=setup(t,{a:{itemId:'gone'},b:{itemId:'gone'},c:{itemId:'present'}},async()=>{if(fail)throw new Error('offline');});

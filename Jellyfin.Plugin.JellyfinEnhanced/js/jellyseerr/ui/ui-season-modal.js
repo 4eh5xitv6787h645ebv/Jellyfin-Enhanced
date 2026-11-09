@@ -424,7 +424,7 @@
                 closeFn();
                 return;
               }
-              JE.toast?.(JE.t("jellyseerr_modal_toast_request_success", { count: new Set(selected).size, title: resolvedShowTitle }), 4e3);
+              JE.toast?.(JE.t("jellyseerr_modal_toast_request_success", { count: new Set(selected).size, title: escapeHtml(resolvedShowTitle) }), 4e3);
             } else {
               const all = tvDetails.seasons.map((s) => s.seasonNumber).filter((n) => Number.isFinite(n) && n > 0);
               if (all.length > 0) await api.requestTvSeasons(tmdbId, all, settings, searchResultItem, is4k, manualTvdbId);
@@ -433,7 +433,7 @@
                 closeFn();
                 return;
               }
-              JE.toast?.(JE.t("jellyseerr_modal_toast_request_success", { count: "all", title: resolvedShowTitle }), 4e3);
+              JE.toast?.(JE.t("jellyseerr_modal_toast_request_success", { count: "all", title: escapeHtml(resolvedShowTitle) }), 4e3);
             }
             host.document.dispatchEvent(new CustomEvent("jellyseerr-tv-requested", { detail: { tmdbId, mediaType: "tv", is4k } }));
             host.document.dispatchEvent(new CustomEvent("jellyseerr-media-requested", { detail: { tmdbId, mediaType: "tv", is4k } }));

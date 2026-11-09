@@ -250,7 +250,7 @@ for (const [label, status] of [['available', 5], ['blocked', 6]]) test(`tv ${lab
  * Opens the real season-selection modal over a stubbed modal shell. `save` clicks Request.
  * @returns {Promise<object>} The harness plus the modal element, its request button and `save`.
  */
-async function seasonModal(t, { tvDetails, partial = true, specials = true, post, config, api = {} } = {}) {
+async function seasonModal(t, { tvDetails, partial = true, specials = true, post, config, api = {}, title = 'Show' } = {}) {
   const h = setup(t, { post, config });
   const polls = [];
   h.window.setInterval = callback => polls.push(callback);
@@ -263,7 +263,7 @@ async function seasonModal(t, { tvDetails, partial = true, specials = true, post
   h.JE.jellyseerrModal = { createAdvancedOptionsHTML: () => '', populateAdvancedOptions() {}, create(o) {
     const el = h.document.createElement('div'); el.innerHTML = `<div class="jellyseerr-modal-body">${o.bodyHtml}</div>`;
     h.document.body.append(el); modal = { el, o }; return { modalElement: el, show() {} }; } };
-  await h.JE.jellyseerrUI.showSeasonSelectionModal(42, 'tv', 'Show', null, false);
+  await h.JE.jellyseerrUI.showSeasonSelectionModal(42, 'tv', title, null, false);
   const requestBtn = h.document.createElement('button');
   return { ...h, el: modal.el, requestBtn, save: () => modal.o.onSave(modal.el, requestBtn, () => {}), poll: () => polls.at(-1)() };
 }
@@ -345,6 +345,19 @@ test('season modal keeps a protected season\'s year, from each source that has i
   assert.match(meta(h, 2), /^2021/);
   assert.match(meta(h, 3), /^2022/);
   assert.match(meta(h, 4), /^2023/);
+});
+
+for (const partial of [true, false]) test(`season modal success toast shows a show title holding HTML as text (partial=${partial})`, async t => {
+  const name = '<img src=x id=pwn onerror="window.pwned=1">';
+  const h = await seasonModal(t, { partial, title: '', tvDetails: { name, seasons: tvSeasons, externalIds: { tvdbId: 1 }, mediaInfo: { seasons: [] } } });
+  if (partial) seasonCheckbox(h, 1).checked = true;
+  await h.save();
+  const [message] = h.toasts.find(([m]) => m.startsWith('jellyseerr_modal_toast_request_success'));
+  // JE.toast renders its message as HTML.
+  const toast = h.document.createElement('div');
+  toast.innerHTML = message;
+  assert.equal(toast.querySelector('img'), null, 'no element from the show title');
+  assert.ok(toast.textContent.includes(name), 'the title is shown as written');
 });
 
 test('season modal sends a stored TVDB id with the selected seasons', async t => {

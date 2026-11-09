@@ -213,7 +213,7 @@
           };
           const synced = await ctx.own.bookmarks.syncBookmarks(oldGroup.bookmarks, newDetails, 0, { replaceOriginals: true });
           if (!isCurrent()) return;
-          if (isCurrent()) JE.toast(JE.t("bookmark_migrated").replace("{count}", String(synced.length)).replace("{name}", fullItem.Name || ""), 4e3);
+          if (isCurrent()) JE.toast(JE.t("bookmark_migrated").replace("{count}", String(synced.length)).replace("{name}", () => escapeHtml(fullItem.Name || "")), 4e3);
           closeDialog();
           const container = document.querySelector(".sections.bookmarks");
           if (container) {

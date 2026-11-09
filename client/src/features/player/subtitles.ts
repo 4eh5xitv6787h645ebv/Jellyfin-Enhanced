@@ -1,6 +1,7 @@
 import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment } from './wire';
 import { createPlayerLifetime } from './lifetime';
+import { isSafeCssColor, isSafeFontFamily } from '../shared/settings-values';
 const { JE, ApiClient } = playerHost();
 const lifetime = createPlayerLifetime(JE, 'subtitles');
 let subtitleObserver: import('./host').Subscription | null = null;
@@ -14,6 +15,8 @@ let subtitleObserver: import('./host').Subscription | null = null;
 
     // Jellyfin renders a secondary subtitle track in its own sibling element inside .videoSubtitles.
     const TEXT_SELECTOR = '.videoSubtitlesInner, .videoSecondarySubtitlesInner';
+
+    const isSafeFontSize = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
 
     function markStyled(el: Element) {
         if (el.hasAttribute(STYLED_ATTR)) return;
@@ -139,8 +142,7 @@ let subtitleObserver: import('./host').Subscription | null = null;
      */
     JE.decodeSubtitleColor = (input, fallback) => {
         if (input === 'transparent') return { swatch: fallback.fallbackSwatch, alphaValue: 0 };
-        const isHex = typeof input === 'string' && input.charCodeAt(0) === 35 /* '#' */
-            && (input.length === 7 || input.length === 9);
+        const isHex = typeof input === 'string' && /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(input);
         if (!isHex) return { swatch: fallback.fallbackSwatch, alphaValue: fallback.fallbackAlphaValue };
 
         const swatch = input.slice(0, 7);
@@ -277,7 +279,12 @@ let subtitleObserver: import('./host').Subscription | null = null;
     /**
      * Main function to apply styles. It sets the desired style and starts the process.
      */
-    JE.applySubtitleStyles = (textColor, bgColor, fontSize, fontFamily, textShadow) => {
+    JE.applySubtitleStyles = (rawTextColor, rawBgColor, rawFontSize, rawFontFamily, textShadow) => {
+        // These reach CSS text (the ::cue rule below): a malformed value falls back to the default.
+        const textColor = isSafeCssColor(rawTextColor) ? rawTextColor : '#FFFFFFFF';
+        const bgColor = isSafeCssColor(rawBgColor) ? rawBgColor : '#00000000';
+        const fontSize = isSafeFontSize(rawFontSize) ? rawFontSize : 1.2;
+        const fontFamily = isSafeFontFamily(rawFontFamily) ? rawFontFamily : 'inherit';
         // Store the chosen style globally for the observer to use
         currentSubtitleStyle = { textColor, bgColor, fontSize, fontFamily, textShadow };
 
@@ -342,8 +349,8 @@ let subtitleObserver: import('./host').Subscription | null = null;
             return;
         }
 
-        const textColor = JE.currentSettings.customSubtitleTextColor || '#FFFFFFFF';
-        const bgColor = JE.currentSettings.customSubtitleBgColor || '#00000000';
+        const textColor = isSafeCssColor(JE.currentSettings.customSubtitleTextColor) ? JE.currentSettings.customSubtitleTextColor : '#FFFFFFFF';
+        const bgColor = isSafeCssColor(JE.currentSettings.customSubtitleBgColor) ? JE.currentSettings.customSubtitleBgColor : '#00000000';
         const textShadow = JE.getSubtitleTextShadow(bgColor);
 
         const fontSizePreset = JE.fontSizePresets[JE.currentSettings.selectedFontSizePresetIndex ?? 2];
