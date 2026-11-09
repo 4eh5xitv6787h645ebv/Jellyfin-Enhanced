@@ -412,6 +412,10 @@
           return;
         }
         showMessage(JE.t("hidden_content_admin_add_searching"));
+        const searchFailed = (source) => (error) => {
+          console.warn(`${logPrefix} Admin add search (${source}) failed:`, error);
+          return null;
+        };
         const libP = JE.core.api.fetch(getApi().getUrl("/Items", {
           userId: getApi().getCurrentUserId(),
           searchTerm: term,
@@ -425,11 +429,13 @@
           const items = export11(res).Items;
           if (!Array.isArray(items)) throw new Error("Invalid item list");
           return items.map(export3);
-        }).catch(() => []);
+        }).catch(searchFailed("library"));
         const seerrApi = featureCtx.peer("jellyseerrAPI");
-        const seerrP = seerrApi && seerrApi.search ? seerrApi.search(term).then(export5).then((res) => res.results).catch(() => []) : Promise.resolve([]);
-        const [libItems, seerrItems] = await Promise.all([libP, seerrP]);
+        const seerrP = seerrApi && seerrApi.search ? seerrApi.search(term).then(export5).then((res) => res.results).catch(searchFailed("Seerr")) : Promise.resolve([]);
+        const [libResult, seerrResult] = await Promise.all([libP, seerrP]);
         if (token !== searchToken || !selection.current() || !overlay.isConnected) return;
+        const libItems = libResult ?? [], seerrItems = seerrResult ?? [];
+        const failures = [libResult ? "" : JE.t("hidden_content_admin_add_failed"), seerrResult ? "" : JE.t("hidden_content_admin_add_seerr_failed")].filter(Boolean);
         const normalized = [];
         const seenTmdb = /* @__PURE__ */ new Set();
         for (const r of libItems) {
@@ -461,10 +467,11 @@
           });
         }
         if (!normalized.length) {
-          showMessage(JE.t("hidden_content_admin_add_none"));
+          showMessage(failures.length ? failures.join(" ") : JE.t("hidden_content_admin_add_none"));
           return;
         }
         const frag = document.createDocumentFragment();
+        for (const text of failures) frag.appendChild(Object.assign(document.createElement("div"), { className: "je-hidden-management-empty", textContent: text }));
         for (const n of normalized) frag.appendChild(buildResultCard(n));
         grid.replaceChildren(frag);
       };

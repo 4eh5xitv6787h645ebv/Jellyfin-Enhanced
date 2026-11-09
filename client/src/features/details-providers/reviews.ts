@@ -7,7 +7,7 @@ import { bool, decodeDetailsItem, errorShape, field, list, str } from './wire';
 import type { DetailsItem } from './wire';
 import {
     averageUserRating, decodeAnilistReviews, decodeTmdbReviews, decodeUserReviews, extractLinks, interpolate,
-    parseMarkdown, relink, renderUserStarRating, reviewDate, sameUser, starIconHtml, toPlainText, translationTargets
+    memoUntilFailure, parseMarkdown, relink, renderUserStarRating, reviewDate, sameUser, starIconHtml, toPlainText, translationTargets
 } from './review-domain';
 import type { ExternalReview, UserReview } from './review-domain';
 
@@ -120,13 +120,13 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
 
     /** The composite review key, encoded part by part for a request path. */
     const keyPath = (tmdbKey: string) => tmdbKey.split(':').map(pathSegment).join(':');
-    /** All users' reviews for the title. */
-    function fetchUserReviews(tmdbKey: string, mediaType: ApiMediaType): Promise<UserReview[]> {
+    /** All users' reviews for the title; null when they failed to load (a save upserts, so that is not "no review"). */
+    function fetchUserReviews(tmdbKey: string, mediaType: ApiMediaType): Promise<UserReview[] | null> {
         return JE.core.api.plugin(`/reviews/${mediaType}/${keyPath(tmdbKey)}`)
             .then(decodeUserReviews)
             .catch((err: unknown) => {
                 console.error(`${logPrefix} Failed to fetch user reviews.`, err);
-                return [];
+                return null;
             });
     }
     /** Creates or updates the current user's review. Not idempotent: never retried. */
@@ -266,14 +266,9 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
         try { language = localStorage.getItem(`${currentUserId()}-language`) || ''; } catch { /* storage unavailable */ }
         return translationTargets(language || document.documentElement.lang || '');
     }
-    let translationLanguages: Promise<string[]> | null = null;
-    /** Target languages the configured LibreTranslate offers, fetched once per page load. */
-    function getTranslationLanguages(): Promise<string[]> {
-        translationLanguages ??= JE.core.api.plugin('/translate/languages', { skipRetry: true })
-            .then(response => list(field(response, 'languages')).filter((code): code is string => typeof code === 'string'))
-            .catch(() => []);
-        return translationLanguages;
-    }
+    /** Target languages the configured LibreTranslate offers, fetched once per page load; a failure is retried on the next render. */
+    const getTranslationLanguages = memoUntilFailure(() => JE.core.api.plugin('/translate/languages', { skipRetry: true })
+        .then(response => list(field(response, 'languages')).filter((code): code is string => typeof code === 'string')));
     /** Whether the browser's built-in translator can do English to the target (secure contexts only). */
     async function browserCanTranslate(target: string): Promise<boolean> {
         try {
@@ -321,7 +316,9 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
         if (!targets) return;
         void Promise.all([
             browserCanTranslate(targets.browser),
-            JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then(languages => languages.includes(targets.server)) : false
+            JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then(languages => languages.includes(targets.server), (error: unknown) => {
+                console.warn(`${logPrefix} Translation languages unavailable; asking again on the next render.`, error); return false;
+            }) : false
         ]).then(([browserOk, serverOk]) => {
             if (!browserOk && !serverOk) return;
             const textElement = card.querySelector<HTMLElement>('.tmdb-review-text');
@@ -552,8 +549,9 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
         else contextPage.querySelector('.mediaInfoItems')?.appendChild(chip);
     }
 
-    function addReviewsToPage(reviews: ExternalReview[] | null, userReviews: UserReview[], contextPage: Element, target: ReviewTarget, viewer: Viewer): void {
+    function addReviewsToPage(reviews: ExternalReview[] | null, fetched: UserReview[] | null, contextPage: Element, target: ReviewTarget, viewer: Viewer): void {
         removeReviewsSection(contextPage);
+        const userReviews = fetched ?? [], userReviewsFailed = userReviewsEnabled && fetched === null; // failed: never offer to write
         // Average user rating next to the TMDB/RT rating chips
         if (userReviewsEnabled && userReviews.length > 0) insertAverageChip(contextPage, userReviews);
 
@@ -576,7 +574,9 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
         const actionBar = document.createElement('div');
         actionBar.className = 'je-review-action-bar';
         let writeBtn: HTMLButtonElement | null = null;
-        if (userReviewsEnabled && !ownReview) {
+        if (userReviewsFailed) actionBar.appendChild(Object.assign(document.createElement('div'), { className: 'je-review-unavailable',
+            textContent: tWithFallback('reviews_user_unavailable', "User reviews couldn't be loaded. Reload the page to try again.") }));
+        else if (userReviewsEnabled && !ownReview) {
             writeBtn = document.createElement('button');
             writeBtn.className = 'je-review-btn je-review-write-btn';
             writeBtn.textContent = JE.t('reviews_add');
@@ -902,7 +902,7 @@ const REVIEWS_CSS = `
                 .je-user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid rgb(94, 213, 95); display: block; }
 
                 /* Action bar */
-                .je-review-action-bar { padding: 0.5em 0.5em 0; display: flex; gap: 0.75em; }
+                .je-review-action-bar { padding: 0.5em 0.5em 0; display: flex; gap: 0.75em; } .je-review-unavailable { opacity: 0.75; font-size: 0.9em; }
                 .je-user-review-actions { display: flex; gap: 0.5em; flex-shrink: 0; }
 
                 /* Shared button style */

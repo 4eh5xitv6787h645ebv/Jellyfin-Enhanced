@@ -6,21 +6,8 @@
   "client/src/bootstrap/loader/boot.ts": {
     "R9-fail-empty loadPluginData": 1
   },
-  "client/src/bootstrap/loader/component-loader.ts": {
-    "R9-fail-empty getComponentScriptList": 1
-  },
   "client/src/features/calendar/calendar-page-data.ts": {
     "R9-fail-empty fetchUserData": 1
-  },
-  "client/src/features/details-providers/reviews.ts": {
-    "R9-fail-empty initializeReviewsScript.fetchUserReviews": 1,
-    "R9-fail-empty initializeReviewsScript.getTranslationLanguages": 1
-  },
-  "client/src/features/downloads/data.ts": {
-    "R9-fail-cached install.fetchIssueMediaDetails": 1
-  },
-  "client/src/features/hidden-content/hidden-content-page-admin.ts": {
-    "R9-fail-empty openAdminAddModal.doSearch": 2
   },
   "client/src/features/media-tags/settings/ui-panel-tag-looks.ts": {
     "R9-fail-empty installUiPanelTagLooks.loadGenres": 1

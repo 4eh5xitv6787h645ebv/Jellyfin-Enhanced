@@ -194,23 +194,30 @@
     const scripts = manifest.filter((entry) => typeof entry === "string").map((entry) => entry.trim()).filter((entry) => entry && !entry.startsWith("//"));
     return scripts.length ? scripts : null;
   }
+  var MANIFEST_ATTEMPTS = 2;
+  var MANIFEST_RETRY_DELAY_MS = 1e3;
   async function getComponentScriptList(fromBootstrap) {
     const fromPayload = filterComponentManifest(fromBootstrap);
     if (fromPayload) return fromPayload;
-    try {
-      const api = client();
-      const manifest = await api.ajax({
-        type: "GET",
-        url: api.getUrl(`${COMPONENT_SCRIPTS_BASE_PATH}/component-scripts.json?v=${getScriptVersion()}`),
-        dataType: "json"
-      });
-      const scripts = filterComponentManifest(manifest);
-      if (scripts) return scripts;
-      throw new Error("Manifest is empty or malformed");
-    } catch (error) {
-      console.error("🪼 Jellyfin Enhanced: Could not load the component-script manifest", error);
-      return [];
+    let lastError;
+    for (let attempt = 1; attempt <= MANIFEST_ATTEMPTS; attempt++) {
+      if (attempt > 1) await new Promise((resolve) => setTimeout(resolve, MANIFEST_RETRY_DELAY_MS));
+      try {
+        const api = client();
+        const manifest = await api.ajax({
+          type: "GET",
+          url: api.getUrl(`${COMPONENT_SCRIPTS_BASE_PATH}/component-scripts.json?v=${getScriptVersion()}`),
+          dataType: "json"
+        });
+        const scripts = filterComponentManifest(manifest);
+        if (scripts) return scripts;
+        lastError = new Error("Manifest is empty or malformed");
+      } catch (error) {
+        lastError = error;
+      }
+      if (attempt < MANIFEST_ATTEMPTS) console.warn("🪼 Jellyfin Enhanced: Could not load the component-script manifest; retrying.", lastError);
     }
+    throw new Error(`Could not load the component-script manifest: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
   }
   function yieldToEventLoop() {
     return new Promise((resolve) => {

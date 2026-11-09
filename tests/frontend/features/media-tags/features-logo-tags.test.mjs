@@ -245,3 +245,32 @@ test('the fallback cache uses entries stamped under the current guard policy onl
   h.renderer().render(h.host, { Id: 'item', Type: 'Movie', Logos: [netflix] }, { stripRevision: 'none' });
   assert.equal(again(), true, 'the authoritative unstripped answer can be reused');
 });
+
+// BUG-013: a failed logo URL is remembered only for a while, so a transient failure does not turn the logo into a
+// name chip until reload; the record of failures is bounded.
+test('a failed logo image is tried again once its failure is older than the retry interval', t => {
+  const h = setup(t);
+  let now = 1_000_000;
+  h.window.Date.now = () => now;
+  const logo = { kind: 'network', name: 'Home Box Office', logo: '/flaky.png' };
+  h.render({ Type: 'Movie', Logos: [logo] });
+  h.chips()[0].querySelector('img').dispatchEvent(new h.window.Event('error'));
+  assert.equal(h.chips()[0].querySelector('img'), null);
+  assert.equal(h.JE.logoTags.buildChip(logo).querySelector('img'), null, 'a fresh failure is not retried at once');
+  now += 10 * 60 * 1000;
+  assert.ok(h.JE.logoTags.buildChip(logo).querySelector('img.je-logo-img'), 'an old failure is retried');
+});
+
+test('the record of failed logo URLs is capped', t => {
+  const h = setup(t);
+  const chips = [];
+  for (let i = 0; i < 600; i++) {
+    const chip = h.JE.logoTags.buildChip({ kind: 'studio', name: `S${i}`, logo: `/l${i}.png` });
+    h.document.body.append(chip);
+    chips.push(chip);
+    chip.querySelector('img').dispatchEvent(new h.window.Event('error'));
+  }
+  // The oldest failures were dropped, so their logos are images again; the newest are still name chips.
+  assert.ok(h.JE.logoTags.buildChip({ kind: 'studio', name: 'S0', logo: '/l0.png' }).querySelector('img'));
+  assert.equal(h.JE.logoTags.buildChip({ kind: 'studio', name: 'S599', logo: '/l599.png' }).querySelector('img'), null);
+});

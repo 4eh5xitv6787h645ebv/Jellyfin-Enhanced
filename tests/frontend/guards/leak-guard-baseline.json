@@ -181,7 +181,6 @@
     "L1-unbounded-cache createMediaLanguage numberFormats": 1
   },
   "client/src/features/media-tags/types/logo/logotags.ts": {
-    "L1-unbounded-cache createLogoTags failedUrls": 1,
     "L2-global-listener createLogoTags.listenForImageErrors error": 1
   },
   "client/src/features/media-tags/types/quality/qualitytags.ts": {

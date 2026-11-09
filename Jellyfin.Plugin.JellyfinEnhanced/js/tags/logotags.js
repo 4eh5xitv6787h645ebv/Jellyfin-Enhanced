@@ -31,7 +31,16 @@
     const TEXT_MAX_LENGTH = 12;
     const KINDS = /* @__PURE__ */ new Set(["provider", "network", "studio"]);
     const LOGO_PATH = /^\/[A-Za-z0-9_-]{1,80}\.(?:png|jpe?g|webp)$/;
-    const failedUrls = /* @__PURE__ */ new Set();
+    const failedUrls = /* @__PURE__ */ new Map();
+    const FAILED_RETRY_MS = 5 * 60 * 1e3;
+    const FAILED_MAX = 500;
+    function recentlyFailed(url) {
+      const at = failedUrls.get(url);
+      if (at === void 0) return false;
+      if (Date.now() - at < FAILED_RETRY_MS) return true;
+      failedUrls.delete(url);
+      return false;
+    }
     let errorListener = false;
     function shortName(name) {
       const text = String(name || "").trim();
@@ -74,7 +83,7 @@
       chip.dataset.jeLogoKind = logo.kind;
       chip.title = logo.name;
       const url = src || logoUrl(logo.logo);
-      if (!url || failedUrls.has(url)) {
+      if (!url || recentlyFailed(url)) {
         asText(chip, logo.name);
         return chip;
       }
@@ -94,7 +103,10 @@
       document.addEventListener("error", (event) => {
         const img = event.target;
         if (!(img instanceof HTMLImageElement) || !img.classList.contains(imageClass)) return;
-        failedUrls.add(img.getAttribute("src") || "");
+        const src = img.getAttribute("src") || "";
+        failedUrls.delete(src);
+        failedUrls.set(src, Date.now());
+        if (failedUrls.size > FAILED_MAX) failedUrls.delete(failedUrls.keys().next().value ?? "");
         const chip = img.closest(`.${chipClass}`);
         if (chip) asText(chip, img.alt);
       }, true);

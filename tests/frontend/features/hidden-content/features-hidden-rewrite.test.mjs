@@ -138,3 +138,26 @@ test('local undo queued during a scoped write survives its later acknowledgement
  const h=setup(t,{items:{a:{itemId:'a',hideScope:'nextup'}},ajax:request=>{if(request.url.includes('/next-up/hide/'))return pending.promise;writes.push(JSON.parse(request.data));return Promise.resolve({});}});
  const scoped=h.home.removeFromHomeSurface('a','nextup');await tick();h.api.unhideItem('a');const correction=h.api.flushPendingSave();pending.resolve({success:true});assert.equal(await scoped,true);await correction;assert.equal(h.api.getHiddenCount(),0);assert.deepEqual(writes.at(-1).items,{});
 });
+// BUG-011: the admin add-items search reports a failed search instead of "No matching titles".
+async function adminSearch(h,{library,seerr}){
+ h.JE.core.api.fetch=library;h.JE.jellyseerrAPI={search:seerr};
+ Object.assign(h.page.state,{selectedAdminUserId:'a',adminUserName:'A',adminItems:[]});
+ h.page.openAdminAddModal();
+ const overlay=h.document.querySelector('.je-hidden-admin-add-overlay'),input=overlay.querySelector('.je-hidden-management-search');
+ const setTimer=h.window.setTimeout.bind(h.window);h.window.setTimeout=(fn,ms,...rest)=>setTimer(fn,ms===300?0:ms,...rest);// the search debounce
+ input.value='alpha';input.dispatchEvent(new h.window.Event('input'));
+ for(let i=0;i<10;i++)await tick();
+ return overlay.querySelector('.je-hidden-management-grid');
+}
+test('admin add-items search shows an error, not "no matches", when the searches fail',async t=>{
+ const h=setup(t);
+ const grid=await adminSearch(h,{library:async()=>{throw Error('offline');},seerr:async()=>{throw Error('offline');}});
+ assert.doesNotMatch(grid.textContent,/hidden_content_admin_add_none/);
+ assert.match(grid.textContent,/hidden_content_admin_add_failed/);
+});
+test('admin add-items search keeps library results and notes that Seerr results are unavailable when only Seerr fails',async t=>{
+ const h=setup(t);
+ const grid=await adminSearch(h,{library:async()=>({Items:[{Id:'lib1',Name:'Alpha',Type:'Movie',ProviderIds:{Tmdb:'5'}}]}),seerr:async()=>{throw Error('offline');}});
+ assert.equal(grid.querySelectorAll('.je-hidden-item-card').length,1);
+ assert.match(grid.textContent,/hidden_content_admin_add_seerr_failed/);
+});

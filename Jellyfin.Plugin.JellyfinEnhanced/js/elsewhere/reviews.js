@@ -215,6 +215,17 @@ ${content}` : content,
     }
     return out;
   }
+  function memoUntilFailure(load) {
+    let pending = null;
+    return () => {
+      if (pending) return pending;
+      const current = pending = load();
+      current.catch(() => {
+        if (pending === current) pending = null;
+      });
+      return current;
+    };
+  }
 
   // client/src/features/details-providers/reviews.ts
   var JE = export1("Reviews");
@@ -308,7 +319,7 @@ ${content}` : content,
     function fetchUserReviews(tmdbKey, mediaType) {
       return JE.core.api.plugin(`/reviews/${mediaType}/${keyPath(tmdbKey)}`).then(decodeUserReviews).catch((err) => {
         console.error(`${logPrefix} Failed to fetch user reviews.`, err);
-        return [];
+        return null;
       });
     }
     async function saveUserReview(tmdbKey, mediaType, content, rating) {
@@ -430,11 +441,7 @@ ${message}` : message);
       }
       return translationTargets(language || document.documentElement.lang || "");
     }
-    let translationLanguages = null;
-    function getTranslationLanguages() {
-      translationLanguages ?? (translationLanguages = JE.core.api.plugin("/translate/languages", { skipRetry: true }).then((response) => export8(export52(response, "languages")).filter((code) => typeof code === "string")).catch(() => []));
-      return translationLanguages;
-    }
+    const getTranslationLanguages = memoUntilFailure(() => JE.core.api.plugin("/translate/languages", { skipRetry: true }).then((response) => export8(export52(response, "languages")).filter((code) => typeof code === "string")));
     async function browserCanTranslate(target) {
       try {
         const translator = export2();
@@ -471,7 +478,10 @@ ${message}` : message);
       if (!targets) return;
       void Promise.all([
         browserCanTranslate(targets.browser),
-        JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then((languages) => languages.includes(targets.server)) : false
+        JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then((languages) => languages.includes(targets.server), (error) => {
+          console.warn(`${logPrefix} Translation languages unavailable; asking again on the next render.`, error);
+          return false;
+        }) : false
       ]).then(([browserOk, serverOk]) => {
         if (!browserOk && !serverOk) return;
         const textElement = card.querySelector(".tmdb-review-text");
@@ -688,8 +698,9 @@ ${message}` : message);
       if (anchor?.parentNode) anchor.parentNode.insertBefore(chip, anchor.nextSibling);
       else contextPage.querySelector(".mediaInfoItems")?.appendChild(chip);
     }
-    function addReviewsToPage(reviews, userReviews, contextPage, target, viewer) {
+    function addReviewsToPage(reviews, fetched, contextPage, target, viewer) {
       removeReviewsSection(contextPage);
+      const userReviews = fetched ?? [], userReviewsFailed = userReviewsEnabled && fetched === null;
       if (userReviewsEnabled && userReviews.length > 0) insertAverageChip(contextPage, userReviews);
       const { tmdbKey, apiMediaType } = target;
       const ownReview = userReviews.find((review) => sameUser(review.userId, viewer.id));
@@ -706,7 +717,11 @@ ${message}` : message);
       const actionBar = document.createElement("div");
       actionBar.className = "je-review-action-bar";
       let writeBtn = null;
-      if (userReviewsEnabled && !ownReview) {
+      if (userReviewsFailed) actionBar.appendChild(Object.assign(document.createElement("div"), {
+        className: "je-review-unavailable",
+        textContent: tWithFallback("reviews_user_unavailable", "User reviews couldn't be loaded. Reload the page to try again.")
+      }));
+      else if (userReviewsEnabled && !ownReview) {
         writeBtn = document.createElement("button");
         writeBtn.className = "je-review-btn je-review-write-btn";
         writeBtn.textContent = JE.t("reviews_add");
@@ -998,7 +1013,7 @@ ${message}` : message);
                 .je-user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid rgb(94, 213, 95); display: block; }
 
                 /* Action bar */
-                .je-review-action-bar { padding: 0.5em 0.5em 0; display: flex; gap: 0.75em; }
+                .je-review-action-bar { padding: 0.5em 0.5em 0; display: flex; gap: 0.75em; } .je-review-unavailable { opacity: 0.75; font-size: 0.9em; }
                 .je-user-review-actions { display: flex; gap: 0.5em; flex-shrink: 0; }
 
                 /* Shared button style */

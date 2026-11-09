@@ -32,8 +32,18 @@ export function createLogoTags(JE: TagRuntimeBridge) {
     const TEXT_MAX_LENGTH = 12;
     const KINDS = new Set(['provider', 'network', 'studio']);
     const LOGO_PATH = /^\/[A-Za-z0-9_-]{1,80}\.(?:png|jpe?g|webp)$/;
-    /** image URLs that failed to load this session (shown as names) */
-    const failedUrls: Set<string> = new Set();
+    /** Image URLs that failed to load (shown as names) → when. Retried after FAILED_RETRY_MS; at most FAILED_MAX. */
+    const failedUrls: Map<string, number> = new Map();
+    const FAILED_RETRY_MS = 5 * 60 * 1000;
+    const FAILED_MAX = 500;
+    /** Whether the URL failed recently; an older failure is forgotten so the image is tried again. */
+    function recentlyFailed(url: string): boolean {
+        const at = failedUrls.get(url);
+        if (at === undefined) return false;
+        if (Date.now() - at < FAILED_RETRY_MS) return true;
+        failedUrls.delete(url);
+        return false;
+    }
     let errorListener = false;
 
     /**
@@ -105,7 +115,7 @@ export function createLogoTags(JE: TagRuntimeBridge) {
         chip.dataset.jeLogoKind = logo.kind;
         chip.title = logo.name;
         const url = src || logoUrl(logo.logo);
-        if (!url || failedUrls.has(url)) {
+        if (!url || recentlyFailed(url)) {
             asText(chip, logo.name);
             return chip;
         }
@@ -131,7 +141,10 @@ export function createLogoTags(JE: TagRuntimeBridge) {
         document.addEventListener('error', (event) => {
             const img = event.target;
             if (!(img instanceof HTMLImageElement) || !img.classList.contains(imageClass)) return;
-            failedUrls.add(img.getAttribute('src') || '');
+            const src = img.getAttribute('src') || '';
+            failedUrls.delete(src);
+            failedUrls.set(src, Date.now());
+            if (failedUrls.size > FAILED_MAX) failedUrls.delete(failedUrls.keys().next().value ?? '');
             const chip = img.closest<HTMLElement>(`.${chipClass}`);
             if (chip) asText(chip, img.alt);
         }, true);

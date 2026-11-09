@@ -20,24 +20,36 @@ export function filterComponentManifest(manifest: unknown): string[] | null {
     return scripts.length ? scripts : null;
 }
 
-/** Bootstrap's list when available, else the embedded manifest. Only dev and fallback need it. */
+/** Attempts at the manifest request, and the wait between them. */
+const MANIFEST_ATTEMPTS = 2;
+const MANIFEST_RETRY_DELAY_MS = 1000;
+
+/**
+ * Bootstrap's list when available, else the embedded manifest. Only dev and fallback need it. A failed
+ * request is retried once; if that fails too it throws, since an empty list would load no feature at all.
+ */
 async function getComponentScriptList(fromBootstrap: unknown): Promise<string[]> {
     const fromPayload = filterComponentManifest(fromBootstrap);
     if (fromPayload) return fromPayload;
-    try {
-        const api = client();
-        const manifest = await api.ajax({
-            type: 'GET',
-            url: api.getUrl(`${COMPONENT_SCRIPTS_BASE_PATH}/component-scripts.json?v=${getScriptVersion()}`),
-            dataType: 'json'
-        });
-        const scripts = filterComponentManifest(manifest);
-        if (scripts) return scripts;
-        throw new Error('Manifest is empty or malformed');
-    } catch (error) {
-        console.error('🪼 Jellyfin Enhanced: Could not load the component-script manifest', error);
-        return [];
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MANIFEST_ATTEMPTS; attempt++) {
+        if (attempt > 1) await new Promise(resolve => setTimeout(resolve, MANIFEST_RETRY_DELAY_MS));
+        try {
+            const api = client();
+            const manifest = await api.ajax({
+                type: 'GET',
+                url: api.getUrl(`${COMPONENT_SCRIPTS_BASE_PATH}/component-scripts.json?v=${getScriptVersion()}`),
+                dataType: 'json'
+            });
+            const scripts = filterComponentManifest(manifest);
+            if (scripts) return scripts;
+            lastError = new Error('Manifest is empty or malformed');
+        } catch (error) {
+            lastError = error;
+        }
+        if (attempt < MANIFEST_ATTEMPTS) console.warn('🪼 Jellyfin Enhanced: Could not load the component-script manifest; retrying.', lastError);
     }
+    throw new Error(`Could not load the component-script manifest: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
 }
 
 /**
