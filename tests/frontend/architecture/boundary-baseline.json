@@ -1,0 +1,1007 @@
+{
+  "_comment": "frontend.md §2.4 ratchet, recorded at step S1 from the tree at restructure/integration 9087893a. {file: {violation: count}}. Counts may only fall: lower or delete an entry when a step removes violations. A file move renames its key with the same counts. Never add an entry or raise a count. Step C4 deletes this file (strict mode).",
+  "client/src/admin/config/page/media-tags-tab.ts": {
+    "internals *": 1,
+    "internals enhancedUi": 1
+  },
+  "client/src/core/lifecycle-entry.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/features/activity/activity-custom-tab.ts": {
+    "import client/src/host/activity-host.ts": 2
+  },
+  "client/src/features/activity/activity-page.ts": {
+    "import client/src/host/activity-host.ts": 2
+  },
+  "client/src/features/activity/colored-activity-icons.ts": {
+    "import client/src/host/activity-host.ts": 2
+  },
+  "client/src/features/activity/model.ts": {
+    "import client/src/host/activity-host.ts": 1
+  },
+  "client/src/features/admin-tags/admin-tags.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/custom-rules-editor.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/mount.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/page.ts": {
+    "import client/src/features/settings-panel/ui-panel-tag-preview.ts": 1,
+    "import client/src/host/admin-tags-host.ts": 1,
+    "internals enhancedUi": 1
+  },
+  "client/src/features/admin-tags/save-store.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/sections/awards.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/sections/badges.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/sections/install.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/sections/layout.ts": {
+    "import client/src/host/admin-tags-host.ts": 1,
+    "internals enhancedUi": 1
+  },
+  "client/src/features/admin-tags/sections/overview.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/sections/portable.ts": {
+    "import client/src/features/settings-panel/ui-panel-tag-portable.ts": 1,
+    "import client/src/host/admin-tags-host.ts": 1,
+    "internals enhancedUi": 1
+  },
+  "client/src/features/admin-tags/sections/quality.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/sections/rules.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/sections/server.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/tag-styles-editor.ts": {
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/admin-tags/types.ts": {
+    "import client/src/features/settings-panel/ui-panel-tag-preview.ts": 1,
+    "import client/src/host/admin-tags-host.ts": 1
+  },
+  "client/src/features/bookmarks/bookmarks.ts": {
+    "import client/src/host/bookmarks-host.ts": 1
+  },
+  "client/src/features/bookmarks/library-init.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals bookmarksLibrary": 2,
+    "raw-global JellyfinEnhanced": 3
+  },
+  "client/src/features/bookmarks/library-items.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals bookmarksLibrary": 2
+  },
+  "client/src/features/bookmarks/library-modals.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals bookmarksLibrary": 2
+  },
+  "client/src/features/bookmarks/library-page.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals bookmarksLibrary": 2
+  },
+  "client/src/features/bookmarks/library-render.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals bookmarksLibrary": 2
+  },
+  "client/src/features/bookmarks/library-replacements.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals bookmarksLibrary": 2
+  },
+  "client/src/features/bookmarks/library-styles.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals bookmarksLibrary": 2
+  },
+  "client/src/features/bookmarks/lifetime.ts": {
+    "import client/src/host/bookmarks-host.ts": 1,
+    "internals *": 1,
+    "internals bookmarkLifetimes": 3
+  },
+  "client/src/features/bookmarks/state.ts": {
+    "import client/src/host/bookmarks-host.ts": 1
+  },
+  "client/src/features/calendar/calendar-custom-tab.ts": {
+    "import client/src/host/calendar-host.ts": 1,
+    "internals calendarPage": 1
+  },
+  "client/src/features/calendar/calendar-page-actions.ts": {
+    "import client/src/host/calendar-host.ts": 1
+  },
+  "client/src/features/calendar/calendar-page-data.ts": {
+    "import client/src/host/calendar-host.ts": 1
+  },
+  "client/src/features/calendar/calendar-page-init.ts": {
+    "import client/src/host/calendar-host.ts": 1
+  },
+  "client/src/features/calendar/calendar-page-render-events.ts": {
+    "import client/src/host/calendar-host.ts": 1
+  },
+  "client/src/features/calendar/calendar-page-render-views.ts": {
+    "import client/src/host/calendar-host.ts": 1
+  },
+  "client/src/features/calendar/calendar-page-styles.ts": {
+    "import client/src/host/calendar-host.ts": 1
+  },
+  "client/src/features/calendar/lifetime.ts": {
+    "import client/src/host/calendar-host.ts": 1,
+    "internals calendarLifetime": 1,
+    "internals calendarPage": 3
+  },
+  "client/src/features/catchup/catchup-activity.ts": {
+    "import client/src/host/activity-host.ts": 1,
+    "import client/src/host/catchup-host.ts": 1,
+    "internals catchUp": 1
+  },
+  "client/src/features/catchup/catchup-core.ts": {
+    "import client/src/host/activity-host.ts": 2,
+    "import client/src/host/catchup-host.ts": 2,
+    "internals *": 2,
+    "internals catchUp": 2
+  },
+  "client/src/features/catchup/catchup-custom-tab.ts": {
+    "import client/src/host/catchup-host.ts": 2,
+    "internals catchUp": 2
+  },
+  "client/src/features/catchup/catchup-deck.ts": {
+    "import client/src/host/activity-host.ts": 1,
+    "import client/src/host/catchup-host.ts": 1,
+    "internals catchUp": 1
+  },
+  "client/src/features/catchup/catchup-page.ts": {
+    "import client/src/host/catchup-host.ts": 1,
+    "internals catchUp": 1
+  },
+  "client/src/features/catchup/catchup-styles.ts": {
+    "import client/src/host/catchup-host.ts": 1,
+    "internals catchUp": 1
+  },
+  "client/src/features/catchup/model.ts": {
+    "import client/src/host/activity-host.ts": 1
+  },
+  "client/src/features/catchup/types.ts": {
+    "import client/src/host/activity-host.ts": 1
+  },
+  "client/src/features/chrome/active-streams-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/active-streams.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/events-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1,
+    "internals *": 2,
+    "internals canonicalCombo": 1
+  },
+  "client/src/features/chrome/events.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/header-actions-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/header-actions.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/login-image-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/native-tabs-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/native-tabs.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/plugin-icons-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/plugin-icons.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/plugin-revisions-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/plugin-revisions.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/splashscreen-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/theme-selector-entry.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/chrome/theme-selector.ts": {
+    "import client/src/host/chrome-host.ts": 1
+  },
+  "client/src/features/details-providers/arr-domain.ts": {
+    "import client/src/host/details-providers-host.ts": 1
+  },
+  "client/src/features/details-providers/arr-links.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/arr-tag-links.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/awards.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/colored-ratings.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/details-page.ts": {
+    "import client/src/host/details-providers-host.ts": 2,
+    "internals *": 1
+  },
+  "client/src/features/details-providers/doesthedogdie.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/elsewhere.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/letterboxd-links.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/links.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/mdblist-ratings.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/media-info.ts": {
+    "import client/src/host/details-providers-host.ts": 2,
+    "internals *": 1
+  },
+  "client/src/features/details-providers/page.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/random-button.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/details-providers/random-domain.ts": {
+    "import client/src/host/details-providers-host.ts": 1
+  },
+  "client/src/features/details-providers/release-dates.ts": {
+    "import client/src/host/details-providers-host.ts": 2,
+    "internals *": 1
+  },
+  "client/src/features/details-providers/reviews.ts": {
+    "import client/src/host/details-providers-host.ts": 2
+  },
+  "client/src/features/downloads/actions-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/custom-tab-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/data-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/init-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/render-cards-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/render-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/render-helpers-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/styles-entry.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/downloads/types.ts": {
+    "import client/src/host/downloads-host.ts": 1
+  },
+  "client/src/features/hidden-content/features-remove-home.ts": {
+    "import client/src/host/hidden-content-host.ts": 3,
+    "internals hiddenContent": 1
+  },
+  "client/src/features/hidden-content/features-remove-multiselect.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-buttons.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-custom-tab.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-data.ts": {
+    "import client/src/host/hidden-content-host.ts": 4
+  },
+  "client/src/features/hidden-content/hidden-content-dialogs.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-filter.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-init.ts": {
+    "import client/src/host/hidden-content-host.ts": 2
+  },
+  "client/src/features/hidden-content/hidden-content-page-admin.ts": {
+    "import client/src/host/hidden-content-host.ts": 4
+  },
+  "client/src/features/hidden-content/hidden-content-page-cards.ts": {
+    "import client/src/host/hidden-content-host.ts": 4
+  },
+  "client/src/features/hidden-content/hidden-content-page-init.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-page-nav.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-page-render.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-page-state.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-page-styles.ts": {
+    "import client/src/host/hidden-content-host.ts": 2
+  },
+  "client/src/features/hidden-content/hidden-content-panel.ts": {
+    "import client/src/host/hidden-content-host.ts": 4
+  },
+  "client/src/features/hidden-content/hidden-content-save.ts": {
+    "import client/src/host/hidden-content-host.ts": 3
+  },
+  "client/src/features/hidden-content/hidden-content-styles.ts": {
+    "import client/src/host/hidden-content-host.ts": 2
+  },
+  "client/src/features/media-tags/rules/media-language-entry.ts": {
+    "import client/src/host/tag-rules-host.ts": 1
+  },
+  "client/src/features/media-tags/rules/poster-colours-entry.ts": {
+    "import client/src/host/tag-rules-host.ts": 1
+  },
+  "client/src/features/media-tags/rules/rating-sources-entry.ts": {
+    "import client/src/host/tag-rules-host.ts": 1
+  },
+  "client/src/features/media-tags/rules/status-vocabulary-entry.ts": {
+    "import client/src/host/tag-rules-host.ts": 1
+  },
+  "client/src/features/media-tags/rules/tag-layout-entry.ts": {
+    "import client/src/host/tag-rules-host.ts": 1
+  },
+  "client/src/features/media-tags/rules/tag-look-entry.ts": {
+    "import client/src/host/tag-rules-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/ageratingtags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/ageratingtags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/awardstags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/awardstags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/customtags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/customtags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/genretags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/genretags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/languagetags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/languagetags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/logotags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/logotags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/peopletags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/peopletags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1,
+    "internals *": 2,
+    "internals peopleTags": 1
+  },
+  "client/src/features/media-tags/runtime/qualitytags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/qualitytags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/ratingtags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/ratingtags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/statustags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/statustags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-cache-store-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-direct-play-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-direct-play.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-item-editor-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-item-editor.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1,
+    "internals enhancedUi": 1
+  },
+  "client/src/features/media-tags/runtime/tag-item-menu-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-item-menu.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1,
+    "internals features": 1
+  },
+  "client/src/features/media-tags/runtime/tag-layout-styles-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-layout-styles.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-pipeline-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-pipeline.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-renderer-base-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-renderer-base.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-styles-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/tag-styles.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/userreviewtags-entry.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/runtime/userreviewtags.ts": {
+    "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/player/auto-skip-engine.ts": {
+    "import client/src/host/player-host.ts": 1
+  },
+  "client/src/features/player/auto-skip.ts": {
+    "import client/src/host/player-host.ts": 2,
+    "internals *": 2,
+    "internals autoSkip": 1,
+    "internals player": 2
+  },
+  "client/src/features/player/context.ts": {
+    "import client/src/host/player-host.ts": 1
+  },
+  "client/src/features/player/lifetime.ts": {
+    "import client/src/host/player-host.ts": 1
+  },
+  "client/src/features/player/now-playing.ts": {
+    "import client/src/host/player-host.ts": 1,
+    "internals *": 2,
+    "internals nowPlaying": 1,
+    "internals player": 1
+  },
+  "client/src/features/player/osd-rating.ts": {
+    "import client/src/host/player-host.ts": 2
+  },
+  "client/src/features/player/pause-view.ts": {
+    "import client/src/host/player-host.ts": 1
+  },
+  "client/src/features/player/pausescreen.ts": {
+    "import client/src/host/player-host.ts": 2,
+    "internals nowPlaying": 1
+  },
+  "client/src/features/player/playback-rating-badge.ts": {
+    "import client/src/host/player-host.ts": 1,
+    "internals nowPlaying": 1
+  },
+  "client/src/features/player/playback.ts": {
+    "import client/src/host/player-host.ts": 1,
+    "internals *": 2,
+    "internals player": 2
+  },
+  "client/src/features/player/subtitles.ts": {
+    "import client/src/host/player-host.ts": 2
+  },
+  "client/src/features/seerr/core/api-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/api.ts": {
+    "import client/src/host/seerr-core-host.ts": 1,
+    "raw-global JellyfinEnhanced": 2
+  },
+  "client/src/features/seerr/core/display.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/modal-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/modal.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/request-manager-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/runtime.ts": {
+    "import client/src/host/seerr-core-host.ts": 1,
+    "internals *": 1
+  },
+  "client/src/features/seerr/core/search-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/search.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/status-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/badges-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/badges.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/buttons-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/buttons.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/cards-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/cards.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/icons-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/popover-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/popover.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/quota-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/quota.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/request-modals-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/request-modals.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/results-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/results.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/season-modal-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/season-modal.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/core/ui/styles-entry.ts": {
+    "import client/src/host/seerr-core-host.ts": 1
+  },
+  "client/src/features/seerr/details/details-page/item-details-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/details-page/rows.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/domain/media.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/hss-discovery-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/issues/issue-model.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/issues/issue-reporter-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/actions-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1,
+    "internals spoilerGuard": 1
+  },
+  "client/src/features/seerr/details/moreinfo/actions-tv-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/badges-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/data-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/four-k-popup.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/init-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/render-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/scope.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/seasons-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/moreinfo/styles-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/scroll/seamless-scroll-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/details/scroll/seamless-scroll.ts": {
+    "import client/src/host/seerr-details-host.ts": 2
+  },
+  "client/src/features/seerr/details/seerr-detail-link-entry.ts": {
+    "import client/src/host/seerr-details-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/card-rendering.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/collection-discovery.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/controller.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/controls.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/discovery-base.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/discovery-filter-utils.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/genre-discovery.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/lookups.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/managed-fetch.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/network-discovery.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/page-ready.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/person-discovery.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/discovery/tag-discovery.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/recommendations-catalog.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/recommendations-category.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/recommendations-custom-tab.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/recommendations-data.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/recommendations-init.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/recommendations-page.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/recommendations-render.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1
+  },
+  "client/src/features/seerr/recommendations/stage.ts": {
+    "import client/src/host/seerr-discovery-host.ts": 1,
+    "internals *": 2
+  },
+  "client/src/features/settings-panel/context.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/shortcut-rules.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-entry-points.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-hidden-content.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-language.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-media-tags.ts": {
+    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-resize.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-settings.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-shortcut-editor.ts": {
+    "import client/src/host/settings-panel-host.ts": 1,
+    "internals canonicalCombo": 1
+  },
+  "client/src/features/settings-panel/ui-panel-tag-editor.ts": {
+    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-tag-looks.ts": {
+    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
+    "import client/src/features/media-tags/rules/tag-look.ts": 1,
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-tag-portable.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-tag-preview.ts": {
+    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-panel-template.ts": {
+    "import client/src/host/settings-panel-host.ts": 1,
+    "internals spoilerGuard": 1
+  },
+  "client/src/features/settings-panel/ui-panel.ts": {
+    "import client/src/host/settings-panel-host.ts": 1,
+    "internals spoilerGuard": 1
+  },
+  "client/src/features/settings-panel/ui-release-notes.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings-panel/ui-styles.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/settings/defaults.ts": {
+    "import client/src/host/settings-host.ts": 1
+  },
+  "client/src/features/settings/entry.ts": {
+    "import client/src/host/settings-host.ts": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/features/settings/inheritance.ts": {
+    "import client/src/host/settings-host.ts": 1
+  },
+  "client/src/features/settings/save.ts": {
+    "import client/src/host/settings-host.ts": 1
+  },
+  "client/src/features/settings/state.ts": {
+    "import client/src/host/settings-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/detail-button.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/dialog.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/identity.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/ids.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/image-refresh.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/index.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/ownership.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/seerr-toggle.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/settings-tab.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/snooze.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/state.ts": {
+    "import client/src/host/spoiler-host.ts": 2
+  },
+  "client/src/features/spoiler-guard/styles.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/watched-refresh.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/features/spoiler-guard/wire.ts": {
+    "import client/src/host/spoiler-host.ts": 1
+  },
+  "client/src/host/activity-host.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/admin-config-host.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/admin-tags-host.ts": {
+    "host-import client/src/features/admin-tags/types.ts": 1,
+    "host-import client/src/features/media-tags/rules/poster-colours.ts": 1,
+    "host-import client/src/features/media-tags/rules/rating-sources.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-layout.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-look.ts": 1,
+    "host-import client/src/features/media-tags/runtime/scopes.ts": 1,
+    "host-import client/src/features/media-tags/runtime/tag-item-editor.ts": 1,
+    "host-import client/src/features/media-tags/runtime/tag-styles.ts": 1,
+    "host-import client/src/features/settings-panel/registry.ts": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/api-host.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/bookmarks-host.ts": {
+    "host-import client/src/features/bookmarks/types.ts": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/bootstrap-pages-host.ts": {
+    "host-import client/src/features/calendar/types.ts": 1,
+    "host-import client/src/features/downloads/types.ts": 1,
+    "host-import client/src/features/seerr/recommendations/types.ts": 1,
+    "raw-global JellyfinEnhanced": 3
+  },
+  "client/src/host/calendar-host.ts": {
+    "host-import client/src/features/calendar/lifetime.ts": 1,
+    "host-import client/src/features/calendar/types.ts": 1,
+    "internals *": 1,
+    "internals calendarPage": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/catchup-host.ts": {
+    "host-import client/src/features/catchup/types.ts": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/chrome-host.ts": {
+    "raw-global JellyfinEnhanced": 6
+  },
+  "client/src/host/core-host.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/details-providers-host.ts": {
+    "raw-global JellyfinEnhanced": 2
+  },
+  "client/src/host/dom-host.ts": {
+    "raw-global JellyfinEnhanced": 2
+  },
+  "client/src/host/downloads-host.ts": {
+    "host-import client/src/features/downloads/types.ts": 1,
+    "internals *": 1,
+    "internals requestsPage": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/hidden-content-host.ts": {
+    "host-import client/src/features/hidden-content/home-model.ts": 1,
+    "host-import client/src/features/hidden-content/model.ts": 1,
+    "host-import client/src/features/hidden-content/page-model.ts": 1,
+    "internals *": 2,
+    "raw-global JellyfinEnhanced": 2
+  },
+  "client/src/host/navigation-host.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/player-host.ts": {
+    "host-import client/src/features/player/wire.ts": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/seerr-core-host.ts": {
+    "host-import client/src/features/seerr/core/contract.ts": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/seerr-details-host.ts": {
+    "internals *": 2,
+    "raw-global JellyfinEnhanced": 4
+  },
+  "client/src/host/seerr-discovery-host.ts": {
+    "host-import client/src/features/seerr/discovery/types.ts": 1,
+    "host-import client/src/features/seerr/recommendations/types.ts": 1,
+    "raw-global JellyfinEnhanced": 2
+  },
+  "client/src/host/session-host.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/settings-host.ts": {
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/settings-panel-host.ts": {
+    "host-import client/src/features/media-tags/rules/media-language.ts": 1,
+    "host-import client/src/features/media-tags/rules/poster-colours.ts": 1,
+    "host-import client/src/features/media-tags/rules/rating-sources.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-layout.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-look.ts": 1,
+    "host-import client/src/features/settings-panel/context.ts": 2,
+    "host-import client/src/features/settings-panel/registry.ts": 1,
+    "host-import client/src/features/shared/icons.ts": 1,
+    "internals *": 2,
+    "internals enhancedUi": 2,
+    "raw-global JellyfinEnhanced": 2
+  },
+  "client/src/host/spoiler-host.ts": {
+    "internals *": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/tag-rules-host.ts": {
+    "host-import client/src/features/media-tags/rules/layout-rules.ts": 2,
+    "host-import client/src/features/media-tags/rules/media-language.ts": 1,
+    "host-import client/src/features/media-tags/rules/poster-colours.ts": 2,
+    "host-import client/src/features/media-tags/rules/rating-sources.ts": 1,
+    "host-import client/src/features/media-tags/rules/status-vocabulary.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-layout.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-look.ts": 3,
+    "raw-global JellyfinEnhanced": 2
+  },
+  "client/src/host/tag-runtime-host.ts": {
+    "host-import client/src/features/media-tags/rules/media-language.ts": 1,
+    "host-import client/src/features/media-tags/rules/poster-colours.ts": 1,
+    "host-import client/src/features/media-tags/rules/rating-sources.ts": 1,
+    "host-import client/src/features/media-tags/rules/status-vocabulary.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-layout.ts": 1,
+    "host-import client/src/features/media-tags/rules/tag-look.ts": 1,
+    "host-import client/src/features/media-tags/runtime/awardstags.ts": 1,
+    "host-import client/src/features/media-tags/runtime/contract.ts": 2,
+    "host-import client/src/features/media-tags/runtime/customtags.ts": 1,
+    "host-import client/src/features/media-tags/runtime/dto.ts": 1,
+    "host-import client/src/features/media-tags/runtime/languagetags.ts": 1,
+    "host-import client/src/features/media-tags/runtime/logotags.ts": 1,
+    "host-import client/src/features/media-tags/runtime/scopes.ts": 1,
+    "host-import client/src/features/media-tags/runtime/tag-cache-store.ts": 1,
+    "host-import client/src/features/media-tags/runtime/tag-direct-play.ts": 1,
+    "host-import client/src/features/media-tags/runtime/tag-item-editor.ts": 1,
+    "host-import client/src/features/media-tags/runtime/tag-styles.ts": 1,
+    "raw-global JellyfinEnhanced": 1
+  },
+  "client/src/host/ui-host.ts": {
+    "raw-global JellyfinEnhanced": 2
+  }
+}
