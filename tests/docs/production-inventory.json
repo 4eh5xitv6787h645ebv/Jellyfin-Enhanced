@@ -134,16 +134,8 @@
       "category": "Configuration"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/CatchUpController.cs",
-      "category": "Controllers"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "category": "Controllers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/ActivityPlaybackConsumer.cs",
-      "category": "EventHandlers"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/ContinueWatchingPlaybackEvents.cs",
@@ -174,7 +166,31 @@
       "category": "Extensions"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/BookmarkDocumentService.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/Events/ActivityPlaybackConsumer.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/Services/ActivityFavoriteMonitor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/Services/ActivityFeedBuilder.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/Services/ActivityService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/JeCatchupController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/Services/CatchUpLogService.cs",
       "category": "Features"
     },
     {
@@ -446,18 +462,6 @@
       "category": "ScheduledTasks"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ActivityFavoriteMonitor.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ActivityFeedBuilder.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ActivityService.cs",
-      "category": "Services"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AnalyticsReportingService.cs",
       "category": "Services"
     },
@@ -487,10 +491,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/BrandingAssetStartupFilter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/CatchUpLogService.cs",
       "category": "Services"
     },
     {
@@ -1923,33 +1923,6 @@
     }
   ],
   "routes": [
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/catchup/event",
-      "method": "PostEvent",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/CatchUpController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/catchup/events",
-      "method": "GetEvents",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/CatchUpController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/catchup/summary",
-      "method": "GetSummary",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/CatchUpController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
     {
       "verb": "GET",
       "path": "/JellyfinEnhanced/jellyseerr/status",
@@ -3800,6 +3773,33 @@
       "method": "GetView",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/catchup/event",
+      "method": "PostEvent",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/JeCatchupController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/catchup/events",
+      "method": "GetEvents",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/JeCatchupController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/catchup/summary",
+      "method": "GetSummary",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/JeCatchupController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
     }
   ],
   "configuration_properties": [
@@ -9831,7 +9831,7 @@
     },
     {
       "literal": "bookmark.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/BookmarkDocumentService.cs"
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs"
     },
     {
       "literal": "matroska-languages.json",

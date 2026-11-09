@@ -270,7 +270,7 @@ Core loads first and owns state, helpers and API actions. The deck implements sw
 
 Swipes mark watched, dismiss, add to the watchlist (Jellyfin's Likes flag) or open a title. Dismissals are per-user browser-local data.
 
-`Controllers/CatchUpController.cs` records authenticated users' actions through `POST /JellyfinEnhanced/catchup/event`; both feature and recording gates must be enabled. `GET /JellyfinEnhanced/catchup/events` and `GET /JellyfinEnhanced/catchup/summary` require authentication and enforce administrator status inside their methods. `Services/CatchUpLogService.cs` stores the bounded log, independently of Activity Feed.
+`Features/Catchup/JeCatchupController.cs` records authenticated users' actions through `POST /JellyfinEnhanced/catchup/event`; both feature and recording gates must be enabled. `GET /JellyfinEnhanced/catchup/events` and `GET /JellyfinEnhanced/catchup/summary` require authentication and enforce administrator status inside their methods. `Features/Catchup/Services/CatchUpLogService.cs` stores the bounded log, independently of Activity Feed.
 
 Administrator settings under **Pages**:
 
@@ -394,7 +394,7 @@ Administrator setting under **Display**:
 
 `js/extras/activity-page.js` renders the feed; `activity-custom-tab.js` mounts it.
 
-On the server, `EventHandlers/ActivityPlaybackConsumer.cs` records playback-stop activity after at least 5% progress or Jellyfin-reported completion. `Services/ActivityFavoriteMonitor.cs` watches favorite changes; `ActivityService.cs` supplies the recording API over `UserConfigurationManager` storage. `ActivityFeedBuilder.cs` merges activity and reviews, filters by viewer access/author visibility, then hydrates card data.
+On the server, `Features/Activity/Events/ActivityPlaybackConsumer.cs` records playback-stop activity after at least 5% progress or Jellyfin-reported completion. `Features/Activity/Services/ActivityFavoriteMonitor.cs` watches favorite changes; `ActivityService.cs` supplies the recording API over `UserConfigurationManager` storage. `ActivityFeedBuilder.cs` merges activity and reviews, filters by viewer access/author visibility, then hydrates card data.
 
 Administrator settings under **Pages** (the final two controls are under **Extras**):
 
