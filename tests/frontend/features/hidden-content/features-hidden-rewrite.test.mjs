@@ -146,6 +146,7 @@ async function adminSearch(h,{library,seerr}){
  const overlay=h.document.querySelector('.je-hidden-admin-add-overlay'),input=overlay.querySelector('.je-hidden-management-search');
  const setTimer=h.window.setTimeout.bind(h.window);h.window.setTimeout=(fn,ms,...rest)=>setTimer(fn,ms===300?0:ms,...rest);// the search debounce
  input.value='alpha';input.dispatchEvent(new h.window.Event('input'));
+ await new Promise(resolve=>setTimer(resolve,0));// equal-delay timers run in order, so the debounced search has started
  for(let i=0;i<10;i++)await tick();
  return overlay.querySelector('.je-hidden-management-grid');
 }
