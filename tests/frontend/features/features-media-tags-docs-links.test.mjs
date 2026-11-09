@@ -12,7 +12,7 @@ const anchors = new Set(read('docs/enhanced/tags.md').split('\n').filter(line =>
 for (const [file, tabsSource] of [
   // The hub is TypeScript now: its tab list is read from the source, not the generated bundle.
   ['client/src/features/media-tags/settings/ui-panel-media-tags.ts', /function tabsFor\(\) \{([\s\S]*?)\n {4}\}/],
-  ['client/src/features/admin-tags/admin-tags.ts', /const TABS: readonly TabDef\[\] = \[([\s\S]*?)\];/],
+  ['client/src/features/media-tags/admin/admin-tags.ts', /const TABS: readonly TabDef\[\] = \[([\s\S]*?)\];/],
 ]) {
   test(`every Media Tags tab in ${file.split('/').pop()} links to an existing user-guide heading`, () => {
     const source = read(file);

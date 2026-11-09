@@ -309,7 +309,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/admin-tags.ts",
+      "source": "client/src/features/media-tags/admin/admin-tags.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -317,7 +317,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/custom-rules-editor.ts",
+      "source": "client/src/features/media-tags/admin/custom-rules-editor.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -325,7 +325,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/agerating.ts",
+      "source": "client/src/features/media-tags/admin/sections/agerating.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -333,7 +333,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/awards.ts",
+      "source": "client/src/features/media-tags/admin/sections/awards.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -341,7 +341,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/badges.ts",
+      "source": "client/src/features/media-tags/admin/sections/badges.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -349,7 +349,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/colours.ts",
+      "source": "client/src/features/media-tags/admin/sections/colours.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -357,7 +357,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/custom.ts",
+      "source": "client/src/features/media-tags/admin/sections/custom.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -365,7 +365,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/genre.ts",
+      "source": "client/src/features/media-tags/admin/sections/genre.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -373,7 +373,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/language.ts",
+      "source": "client/src/features/media-tags/admin/sections/language.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -381,7 +381,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/layout.ts",
+      "source": "client/src/features/media-tags/admin/sections/layout.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -389,7 +389,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/logos.ts",
+      "source": "client/src/features/media-tags/admin/sections/logos.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -397,7 +397,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/overview.ts",
+      "source": "client/src/features/media-tags/admin/sections/overview.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -405,7 +405,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/people.ts",
+      "source": "client/src/features/media-tags/admin/sections/people.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -413,7 +413,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/portable.ts",
+      "source": "client/src/features/media-tags/admin/sections/portable.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -421,7 +421,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/quality.ts",
+      "source": "client/src/features/media-tags/admin/sections/quality.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -429,7 +429,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/rating.ts",
+      "source": "client/src/features/media-tags/admin/sections/rating.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -437,7 +437,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/rules.ts",
+      "source": "client/src/features/media-tags/admin/sections/rules.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -445,7 +445,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/server.ts",
+      "source": "client/src/features/media-tags/admin/sections/server.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -453,7 +453,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/sections/status.ts",
+      "source": "client/src/features/media-tags/admin/sections/status.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -461,7 +461,7 @@
       "orderedComponent": false,
       "existedAtBaseline": true,
       "status": "typed-output",
-      "source": "client/src/features/admin-tags/tag-styles-editor.ts",
+      "source": "client/src/features/media-tags/admin/tag-styles-editor.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {

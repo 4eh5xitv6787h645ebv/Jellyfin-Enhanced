@@ -39,7 +39,7 @@ registerSection({
         { id: 'leavingSoonCollections', key: 'LeavingSoonCollections', type: 'textarea', label: 'Leaving collections' },
         { id: 'leavingSoonRefreshHours', key: 'LeavingSoonRefreshHours', type: 'number', label: 'Refresh every' },
 */
-import { optionalApiClient } from '../../../host/admin-tags-host';
+import { optionalApiClient } from '../host';
 import { find, findAs } from '../dom';
 import type { FmtParams } from '../format';
 import type { FieldDef, PageContext } from '../types';

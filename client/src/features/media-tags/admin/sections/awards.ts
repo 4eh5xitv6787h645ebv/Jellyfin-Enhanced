@@ -22,7 +22,7 @@ registerSection({
         { id: 'awardsTagsLetterboxdList', key: 'AwardsTagsLetterboxdList', type: 'text', label: 'Letterboxd Top 250 list (MDBList id or owner/slug)' },
         { id: 'awardsTagsRefreshHours', key: 'AwardsTagsRefreshHours', type: 'number', label: 'Refresh cadence (hours)' },
 */
-import { apiClient } from '../../../host/admin-tags-host';
+import { apiClient } from '../host';
 import { find, must } from '../dom';
 import { installSection } from './install';
 

@@ -3,8 +3,8 @@
  * bounded rows, existing library suggestions and reserved labels. Publishes
  * JE.adminTags.CUSTOM_HTML (drawn when read) and createCustomTagRules.
  */
-import { adminBridge, optionalApiClient } from '../../host/admin-tags-host';
-import type { JsonValue } from '../../contracts/generated';
+import { adminBridge, optionalApiClient } from './host';
+import type { JsonValue } from '../../../contracts/generated';
 import { find, findAs } from './dom';
 import { escapeText, fmt, type FmtParams } from './format';
 import type { CreateCustomRules, CustomRule } from './types';

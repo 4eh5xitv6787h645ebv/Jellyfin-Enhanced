@@ -13,7 +13,7 @@ registerSection({
     tab: 'overview',
     title: 'Tag group defaults',
 */
-import { apiClient } from '../../../host/admin-tags-host';
+import { apiClient } from '../host';
 import { closest, find, findAs } from '../dom';
 import { word, type FmtParams } from '../format';
 import type { PageContext } from '../types';

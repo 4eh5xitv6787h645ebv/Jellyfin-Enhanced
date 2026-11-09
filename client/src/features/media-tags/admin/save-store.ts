@@ -11,8 +11,8 @@
  * the server writes only the changed fields on top of what it holds, and
  * refuses (409) any field whose Expected value another administrator changed.
  */
-import type { JsonValue } from '../../contracts/generated';
-import type { AdminTagLook } from '../../host/admin-tags-host';
+import type { JsonValue } from '../../../contracts/generated';
+import type { AdminTagLook } from './host';
 import type { HeldSaveScope, PageApi, StoreState } from './types';
 import { configOf, copy, objects, type Config, type JsonObject } from './values';
 

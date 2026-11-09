@@ -21,10 +21,10 @@ registerSection({
         { id: 'nativePosterTagsEnabled', key: 'NativePosterTagsEnabled', type: 'switch', label: 'Native poster tags (experimental)' },
         { id: 'nativePosterTagsWebClientNames', key: 'NativePosterTagsWebClientNames', type: 'textarea', label: 'Additional excluded apps' },
 */
-import { apiClient } from '../../../host/admin-tags-host';
+import { apiClient } from '../host';
 import { allAs, closest, find, findAs } from '../dom';
 import type { PageContext } from '../types';
-import type { JsonValue } from '../../../contracts/generated';
+import type { JsonValue } from '../../../../contracts/generated';
 import { installSection } from './install';
 
 interface Folder { ItemId: string; Name: string }

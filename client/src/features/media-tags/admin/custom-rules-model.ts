@@ -2,7 +2,7 @@
  * @file The Custom tag rules as the server stores them (Configuration/CustomTagRuleSet.cs):
  * the table's rows, their clean-up and the reserved-label rule. Pure.
  */
-import type { JsonValue } from '../../contracts/generated';
+import type { JsonValue } from '../../../contracts/generated';
 import type { CustomRule } from './types';
 import { pick } from './values';
 

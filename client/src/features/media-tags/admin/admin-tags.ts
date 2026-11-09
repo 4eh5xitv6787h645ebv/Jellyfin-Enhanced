@@ -22,7 +22,7 @@
  * section modules itself, in SECTION_FILES order. It relies on the JE client
  * bundle the dashboard already runs (core/tag-layout.js and the hub's preview).
  */
-import { adminBridge, apiClient, dashboard, optionalApiClient } from '../../host/admin-tags-host';
+import { adminBridge, apiClient, dashboard, optionalApiClient } from './host';
 import { createLifecycle, type MountState } from './mount';
 import { controlValue, fieldHtml, fieldsHtml, fieldValue, redrawList, type TextKit } from './fields';
 import { fmt, WORDS, type FmtParams } from './format';

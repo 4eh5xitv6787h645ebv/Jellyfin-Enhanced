@@ -5,7 +5,7 @@
  * checked against the session it was asked in, and pending saves flushed
  * before the page hides or the browser tab closes.
  */
-import { dashboard } from '../../host/admin-tags-host';
+import { dashboard } from './host';
 import { find } from './dom';
 import type { SaveStore } from './save-store';
 import type { PageContext, PageOptions, Target } from './types';

@@ -177,102 +177,102 @@
     },
     {
       "output": "js/enhanced/admintags/admin-tags.js",
-      "source": "client/src/features/admin-tags/admin-tags.ts",
+      "source": "client/src/features/media-tags/admin/admin-tags.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/custom-rules-editor.js",
-      "source": "client/src/features/admin-tags/custom-rules-editor.ts",
+      "source": "client/src/features/media-tags/admin/custom-rules-editor.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/agerating.js",
-      "source": "client/src/features/admin-tags/sections/agerating.ts",
+      "source": "client/src/features/media-tags/admin/sections/agerating.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/awards.js",
-      "source": "client/src/features/admin-tags/sections/awards.ts",
+      "source": "client/src/features/media-tags/admin/sections/awards.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/badges.js",
-      "source": "client/src/features/admin-tags/sections/badges.ts",
+      "source": "client/src/features/media-tags/admin/sections/badges.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/colours.js",
-      "source": "client/src/features/admin-tags/sections/colours.ts",
+      "source": "client/src/features/media-tags/admin/sections/colours.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/custom.js",
-      "source": "client/src/features/admin-tags/sections/custom.ts",
+      "source": "client/src/features/media-tags/admin/sections/custom.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/genre.js",
-      "source": "client/src/features/admin-tags/sections/genre.ts",
+      "source": "client/src/features/media-tags/admin/sections/genre.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/language.js",
-      "source": "client/src/features/admin-tags/sections/language.ts",
+      "source": "client/src/features/media-tags/admin/sections/language.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/layout.js",
-      "source": "client/src/features/admin-tags/sections/layout.ts",
+      "source": "client/src/features/media-tags/admin/sections/layout.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/logos.js",
-      "source": "client/src/features/admin-tags/sections/logos.ts",
+      "source": "client/src/features/media-tags/admin/sections/logos.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/overview.js",
-      "source": "client/src/features/admin-tags/sections/overview.ts",
+      "source": "client/src/features/media-tags/admin/sections/overview.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/people.js",
-      "source": "client/src/features/admin-tags/sections/people.ts",
+      "source": "client/src/features/media-tags/admin/sections/people.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/portable.js",
-      "source": "client/src/features/admin-tags/sections/portable.ts",
+      "source": "client/src/features/media-tags/admin/sections/portable.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/quality.js",
-      "source": "client/src/features/admin-tags/sections/quality.ts",
+      "source": "client/src/features/media-tags/admin/sections/quality.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/rating.js",
-      "source": "client/src/features/admin-tags/sections/rating.ts",
+      "source": "client/src/features/media-tags/admin/sections/rating.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/rules.js",
-      "source": "client/src/features/admin-tags/sections/rules.ts",
+      "source": "client/src/features/media-tags/admin/sections/rules.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/server.js",
-      "source": "client/src/features/admin-tags/sections/server.ts",
+      "source": "client/src/features/media-tags/admin/sections/server.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/sections/status.js",
-      "source": "client/src/features/admin-tags/sections/status.ts",
+      "source": "client/src/features/media-tags/admin/sections/status.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
       "output": "js/enhanced/admintags/tag-styles-editor.js",
-      "source": "client/src/features/admin-tags/tag-styles-editor.ts",
+      "source": "client/src/features/media-tags/admin/tag-styles-editor.ts",
       "manifest": "client/entries/admin-tags.json"
     },
     {
@@ -1365,46 +1365,46 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/elsewhere.js": "9b65990abda9c7c934bd5da780ccd7e8521bf6776abf2a52bf97afd3ab9bb594",
     "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/reviews.js.map": "3fcc7941605091869adc24016d6030089bd5ba94607fae76ee7d925ad4a4d568",
     "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/reviews.js": "a0648654ce4d62c34e78086b872e8419d2015db4d58426cbbd81434d0f4e26c7",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js.map": "54bd1d0219038ccb3d0299cd922fa40c75117837222e1a344744fa4a2cc54f90",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js": "2dc0abb5e92f6582d5be20f618b99065a8734259b59bf437f612f9bddae464cd",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js.map": "29f02bb1e0304a9b8e313fe4830c0ee076ca99a48ede734f9674c2540a884184",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js": "ccf3837852be94d840d2e135aad3e8725a9af4adb6a3f19d46c87cdf8986188d",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/agerating.js.map": "8b8afbcfde17e1d9444a1e607463e684f02551a1820d8d491f64d4569efa9b5b",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/agerating.js": "dcd4667bf3ff4b27aa3b8a4dfc2b4aeccfaa1a54b9f5e48b459603a9d2d711ba",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/awards.js.map": "a32d980eada8b5776aa0eb6467b0443d73f5273924bd6532194fca6ecfd12923",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/awards.js": "243422b2a0fca2927255efe95e7b296a538eb46be031e07058cdb1c5579e0a50",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js.map": "9d33fbb3331821b9c1cc28be9d5ba3d42e1fa7d31f33e4ed94f0cec49e0ae1d3",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js": "02736a5392990349d6536d581452e7f6a9ff1466d74626022aa4611567efd092",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js.map": "5f688210504e978476697666035215c2d57cfd2cb15bdce1284f5b2370db7c2a",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js": "be56b9e8ef609578642d0f05ca0d157356944238554673e43e411da3125a47b4",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js.map": "b88991d28f261cae8fcb272271082f4c494fa3c91439a0fff7481ec5d68b9a44",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js": "ce71f4bc5ccd64da9ef2a55823725e5a7b6f5cc14e3a8de434649b62cd512291",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/genre.js.map": "9c4125da9308fea05a24b9d27cf67064de6e95cd4d8fa6a270633d957cc96f3a",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/genre.js": "032cbdb137c8ff328fe3e5cfa3a13dbfbe3b627ec512e8c3bc0913594c021d7f",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/language.js.map": "51b48aa5c015ba44f043d4264e4092a5d11bb1577e4c95c661ffd91b146024bb",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/language.js": "9780a4381288c99eb78ee9c4c8d03f53baa6dd84955778010acaecb6daa409ec",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/layout.js.map": "b52bf1a1e05cec010b5ef613bc25a84ad2fb9dc04c7f23a5bc27cf2ac5b5b099",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/layout.js": "1704a516ab1c8b1f279e4f7da4ed3838e21e3a629748913e89ccf1d910b2b7b8",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/logos.js.map": "d675725b2522e99c05acd39e33ab68ecae0b47495c95dc93fc4fc6427a606634",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/logos.js": "41d73ba9705fec63d04a0c9bf6c1a6e3331d1db5ecdaad235be7dd253a41c22f",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/overview.js.map": "1dd79893f641e115f314f583f2feaee56e3324b152fe6d349a4912a880e062d3",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/overview.js": "f1554907558d15d312870c9ab683f4944ac7cb624e52e5dacd69cdb595b19cbc",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js.map": "641a90f5edfba4c0bfdf1d0dbf682feed858bb7fc7ee426018c9f8a662578082",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js": "481084eee619dfa016f9f79764f43bf07dd78d077c861376092c1a8049e9029b",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js.map": "f3400216abdc6160fc09c534ae27d8d3f77d43cd6712e8376214482ef849b1d7",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js": "b217703fd99dace2dd7b67041f53f4c9abffcf859d4ec14c9e9de2fcb34a6d5d",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js.map": "a0a00f3fdae191544a9e1c181543f1f3fc00df7d2355e81f8453e0821523808f",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js": "4703c0aa849b758d2624fe0aa75185dce305e6c2ecd2d471653b877e72ce49ec",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rating.js.map": "c1eac2571fa4205027f3a28103c0bbbb3f0f69a7c44365713248793082e49ce1",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rating.js": "f54d204d01868ddcd8810c8d00c6f3d976925ba87e9257feddef1801823d6959",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rules.js.map": "2f262a68cd718abee043e140d9bc2f9bf85d51cb94611dc7f1f23a7934f83221",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rules.js": "4c3df2251a8361dcda3f4648c2b26deee9d90b579730161246dac2d89c5caf60",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/server.js.map": "c2dffa0368ef7a09137bba7a65b09c980385e9750b2cec0ef5ba024dff66028c",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/server.js": "9153a78f319adbd30fdac8c369271f6075619ded10bafd86b42a787cb25820b7",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/status.js.map": "b710c82f61ddea6172be53a9083945351b2d0498e6c94286351a23d6ca7567a2",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/status.js": "74171e45823092468302fefa0b750b7004f466b574a9c2fdd149284fe931d556",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js.map": "9d91f8002ec98586c879a16c91a854f7ba7f9de01a13dc42c838fb25aba5b8b9",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js": "dd5057e21ca8f41dc4d48773735f7d71a5391eb4eb5261191a984b5b6d7541a7",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js.map": "e7a0f0b858aa5282c66c7110d96d6f813b435af76202b442897319a2c14cf510",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/admin-tags.js": "87a8a4da996d28493ce16b870f5995ef7414b89e5ebafddafc010f1179b3ad14",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js.map": "e6f4f7ca0ae830ae5867b8ba5aeba775effa04ce4eccf6635cb61f3a41387f52",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/custom-rules-editor.js": "2f0a76ff18a37ef69131df73c7ae87e267db6237b05c26b965ca502fc38b0b8b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/agerating.js.map": "c5269a0b1c7fb6e892b9f7ee2ad94607bcd44a1a5ab746fea49f63c5cf464786",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/agerating.js": "0e201405b2a481173d7481ba8fcb69fb513996ef317fb60e3a6dc63c44a3942f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/awards.js.map": "6f6db8b9bd19e175b1f0495e52e2e1540e9e66e192e60daf9f47144588b51b21",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/awards.js": "8f92328391030b0f469765044cabe6868e854c21516e6cd3d54ae49e4e44566c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js.map": "9d1f815a7e92a77372af4885402442605ecc97df26e29dd5750a43d63fa5527f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js": "587191a39e338915247e797e9a4bbb19d3aae0eb23e52ed5b435fe9bcf242342",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js.map": "cb1bf43a69b5a7ad7c0ccccce3cf6de27a56e0456cb383e26e673cc928fbbbb5",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/colours.js": "13947d477dfccb3b85816c631ad7d184e31f31c079c7342176f010187a47c3f4",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js.map": "feeba590d9b396fe80d83d5851051b7cf56f47a4109b2ef0aacd999313c88991",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/custom.js": "63a70ccd43afd78df5a46a303355ae83c587ca4dd36c758a38beb4672c67c056",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/genre.js.map": "f09511a1e2b32ad909cd0397e0e21fa56faa5ebf99e2074738377b0a32f2b34c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/genre.js": "2152a629cfb589c2dd4864607700bfd90bbe3ccd39a73eff5ddf635eb1b7f59d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/language.js.map": "7b7c97d19910497c734d9f0723ac484fa5f5068b89ce6fff5ae273c3060cf829",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/language.js": "3bef18e8ef0a4192c067ffd4e6ed3fdd86a3b46e7ec5f931205a34f2a84eb57c",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/layout.js.map": "ca364604723e6d66db8c0dfbee806608a5917cf18ac3cb2e87b6e0290ced5a0f",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/layout.js": "b5ea62091f6f67e4d4a4e67b75bdf9e0258b5fbef44ebdd831268909e28b413e",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/logos.js.map": "f67a76f97a30584ae871187f54ab7ec42df9d0940d2f52b58d00daefd2d6055d",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/logos.js": "0b506b3125b7af1d7245e174ba3f19d7a5d1d1fe06a1dc7c7888ce236e1ee961",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/overview.js.map": "0428a933f8aa08d697c02791d60b78a850a60433e1ee1c58762a7141b6fdba76",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/overview.js": "59b10152ef375e788aac11d60ce61dd1f347d1e2ac955bbff1ce8201c52fe0ef",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js.map": "499e603e204b02a4188789f6e151d8c114a1f8cc6fa7af168489f87ac673d850",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/people.js": "ba791204590e49ce52dfb2c72d3b4b66adfe31e30c6e58a29a0154e74fa66dc3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js.map": "d49a7a5f2f8736661defa6cbcbd515452ea53689866392f4a3b01a2c43f0e607",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/portable.js": "adbeb5adcad2d8d5baba41baed33a4a198070deef8407b0318335757de6a1fe9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js.map": "57ab62d7ac8011d45ac02a0f43a38611a83d0a4c874553bc3a3ae87b2f12134b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/quality.js": "9862890ce7efb0bb70885d3f5f3a38afcfef7f06b207cdb9834e608b888506ba",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rating.js.map": "c028f4cbb186f08314d1a28838f648a3be2c5b26e1a58a98f5251e2690497ad6",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rating.js": "2bb72df7fc4932e05992adb1eeb101b2c8c6c25e1cc44528dd350847c71338be",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rules.js.map": "87d6a5ddcddf566091a53d0856808e38cc1c10b19c9941e1afb370b16a654b5b",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rules.js": "02845d064526bd7ab601ef609ace498864e8afcb9693b676ea7f7bdb35740c42",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/server.js.map": "13d4cb0fef88ad52b027f5691c69abe614c7176032dba694be8bc90d76e80843",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/server.js": "896282acc507bf51d27d0995f9cd68875d56f955d31b5bb11871db500c40e662",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/status.js.map": "5e5763f392813fe0f55bef129109dfa42a5fbaa075f2fc49e402c734ae7227a3",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/status.js": "4853dbb6288f238da66c46c950384af1292517eebf757a61f074e776c6744d45",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js.map": "efb0fa0b8c100be399c281509dc2c5ffe83843b0dcbe1b7d1b33edd81a1edeba",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js": "da6077830622e6514ad87bb34f1ab514644b7fedd1fb7eeb598f5f24d89a68f1",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-init.js.map": "3ed40005a22c827aac3592c38ece0858e227cac2fa8abe688a5299fbe009dd03",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-init.js": "70b9a05dde4abf9525e7623c3030650968d8cbd11f2dd557198ee9349d62a0e8",
     "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/bookmarks/bookmarks-library-items.js.map": "56ab50502610698b4723da111e9f33cd5f527c87c801c3545912133bf6752b7c",
