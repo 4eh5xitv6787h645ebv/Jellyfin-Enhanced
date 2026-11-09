@@ -7,7 +7,6 @@
   "client/src/features/media-tags/admin/tag-styles-editor.ts": 1119,
   "client/src/features/media-tags/editor/tag-item-editor.ts": 1053,
   "client/src/features/media-tags/layout/tag-layout.ts": 2241,
-  "client/src/features/media-tags/pipeline/tag-pipeline.ts": 2567,
   "client/src/features/media-tags/pipeline/tag-renderer-base.ts": 899,
   "client/src/features/media-tags/settings/ui-panel-media-tags.ts": 1235,
   "client/src/features/media-tags/settings/ui-panel-tag-editor.ts": 1133,
