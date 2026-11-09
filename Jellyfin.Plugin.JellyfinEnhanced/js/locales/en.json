@@ -715,6 +715,7 @@
     "reviews_form_error_empty": "Please add a rating or write a review before saving.",
     "reviews_form_error_save": "Failed to save review. Please try again.",
     "reviews_avg_rating_tooltip": "Average rating from {count} user(s)",
+    "reviews_user_unavailable": "User reviews couldn't be loaded. Reload the page to try again.",
     "ddd_title": "Content Warnings",
     "ddd_choose_triggers": "Choose your triggers",
     "ddd_summary_all": "{count} triggers reported for this title",
