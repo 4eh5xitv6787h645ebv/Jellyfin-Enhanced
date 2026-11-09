@@ -96,8 +96,8 @@
     };
   }
 
-  // client/src/features/player/pause-styles.ts
-  var pauseStyles = `
+  // client/src/features/player/pause-screen.css
+  var pause_screen_default = `
             :root {
               --pause-screen-overlay-bg: rgba(0,0,0,.78);
               --pause-screen-blur: 50px;
@@ -362,6 +362,9 @@
             #pause-screen-logo:not([src]), #pause-screen-disc:not([src]) { display: none; }
 
           `;
+
+  // client/src/features/player/pause-styles.ts
+  var pauseStyles = pause_screen_default;
 
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
