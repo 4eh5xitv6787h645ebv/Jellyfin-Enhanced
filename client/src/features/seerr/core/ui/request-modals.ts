@@ -58,13 +58,15 @@ export function installRequestModals(host: SeerrCoreHost): void {
         // The account the options were loaded for is the one that may submit them.
         const origin = captureOrigin(host);
         const backdropPath = isRecord(searchResultItem) && isString(searchResultItem.backdropPath) ? searchResultItem.backdropPath : null;
+        // Server options that failed to load: the request goes without them, to Seerr's default server.
+        let optionsFailed = false;
         const { modalElement, show } = modal.create({
             title: JE.t('jellyseerr_modal_title_movie'),
             subtitle: title,
             bodyHtml: modal.createAdvancedOptionsHTML('movie'),
             backdropPath,
             onSave: async (modalEl, requestBtn, closeFn) => {
-                const settings = chosenSettings(modalEl, 'movie');
+                const settings = optionsFailed ? {} : chosenSettings(modalEl, 'movie');
                 if (!settings) {
                     JE.toast?.(JE.t('jellyseerr_modal_toast_options_missing'), 3000);
                     return;
@@ -89,6 +91,7 @@ export function installRequestModals(host: SeerrCoreHost): void {
             const data = await api.fetchAdvancedRequestData('movie');
             if (origin.current()) modal.populateAdvancedOptions(modalElement, data, 'movie', is4k);
         } catch (error) {
+            optionsFailed = true;
             console.error(`${LOG_UI} Failed to load advanced options:`, error);
             JE.toast?.(JE.t('jellyseerr_err_load_server_options'), 3000);
         }
@@ -169,6 +172,8 @@ export function installRequestModals(host: SeerrCoreHost): void {
             ${showAdvanced ? modal.createAdvancedOptionsHTML('movie') : ''}
         `;
         const buttonText = label('jellyseerr_modal_request_selected_movies', 'Request Selected Movies');
+        // Server options that failed to load: the requests go without them, to Seerr's default server.
+        let optionsFailed = false;
         const backdrop = isString(details.backdrop_path) && details.backdrop_path ? details.backdrop_path
             : isString(details.backdropPath) ? details.backdropPath : null;
         const instance = modal.create({
@@ -183,7 +188,7 @@ export function installRequestModals(host: SeerrCoreHost): void {
                 requestBtn.disabled = true;
                 requestBtn.innerHTML = `${label('jellyseerr_modal_requesting', 'Requesting')}<span class="jellyseerr-button-spinner"></span>`;
                 let settings = {};
-                if (showAdvanced) {
+                if (showAdvanced && !optionsFailed) {
                     const chosen = chosenSettings(modalEl, 'movie');
                     if (!chosen) {
                         JE.toast?.(label('jellyseerr_modal_toast_options_missing', 'Please select all options'), 3000);
@@ -245,7 +250,9 @@ export function installRequestModals(host: SeerrCoreHost): void {
                 const data = await api.fetchAdvancedRequestData('movie');
                 modal.populateAdvancedOptions(instance.modalElement, data, 'movie', false);
             } catch (error) {
+                optionsFailed = true;
                 console.error('Failed to load advanced options:', error);
+                JE.toast?.(JE.t('jellyseerr_err_load_server_options'), 3000);
             }
         }
         if (!origin.current()) return;

@@ -217,6 +217,8 @@ export function installModal(host: SeerrCoreHost): void {
             if (shown || isClosing) return;
             shown = true;
             openedUrl = window.location.href;
+            // A dialog still in its exit animation goes now, so this one owns its ids and labels.
+            for (const closing of Array.from(document.querySelectorAll('.jellyseerr-season-modal[aria-hidden="true"]'))) closing.remove();
             document.body.appendChild(modalElement);
             document.body.classList.add('jellyseerr-modal-is-open');
             const previous: unknown = window.history.state;

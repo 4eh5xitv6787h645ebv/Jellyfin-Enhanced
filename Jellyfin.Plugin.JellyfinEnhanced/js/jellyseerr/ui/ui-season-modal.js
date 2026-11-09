@@ -365,6 +365,7 @@
             ${partialRequestsEnabled && !singleSeasonOnly ? '<div class="jellyseerr-season-header-row"><input type="checkbox" class="jellyseerr-season-checkbox" id="jellyseerr-select-all-seasons"><label class="jellyseerr-season-header-label" for="jellyseerr-select-all-seasons">' + JE.t("jellyseerr_select_all_seasons") + "</label><div></div><div></div></div>" : ""}
         </div>${showAdvanced ? modal.createAdvancedOptionsHTML("tv") : ""}`;
       let latestDetails = tvDetails;
+      let optionsFailed = false;
       const instance = modal.create({
         title: is4k ? `${JE.t("jellyseerr_modal_title")} - 4K` : JE.t("jellyseerr_modal_title"),
         subtitle: resolvedShowTitle,
@@ -395,7 +396,7 @@
             }
           }
           let settings = {};
-          if (showAdvanced) {
+          if (showAdvanced && !optionsFailed) {
             const value = (id) => {
               const el = modalEl.querySelector(`#${id}`);
               return el instanceof HTMLSelectElement ? el.value : "";
@@ -541,6 +542,7 @@
           const data = await api.fetchAdvancedRequestData("tv");
           if (origin.current()) modal.populateAdvancedOptions(instance.modalElement, data, "tv", is4k);
         } catch (error) {
+          optionsFailed = true;
           console.error(`${LOG_UI} Failed to load TV advanced options:`, error);
           JE.toast?.(JE.t("jellyseerr_err_load_server_options"), 3e3);
         }

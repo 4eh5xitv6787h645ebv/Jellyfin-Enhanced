@@ -261,6 +261,8 @@ export function installSeasonModal(host: SeerrCoreHost): void {
         </div>${showAdvanced ? modal.createAdvancedOptionsHTML('tv') : ''}`;
         // The newest details: a backfill started from older ones renders these (a newer guard verdict).
         let latestDetails: TvDetailsView = tvDetails;
+        // Server options that failed to load: the request goes without them, to Seerr's default server.
+        let optionsFailed = false;
         const instance = modal.create({
             title: is4k ? `${JE.t('jellyseerr_modal_title')} - 4K` : JE.t('jellyseerr_modal_title'),
             subtitle: resolvedShowTitle,
@@ -286,7 +288,7 @@ export function installSeasonModal(host: SeerrCoreHost): void {
                     }
                 }
                 let settings = {};
-                if (showAdvanced) {
+                if (showAdvanced && !optionsFailed) {
                     const value = (id: string) => { const el = modalEl.querySelector(`#${id}`); return el instanceof HTMLSelectElement ? el.value : ''; };
                     const server = value('tv-server');
                     const quality = value('tv-quality');
@@ -432,6 +434,7 @@ export function installSeasonModal(host: SeerrCoreHost): void {
                 const data = await api.fetchAdvancedRequestData('tv');
                 if (origin.current()) modal.populateAdvancedOptions(instance.modalElement, data, 'tv', is4k);
             } catch (error) {
+                optionsFailed = true;
                 console.error(`${LOG_UI} Failed to load TV advanced options:`, error);
                 JE.toast?.(JE.t('jellyseerr_err_load_server_options'), 3000);
             }
