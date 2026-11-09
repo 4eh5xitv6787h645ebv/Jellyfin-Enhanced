@@ -214,14 +214,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr
                 _logger.Info("[Manual User Import] Starting manual Jellyseerr user import...");
 
                 var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper.GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
+                var blockedIds = Shared.Seerr.JellyseerrUserImportHelper.GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
                 var userIds = _userManager.GetAllUsers()
                     .Select(u => u.Id.ToString().Replace("-", ""))
                     .Where(id => !blockedIds.Contains(id))
                     .ToList();
                 _logger.Info($"[Manual User Import] Importing {userIds.Count} Jellyfin users...");
 
-                var importResult = await Features.Seerr.Services.JellyseerrUserImportHelper.BulkImportAsync(
+                var importResult = await Shared.Seerr.JellyseerrUserImportHelper.BulkImportAsync(
                     userIds, urls, config.JellyseerrApiKey, _httpClientFactory, _logger);
 
                 // only flush user caches when at least one user

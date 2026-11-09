@@ -742,10 +742,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/JellyseerrUserImportHelper.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/MovieCollectionsBatch.cs",
       "category": "Features"
     },
@@ -934,6 +930,10 @@
       "category": "PluginServiceRegistrator.cs"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Analytics/UsageCounterDiskFormat.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Analytics/UsageEventCounterService.cs",
       "category": "Shared"
     },
@@ -1071,6 +1071,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/JellyseerrUser.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/JellyseerrUserImportHelper.cs",
       "category": "Shared"
     },
     {
@@ -10518,7 +10522,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 533,
+    "files": 534,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,

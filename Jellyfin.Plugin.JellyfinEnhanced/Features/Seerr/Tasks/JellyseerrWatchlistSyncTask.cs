@@ -156,7 +156,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 
             // Get all Jellyfin users, then filter out the JellyseerrImportBlockedUsers
             // so blocked users don't get watchlist sync.
-            var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
+            var blockedIds = Shared.Seerr.JellyseerrUserImportHelper
                 .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
             var allUsers = _userManager.GetAllUsers().ToList();
             var jellyfinUsers = allUsers
