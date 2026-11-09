@@ -355,7 +355,7 @@
         }
         return media;
       } catch (error) {
-        if (lease.current()) issueMediaCache.set(cacheKey, null);
+        console.warn(`${logPrefix} Failed to fetch issue media details:`, error);
         return null;
       }
     }

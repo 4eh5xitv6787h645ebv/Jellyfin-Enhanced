@@ -291,7 +291,9 @@ export function install(deps: Dependencies) {
       }
       return media;
     } catch (error) {
-      if (lease.current()) issueMediaCache.set(cacheKey, null);
+      // Not cached: a transient failure must not blank this issue's media until the cache clears,
+      // and only answers count against the cache cap. The next load asks again.
+      console.warn(`${logPrefix} Failed to fetch issue media details:`, error);
       return null;
     }
   }
