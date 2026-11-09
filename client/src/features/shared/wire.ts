@@ -1,6 +1,6 @@
 /**
  * Pure response decoders and the session lease check shared by activity and catchup (review D2: they used to be
- * one copy in activity/host.ts and a verbatim copy in catchup/wire.ts). Stateless: no module-level state, and each
+ * one copy in activity/host.ts and a verbatim copy in catchup, from step C3-catchup). Stateless: no module-level state, and each
  * function reads only its arguments, so inlining it into each IIFE output is harmless (frontend.md §2.2).
  */
 /** The part of the session service a lease reads (activity's `SocialSession` satisfies it). */
