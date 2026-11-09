@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using MediaBrowser.Model.Globalization;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
     /// <summary>
     /// Maps stream language codes to audio-language tag names and computes tag changes.

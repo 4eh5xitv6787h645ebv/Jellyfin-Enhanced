@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models
 {
     /// <summary>One topic's community votes for a title (DoesTheDogDie topicItemStat).</summary>
     public class DddTopicStat

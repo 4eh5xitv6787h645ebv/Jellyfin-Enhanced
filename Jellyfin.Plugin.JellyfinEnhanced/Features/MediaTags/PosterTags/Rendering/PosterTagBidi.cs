@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {
     /// <summary>
     /// The Unicode bidirectional algorithm (UAX #9) for one line of tag text, without explicit embeddings or

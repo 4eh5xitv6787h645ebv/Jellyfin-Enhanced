@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Configuration;
@@ -10,6 +11,10 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 
 namespace JE.Tests;
 
@@ -62,6 +67,20 @@ public class ApiSeerrTests
             var calendar = (JeCalendarController)ApiAssetTests.Controller(typeof(JeCalendarController), Plugin.Core, services);
             calendar.ControllerContext = Controller.ControllerContext;
             return calendar;
+        }
+        // The DetailsProviders actions live on JeDetailsProvidersController (restructure S2.12); same services, same HTTP context.
+        public JeDetailsProvidersController DetailsProviders()
+        {
+            var details = (JeDetailsProvidersController)ApiAssetTests.Controller(typeof(JeDetailsProvidersController), Plugin.Core, services);
+            details.ControllerContext = Controller.ControllerContext;
+            return details;
+        }
+        // The Downloads actions live on JeDownloadsController (restructure S2.10); same services, same HTTP context.
+        public JeDownloadsController Downloads()
+        {
+            var downloads = (JeDownloadsController)ApiAssetTests.Controller(typeof(JeDownloadsController), Plugin.Core, services);
+            downloads.ControllerContext = Controller.ControllerContext;
+            return downloads;
         }
         public void SetUser(Guid user, bool admin = false) => Controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
             new Claim("Jellyfin-UserId", user.ToString()), new Claim(ClaimTypes.Role, admin ? "Administrator" : "User")], "test"));
@@ -312,7 +331,7 @@ public class ApiSeerrTests
     {
         using var f = GuardedSeerr(out _);
         f.Plugin.Plugin.Configuration.MdblistRatingsEnabled = true;
-        var ok = Assert.IsType<OkObjectResult>(await f.Controller.GetMdblistRatings("movie", "603", CancellationToken.None));
+        var ok = Assert.IsType<OkObjectResult>(await f.DetailsProviders().GetMdblistRatings("movie", "603", CancellationToken.None));
         var body = Body(JsonSerializer.Serialize(ok.Value));
         Assert.False(body.GetProperty("Found").GetBoolean());
         // Not confirmed, so no cache keeps it past the guard.
@@ -348,13 +367,13 @@ public class ApiSeerrTests
     public void SpoilerMovieScopeAnswersForTheCallersOwnStateAndValidatesTheId()
     {
         using var f = GuardedSeerr(out var movieId);
-        var ok = Assert.IsType<OkObjectResult>(f.Controller.GetSpoilerMovieScope(movieId.ToString("N")));
+        var ok = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(movieId.ToString("N")));
         Assert.True(Body(JsonSerializer.Serialize(ok.Value)).GetProperty("inScope").GetBoolean());
         f.SetUser(f.OtherUserId);
-        var other = Assert.IsType<OkObjectResult>(f.Controller.GetSpoilerMovieScope(movieId.ToString("N")));
+        var other = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(movieId.ToString("N")));
         Assert.False(Body(JsonSerializer.Serialize(other.Value)).GetProperty("inScope").GetBoolean());
-        Assert.IsType<BadRequestObjectResult>(f.Controller.GetSpoilerMovieScope("not-a-guid"));
-        Assert.IsType<BadRequestObjectResult>(f.Controller.GetSpoilerMovieScope(Guid.Empty.ToString("N")));
+        Assert.IsType<BadRequestObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope("not-a-guid"));
+        Assert.IsType<BadRequestObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(Guid.Empty.ToString("N")));
     }
 
     private static JsonElement Rows(IActionResult result, string name) => JsonSerializer.SerializeToElement(Assert.IsType<OkObjectResult>(result).Value).GetProperty(name);
@@ -366,13 +385,13 @@ public class ApiSeerrTests
         using var f = GuardedSeerr(out _);
         f.Reply = _ => IntegrationTransport.Response("{\"records\":[{\"id\":1,\"series\":{\"title\":\"Show\",\"tvdbId\":71663},\"episode\":{\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\"},\"status\":\"downloading\",\"size\":100,\"sizeleft\":50}]}");
         f.SetUser(f.UserId, admin: true);
-        var guarded = Rows(await f.Controller.GetDownloadQueue(), "items")[0];
+        var guarded = Rows(await f.Downloads().GetDownloadQueue(), "items")[0];
         Assert.Equal("S02E05", guarded.GetProperty("subtitle").GetString());
         Assert.Equal("Show", guarded.GetProperty("title").GetString());
         f.SetUser(f.OtherUserId, admin: true);
-        Assert.Equal("S02E05 - Secret title", Rows(await f.Controller.GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
+        Assert.Equal("S02E05 - Secret title", Rows(await f.Downloads().GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
         f.SetUser(f.UserId, admin: true);
-        Assert.Equal("S02E05", Rows(await f.Controller.GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
+        Assert.Equal("S02E05", Rows(await f.Downloads().GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
     }
 
     [Fact]
@@ -384,7 +403,7 @@ public class ApiSeerrTests
             + "{\"eventType\":\"downloadFolderImported\",\"date\":\"2026-11-01T00:00:00Z\",\"downloadId\":\"a\",\"series\":{\"title\":\"Show\",\"tvdbId\":71663},\"episode\":{\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\"}},"
             + "{\"eventType\":\"downloadFolderImported\",\"date\":\"2026-10-01T00:00:00Z\",\"downloadId\":\"b\",\"series\":{\"title\":\"Other\",\"tvdbId\":7},\"episode\":{\"seasonNumber\":1,\"episodeNumber\":1,\"title\":\"Open title\"}}]}");
         f.SetUser(f.UserId, admin: true);
-        var rows = Rows(await f.Controller.GetDownloadHistory(), "items");
+        var rows = Rows(await f.Downloads().GetDownloadHistory(), "items");
         Assert.Equal("S02E05", rows[0].GetProperty("subtitle").GetString());
         Assert.Equal("S01E01 - Open title", rows[1].GetProperty("subtitle").GetString());
         Assert.False(string.IsNullOrEmpty(rows[0].GetProperty("date").GetString()));
@@ -414,12 +433,12 @@ public class ApiSeerrTests
         const string Show = "{\"name\":\"Show\",\"firstAirDate\":\"2005-02-06\",\"posterPath\":\"/p.jpg\",\"nextEpisodeToAir\":{\"airDate\":\"2099-01-01\"}}";
         f.Reply = request => IntegrationTransport.Response(request.RequestUri!.AbsolutePath == "/api/v1/tv/1433" ? Show : Requests);
         f.SetUser(f.UserId, admin: true);
-        var row = Rows(await f.Controller.GetRequests(), "requests")[0];
+        var row = Rows(await f.Downloads().GetRequests(), "requests")[0];
         Assert.Equal(JsonValueKind.Null, row.GetProperty("nextAirDate").ValueKind);
         Assert.Equal(JsonValueKind.Null, row.GetProperty("initialAirDate").ValueKind);
         Assert.True(row.GetProperty("isComingSoon").GetBoolean());
         Assert.Equal("Show", row.GetProperty("title").GetString());
         f.SetUser(f.OtherUserId, admin: true);
-        Assert.Equal("2099-01-01", Rows(await f.Controller.GetRequests(), "requests")[0].GetProperty("nextAirDate").GetString());
+        Assert.Equal("2099-01-01", Rows(await f.Downloads().GetRequests(), "requests")[0].GetProperty("nextAirDate").GetString());
     }
 }

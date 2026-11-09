@@ -76,7 +76,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services
                 TagsHideOnHover = defaultConfig.TagsHideOnHover,
                 QualityTagsPosition = defaultConfig.QualityTagsPosition,
                 // Series/season quality aggregation default.
-                SeriesQualityAggregation = Jellyfin.Plugin.JellyfinEnhanced.Services.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
+                SeriesQualityAggregation = Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
                 QualityHideSdr = defaultConfig.QualityHideSdr,
                 QualityMinimumResolution = QualityDisplayRules.Minimum(defaultConfig.QualityMinimumResolution),
                 QualityHdrDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityHdrDisplayMode),

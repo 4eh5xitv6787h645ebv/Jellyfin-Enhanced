@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {
     /// <summary>
     /// Where every tag goes on one image, in CSS px of the logical card (the web's layout), before scaling to pixels.

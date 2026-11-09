@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution
 {
     /// <summary>
     /// JavaScript string and number semantics the web tag code relies on (String.prototype.trim,

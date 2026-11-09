@@ -1,6 +1,7 @@
 using System.Collections.Generic;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models
 {
     /// <summary>
     /// One award category result, shaped differently depending on which side

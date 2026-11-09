@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 
@@ -13,5 +14,5 @@ internal static class SubtitleAccessibility
 
     internal static string[] Languages(IEnumerable<TagMediaStream>? streams) => (streams ?? Array.Empty<TagMediaStream>())
         .Where(s => s?.Type == "Subtitle" && IsSdh(s.IsHearingImpaired, s.Title, s.DisplayTitle))
-        .Select(s => Services.TagCacheService.NormalizeStreamLanguage(s.Language)).OfType<string>().Distinct(StringComparer.Ordinal).ToArray();
+        .Select(s => Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services.TagCacheService.NormalizeStreamLanguage(s.Language)).OfType<string>().Distinct(StringComparer.Ordinal).ToArray();
 }

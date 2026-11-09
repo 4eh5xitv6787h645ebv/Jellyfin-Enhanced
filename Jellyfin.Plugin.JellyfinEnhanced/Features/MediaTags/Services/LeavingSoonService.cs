@@ -17,8 +17,9 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.DependencyInjection;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
     /// <summary>
     /// Leaving soon facts (Status group): which library items Maintainerr will delete and

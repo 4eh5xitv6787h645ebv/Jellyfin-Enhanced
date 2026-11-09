@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 /// <summary>Refreshes public native status snapshots off the image route, on stale reads and once a minute.</summary>
 public sealed class NativeStatusRefreshService : BackgroundService

@@ -8,6 +8,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Reviews;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
 {
@@ -96,21 +97,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
         protected RevisionedSettingsResponse LoadRevisionedSettings(string userId)
             => new Features.Settings.Services.SettingsDocumentService(_userConfigurationManager).Read(userId, SettingsDefaults.Create, IsAdminUser());
 
-        /// <summary>
-        /// Per-request state for deciding which reviews a viewer may see.
-        /// Shared by <see cref="GetItemReviews"/> and <see cref="GetReviewRatings"/>
-        /// so the list and the poster rating chips can never disagree. Authors
-        /// are resolved at most once per request.
-        /// </summary>
-        protected sealed class ReviewVisibilityContext
-        {
-            public bool ViewerIsAdmin { get; init; }
-            public string? ViewerUserIdN { get; init; }
-            public bool HideHiddenAuthors { get; init; }
-            public bool HideDisabledAuthors { get; init; }
-            public Dictionary<Guid, Jellyfin.Database.Implementations.Entities.User?> Authors { get; } = new();
-        }
-
         protected ReviewVisibilityContext CreateReviewVisibilityContext(string endpoint, string target)
         {
             var config = JellyfinEnhanced.Instance?.Configuration;
@@ -149,6 +135,129 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
             if (claim != null && Guid.TryParse(claim.Value, out var id))
                 return id;
             return Guid.Empty;
+        }
+
+        protected IActionResult ParentalBlockedResult()
+        {
+            return StatusCode(403, new
+            {
+                error = true,
+                code = "parental_block",
+                message = "This title is above your parental rating limit."
+            });
+        }
+
+        /// <summary>
+        /// Decides whether <paramref name="review"/> is visible to the viewer
+        /// described by <paramref name="ctx"/> and resolves its author
+        /// (null when the id is unparseable or the user no longer exists).
+        /// May throw on a corrupt record or a failing user lookup — callers
+        /// isolate each review so one bad record cannot fail the request.
+        /// </summary>
+        /// <summary>
+        /// The Jellyfin user behind a review author id (null when the user no
+        /// longer exists), through <see cref="Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services.ReviewAuthorCache"/>, which the
+        /// user update/delete events invalidate.
+        /// </summary>
+        protected Jellyfin.Database.Implementations.Entities.User? ResolveReviewAuthor(Guid userGuid)
+            => Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services.ReviewAuthorCache.Resolve(userGuid, _userManager.GetUserById);
+
+        protected bool IsReviewVisibleToViewer(
+            UserReview review,
+            ReviewVisibilityContext ctx,
+            string itemLabel,
+            out Jellyfin.Database.Implementations.Entities.User? jellyfinUser)
+        {
+            // Rules live in ReviewVisibility (shared with native poster tags'
+            // review chip); authors are resolved at most once per request.
+            var visible = ReviewVisibility.IsVisible(
+                review,
+                ctx.ViewerIsAdmin,
+                ctx.ViewerUserIdN,
+                ctx.HideHiddenAuthors,
+                ctx.HideDisabledAuthors,
+                userGuid =>
+                {
+                    if (!ctx.Authors.TryGetValue(userGuid, out var author))
+                    {
+                        author = ResolveReviewAuthor(userGuid);
+                        ctx.Authors[userGuid] = author;
+                    }
+                    return author;
+                },
+                out jellyfinUser,
+                out var hiddenAsOrphan);
+            if (hiddenAsOrphan)
+            {
+                _logger.Warning($"Hiding orphaned review for unknown userId={review.UserId} on {itemLabel} from non-admin viewer.");
+            }
+            return visible;
+        }
+
+        /// <summary>
+        /// One pass over the review store: the rating sum and count per
+        /// "mediaType:tmdbKey" over the reviews visible to the viewer described
+        /// by <paramref name="ctx"/>, for the keys <paramref name="wanted"/>
+        /// accepts. Only keys with at least one counted rating are yielded.
+        /// Shared by <see cref="GetReviewRatings"/> and the tag-cache payload so
+        /// a poster chip shows the same average whichever way it was resolved.
+        /// </summary>
+        protected IEnumerable<(string Key, double Sum, int Count)> AggregateVisibleReviewRatings(ReviewVisibilityContext ctx, Func<string, bool> wanted)
+        {
+            var store = _userConfigurationManager.GetAllReviews();
+            var totals = new Dictionary<string, (double Sum, int Count)>(StringComparer.Ordinal);
+
+            foreach (var kvp in store.Reviews)
+            {
+                // Store keys are "{userIdN}:{mediaType}:{tmdbKey}". A requested
+                // key K matches exactly when the store key ends with ":" + K —
+                // the same suffix test GetItemReviews applies — so probe the
+                // tail after every ':' (a key holds at most a handful).
+                var storeKey = kvp.Key;
+                for (var i = storeKey.IndexOf(':'); i >= 0; i = storeKey.IndexOf(':', i + 1))
+                {
+                    var itemKey = storeKey.Substring(i + 1);
+                    // A store key's item part always starts with its media type, so
+                    // only a "movie:"/"tv:" tail can be an item key; the shorter tails
+                    // ("1399:s1", "s1") are never one.
+                    if (!itemKey.StartsWith("movie:", StringComparison.Ordinal) && !itemKey.StartsWith("tv:", StringComparison.Ordinal)) continue;
+                    if (!wanted(itemKey)) continue;
+
+                    // Same per-review isolation as GetItemReviews: a corrupt
+                    // record or failing author lookup skips only this review.
+                    var review = kvp.Value;
+                    if (review == null)
+                    {
+                        _logger.Warning($"Skipping review key={storeKey}: empty record.");
+                        continue;
+                    }
+
+                    try
+                    {
+                        if (!IsReviewVisibleToViewer(review, ctx, itemKey, out _)) continue;
+
+                        // Mirror the client's historical `filter(r => r.rating)`: only
+                        // a non-zero rating counts (NaN is excluded too).
+                        var rating = review.Rating ?? 0;
+                        if (double.IsNaN(rating) || Math.Abs(rating) <= 0) continue;
+
+                        var acc = totals.TryGetValue(itemKey, out var existing) ? existing : (0d, 0);
+                        totals[itemKey] = (acc.Item1 + rating, acc.Item2 + 1);
+                    }
+                    catch (Exception ex) when (ex is not OutOfMemoryException)
+                    {
+                        // Same per-review isolation as GetItemReviews: one unusable record
+                        // (e.g. an author id the user manager rejects) skips only itself
+                        // instead of failing every chip in the batch.
+                        _logger.Warning($"Skipping review key={storeKey} due to filter error: {ex.Message}");
+                    }
+                }
+            }
+
+            foreach (var kvp in totals)
+            {
+                yield return (kvp.Key, kvp.Value.Sum, kvp.Value.Count);
+            }
         }
     }
 }

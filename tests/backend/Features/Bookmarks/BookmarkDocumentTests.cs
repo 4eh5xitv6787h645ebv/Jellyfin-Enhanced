@@ -104,7 +104,7 @@ public class BookmarkDocumentTests
         controller.Request.Headers["X-JE-Admin"] = "true";
         controller.HttpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Loopback;
         Assert.IsType<ForbidResult>(controller.GetBookmarkDocument(user.ToString("N")));
-        controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user, false);
+        controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user, false);
         Assert.IsType<ForbidResult>(controller.GetBookmarkDocument(Guid.NewGuid().ToString("N")));
         Assert.IsType<ForbidResult>(controller.MutateBookmarkDocument(Guid.NewGuid().ToString("N"), Request("missing", Op("delete-all"))));
         var directory = Path.Combine(fixture.Core.ConfigRoot, user.ToString("N")); Directory.CreateDirectory(directory);
@@ -126,7 +126,7 @@ public class BookmarkDocumentTests
         Assert.Equal(receipt.Revision, fixture.Core.Manager.ReadUserConfigurationDocument(user.ToString("N"), "bookmark.json").Revision);
         Assert.IsType<OkObjectResult>(controller.SaveUserBookmark(user.ToString("N"), new Jellyfin.Plugin.JellyfinEnhanced.Configuration.UserBookmark()));
         Assert.IsType<ConflictObjectResult>(controller.MutateBookmarkDocument(user.ToString("N"), Request(receipt.Revision, Op("delete-all"))));
-        controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), true);
+        controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(Guid.NewGuid(), true);
         Assert.IsType<JsonResult>(controller.GetBookmarkDocument(user.ToString("N")));
     }
     [Fact]

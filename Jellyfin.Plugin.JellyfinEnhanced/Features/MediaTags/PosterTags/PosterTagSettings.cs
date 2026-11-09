@@ -8,11 +8,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     /// <summary>
     /// The effective poster tag settings of one user: every value the card tag groups read,
@@ -629,7 +631,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
                 VideoCodecTagOrder = user.VideoCodecTagOrder ?? config.VideoCodecTagOrder,
                 AudioInfoTagOrder = user.AudioInfoTagOrder ?? config.AudioInfoTagOrder,
                 QualityTagsPreferredAudioLanguage = preferredChoice,
-                SeriesQualityAggregation = Services.SeriesQualityAggregation.Normalize(user.SeriesQualityAggregation ?? config.SeriesQualityAggregation),
+                SeriesQualityAggregation = Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.SeriesQualityAggregation.Normalize(user.SeriesQualityAggregation ?? config.SeriesQualityAggregation),
                 QualityHideSdr = user.QualityHideSdr ?? config.QualityHideSdr,
                 QualityMinimumResolution = QualityDisplayRules.Minimum(user.QualityMinimumResolution ?? config.QualityMinimumResolution),
                 QualityHdrDisplayMode = QualityDisplayRules.Mode(user.QualityHdrDisplayMode ?? config.QualityHdrDisplayMode),

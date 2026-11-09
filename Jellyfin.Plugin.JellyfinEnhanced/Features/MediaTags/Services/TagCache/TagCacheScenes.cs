@@ -3,8 +3,9 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 /// <summary>Projects daily movie keyword snapshots into the normal tag-cache publication.</summary>
 public partial class TagCacheService

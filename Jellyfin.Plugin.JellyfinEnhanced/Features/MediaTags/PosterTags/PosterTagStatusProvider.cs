@@ -3,12 +3,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Http;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 
 /// <summary>Shares TMDB caches with the web; parent aggregates are resolved as the image's viewer and spoiler-stripped.</summary>
 public sealed class PosterTagStatusProvider

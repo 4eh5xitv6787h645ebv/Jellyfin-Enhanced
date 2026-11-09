@@ -289,7 +289,7 @@
     "title": "🐛[BUG] Quality Tags are showing wrong info",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/PosterTags/PosterRegressionTests.cs",
+      "tests/backend/Features/MediaTags/PosterTags/PosterRegressionTests.cs",
       "tests/frontend/core/core-tag-renderer.test.mjs"
     ],
     "assessment": "Production tag renderer and stream-height resolution tested; original TV-mode div-card and 1328x720 fixture not all replayed. Width-sensitive threshold may escape height-only test."
@@ -1164,7 +1164,7 @@
     "title": "Fix quality tags for TV mode",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/PosterTags/PosterRegressionTests.cs",
+      "tests/backend/Features/MediaTags/PosterTags/PosterRegressionTests.cs",
       "tests/frontend/core/core-tag-renderer.test.mjs"
     ],
     "assessment": "Production tag renderer and stream-height resolution tested; original TV-mode div-card and 1328x720 fixture not all replayed. Width-sensitive threshold may escape height-only test."
@@ -1295,7 +1295,7 @@
     "title": "🐛[BUG] Quality tags are incorrect for 720p media",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/PosterTags/PosterRegressionTests.cs",
+      "tests/backend/Features/MediaTags/PosterTags/PosterRegressionTests.cs",
       "tests/frontend/core/core-tag-renderer.test.mjs"
     ],
     "assessment": "Production tag renderer and stream-height resolution tested; original TV-mode div-card and 1328x720 fixture not all replayed. Width-sensitive threshold may escape height-only test."

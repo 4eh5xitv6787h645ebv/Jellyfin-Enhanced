@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     // A short-lived cache in front of IUserManager.GetUserById for the native
     // poster tag hot paths. On Jellyfin 12 every GetUserById opens a DB

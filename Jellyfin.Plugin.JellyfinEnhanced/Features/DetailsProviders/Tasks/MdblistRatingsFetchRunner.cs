@@ -11,8 +11,11 @@ using MediaBrowser.Model.Entities;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Tasks
 {
     /// <summary>
     /// Core for MdblistRatingsFetchTask: keeps mdblist-ratings.json warm by

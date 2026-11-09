@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 /// <summary>Daily movie keyword snapshots through the shared TMDB response cache. Image routes only read snapshots.</summary>
 public sealed class StatusTagsScenesService

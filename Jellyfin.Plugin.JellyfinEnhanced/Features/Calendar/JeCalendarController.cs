@@ -25,7 +25,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar
     [ApiController]
     public class JeCalendarController : JeControllerBase
     {
-        private readonly Services.SpoilerSeerrRedactor _spoilerSeerrRedactor;
+        private readonly Shared.SpoilerGuard.SpoilerSeerrRedactor _spoilerSeerrRedactor;
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
         private readonly IItemRepository _itemRepository;
@@ -41,7 +41,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar
             UserConfigurationManager userConfigurationManager,
             IItemRepository itemRepository,
             IDbContextFactory<JellyfinDbContext> dbContextFactory,
-            Services.SpoilerSeerrRedactor spoilerSeerrRedactor)
+            Shared.SpoilerGuard.SpoilerSeerrRedactor spoilerSeerrRedactor)
             : base(userManager, logger, userConfigurationManager)
         {
             _userDataManager = userDataManager;

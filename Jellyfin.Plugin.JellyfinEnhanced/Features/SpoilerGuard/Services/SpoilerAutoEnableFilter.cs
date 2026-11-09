@@ -5,7 +5,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
 {
     // Shared "does auto-enable apply to this title?" gate for the three
     // Spoiler Guard auto-enable modes (first play, Seerr request, library

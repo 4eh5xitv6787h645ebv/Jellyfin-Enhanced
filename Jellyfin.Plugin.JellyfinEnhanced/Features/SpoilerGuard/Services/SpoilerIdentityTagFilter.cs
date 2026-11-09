@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Search;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
 {
     // Stamps the requesting user's identity marker (see
     // SpoilerIdentityService) onto every image-tag field of item DTOs in

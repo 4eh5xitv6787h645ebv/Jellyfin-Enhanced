@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Events.Users;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
 {

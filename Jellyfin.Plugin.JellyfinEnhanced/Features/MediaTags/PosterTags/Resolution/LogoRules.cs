@@ -4,8 +4,11 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution
 {
     /// <summary>
     /// Port of <c>js/tags/logotags.js</c> readLogos and shortName: the valid logos of a cache entry

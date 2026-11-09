@@ -3,8 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution
 {
     /// <summary>
     /// Port of the web's audio-language flag logic: <c>js/core/media-language.js</c> (tag parsing,
@@ -338,7 +340,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution
             .Select(code => (code, code.ToUpperInvariant())).ToArray();
 
         /// <summary>Language chips in the combined cap order: badge, audio, subtitles.</summary>
-        internal static List<PosterTag>? ResolveGroup(Model.TagCacheEntry entry, PosterTagSettings settings)
+        internal static List<PosterTag>? ResolveGroup(Models.TagCacheEntry entry, PosterTagSettings settings)
         {
             bool codes = settings.LanguageStyle == "codes";
             List<FlagInfo>? ResolveTracks(string[]? tracks, string[]? partial, bool asCodes) => Resolve(

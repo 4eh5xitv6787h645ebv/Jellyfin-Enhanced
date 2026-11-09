@@ -11,7 +11,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
 {
     // "Apply to existing titles": the admin-triggered, one-shot counterpart
     // of auto-enable on library add. Library add only ever arms titles as

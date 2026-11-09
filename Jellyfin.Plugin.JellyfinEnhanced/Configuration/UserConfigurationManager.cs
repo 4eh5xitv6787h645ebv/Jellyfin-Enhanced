@@ -417,8 +417,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
 
         private void NotifyUserConfigurationSaved(string userId, string fileName)
         {
-            if (string.Equals(fileName, Services.SpoilerBlurImageFilter.SpoilerBlurFileName, StringComparison.OrdinalIgnoreCase))
-                Services.SpoilerUserResolver.InvalidateUser(userId);
+            if (string.Equals(fileName, Features.SpoilerGuard.Services.SpoilerBlurImageFilter.SpoilerBlurFileName, StringComparison.OrdinalIgnoreCase))
+                Shared.SpoilerGuard.SpoilerUserResolver.InvalidateUser(userId);
             RaiseUserConfigurationSaved(userId, fileName);
         }
 

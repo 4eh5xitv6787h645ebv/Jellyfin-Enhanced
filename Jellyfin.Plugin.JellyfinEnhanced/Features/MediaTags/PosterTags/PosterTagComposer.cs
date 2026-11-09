@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering;
 using SkiaSharp;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     /// <summary>The image a poster is drawn on.</summary>
     /// <param name="ContentType">Normalized media type (image/jpeg, image/png or image/webp).</param>

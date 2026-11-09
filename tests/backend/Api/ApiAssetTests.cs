@@ -18,9 +18,9 @@ public class ApiAssetTests
     {
         // Asset actions use only the logger and HTTP context; unrelated host services are deliberately absent.
         var constructor = controllerType.GetConstructors().Single();
-        var arguments = constructor.GetParameters().Select(p => p.ParameterType == typeof(Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor) && !services.OfType<Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor>().Any()
+        var arguments = constructor.GetParameters().Select(p => p.ParameterType == typeof(Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerSeerrRedactor) && !services.OfType<Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerSeerrRedactor>().Any()
             // Inert until a test turns Spoiler Guard on, and then it supplies its own.
-            ? new Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor(null!, null!, null!, null!, null!)
+            ? new Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerSeerrRedactor(null!, null!, null!, null!, null!)
             : p.ParameterType == typeof(Jellyfin.Plugin.JellyfinEnhanced.Logger) ? (object)fixture.Logger : services.FirstOrDefault(p.ParameterType.IsInstanceOfType)).ToArray();
         var controller = (ControllerBase)constructor.Invoke(arguments);
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
@@ -32,6 +32,22 @@ public class ApiAssetTests
     internal static T Sibling<T>(ControllerBase controller, CoreFixture fixture, params object[] services) where T : ControllerBase
     {
         var sibling = (T)Controller(typeof(T), fixture, services);
+        sibling.ControllerContext = controller.ControllerContext;
+        return sibling;
+    }
+
+    // A feature controller built from the constructor arguments `controller` holds (its injected fields, base class
+    // included) and sharing its ControllerContext, so it sees the same services and signed-in user. For tests whose
+    // fixture exposes only the main controller (restructure S2.11). Call it per action: a later SignIn replaces the
+    // main controller's context.
+    internal static T SiblingOf<T>(ControllerBase controller) where T : ControllerBase
+    {
+        var values = new List<object>();
+        for (var type = controller.GetType(); type != null && type != typeof(ControllerBase); type = type.BaseType)
+            values.AddRange(type.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly)
+                .Select(f => f.GetValue(controller)).OfType<object>());
+        var constructor = typeof(T).GetConstructors().Single();
+        var sibling = (T)constructor.Invoke(constructor.GetParameters().Select(p => values.FirstOrDefault(p.ParameterType.IsInstanceOfType)).ToArray());
         sibling.ControllerContext = controller.ControllerContext;
         return sibling;
     }

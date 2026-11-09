@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     // Decides, at metadata time, whether the client asking for item DTOs gets
     // native poster tags stamped into its image tags. Clients that load the

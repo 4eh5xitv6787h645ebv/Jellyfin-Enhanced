@@ -6,8 +6,11 @@ using System.Linq;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
 
 /// <summary>Live, caller-filtered inputs for the pure status decision. No remote data is persisted in the tag cache.</summary>
 /// <param name="WeeklyRank">The rank came from Seerr's weekly list ("#N This Week"), not TMDB's daily one.</param>
@@ -233,7 +236,7 @@ public static class StatusRules
             if (ShortDates.Locales.TryGetValue(ancestor.Name, out key)) break;
         }
         var format = ShortDates.Formats[key ?? ShortDates.Locales["en"]];
-        Calendar calendar = format.Calendar switch
+        System.Globalization.Calendar calendar = format.Calendar switch
         {
             "persian" => new PersianCalendar(),
             "islamic-umalqura" => new UmAlQuraCalendar(),

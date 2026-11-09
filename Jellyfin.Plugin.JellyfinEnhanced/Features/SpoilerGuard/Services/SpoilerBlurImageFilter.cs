@@ -14,8 +14,9 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Trickplay;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
 {
     // Replaces spoiler-bearing image bytes (parent-art substitution in
     // "hide" mode, or a Gaussian blur in "blur" mode) when Spoiler Guard is

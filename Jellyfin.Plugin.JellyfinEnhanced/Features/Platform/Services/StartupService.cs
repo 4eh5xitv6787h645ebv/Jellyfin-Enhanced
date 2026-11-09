@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

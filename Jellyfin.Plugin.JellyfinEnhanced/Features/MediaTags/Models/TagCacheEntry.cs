@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models
 {
     /// <summary>
     /// Pre-computed tag data for a single library item.

@@ -2,8 +2,9 @@ using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Text;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution
 {
     /// <summary>
     /// Port of <c>js/tags/ageratingtags.js</c> normalizeRating with the shared Colored Ratings

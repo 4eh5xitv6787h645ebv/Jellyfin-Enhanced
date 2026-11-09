@@ -67,7 +67,7 @@ public class RevisionedSettingsTests
         var user = Guid.NewGuid();
         var maintenance = new MaintenanceModeService(Moq.Mock.Of<MediaBrowser.Controller.Library.IUserManager>(), Moq.Mock.Of<MediaBrowser.Controller.Session.ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
         var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), fixture.Core, maintenance, fixture.Core.Manager);
-        controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user, false);
+        controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user, false);
         Assert.IsType<Microsoft.AspNetCore.Mvc.ForbidResult>(controller.GetRevisionedSettings(Guid.NewGuid().ToString("N")));
         var loaded = Assert.IsType<RevisionedSettingsResponse>(Assert.IsType<Microsoft.AspNetCore.Mvc.JsonResult>(controller.GetRevisionedSettings(user.ToString("N"))).Value);
         var root = new DirectoryInfo(AppContext.BaseDirectory);

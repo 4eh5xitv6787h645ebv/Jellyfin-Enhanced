@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Model.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 {

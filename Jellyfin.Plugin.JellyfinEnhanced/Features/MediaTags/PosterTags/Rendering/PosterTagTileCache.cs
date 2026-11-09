@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using SkiaSharp;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {
     /// <summary>
     /// Byte-bounded LRU of pre-rendered tag tiles (a chip with its blurred shadow, a flag with its clip and outline).

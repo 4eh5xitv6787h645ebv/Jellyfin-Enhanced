@@ -10,7 +10,7 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
 {
     // Shared "arm many titles for many users" path used by the two bulk
     // auto-enable features: the library-add batcher (SpoilerLibraryAddAutoEnabler)
