@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Text;
 
 /// <summary>
 /// The CLDR plural category ("zero", "one", "two", "few", "many", "other") of a whole number in a language,

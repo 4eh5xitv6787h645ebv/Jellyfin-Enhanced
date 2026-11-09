@@ -475,7 +475,7 @@ public class ApiMediaTagsPortableTests
             Expected = new Dictionary<string, JsonElement> { ["TagStyleOverrides"] = Json(change["from"]!.ToJsonString()) },
         }));
         Assert.Equal(styles, f.Plugin.Configuration.TagStyleOverrides);
-        var set = Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.TagStyleSet.Parse(f.Plugin.Configuration.TagStyleOverrides);
+        var set = Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.TagStyleSet.Parse(f.Plugin.Configuration.TagStyleOverrides);
         Assert.Equal("rgba(198, 40, 40, 1)", set.Resolve("genre", "horror").Background);
         Assert.Equal("rgba(17, 17, 17, 1)", set.Resolve("genre", "comedy").Text);
         Assert.Equal("rgba(84, 110, 122, 1)", set.Resolve("genre", "other").Background);

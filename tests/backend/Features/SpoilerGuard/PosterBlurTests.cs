@@ -1,4 +1,3 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using SkiaSharp;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 namespace JE.Tests.Features.SpoilerGuard;

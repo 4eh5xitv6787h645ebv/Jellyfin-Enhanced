@@ -17,23 +17,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi
 
             /// <summary><c>TagCacheService.Instance?.OnRatingSourceSettingsChanged()</c>.</summary>
             public static void OnRatingSourceSettingsChanged() => TagCacheService.Instance?.OnRatingSourceSettingsChanged();
-        }
 
-        /// <summary>Forwards to the static <see cref="LeavingSoonService"/> members other features call.</summary>
-        public static class LeavingSoon
-        {
-            /// <summary><c>LeavingSoonService.Configured(config)</c>.</summary>
-            public static bool Configured(Configuration.PluginConfiguration? config) => LeavingSoonService.Configured(config);
-        }
-
-        /// <summary>Forwards to the static Tag Styles members (<see cref="PosterTags.TagStyleSet"/>, <see cref="PosterTags.TagStyleKeys"/>) other features call.</summary>
-        public static class TagStyles
-        {
-            /// <summary><c>TagStyleSet.Parse(json, preset).IsEmpty</c>.</summary>
-            public static bool ParseIsEmpty(string? json, string? preset) => PosterTags.TagStyleSet.Parse(json, preset).IsEmpty;
-
-            /// <summary><c>TagStyleKeys.NormalizePreset(preset)</c>.</summary>
-            public static string NormalizePreset(string? preset) => PosterTags.TagStyleKeys.NormalizePreset(preset);
+            /// <summary><c>TagCacheService.Instance?.RefreshRatingSourceAvailability()</c>.</summary>
+            public static void RefreshRatingSourceAvailability() => TagCacheService.Instance?.RefreshRatingSourceAvailability();
         }
 
         /// <summary>Forwards to the static <see cref="PosterTags.NativeClientPolicy"/> members other features read.</summary>

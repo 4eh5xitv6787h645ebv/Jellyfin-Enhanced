@@ -4,8 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
@@ -139,7 +138,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
                 case "LeavingSoonMaintainerrUrl":
                     var url = (value as string)?.Trim();
                     normalized = url;
-                    if (url != null && (url.Length == 0 || LeavingSoonService.IsMaintainerrUrl(url))) return true;
+                    if (url != null && (url.Length == 0 || LeavingSoonSources.IsMaintainerrUrl(url))) return true;
                     error = "must be empty or an http(s) address without credentials, query or fragment";
                     return false;
                 case "LeavingSoonMaintainerrApiKey":
@@ -151,8 +150,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
                 case "LeavingSoonCollections":
                     var names = value as string;
                     normalized = names?.Trim();
-                    if (LeavingSoonService.IsCollectionList(names)) return true;
-                    error = $"must be at most {LeavingSoonService.MaxCollectionNames} names of at most {LeavingSoonService.MaxCollectionNameLength} characters";
+                    if (LeavingSoonSources.IsCollectionList(names)) return true;
+                    error = $"must be at most {LeavingSoonSources.MaxCollectionNames} names of at most {LeavingSoonSources.MaxCollectionNameLength} characters";
                     return false;
                 case "AwardsTagsImdbList":
                 case "AwardsTagsLetterboxdList":

@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
 using Jellyfin.Database.Implementations.Entities;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;

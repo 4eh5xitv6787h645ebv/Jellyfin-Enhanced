@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 

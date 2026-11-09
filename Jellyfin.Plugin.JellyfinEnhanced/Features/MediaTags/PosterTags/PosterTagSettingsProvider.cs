@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {

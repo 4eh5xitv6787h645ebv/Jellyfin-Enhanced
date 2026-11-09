@@ -4,7 +4,7 @@ using System.Security;
 using System.Security.Claims;
 using Jellyfin.Extensions;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers {
+namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth {
     public static class UserHelper {
 
         public static string? GetClaimValue(ClaimsPrincipal user, string name)

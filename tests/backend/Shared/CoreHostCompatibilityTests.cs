@@ -1,7 +1,6 @@
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;

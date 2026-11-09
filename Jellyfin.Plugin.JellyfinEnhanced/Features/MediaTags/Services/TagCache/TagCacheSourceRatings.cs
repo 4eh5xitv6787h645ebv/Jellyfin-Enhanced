@@ -4,12 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Entities;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Tasks;
 
@@ -30,7 +28,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
             var hideRatings = !SourceRatingsConfigured && entry.Ratings != null;
             var hideAwards = config?.AwardsTagsEnabled != true && entry.Awards != null;
             // A removed Leaving soon source retires its facts before the next publish.
-            var hideLeaving = entry.Leaving != null && !LeavingSoonService.Configured(config);
+            var hideLeaving = entry.Leaving != null && !LeavingSoonSources.Configured(config);
             if (!hideRatings && !hideAwards && !hideLeaving) return entry;
             var copy = entry.Clone();
             if (hideRatings) copy.Ratings = null;

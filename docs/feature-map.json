@@ -16,8 +16,8 @@
       "client": ["client/src/features/activity"],
       "backend": "Activity",
       "controller": "JeActivityController",
-      "tests": { "frontend": ["tests/frontend/pages"], "backend": [] },
-      "notes": "Its frontend tests (pages-activity, pages-social-*, pages-plugin-pages-features) stay in the cross-cutting pages/ folder, which F1 kept. Backend: no tests/backend/Features/Activity folder; its tests sit in mixed files, tests/backend/Features/DetailsProviders/ReviewActivityVisibilityTests.cs (ActivityFeedBuilder and review visibility in the feed) and tests/backend/Core/CoreSharedStoresTests.cs (the activity store)."
+      "tests": { "frontend": ["tests/frontend/pages"], "backend": ["tests/backend/Features/Activity"] },
+      "notes": "Its frontend tests (pages-activity, pages-social-*, pages-plugin-pages-features) stay in the cross-cutting pages/ folder, which F1 kept. Backend: tests/backend/Features/Activity holds the ActivityFeedBuilder tests (round 13 moved them out of DetailsProviders/ReviewActivityVisibilityTests.cs). The activity store itself is Configuration/UserConfigurationManager, tested in tests/backend/Core/CoreSharedStoresTests.cs."
     },
     {
       "name": "bookmarks",
@@ -68,8 +68,8 @@
       "client": ["client/src/features/downloads"],
       "backend": "Downloads",
       "controller": "JeDownloadsController",
-      "tests": { "frontend": ["tests/frontend/features/downloads"], "backend": [] },
-      "notes": "Backend: no tests/backend/Features/Downloads folder; the arr/queue, arr/history and arr/requests routes are tested through JeDownloadsController in tests/backend/Features/Seerr/ApiSeerrTests.cs, which shares the Seerr fixture."
+      "tests": { "frontend": ["tests/frontend/features/downloads"], "backend": ["tests/backend/Features/Downloads"] },
+      "notes": "Backend: tests/backend/Features/Downloads holds the arr/queue, arr/history and arr/requests route tests (round 13 moved them out of Seerr/ApiSeerrTests.cs; they still use its Seerr fixture)."
     },
     {
       "name": "hidden-content",

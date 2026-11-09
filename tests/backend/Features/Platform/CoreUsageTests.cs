@@ -1,5 +1,4 @@
 using System.Globalization;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Analytics;
 
 namespace JE.Tests.Features.Platform;

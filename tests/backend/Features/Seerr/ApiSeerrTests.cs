@@ -6,7 +6,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
@@ -23,7 +22,7 @@ namespace JE.Tests.Features.Seerr;
 [Collection("Plugin singleton")]
 public class ApiSeerrTests
 {
-    private sealed class SeerrFixture : IDisposable
+    internal sealed class SeerrFixture : IDisposable
     {
         public ApiPluginFixture Plugin { get; } = new();
         public Guid UserId { get; } = Guid.NewGuid();
@@ -283,7 +282,7 @@ public class ApiSeerrTests
 
     private const string TmdbBody = "{\"id\":603,\"title\":\"Film\",\"overview\":\"Secret plot\"}";
 
-    private static SeerrFixture GuardedSeerr(out Guid movieId)
+    internal static SeerrFixture GuardedSeerr(out Guid movieId)
     {
         var library = new Mock<ILibraryManager>();
         var movie = new MediaBrowser.Controller.Entities.Movies.Movie { Id = Guid.NewGuid() };
@@ -385,38 +384,7 @@ public class ApiSeerrTests
         Assert.IsType<BadRequestObjectResult>(f.SpoilerGuard().GetSpoilerMovieScope(Guid.Empty.ToString("N")));
     }
 
-    private static JsonElement Rows(IActionResult result, string name) => JsonSerializer.SerializeToElement(Assert.IsType<OkObjectResult>(result).Value).GetProperty(name);
-
-    // The Downloads caches are shared between users, so a guard can only be applied on the way out.
-    [Fact]
-    public async Task DownloadsHideGuardedEpisodeTitlesPerUserOverTheSharedCache()
-    {
-        using var f = GuardedSeerr(out _);
-        f.Reply = _ => IntegrationTransport.Response("{\"records\":[{\"id\":1,\"series\":{\"title\":\"Show\",\"tvdbId\":71663},\"episode\":{\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\"},\"status\":\"downloading\",\"size\":100,\"sizeleft\":50}]}");
-        f.SetUser(f.UserId, admin: true);
-        var guarded = Rows(await f.Downloads().GetDownloadQueue(), "items")[0];
-        Assert.Equal("S02E05", guarded.GetProperty("subtitle").GetString());
-        Assert.Equal("Show", guarded.GetProperty("title").GetString());
-        f.SetUser(f.OtherUserId, admin: true);
-        Assert.Equal("S02E05 - Secret title", Rows(await f.Downloads().GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
-        f.SetUser(f.UserId, admin: true);
-        Assert.Equal("S02E05", Rows(await f.Downloads().GetDownloadQueue(), "items")[0].GetProperty("subtitle").GetString());
-    }
-
-    [Fact]
-    public async Task HistoryHidesGuardedEpisodeTitlesAndLeavesOtherRowsWhole()
-    {
-        using var f = GuardedSeerr(out _);
-        f.Plugin.Plugin.Configuration.DownloadsShowHistory = true;
-        f.Reply = _ => IntegrationTransport.Response("{\"records\":["
-            + "{\"eventType\":\"downloadFolderImported\",\"date\":\"2026-11-01T00:00:00Z\",\"downloadId\":\"a\",\"series\":{\"title\":\"Show\",\"tvdbId\":71663},\"episode\":{\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\"}},"
-            + "{\"eventType\":\"downloadFolderImported\",\"date\":\"2026-10-01T00:00:00Z\",\"downloadId\":\"b\",\"series\":{\"title\":\"Other\",\"tvdbId\":7},\"episode\":{\"seasonNumber\":1,\"episodeNumber\":1,\"title\":\"Open title\"}}]}");
-        f.SetUser(f.UserId, admin: true);
-        var rows = Rows(await f.Downloads().GetDownloadHistory(), "items");
-        Assert.Equal("S02E05", rows[0].GetProperty("subtitle").GetString());
-        Assert.Equal("S01E01 - Open title", rows[1].GetProperty("subtitle").GetString());
-        Assert.False(string.IsNullOrEmpty(rows[0].GetProperty("date").GetString()));
-    }
+    internal static JsonElement Rows(IActionResult result, string name) => JsonSerializer.SerializeToElement(Assert.IsType<OkObjectResult>(result).Value).GetProperty(name);
 
     [Fact]
     public async Task CalendarHidesGuardedEpisodeTitlesAndKeepsTheirDates()
@@ -432,22 +400,5 @@ public class ApiSeerrTests
         Assert.Equal("S02E05", guarded.GetProperty("subtitle").GetString());
         Assert.False(string.IsNullOrEmpty(guarded.GetProperty("releaseDate").GetString()));
         Assert.Equal("S01E01 - Open title", events.Single(e => e.GetProperty("title").GetString() == "Other").GetProperty("subtitle").GetString());
-    }
-
-    [Fact]
-    public async Task RequestRowsHideGuardedDatesWhileComingSoonStillWorks()
-    {
-        using var f = GuardedSeerr(out _);
-        const string Requests = "{\"pageInfo\":{\"results\":1},\"results\":[{\"id\":1,\"type\":\"tv\",\"status\":2,\"createdAt\":\"2026-01-01T00:00:00Z\",\"media\":{\"tmdbId\":1433,\"tvdbId\":71663,\"status\":4},\"requestedBy\":{\"displayName\":\"A\"}}]}";
-        const string Show = "{\"name\":\"Show\",\"firstAirDate\":\"2005-02-06\",\"posterPath\":\"/p.jpg\",\"nextEpisodeToAir\":{\"airDate\":\"2099-01-01\"}}";
-        f.Reply = request => IntegrationTransport.Response(request.RequestUri!.AbsolutePath == "/api/v1/tv/1433" ? Show : Requests);
-        f.SetUser(f.UserId, admin: true);
-        var row = Rows(await f.Downloads().GetRequests(), "requests")[0];
-        Assert.Equal(JsonValueKind.Null, row.GetProperty("nextAirDate").ValueKind);
-        Assert.Equal(JsonValueKind.Null, row.GetProperty("initialAirDate").ValueKind);
-        Assert.True(row.GetProperty("isComingSoon").GetBoolean());
-        Assert.Equal("Show", row.GetProperty("title").GetString());
-        f.SetUser(f.OtherUserId, admin: true);
-        Assert.Equal("2099-01-01", Rows(await f.Downloads().GetRequests(), "requests")[0].GetProperty("nextAirDate").GetString());
     }
 }

@@ -1,10 +1,9 @@
 using System.Threading.Tasks;
 using Jellyfin.Data.Events.Users;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity
 {
     // Invalidate the identity caches the moment the user set changes, so the
     // single-user shortcut and the marker→user map never serve a stale view

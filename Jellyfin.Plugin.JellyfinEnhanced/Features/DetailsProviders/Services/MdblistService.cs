@@ -8,10 +8,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Mdblist;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services

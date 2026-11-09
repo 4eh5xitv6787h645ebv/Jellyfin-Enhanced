@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Xml.Serialization;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;

@@ -5,11 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Controller.Entities;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {

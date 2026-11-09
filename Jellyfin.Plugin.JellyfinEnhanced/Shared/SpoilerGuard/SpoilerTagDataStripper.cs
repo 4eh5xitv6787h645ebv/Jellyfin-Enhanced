@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
@@ -551,7 +549,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                         DisplayTitle = null,
                         // The role the titles named (commentary, description) is no spoiler and decides
                         // the main audio, so it outlives them.
-                        Role = st.Role ?? (st.Type == "Audio" && Helpers.TrackRoles.IsSecondaryAudio(st.Title, st.DisplayTitle) ? Helpers.TrackRoles.SecondaryRole : null),
+                        Role = st.Role ?? (st.Type == "Audio" && Shared.Media.TrackRoles.IsSecondaryAudio(st.Title, st.DisplayTitle) ? Shared.Media.TrackRoles.SecondaryRole : null),
                     }).ToList(),
                     Sources = sd.Sources?.Select(source => new TagMediaSource
                     {

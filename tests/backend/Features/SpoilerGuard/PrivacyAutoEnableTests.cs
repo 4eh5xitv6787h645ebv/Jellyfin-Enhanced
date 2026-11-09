@@ -2,8 +2,7 @@ using Jellyfin.Data;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Events;
 
 namespace JE.Tests.Features.SpoilerGuard;

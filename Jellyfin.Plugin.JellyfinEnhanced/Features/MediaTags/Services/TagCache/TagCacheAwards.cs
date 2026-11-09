@@ -3,12 +3,10 @@ using Jellyfin.Data.Enums;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Entities;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services

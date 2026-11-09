@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Xml.Serialization;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
@@ -164,7 +165,7 @@ public class CoreTagItemLooksTests
         Assert.Equal(1, settings.AgeRatingCap);
         Assert.Equal(maximum == 1 ? 1 : 8, settings.LogoCap);
         Assert.Equal((9, 0, 8), (look.Caps.Status, look.Caps.AgeRating, look.Caps.Logos));
-        var entry = new Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry { Type = "Movie", OfficialRating = "PG-13" };
+        var entry = new Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry { Type = "Movie", OfficialRating = "PG-13" };
         var layout = PosterTagResolver.Resolve(entry, settings, new("Movie", false, null, null, null), false)!;
         using var renderer = new Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering.PosterTagRenderer();
         Assert.Contains(renderer.Plan(180, 270, layout).Groups.SelectMany(g => g.Items), i => i.FlushEdges != 0);

@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Dto;
@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
 namespace JE.Tests.Features.SpoilerGuard;
 

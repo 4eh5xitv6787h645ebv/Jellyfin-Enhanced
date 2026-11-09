@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {

@@ -2,14 +2,14 @@ using System.Security.Claims;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 

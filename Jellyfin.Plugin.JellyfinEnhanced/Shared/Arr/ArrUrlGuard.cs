@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr
 {
     public static class ArrUrlGuard
     {
@@ -141,7 +141,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
         // Logging variants used by the controllers (restructure S2.0b, moved from JellyfinEnhancedController).
         public static bool IsAllowedUrl(string url, Logger logger)
         {
-            var allowed = Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrl(url);
+            var allowed = Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr.ArrUrlGuard.IsAllowedUrl(url);
             if (!allowed && !string.IsNullOrWhiteSpace(url))
             {
                 // Log at Error so admins can diagnose "instance doesn't return data"
@@ -156,7 +156,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
         // instances serialize their DNS lookups in the Select() prelude (Codex pass-3 P2).
         public static async Task<bool> IsAllowedUrlAsync(string url, Logger logger, CancellationToken ct)
         {
-            var allowed = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrlAsync(url, ct).ConfigureAwait(false);
+            var allowed = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr.ArrUrlGuard.IsAllowedUrlAsync(url, ct).ConfigureAwait(false);
             if (!allowed && !string.IsNullOrWhiteSpace(url))
             {
                 logger.Error($"IsAllowedUrl rejected outbound URL: {url}");

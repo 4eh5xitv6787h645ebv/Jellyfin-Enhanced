@@ -8,7 +8,6 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
 

@@ -1,7 +1,6 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;

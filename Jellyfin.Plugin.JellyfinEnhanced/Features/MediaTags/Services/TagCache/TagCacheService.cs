@@ -8,8 +8,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -17,9 +16,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Querying;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
@@ -3209,7 +3206,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
             return new TagStreamData
             {
                 Streams = streams,
-                DistinctQualities = PosterTags.Resolution.QualityTagRules.DetectDistinct(streams),
+                DistinctQualities = Shared.MediaTags.PosterTags.Resolution.QualityTagRules.DetectDistinct(streams),
                 Sources = sources,
                 ItemName = item.Name,
                 RunTimeTicks = item.RunTimeTicks,
@@ -3369,12 +3366,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
                             Channels = s.Channels,
                             ChannelLayout = s.ChannelLayout,
                             VideoRangeType = videoRangeType,
-                            VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(videoRangeType, s.VideoRange.ToString()) : null,
+                            VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(videoRangeType, s.VideoRange.ToString()) : null,
                             DisplayTitle = s.DisplayTitle
                         });
 
                         // A commentary or audio-description track is not a dub.
-                        if (s.Type == MediaStreamType.Audio && !Helpers.TrackRoles.IsSecondaryAudio(s.Title, s.DisplayTitle)
+                        if (s.Type == MediaStreamType.Audio && !Shared.Media.TrackRoles.IsSecondaryAudio(s.Title, s.DisplayTitle)
                             && NormalizeAudioLanguage(effectiveLanguage) is { } lang)
                         {
                             languages.Add(lang);
@@ -3438,7 +3435,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
                     if (type != MediaStreamType.Video && type != MediaStreamType.Audio) continue;
 
                     hasStreams = true;
-                    if (type == MediaStreamType.Audio && !Helpers.TrackRoles.IsSecondaryAudio(resolved.Stream.Title, resolved.Stream.DisplayTitle)
+                    if (type == MediaStreamType.Audio && !Shared.Media.TrackRoles.IsSecondaryAudio(resolved.Stream.Title, resolved.Stream.DisplayTitle)
                         && NormalizeAudioLanguage(resolved.Language) is { } lang)
                     {
                         languages.Add(lang);

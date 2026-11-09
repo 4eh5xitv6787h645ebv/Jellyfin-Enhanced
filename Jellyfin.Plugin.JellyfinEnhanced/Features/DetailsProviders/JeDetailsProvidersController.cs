@@ -1,48 +1,13 @@
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using Jellyfin.Data.Enums;
-using Jellyfin.Data;
-using Jellyfin.Database.Implementations.Enums;
-using Jellyfin.Database.Implementations;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Common.Plugins;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Persistence;
-using MediaBrowser.Controller;
-using MediaBrowser.Model.Dto;
-using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Plugins;
-using MediaBrowser.Model.Querying;
-using MediaBrowser.Model;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
 {
@@ -158,7 +123,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
             }
 
             var baseUrl = config.ReviewTranslationUrl.Trim().TrimEnd('/');
-            if (!await Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
+            if (!await Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
             {
                 return BadRequest("The translation URL is not allowed.");
             }
@@ -196,7 +161,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
             }
 
             var baseUrl = config.ReviewTranslationUrl.Trim().TrimEnd('/');
-            if (!await Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
+            if (!await Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr.ArrUrlGuard.IsAllowedUrlAsync(baseUrl, cancellationToken).ConfigureAwait(false))
             {
                 return BadRequest("The translation URL is not allowed.");
             }

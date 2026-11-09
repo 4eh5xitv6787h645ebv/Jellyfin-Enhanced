@@ -2,11 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions;
 using MediaBrowser.Controller.Session;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity
 {
     /// <summary>
     /// How the requesting user was identified — ordered strongest to weakest.
@@ -211,7 +211,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
         public RequestIdentity Resolve(Microsoft.AspNetCore.Http.HttpContext httpContext)
         {
             // Tier 1: authenticated request — authoritative.
-            var primary = Helpers.UserHelper.GetCurrentUserId(httpContext.User);
+            var primary = Infrastructure.Auth.UserHelper.GetCurrentUserId(httpContext.User);
             if (primary != null && primary.Value != Guid.Empty)
             {
                 return new RequestIdentity(new[] { primary.Value }, IdentityConfidence.Authenticated);

@@ -59,7 +59,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                     });
                 // The pending row (if any) was just consumed — keep the
                 // promoter's gate consistent so it stops sweeping this user.
-                Features.SpoilerGuard.Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId);
+                Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId);
                 _logger.Info($"Spoiler Guard pending resolved to existing series '{existingSeries.Name}' ({seriesKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return new SpoilerBlurPendingResult("series", seriesKey, existingSeries.Name, changed > 0);
             }
@@ -79,7 +79,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                         };
                         return 1;
                     });
-                Features.SpoilerGuard.Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId);
+                Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, userId);
                 _logger.Info($"Spoiler Guard pending resolved to existing movie '{existingMovie.Name}' ({movieKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
                 return new SpoilerBlurPendingResult("movie", movieKey, existingMovie.Name, changed > 0);
             }
@@ -119,7 +119,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
             }
             // Prime the promoter's fast-path gate so the next ItemAdded
             // matching this TMDB id sweeps THIS user instead of bailing.
-            Features.SpoilerGuard.Services.SpoilerSeerrPendingPromoter.RegisterPending(pendingKey, userId);
+            Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.RegisterPending(pendingKey, userId);
             _logger.Info($"Spoiler Guard pending recorded {pendingKey} for {_userDisplayResolver.ResolveUserDisplay(userKey)} (not yet in library)");
 
             // TOCTOU recovery: the scanner may have added the item between the
@@ -169,7 +169,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
             // this user (harmless no-op if it was never registered).
             if (Guid.TryParseExact(userKey, "N", out var promotedSeriesUserId))
             {
-                Features.SpoilerGuard.Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, promotedSeriesUserId);
+                Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, promotedSeriesUserId);
             }
             _logger.Info($"Spoiler Guard pending TOCTOU-promoted to series '{series.Name}' ({seriesKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
             return new SpoilerBlurPendingResult("series", seriesKey, series.Name, true);
@@ -195,7 +195,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                 });
             if (Guid.TryParseExact(userKey, "N", out var promotedMovieUserId))
             {
-                Features.SpoilerGuard.Services.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, promotedMovieUserId);
+                Shared.SpoilerGuard.SpoilerSeerrPendingPromoter.UnregisterPending(pendingKey, promotedMovieUserId);
             }
             _logger.Info($"Spoiler Guard pending TOCTOU-promoted to movie '{movie.Name}' ({movieKey}) for {_userDisplayResolver.ResolveUserDisplay(userKey)}");
             return new SpoilerBlurPendingResult("movie", movieKey, movie.Name, true);

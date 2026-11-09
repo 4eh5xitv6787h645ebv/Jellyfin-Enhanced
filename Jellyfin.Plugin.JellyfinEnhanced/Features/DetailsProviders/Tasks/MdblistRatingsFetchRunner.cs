@@ -9,9 +9,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Mdblist;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 

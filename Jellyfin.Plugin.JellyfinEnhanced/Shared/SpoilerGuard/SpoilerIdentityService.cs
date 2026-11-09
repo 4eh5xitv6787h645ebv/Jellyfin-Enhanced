@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions;
 using MediaBrowser.Controller.Library;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard

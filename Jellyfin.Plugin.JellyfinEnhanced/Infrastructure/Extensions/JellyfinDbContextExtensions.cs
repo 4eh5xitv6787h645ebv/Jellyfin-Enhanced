@@ -9,7 +9,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using Microsoft.EntityFrameworkCore;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Extensions
+namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions
 {
     public static class JellyfinDbExtension
     {

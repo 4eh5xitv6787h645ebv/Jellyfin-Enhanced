@@ -1,25 +1,13 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
-using Jellyfin.Plugin.JellyfinEnhanced.Shared.Text;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using static Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrCaches;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads

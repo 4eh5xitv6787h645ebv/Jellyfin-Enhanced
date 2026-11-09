@@ -19,7 +19,7 @@ public class FileSizeTests(ITestOutputHelper output)
     // PosterTagRenderer) are under 1,500 lines today and need no entry.
     public static readonly IReadOnlyDictionary<string, int> AllowList = new Dictionary<string, int>(StringComparer.Ordinal)
     {
-        ["Features/MediaTags/Services/TagCache/TagCacheService.cs"] = 4128,
+        ["Features/MediaTags/Services/TagCache/TagCacheService.cs"] = 4126,
     };
 
     internal static IEnumerable<(string Path, int Lines)> SourceFiles()

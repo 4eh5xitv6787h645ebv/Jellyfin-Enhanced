@@ -11,13 +11,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.DependencyInjection;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using static Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.LeavingSoonSources;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
@@ -42,10 +42,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
     {
         /// <summary>The named HttpClient for Maintainerr: automatic redirects off (see <see cref="AddHttpClient"/>).</summary>
         public const string ClientName = "JellyfinEnhanced.Maintainerr";
-        /// <summary>Most collection names the fallback list takes.</summary>
-        public const int MaxCollectionNames = 20;
-        /// <summary>Longest collection name the fallback list takes.</summary>
-        public const int MaxCollectionNameLength = 200;
         /// <summary>Largest Maintainerr answer read (bytes).</summary>
         internal const int MaxResponseBytes = 16 * 1024 * 1024;
         /// <summary>First retry delay after a failed Maintainerr request.</summary>
@@ -100,40 +96,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         /// </summary>
         public static IHttpClientBuilder AddHttpClient(IServiceCollection services)
             => services.AddHttpClient(ClientName).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
-
-        /// <summary>Whether a source is set: a usable Maintainerr URL or at least one collection name.</summary>
-        public static bool Configured(PluginConfiguration? config)
-            => config != null && (IsMaintainerrUrl(config.LeavingSoonMaintainerrUrl) || CollectionNames(config.LeavingSoonCollections).Count > 0);
-
-        /// <summary>An absolute http(s) base URL without credentials, query or fragment (empty is not one).</summary>
-        public static bool IsMaintainerrUrl(string? url)
-        {
-            if (string.IsNullOrWhiteSpace(url) || url.Length > 512) return false;
-            if (!Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri)) return false;
-            return (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-                && string.IsNullOrEmpty(uri.UserInfo) && string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment)
-                && !string.IsNullOrEmpty(uri.Host);
-        }
-
-        /// <summary>The fallback collection names: one per line or comma separated, trimmed, distinct (case-insensitive), bounded.</summary>
-        public static IReadOnlyList<string> CollectionNames(string? text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return Array.Empty<string>();
-            return text.Split(new[] { '\n', '\r', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(n => n.Length is > 0 and <= MaxCollectionNameLength)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(MaxCollectionNames)
-                .ToArray();
-        }
-
-        /// <summary>Whether a fallback list is acceptable as typed: every name within bounds and at most <see cref="MaxCollectionNames"/>.</summary>
-        public static bool IsCollectionList(string? text)
-        {
-            if (text == null) return false;
-            var names = text.Split(new[] { '\n', '\r', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(n => n.Length > 0).ToArray();
-            return names.All(n => n.Length <= MaxCollectionNameLength) && names.Distinct(StringComparer.OrdinalIgnoreCase).Count() <= MaxCollectionNames;
-        }
 
         /// <summary>What the facts depend on: the URL, key and names. Only a digest is kept.</summary>
         internal static string Signature(PluginConfiguration config) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
@@ -395,7 +357,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         {
             var baseUrl = config.LeavingSoonMaintainerrUrl.Trim().TrimEnd('/');
             var url = baseUrl + "/api/collections";
-            if (!await Helpers.ArrUrlGuard.IsAllowedUrlAsync(url, token).ConfigureAwait(false)) throw new UnauthorizedAccessException();
+            if (!await Shared.Arr.ArrUrlGuard.IsAllowedUrlAsync(url, token).ConfigureAwait(false)) throw new UnauthorizedAccessException();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
             timeout.CancelAfter(Timeout);
             var client = _http.CreateClient(ClientName);

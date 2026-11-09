@@ -59,7 +59,7 @@ for (const mode of [{}, {check:true}, {typecheckOnly:true}]) {
 
 test('native compact drift fails checks even when TS and JS are fresh', async t => {
   const f = fixture(t); await buildClient({root:f.root});
-  const native = `${plugin}/Features/MediaTags/PosterTags/Resolution/QualityCompactLabels.g.cs`;
+  const native = `${plugin}/Shared/MediaTags/PosterTags/Resolution/QualityCompactLabels.g.cs`;
   f.put(native, 'stale native projection');
   await assert.rejects(buildClient({root:f.root,check:true}), /Stale quality vocabulary/);
   assert.equal(readFileSync(join(f.root,native),'utf8'), 'stale native projection');

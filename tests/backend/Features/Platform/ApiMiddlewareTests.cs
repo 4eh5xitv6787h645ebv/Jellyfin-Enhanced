@@ -1,5 +1,4 @@
 using System.Text;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

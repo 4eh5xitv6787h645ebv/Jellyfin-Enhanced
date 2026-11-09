@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
 namespace JE.Tests.Features.Seerr;

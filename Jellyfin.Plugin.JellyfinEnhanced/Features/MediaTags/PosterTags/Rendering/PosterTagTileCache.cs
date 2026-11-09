@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using SkiaSharp;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {

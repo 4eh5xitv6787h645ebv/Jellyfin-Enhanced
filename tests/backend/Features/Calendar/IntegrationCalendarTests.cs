@@ -5,7 +5,7 @@ using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Locking;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Http;

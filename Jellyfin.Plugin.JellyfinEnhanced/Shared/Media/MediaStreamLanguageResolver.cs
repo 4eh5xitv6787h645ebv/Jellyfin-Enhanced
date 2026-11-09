@@ -5,7 +5,7 @@ using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Media
 {
     /// <summary>
     /// Resolves the effective language for media streams.

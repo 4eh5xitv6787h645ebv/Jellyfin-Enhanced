@@ -12,7 +12,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks

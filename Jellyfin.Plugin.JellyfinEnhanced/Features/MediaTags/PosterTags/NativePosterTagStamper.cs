@@ -10,8 +10,8 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Search;
 using Microsoft.AspNetCore.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {

@@ -1,6 +1,6 @@
 using System.Net;
 using System.Reflection;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 
 namespace JE.Tests;
 

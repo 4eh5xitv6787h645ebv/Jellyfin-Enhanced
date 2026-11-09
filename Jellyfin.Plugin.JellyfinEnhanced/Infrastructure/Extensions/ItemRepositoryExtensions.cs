@@ -5,7 +5,7 @@ using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Persistence;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Extensions {
+namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions {
 
     public static class ItemRepositoryExtensions
     {

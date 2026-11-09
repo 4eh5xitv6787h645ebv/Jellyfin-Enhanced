@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
@@ -8,7 +8,7 @@ using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using Moq;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace JE.Tests.Features.MediaTags;
@@ -160,7 +160,7 @@ public class TagCacheSubtitleLanguagesTests
     [InlineData("ga", "ie")]
     [InlineData("gle", "ie")]
     public void NorwegianCantoneseSwissGermanAndIrishHaveFlags(string code, string flag)
-        => Assert.Equal(flag, Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution.LanguageFlagRules.ResolveFlag(code, string.Empty));
+        => Assert.Equal(flag, Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution.LanguageFlagRules.ResolveFlag(code, string.Empty));
 
     [Theory]
     [InlineData("Commentary by director", null, true)]

@@ -9,8 +9,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;

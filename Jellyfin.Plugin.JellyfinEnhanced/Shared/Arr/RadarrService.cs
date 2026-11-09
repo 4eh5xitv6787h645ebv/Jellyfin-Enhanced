@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr
 {
     public class RadarrMovie
     {
@@ -53,7 +53,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
             // SSRF guard: reject before any outbound request so scheduled-task callers
             // cannot be pointed at metadata/loopback targets via instance URL.
-            if (!Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrl(radarrUrl))
+            if (!Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr.ArrUrlGuard.IsAllowedUrl(radarrUrl))
             {
                 _logger.Error($"Refusing to fetch Radarr tags — URL rejected by SSRF guard: {radarrUrl}");
                 return result;

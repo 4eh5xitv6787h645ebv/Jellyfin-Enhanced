@@ -1,4 +1,4 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Mdblist;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 
 namespace JE.Tests.Features.DetailsProviders;

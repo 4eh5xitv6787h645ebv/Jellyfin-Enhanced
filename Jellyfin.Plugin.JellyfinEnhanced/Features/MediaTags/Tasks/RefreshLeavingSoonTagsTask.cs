@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Model.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 {
@@ -21,7 +21,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
         public string Key => "JellyfinEnhancedRefreshLeavingSoonTags";
         public string Description => "Reads which items Maintainerr (or the configured leaving collections) will remove, for the Leaving soon status badge. Runs when the configured refresh interval has passed.";
         public string Category => "Jellyfin Enhanced";
-        public bool IsHidden => !LeavingSoonService.Configured(JellyfinEnhanced.Instance?.Configuration);
+        public bool IsHidden => !LeavingSoonSources.Configured(JellyfinEnhanced.Instance?.Configuration);
         public bool IsEnabled => true;
         public bool IsLogged => true;
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers() => new[] { new TaskTriggerInfo { Type = TaskTriggerInfoType.IntervalTrigger, IntervalTicks = TimeSpan.FromHours(1).Ticks } };

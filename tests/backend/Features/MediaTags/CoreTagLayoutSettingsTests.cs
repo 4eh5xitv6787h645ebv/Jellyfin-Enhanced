@@ -1,4 +1,4 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Xml.Serialization;

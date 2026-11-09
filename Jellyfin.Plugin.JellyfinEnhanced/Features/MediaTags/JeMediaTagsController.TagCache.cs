@@ -1,49 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
-using Jellyfin.Data;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Querying;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.StaticFiles;
-using Newtonsoft.Json.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using MediaBrowser.Controller;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Common.Plugins;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using MediaBrowser.Model.Plugins;
-using MediaBrowser.Model;
-using MediaBrowser.Controller.Persistence;
-using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
-using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
-using Jellyfin.Database.Implementations;
-using Jellyfin.Database.Implementations.Enums;
-using Microsoft.EntityFrameworkCore;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Media;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
 {
@@ -94,7 +63,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // across page loads (tag-cache-store.js), so every guarded entry
             // rides along with each delta: a guard list's worth of entries,
             // stripped below exactly like a full load, instead of the whole cache.
-            Func<string, Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry, bool>? guardedRider =
+            Func<string, Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry, bool>? guardedRider =
                 since.HasValue && spPolicy != null
                     ? (key, e) => _spoilerTagDataStripper.GetGuardedKind(spPolicy.State, key, e) != null
                     : null;
@@ -192,7 +161,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // LastUpdated, so they ride along freshly projected; the walk runs again only on that mismatch.
             if (since.HasValue && known != null && !string.Equals(known, FilterRevisionOf(accessRevision), StringComparison.Ordinal))
             {
-                Func<string, Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry, bool> reconcileRider = guardedRider == null
+                Func<string, Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry, bool> reconcileRider = guardedRider == null
                     ? (_, e) => Services.TagCacheService.ProjectsAccess(e)
                     : (key, e) => Services.TagCacheService.ProjectsAccess(e) || guardedRider(key, e);
                 items = _tagCacheService.GetCacheForUser(user, out cacheVersion, out cacheTimestamp, out accessRevision, out removed, since, reconcileRider);
@@ -322,15 +291,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     options.TypeInfoResolver ?? new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
                     static typeInfo =>
                     {
-                        if (typeInfo.Type != typeof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry)) return;
+                        if (typeInfo.Type != typeof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry)) return;
                         foreach (var property in typeInfo.Properties)
                         {
                             // By CLR name: the JSON name follows the host's naming policy.
                             if (property.AttributeProvider is System.Reflection.PropertyInfo clrProperty
-                                && (clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.LatestEpisodeId)
-                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.StatusEpisodeIds)
-                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.QualityEpisodeIds)
-                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models.TagCacheEntry.NextEpisodePremiere)))
+                                && (clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.LatestEpisodeId)
+                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.StatusEpisodeIds)
+                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.QualityEpisodeIds)
+                                    || clrProperty.Name == nameof(Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.TagCacheEntry.NextEpisodePremiere)))
                             {
                                 property.ShouldSerialize = static (_, _) => false;
                             }
@@ -417,7 +386,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // Library id for the tag look rules, as the server tag cache stores
             // it (Seasons/Episodes take their Series'), memoized per series.
             var seriesLibraryMemo = new Dictionary<Guid, string?>();
-            string? TagDataLibraryId(BaseItem tagItem) => Jellyfin.Plugin.JellyfinEnhanced.Services.ItemLibraryResolver.Resolve(_libraryManager, tagItem, null, seriesLibraryMemo);
+            string? TagDataLibraryId(BaseItem tagItem) => Jellyfin.Plugin.JellyfinEnhanced.Shared.Library.ItemLibraryResolver.Resolve(_libraryManager, tagItem, null, seriesLibraryMemo);
             // Custom tag rule ids, as the server tag cache stores them, with collection
             // matches only for collections this user can access. The Spoiler Guard stubs
             // drop them with the genres (SpoilerStripTags): a tag or collection label can
@@ -594,7 +563,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                                     Channels = s.Channels,
                                     ChannelLayout = s.ChannelLayout,
                                     VideoRangeType = s.VideoRangeType,
-                                    VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
+                                    VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
                                     // DisplayTitle's GETTER prepends the raw Title field,
                                     // which on user-muxed mkvs (MakeMKV / Plex / Sonarr
                                     // renamers) commonly carries the episode name — under
@@ -743,7 +712,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                                     Channels = s.Channels,
                                     ChannelLayout = s.ChannelLayout,
                                     VideoRangeType = s.VideoRangeType,
-                                    VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
+                                    VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
                                     DisplayTitle = default(string?),
                                 };
                             })
@@ -835,14 +804,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 // Series and Season are containers with no media files — skip the expensive call
                 List<object>? trimmedStreams = null;
                 List<object>? trimmedSources = null;
-                var namingTags = new Services.MediaNamingTags();
+                var namingTags = new Shared.MediaTags.MediaNamingTags();
                 string[]? subtitleLanguages = null;
                 string[]? sdhSubtitleLanguages = null;
                 if (!isContainer)
                 {
                     var mediaSources =
                         SelectTagDataMediaSources(item.GetMediaSources(false));
-                    namingTags = Services.MediaNamingTags.Detect(item.Path, mediaSources, item.Name, item.OriginalTitle);
+                    namingTags = Shared.MediaTags.MediaNamingTags.Detect(item.Path, mediaSources, item.Name, item.OriginalTitle);
                     subtitleLanguages = TagDataSubtitleLanguages(mediaSources);
                     sdhSubtitleLanguages = mediaSources.SelectMany(source => source.MediaStreams ?? new List<MediaStream>())
                         .Where(stream => stream.Type == MediaStreamType.Subtitle && !stream.IsForced && SubtitleAccessibility.IsSdh(stream.IsHearingImpaired, stream.Title, stream.DisplayTitle))
@@ -876,7 +845,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                                 Channels = s.Channels,
                                 ChannelLayout = s.ChannelLayout,
                                 VideoRangeType = s.VideoRangeType,
-                                    VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
+                                    VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
                                 DisplayTitle = s.DisplayTitle,
                             };
                         })
@@ -886,15 +855,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     trimmedSources = mediaSources
                         .Select(s =>
                         {
-                            var versionNaming = Services.MediaNamingTags.Detect(item.Path, new[] { s }, item.Name, item.OriginalTitle);
+                            var versionNaming = Shared.MediaTags.MediaNamingTags.Detect(item.Path, new[] { s }, item.Name, item.OriginalTitle);
                             return (object)new
                             {
                                 Id = s.Id,
                                 Source = versionNaming.Source,
                                 Edition = versionNaming.Edition,
                                 RunTimeTicks = s.RunTimeTicks,
-                                Path = Services.MediaNamingTags.FileName(s.Path),
-                                Name = Services.MediaNamingTags.FileName(s.Name),
+                                Path = Shared.MediaTags.MediaNamingTags.FileName(s.Path),
+                                Name = Shared.MediaTags.MediaNamingTags.FileName(s.Name),
                                 Is3D = s.Video3DFormat != null ? true : (bool?)null,
                                 Revision = Services.TagCacheService.MediaRevision(s),
                             };
@@ -950,7 +919,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     ProviderIds = item.ProviderIds,
                     Name = item.Name,
                     RunTimeTicks = item.RunTimeTicks,
-                    Path = Services.MediaNamingTags.FileName(item.Path),
+                    Path = Shared.MediaTags.MediaNamingTags.FileName(item.Path),
                     Source = namingTags.Source,
                     Edition = namingTags.Edition,
                     MediaStreams = trimmedStreams,

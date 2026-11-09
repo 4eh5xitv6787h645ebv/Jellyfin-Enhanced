@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;

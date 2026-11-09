@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
@@ -80,7 +75,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
                 return BadRequest(new { message = invalid });
             try
             {
-                var service = new Services.SettingsDocumentService(_userConfigurationManager);
+                var service = new Shared.Settings.SettingsDocumentService(_userConfigurationManager);
                 if (!service.TrySave(authorizedUserId, request, IsAdminUser(), out var result))
                     return Conflict(new { message = "Settings changed in another tab or on the server. Reload before saving again." });
                 MediaTagsApi.TagCache.OnLogoSettingsChanged();

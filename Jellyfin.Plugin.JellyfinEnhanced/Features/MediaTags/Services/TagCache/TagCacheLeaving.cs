@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
@@ -27,7 +26,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         {
             if (_leavingSoonService == null) return null;
             var config = JellyfinEnhanced.Instance?.Configuration;
-            if (!LeavingSoonService.Configured(config)) return null;
+            if (!LeavingSoonSources.Configured(config)) return null;
             return item switch
             {
                 Episode e => _leavingSoonService.Resolve(e.Id, e.SeasonId == Guid.Empty ? null : e.SeasonId, e.SeriesId == Guid.Empty ? null : e.SeriesId, config),

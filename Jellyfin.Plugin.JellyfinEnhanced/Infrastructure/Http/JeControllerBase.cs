@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using Jellyfin.Data;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Settings;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
@@ -95,7 +94,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
         }
 
         protected RevisionedSettingsResponse LoadRevisionedSettings(string userId)
-            => new Features.Settings.Services.SettingsDocumentService(_userConfigurationManager).Read(userId, SettingsDefaults.Create, IsAdminUser());
+            => new Shared.Settings.SettingsDocumentService(_userConfigurationManager).Read(userId, SettingsDefaults.Create, IsAdminUser());
 
         protected ReviewVisibilityContext CreateReviewVisibilityContext(string endpoint, string target)
         {
@@ -156,11 +155,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http
         /// </summary>
         /// <summary>
         /// The Jellyfin user behind a review author id (null when the user no
-        /// longer exists), through <see cref="Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services.ReviewAuthorCache"/>, which the
+        /// longer exists), through <see cref="Jellyfin.Plugin.JellyfinEnhanced.Shared.Reviews.ReviewAuthorCache"/>, which the
         /// user update/delete events invalidate.
         /// </summary>
         protected Jellyfin.Database.Implementations.Entities.User? ResolveReviewAuthor(Guid userGuid)
-            => Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services.ReviewAuthorCache.Resolve(userGuid, _userManager.GetUserById);
+            => Jellyfin.Plugin.JellyfinEnhanced.Shared.Reviews.ReviewAuthorCache.Resolve(userGuid, _userManager.GetUserById);
 
         protected bool IsReviewVisibleToViewer(
             UserReview review,

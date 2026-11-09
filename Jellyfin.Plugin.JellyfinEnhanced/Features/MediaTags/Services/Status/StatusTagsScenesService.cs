@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;

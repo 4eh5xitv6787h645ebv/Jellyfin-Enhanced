@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Text.Json.Nodes;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using Series = MediaBrowser.Controller.Entities.TV.Series;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
 namespace JE.Tests.Features.SpoilerGuard;
 

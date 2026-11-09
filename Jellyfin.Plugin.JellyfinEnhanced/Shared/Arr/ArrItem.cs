@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Arr {
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr {
     public class ArrItem
     {
         /// <summary>

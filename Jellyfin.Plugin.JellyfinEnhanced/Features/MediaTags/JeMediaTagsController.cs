@@ -1,49 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using Jellyfin.Data;
-using Jellyfin.Data.Enums;
-using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Querying;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.StaticFiles;
-using Newtonsoft.Json.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using MediaBrowser.Controller;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Common.Plugins;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using MediaBrowser.Model.Plugins;
-using MediaBrowser.Model;
-using MediaBrowser.Controller.Persistence;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Auth;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
-using Jellyfin.Database.Implementations;
-using Jellyfin.Database.Implementations.Enums;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
 {
@@ -504,9 +472,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     _ => Guid.Empty,
                 };
                 var previewSeriesIdN = previewSeriesId == Guid.Empty ? null : previewSeriesId.ToString("N");
-                PosterTags.PosterTagLookFacts? LookFacts() => _tagCacheService.TryGetEntry(item.Id, out var lookEntry)
-                    ? PosterTags.PosterTagLookFacts.FromEntry(lookEntry)
-                    : PosterTags.PosterTagLookFacts.FromItem(_libraryManager, item);
+                Shared.MediaTags.PosterTags.PosterTagLookFacts? LookFacts() => _tagCacheService.TryGetEntry(item.Id, out var lookEntry)
+                    ? Shared.MediaTags.PosterTags.PosterTagLookFacts.FromEntry(lookEntry)
+                    : Shared.MediaTags.PosterTags.PosterTagLookFacts.FromItem(_libraryManager, item);
                 var userPosterSettings = posterTagSettings.Get(user.Id);
                 var settings = userPosterSettings.ForItem(item.Id, previewSeriesIdN, LookFacts);
                 var lookSource = userPosterSettings.ResolveLook(item.Id.ToString("N"), previewSeriesIdN, LookFacts).Source;
