@@ -12,7 +12,7 @@ For endpoint details, see the [API reference](api.md). For setup and placement, 
 
 This section follows the client from loader injection through initialization and user switches.
 
-`Features/Platform/Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Features/Platform/JePlatformController.Assets.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
+`Features/Platform/Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. It asks Jellyfin for the plain `index.html`, then serves the injected page itself with Brotli or gzip, a strong ETag per encoding and working 304s, and caches it keyed by the file's own ETag/Last-Modified. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Features/Platform/JePlatformController.Assets.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
 
 The ordered module list lives in `js/component-scripts.json`: 181 component modules, with paths relative to `js/`. Entries starting with `//` are ordering notes.
 
