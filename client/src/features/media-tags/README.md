@@ -1,12 +1,12 @@
 # media-tags
 
-Media tags: the poster tag pipeline and per-type renderers (`runtime/`), the layout, look and rule data (`rules/`), the user-settings panels (`settings/`) and the admin Media Tags page (`admin/`; formerly `features/admin-tags`).
+Media tags: the poster tag pipeline, cache store, renderer base and contracts (`pipeline/`), the item tag editor and menu (`editor/`), one folder per tag type (`types/<type>/`: quality, direct-play, language, people, status, ratings, age-rating, awards, genre, logo, custom), layout, looks, poster colours and tag styles (`layout/`), the user-settings panels (`settings/`) and the admin Media Tags page (`admin/`; formerly `features/admin-tags`). Until step B2, the generated data modules are still in `runtime/` and `rules/`.
 
 Owner: Jellyfin Enhanced maintainers. Backend counterpart: `Features/MediaTags/` (with `JeMediaTagsController.Admin.cs` and `Admin/`) (PLAN.md canonical feature list).
 
 ## Entry points → shipped files
 
-Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.JellyfinEnhanced/` and declared in `client/entries/admin-tags.json`, `client/entries/tag-rules.json`, `client/entries/tag-runtime.json`, `client/entries/settings-panel.json`. Load position is the 1-based index among the scripts in `js/component-scripts.json` (`–` = not in that list; loaded by its page or another script). `tests/frontend/architecture/feature-readme.test.mjs` checks this table against `client/generated-manifest.json`: update it whenever an entry source moves or an output is added.
+Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.JellyfinEnhanced/` and declared in `client/entries/admin-tags.json`, `client/entries/tag-runtime.json`, `client/entries/tag-rules.json`, `client/entries/settings-panel.json`. Load position is the 1-based index among the scripts in `js/component-scripts.json` (`–` = not in that list; loaded by its page or another script). `tests/frontend/architecture/feature-readme.test.mjs` checks this table against `client/generated-manifest.json`: update it whenever an entry source moves or an output is added.
 
 | source | output | load position |
 |---|---|---|
@@ -30,36 +30,36 @@ Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.Je
 | `admin/sections/server.ts` | `js/enhanced/admintags/sections/server.js` | – |
 | `admin/sections/status.ts` | `js/enhanced/admintags/sections/status.js` | – |
 | `admin/tag-styles-editor.ts` | `js/enhanced/admintags/tag-styles-editor.js` | – |
-| `rules/media-language-entry.ts` | `js/core/media-language.js` | 6 |
-| `rules/poster-colours-entry.ts` | `js/tags/tag-poster-colours.js` | 150 |
-| `rules/rating-sources-entry.ts` | `js/tags/rating-sources.js` | 11 |
-| `rules/status-vocabulary-entry.ts` | `js/tags/status-vocabulary.js` | 148 |
-| `rules/tag-layout-entry.ts` | `js/core/tag-layout.js` | 9 |
-| `rules/tag-look-entry.ts` | `js/core/tag-look.js` | 10 |
-| `runtime/ageratingtags-entry.ts` | `js/tags/ageratingtags.js` | 145 |
-| `runtime/awardstags-entry.ts` | `js/tags/awardstags.js` | 146 |
-| `runtime/customtags-entry.ts` | `js/tags/customtags.js` | 152 |
-| `runtime/genretags-entry.ts` | `js/tags/genretags.js` | 140 |
-| `runtime/languagetags-entry.ts` | `js/tags/languagetags.js` | 141 |
-| `runtime/logotags-entry.ts` | `js/tags/logotags.js` | 151 |
-| `runtime/peopletags-entry.ts` | `js/tags/peopletags.js` | 142 |
-| `runtime/qualitytags-entry.ts` | `js/tags/qualitytags.js` | 143 |
-| `runtime/ratingtags-entry.ts` | `js/tags/ratingtags.js` | 144 |
-| `runtime/statustags-entry.ts` | `js/tags/statustags.js` | 149 |
-| `runtime/tag-cache-store-entry.ts` | `js/tags/tag-cache-store.js` | 16 |
-| `runtime/tag-direct-play-entry.ts` | `js/tags/tag-direct-play.js` | 147 |
-| `runtime/tag-item-editor-entry.ts` | `js/tags/tag-item-editor.js` | 155 |
-| `runtime/tag-item-menu-entry.ts` | `js/tags/tag-item-menu.js` | 156 |
-| `runtime/tag-layout-styles-entry.ts` | `js/tags/tag-layout-styles.js` | 18 |
-| `runtime/tag-pipeline-entry.ts` | `js/tags/tag-pipeline.js` | 17 |
-| `runtime/tag-renderer-base-entry.ts` | `js/core/tag-renderer-base.js` | 8 |
-| `runtime/tag-styles-entry.ts` | `js/tags/tag-styles.js` | 153 |
-| `runtime/userreviewtags-entry.ts` | `js/tags/userreviewtags.js` | 154 |
+| `editor/tag-item-editor-entry.ts` | `js/tags/tag-item-editor.js` | 155 |
+| `editor/tag-item-menu-entry.ts` | `js/tags/tag-item-menu.js` | 156 |
+| `layout/poster-colours-entry.ts` | `js/tags/tag-poster-colours.js` | 150 |
+| `layout/tag-layout-entry.ts` | `js/core/tag-layout.js` | 9 |
+| `layout/tag-layout-styles-entry.ts` | `js/tags/tag-layout-styles.js` | 18 |
+| `layout/tag-look-entry.ts` | `js/core/tag-look.js` | 10 |
+| `layout/tag-styles-entry.ts` | `js/tags/tag-styles.js` | 153 |
+| `pipeline/tag-cache-store-entry.ts` | `js/tags/tag-cache-store.js` | 16 |
+| `pipeline/tag-pipeline-entry.ts` | `js/tags/tag-pipeline.js` | 17 |
+| `pipeline/tag-renderer-base-entry.ts` | `js/core/tag-renderer-base.js` | 8 |
 | `settings/ui-panel-media-tags.ts` | `js/enhanced/settingspanel/ui-panel-media-tags.js` | 78 |
 | `settings/ui-panel-tag-editor.ts` | `js/enhanced/settingspanel/ui-panel-tag-editor.js` | 72 |
 | `settings/ui-panel-tag-looks.ts` | `js/enhanced/settingspanel/ui-panel-tag-looks.js` | 75 |
 | `settings/ui-panel-tag-portable.ts` | `js/enhanced/settingspanel/ui-panel-tag-portable.js` | 77 |
 | `settings/ui-panel-tag-preview.ts` | `js/enhanced/settingspanel/ui-panel-tag-preview.js` | 76 |
+| `types/age-rating/ageratingtags-entry.ts` | `js/tags/ageratingtags.js` | 145 |
+| `types/awards/awardstags-entry.ts` | `js/tags/awardstags.js` | 146 |
+| `types/custom/customtags-entry.ts` | `js/tags/customtags.js` | 152 |
+| `types/direct-play/tag-direct-play-entry.ts` | `js/tags/tag-direct-play.js` | 147 |
+| `types/genre/genretags-entry.ts` | `js/tags/genretags.js` | 140 |
+| `types/language/languagetags-entry.ts` | `js/tags/languagetags.js` | 141 |
+| `types/language/media-language-entry.ts` | `js/core/media-language.js` | 6 |
+| `types/logo/logotags-entry.ts` | `js/tags/logotags.js` | 151 |
+| `types/people/peopletags-entry.ts` | `js/tags/peopletags.js` | 142 |
+| `types/quality/qualitytags-entry.ts` | `js/tags/qualitytags.js` | 143 |
+| `types/ratings/rating-sources-entry.ts` | `js/tags/rating-sources.js` | 11 |
+| `types/ratings/ratingtags-entry.ts` | `js/tags/ratingtags.js` | 144 |
+| `types/ratings/userreviewtags-entry.ts` | `js/tags/userreviewtags.js` | 154 |
+| `types/status/status-vocabulary-entry.ts` | `js/tags/status-vocabulary.js` | 148 |
+| `types/status/statustags-entry.ts` | `js/tags/statustags.js` | 149 |
 
 ## Public API and global slots
 

@@ -166,7 +166,7 @@
     }
   };
 
-  // client/src/features/media-tags/rules/status-vocabulary-entry.ts
+  // client/src/features/media-tags/types/status/status-vocabulary-entry.ts
   tagRulesHost().statusVocabulary = statusVocabulary;
 })();
 })();

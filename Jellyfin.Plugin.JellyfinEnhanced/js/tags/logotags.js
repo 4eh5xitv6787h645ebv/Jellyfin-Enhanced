@@ -18,7 +18,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -27,7 +27,7 @@
     return isRecord(value) ? value : EMPTY;
   }
 
-  // client/src/features/media-tags/runtime/logotags.ts
+  // client/src/features/media-tags/types/logo/logotags.ts
   function createLogoTags(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: Logos Tags:";
     const containerClass = "logo-overlay-container";
@@ -236,7 +236,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/logotags-entry.ts
+  // client/src/features/media-tags/types/logo/logotags-entry.ts
   createLogoTags(tagRuntimeHost());
 })();
 })();

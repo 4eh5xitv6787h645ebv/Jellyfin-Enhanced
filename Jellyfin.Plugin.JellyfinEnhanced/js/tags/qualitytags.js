@@ -18,7 +18,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -243,7 +243,7 @@
             `;
   }
 
-  // client/src/features/media-tags/runtime/quality-rules.ts
+  // client/src/features/media-tags/types/quality/quality-rules.ts
   function listed(value) {
     return value ? members(value).map((member) => member === null || member === void 0 ? null : record(member)) : null;
   }
@@ -899,7 +899,7 @@
     return { aggregateQualities, aggregationCategoriesKey, aggregationPolicy, allValues, categorize, displayModeKey, distinctRank, getEnhancedQuality, legacyFullAudio, meetsMinimum, normalizeQualityLabel, readBool, readInt };
   }
 
-  // client/src/features/media-tags/runtime/qualitytags.ts
+  // client/src/features/media-tags/types/quality/qualitytags.ts
   var CACHE_NAMING_VERSION = 26;
   function createQualityTags(JE) {
     const rules = createQualityRules({
@@ -1347,7 +1347,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/qualitytags-entry.ts
+  // client/src/features/media-tags/types/quality/qualitytags-entry.ts
   createQualityTags(tagRuntimeHost());
 })();
 })();

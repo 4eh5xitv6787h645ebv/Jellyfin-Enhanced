@@ -14,8 +14,8 @@
  * or unlock, the list's empty state when nothing is left, the new rule after
  * Add rule. Everything is built with DOM APIs (textContent), never innerHTML.
  */
-import type { Layout } from '../rules/layout-rules';
-import type { LookRule } from '../rules/tag-look';
+import type { Layout } from '../layout/layout-rules';
+import type { LookRule } from '../layout/tag-look';
 import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge } from '../../../host/settings-panel-host';
 import type { PanelContext } from '../../settings-panel/public-api';
 import { focusElement, queryElements, querySelect } from '../../shared/dom';

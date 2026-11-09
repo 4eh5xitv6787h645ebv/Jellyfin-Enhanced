@@ -5,17 +5,17 @@ import type { Session } from '../core/session';
 import type { CoreApi } from '../core/api/api';
 import type { Ui } from '../core/ui/runtime';
 import type { MediaLanguage } from '../features/media-tags/rules/media-language';
-import type { RatingSources } from '../features/media-tags/rules/rating-sources';
-import type { PosterColours } from '../features/media-tags/rules/poster-colours';
-import type { TagLayout } from '../features/media-tags/rules/tag-layout';
-import type { TagLook } from '../features/media-tags/rules/tag-look';
+import type { RatingSources } from '../features/media-tags/types/ratings/rating-sources';
+import type { PosterColours } from '../features/media-tags/layout/poster-colours';
+import type { TagLayout } from '../features/media-tags/layout/tag-layout';
+import type { TagLook } from '../features/media-tags/layout/tag-look';
 import type { statusVocabulary } from '../features/media-tags/rules/status-vocabulary';
-import type { PipelineApi, RendererApi } from '../features/media-tags/runtime/contract';
-import type { TagScopes, TagSettingsMatrix } from '../features/media-tags/runtime/scopes';
-import type { TagCacheStore } from '../features/media-tags/runtime/tag-cache-store';
-import type { DirectPlay } from '../features/media-tags/runtime/tag-direct-play';
-import type { ItemEditor } from '../features/media-tags/runtime/tag-item-editor';
-import type { JsonRecord } from '../features/media-tags/runtime/dto';
+import type { PipelineApi, RendererApi } from '../features/media-tags/pipeline/contract';
+import type { TagScopes, TagSettingsMatrix } from '../features/media-tags/pipeline/scopes';
+import type { TagCacheStore } from '../features/media-tags/pipeline/tag-cache-store';
+import type { DirectPlay } from '../features/media-tags/types/direct-play/tag-direct-play';
+import type { ItemEditor } from '../features/media-tags/editor/tag-item-editor';
+import type { JsonRecord } from '../features/media-tags/pipeline/dto';
 
 /** Mutable settings documents with dynamic group keys; values stay unknown until read. */
 export type SettingsDocument = Record<string, unknown>;
@@ -78,7 +78,7 @@ export interface TagRuntimeCore {
     tagRenderer: RendererApi;
     tagScopes?: TagScopes;
     tagSettingsMatrix?: TagSettingsMatrix;
-    languageTags?: import('../features/media-tags/runtime/languagetags').LanguageTagsApi;
+    languageTags?: import('../features/media-tags/types/language/languagetags').LanguageTagsApi;
 }
 export interface TagRuntimeHelpers {
     getItemCached?(id: string, options?: { userId: string }): Promise<unknown>;
@@ -115,14 +115,14 @@ export interface TagRuntimeBridge {
     tagDirectPlay?: DirectPlay;
     tagItemEditor?: ItemEditor;
     tagItemMenu?: { inject(): Promise<void>; DATA_ID: string };
-    tagStyles?: import('../features/media-tags/runtime/tag-styles').TagStyles;
+    tagStyles?: import('../features/media-tags/layout/tag-styles').TagStyles;
     genreTags?: { iconFor(name: string): string; labelFor(name: string): string };
-    logoTags?: import('../features/media-tags/runtime/logotags').LogoTags;
-    customTags?: import('../features/media-tags/runtime/customtags').CustomTags;
-    awardsTags?: import('../features/media-tags/runtime/awardstags').AwardsTags;
+    logoTags?: import('../features/media-tags/types/logo/logotags').LogoTags;
+    customTags?: import('../features/media-tags/types/custom/customtags').CustomTags;
+    awardsTags?: import('../features/media-tags/types/awards/awardstags').AwardsTags;
     selectedMediaSource?(itemId: unknown): string;
     isRatingTagExcludedByScope?(el: HTMLElement, type: unknown): boolean;
-    appendUserRatingToContainer?(el: HTMLElement, item: JsonRecord, extras?: import('../features/media-tags/runtime/contract').RenderExtras | null): void;
+    appendUserRatingToContainer?(el: HTMLElement, item: JsonRecord, extras?: import('../features/media-tags/pipeline/contract').RenderExtras | null): void;
     invalidateUserReviewTagCache?(tmdbKey?: string, mediaType?: string): void;
     getStatusDateContext?(): { locale: string; timeZone: string };
     initializeGenreTags?(): void;

@@ -9,13 +9,13 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
   }
 
-  // client/src/features/media-tags/runtime/tag-cache-store.ts
+  // client/src/features/media-tags/pipeline/tag-cache-store.ts
   function createTagCacheStore() {
     const logPrefix = "🪼 Jellyfin Enhanced [TagCacheStore]:";
     const DB_NAME = "JellyfinEnhanced";
@@ -343,7 +343,7 @@
     return typeof r === "number" && typeof g === "number" && typeof b === "number" ? [r, g, b] : void 0;
   }
 
-  // client/src/features/media-tags/runtime/tag-cache-store-entry.ts
+  // client/src/features/media-tags/pipeline/tag-cache-store-entry.ts
   tagRuntimeHost().tagCacheStore = createTagCacheStore();
 })();
 })();

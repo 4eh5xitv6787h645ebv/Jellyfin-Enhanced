@@ -49,7 +49,7 @@ registerSection({
 */
 import type { JsonValue } from '../../../../contracts/generated';
 import type { AdminTagLayout } from '../host';
-import type { Group, Layout, Shape } from '../../rules/layout-rules';
+import type { Group, Layout, Shape } from '../../layout/layout-rules';
 import { allAs, closest, find, findAs, focus, isDisabled } from '../dom';
 import { word } from '../format';
 import type { PageContext, SectionDef } from '../types';

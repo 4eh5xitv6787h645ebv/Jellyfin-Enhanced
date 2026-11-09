@@ -15,7 +15,7 @@
  * features never pick them up. Built lazily by the hub (ui-panel-media-tags.js)
  * when the Media Tags section first shows, disposed when the panel closes.
  */
-import type { Group } from '../rules/layout-rules';
+import type { Group } from '../layout/layout-rules';
 import { panelHost, registry, type PanelBridge, type PanelTagLayout, type Settings, type PluginConfig, type CustomTagRule } from '../../../host/settings-panel-host';
 import type { QualityCat } from './ui-panel-tag-editor';
 import { closestTarget, queryElement } from '../../shared/dom';

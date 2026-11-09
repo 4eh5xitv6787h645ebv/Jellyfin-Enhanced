@@ -18,7 +18,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -42,7 +42,7 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/media-tags/runtime/status-facts.ts
+  // client/src/features/media-tags/types/status/status-facts.ts
   var MAX_DATE_MS = 864e13;
   function readLeaving(raw) {
     if (!isRecord(raw)) return null;
@@ -168,7 +168,7 @@
     return paths.some((path) => typeof path === "string" && path.toLowerCase().endsWith(".strm"));
   }
 
-  // client/src/features/media-tags/runtime/statustags.ts
+  // client/src/features/media-tags/types/status/statustags.ts
   function createStatusTags(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: Status Tags:";
     const containerClass = "status-overlay-container";
@@ -1118,7 +1118,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/statustags-entry.ts
+  // client/src/features/media-tags/types/status/statustags-entry.ts
   createStatusTags(tagRuntimeHost());
 })();
 })();

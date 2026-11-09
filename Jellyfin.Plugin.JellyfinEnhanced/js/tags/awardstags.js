@@ -9,7 +9,7 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -41,7 +41,7 @@
     emmy: ["award-logos", "emmy"]
   };
 
-  // client/src/features/media-tags/runtime/awardstags.ts
+  // client/src/features/media-tags/types/awards/awardstags.ts
   var IDS = ["imdbTop250", "certifiedFresh", "oscar", "emmy", "letterboxdTop250"];
   function createAwardsTags(JE) {
     function read(facts, key) {
@@ -134,7 +134,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/awardstags-entry.ts
+  // client/src/features/media-tags/types/awards/awardstags-entry.ts
   createAwardsTags(tagRuntimeHost());
 })();
 })();

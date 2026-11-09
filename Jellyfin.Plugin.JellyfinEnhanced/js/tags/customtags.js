@@ -9,13 +9,13 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
   }
 
-  // client/src/features/media-tags/runtime/customtags.ts
+  // client/src/features/media-tags/types/custom/customtags.ts
   function createCustomTags(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: Custom Tags:";
     const containerClass = "custom-overlay-container";
@@ -282,7 +282,7 @@ ${source}`;
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/customtags-entry.ts
+  // client/src/features/media-tags/types/custom/customtags-entry.ts
   createCustomTags(tagRuntimeHost());
 })();
 })();

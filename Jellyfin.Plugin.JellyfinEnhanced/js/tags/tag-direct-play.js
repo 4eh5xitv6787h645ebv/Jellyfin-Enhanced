@@ -18,7 +18,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -36,7 +36,7 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/media-tags/runtime/device-profile.ts
+  // client/src/features/media-tags/types/direct-play/device-profile.ts
   function profileWindow() {
     return window;
   }
@@ -527,7 +527,7 @@
     return { enableMkvProgressive: false, disableHlsVideoAudioCodecs };
   }
 
-  // client/src/features/media-tags/runtime/tag-direct-play.ts
+  // client/src/features/media-tags/types/direct-play/tag-direct-play.ts
   function isTimedOut(error) {
     return isRecord(error) && error.timedOut === true;
   }
@@ -1204,7 +1204,7 @@ ${name}=${value}`;
     return api;
   }
 
-  // client/src/features/media-tags/runtime/tag-direct-play-entry.ts
+  // client/src/features/media-tags/types/direct-play/tag-direct-play-entry.ts
   createDirectPlay(tagRuntimeHost());
 })();
 })();

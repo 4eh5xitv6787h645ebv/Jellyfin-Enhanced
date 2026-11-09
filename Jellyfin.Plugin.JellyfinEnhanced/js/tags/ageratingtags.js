@@ -9,7 +9,7 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -18,7 +18,7 @@
     return typeof value === "string" && value ? value : null;
   }
 
-  // client/src/features/media-tags/runtime/ageratingtags.ts
+  // client/src/features/media-tags/types/age-rating/ageratingtags.ts
   function createAgeRatingTags(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: Age Rating Tags:";
     const containerClass = "age-rating-overlay-container";
@@ -213,7 +213,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/ageratingtags-entry.ts
+  // client/src/features/media-tags/types/age-rating/ageratingtags-entry.ts
   createAgeRatingTags(tagRuntimeHost());
 })();
 })();

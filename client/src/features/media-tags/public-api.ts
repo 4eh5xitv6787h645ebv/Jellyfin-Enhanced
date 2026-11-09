@@ -11,14 +11,14 @@ export type { PreviewInteraction, PreviewInteractionOptions, TagPreview, TagPrev
 // host/settings-panel-host.ts; added in S2). C1 moves the first two into this feature; the settings-panel host
 // moves to settings-panel/ and then needs these through this file.
 export type { LanguageConfig, LanguageSettings, MediaLanguage } from './rules/media-language';
-export type { PosterColours } from './rules/poster-colours';
-export type { RatingConfig, RatingSettings, RatingSources } from './rules/rating-sources';
+export type { PosterColours } from './layout/poster-colours';
+export type { RatingConfig, RatingSettings, RatingSources } from './types/ratings/rating-sources';
 export type { statusVocabulary } from './rules/status-vocabulary';
-export type { TagLayout } from './rules/tag-layout';
-export type { TagLook } from './rules/tag-look';
-export type { PipelineApi, RendererApi } from './runtime/contract';
-export type { JsonRecord } from './runtime/dto';
-export type { TagScopes, TagSettingsMatrix } from './runtime/scopes';
-export type { TagCacheStore } from './runtime/tag-cache-store';
-export type { DirectPlay } from './runtime/tag-direct-play';
-export type { ItemEditor } from './runtime/tag-item-editor';
+export type { TagLayout } from './layout/tag-layout';
+export type { TagLook } from './layout/tag-look';
+export type { PipelineApi, RendererApi } from './pipeline/contract';
+export type { JsonRecord } from './pipeline/dto';
+export type { TagScopes, TagSettingsMatrix } from './pipeline/scopes';
+export type { TagCacheStore } from './pipeline/tag-cache-store';
+export type { DirectPlay } from './types/direct-play/tag-direct-play';
+export type { ItemEditor } from './editor/tag-item-editor';

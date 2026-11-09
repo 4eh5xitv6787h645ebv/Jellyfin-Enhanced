@@ -1,0 +1,11 @@
+import { tagRulesHost, localeCandidates } from '../../../../host/tag-rules-host';
+import { createMediaLanguage } from '../../rules/media-language';
+const bridge = tagRulesHost();
+bridge.core ??= {};
+bridge.core.mediaLanguage = createMediaLanguage({
+    translate: key => bridge.t(key),
+    flagSvg: code => bridge.cdn.flagSvg(code),
+    localeCandidates: () => localeCandidates(bridge),
+    settings: () => bridge.currentSettings || {},
+    config: () => bridge.pluginConfig || {},
+});
