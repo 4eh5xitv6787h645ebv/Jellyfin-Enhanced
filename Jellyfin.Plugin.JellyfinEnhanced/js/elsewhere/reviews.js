@@ -215,6 +215,17 @@ ${content}` : content,
     }
     return out;
   }
+  function memoUntilFailure(load) {
+    let pending = null;
+    return () => {
+      if (pending) return pending;
+      const current = pending = load();
+      current.catch(() => {
+        if (pending === current) pending = null;
+      });
+      return current;
+    };
+  }
 
   // client/src/features/details-providers/reviews.ts
   var JE = export1("Reviews");
@@ -430,11 +441,7 @@ ${message}` : message);
       }
       return translationTargets(language || document.documentElement.lang || "");
     }
-    let translationLanguages = null;
-    function getTranslationLanguages() {
-      translationLanguages ?? (translationLanguages = JE.core.api.plugin("/translate/languages", { skipRetry: true }).then((response) => export8(export52(response, "languages")).filter((code) => typeof code === "string")).catch(() => []));
-      return translationLanguages;
-    }
+    const getTranslationLanguages = memoUntilFailure(() => JE.core.api.plugin("/translate/languages", { skipRetry: true }).then((response) => export8(export52(response, "languages")).filter((code) => typeof code === "string")));
     async function browserCanTranslate(target) {
       try {
         const translator = export2();
@@ -471,7 +478,10 @@ ${message}` : message);
       if (!targets) return;
       void Promise.all([
         browserCanTranslate(targets.browser),
-        JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then((languages) => languages.includes(targets.server)) : false
+        JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then((languages) => languages.includes(targets.server), (error) => {
+          console.warn(`${logPrefix} Translation languages unavailable; asking again on the next render.`, error);
+          return false;
+        }) : false
       ]).then(([browserOk, serverOk]) => {
         if (!browserOk && !serverOk) return;
         const textElement = card.querySelector(".tmdb-review-text");

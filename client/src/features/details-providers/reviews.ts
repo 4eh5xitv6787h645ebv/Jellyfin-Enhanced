@@ -7,7 +7,7 @@ import { bool, decodeDetailsItem, errorShape, field, list, str } from './wire';
 import type { DetailsItem } from './wire';
 import {
     averageUserRating, decodeAnilistReviews, decodeTmdbReviews, decodeUserReviews, extractLinks, interpolate,
-    parseMarkdown, relink, renderUserStarRating, reviewDate, sameUser, starIconHtml, toPlainText, translationTargets
+    memoUntilFailure, parseMarkdown, relink, renderUserStarRating, reviewDate, sameUser, starIconHtml, toPlainText, translationTargets
 } from './review-domain';
 import type { ExternalReview, UserReview } from './review-domain';
 
@@ -266,14 +266,9 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
         try { language = localStorage.getItem(`${currentUserId()}-language`) || ''; } catch { /* storage unavailable */ }
         return translationTargets(language || document.documentElement.lang || '');
     }
-    let translationLanguages: Promise<string[]> | null = null;
-    /** Target languages the configured LibreTranslate offers, fetched once per page load. */
-    function getTranslationLanguages(): Promise<string[]> {
-        translationLanguages ??= JE.core.api.plugin('/translate/languages', { skipRetry: true })
-            .then(response => list(field(response, 'languages')).filter((code): code is string => typeof code === 'string'))
-            .catch(() => []);
-        return translationLanguages;
-    }
+    /** Target languages the configured LibreTranslate offers, fetched once per page load; a failure is retried on the next render. */
+    const getTranslationLanguages = memoUntilFailure(() => JE.core.api.plugin('/translate/languages', { skipRetry: true })
+        .then(response => list(field(response, 'languages')).filter((code): code is string => typeof code === 'string')));
     /** Whether the browser's built-in translator can do English to the target (secure contexts only). */
     async function browserCanTranslate(target: string): Promise<boolean> {
         try {
@@ -321,7 +316,9 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
         if (!targets) return;
         void Promise.all([
             browserCanTranslate(targets.browser),
-            JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then(languages => languages.includes(targets.server)) : false
+            JE.pluginConfig.ReviewTranslationServer ? getTranslationLanguages().then(languages => languages.includes(targets.server), (error: unknown) => {
+                console.warn(`${logPrefix} Translation languages unavailable; asking again on the next render.`, error); return false;
+            }) : false
         ]).then(([browserOk, serverOk]) => {
             if (!browserOk && !serverOk) return;
             const textElement = card.querySelector<HTMLElement>('.tmdb-review-text');

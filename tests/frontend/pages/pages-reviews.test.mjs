@@ -284,3 +284,13 @@ test('a failed scope lookup suppresses reviews on a movie, as other failed guard
   const h=await setup(t,{config:{SpoilerBlurEnabled:true},spoilerBlur:{isMovieInScope:async()=>{throw new Error('offline');}}});
   assert.equal(h.document.querySelector('.tmdb-reviews-section'),null);
 });
+// BUG-009: a failed /translate/languages lookup is not remembered as "no languages" for the rest of the session.
+test('a failed translation-language lookup is asked again on the next render instead of hiding Translate until reload',async t=>{
+  let fail=true,lookups=0;
+  const plugin=async url=>{if(url==='/translate/languages'){lookups++;if(fail)throw Error('offline');return {languages:['de']};}return {reviews:[]};};
+  const h=await setup(t,{config:{ReviewTranslationEnabled:true,ReviewTranslationServer:true},tmdb:english,lang:'de',plugin});await nextTurn();
+  assert.equal(h.document.querySelector('.je-review-translate'),null,'no server language list, no server translation');
+  fail=false;h.document.querySelector('.tmdb-reviews-section').remove();await h.navigate();await nextTurn();
+  assert.equal(lookups,2);
+  assert.ok(h.document.querySelector('.je-review-translate'),'the recovered language list offers Translate');
+});

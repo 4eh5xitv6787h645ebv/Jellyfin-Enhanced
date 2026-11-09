@@ -10,8 +10,7 @@
     "R9-fail-empty fetchUserData": 1
   },
   "client/src/features/details-providers/reviews.ts": {
-    "R9-fail-empty initializeReviewsScript.fetchUserReviews": 1,
-    "R9-fail-empty initializeReviewsScript.getTranslationLanguages": 1
+    "R9-fail-empty initializeReviewsScript.fetchUserReviews": 1
   },
   "client/src/features/downloads/data.ts": {
     "R9-fail-cached install.fetchIssueMediaDetails": 1

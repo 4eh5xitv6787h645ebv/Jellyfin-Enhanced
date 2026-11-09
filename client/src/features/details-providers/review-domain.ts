@@ -235,3 +235,14 @@ export function interpolate(template: string, params: Record<string, string | nu
     }
     return out;
 }
+
+/** Memoises an async load until it fails: a rejected load is forgotten, so the next call starts it again. */
+export function memoUntilFailure<T>(load: () => Promise<T>): () => Promise<T> {
+    let pending: Promise<T> | null = null;
+    return () => {
+        if (pending) return pending;
+        const current = pending = load();
+        current.catch(() => { if (pending === current) pending = null; });
+        return current;
+    };
+}
