@@ -116,6 +116,8 @@
   var openGeneration = 0;
   var historyEntryActive = false;
   var popPending = false;
+  var HISTORY_KEY = "jeMoreInfo";
+  var historyToken = "";
   var dialogOpen = () => document.body.classList.contains(DIALOG_OPEN_CLASS);
   var keyOf = (event) => "key" in event ? event.key : void 0;
   async function open(tmdbId, rawType) {
@@ -244,7 +246,8 @@
     document.body.appendChild(modal);
     state.currentModal = modal;
     if (!historyEntryActive) {
-      history.pushState(null, "", location.href);
+      historyToken = `${Date.now()}:${openGeneration}`;
+      history.pushState({ [HISTORY_KEY]: historyToken }, "", location.href);
       historyEntryActive = true;
     }
     listen(scope, "keydown", (event) => {
@@ -335,9 +338,11 @@
   }
   moreInfoModal.open = open;
   moreInfoModal.close = close;
-  window.addEventListener("popstate", () => {
+  window.addEventListener("popstate", (event) => {
     if (!historyEntryActive) return;
     if (dialogOpen()) return;
+    const landed = event.state;
+    if (isRecord(landed) && landed[HISTORY_KEY] === historyToken) return;
     close();
   });
   JE.session?.onUserChange?.("jellyseerr-more-info", close);

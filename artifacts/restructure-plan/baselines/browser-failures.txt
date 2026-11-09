@@ -1,5 +1,4 @@
 [chromium] › tests/browser/flows.spec.cjs:29:1 › keyboard focus stays within modal and Escape cleans up across repeated opens
-[chromium] › tests/browser/seerr-details-rewrite.spec.cjs:85:1 › Escape closes a dialog on top and leaves the modal; a second one closes the modal
 [chromium] › tests/browser/settings-matrix.spec.cjs:155:1 › item editor: every group row offers the matrix controls and states where the rest are set
 [chromium] › tests/browser/settings-matrix.spec.cjs:176:1 › admin page: a link with an arrow or external-link icon underlines its words, never the icon beside them
 [chromium] › tests/browser/settings-matrix.spec.cjs:60:1 › admin page: every group offers the matrix controls, Edit only with settings inside, no dead links or empty disclosures
@@ -18,7 +17,6 @@
 [firefox] › tests/browser/seerr-core-rewrite.spec.cjs:56:1 › a card request is sent once through the real client and shown as requested
 [firefox] › tests/browser/seerr-core-rewrite.spec.cjs:69:1 › a request lost in transport is not retried and its outcome is shown as unknown
 [firefox] › tests/browser/seerr-core-rewrite.spec.cjs:80:1 › an account change while a request is in flight leaves the next account's view untouched
-[firefox] › tests/browser/seerr-details-rewrite.spec.cjs:85:1 › Escape closes a dialog on top and leaves the modal; a second one closes the modal
 [firefox] › tests/browser/settings-matrix.spec.cjs:155:1 › item editor: every group row offers the matrix controls and states where the rest are set
 [firefox] › tests/browser/settings-matrix.spec.cjs:176:1 › admin page: a link with an arrow or external-link icon underlines its words, never the icon beside them
 [firefox] › tests/browser/settings-matrix.spec.cjs:60:1 › admin page: every group offers the matrix controls, Edit only with settings inside, no dead links or empty disclosures
@@ -36,7 +34,6 @@
 [mobile-chromium] › tests/browser/chrome-rewrite.spec.cjs:26:1 › header More menu collapses JE actions on a phone width, forwards to originals and expands on desktop
 [mobile-chromium] › tests/browser/chrome-rewrite.spec.cjs:95:1 › splash covers the page, then gives way to the UI exactly once
 [mobile-chromium] › tests/browser/flows.spec.cjs:29:1 › keyboard focus stays within modal and Escape cleans up across repeated opens
-[mobile-chromium] › tests/browser/seerr-details-rewrite.spec.cjs:85:1 › Escape closes a dialog on top and leaves the modal; a second one closes the modal
 [mobile-chromium] › tests/browser/settings-matrix.spec.cjs:155:1 › item editor: every group row offers the matrix controls and states where the rest are set
 [mobile-chromium] › tests/browser/settings-matrix.spec.cjs:176:1 › admin page: a link with an arrow or external-link icon underlines its words, never the icon beside them
 [mobile-chromium] › tests/browser/settings-matrix.spec.cjs:60:1 › admin page: every group offers the matrix controls, Edit only with settings inside, no dead links or empty disclosures

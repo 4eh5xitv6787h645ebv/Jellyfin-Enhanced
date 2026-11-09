@@ -18,6 +18,9 @@ let openGeneration = 0;
 // behind it, so an open modal owns one history entry that Back pops.
 let historyEntryActive = false;
 let popPending = false;
+// Marks the history entry the modal pushed, so a dialog on top popping back to it is told apart from leaving it.
+const HISTORY_KEY = 'jeMoreInfo';
+let historyToken = '';
 
 const dialogOpen = (): boolean => document.body.classList.contains(DIALOG_OPEN_CLASS);
 /** The key of an event; a TV shell can send one that is not a KeyboardEvent. */
@@ -169,7 +172,8 @@ function showModal(data: JsonRecord, mediaType: MediaType): MoreInfoModalElement
     document.body.appendChild(modal);
     state.currentModal = modal;
     if (!historyEntryActive) {
-        history.pushState(null, '', location.href);
+        historyToken = `${Date.now()}:${openGeneration}`;
+        history.pushState({ [HISTORY_KEY]: historyToken }, '', location.href);
         historyEntryActive = true;
     }
 
@@ -280,10 +284,13 @@ function close(): void {
 moreInfoModal.open = open;
 moreInfoModal.close = close;
 
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', event => {
     if (!historyEntryActive) return;
     // A dialog stacked above the modal closes first and keeps this entry.
     if (dialogOpen()) return;
+    // A closed dialog's own history.back() lands on this modal's entry: stay open.
+    const landed: unknown = event.state;
+    if (isRecord(landed) && landed[HISTORY_KEY] === historyToken) return;
     close();
 });
 
