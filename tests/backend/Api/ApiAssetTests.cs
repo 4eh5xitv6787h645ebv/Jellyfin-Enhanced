@@ -199,7 +199,9 @@ public class ApiAssetTests
                 Assert.Equal(originalSources.Length, mappedSources.Length);
                 for (var j = 0; j < mappedSources.Length; j++)
                 {
-                    Assert.StartsWith("client/src/", mappedSources[j].GetString());
+                    // canopy K1b: or a module the build generated for a shared module (scripts/client/shared-modules.mjs);
+                    // its text is in sourcesContent, copied from the readable map above.
+                    Assert.Matches("^client/(src|generated-shared)/", mappedSources[j].GetString());
                     Assert.EndsWith(mappedSources[j].GetString()!, originalSources[j].GetString());
                 }
             }
