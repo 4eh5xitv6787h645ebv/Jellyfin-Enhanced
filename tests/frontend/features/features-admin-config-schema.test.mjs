@@ -74,10 +74,12 @@ test('the per-user setting list matches the controller', () => {
     const b = controller.indexOf('Reset settings for', a);
     const c = controller.indexOf('private static HiddenContentSettings BuildHcDefaultSettings');
     const d = controller.indexOf('[HttpPost', c);
+    assert.ok(a >= 0 && b > a && c >= 0 && d > c, 'the reset-all-users-settings or BuildHcDefaultSettings block was not found');
     const expected = new Set([
         ...controller.slice(a, b).matchAll(/=\s*defaultConfig\.(\w+)/g),
         ...controller.slice(c, d).matchAll(/=\s*src\.(\w+)/g)
     ].map((m) => m[1]));
+    assert.ok(expected.size >= 98, `expected at least 98 per-user settings, found ${expected.size}`);
     const generated = readFileSync(join(root, '..', 'client', 'src', 'admin', 'config', 'per-user-props.ts'), 'utf8');
     const actual = new Set([...generated.matchAll(/^\s+'(\w+)',?$/gm)].map((m) => m[1]));
     assert.deepEqual([...actual].sort(), [...expected].sort(), 'run: python scripts/generate_per_user_props.py');

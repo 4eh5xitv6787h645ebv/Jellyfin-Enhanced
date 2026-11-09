@@ -39,6 +39,7 @@ using MediaBrowser.Model;
 using MediaBrowser.Controller.Persistence;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -49,17 +50,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 {
     [Route("JellyfinEnhanced")]
     [ApiController]
-    public class JellyfinEnhancedController : ControllerBase
+    public class JellyfinEnhancedController : JeControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly Logger _logger;
-        private readonly IUserManager _userManager;
         private readonly Services.SeerrParentalFilter _parentalFilter;
         private readonly Services.SpoilerSeerrRedactor _spoilerSeerrRedactor;
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
         private readonly IDtoService _dtoService;
-        private readonly UserConfigurationManager _userConfigurationManager;
         private readonly IItemRepository _itemRepository;
         private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
         private readonly Services.TagCacheService _tagCacheService;
@@ -226,14 +224,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             MediaBrowser.Model.Tasks.ITaskManager taskManager,
             IPluginManager pluginManager,
             Helpers.MatroskaLanguageCache matroskaLanguageCache)
+            : base(userManager, logger, userConfigurationManager)
         {
             _httpClientFactory = httpClientFactory;
-            _logger = logger;
-            _userManager = userManager;
             _userDataManager = userDataManager;
             _libraryManager = libraryManager;
             _dtoService = dtoService;
-            _userConfigurationManager = userConfigurationManager;
             _itemRepository = itemRepository;
             _dbContextFactory = dbContextFactory;
             _tagCacheService = tagCacheService;
@@ -5440,70 +5436,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             return new FileStreamResult(stream, contentType + "; charset=utf-8");
         }
 
-        private IActionResult? AuthorizeUserConfigAccess(string requestedUserId, out string authorizedUserId)
-        {
-            authorizedUserId = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(requestedUserId))
-            {
-                return BadRequest(new { message = "userId is required." });
-            }
-
-            if (!Guid.TryParse(requestedUserId, out var parsedUserId) && !Guid.TryParseExact(requestedUserId, "N", out parsedUserId))
-            {
-                return BadRequest(new { message = "Invalid userId format." });
-            }
-
-            var effectiveUserId = UserHelper.GetUserId(User, parsedUserId);
-            if (!effectiveUserId.HasValue)
-            {
-                return Forbid();
-            }
-
-            // UserConfigurationManager expects folder names in N format (without dashes).
-            authorizedUserId = effectiveUserId.Value.ToString("N");
-            return null;
-        }
-
-        private IActionResult? AuthorizeUserAccess(Guid requestedUserId, out JUser user)
-        {
-            user = null!;
-            var effectiveUserId = UserHelper.GetUserId(User, requestedUserId);
-            if (!effectiveUserId.HasValue)
-            {
-                return Forbid();
-            }
-
-            var resolvedUser = _userManager.GetUserById(effectiveUserId.Value);
-            if (resolvedUser is null)
-            {
-                return NotFound();
-            }
-
-            user = resolvedUser;
-            return null;
-        }
-
-        // previously a single `User.IsInRole("Administrator")`
-        // magic-string check. Cross-check against the IUserManager-resolved
-        // Jellyfin user's actual `IsAdministrator` permission so a future
-        // Jellyfin core role-name rename can't silently downgrade JE's
-        // admin gates. Falls back to the role claim if the user lookup
-        // fails (which would be a programmer error since `[Authorize]`
-        // gates every admin endpoint).
-        private bool IsAdminUser()
-        {
-            if (User.IsInRole("Administrator")) return true;
-            try
-            {
-                var jfUserId = UserHelper.GetCurrentUserId(User);
-                if (!jfUserId.HasValue) return false;
-                var u = _userManager.GetUserById(jfUserId.Value);
-                return u != null && u.HasPermission(Jellyfin.Database.Implementations.Enums.PermissionKind.IsAdministrator);
-            }
-            catch { return false; }
-        }
-
         private bool IsAllowedUrl(string url)
         {
             var allowed = Jellyfin.Plugin.JellyfinEnhanced.Helpers.ArrUrlGuard.IsAllowedUrl(url);
@@ -5614,129 +5546,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         {
             return LoadRevisionedSettings(authorizedUserId).Settings;
         }
-
-        private JellyfinEnhancedUserSettings CreateSettingsDefaults()
-        {
-            var defaultConfig = JellyfinEnhanced.Instance?.Configuration;
-            if (defaultConfig == null) return new JellyfinEnhancedUserSettings();
-            var defaultUserSettings = new JellyfinEnhancedUserSettings
-            {
-                AutoPauseEnabled = defaultConfig.AutoPauseEnabled,
-                AutoResumeEnabled = defaultConfig.AutoResumeEnabled,
-                AutoPipEnabled = defaultConfig.AutoPipEnabled,
-                LongPress2xEnabled = defaultConfig.LongPress2xEnabled,
-                PauseScreenEnabled = defaultConfig.PauseScreenEnabled,
-                PauseScreenDelaySeconds = defaultConfig.PauseScreenDelaySeconds,
-                AutoSkipIntro = defaultConfig.AutoSkipIntro,
-                AutoSkipOutro = defaultConfig.AutoSkipOutro,
-                DisableCustomSubtitleStyles = defaultConfig.DisableCustomSubtitleStyles,
-                SelectedStylePresetIndex = defaultConfig.DefaultSubtitleStyle,
-                SelectedFontSizePresetIndex = defaultConfig.DefaultSubtitleSize,
-                SelectedFontFamilyPresetIndex = defaultConfig.DefaultSubtitleFont,
-                SelectedTextEffectPresetIndex = defaultConfig.DefaultSubtitleTextEffect,
-                RandomButtonEnabled = defaultConfig.RandomButtonEnabled,
-                RandomUnwatchedOnly = defaultConfig.RandomUnwatchedOnly,
-                RandomIncludeMovies = defaultConfig.RandomIncludeMovies,
-                RandomIncludeShows = defaultConfig.RandomIncludeShows,
-                RandomScopeCurrentContainer = defaultConfig.RandomScopeCurrentContainer,
-                ShowWatchProgress = defaultConfig.ShowWatchProgress,
-                WatchProgressMode = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressDefaultMode) ? "percentage" : defaultConfig.WatchProgressDefaultMode,
-                WatchProgressTimeFormat = string.IsNullOrWhiteSpace(defaultConfig.WatchProgressTimeFormat) ? "hours" : defaultConfig.WatchProgressTimeFormat,
-                ShowFileSizes = defaultConfig.ShowFileSizes,
-                ShowAudioLanguages = defaultConfig.ShowAudioLanguages,
-                UseNativePosterTags = null, // Not chosen yet: on while the administrator allows native poster tags.
-                QualityTagsEnabled = defaultConfig.QualityTagsEnabled,
-                ShowResolutionTag = defaultConfig.ShowResolutionTag,
-                ShowSourceTag = defaultConfig.ShowSourceTag,
-                // Source and edition defaults.
-                ShowEditionTag = defaultConfig.ShowEditionTag,
-                ShowRuntimeTag = defaultConfig.ShowRuntimeTag,
-                ShowVersionsTag = defaultConfig.ShowVersionsTag,
-                ShowAspectRatioTag = defaultConfig.ShowAspectRatioTag,
-                ShowFrameRateTag = defaultConfig.ShowFrameRateTag,
-                EditionTagOrder = defaultConfig.EditionTagOrder,
-                RuntimeTagOrder = defaultConfig.RuntimeTagOrder,
-                VersionsTagOrder = defaultConfig.VersionsTagOrder,
-                AspectRatioTagOrder = defaultConfig.AspectRatioTagOrder,
-                FrameRateTagOrder = defaultConfig.FrameRateTagOrder,
-                ShowLowQualitySourceTag = defaultConfig.ShowLowQualitySourceTag,
-                ShowDynamicRangeTag = defaultConfig.ShowDynamicRangeTag,
-                ShowSpecialFormatTag = defaultConfig.ShowSpecialFormatTag,
-                ShowVideoCodecTag = defaultConfig.ShowVideoCodecTag,
-                ShowAudioInfoTag = defaultConfig.ShowAudioInfoTag,
-                ResolutionTagOrder = defaultConfig.ResolutionTagOrder,
-                SourceTagOrder = defaultConfig.SourceTagOrder,
-                DynamicRangeTagOrder = defaultConfig.DynamicRangeTagOrder,
-                SpecialFormatTagOrder = defaultConfig.SpecialFormatTagOrder,
-                VideoCodecTagOrder = defaultConfig.VideoCodecTagOrder,
-                AudioInfoTagOrder = defaultConfig.AudioInfoTagOrder,
-                GenreTagsEnabled = defaultConfig.GenreTagsEnabled,
-                LanguageTagsEnabled = defaultConfig.LanguageTagsEnabled,
-                RatingTagsEnabled = defaultConfig.RatingTagsEnabled,
-                AgeRatingTagsEnabled = defaultConfig.AgeRatingTagsEnabled,
-                LogoTagsEnabled = defaultConfig.LogoTagsEnabled,
-                StatusTagsEnabled = defaultConfig.StatusTagsEnabled,
-                AwardsTagsEnabled = defaultConfig.AwardsTagsEnabled,
-                AwardsTagsPosition = defaultConfig.AwardsTagsPosition,
-                CustomTagsEnabled = defaultConfig.CustomTagsEnabled,
-                PeopleTagsEnabled = defaultConfig.PeopleTagsEnabled,
-                TagsHideOnHover = defaultConfig.TagsHideOnHover,
-                QualityTagsPosition = defaultConfig.QualityTagsPosition,
-                // Series/season quality aggregation default.
-                SeriesQualityAggregation = Services.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
-                QualityHideSdr = defaultConfig.QualityHideSdr,
-                QualityMinimumResolution = QualityDisplayRules.Minimum(defaultConfig.QualityMinimumResolution),
-                QualityHdrDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityHdrDisplayMode),
-                QualityVideoCodecDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityVideoCodecDisplayMode),
-                QualityAudioDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityAudioDisplayMode),
-                GenreTagsPosition = defaultConfig.GenreTagsPosition,
-                LanguageTagsPosition = defaultConfig.LanguageTagsPosition,
-                RatingTagsPosition = defaultConfig.RatingTagsPosition,
-                RatingTagsOnMovies = true, // follows the administrator (TagLayoutRules.RatingScope)
-                RatingTagsOnSeries = true, // follows the administrator (TagLayoutRules.RatingScope)
-                RatingTagsOnSeasons = true, // follows the administrator (TagLayoutRules.RatingScope)
-                RatingTagsOnEpisodes = true, // follows the administrator (TagLayoutRules.RatingScope)
-                RatingTagsOnContinueWatching = true, // follows the administrator (TagLayoutRules.RatingScope)
-                RatingTagsOnNextUp = true, // follows the administrator (TagLayoutRules.RatingScope)
-                RatingTagsShowCommunity = defaultConfig.RatingTagsShowCommunity,
-                RatingTagsShowCritic = defaultConfig.RatingTagsShowCritic,
-                // Multi-source rating defaults (copy the ordered array).
-                RatingTagsSources = RatingSourceSettings.Defaults(defaultConfig).ToArray(),
-                RatingTagsMinScore = RatingSourceSettings.NormalizeMinimum(defaultConfig.RatingTagsMinScore),
-                RatingTagsColorByScore = defaultConfig.RatingTagsColorByScore,
-                AgeRatingTagsPosition = defaultConfig.AgeRatingTagsPosition,
-                LogoTagsPosition = defaultConfig.LogoTagsPosition,
-                StatusTagsPosition = defaultConfig.StatusTagsPosition,
-                CustomTagsPosition = defaultConfig.CustomTagsPosition,
-                StatusTagsJustAdded = defaultConfig.StatusTagsJustAdded,
-                StatusTagsNewRelease = defaultConfig.StatusTagsNewRelease,
-                StatusTagsTrending = defaultConfig.StatusTagsTrending,
-                // Tag Styles preset: null follows the admin's preset.
-                TagStylePreset = null,
-                StatusTagsSchedule = defaultConfig.StatusTagsSchedule,
-                StatusTagsMilestones = defaultConfig.StatusTagsMilestones,
-                StatusTagsSeriesStatus = defaultConfig.StatusTagsSeriesStatus,
-                StatusTagsScenes = defaultConfig.StatusTagsScenes,
-                StatusTagsLeaving = defaultConfig.StatusTagsLeaving,
-                StatusTagsDirectPlay = defaultConfig.StatusTagsDirectPlay,
-                ShowRatingInPlayer = defaultConfig.ShowRatingInPlayer,
-                RemoveContinueWatchingEnabled = defaultConfig.RemoveContinueWatchingEnabled,
-                ReviewsExpandedByDefault = defaultConfig.ReviewsExpandedByDefault,
-                DisplayLanguage = defaultConfig.DefaultLanguage,
-                CalendarDisplayMode = "list",
-                CalendarDefaultViewMode = "agenda",
-                LastOpenedTab = "shortcuts"
-            };
-            TagLayoutRules.ApplyDefaults(defaultUserSettings, defaultConfig);
-            TagLookValidation.ApplyDefaults(defaultUserSettings, defaultConfig);
-            LanguageTagDisplay.ApplyDefaults(defaultUserSettings, defaultConfig);
-            TagShapeRules.ApplyDefaults(defaultUserSettings, defaultConfig);
-
-            return defaultUserSettings;
-        }
-
-        private RevisionedSettingsResponse LoadRevisionedSettings(string userId)
-            => new Services.SettingsDocumentService(_userConfigurationManager).Read(userId, CreateSettingsDefaults, IsAdminUser());
 
         [HttpGet("user-settings/{userId}/settings-document")]
         [Authorize]
@@ -8282,51 +8091,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
         private static bool IsValidTmdbKey(string tmdbId) =>
             !string.IsNullOrWhiteSpace(tmdbId) && _tmdbIdExtendedRegex.IsMatch(tmdbId);
-
-        /// <summary>
-        /// Per-request state for deciding which reviews a viewer may see.
-        /// Shared by <see cref="GetItemReviews"/> and <see cref="GetReviewRatings"/>
-        /// so the list and the poster rating chips can never disagree. Authors
-        /// are resolved at most once per request.
-        /// </summary>
-        private sealed class ReviewVisibilityContext
-        {
-            public bool ViewerIsAdmin { get; init; }
-            public string? ViewerUserIdN { get; init; }
-            public bool HideHiddenAuthors { get; init; }
-            public bool HideDisabledAuthors { get; init; }
-            public Dictionary<Guid, Jellyfin.Database.Implementations.Entities.User?> Authors { get; } = new();
-        }
-
-        private ReviewVisibilityContext CreateReviewVisibilityContext(string endpoint, string target)
-        {
-            var config = JellyfinEnhanced.Instance?.Configuration;
-
-            // Resolve the current viewer's "N"-format user id so we can
-            // always show their OWN review back to them, even when the
-            // viewer themselves is hidden/disabled in Jellyfin and the
-            // hide filters would otherwise drop their author record.
-            // Without this, a hidden non-admin user posting a review would
-            // immediately lose visibility of their own content (issue 546).
-            var viewerUserIdN = UserHelper.GetCurrentUserId(User)?.ToString("N");
-            if (string.IsNullOrEmpty(viewerUserIdN))
-            {
-                // Anomalous: [Authorize] passed but the Jellyfin-UserId
-                // claim is missing or unparseable. The self-review bypass
-                // below will silently no-op, so warn here to give a
-                // diagnostic trail if a hidden user reports the symptom
-                // again with no obvious cause.
-                _logger.Warning($"{endpoint}: could not resolve viewer user id from claims on {target}; self-review bypass disabled.");
-            }
-
-            return new ReviewVisibilityContext
-            {
-                ViewerIsAdmin = IsAdminUser(),
-                ViewerUserIdN = viewerUserIdN,
-                HideHiddenAuthors = config?.HideReviewsFromHiddenUsers ?? true,
-                HideDisabledAuthors = config?.HideReviewsFromDisabledUsers ?? true,
-            };
-        }
 
         /// <summary>
         /// Decides whether <paramref name="review"/> is visible to the viewer
@@ -11565,16 +11329,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             return Ok(new { sent, skipped, errors });
-        }
-
-        private Guid GetCurrentUserId()
-        {
-            var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
-                     ?? User.FindFirst("sub")
-                     ?? User.FindFirst("Sid");
-            if (claim != null && Guid.TryParse(claim.Value, out var id))
-                return id;
-            return Guid.Empty;
         }
 
         private string ResolveUserDisplay(string userId)

@@ -734,6 +734,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDefaults.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentPatch.cs",
       "category": "Features"
     },
@@ -823,6 +827,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Extensions/UserManagerExtensions.cs",
+      "category": "Infrastructure"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Http/JeControllerBase.cs",
       "category": "Infrastructure"
     },
     {
@@ -10274,7 +10282,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 480,
+    "files": 482,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 88,

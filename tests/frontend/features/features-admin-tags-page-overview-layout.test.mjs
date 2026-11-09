@@ -225,11 +225,15 @@ test('Overview: Apply defaults to all users saves first, then asks the server to
 
 
 test('a new user\'s preview document carries every tag setting the server seeds from the configuration', () => {
-  // Lexical cross-check against LoadUserSettingsDocument: every tag setting it copies
-  // straight from the configuration must reach the preview's seeded document.
-  const controller = readFileSync(resolve(jsRoot, '../Controllers/JellyfinEnhancedController.cs'), 'utf8');
-  const block = controller.slice(controller.indexOf('var defaultUserSettings = new JellyfinEnhancedUserSettings'), controller.indexOf('TagLayoutRules.ApplyDefaults(defaultUserSettings'));
+  // Lexical cross-check against SettingsDefaults.Create (the defaults LoadUserSettingsDocument seeds): every tag
+  // setting it copies straight from the configuration must reach the preview's seeded document.
+  const defaults = readFileSync(resolve(jsRoot, '../Features/Settings/Services/SettingsDefaults.cs'), 'utf8');
+  const start = defaults.indexOf('var defaultUserSettings = new JellyfinEnhancedUserSettings');
+  const end = defaults.indexOf('TagLayoutRules.ApplyDefaults(defaultUserSettings');
+  assert.ok(start >= 0 && end > start, 'the seeded-defaults block was not found in SettingsDefaults.cs');
+  const block = defaults.slice(start, end);
   const copied = [...block.matchAll(/(\w+) = (?:[\w.]+\()?defaultConfig\.(\w+)/g)].map((m) => m[2]).filter((k) => /Tag|Rating|Quality|Language|Status|Aggregation|^Show(Resolution|Source|Edition|LowQuality|DynamicRange|SpecialFormat|VideoCodec|AudioInfo)/.test(k));
+  assert.ok(copied.length >= 65, `expected at least 65 copied tag settings, found ${copied.length}`);
   const h = createHarness({ JE: {} });
   try {
     h.load('enhanced/admintags/admin-tags.js');
