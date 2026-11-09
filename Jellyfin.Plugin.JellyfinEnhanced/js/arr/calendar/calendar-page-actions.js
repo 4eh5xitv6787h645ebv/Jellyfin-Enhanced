@@ -2,18 +2,46 @@
 "use strict";
 (() => {
   // client/src/features/calendar/lifetime.ts
-  function lifetime(JE) {
+  function lifetime(ctx) {
     var _a;
-    return (_a = JE.internals).calendarLifetime || (_a.calendarLifetime = { view: 0, navigation: 0, refresh: 0, events: 0, userData: 0, requests: 0, initialized: false, disposers: /* @__PURE__ */ new Map() });
+    return (_a = ctx.own).calendarLifetime || (_a.calendarLifetime = { view: 0, navigation: 0, refresh: 0, events: 0, userData: 0, requests: 0, initialized: false, disposers: /* @__PURE__ */ new Map() });
   }
-  function lease(JE, channel) {
-    const owner = lifetime(JE), view = owner.view, epoch = JE.session?.getEpoch(), session = JE.session?.createLease?.();
+  function lease(ctx, channel) {
+    const JE = ctx.core, owner = lifetime(ctx), view = owner.view, epoch = JE.session?.getEpoch(), session = JE.session?.createLease?.();
     const serial = channel ? ++owner[channel] : 0;
-    const container = JE.internals.calendarPage?.state?._customTabContainer;
+    const container = ctx.own.calendarPage?.state?._customTabContainer;
     return () => owner.view === view && (!channel || owner[channel] === serial) && (epoch === void 0 || JE.session?.isCurrent(epoch) === true) && (!session || session.isCurrent()) && (!container || container.isConnected && JE.helpers.isActiveTabContainer(container));
   }
-  function cancelNavigation(JE) {
-    lifetime(JE).navigation++;
+  function cancelNavigation(ctx) {
+    lifetime(ctx).navigation++;
+  }
+
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
   }
 
   // client/src/features/calendar/host.ts
@@ -25,13 +53,18 @@
     JE.internals || (JE.internals = {});
     const partial = (_a = JE.internals).calendarPage || (_a.calendarPage = {});
     const P = partial;
-    return { JE, host, P };
+    const ctx = featureContext("calendar", JE, {
+      facades: ["initializeCalendarPage"],
+      internalSlots: ["calendarLifetime", "calendarPage"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+    return { JE, ctx, host, P };
   }
 
   // client/src/features/calendar/calendar-page-actions.ts
   (function() {
     "use strict";
-    const { JE, P } = calendarHost();
+    const { JE, ctx, P } = calendarHost();
     const state = P.state;
     const renderPage = P.renderPage;
     const getRangeForView = P.getRangeForView;
@@ -47,8 +80,8 @@
     const updateDisplayModeButtons = P.updateDisplayModeButtons;
     const logPrefix = "🪼 Jellyfin Enhanced: Calendar Page:";
     async function loadAllData() {
-      cancelNavigation(JE);
-      const current = lease(JE, "refresh");
+      cancelNavigation(ctx);
+      const current = lease(ctx, "refresh");
       if (!current()) return;
       P.loadSettings();
       state.isLoading = true;
@@ -68,7 +101,7 @@
       renderPage();
     }
     function setViewMode(mode) {
-      const current = lease(JE);
+      const current = lease(ctx);
       if (state.viewMode === mode) return;
       state.viewMode = mode;
       syncPageModeClasses();
@@ -82,9 +115,9 @@
       loadAllData();
     }
     function setDisplayMode(mode) {
-      const current = lease(JE);
+      const current = lease(ctx);
       if (!mode || state.settings.displayMode === mode) return;
-      cancelNavigation(JE);
+      cancelNavigation(ctx);
       state.settings.displayMode = mode;
       syncPageModeClasses();
       JE.currentSettings = JE.currentSettings || JE.loadSettings?.() || {};
@@ -124,7 +157,7 @@
       if (state.settings.forceOnlyRequested && filterType === "Requests") {
         return;
       }
-      cancelNavigation(JE);
+      cancelNavigation(ctx);
       if (state.activeFilters.has(filterType)) {
         state.activeFilters.delete(filterType);
       } else {
@@ -140,32 +173,32 @@
       if (!mode || mode !== "any" && mode !== "all") return;
       if (state.activeFilters.size < 2) return;
       if (state.filterMatchMode === mode) return;
-      cancelNavigation(JE);
+      cancelNavigation(ctx);
       state.filterMatchMode = mode;
       saveFilters();
       renderPage();
     }
     function toggleFilterInvert() {
       if (state.activeFilters.size === 0) return;
-      cancelNavigation(JE);
+      cancelNavigation(ctx);
       state.filterInvert = !state.filterInvert;
       saveFilters();
       renderPage();
     }
     function toggleCollapseEpisodes() {
-      cancelNavigation(JE);
+      cancelNavigation(ctx);
       state.settings.collapseEpisodes = !state.settings.collapseEpisodes;
       setStoredCollapse(state.settings.collapseEpisodes);
       renderPage();
     }
     function toggleShowUnmonitored() {
-      cancelNavigation(JE);
+      cancelNavigation(ctx);
       state.settings.showUnmonitored = !state.settings.showUnmonitored;
       setStoredShowUnmonitored(state.settings.showUnmonitored);
       renderPage();
     }
     async function navigateToJellyfinItem(event, options = {}) {
-      const current = lease(JE, "navigation");
+      const current = lease(ctx, "navigation");
       if (!current()) return;
       const preferSeries = !!options.preferSeries;
       const isMovie = event.type === "Movie";
@@ -238,7 +271,7 @@
         e.stopImmediatePropagation();
         const key = groupBtn.dataset.groupKey;
         if (!key) return;
-        cancelNavigation(JE);
+        cancelNavigation(ctx);
         if (!state.expandedGroups.delete(key)) state.expandedGroups.add(key);
         renderPage();
         return;

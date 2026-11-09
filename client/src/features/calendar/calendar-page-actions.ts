@@ -7,7 +7,7 @@ import type { CalendarEvent } from './types';
 (function () {
   "use strict";
 
-  const { JE, P } = calendarHost();
+  const { JE, ctx, P } = calendarHost();
 
   const state = P.state;
   const renderPage = P.renderPage;
@@ -29,8 +29,8 @@ import type { CalendarEvent } from './types';
    * Load all data
    */
   async function loadAllData() {
-    cancelNavigation(JE);
-    const current = lease(JE, "refresh");
+    cancelNavigation(ctx);
+    const current = lease(ctx, "refresh");
     if (!current()) return;
     P.loadSettings();
     state.isLoading = true;
@@ -59,7 +59,7 @@ import type { CalendarEvent } from './types';
 
   // Switch between month/week/agenda views
   function setViewMode(mode: string) {
-    const current = lease(JE);
+    const current = lease(ctx);
     if (state.viewMode === mode) return;
     state.viewMode = mode;
     syncPageModeClasses();
@@ -76,9 +76,9 @@ import type { CalendarEvent } from './types';
   }
 
   function setDisplayMode(mode: string) {
-    const current = lease(JE);
+    const current = lease(ctx);
     if (!mode || state.settings.displayMode === mode) return;
-    cancelNavigation(JE);
+    cancelNavigation(ctx);
     state.settings.displayMode = mode;
     syncPageModeClasses();
     JE.currentSettings = JE.currentSettings || JE.loadSettings?.() || {};
@@ -129,7 +129,7 @@ import type { CalendarEvent } from './types';
       return;
     }
 
-    cancelNavigation(JE);
+    cancelNavigation(ctx);
     if (state.activeFilters.has(filterType)) {
       state.activeFilters.delete(filterType);
     } else {
@@ -146,7 +146,7 @@ import type { CalendarEvent } from './types';
     if (!mode || (mode !== 'any' && mode !== 'all')) return;
     if (state.activeFilters.size < 2) return;
     if (state.filterMatchMode === mode) return;
-    cancelNavigation(JE);
+    cancelNavigation(ctx);
     state.filterMatchMode = mode;
     saveFilters();
     renderPage();
@@ -154,14 +154,14 @@ import type { CalendarEvent } from './types';
 
   function toggleFilterInvert() {
     if (state.activeFilters.size === 0) return;
-    cancelNavigation(JE);
+    cancelNavigation(ctx);
     state.filterInvert = !state.filterInvert;
     saveFilters();
     renderPage();
   }
 
   function toggleCollapseEpisodes() {
-    cancelNavigation(JE);
+    cancelNavigation(ctx);
     state.settings.collapseEpisodes = !state.settings.collapseEpisodes;
     setStoredCollapse(state.settings.collapseEpisodes);
     renderPage();
@@ -169,7 +169,7 @@ import type { CalendarEvent } from './types';
 
   // Toggle show unmonitored series on/off
   function toggleShowUnmonitored() {
-    cancelNavigation(JE);
+    cancelNavigation(ctx);
     state.settings.showUnmonitored = !state.settings.showUnmonitored;
     setStoredShowUnmonitored(state.settings.showUnmonitored);
     renderPage();
@@ -179,7 +179,7 @@ import type { CalendarEvent } from './types';
    * Navigate to Jellyfin item by provider IDs
    */
   async function navigateToJellyfinItem(event: CalendarEvent, options: {preferSeries?: boolean} = {}) {
-    const current = lease(JE, "navigation");
+    const current = lease(ctx, "navigation");
     if (!current()) return;
     const preferSeries = !!options.preferSeries;
     const isMovie = event.type === "Movie";
@@ -268,7 +268,7 @@ import type { CalendarEvent } from './types';
       e.stopImmediatePropagation();
       const key = groupBtn.dataset.groupKey;
       if (!key) return;
-      cancelNavigation(JE);
+      cancelNavigation(ctx);
       if (!state.expandedGroups.delete(key)) state.expandedGroups.add(key);
       renderPage();
       return;

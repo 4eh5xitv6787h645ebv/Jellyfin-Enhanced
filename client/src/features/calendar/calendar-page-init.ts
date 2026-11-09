@@ -7,7 +7,7 @@ import { calendarHost } from './host';
 (function () {
   "use strict";
 
-  const { JE, P } = calendarHost();
+  const { JE, ctx, P } = calendarHost();
 
   const state = P.state;
   const injectStyles = P.injectStyles;
@@ -31,7 +31,7 @@ import { calendarHost } from './host';
    * Initialize calendar page
    */
   function initialize() {
-    if (lifetime(JE).initialized) return;
+    if (lifetime(ctx).initialized) return;
     console.log(`${logPrefix} Initializing calendar page module`);
 
     const config = JE.pluginConfig || {};
@@ -40,8 +40,8 @@ import { calendarHost } from './host';
       return;
     }
 
-    lifetime(JE).initialized = true;
-    lifecycle.track(() => disposeCalendar(JE));
+    lifetime(ctx).initialized = true;
+    lifecycle.track(() => disposeCalendar(ctx));
     injectStyles();
     loadSettings();
 
@@ -129,7 +129,7 @@ import { calendarHost } from './host';
     if (!config.CalendarPageEnabled) return;
     if (pluginPagesExists && config.CalendarUsePluginPages) return;
 
-    invalidate(JE);
+    invalidate(ctx);
     state._customTabContainer = null;
     state.pageVisible = true;
     loadSettings();
@@ -185,7 +185,7 @@ import { calendarHost } from './host';
    */
   function hidePage() {
     if (!state.pageVisible) return;
-    invalidate(JE);
+    invalidate(ctx);
 
     const page = document.getElementById("je-calendar-page");
     if (page) {
@@ -311,7 +311,7 @@ import { calendarHost } from './host';
 
     // Shared watcher (helpers.onSidebarRebuilt): runs only when the link is
     // gone and the section exists, instead of a document-wide observer.
-    own(JE, 'sidebar', JE.helpers.onSidebarRebuilt('calendar', '.je-nav-calendar-item', () => {
+    own(ctx, 'sidebar', JE.helpers.onSidebarRebuilt('calendar', '.je-nav-calendar-item', () => {
       // Re-check config each time to avoid injecting when settings change
       const currentConfig = JE.pluginConfig || {};
       if (currentConfig.CalendarUseCustomTabs) return;
@@ -328,7 +328,7 @@ import { calendarHost } from './host';
    *   render into, avoiding global getElementById lookups.
    */
   function renderForCustomTab(targetContainer?: HTMLElement) {
-    if (state._customTabContainer !== targetContainer) invalidate(JE);
+    if (state._customTabContainer !== targetContainer) invalidate(ctx);
     injectStyles();
     loadSettings();
     renderPage(targetContainer);
@@ -355,5 +355,5 @@ import { calendarHost } from './host';
     setDisplayMode: P.setDisplayMode
   };
 
-  JE.initializeCalendarPage = initialize;
+  ctx.own.initializeCalendarPage = initialize;
 })();

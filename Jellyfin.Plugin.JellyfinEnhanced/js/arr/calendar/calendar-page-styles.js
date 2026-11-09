@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/calendar/host.ts
   function calendarHost() {
     var _a;
@@ -10,7 +38,12 @@
     JE.internals || (JE.internals = {});
     const partial = (_a = JE.internals).calendarPage || (_a.calendarPage = {});
     const P = partial;
-    return { JE, host, P };
+    const ctx = featureContext("calendar", JE, {
+      facades: ["initializeCalendarPage"],
+      internalSlots: ["calendarLifetime", "calendarPage"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+    return { JE, ctx, host, P };
   }
 
   // client/src/features/calendar/calendar-page-styles.ts

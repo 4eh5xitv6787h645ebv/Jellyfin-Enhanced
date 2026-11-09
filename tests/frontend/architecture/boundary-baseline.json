@@ -7,13 +7,6 @@
   "client/src/core/lifecycle-entry.ts": {
     "raw-global JellyfinEnhanced": 1
   },
-  "client/src/features/calendar/calendar-custom-tab.ts": {
-    "internals calendarPage": 1
-  },
-  "client/src/features/calendar/lifetime.ts": {
-    "internals calendarLifetime": 1,
-    "internals calendarPage": 3
-  },
   "client/src/features/chrome/events-entry.ts": {
     "internals *": 2,
     "internals canonicalCombo": 1
