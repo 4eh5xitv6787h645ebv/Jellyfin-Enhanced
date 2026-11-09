@@ -1,4 +1,4 @@
-import type { SeerrCoreBridge, SeerrCoreHost } from '../host-core';
+import { seerrCoreContext, type SeerrCoreBridge, type SeerrCoreHost } from '../host-core';
 import type { RequestOutcome, SeerrUiInternals } from './contract';
 import { isNumber, isRecord, isString } from './decode';
 
@@ -10,8 +10,8 @@ export const LOG_UI = '🪼 Jellyfin Enhanced: Seerr UI:';
  * seed a diverging shape.
  */
 export function groupInternals(JE: SeerrCoreBridge): SeerrUiInternals {
-    const internals = JE.internals ||= {};
-    return internals.jellyseerrUi ||= { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } };
+    const own = seerrCoreContext(JE).own;
+    return own.jellyseerrUi ||= { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } };
 }
 /** True the first time an entry installs on this page; a re-evaluated bundle installs nothing twice. */
 export function firstInstall(JE: SeerrCoreBridge, name: string): boolean {

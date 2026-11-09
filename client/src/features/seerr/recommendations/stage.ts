@@ -1,4 +1,4 @@
-import { discoveryHost, type SeerrDiscoveryHost } from '../host-discovery';
+import { discoveryContext, discoveryHost, type SeerrDiscoveryHost } from '../host-discovery';
 import type { RecommendationsInternals, RecommendationsStage } from './types';
 
 export const LOG_PREFIX = '🪼 Jellyfin Enhanced: Recommendations:';
@@ -13,8 +13,8 @@ export const OTHER_PAGE = `.mainAnimatedPage:not(.hide):not(#${PAGE_ID}):not(#${
 
 export function recommendationsHost(): { JE: SeerrDiscoveryHost; P: RecommendationsStage } {
     const { JE } = discoveryHost();
-    const internals = JE.internals ?? (JE.internals = {});
-    return { JE, P: internals.recommendationsPage ?? (internals.recommendationsPage = {}) };
+    const own = discoveryContext(JE).own;
+    return { JE, P: own.recommendationsPage ?? (own.recommendationsPage = {}) };
 }
 /** A part another entry published. Read at call time: the entries form a cycle at runtime. */
 export function part<K extends keyof RecommendationsInternals>(P: RecommendationsStage, key: K): NonNullable<RecommendationsStage[K]> {

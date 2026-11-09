@@ -1,4 +1,4 @@
-import type { SeerrCoreHost } from '../../host-core';
+import { seerrCoreContext, type SeerrCoreHost } from '../../host-core';
 import type { SeasonAnalysis, SeerrUiFacade } from '../contract';
 import { isMediaItem, isSafeTmdbImagePath } from '../decode';
 import { analyzeSeasonStatuses } from '../display';
@@ -68,6 +68,7 @@ export function installCards(host: SeerrCoreHost): void {
     if (!firstInstall(JE, 'ui-cards')) return;
     const ui: Partial<SeerrUiFacade> = JE.jellyseerrUI ||= {};
     const internals = groupInternals(JE);
+    const seerr = seerrCoreContext(JE);
     const escapeHtml = escapeWith(JE);
     const isTvLayout = () => JE.core?.ui?.isTvLayout?.() === true;
 
@@ -277,7 +278,7 @@ export function installCards(host: SeerrCoreHost): void {
     function getBatchContext(): BatchContext {
         if (batchContext) return batchContext;
         const config = JE.pluginConfig;
-        const hiddenSettings = JE.hiddenContent?.getSettings?.() ?? null;
+        const hiddenSettings = seerr.peer('hiddenContent')?.getSettings?.() ?? null;
         const showHideButtons = !!(hiddenSettings && hiddenSettings.enabled
             && hiddenSettings.showHideButtons !== false && hiddenSettings.showButtonJellyseerr !== false);
         const translatedOr = (key: string, fallback: string) => (JE.t(key) !== key ? JE.t(key) : fallback);
@@ -336,7 +337,7 @@ export function installCards(host: SeerrCoreHost): void {
             ctx.showHideButtons, ctx.hiddenLabel, ctx.unhideLabel, ctx.hideLabel, ctx.viewOnJellyseerrLabel(),
             ctx.mediaBadgeLabel('movie'), ctx.mediaBadgeLabel('tv'), ctx.mediaBadgeLabel('collection'),
             items.map(item => isMediaItem(item) ? cardItemInputs(item) : null),
-            ctx.showHideButtons ? items.map(item => isMediaItem(item) ? JE.hiddenContent?.isHiddenByTmdbId?.(item.id) ?? false : null) : null
+            ctx.showHideButtons ? items.map(item => isMediaItem(item) ? seerr.peer('hiddenContent')?.isHiddenByTmdbId?.(item.id) ?? false : null) : null
         ]);
     }
 
@@ -415,7 +416,7 @@ export function installCards(host: SeerrCoreHost): void {
         if (ctx.showProviderIcons && item.mediaType !== 'collection') observeProviderIcons(imageContainer, part(imageContainer, 1), item.id, item.mediaType);
         if (ctx.showHideButtons) {
             const hideBtn = document.createElement('button');
-            setHideButtonState(hideBtn, JE.hiddenContent?.isHiddenByTmdbId?.(item.id) ?? false, ctx);
+            setHideButtonState(hideBtn, seerr.peer('hiddenContent')?.isHiddenByTmdbId?.(item.id) ?? false, ctx);
             cardBox.style.position = 'relative';
             cardBox.appendChild(hideBtn);
         }
@@ -523,11 +524,11 @@ export function installCards(host: SeerrCoreHost): void {
         event.preventDefault();
         event.stopPropagation();
         if (hideBtn.classList.contains('je-already-hidden')) {
-            JE.hiddenContent?.unhideItem?.(state.jellyfinMediaId || `tmdb-${item.id}`);
+            seerr.peer('hiddenContent')?.unhideItem?.(state.jellyfinMediaId || `tmdb-${item.id}`);
             setHideButtonState(hideBtn, false, state.ctx);
             return;
         }
-        JE.hiddenContent?.confirmAndHide?.({
+        seerr.peer('hiddenContent')?.confirmAndHide?.({
             itemId: state.jellyfinMediaId || '',
             name: escapeHtml(item.title || item.name),
             type: item.mediaType === 'tv' ? 'Series' : 'Movie',

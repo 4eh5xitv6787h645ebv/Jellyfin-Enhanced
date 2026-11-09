@@ -95,17 +95,8 @@
     "internals *": 2,
     "internals peopleTags": 1
   },
-  "client/src/features/seerr/core/api.ts": {
-    "raw-global JellyfinEnhanced": 2
-  },
-  "client/src/features/seerr/core/runtime.ts": {
-    "internals *": 1
-  },
   "client/src/features/seerr/details/moreinfo/actions-entry.ts": {
     "internals spoilerGuard": 1
-  },
-  "client/src/features/seerr/recommendations/stage.ts": {
-    "internals *": 2
   },
   "client/src/features/settings-panel/ui-panel-shortcut-editor.ts": {
     "internals canonicalCombo": 1

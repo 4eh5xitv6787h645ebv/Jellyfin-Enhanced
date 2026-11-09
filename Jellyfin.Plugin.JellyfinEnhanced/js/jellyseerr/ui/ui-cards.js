@@ -1,12 +1,52 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/seerr/host-core.ts
+  var coreContexts = /* @__PURE__ */ new WeakMap();
+  function seerrCoreContext(JE) {
+    let ctx = coreContexts.get(JE);
+    if (!ctx) {
+      ctx = featureContext("seerr", JE, {
+        internalSlots: ["jellyseerrUi"],
+        internalsObject: () => JE.internals || (JE.internals = {})
+      });
+      coreContexts.set(JE, ctx);
+    }
+    return ctx;
+  }
   function seerrCoreHost() {
     const host = window;
     const JE = host.JellyfinEnhanced;
     if (!JE) throw new Error("Jellyfin Enhanced must be initialized before the Seerr core group");
-    return { JE, window: host, document, apiClient: () => host.ApiClient };
+    return { JE, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
   }
 
   // client/src/features/seerr/core/decode.ts
@@ -261,8 +301,8 @@
   // client/src/features/seerr/core/runtime.ts
   var LOG_UI = "🪼 Jellyfin Enhanced: Seerr UI:";
   function groupInternals(JE) {
-    const internals = JE.internals || (JE.internals = {});
-    return internals.jellyseerrUi || (internals.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
+    const own = seerrCoreContext(JE).own;
+    return own.jellyseerrUi || (own.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
   }
   function firstInstall(JE, name) {
     const internals = groupInternals(JE);
@@ -347,6 +387,7 @@
     if (!firstInstall(JE, "ui-cards")) return;
     const ui = JE.jellyseerrUI || (JE.jellyseerrUI = {});
     const internals = groupInternals(JE);
+    const seerr = seerrCoreContext(JE);
     const escapeHtml = escapeWith(JE);
     const isTvLayout = () => JE.core?.ui?.isTvLayout?.() === true;
     const POSTER_DATA_KEY = "jePoster";
@@ -536,7 +577,7 @@
     function getBatchContext() {
       if (batchContext) return batchContext;
       const config = JE.pluginConfig;
-      const hiddenSettings = JE.hiddenContent?.getSettings?.() ?? null;
+      const hiddenSettings = seerr.peer("hiddenContent")?.getSettings?.() ?? null;
       const showHideButtons = !!(hiddenSettings && hiddenSettings.enabled && hiddenSettings.showHideButtons !== false && hiddenSettings.showButtonJellyseerr !== false);
       const translatedOr = (key, fallback) => JE.t(key) !== key ? JE.t(key) : fallback;
       const mediaBadgeKeys = { movie: "jellyseerr_card_badge_movie", tv: "jellyseerr_card_badge_series", collection: "jellyseerr_card_badge_collection" };
@@ -617,7 +658,7 @@
         ctx.mediaBadgeLabel("tv"),
         ctx.mediaBadgeLabel("collection"),
         items.map((item) => isMediaItem(item) ? cardItemInputs(item) : null),
-        ctx.showHideButtons ? items.map((item) => isMediaItem(item) ? JE.hiddenContent?.isHiddenByTmdbId?.(item.id) ?? false : null) : null
+        ctx.showHideButtons ? items.map((item) => isMediaItem(item) ? seerr.peer("hiddenContent")?.isHiddenByTmdbId?.(item.id) ?? false : null) : null
       ]);
     }
     function setHideButtonState(hideBtn, hidden, ctx) {
@@ -688,7 +729,7 @@
       if (ctx.showProviderIcons && item.mediaType !== "collection") observeProviderIcons(imageContainer, part(imageContainer, 1), item.id, item.mediaType);
       if (ctx.showHideButtons) {
         const hideBtn = document2.createElement("button");
-        setHideButtonState(hideBtn, JE.hiddenContent?.isHiddenByTmdbId?.(item.id) ?? false, ctx);
+        setHideButtonState(hideBtn, seerr.peer("hiddenContent")?.isHiddenByTmdbId?.(item.id) ?? false, ctx);
         cardBox.style.position = "relative";
         cardBox.appendChild(hideBtn);
       }
@@ -804,11 +845,11 @@
       event.preventDefault();
       event.stopPropagation();
       if (hideBtn.classList.contains("je-already-hidden")) {
-        JE.hiddenContent?.unhideItem?.(state.jellyfinMediaId || `tmdb-${item.id}`);
+        seerr.peer("hiddenContent")?.unhideItem?.(state.jellyfinMediaId || `tmdb-${item.id}`);
         setHideButtonState(hideBtn, false, state.ctx);
         return;
       }
-      JE.hiddenContent?.confirmAndHide?.({
+      seerr.peer("hiddenContent")?.confirmAndHide?.({
         itemId: state.jellyfinMediaId || "",
         name: escapeHtml(item.title || item.name),
         type: item.mediaType === "tv" ? "Series" : "Movie",

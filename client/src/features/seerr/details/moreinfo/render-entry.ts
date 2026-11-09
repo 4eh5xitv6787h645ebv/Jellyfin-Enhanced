@@ -1,10 +1,11 @@
-import { bridge, escaper, moreInfoRegistry, sibling, translator, type MediaType, type TmdbId } from '../../host-details';
+import { bridge, escaper, moreInfoRegistry, seerrDetailsContext, sibling, translator, type MediaType, type TmdbId } from '../../host-details';
 import { longDate } from '../domain/dates';
 import { filled, idText, isRecord, record, records, str, type JsonRecord } from '../domain/json';
 import { safeHttpUrl, tmdbImage } from '../domain/links';
 import { crewSummary, headerYear, runtimeText, streamingProviders, titleOf } from '../domain/media';
 
 const JE = bridge();
+const seerr = seerrDetailsContext(JE);
 const internal = moreInfoRegistry(JE);
 const escapeHtml = escaper(JE);
 const t = translator(JE);
@@ -29,7 +30,7 @@ function dateRow(key: string, value: unknown): string {
 function ratingBadge(details: JsonRecord, mediaType: MediaType): string {
     const rating = sibling(internal, 'getContentRating')(details, mediaType);
     if (JE.pluginConfig?.ColoredRatingsEnabled && rating && rating !== 'N/A') {
-        return `<span class="rating-badge mediaInfoOfficialRating" rating="${escapeHtml(JE.normalizeOfficialRating?.(rating) || rating)}">${escapeHtml(rating)}</span>`;
+        return `<span class="rating-badge mediaInfoOfficialRating" rating="${escapeHtml(seerr.peer('normalizeOfficialRating')?.(rating) || rating)}">${escapeHtml(rating)}</span>`;
     }
     return `<span class="rating-badge">${escapeHtml(rating)}</span>`;
 }

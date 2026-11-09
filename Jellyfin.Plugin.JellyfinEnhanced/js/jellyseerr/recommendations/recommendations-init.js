@@ -1,11 +1,51 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/seerr/host-discovery.ts
   function discoveryHost() {
     const host = window;
     const JE = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
     return { JE, api: () => host.ApiClient };
+  }
+  var discoveryContexts = /* @__PURE__ */ new WeakMap();
+  function discoveryContext(JE) {
+    let ctx = discoveryContexts.get(JE);
+    if (!ctx) {
+      ctx = featureContext("seerr", JE, {
+        internalSlots: ["recommendationsPage"],
+        internalsObject: () => JE.internals ?? (JE.internals = {})
+      });
+      discoveryContexts.set(JE, ctx);
+    }
+    return ctx;
   }
   function translate(JE, key, params) {
     return JE.t?.(key, params) ?? key;
@@ -19,8 +59,8 @@
   var OTHER_PAGE = `.mainAnimatedPage:not(.hide):not(#${PAGE_ID}):not(#${CATEGORY_PAGE_ID})`;
   function recommendationsHost() {
     const { JE } = discoveryHost();
-    const internals = JE.internals ?? (JE.internals = {});
-    return { JE, P: internals.recommendationsPage ?? (internals.recommendationsPage = {}) };
+    const own = discoveryContext(JE).own;
+    return { JE, P: own.recommendationsPage ?? (own.recommendationsPage = {}) };
   }
   function part(P, key) {
     const value = P[key];

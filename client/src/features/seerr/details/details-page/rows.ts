@@ -1,4 +1,4 @@
-import { SEERR_LOG, taskScheduler, translator, type SeerrDetailsBridge } from '../../host-details';
+import { SEERR_LOG, seerrDetailsContext, taskScheduler, translator, type SeerrDetailsBridge } from '../../host-details';
 import { filled, record, str } from '../domain/json';
 import { detailsHref } from '../domain/links';
 
@@ -137,7 +137,8 @@ export function createDetailRows(JE: SeerrDetailsBridge, processedItems: Set<str
         if (results.length === 0) return [];
         let filtered = results;
         if (JE.pluginConfig?.JellyseerrExcludeLibraryItems === true) filtered = results.filter(item => !jellyfinMediaIdOf(item));
-        if (JE.hiddenContent) filtered = JE.hiddenContent.filterJellyseerrResults(filtered, 'recommendations');
+        const hiddenContent = seerrDetailsContext(JE).peer('hiddenContent');
+        if (hiddenContent) filtered = hiddenContent.filterJellyseerrResults(filtered, 'recommendations');
         return filtered;
     }
 
