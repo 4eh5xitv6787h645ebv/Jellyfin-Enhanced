@@ -2,7 +2,8 @@
 const {test,expect}=require('@playwright/test');
 const path=require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const root=path.resolve(process.env.CHROME_JS||path.join(__dirname,'../../Jellyfin.Plugin.JellyfinEnhanced/js'));
-const page0=html=>route=>route.fulfill({contentType:'text/html',body:`<!doctype html><html><head><style>body{margin:0;font-family:sans-serif;background:#101010;color:#eee}
+// The viewport meta as Jellyfin web's index.html has it: without it a phone (isMobile) lays the page out 980px wide.
+const page0=html=>route=>route.fulfill({contentType:'text/html',body:`<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;font-family:sans-serif;background:#101010;color:#eee}
  .headerTop{display:flex;align-items:center;height:56px;padding:0 8px;background:#202020}.headerLeft{flex-grow:1;display:flex;align-items:center}
  .headerRight{display:flex;align-items:center}.headerButton{width:40px;height:40px;margin:0 2px;border:0;background:#333;color:#fff}</style></head><body>${html}</body></html>`});
 const header='<div class="skinHeader"><div class="headerTop"><div class="headerLeft"><h3 class="pageTitle">Home</h3></div><div class="headerRight"><button class="headerButton" id="native-user">U</button></div></div></div>';

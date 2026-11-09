@@ -217,8 +217,12 @@ public class ApiAssetTests
         var rebuilt = ClientScriptBundle.GetBundle("regression-version", true, fixture.Logger);
         Assert.NotSame(cached.Script, rebuilt.Script);
         Assert.Equal(bundle.Script, rebuilt.Script);
+        // A new cache key builds a new bundle that links its map under that key. (Every manifest module now ships a
+        // typed map, so the key no longer appears in the map itself; only a legacy section's sources carry it.)
         var changed = ClientScriptBundle.GetBundle("next-version", false, fixture.Logger);
-        Assert.Contains("v=next-version", Encoding.UTF8.GetString(changed.SourceMap));
+        Assert.NotSame(rebuilt.Script, changed.Script);
+        Assert.NotSame(rebuilt.SourceMap, changed.SourceMap);
+        Assert.EndsWith("//# sourceMappingURL=bundle.js.map?v=next-version\n", Encoding.UTF8.GetString(changed.Script));
     }
 
     [Fact]

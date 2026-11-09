@@ -74,7 +74,8 @@ function setup(t, { stored = {}, plugin = {}, mine = [], offered = [], preview }
         const url = new URL(request.url);
         const path = url.pathname;
         const wire = request.data ? JSON.parse(request.data) : null;
-        const body = path.endsWith('/settings-document') ? wire.Settings : wire;
+        // A GET carries no body (wire is null).
+        const body = path.endsWith('/settings-document') ? wire?.Settings : wire;
         requests.push({ type: request.type, path, body, server: identity.server });
         const account = accountOf(path);
         if (path.endsWith('/settings-document')) {
@@ -158,7 +159,8 @@ function setup(t, { stored = {}, plugin = {}, mine = [], offered = [], preview }
       identity.user = user;
       identity.server = serverName;
       h.JE.session.checkNow('test-switch');
-      h.JE.userConfig = { settings: convert(c => c.toLowerCase())(accounts.get(key).settings), shortcuts: { Shortcuts: [] } };
+      // The loader keeps the loaded document's revision (bootstrap/loader/user-config.ts); the panel needs it to open.
+      h.JE.userConfig = { settings: convert(c => c.toLowerCase())(accounts.get(key).settings), shortcuts: { Shortcuts: [] }, settingsRevision: 'fixture-loaded' };
       h.JE.currentSettings = h.JE.loadSettings();
       if (closePanel) $('#closeSettingsPanel')?.click();
     },
