@@ -2780,7 +2780,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/frontend/pages/pages-calendar.test.mjs",
-      "tests/backend/Integrations/IntegrationCalendarTests.cs"
+      "tests/backend/Features/Calendar/IntegrationCalendarTests.cs"
     ],
     "assessment": "Calendar settings/filtering/provider integration has coverage; last-day RFC3339 boundary and each historical navigation/layout change not proven by this audit."
   },
@@ -2792,7 +2792,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/frontend/pages/pages-calendar.test.mjs",
-      "tests/backend/Integrations/IntegrationCalendarTests.cs"
+      "tests/backend/Features/Calendar/IntegrationCalendarTests.cs"
     ],
     "assessment": "Calendar settings/filtering/provider integration has coverage; last-day RFC3339 boundary and each historical navigation/layout change not proven by this audit."
   },
@@ -2901,7 +2901,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/frontend/pages/pages-calendar.test.mjs",
-      "tests/backend/Integrations/IntegrationCalendarTests.cs"
+      "tests/backend/Features/Calendar/IntegrationCalendarTests.cs"
     ],
     "assessment": "Calendar settings/filtering/provider integration has coverage; last-day RFC3339 boundary and each historical navigation/layout change not proven by this audit."
   },
@@ -2994,7 +2994,7 @@
     "status": "partial-existing",
     "tests": [
       "tests/frontend/pages/pages-calendar.test.mjs",
-      "tests/backend/Integrations/IntegrationCalendarTests.cs"
+      "tests/backend/Features/Calendar/IntegrationCalendarTests.cs"
     ],
     "assessment": "Calendar settings/filtering/provider integration has coverage; last-day RFC3339 boundary and each historical navigation/layout change not proven by this audit."
   },

@@ -194,6 +194,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Calendar/JeCalendarController.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/CatchupServiceRegistration.cs",
       "category": "Features"
     },
@@ -3689,37 +3693,12 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/calendar",
-      "method": "GetCalendarEvents",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/arr/calendar/user-data",
-      "method": "GetCalendarUserDataForEvents",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/proxy/avatar",
       "method": "ProxyAvatar",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize"
       ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/items/by-providers",
-      "method": "GetItemIdByProviders",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
     },
     {
       "verb": "GET",
@@ -3833,6 +3812,31 @@
         "Authorize",
         "Produces(\"application/json\")"
       ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/calendar",
+      "method": "GetCalendarEvents",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Calendar/JeCalendarController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/arr/calendar/user-data",
+      "method": "GetCalendarUserDataForEvents",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Calendar/JeCalendarController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/items/by-providers",
+      "method": "GetItemIdByProviders",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Calendar/JeCalendarController.cs",
+      "following_attributes": []
     },
     {
       "verb": "POST",
@@ -10330,7 +10334,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 493,
+    "files": 494,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 89,

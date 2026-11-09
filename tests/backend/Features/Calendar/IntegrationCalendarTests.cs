@@ -4,6 +4,7 @@ using System.Text.Json;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Locking;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -13,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Calendar;
 
 [Collection("Plugin singleton")]
 public class IntegrationCalendarTests
@@ -29,6 +30,8 @@ public class IntegrationCalendarTests
         }
         public Task<JellyfinDbContext> CreateDbContextAsync(CancellationToken ct = default) => Task.FromResult(CreateDbContext());
     }
+    private static JeCalendarController Calendar(CoreFixture core, params object[] services)
+        => (JeCalendarController)ApiAssetTests.Controller(typeof(JeCalendarController), core, services);
     private static (List<ArrItem> Events, JsonElement Errors) Unpack(IActionResult result)
     {
         var root = JsonSerializer.SerializeToElement(Assert.IsType<OkObjectResult>(result).Value);
@@ -59,7 +62,7 @@ public class IntegrationCalendarTests
             Assert.Contains("startDate=2026-10-01&endDate=2026-11-01", request.RequestUri.Query);
             return Task.FromResult(IntegrationTransport.Response("[" + string.Join(",", new[] { "Episode", "Special", "Credits", "Trailer", "Parody", "Other" }.Select((t, i) => Episode(t, i, i + 1))) + "]"));
         });
-        var controller = ApiAssetTests.Controller(f.Core, transport, new CalendarDatabase());
+        var controller = Calendar(f.Core, transport, new CalendarDatabase());
         controller.Request.QueryString = new QueryString("?start=2026-10-01&end=2026-11-01");
         var result = Unpack(await controller.GetCalendarEvents());
         Assert.Equal(type, Assert.Single(result.Events).Subtitle!.Split(' ')[0]);
@@ -78,7 +81,7 @@ public class IntegrationCalendarTests
         f.Plugin.Configuration.SonarrUrl = "http://127.0.0.1/sonarr";
         f.Plugin.Configuration.SonarrApiKey = "arr-secret";
         using var transport = new IntegrationTransport((request, _) => Task.FromResult(request.RequestUri!.AbsolutePath.Contains("/shoko/") ? IntegrationTransport.Response(body, status) : IntegrationTransport.Response("[{\"airDateUtc\":\"2026-10-10\",\"title\":\"Episode\",\"series\":{\"title\":\"Unaffected series\"}}]")));
-        var controller = ApiAssetTests.Controller(f.Core, transport);
+        var controller = Calendar(f.Core, transport);
         var result = Unpack(await controller.GetCalendarEvents());
         Assert.Equal("Sonarr", Assert.Single(result.Events).Source);
         Assert.Equal("Shoko", result.Errors[0].GetProperty("source").GetString());
@@ -99,7 +102,7 @@ public class IntegrationCalendarTests
             db.SaveChanges();
         }
         using var transport = new IntegrationTransport((request, _) => Task.FromResult(IntegrationTransport.Response(request.RequestUri!.AbsolutePath.Contains("/shoko/") ? "[" + Episode("Episode", 1, 42) + "]" : "[{\"airDateUtc\":\"2026-10-10T12:00:00Z\",\"title\":\"Episode 1\",\"episodeNumber\":1,\"series\":{\"title\":\"Same anime\"}}]")));
-        var controller = ApiAssetTests.Controller(f.Core, transport, database);
+        var controller = Calendar(f.Core, transport, database);
         var result = Unpack(await controller.GetCalendarEvents());
         Assert.Equal(2, result.Events.Count);
         var shoko = Assert.Single(result.Events, e => e.Source == "Shoko");
@@ -127,7 +130,7 @@ public class IntegrationCalendarTests
         var library = new Mock<ILibraryManager>();
         library.Setup(l => l.GetItemById<BaseItem>(seriesId, user)).Returns(allowed ? new MediaBrowser.Controller.Entities.TV.Series { Id = seriesId } : null);
         using var transport = new IntegrationTransport((_, _) => Task.FromResult(IntegrationTransport.Response("[" + Episode("Episode", 1, 42) + "]")));
-        var controller = ApiAssetTests.Controller(f.Core, transport, database, users.Object, library.Object);
+        var controller = Calendar(f.Core, transport, database, users.Object, library.Object);
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("Jellyfin-UserId", user.Id.ToString())], "test"));
         var result = Unpack(await controller.GetCalendarEvents());
         Assert.Equal(allowed ? 1 : 0, result.Events.Count);
@@ -145,7 +148,7 @@ public class IntegrationCalendarTests
             request.RequestUri!.AbsolutePath.Contains("/shoko/") ? "[" + Episode("Episode", 1, 42) + ",{\"Type\":\"Episode\",\"AirDate\":\"invalid\"}]" :
             request.RequestUri.AbsolutePath.Contains("/radarr/") ? "[{\"id\":1,\"title\":\"Movie\",\"digitalRelease\":\"2026-10-10\"}]" :
             "[{\"airDateUtc\":\"2026-10-10\",\"series\":{\"title\":\"TV\"}}]")));
-        var controller = ApiAssetTests.Controller(f.Core, transport, new CalendarDatabase());
+        var controller = Calendar(f.Core, transport, new CalendarDatabase());
         controller.Request.QueryString = new QueryString("?start=2026-10-01&end=2026-11-01");
         var result = Unpack(await controller.GetCalendarEvents());
         Assert.Equal(new[] { "Radarr", "Shoko", "Sonarr" }, result.Events.Select(e => e.Source).OrderBy(x => x));
@@ -175,7 +178,7 @@ public class IntegrationCalendarTests
         {
             // th-TH uses the Buddhist calendar: culture-sensitive parsing reads 2026 as a Buddhist year.
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("th-TH");
-            var controller = ApiAssetTests.Controller(f.Core, transport, new CalendarDatabase());
+            var controller = Calendar(f.Core, transport, new CalendarDatabase());
             controller.Request.QueryString = new QueryString("?start=2026-10-01&end=2026-11-01");
             var result = Unpack(await controller.GetCalendarEvents());
             Assert.Equal(new[] { "Radarr", "Shoko", "Sonarr" }, result.Events.Select(e => e.Source).OrderBy(x => x));
@@ -193,7 +196,7 @@ public class IntegrationCalendarTests
         using var f = new ApiPluginFixture(); Configure(f);
         if (urlOnly) f.Plugin.Configuration.ShokoApiKey = ""; else f.Plugin.Configuration.ShokoUrl = "";
         using var transport = new IntegrationTransport((_, _) => throw new InvalidOperationException("Must not fetch partial configuration"));
-        var result = Unpack(await ApiAssetTests.Controller(f.Core, transport).GetCalendarEvents());
+        var result = Unpack(await Calendar(f.Core, transport).GetCalendarEvents());
         Assert.Empty(result.Events);
         Assert.Equal(1, result.Errors.GetArrayLength());
         Assert.Equal(0, transport.Calls);
