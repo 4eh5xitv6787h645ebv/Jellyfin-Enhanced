@@ -5,8 +5,8 @@ using Xunit.Abstractions;
 
 namespace JE.Tests.Architecture;
 
-// Guardrail §7.2 (artifacts/restructure-plan/backend.md), REPORT-ONLY from S0: findings go to the test output and
-// fail only for features listed under "enforced" in feature-dependencies.json (none in S0). Reflection only: for every
+// Guardrail §7.2 (artifacts/restructure-plan/backend.md), FAILING for every feature from S3 (S0–S2 enforced it per
+// feature through an "enforced" list in feature-dependencies.json, now retired). Reflection only: for every
 // type in namespace …Features.<A>, the types it references through constructor/method parameters, return types,
 // fields, properties, base types and IL member/type tokens (the Gate B decoder). An edge Features.<A> → Features.<B>
 // is a finding unless allow-listed; a controller may reference no other feature at all. One exception for both
@@ -70,15 +70,15 @@ public class FeatureBoundaryTests(ITestOutputHelper output)
         return direct.SelectMany(Expand).Distinct();
     }
 
-    private sealed record Map(string[] Enforced, Dictionary<string, string[]> Allow);
+    private sealed record Map(Dictionary<string, string[]> Allow);
 
     private static Map LoadMap()
     {
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(Arch.SnapshotDirectory, "feature-dependencies.json")));
-        var enforced = json.RootElement.GetProperty("enforced").EnumerateArray().Select(e => e.GetString()!).ToArray();
+        Assert.False(json.RootElement.TryGetProperty("enforced", out _), "feature-dependencies.json: \"enforced\" is retired; every feature is enforced (S3)");
         var allow = json.RootElement.GetProperty("allow").EnumerateObject()
             .ToDictionary(p => p.Name, p => p.Value.EnumerateArray().Select(e => e.GetString()!).ToArray());
-        return new Map(enforced, allow);
+        return new Map(allow);
     }
 
     [Fact]
@@ -103,10 +103,13 @@ public class FeatureBoundaryTests(ITestOutputHelper output)
             }
         }
         output.WriteLine($"feature namespaces: {string.Join(", ", featureTypes.Select(FeatureOf).Distinct().Order(StringComparer.Ordinal))}");
-        output.WriteLine($"types in Features.*: {featureTypes.Count}; cross-feature edges: {edges.Count}; findings: {findings.Count}; enforced: [{string.Join(", ", map.Enforced)}]");
+        output.WriteLine($"types in Features.*: {featureTypes.Count}; cross-feature edges: {edges.Count}; findings: {findings.Count}; enforced: every feature");
         foreach (var edge in edges) output.WriteLine("edge: " + edge);
+        foreach (var (from, targets) in map.Allow)
+            foreach (var to in targets.Where(to => to != "*" && !edges.Contains($"{from} -> {to}")))
+                output.WriteLine($"note: allow-list entry {from} -> {to} is unused");
         foreach (var finding in findings) output.WriteLine("finding: " + finding.Text);
-        Assert.Empty(findings.Where(f => map.Enforced.Contains(f.Feature)).Select(f => f.Text));
+        Assert.True(findings.Count == 0, "Cross-feature references outside feature-dependencies.json (backend.md §7.2):\n" + string.Join("\n", findings.Select(f => f.Text)));
     }
 
     public const string SharedBaselineFile = "shared-feature-references.baseline.json";
