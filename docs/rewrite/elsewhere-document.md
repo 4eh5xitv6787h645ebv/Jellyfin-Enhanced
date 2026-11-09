@@ -1,6 +1,6 @@
 # Elsewhere document boundary
 
-`Services/ElsewhereDocumentService.cs` owns reading and saving `elsewhere.json` for
+`Features/DetailsProviders/Services/ElsewhereDocumentService.cs` owns reading and saving `elsewhere.json` for
 the `user-settings/{userId}/elsewhere.json` routes. It resolves DETAILS-PROVIDERS-003
 and REVIEW-DP-R2-03 on the server. Routes, authorization, user scoping and the
 success response are unchanged. It adds no migration, and existing files keep their

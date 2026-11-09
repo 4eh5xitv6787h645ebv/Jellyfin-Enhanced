@@ -76,7 +76,7 @@ test('Spoiler Guard suppresses sources on series and local fallback cache withou
 });
 
 test('every persistent tag entry schema matches the server constant, including IndexedDB restore', () => {
-  const server = readFileSync(`${jsRoot}/../Services/TagCacheService.cs`, 'utf8');
+  const server = readFileSync(`${jsRoot}/../Features/MediaTags/Services/TagCache/TagCacheService.cs`, 'utf8');
   const schema = server.match(/CurrentCacheSchemaVersion = (\d+);/)[1];
   for (const file of ['tags/tag-cache-store.js', 'tags/tag-pipeline.js']) {
     assert.match(readFileSync(`${jsRoot}/${file}`, 'utf8'), new RegExp(`const (?:ENTRY_SCHEMA|STORED_ENTRY_SCHEMA) = (?:JE\\.tagCacheStore\\?\\.ENTRY_SCHEMA \\?\\? )?${schema};`));
@@ -84,7 +84,7 @@ test('every persistent tag entry schema matches the server constant, including I
 });
 
 test('tag cache reference docs name the schema number in exactly one place', () => {
-  const server = readFileSync(`${jsRoot}/../Services/TagCacheService.cs`, 'utf8');
+  const server = readFileSync(`${jsRoot}/../Features/MediaTags/Services/TagCache/TagCacheService.cs`, 'utf8');
   const schema = Number(server.match(/CurrentCacheSchemaVersion = (\d+);/)[1]);
   const numbered = [];
   for (const file of ['advanced/api.md', 'advanced/project-structure.md', 'enhanced/tags.md']) {

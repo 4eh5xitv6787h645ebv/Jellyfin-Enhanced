@@ -23,7 +23,7 @@ test('contract generation recovers independently while real client/build/pack gu
     'Directory.Build.targets', 'package.json', 'package-lock.json', 'client', 'contracts',
     `${plugin}/JellyfinEnhanced.csproj`, `${plugin}/Transport`,
     `${plugin}/js/tags/status-vocabulary.json`, `${plugin}/js/tags/quality-compact.json`,
-    `${plugin}/Services/PosterTags/Resolution/QualityCompactLabels.g.cs`]) copy(relative);
+    `${plugin}/Features/MediaTags/PosterTags/Resolution/QualityCompactLabels.g.cs`]) copy(relative);
   // Copy the actual linked source closure, not a second model definition.
   const project = readFileSync(join(root, 'tools/ClientContracts/ClientContracts.csproj'), 'utf8');
   assert.doesNotMatch(project, /ProjectReference/);

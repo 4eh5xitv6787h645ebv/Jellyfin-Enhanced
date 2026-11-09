@@ -1,4 +1,4 @@
-// Parity harness for Services/PosterTags (native poster tags): runs the C# resolver over the
+// Parity harness for Features/MediaTags/PosterTags (native poster tags): runs the C# resolver over the
 // same profiles and tag-cache entries as web-expected.mjs and writes data/out/cs-<profile>.json.
 //
 //   dotnet run -- prepare <dataDir>   web view of synthetic settings + server-faithful synthetic entries
