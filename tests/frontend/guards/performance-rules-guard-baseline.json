@@ -3,9 +3,6 @@
   "client/src/admin/config/page/actions.ts": {
     "R5-interval-dom createActions.wire": 1
   },
-  "client/src/admin/config/page/locales.ts": {
-    "R6-remote-asset createLocales.wire": 1
-  },
   "client/src/bootstrap/loader/maintenance.ts": {
     "R5-interval-dom injectMaintenanceBanner": 1
   },
@@ -79,9 +76,6 @@
   },
   "client/src/features/seerr/recommendations/recommendations-custom-tab.ts": {
     "R5-interval-dom (module)": 1
-  },
-  "client/src/features/settings-panel/ui-panel-language.ts": {
-    "R6-remote-asset installUiPanelLanguage.wireLanguageControls": 1
   },
   "client/src/features/settings-panel/ui-release-notes.ts": {
     "R6-remote-asset installUiReleaseNotes.showReleaseNotesNotification": 1

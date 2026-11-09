@@ -28,6 +28,7 @@
     const CONTEXT_TTL_MS = 5e3;
     const ITEM_ROWS = ["addtocollection", "addtoplaylist", "share", "edit", "editimages", "editsubtitles", "identify", "moremediainfo", "refresh", "delete", "download", "copy-stream", "playallfromhere", "queueallfromhere", "resume", "play", "queue", "shuffle", "instantmix", "multiSelect", "removefromcollection"];
     const ITEM_ROW_SELECTOR = ITEM_ROWS.map((id) => `[data-id="${id}"]`).join(", ");
+    const featureCtx = export2(JE);
     let context = null;
     function detailItemId() {
       const query = window.location.hash.split("?")[1] || window.location.search.slice(1) || "";
@@ -67,7 +68,7 @@
       return scrollers[scrollers.length - 1] || null;
     }
     function buildRow(scroller) {
-      const shared3 = export2(JE).peer("homeRemoval")?.buildNativeActionSheetItem;
+      const shared3 = featureCtx.peer("homeRemoval")?.buildNativeActionSheetItem;
       if (typeof shared3 === "function") return shared3(scroller, { dataId: DATA_ID, icon: "local_offer", text: JE.t("common_media_tags") });
       const ref = scroller.querySelector(".actionSheetMenuItem");
       const button = document.createElement("button");

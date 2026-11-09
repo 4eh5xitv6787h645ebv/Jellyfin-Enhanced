@@ -17,7 +17,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
     /// <summary>
     /// Local CDN subsystem. Every third-party static asset the client used to load
     /// directly from an external CDN (jsDelivr icons, flag CDNs, the Jellyfish theme
-    /// colour sheets, remote locale JSON, …) is instead served from the plugin's own
+    /// colour sheets, …) is instead served from the plugin's own
     /// <c>/JellyfinEnhanced/cdn/{source}/{path}</c> route, backed by this service.
     /// (Google Fonts is bundled directly instead - see <c>GetBundledFont</c>.)
     ///
@@ -103,7 +103,39 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
         /// sources whose real URL isn't a simple path append (e.g. the Google Fonts css2
         /// endpoint, which needs a `?family=…` query string).
         /// </param>
-        private sealed record CdnSource(string BaseUrl, HashSet<string> AllowedTypes, IReadOnlyDictionary<string, string>? FixedPaths = null);
+        /// <param name="MaxBytes">Size cap for one asset of this source (at most <see cref="MaxAssetBytes"/>).</param>
+        private sealed record CdnSource(string BaseUrl, HashSet<string> AllowedTypes, IReadOnlyDictionary<string, string>? FixedPaths = null, long MaxBytes = MaxAssetBytes);
+
+        /// <summary>
+        /// The only hosts the service will ever contact (https only). Every source URL below
+        /// must be on one of them (a backend test checks <see cref="SourceUrls"/>), each fetch
+        /// is checked again, and a response that ends on another host (a redirect) is discarded.
+        /// </summary>
+        internal static readonly IReadOnlySet<string> AllowedHosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "cdn.jsdelivr.net", "flagcdn.com", "cdnjs.cloudflare.com",
+        };
+
+        /// <summary>
+        /// The upstream commit the plugin's own repository assets are pinned to (canopy #7):
+        /// jsDelivr serves a commit ref immutably, so a change on the upstream main branch
+        /// can never alter what a released build shows. Bumping it is a deliberate edit.
+        /// At pinning time (2026-11-10) each pinned file was byte-identical to main.
+        /// </summary>
+        internal const string JellyfinEnhancedPinnedCommit = "aa8f4312cb0f75e3d4a35c57b0fd3831548d4e4f";
+
+        private const string PinnedRepoBase = "https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@" + JellyfinEnhancedPinnedCommit;
+
+        private static IReadOnlyDictionary<string, string> Pinned(string directory, params string[] files)
+        {
+            var map = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var file in files)
+            {
+                map[file] = $"{PinnedRepoBase}/{directory}/{file}";
+            }
+
+            return map;
+        }
 
         // ── Source registry (the ONLY hosts this service will ever fetch from) ──────
         private static readonly IReadOnlyDictionary<string, CdnSource> Sources = new Dictionary<string, CdnSource>(StringComparer.Ordinal)
@@ -122,12 +154,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
             ["flagcdn"] = new("https://flagcdn.com", Types("image/png")),
             // cdnjs flag-icons SVG flags (language tags)
             ["flag-icons"] = new("https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.2.1", Types("image/svg+xml")),
-            // Remote (newer-than-bundled) locale JSON from the upstream repo's main branch
-            ["locales"] = new("https://raw.githubusercontent.com/n00bcodr/Jellyfin-Enhanced/main/Jellyfin.Plugin.JellyfinEnhanced/js/locales", Types("application/json", "text/plain")),
-            // Documentation screenshots shown on the admin config page
-            ["je-docs-img"] = new("https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/docs/images", Types("image/png", "image/jpeg")),
-            // The plugin's own bundled-on-CDN stylesheets (e.g. colored-ratings CSS)
-            ["je-css"] = new("https://cdn.jsdelivr.net/gh/n00bcodr/Jellyfin-Enhanced@main/css", Types("text/css")),
+            // Documentation screenshots shown on the admin config page: exactly these files, at the pinned commit
+            ["je-docs-img"] = new(PinnedRepoBase + "/docs/images", Types("image/png", "image/jpeg"),
+                Pinned("docs/images", "ratings.png", "theme-selector.png", "colored-activity-icons.png", "login-image.png", "plugin-icons.png"),
+                MaxBytes: 2 * 1024 * 1024),
+            // The plugin's own colored-ratings stylesheet: exactly this file, at the pinned commit
+            ["je-css"] = new(PinnedRepoBase + "/css", Types("text/css"), Pinned("css", "ratings.css"), MaxBytes: 256 * 1024),
             // Druidblack metadata-provider icon stylesheet (attribute-selector icons; no external url() assets)
             ["icon-metadata"] = new("https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata", Types("text/css")),
             // Jellyfin-Elsewhere region/provider reference lists (fetched as text)
@@ -181,6 +213,28 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
         /// <summary>True when <paramref name="source"/> is a registered upstream.</summary>
         public bool IsValidSource(string source) => Sources.ContainsKey(source) || BundledSources.Contains(source);
 
+        /// <summary>
+        /// The base and exact URLs of every upstream source, for the allow-list test.
+        /// </summary>
+        internal static IEnumerable<string> SourceUrls()
+        {
+            foreach (var source in Sources.Values)
+            {
+                yield return source.BaseUrl + "/";
+                if (source.FixedPaths != null)
+                {
+                    foreach (var url in source.FixedPaths.Values)
+                    {
+                        yield return url;
+                    }
+                }
+            }
+        }
+
+        /// <summary>True when <paramref name="url"/> is https on an allow-listed host.</summary>
+        internal static bool IsAllowedUrl(Uri? url) =>
+            url != null && url.IsAbsoluteUri && url.Scheme == Uri.UriSchemeHttps && AllowedHosts.Contains(url.Host);
+
         // Assets shipped inside the plugin DLL (Assets/Cdn/, images/mdblist-logos/), so a
         // third-party host deleting or rate-limiting a file can never break them. Client
         // URLs are unchanged: /JellyfinEnhanced/cdn/{source}/{path}. Attribution for the
@@ -188,8 +242,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
         private const string BundledPrefix = "Jellyfin.Plugin.JellyfinEnhanced.Assets.Cdn.";
         private static readonly HashSet<string> BundledSources = new(StringComparer.Ordinal)
         {
-            "award-logos", "ibb", "moonbase", "mdblist-logos", "mdblist-static", "ddd-static", "anilist-static"
+            "award-logos", "ibb", "moonbase", "mdblist-logos", "mdblist-static", "ddd-static", "anilist-static", "locales"
         };
+
+        // "locales" (the translations loader's fallback route) serves only the plugin's embedded
+        // js/locales/{code}.json, the same files as GET /JellyfinEnhanced/locales/{code}.json; it
+        // used to proxy the upstream repo's main branch, which could change under a released build.
+        private const string LocalePrefix = "Jellyfin.Plugin.JellyfinEnhanced.js.locales.";
+        private static readonly Regex LocaleKey = new(@"^locales/([A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,4})?)\.json$", RegexOptions.Compiled);
 
         private static readonly IReadOnlyDictionary<string, (string Resource, string ContentType)> BundledFixed =
             new Dictionary<string, (string, string)>(StringComparer.Ordinal)
@@ -223,18 +283,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                 if (BundledFixed.TryGetValue(k, out var fixedEntry))
                 {
                     (resource, contentType) = fixedEntry;
+                    resource = BundledPrefix + resource;
                 }
                 else if (k.StartsWith("mdblist-logos/", StringComparison.Ordinal) && k.EndsWith(".png", StringComparison.Ordinal))
                 {
-                    resource = k.Replace('/', '.');
+                    resource = BundledPrefix + k.Replace('/', '.');
                     contentType = "image/png";
+                }
+                else if (LocaleKey.Match(k) is { Success: true } locale)
+                {
+                    resource = LocalePrefix + locale.Groups[1].Value + ".json";
+                    contentType = "application/json";
                 }
                 else
                 {
                     return null;
                 }
 
-                using var stream = typeof(CdnAssetService).Assembly.GetManifestResourceStream(BundledPrefix + resource);
+                using var stream = typeof(CdnAssetService).Assembly.GetManifestResourceStream(resource);
                 if (stream == null)
                 {
                     return null;
@@ -274,6 +340,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
             }
 
             var src = Sources[source];
+            if (src.FixedPaths != null && !src.FixedPaths.ContainsKey(path))
+            {
+                // Exact-URL sources serve only their listed files.
+                return null;
+            }
 
             // Hot in-memory layer (skipped on a forced refresh so the task always re-downloads).
             // Honours the same TTL as the disk so a lazily-cached asset (flags/locales) is not
@@ -375,6 +446,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                     url = $"{src.BaseUrl}/{path}";
                 }
 
+                if (!IsAllowedUrl(new Uri(url)))
+                {
+                    _logger.Warning($"[CDN] Refused a fetch for source '{source}': its URL is not https on an allow-listed host.");
+                    return null;
+                }
+
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(20);
 
@@ -388,6 +465,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                     return null;
                 }
 
+                // A redirect must not carry the fetch off the allow-list.
+                if (response.RequestMessage?.RequestUri is Uri final && !IsAllowedUrl(final))
+                {
+                    _logger.Warning($"[CDN] Upstream for source '{source}' redirected off the allow-listed hosts.");
+                    return null;
+                }
+
                 var contentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
                 if (!src.AllowedTypes.Contains(contentType))
                 {
@@ -397,13 +481,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
 
                 // Enforce the size cap even when the server lies about / omits Content-Length.
                 var declared = response.Content.Headers.ContentLength;
-                if (declared.HasValue && declared.Value > MaxAssetBytes)
+                var cap = Math.Min(src.MaxBytes, MaxAssetBytes);
+                if (declared.HasValue && declared.Value > cap)
                 {
                     _logger.Warning($"[CDN] Asset for source '{source}' exceeds size cap ({declared.Value} bytes).");
                     return null;
                 }
 
-                var bytes = await ReadCappedAsync(response, cancellationToken).ConfigureAwait(false);
+                var bytes = await ReadCappedAsync(response, cap, cancellationToken).ConfigureAwait(false);
                 if (bytes == null)
                 {
                     _logger.Warning($"[CDN] Asset for source '{source}' exceeded the size cap while streaming.");
@@ -427,7 +512,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
         }
 
         /// <summary>Reads the response body, aborting if it grows past the size cap.</summary>
-        private static async Task<byte[]?> ReadCappedAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+        private static async Task<byte[]?> ReadCappedAsync(HttpResponseMessage response, long cap, CancellationToken cancellationToken)
         {
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using var buffer = new MemoryStream();
@@ -435,7 +520,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
             int read;
             while ((read = await stream.ReadAsync(chunk, cancellationToken).ConfigureAwait(false)) > 0)
             {
-                if (buffer.Length + read > MaxAssetBytes)
+                if (buffer.Length + read > cap)
                 {
                     return null;
                 }

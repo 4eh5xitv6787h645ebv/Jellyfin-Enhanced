@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/settings-panel/host.ts
+  // client/src/features/shared/panel-host.ts
   function panelHost() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new TypeError("Jellyfin Enhanced must load before the settings panel");
@@ -16,6 +16,8 @@
     const host = window;
     return host.ApiClient;
   }
+
+  // client/src/features/settings-panel/host.ts
   function registry(JE) {
     JE.internals = JE.internals || {};
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
@@ -44,21 +46,6 @@
   function decodeLocaleCodes(value) {
     if (!Array.isArray(value)) throw new TypeError("Locale response is not a list");
     return value.filter((code) => typeof code === "string");
-  }
-  function githubLocaleCodes(value) {
-    if (!Array.isArray(value)) return [];
-    const codes = [];
-    for (const file of value) {
-      const name = file !== null && typeof file === "object" ? Reflect.get(file, "name") : void 0;
-      if (typeof name === "string" && name.endsWith(".json") && name !== "en.json") codes.push(name.replace(".json", ""));
-    }
-    return codes;
-  }
-  function mergeLocaleCodes(server, extra) {
-    const merged = server.slice();
-    const serverSet = new Set(server.map((c) => c.toLowerCase()));
-    for (const code of extra) if (!serverSet.has(code.toLowerCase())) merged.push(code);
-    return merged;
   }
   var CUSTOM_DISPLAY_NAMES = {
     "pr": "Pirate",
@@ -121,12 +108,10 @@
         const server = serverId();
         let closed = false;
         let reloadTimer = null;
-        const controller = new AbortController();
         const sameDocument = () => apiClient() === client && client.getCurrentUserId() === userId && client.getUrl("/") === serverRoot && client.accessToken?.() === token && serverId() === server && JE.session?.getEpoch() === epoch && JE.userConfig === origin && JE.currentSettings === settings;
         const current = () => !closed && displayLanguageSelect.isConnected && sameDocument();
         const dispose = () => {
           closed = true;
-          controller.abort();
           if (reloadTimer !== null) clearTimeout(reloadTimer);
           displayLanguageSelect.removeEventListener("change", saveLanguage);
         };
@@ -157,7 +142,7 @@
         };
         void client.ajax({ type: "GET", url: client.getUrl("/JellyfinEnhanced/locales"), dataType: "json" }).then((response) => {
           if (current()) {
-            localeCodes = mergeLocaleCodes(decodeLocaleCodes(response), localeCodes);
+            localeCodes = decodeLocaleCodes(response);
             renderOptions();
           }
         }).catch((err) => {
@@ -168,13 +153,6 @@
             cultures = decodeCultures(response);
             renderOptions();
           }
-        }).catch(() => void 0);
-        void fetch("https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales", { signal: controller.signal }).then(async (response) => {
-          if (!response.ok || !current()) return;
-          const data = await response.json();
-          if (!current()) return;
-          localeCodes = mergeLocaleCodes(localeCodes, githubLocaleCodes(data));
-          renderOptions();
         }).catch(() => void 0);
         async function saveLanguage() {
           if (!current() || saving) return;

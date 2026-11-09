@@ -27,6 +27,15 @@ public class ApiMiddlewareTests
         return context;
     }
     private static string Body(HttpContext context) => Encoding.UTF8.GetString(((MemoryStream)context.Response.Body).ToArray());
+    // The shell is gzip-encoded by the plugin when the client accepts gzip (canopy K3a).
+    private static string Decoded(HttpContext context)
+    {
+        if (context.Response.Headers.ContentEncoding.ToString() != "gzip") return Body(context);
+        using var gzip = new System.IO.Compression.GZipStream(new MemoryStream(((MemoryStream)context.Response.Body).ToArray()), System.IO.Compression.CompressionMode.Decompress);
+        using var decoded = new MemoryStream();
+        gzip.CopyTo(decoded);
+        return Encoding.UTF8.GetString(decoded.ToArray());
+    }
 
     [Theory]
     [InlineData("/web")][InlineData("/web/")][InlineData("/web/index.html")]
@@ -45,13 +54,18 @@ public class ApiMiddlewareTests
             c.Response.Headers.AcceptRanges = "bytes";
             await c.Response.WriteAsync("<html><body>日本語</body></html>");
         });
-        // The tag goes just before </body>, and the rewritten page is UTF-8 and says so.
-        Assert.Equal("<html><body>日本語" + f.Plugin.BuildScriptTag() + "\n</body></html>", Body(context));
+        // The tag goes just before </body>, and the rewritten page is UTF-8 and says so. The client
+        // asked for gzip (Invoke), so the plugin encodes the page itself (canopy K3a).
+        Assert.Equal("gzip", context.Response.Headers.ContentEncoding);
+        var encoded = ((MemoryStream)context.Response.Body).ToArray();
+        Assert.Equal("<html><body>日本語" + f.Plugin.BuildScriptTag() + "\n</body></html>", Decoded(context));
         Assert.Equal("text/html;charset=utf-8", context.Response.ContentType);
-        Assert.Equal(0, context.Response.Headers.ETag.Count);
+        // The source's validators never describe the injected page: its own strong ETag replaces them.
+        Assert.NotEqual("original", context.Response.Headers.ETag.ToString());
+        Assert.StartsWith("\"", context.Response.Headers.ETag.ToString());
         Assert.Equal(0, context.Response.Headers.LastModified.Count);
         Assert.Equal(0, context.Response.Headers.AcceptRanges.Count);
-        Assert.Equal(Encoding.UTF8.GetByteCount(Body(context)), context.Response.ContentLength);
+        Assert.Equal(encoded.Length, context.Response.ContentLength);
     }
 
     [Theory]
@@ -87,7 +101,7 @@ public class ApiMiddlewareTests
             c.Response.ContentType = "text/html";
             await c.Response.WriteAsync(original);
         });
-        Assert.Equal(original, Body(context));
+        Assert.Equal(original, Decoded(context));
     }
 
     [Fact]

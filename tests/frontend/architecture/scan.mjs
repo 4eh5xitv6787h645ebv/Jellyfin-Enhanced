@@ -80,17 +80,42 @@ export function parse(file) {
   return parsed.get(file);
 }
 
+let cachedConfig;
+function clientConfig() {
+  cachedConfig ??= ts.getParsedCommandLineOfConfigFile(join(repoRoot, 'client/tsconfig.json'), {}, {
+    ...ts.sys,
+    onUnRecoverableConfigFileDiagnostic: d => { throw new Error(ts.flattenDiagnosticMessageText(d.messageText, '\n')); },
+  });
+  return cachedConfig;
+}
+
 let cachedProgram;
-/** One type-checked program over client/tsconfig.json (needed only for the raw-global rule). */
+/** One type-checked program over client/tsconfig.json (needed only for rules 3 and 4). */
 export function program() {
   if (!cachedProgram) {
-    const config = ts.getParsedCommandLineOfConfigFile(join(repoRoot, 'client/tsconfig.json'), {}, {
-      ...ts.sys,
-      onUnRecoverableConfigFileDiagnostic: d => { throw new Error(ts.flattenDiagnosticMessageText(d.messageText, '\n')); },
-    });
+    const config = clientConfig();
     cachedProgram = ts.createProgram({ rootNames: config.fileNames, options: config.options });
   }
   return cachedProgram;
+}
+
+/**
+ * A type-checked program over in-memory files ({repo-relative path: text}) with client/tsconfig.json's options, for
+ * the planted-violation self-tests. Other files (the libs) come from disk.
+ */
+export function virtualProgram(files) {
+  const options = clientConfig().options;
+  const texts = new Map(Object.entries(files).map(([path, text]) => [join(repoRoot, path).replaceAll('\\', '/'), text]));
+  const host = ts.createCompilerHost(options);
+  const { getSourceFile, fileExists, readFile, directoryExists } = host;
+  host.getSourceFile = (name, language, ...rest) => texts.has(name)
+    ? ts.createSourceFile(name, texts.get(name), language, true, ts.ScriptKind.TS)
+    : getSourceFile.call(host, name, language, ...rest);
+  host.fileExists = name => texts.has(name) || fileExists.call(host, name);
+  host.readFile = name => texts.get(name) ?? readFile.call(host, name);
+  host.directoryExists = name => [...texts.keys()].some(path => path.startsWith(`${name.replace(/\/$/, '')}/`))
+    || directoryExists.call(host, name);
+  return ts.createProgram({ rootNames: [...texts.keys()], options, host });
 }
 
 function resolveRelative(from, specifier) {
@@ -151,15 +176,6 @@ export function unwrap(expression) {
   while (ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isNonNullExpression(e)
     || ts.isTypeAssertionExpression(e) || ts.isSatisfiesExpression(e)) e = e.expression;
   return e;
-}
-
-/** `a.b`, `a?.b` and `a['b']` → { object, name }; anything else → null. */
-export function memberAccess(node) {
-  if (ts.isPropertyAccessExpression(node)) return { object: node.expression, name: node.name.text };
-  if (ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression)) {
-    return { object: node.expression, name: node.argumentExpression.text };
-  }
-  return null;
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -298,6 +314,112 @@ function typeIsGlobal(type, checker, seen = new Set()) {
   return type.isClassOrInterface() && (checker.getBaseTypes(type) ?? []).some(t => typeIsGlobal(t, checker, seen));
 }
 
+const isThis = expression => unwrap(expression).kind === ts.SyntaxKind.ThisKeyword;
+
+/**
+ * The property names an expression used as a key can be: a string/number literal's text, else (through the checker)
+ * the string literal type or union of them it has (`const k = 'internals'; o[k]`). null: not known (a dynamic key).
+ */
+export function keyExpressionNames(expression, checker) {
+  const e = unwrap(expression);
+  if (ts.isStringLiteralLike(e) || ts.isNumericLiteral(e)) return [e.text];
+  if (!checker) return null;
+  const type = checker.getTypeAtLocation(e);
+  const parts = type.isUnion() ? type.types : [type];
+  return parts.every(t => t.isStringLiteral()) ? parts.map(t => t.value) : null;
+}
+
+/** The names a declared property key (`{ k }`, `{ 'k': v }`, `{ [k]: v }`) can be; null: not known. */
+function propertyKeyNames(name, checker) {
+  if (!name) return null;
+  if (ts.isIdentifier(name) || ts.isStringLiteralLike(name) || ts.isNumericLiteral(name) || ts.isPrivateIdentifier(name)) {
+    return [name.text];
+  }
+  if (ts.isComputedPropertyName(name)) return keyExpressionNames(name.expression, checker);
+  return null;
+}
+
+/**
+ * A property read: `a.b`, `a?.b`, `a['b']`, `` a[`b`] ``, `a[k]` (k typed as string literal(s), through the
+ * checker) and `Reflect.get(a, 'b')`.
+ * @returns {{ object: ts.Expression, names: string[]|null }|null} names: null for a dynamic key.
+ */
+export function propertyRead(node, checker) {
+  if (ts.isPropertyAccessExpression(node)) return { object: node.expression, names: [node.name.text] };
+  if (ts.isElementAccessExpression(node)) return { object: node.expression, names: keyExpressionNames(node.argumentExpression, checker) };
+  if (ts.isCallExpression(node) && node.arguments.length >= 2) {
+    const callee = unwrap(node.expression);
+    if (ts.isPropertyAccessExpression(callee) && callee.name.text === 'get'
+      && ts.isIdentifier(unwrap(callee.expression)) && unwrap(callee.expression).text === 'Reflect') {
+      return { object: node.arguments[0], names: keyExpressionNames(node.arguments[1], checker) };
+    }
+  }
+  return null;
+}
+
+/** Is `node` an object/array literal written as an assignment target (`({ a } = v)`, `for ({ a } of vs)`, nested)? */
+function isAssignmentPattern(node) {
+  if (!ts.isObjectLiteralExpression(node) && !ts.isArrayLiteralExpression(node)) return false;
+  let e = node;
+  while (ts.isParenthesizedExpression(e.parent)) e = e.parent;
+  const parent = e.parent;
+  if (ts.isBinaryExpression(parent) && parent.left === e && parent.operatorToken.kind === ts.SyntaxKind.EqualsToken) return true;
+  if ((ts.isForOfStatement(parent) || ts.isForInStatement(parent)) && parent.initializer === e) return true;
+  if (ts.isPropertyAssignment(parent) && parent.initializer === e) return isAssignmentPattern(parent.parent);
+  return ts.isArrayLiteralExpression(parent) && isAssignmentPattern(parent);
+}
+
+/**
+ * The properties a destructuring pattern reads: `{ k }`, `{ k: x }`, `{ k: { … } }` and `{ ...rest }` in variable
+ * declarations, parameters, catch clauses and for-of heads (ObjectBindingPattern), and the same as an assignment
+ * target (`({ k: x } = v)`). names: null for a rest element or a dynamic key. value: the binding name or target
+ * (an identifier, a nested pattern, or a member expression).
+ * @returns {{ element: ts.Node, names: string[]|null, value: ts.Node|undefined }[]|null} null: not a pattern.
+ */
+export function patternElements(node, checker) {
+  if (ts.isObjectBindingPattern(node)) {
+    return node.elements.map(el => ({
+      element: el,
+      names: el.dotDotDotToken ? null : propertyKeyNames(el.propertyName ?? el.name, checker),
+      value: el.name,
+    }));
+  }
+  if (ts.isObjectLiteralExpression(node) && isAssignmentPattern(node)) {
+    return node.properties.map(p => {
+      if (ts.isShorthandPropertyAssignment(p)) return { element: p, names: [p.name.text], value: p.name };
+      if (ts.isPropertyAssignment(p)) {
+        const value = ts.isBinaryExpression(p.initializer) && p.initializer.operatorToken.kind === ts.SyntaxKind.EqualsToken
+          ? p.initializer.left : p.initializer;   // `{ k: x = d }` → x
+        return { element: p, names: propertyKeyNames(p.name, checker), value: unwrap(value) };
+      }
+      return { element: p, names: null, value: ts.isSpreadAssignment(p) ? p.expression : undefined };
+    });
+  }
+  return null;
+}
+
+/**
+ * What a pattern destructures: { expression } when the value is written (`= init`, a parameter default, the right side
+ * of an assignment), { outer, names } for a nested pattern (the property `names` of the outer pattern's value), or {}.
+ */
+function patternSource(pattern) {
+  const parent = pattern.parent;
+  if (ts.isObjectBindingPattern(pattern)) {
+    if ((ts.isVariableDeclaration(parent) || ts.isParameter(parent)) && parent.initializer) return { expression: parent.initializer };
+    if (ts.isBindingElement(parent) && ts.isObjectBindingPattern(parent.parent)) {
+      return { outer: parent.parent, names: parent.dotDotDotToken ? null : propertyKeyNames(parent.propertyName ?? parent.name) };
+    }
+    return {};
+  }
+  let e = pattern;
+  while (ts.isParenthesizedExpression(e.parent)) e = e.parent;
+  if (ts.isBinaryExpression(e.parent) && e.parent.left === e) return { expression: e.parent.right };
+  if (ts.isPropertyAssignment(e.parent) && isAssignmentPattern(e.parent.parent)) {
+    return { outer: e.parent.parent, names: propertyKeyNames(e.parent.name) };
+  }
+  return {};
+}
+
 /** Does this declaration hold the browser global (`x = window`, `{ host: window }`, `{ host } = f()`)? */
 function declarationIsGlobal(d, checker, seen) {
   if (seen.has(d)) return false;
@@ -320,8 +442,8 @@ function declarationIsGlobal(d, checker, seen) {
 /**
  * Does `expression` evaluate to the browser global (window/globalThis/self)? Follows what the hosts
  * actually do: `const host: X = window` aliases (casts included), `{ host } = bridge()` destructuring and
- * `{ host: window }` properties, `host.window`, functions that `return window` (in any file, through the
- * checker), and anything typed `Window`, `typeof globalThis` or an interface extending Window.
+ * `{ host: window }` properties, `host.window` / `host['window']`, functions that `return window` (in any file,
+ * through the checker), and anything typed `Window`, `typeof globalThis` or an interface extending Window.
  */
 export function isGlobalReference(expression, checker, seen = new Set()) {
   const e = unwrap(expression);
@@ -337,40 +459,164 @@ export function isGlobalReference(expression, checker, seen = new Set()) {
     if (GLOBAL_NAMES.has(e.name.text)) return true;
     const declarations = checker.getSymbolAtLocation(e.name)?.declarations ?? [];
     if (declarations.some(d => declarationIsGlobal(d, checker, seen))) return true;
+  } else if (ts.isElementAccessExpression(e)) {
+    if ((keyExpressionNames(e.argumentExpression, checker) ?? []).some(n => GLOBAL_NAMES.has(n))) return true;
   } else if (ts.isCallExpression(e)) {
     const declaration = checker.getResolvedSignature(e)?.declaration;
-    if (declaration && !seen.has(declaration) && functionReturnsGlobal(declaration, checker, seen)) return true;
+    if (declaration && !seen.has(declaration) && functionReturns(declaration, checker, seen, isGlobalReference)) return true;
   }
   return typeIsGlobal(checker.getTypeAtLocation(e), checker);
 }
 
-function functionReturnsGlobal(declaration, checker, seen) {
+/** Does any `return` of this function (or its expression body) satisfy `test`? */
+function functionReturns(declaration, checker, seen, test) {
   seen.add(declaration);
   const body = declaration.body;
   if (!body) return false;
-  if (!ts.isBlock(body)) return isGlobalReference(body, checker, seen);
+  if (!ts.isBlock(body)) return test(body, checker, seen);
   let found = false;
   (function visit(node) {
     if (found || (node !== body && ts.isFunctionLike(node))) return;
-    if (ts.isReturnStatement(node) && node.expression && isGlobalReference(node.expression, checker, seen)) found = true;
+    if (ts.isReturnStatement(node) && node.expression && test(node.expression, checker, seen)) found = true;
     ts.forEachChild(node, visit);
   })(body);
   return found;
 }
 
+/** Is the value a destructuring pattern reads the browser global (directly, through an alias or by its type)? */
+function patternIsGlobal(pattern, checker) {
+  const source = patternSource(pattern);
+  if (source.expression && isGlobalReference(source.expression, checker)) return true;
+  const type = ts.isObjectBindingPattern(pattern) ? checker.getTypeAtLocation(pattern)
+    : source.expression ? checker.getTypeAtLocation(source.expression) : null;
+  return Boolean(type && typeIsGlobal(type, checker));
+}
+
+const INTERNALS = 'internals';
+const RAW_GLOBAL = 'JellyfinEnhanced';
+const VALUE_OPERATORS = new Set([
+  ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.AmpersandAmpersandToken,
+  ts.SyntaxKind.EqualsToken, ts.SyntaxKind.BarBarEqualsToken, ts.SyntaxKind.QuestionQuestionEqualsToken,
+  ts.SyntaxKind.AmpersandAmpersandEqualsToken, ts.SyntaxKind.CommaToken,
+]);
+
+/** Does this declaration hold a `JE.internals` object (`i = JE.internals`, `{ internals: i } = JE`, `{ i: JE.internals }`)? */
+function declarationIsInternals(d, checker, seen) {
+  if (seen.has(d)) return false;
+  seen.add(d);
+  if ((ts.isVariableDeclaration(d) || ts.isParameter(d) || ts.isPropertyAssignment(d) || ts.isPropertyDeclaration(d))
+    && ts.isIdentifier(d.name) && d.initializer) {
+    return isInternalsValue(d.initializer, checker, seen);
+  }
+  if (ts.isShorthandPropertyAssignment(d)) {
+    return (checker.getShorthandAssignmentValueSymbol(d)?.declarations ?? []).some(x => declarationIsInternals(x, checker, seen));
+  }
+  if (ts.isBindingElement(d) && ts.isIdentifier(d.name) && ts.isObjectBindingPattern(d.parent) && !d.dotDotDotToken) {
+    const source = patternSource(d.parent);
+    return Boolean(propertyKeyNames(d.propertyName ?? d.name, checker)?.includes(INTERNALS)
+      && !(source.expression && isThis(source.expression)));
+  }
+  return false;
+}
+
 /**
- * Rule 3 (internals) and rule 4 (raw global), from the type-checked program.
- * Rule 3 flags every `.internals` / `['internals']` access except on `this`: today every one of them is on a
- * JE bridge (`JE`, `je`, `JE()`), and counting all of them closes the `const b = JE; b.internals` loophole.
- * It is allowed only in a feature host file, and there only for slots the feature owns
- * (internals-owners.json; a whole-object access `JE.internals` is the owner's own object).
- * Rule 4 flags `.JellyfinEnhanced` read off the browser global (and `{ JellyfinEnhanced } = window`),
- * allowed only in host/context.ts, features/<f>/host*.ts, bootstrap/**, and PLATFORM_GLOBAL_FILES: the core platform
- * hosts that stay in host/ after C1 and core/lifecycle-entry.ts (frontend.md §2.4 rule 4, §5.2; step C4).
+ * Does `expression` evaluate to a `JE.internals` object? `x.internals` / `x?.['internals']` / `x[k]` /
+ * `Reflect.get(x, 'internals')` on anything but `this`, aliases (`const i = JE.internals`, `{ internals: i } = JE`,
+ * `{ i: JE.internals }`), `JE.internals ||= {}` / `??` / `||` / `,` / `?:` values, and functions that return one
+ * (through the checker, in any file).
  */
-export function bridgeViolations(owners) {
+export function isInternalsValue(expression, checker, seen = new Set()) {
+  const e = unwrap(expression);
+  if (seen.has(e)) return false;
+  seen.add(e);
+  const read = propertyRead(e, checker);
+  if (read) {
+    if (read.names?.includes(INTERNALS) && !isThis(read.object)) return true;
+    if (!ts.isPropertyAccessExpression(e)) return false;
+    return (checker.getSymbolAtLocation(e.name)?.declarations ?? []).some(d => declarationIsInternals(d, checker, seen));
+  }
+  if (ts.isIdentifier(e)) {
+    let symbol = checker.getSymbolAtLocation(e);
+    if (symbol && symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol);
+    return (symbol?.declarations ?? []).some(d => declarationIsInternals(d, checker, seen));
+  }
+  if (ts.isBinaryExpression(e) && VALUE_OPERATORS.has(e.operatorToken.kind)) {
+    return (e.operatorToken.kind !== ts.SyntaxKind.CommaToken && isInternalsValue(e.left, checker, seen))
+      || isInternalsValue(e.right, checker, seen);
+  }
+  if (ts.isConditionalExpression(e)) return isInternalsValue(e.whenTrue, checker, seen) || isInternalsValue(e.whenFalse, checker, seen);
+  if (ts.isCallExpression(e)) {
+    const declaration = checker.getResolvedSignature(e)?.declaration;
+    return Boolean(declaration && !seen.has(declaration) && functionReturns(declaration, checker, seen, isInternalsValue));
+  }
+  return false;
+}
+
+/** Does a destructuring pattern read a `JE.internals` object (`{ a } = JE.internals`, `{ internals: { a } } = JE`)? */
+function patternIsInternals(pattern, checker) {
+  const source = patternSource(pattern);
+  if (source.expression) return isInternalsValue(source.expression, checker);
+  if (source.outer) {
+    const outer = patternSource(source.outer);
+    return Boolean(source.names?.includes(INTERNALS) && !(outer.expression && isThis(outer.expression)));
+  }
+  return false;
+}
+
+/** The outermost expression whose value is `node` (through parentheses, `as`, `!`, `satisfies`, `<T>`). */
+function outermost(node) {
+  let e = node;
+  while (e.parent && (ts.isParenthesizedExpression(e.parent) || ts.isAsExpression(e.parent) || ts.isNonNullExpression(e.parent)
+    || ts.isTypeAssertionExpression(e.parent) || ts.isSatisfiesExpression(e.parent)) && e.parent.expression === e) e = e.parent;
+  return e;
+}
+
+/**
+ * The slots read directly off an internals reference `node` (counted on the reference, outside a host file):
+ * `node.slot`, `(node as T)?.['slot']`, `const { slot } = node`; else ['*'] (the whole object).
+ */
+function directSlots(node, checker) {
+  const outer = outermost(node);
+  const read = propertyRead(outer.parent, checker);
+  if (read && read.object === outer) return read.names ?? ['?'];
+  if (ts.isVariableDeclaration(outer.parent) && outer.parent.initializer === outer && ts.isObjectBindingPattern(outer.parent.name)) {
+    return patternElements(outer.parent.name, checker).flatMap(el => el.names ?? ['?']);
+  }
+  return ['*'];
+}
+
+/** Is `expression` itself an internals reference (`x.internals`, `x['internals']`, …), not an alias of one? */
+const isDirectInternals = (expression, checker) => {
+  const read = propertyRead(unwrap(expression), checker);
+  return Boolean(read?.names?.includes(INTERNALS) && !isThis(read.object));
+};
+
+/**
+ * Rule 3 (internals) and rule 4 (raw global), from the type-checked program (`prog`, default the client program).
+ *
+ * Rule 3. An internals reference is any read of a property named `internals` on anything but `this`: `.internals`,
+ * `?.internals`, `['internals']`, `[k]` with k typed `'internals'`, `Reflect.get(x, 'internals')`, and destructuring
+ * (`{ internals } = JE`, `{ internals: i }`, `{ internals: { slot } }`, in declarations, parameters, for-of heads
+ * and assignment patterns). Today every one of them is on a JE bridge (`JE`, `je`, `JE()`), and counting all of them
+ * closes the `const b = JE; b.internals` loophole. Outside a feature host file each one is a violation
+ * (`internals <slot>`, `*` for the whole object), and so is each slot read off a `JE.internals` value the file got
+ * through an alias or a call (a host function that returns `JE.internals`). In a feature host file the whole object
+ * is the owner's own (it hands it to featureContext), but every slot read off it must be a slot the feature owns
+ * (internals-owners.json), however it is reached: `JE.internals.slot`, `(JE.internals as T)?.['slot']`,
+ * `{ slot } = JE.internals`, `{ internals: { slot } } = JE`, `const i = JE.internals; i.slot`,
+ * `(JE.internals ||= {}).slot`, a function returning `JE.internals`, or a key typed as a literal. A slot read with a
+ * dynamic key (`JE.internals[name]`) or a `...rest` of it is not provably owned and counts as `internals-foreign ?`.
+ *
+ * Rule 4 flags reading `JellyfinEnhanced` off the browser global, allowed only in host/context.ts,
+ * features/<f>/host*.ts, bootstrap/**, and PLATFORM_GLOBAL_FILES: the core platform hosts that stay in host/ after C1
+ * and core/lifecycle-entry.ts (frontend.md §2.4 rule 4, §5.2; step C4). Every read form counts (`window.X`,
+ * `window?.X`, `window['X']`, `window[k]`, `Reflect.get(window, 'X')`) on anything that is the global (isGlobalReference:
+ * aliases, `host.window`, functions returning it, values typed Window/globalThis), and every destructuring of it
+ * (`{ JellyfinEnhanced } = window`, `{ JellyfinEnhanced: je } = globalThis`, a `(w: Window)` or `= window` parameter
+ * pattern, nested patterns, `({ JellyfinEnhanced: je } = window)`).
+ */
+export function bridgeViolations(owners, prog = program()) {
   const violations = {};
-  const prog = program();
   const checker = prog.getTypeChecker();
   for (const sf of prog.getSourceFiles()) {
     if (sf.isDeclarationFile) continue;
@@ -379,23 +625,50 @@ export function bridgeViolations(owners) {
     const where = classify(file);
     const hostFile = isFeatureHostFile(file);
     const globalAllowed = hostFile || file === CONTEXT || where.area === 'bootstrap' || PLATFORM_GLOBAL_FILES.has(file);
+    // A slot read off a JE.internals value: outside a host file every one is a violation; in a host file only one the
+    // feature does not own (or a dynamic key / rest, `?`).
+    const slotRead = slot => {
+      if (!hostFile) bump(violations, file, `internals ${slot}`);
+      else if (slot === '?' || !(owners[slot] ?? []).includes(where.feature)) bump(violations, file, `internals-foreign ${slot}`);
+    };
     (function visit(node) {
-      const access = memberAccess(node);
-      if (access?.name === 'internals' && unwrap(access.object).kind !== ts.SyntaxKind.ThisKeyword) {
-        const parent = memberAccess(node.parent);
-        const slot = parent && node.parent.expression === node ? parent.name : '*';
-        if (!hostFile) bump(violations, file, `internals ${slot}`);
-        else if (slot !== '*' && !(owners[slot] ?? []).includes(where.feature)) {
-          bump(violations, file, `internals-foreign ${slot}`);
+      const read = propertyRead(node, checker);
+      if (read) {
+        // Rule 3: the internals reference itself, outside a host file (with the slots read directly off it).
+        if (!hostFile && read.names?.includes(INTERNALS) && !isThis(read.object)) {
+          for (const slot of directSlots(node, checker)) bump(violations, file, `internals ${slot}`);
+        }
+        // Rule 3: a slot read off a JE.internals value (outside a host file, unless already counted on the reference).
+        if ((hostFile || !isDirectInternals(read.object, checker)) && isInternalsValue(read.object, checker)) {
+          for (const slot of read.names ?? ['?']) slotRead(slot);
+        }
+        // Rule 4.
+        if (!globalAllowed && read.names?.includes(RAW_GLOBAL) && isGlobalReference(read.object, checker)) {
+          bump(violations, file, `raw-global ${RAW_GLOBAL}`);
         }
       }
-      if (!globalAllowed) {
-        if (access?.name === 'JellyfinEnhanced' && isGlobalReference(access.object, checker)) {
-          bump(violations, file, 'raw-global JellyfinEnhanced');
-        } else if (ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name) && node.initializer
-          && node.name.elements.some(el => (el.propertyName ?? el.name).getText(sf) === 'JellyfinEnhanced')
-          && isGlobalReference(node.initializer, checker)) {
-          bump(violations, file, 'raw-global JellyfinEnhanced');
+      const elements = patternElements(node, checker);
+      if (elements) {
+        const source = patternSource(node);
+        const ofThis = Boolean(source.expression && isThis(source.expression));
+        // Already counted on the reference outside a host file: `{ slot } = JE.internals` (directSlots) and
+        // `{ internals: { slot } } = JE` (below).
+        const counted = !hostFile && (source.outer || (source.expression && isDirectInternals(source.expression, checker)));
+        const internalsPattern = !counted && patternIsInternals(node, checker);
+        let globalPattern;
+        for (const { names, value } of elements) {
+          // Rule 3: `{ internals } = JE`, `{ internals: i }`, `{ internals: { slot } }`.
+          if (!hostFile && !ofThis && names?.includes(INTERNALS)) {
+            const nested = value && patternElements(value, checker);
+            for (const slot of nested ? nested.flatMap(n => n.names ?? ['?']) : ['*']) bump(violations, file, `internals ${slot}`);
+          }
+          // Rule 3: `{ slot } = <JE.internals value>`.
+          if (internalsPattern) for (const slot of names ?? ['?']) slotRead(slot);
+          // Rule 4.
+          if (!globalAllowed && names?.includes(RAW_GLOBAL)) {
+            globalPattern ??= patternIsGlobal(node, checker);
+            if (globalPattern) bump(violations, file, `raw-global ${RAW_GLOBAL}`);
+          }
         }
       }
       ts.forEachChild(node, visit);

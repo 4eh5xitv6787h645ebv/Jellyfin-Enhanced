@@ -44,6 +44,11 @@ export function createItemMenu(JE: TagRuntimeBridge) {
     /** Rows only the item menu (itemContextMenu.getCommands) has: a sheet without one is another menu. */
     const ITEM_ROWS = ['addtocollection', 'addtoplaylist', 'share', 'edit', 'editimages', 'editsubtitles', 'identify', 'moremediainfo', 'refresh', 'delete', 'download', 'copy-stream', 'playallfromhere', 'queueallfromhere', 'resume', 'play', 'queue', 'shuffle', 'instantmix', 'multiSelect', 'removefromcollection'];
     const ITEM_ROW_SELECTOR = ITEM_ROWS.map((id) => `[data-id="${id}"]`).join(', ');
+    /**
+     * One context for this bridge (review D3). Building it reads nothing and it keeps no per-open state: `peer()`
+     * reads `JE.homeRemoval` on each call, so a row built later still sees a facade published after this ran.
+     */
+    const featureCtx = mediaTagsContext(JE);
 
     let context: MenuContext|null = null;
 
@@ -98,7 +103,7 @@ export function createItemMenu(JE: TagRuntimeBridge) {
      * .actionSheetItemText (as textContent).
      * */
     function buildRow(scroller: HTMLElement): HTMLButtonElement {
-        const shared = mediaTagsContext(JE).peer('homeRemoval')?.buildNativeActionSheetItem;
+        const shared = featureCtx.peer('homeRemoval')?.buildNativeActionSheetItem;
         if (typeof shared === 'function') return shared(scroller, { dataId: DATA_ID, icon: 'local_offer', text: JE.t('common_media_tags') });
         const ref = scroller.querySelector('.actionSheetMenuItem');
         const button = document.createElement('button');

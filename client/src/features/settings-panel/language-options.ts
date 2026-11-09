@@ -23,25 +23,6 @@ export function decodeLocaleCodes(value: unknown): string[] {
     return value.filter((code): code is string => typeof code === 'string');
 }
 
-/** Locale codes named by a GitHub contents listing of js/locales (excluding en.json). */
-export function githubLocaleCodes(value: unknown): string[] {
-    if (!Array.isArray(value)) return [];
-    const codes: string[] = [];
-    for (const file of value) {
-        const name: unknown = file !== null && typeof file === 'object' ? Reflect.get(file, 'name') : undefined;
-        if (typeof name === 'string' && name.endsWith('.json') && name !== 'en.json') codes.push(name.replace('.json', ''));
-    }
-    return codes;
-}
-
-/** Add codes missing from the server list (case-insensitive), keeping server order first. */
-export function mergeLocaleCodes(server: string[], extra: string[]): string[] {
-    const merged = server.slice();
-    const serverSet = new Set(server.map(c => c.toLowerCase()));
-    for (const code of extra) if (!serverSet.has(code.toLowerCase())) merged.push(code);
-    return merged;
-}
-
 export const CUSTOM_DISPLAY_NAMES: Readonly<Record<string, string>> = {
     'pr': 'Pirate',
     'en-GB': 'English (United Kingdom)',

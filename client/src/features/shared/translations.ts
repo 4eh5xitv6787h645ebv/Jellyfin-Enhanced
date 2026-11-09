@@ -3,9 +3,9 @@ import type { TranslationsBridge, SharedClient } from './host';
 export function createTranslations(JE: TranslationsBridge, api: () => SharedClient) {
 
 
-    // Newer-than-bundled locales are fetched via the plugin's local CDN route
-    // (JE.cdn source 'locales'), which server-side proxies + caches the upstream repo's
-    // raw locale JSON. The client never contacts raw.githubusercontent.com directly.
+    // The fallback route for a locale is the plugin's local CDN route (JE.cdn source
+    // 'locales'), which serves only the plugin's embedded locale files (canopy #7); the
+    // client never contacts a third-party host for translations.
     const remoteLocaleUrl = (code: string) => JE.cdn.url('locales', `${code}.json`);
     function storageGet(key: string): string | null { try { return localStorage.getItem(key); } catch { return null; } }
     const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
