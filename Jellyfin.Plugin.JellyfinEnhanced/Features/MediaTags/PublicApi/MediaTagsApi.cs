@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi
 {
@@ -22,8 +23,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi
         /// <summary>Forwards to the static <see cref="LeavingSoonService"/> members other features call.</summary>
         public static class LeavingSoon
         {
-            /// <summary><c>LeavingSoonService.Configured(config)</c>.</summary>
-            public static bool Configured(Configuration.PluginConfiguration? config) => LeavingSoonService.Configured(config);
+            /// <summary><c>LeavingSoonSources.Configured(config)</c>.</summary>
+            public static bool Configured(Configuration.PluginConfiguration? config) => LeavingSoonSources.Configured(config);
         }
 
         /// <summary>Forwards to the static Tag Styles members (<see cref="PosterTags.TagStyleSet"/>, <see cref="PosterTags.TagStyleKeys"/>) other features call.</summary>

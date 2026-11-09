@@ -27,7 +27,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         {
             if (_leavingSoonService == null) return null;
             var config = JellyfinEnhanced.Instance?.Configuration;
-            if (!LeavingSoonService.Configured(config)) return null;
+            if (!LeavingSoonSources.Configured(config)) return null;
             return item switch
             {
                 Episode e => _leavingSoonService.Resolve(e.Id, e.SeasonId == Guid.Empty ? null : e.SeasonId, e.SeriesId == Guid.Empty ? null : e.SeriesId, config),

@@ -186,7 +186,7 @@ public sealed class LeavingSoonTests : IDisposable
     [InlineData("http://host/#x", false)]
     [InlineData("maintainerr:6246", false)]
     [InlineData("", false)]
-    public void Only_plain_http_base_urls_are_accepted(string url, bool ok) => Assert.Equal(ok, LeavingSoonService.IsMaintainerrUrl(url));
+    public void Only_plain_http_base_urls_are_accepted(string url, bool ok) => Assert.Equal(ok, LeavingSoonSources.IsMaintainerrUrl(url));
 
     [Fact]
     public async Task Requests_the_collections_with_the_key_header_and_never_logs_or_persists_the_key()
@@ -486,7 +486,7 @@ public sealed class LeavingSoonTests : IDisposable
         {
             var service = Service(library.Object);
             var config = Config(names: " leaving soon \nMissing collection, Leaving Soon");
-            Assert.Equal(new[] { "leaving soon", "Missing collection" }, LeavingSoonService.CollectionNames(config.LeavingSoonCollections));
+            Assert.Equal(new[] { "leaving soon", "Missing collection" }, LeavingSoonSources.CollectionNames(config.LeavingSoonCollections));
             Assert.True(await service.RefreshAsync(config, false, CancellationToken.None));
             Assert.Equal(new TagLeaving { Collections = box.Id.ToString("N") }, service.Get(movie.Id, config));
             Assert.Null(service.Get(other.Id, config));
@@ -496,7 +496,7 @@ public sealed class LeavingSoonTests : IDisposable
             var none = Config();
             Assert.True(await service.RefreshAsync(none, false, CancellationToken.None));
             Assert.Null(service.Get(movie.Id, none));
-            Assert.False(LeavingSoonService.Configured(none));
+            Assert.False(LeavingSoonSources.Configured(none));
         }
         finally { BaseItem.LibraryManager = previous; }
     }

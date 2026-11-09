@@ -139,7 +139,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
                 case "LeavingSoonMaintainerrUrl":
                     var url = (value as string)?.Trim();
                     normalized = url;
-                    if (url != null && (url.Length == 0 || LeavingSoonService.IsMaintainerrUrl(url))) return true;
+                    if (url != null && (url.Length == 0 || LeavingSoonSources.IsMaintainerrUrl(url))) return true;
                     error = "must be empty or an http(s) address without credentials, query or fragment";
                     return false;
                 case "LeavingSoonMaintainerrApiKey":
@@ -151,8 +151,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
                 case "LeavingSoonCollections":
                     var names = value as string;
                     normalized = names?.Trim();
-                    if (LeavingSoonService.IsCollectionList(names)) return true;
-                    error = $"must be at most {LeavingSoonService.MaxCollectionNames} names of at most {LeavingSoonService.MaxCollectionNameLength} characters";
+                    if (LeavingSoonSources.IsCollectionList(names)) return true;
+                    error = $"must be at most {LeavingSoonSources.MaxCollectionNames} names of at most {LeavingSoonSources.MaxCollectionNameLength} characters";
                     return false;
                 case "AwardsTagsImdbList":
                 case "AwardsTagsLetterboxdList":

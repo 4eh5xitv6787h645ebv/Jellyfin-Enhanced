@@ -30,7 +30,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
             var hideRatings = !SourceRatingsConfigured && entry.Ratings != null;
             var hideAwards = config?.AwardsTagsEnabled != true && entry.Awards != null;
             // A removed Leaving soon source retires its facts before the next publish.
-            var hideLeaving = entry.Leaving != null && !LeavingSoonService.Configured(config);
+            var hideLeaving = entry.Leaving != null && !LeavingSoonSources.Configured(config);
             if (!hideRatings && !hideAwards && !hideLeaving) return entry;
             var copy = entry.Clone();
             if (hideRatings) copy.Ratings = null;

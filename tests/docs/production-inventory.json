@@ -978,6 +978,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/LeavingSoonSources.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/MediaTagsPageFields.cs",
       "category": "Shared"
     },
@@ -10534,7 +10538,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 537,
+    "files": 538,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,

@@ -562,7 +562,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
                 StatusMilestones = user.StatusTagsMilestones,
                 StatusSeriesStatus = user.StatusTagsSeriesStatus,
                 StatusScenes = user.StatusTagsScenes,
-                StatusLeaving = user.StatusTagsLeaving && LeavingSoonService.Configured(config),
+                StatusLeaving = user.StatusTagsLeaving && LeavingSoonSources.Configured(config),
                 StatusJustAddedDays = Math.Clamp(config.StatusTagsJustAddedDays, StatusRules.Thresholds.MinWindowDays, StatusRules.Thresholds.MaxWindowDays),
                 StatusNewReleaseDays = Math.Clamp(config.StatusTagsNewReleaseDays, StatusRules.Thresholds.MinWindowDays, StatusRules.Thresholds.MaxWindowDays),
                 StatusRemoteEnabled = config.StatusTagsEnabled && !string.IsNullOrWhiteSpace(config.TMDB_API_KEY),
