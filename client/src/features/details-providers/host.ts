@@ -159,7 +159,7 @@ export interface PeopleTagsInternals {
     prefetch?(itemId: string, item: unknown, view: Element, epoch: number): void;
     leave?(itemId: string): void;
 }
-export interface DetailsInternals { features?: DetailsFeatures; peopleTags?: PeopleTagsInternals }
+export interface DetailsInternals { features?: DetailsFeatures }
 export interface MediaInfoBridge {
     session?: DetailsSession;
     currentSettings?: DisplaySettings;
@@ -191,7 +191,7 @@ export interface HiddenContentFacade {
     confirmAndHide(item: HiddenItemData, onHidden?: () => void, options?: { showEpisodeChoice?: boolean; onChooseShow?(): void | Promise<void> }): void;
 }
 export interface DetailsPageBridge {
-    /** Read only for media-tags' `peopleTags` slot (details-page.ts); its own `features` slot goes through the context. */
+    /** Its own `features` slot goes through the context. */
     internals?: DetailsInternals;
     helpers: ItemCacheHelper & DebounceHelper & BodyObserverHelper & ViewPageHelper;
     core: { navigation: DetailsNavigation };
@@ -244,6 +244,8 @@ export interface DetailsPeers {
     hiddenContent: HiddenContentFacade;
     spoilerBlur: SpoilerStateProbe & SpoilerGuardProbe & { addSpoilerBlurButton?(itemId: string, page: Element, itemType: string): void };
     invalidateUserReviewTagCache(tmdbKey: string): void;
+    /** media-tags' people tags, for the details page's visits (step C4). */
+    peopleTags: PeopleTagsInternals;
 }
 export type DetailsContext<Core extends object> = FeatureContext<DetailsOwn, DetailsPeers, Core>;
 /** The feature context around an entry's bridge slice. Its own facades stay on that bridge. */

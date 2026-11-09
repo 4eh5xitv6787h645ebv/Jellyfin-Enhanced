@@ -47,6 +47,7 @@ export interface HiddenHost {
  addRemoveButton?:()=>void;addMultiSelectRemoveButton?:()=>void;
  detectCardSurface(el:Element|null):HomeSurface|null;
  initializeHiddenContent?: () => void;
+ homeRemoval?: HomeRemovalFacade;
  jellyseerrAPI?: {search(term:string):Promise<unknown>;fetchMovieDetails(id:number):Promise<unknown>;fetchTvShowDetails(id:number):Promise<unknown>};
  jellyseerrMoreInfo?: {open(id:number,type:string):void};
  userConfig: { hiddenContent?: unknown };
@@ -103,6 +104,15 @@ export function hiddenContentContext(JE:HiddenHost):HiddenContentContext {
   // Same expression as registry() and runtime() below.
   internalsObject: () => JE.internals??={},
  });
+}
+/**
+ * hidden-content's `JE.homeRemoval` facade (step C4), published by features-remove-home.ts next to the helper itself:
+ * Media Tags' item-menu row reuses the native action-sheet row builder. It forwards the `features` slot's member on
+ * each access, as media-tags' `JE.internals?.features?.buildNativeActionSheetItem` read did.
+ */
+export interface HomeRemovalFacade { readonly buildNativeActionSheetItem?: HomeSurfaceApi['buildNativeActionSheetItem'] | undefined }
+export function homeRemovalFacade(JE:HiddenHost):HomeRemovalFacade {
+ return { get buildNativeActionSheetItem() { return JE.internals?.features?.buildNativeActionSheetItem; } };
 }
 interface Runtime { modules:Set<string>; view:number; policy:number; queues:Map<string,Promise<unknown>>; cleanups:Set<()=>void>; identityCleanups:Set<()=>void> }
 function runtime(JE:HiddenHost):Runtime {

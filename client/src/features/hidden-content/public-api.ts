@@ -7,3 +7,5 @@
 export type { HomeSurface, HomeSurfaceApi } from './home-model';
 export type { AdminUser, HiddenDocument, HiddenItem, ListedItem, Settings } from './model';
 export type { PageSurface } from './page-model';
+// Step C4: the facade media-tags' item menu reads (features-remove-home.ts publishes it as `JE.homeRemoval`).
+export type { HomeRemovalFacade } from './host';

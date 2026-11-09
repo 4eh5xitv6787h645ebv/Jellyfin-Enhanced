@@ -517,7 +517,7 @@
     for (const mount of [actions, chips, downloads, secondary, requestedBy]) if (mount) mount.innerHTML = "";
     const context = beginRender(modal);
     renderRequestedBy(requestedBy, rawDetails.mediaInfo);
-    JE.internals?.spoilerGuard?.appendSeerrToggle?.(secondary, rawDetails, mediaType);
+    seerrDetailsContext(JE).peer("spoilerBlur")?.appendSeerrToggle?.(secondary, rawDetails, mediaType);
     const media = mediaState(rawDetails);
     renderChips(chips, media, mediaType === "movie");
     const bars = sibling(internal, "buildDownloadBars")(media.downloads, media.downloads4k);

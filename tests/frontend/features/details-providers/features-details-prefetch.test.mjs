@@ -19,7 +19,7 @@ function setup(t,{id='movie',settings={showWatchProgress:true,showFileSizes:true
  const h=createHarness({html:PAGE,url:`http://jellyfin.test/web/index.html#/details?id=${id}`,
   fetch:async url=>{tmdb.push(String(url));return jsonResponse(RELEASES);},
   globals:{requestAnimationFrame:fn=>{fn();return 1;}},
-  JE:{currentSettings:settings,pluginConfig:config,t:key=>key,internals:people?{peopleTags:people}:{},
+  JE:{currentSettings:settings,pluginConfig:config,t:key=>key,internals:{},...(people?{peopleTags:people}:{}),
    helpers:{
     // The shared item cache: one request per item, every caller gets the same promise.
     getItemCached:itemId=>{lookups++;if(!items.has(itemId))items.set(itemId,deferred());return items.get(itemId).promise;},
