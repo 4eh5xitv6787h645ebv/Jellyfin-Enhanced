@@ -10,6 +10,7 @@ using Moq;
 using Xunit;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace JE.Tests.Features.SpoilerGuard;
 

@@ -1,7 +1,4 @@
 import type { BookmarkDocumentResponse, BootstrapResponse, RevisionedSettingsResponse } from '../contracts/generated';
-import type { CalendarFacade } from '../features/calendar/types';
-import type { PublicPage } from '../features/downloads/types';
-import type { RecommendationsFacade } from '../features/seerr/recommendations/types';
 
 export type JsonRecord = Record<string, unknown>;
 export type TranslationParams = Record<string, unknown>;
@@ -170,13 +167,21 @@ export function reportBundleProgress(count: number): void {
 export type ActivityFacade = {
     injectStyles(): void; renderForCustomTab(host: HTMLElement): Promise<void> | void; stopPolling?(): void;
 };
-export type CalendarPageFacade = Pick<CalendarFacade, 'injectStyles' | 'loadSettings' | 'renderPage' | 'refresh' | 'handleEventClick'>;
+// Step C4: the three page facades below are declared here, structurally (host/ may not import features/), with the
+// signatures of their owners' types: features/calendar/types.ts CalendarFacade, features/downloads/types.ts
+// PublicPage and State, features/seerr/recommendations/types.ts RecommendationsFacade. Types only.
+export type CalendarPageFacade = {
+    injectStyles(): void; loadSettings(): void; renderPage(target?: HTMLElement): void; refresh(): Promise<void>;
+    handleEventClick(event: Event): void;
+};
 export type CatchUpFacade = { injectStyles(): void; renderPage(container?: HTMLElement): void };
-export type DownloadsPageFacade = Pick<PublicPage, 'injectStyles' | 'renderPage' | 'refresh'>
-    & Partial<Pick<PublicPage, 'startPolling' | 'stopPolling' | '_state'>>
+/** The members of the downloads page state (`State`) the page script reads and writes. */
+export interface DownloadsPageState { pageVisible: boolean; _customTabMode?: boolean; _pluginPageVisible?: boolean }
+export type DownloadsPageFacade = { injectStyles(): void; renderPage(target?: HTMLElement): void; refresh(): Promise<void> }
+    & { startPolling?(): void; stopPolling?(): void; _state?: DownloadsPageState }
     & { _pluginPageVisible?: boolean };
 export type HiddenContentPageFacade = { injectStyles?(): void; renderPage?(target?: HTMLElement): void };
-export type RecommendationsPageFacade = Pick<RecommendationsFacade, 'renderForCustomTab'>;
+export type RecommendationsPageFacade = { renderForCustomTab(element: HTMLElement | null): void };
 
 /** What the seven page scripts may read; each facade stays owned by its feature. */
 export interface PagesBridge {

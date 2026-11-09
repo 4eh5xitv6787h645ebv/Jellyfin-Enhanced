@@ -12,7 +12,7 @@ For endpoint details, see the [API reference](api.md). For setup and placement, 
 
 This section follows the client from loader injection through initialization and user switches.
 
-`Features/Platform/Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Features/Platform/JePlatformController.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
+`Features/Platform/Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Features/Platform/JePlatformController.Assets.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
 
 The ordered module list lives in `js/component-scripts.json`: 181 component modules, with paths relative to `js/`. Entries starting with `//` are ordering notes.
 
@@ -545,15 +545,15 @@ Missing or wrong-length keys are recreated; old URLs can serve original artwork 
 |---|---|
 | `Helpers/` | `ArrUrlGuard.cs` checks integration URLs; `BuildAttestation.cs` handles release attestation; `PluginConfigurationPatch.cs` writes a few configuration fields on top of the live configuration and reports conflicting edits (the Media Tags tab's saves); `MediaTagsPageFields.cs` is the list of fields those saves may write, read from the page's section modules; `MediaTagsPortable.cs` reads and writes the versioned Media Tags documents (user and server export, import preview with the save paths' validators, presets: built-in, per-user and offered); `ProviderHelper.cs` and `UserHelper.cs` resolve provider/user identifiers; `ReviewVisibility.cs` applies author visibility; `TagEpisodeSelector.cs` chooses representative episodes with usable streams. |
 | `Helpers/` language handling | `MatroskaLanguageReader.cs`, `MediaStreamLanguageResolver.cs` recover stream language data; `MatroskaLanguageCache.cs` keeps each file's parsed languages (persisted, keyed by path, size and modification time) so unchanged files are not reopened; `AudioLanguageTagHelper.cs` maps base/regional codes to tag names and computes changes. |
-| `Features/Seerr/Services/` | `SeerrHttpHelper.cs`, `JellyseerrPermissionHelper.cs`, `JellyseerrUserImportHelper.cs`: HTTP, permission and import helpers. `ParentalRatingDecision.cs`, `ParentalTagDecision.cs`, `SeerrCertificationExtractor.cs`, `SeerrTagSignatureExtractor.cs`: shared parental decisions/extraction. |
+| `Shared/Seerr/`, `Shared/Parental/` | `Shared/Seerr/`: `SeerrHttpHelper.cs`, `JellyseerrPermissionHelper.cs`, `JellyseerrUserImportHelper.cs`: HTTP, permission and import helpers. `Shared/Parental/`: `ParentalRatingDecision.cs`, `ParentalTagDecision.cs`, `SeerrCertificationExtractor.cs`, `SeerrTagSignatureExtractor.cs`: shared parental decisions/extraction. |
 | `Extensions/` | `ItemRepositoryExtensions.cs`, `JellyfinDbContextExtensions.cs`, `UserManagerExtensions.cs`: repository/database provider lookups and compatible user enumeration across server API changes. |
 | `Features/MediaTags/Services/MediaNamingTags.cs` | Server-side source/edition detection from file and immediate parent-folder names, physical-stub priority and resolution-ranked multi-version selection. Shared by the tag cache and `/tag-data`; only labels reach clients. |
 | `Features/MediaTags/Models/TagCacheEntry.cs` | Tag data at the current cache schema (`CurrentCacheSchemaVersion` in `Features/MediaTags/Services/TagCache/TagCacheService.cs`), including source/edition labels, named-source ratings, Custom rule matches, Logos (`Features/MediaTags/Models/TagLogo.cs`), series/season quality summaries, Status Tags facts and server-only contributor IDs for access filtering, plus precomputed item tag data, including parent-series IDs for Spoiler Guard filtering without per-entry library lookups. |
-| `Features/MediaTags/Models/TagQualitySummary.cs`, `Shared/MediaTags/SeriesQualityAggregation.cs` | Policy-independent container quality facts, bounded distinct values, audio-language variants and policy resolution; built from existing episode streams and recomputed through the cache access filter for restricted users. |
-| `Features/Platform/Models/AnalyticsData.cs`, `WhatsNewData.cs` | Report/counter records and inclusion/exclusion annotations; configuration-schema and pending-change records. |
+| `Shared/MediaTags/TagQualitySummary.cs`, `Shared/MediaTags/SeriesQualityAggregation.cs` | Policy-independent container quality facts, bounded distinct values, audio-language variants and policy resolution; built from existing episode streams and recomputed through the cache access filter for restricted users. |
+| `Features/Platform/Models/AnalyticsData.cs`, `WhatsNewData.cs`, `Shared/Analytics/UsageCounterDiskFormat.cs` | Report records and inclusion/exclusion annotations; the usage-counter file format; configuration-schema and pending-change records. |
 | `Features/DetailsProviders/Models/AwardsData.cs`, `MdblistRatings.cs` | Awards cache records and MDBList cache/account models. |
 | `Shared/Arr/` | `ArrInstance.cs`, `ArrItem.cs`, `ArrType.cs`: integration instance/item/type models. |
-| `Features/Seerr/Models/` | `JellyseerrPermission.cs`, `JellyseerrUser.cs`: Seerr permission/user models. |
+| `Shared/Seerr/` models | `JellyseerrPermission.cs`, `JellyseerrUser.cs`: Seerr permission/user models. |
 
 ### Event handlers: `EventHandlers/`
 
@@ -764,7 +764,7 @@ Native settings and cache digests are resolved in `Features/MediaTags/PosterTags
 
 ### Awards poster tags
 
-- `Features/MediaTags/Models/TagAwards.cs`: immutable exact-work chart/certification/winner facts in `TagCacheEntry.Awards`.
+- `Shared/MediaTags/TagAwards.cs`: immutable exact-work chart/certification/winner facts in `TagCacheEntry.Awards`.
 - `Features/MediaTags/Services/AwardTagsService.cs`: persistent `award-tags.json`, configurable MDBList list membership, provider certification, cached Wikidata winner projection, TTLs, quota reserve and cancellation.
 - `Features/MediaTags/Services/TagCache/TagCacheAwards.cs`: cache-only batch/native projection and normal tag-cache publication after scheduled refresh or config changes.
 - `Features/MediaTags/Tasks/RefreshAwardTagsTask.cs`: **Refresh Awards Tags**, daily 04:00 and on demand, hidden while Awards is off.

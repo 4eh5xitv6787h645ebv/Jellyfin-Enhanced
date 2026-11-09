@@ -58,13 +58,19 @@ internal static class Arch
             return;
         }
         Assert.True(File.Exists(path), $"Snapshot {path} is missing. It is generated once with JE_UPDATE_SNAPSHOTS=1.");
-        var expected = File.ReadAllText(path).ReplaceLineEndings("\n");
+        AssertSameLines(File.ReadAllText(path).ReplaceLineEndings("\n"), actual,
+            $"{fileName} differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.");
+    }
+
+    // Fails with the removed (-) and added (+) lines, at most 40 of each, when the two texts differ.
+    public static void AssertSameLines(string expected, string actual, string headline)
+    {
         if (expected == actual) return;
         var expectedLines = expected.Split('\n');
         var actualLines = actual.Split('\n');
         var removed = Multiset(expectedLines).Except(Multiset(actualLines)).Take(40).ToList();
         var added = Multiset(actualLines).Except(Multiset(expectedLines)).Take(40).ToList();
-        var message = new StringBuilder($"{fileName} differs from the checked-in snapshot. Snapshots are never regenerated to pass a refactor step.\n");
+        var message = new StringBuilder(headline + "\n");
         foreach (var line in removed) message.Append("- ").AppendLine(line.Line);
         foreach (var line in added) message.Append("+ ").AppendLine(line.Line);
         if (removed.Count == 0 && added.Count == 0) message.AppendLine("(same lines, different order)");

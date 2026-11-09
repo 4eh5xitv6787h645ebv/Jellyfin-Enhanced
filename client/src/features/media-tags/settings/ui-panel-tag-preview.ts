@@ -16,7 +16,7 @@
  * when the Media Tags section first shows, disposed when the panel closes.
  */
 import type { Group } from '../layout/layout-rules';
-import { panelHost, registry, type PanelBridge, type PanelTagLayout, type Settings, type PluginConfig, type CustomTagRule } from '../../settings-panel/host';
+import { panelHost, registry, type PanelBridge, type PanelTagLayout, type Settings, type PluginConfig, type CustomTagRule } from './host';
 import type { QualityCat } from './ui-panel-tag-editor';
 import { closestTarget, queryElement } from '../../shared/dom';
 

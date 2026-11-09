@@ -16,6 +16,8 @@ namespace JE.Tests.Architecture;
 // Helpers are matched by method name only, so moving them into JeControllerBase is invisible:
 //   IsAdminUser, AuthorizeUserConfigAccess, AuthorizeUserAccess, GetCurrentUserId on any plugin ControllerBase type;
 //   UserHelper.GetUserId, UserHelper.GetCurrentUserId; RequestIdentityService.Resolve; and ControllerBase.User reads.
+// ONE level misses deeper checks (review M1): AuthReadClosureSnapshotTests follows the full closure per route and
+// compares it with restructure-base. This file's per-action counts and snapshot stay as they are.
 public class AuthHelperCallSnapshotTests(ITestOutputHelper output)
 {
     public const string SnapshotFile = "auth-helper-calls.snapshot.json";

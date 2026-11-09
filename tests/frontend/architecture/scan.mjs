@@ -34,6 +34,12 @@ export function listSources(extensions = ['.ts']) {
 export const readSource = file => readFileSync(join(repoRoot, file), 'utf8');
 export const readJson = name => JSON.parse(readFileSync(join(here, name), 'utf8'));
 
+/** The canonical feature map (PLAN.md "Canonical feature list"), shared with the backend parity test. */
+export const featureMapPath = 'docs/feature-map.json';
+export const readFeatureMap = () => JSON.parse(readFileSync(join(repoRoot, featureMapPath), 'utf8'));
+/** The map's rows whose own folder is client/src/features/<name> (kind `feature`), in map order. */
+export const mappedFeatures = (map = readFeatureMap()) => map.features.filter(row => row.kind === 'feature');
+
 /** `wc -l` semantics (the plan's baseline command): the number of newline characters. */
 export const lineCount = text => text.split('\n').length - 1;
 
@@ -274,6 +280,15 @@ export function cycles(edges) {
 
 const GLOBAL_NAMES = new Set(['window', 'globalThis', 'self']);
 
+/**
+ * Rule 4's platform files (frontend.md §2.4 rule 4, §5.2; step 1 decision, applied in C4): the core platform hosts
+ * that stay in host/ after C1 and core/lifecycle-entry.ts. They are how the platform reaches the global, not features.
+ */
+export const PLATFORM_GLOBAL_FILES = new Set([
+  'core-host.ts', 'api-host.ts', 'dom-host.ts', 'navigation-host.ts', 'session-host.ts', 'ui-host.ts',
+  'admin-config-host.ts', 'bootstrap-pages-host.ts',
+].map(name => `${srcRoot}/host/${name}`).concat(`${srcRoot}/core/lifecycle-entry.ts`));
+
 function typeIsGlobal(type, checker, seen = new Set()) {
   if (seen.has(type)) return false;
   seen.add(type);
@@ -350,7 +365,8 @@ function functionReturnsGlobal(declaration, checker, seen) {
  * It is allowed only in a feature host file, and there only for slots the feature owns
  * (internals-owners.json; a whole-object access `JE.internals` is the owner's own object).
  * Rule 4 flags `.JellyfinEnhanced` read off the browser global (and `{ JellyfinEnhanced } = window`),
- * allowed only in host/context.ts, features/<f>/host*.ts and bootstrap/**.
+ * allowed only in host/context.ts, features/<f>/host*.ts, bootstrap/**, and PLATFORM_GLOBAL_FILES: the core platform
+ * hosts that stay in host/ after C1 and core/lifecycle-entry.ts (frontend.md §2.4 rule 4, §5.2; step C4).
  */
 export function bridgeViolations(owners) {
   const violations = {};
@@ -362,7 +378,7 @@ export function bridgeViolations(owners) {
     if (!file.startsWith(`${srcRoot}/`)) continue;
     const where = classify(file);
     const hostFile = isFeatureHostFile(file);
-    const globalAllowed = hostFile || file === CONTEXT || where.area === 'bootstrap';
+    const globalAllowed = hostFile || file === CONTEXT || where.area === 'bootstrap' || PLATFORM_GLOBAL_FILES.has(file);
     (function visit(node) {
       const access = memberAccess(node);
       if (access?.name === 'internals' && unwrap(access.object).kind !== ts.SyntaxKind.ThisKeyword) {
@@ -401,12 +417,13 @@ export const GENERATED_SOURCES = [
   'status-vocabulary.ts',
   'compact-quality.ts',
   'per-user-props.ts',
-  'quality-data.ts',
   'genre-table.ts',
-  'awards-data.ts',
-  'rating-data.ts',
-  'media-language.ts',
 ];
+// Not listed (coordinator decision E1 (a), step-logs/lane-lm.md): awards-data.ts, rating-data.ts and
+// media-language.ts are hand-written source-of-truth tables (no generator; scripts/build_poster_assets.py only
+// reads them), and quality-data.ts is hand-written apart from the aspect-ratio region that
+// scripts/generate_technical_ratios.py rewrites between its in-body markers. None carries a file header or
+// linguist-generated, and all four stay under the file-size guardrail.
 
 /** Other generated outputs that must carry `linguist-generated` in .gitattributes (§5.3). */
 export const GENERATED_OUTPUTS = [
@@ -519,3 +536,19 @@ export function sizeOffenders(files = listSources(['.ts', '.css'])) {
 
 /** Drop `_comment`-style keys from a baseline or map file. */
 export const withoutComments = map => Object.fromEntries(Object.entries(map).filter(([key]) => !key.startsWith('_')));
+
+// ---------------------------------------------------------------------------------------------------------
+// Feature map → CONTRIBUTING.md "Where things live" (backend.md §7.6)
+
+/** The table rows of CONTRIBUTING.md's "Where things live" section, rendered from docs/feature-map.json. */
+export function whereThingsLiveRows(map = readFeatureMap()) {
+  const code = path => `\`${path}/\``;
+  return map.features.map(row => {
+    const name = `\`${row.name}\`${row.kind === 'area' ? ' (area)' : ''}`;
+    const client = row.client.map(path => code(path.slice(srcRoot.length + 1))).join(', ');
+    const backend = row.backend ? code(row.backend)
+      : row.backendServedBy ? `none (served by ${code(row.backendServedBy)})` : 'none';
+    const tests = [...row.tests.frontend, ...row.tests.backend].map(code).join(', ') || '–';
+    return `| ${name} | ${client} | ${backend} | ${tests} |`;
+  });
+}

@@ -594,7 +594,7 @@
                             </div>
                         </div>
                     </section>` : ""}
-                    ${JE.internals.spoilerGuard?.buildSettingsHtml?.(ctx) || ""}
+                    ${featureCtx.peer("spoilerBlur")?.buildSettingsHtml?.(ctx) || ""}
                     <section class="je-pane" data-pane="language">
                         <h3 class="je-pane-title">${JE.icon(JE.IconName.LANGUAGE)} ${JE.t("panel_settings_language")}</h3>
                         <div style="padding: 0 16px 16px 16px;">

@@ -7,7 +7,7 @@
  * is open, focus given back on close, and
  * the settings search (sections add their controls through ctx.registerSearch).
  */
-import { apiClient, panelHost, registry, settingsDocumentContract, type PanelBridge } from './host';
+import { apiClient, panelHost, registry, settingsDocumentContract, settingsPanelContext, type PanelBridge } from './host';
 import type { PanelContext, SearchHit, SearchProvider } from './context';
 import { closestTarget, queryButton, queryElement, queryElements, querySelect, queryInput } from '../shared/dom';
 import { isTextEntryType, paneSlug, shouldApplyRefresh } from './panel-refresh';
@@ -21,7 +21,7 @@ const PANEL_ID = 'jellyfin-enhanced-panel';
 const POINTER_EVENTS = ['pointerdown', 'mousedown', 'click'] as const;
 const MAX_RESULTS = 8;
 
-export function installUiPanel(JE: Deps): void {
+export function installUiPanel(JE: Deps, featureCtx = settingsPanelContext(JE)): void {
     const internal = registry(JE);
 
     /** Closes the open panel through its full teardown. */
@@ -684,7 +684,7 @@ export function installUiPanel(JE: Deps): void {
         internal.wireSettingsListeners?.(ctx);
         internal.wireTagLooks?.(ctx);
         internal.wireHiddenContentListeners?.(ctx);
-        JE.internals.spoilerGuard?.wireSettings?.(ctx);
+        featureCtx.peer('spoilerBlur')?.wireSettings?.(ctx);
         internal.wireMiscSettingsControls?.(ctx);
         internal.wireTagGroupEditor?.(ctx);
         internal.wireLanguageControls?.(ctx);

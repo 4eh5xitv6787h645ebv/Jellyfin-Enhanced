@@ -183,7 +183,7 @@
   // client/src/features/details-providers/details-page.ts
   var JE = bridge("Details page features");
   var ctx = detailsContext(JE);
-  var internals = JE.internals ?? (JE.internals = {});
+  void ctx.own.features;
   var features = () => {
     var _a;
     return (_a = ctx.own).features ?? (_a.features = {});
@@ -414,7 +414,7 @@
     visit = null;
     features().discardItemStatsPrefetch?.(ended);
     features().discardReleasePrefetch?.(ended);
-    internals.peopleTags?.leave?.(ended.itemId);
+    ctx.peer("peopleTags")?.leave?.(ended.itemId);
   }
   function beginDetailsVisit(view, detail) {
     endDetailsVisit();
@@ -423,7 +423,7 @@
     if (!itemId || paramsId && paramsId !== itemId) return;
     const settings = JE.currentSettings || {};
     const config = JE.pluginConfig || {};
-    if (!(settings.showWatchProgress || settings.showFileSizes || config.ShowReleaseDates && config.TmdbEnabled || settings.peopleTagsEnabled && internals.peopleTags)) return;
+    if (!(settings.showWatchProgress || settings.showFileSizes || config.ShowReleaseDates && config.TmdbEnabled || settings.peopleTagsEnabled && ctx.peer("peopleTags"))) return;
     if (lastDetailsItemId === itemId && lastDetailsItemType) return;
     const userId = currentUserId();
     const getItemCached = JE.helpers.getItemCached;
@@ -463,7 +463,7 @@
   function startPeoplePrefetch(current) {
     if (current.peopleStarted || !current.item || !visitLive(current)) return;
     current.peopleStarted = true;
-    internals.peopleTags?.prefetch?.(current.itemId, current.item, current.view, current.epoch);
+    ctx.peer("peopleTags")?.prefetch?.(current.itemId, current.item, current.view, current.epoch);
   }
   JE.core.navigation.onViewPage((_view, _element, _hash, _itemPromise, rawEvent) => {
     const target = rawEvent?.target;

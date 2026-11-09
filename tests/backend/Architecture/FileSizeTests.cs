@@ -2,14 +2,25 @@ using Xunit.Abstractions;
 
 namespace JE.Tests.Architecture;
 
-// Guardrail §7.1 (artifacts/restructure-plan/backend.md), REPORT-ONLY from S0 (S3 makes it fail, with a shrinking
-// allow-list): any *.cs under Features/** or Shared/** over 1,500 lines, and any Je*Controller*.cs over 1,200 lines.
-// Generated *.g.cs files are exempt. Also lists every plugin .cs file over 1,500 lines wherever it lives, which is
-// the allow-list S3 starts from once Phase 1/2 have moved those files under Features/ or Shared/.
+// Guardrail §7.1 (artifacts/restructure-plan/backend.md), FAILING from S3: any *.cs under Features/** or Shared/** over
+// 1,500 lines, and any Je*Controller*.cs over 1,200 lines, fails. Generated *.g.cs files are exempt. Over-cap
+// controllers are split into partials Je<Feature>Controller.<Area>.cs (§7.9) and never allow-listed.
+//
+// AllowList holds the offenders that existed when S3 turned the gate on, each with its line count then. It may only
+// shrink: an allow-listed file fails when it grows past its recorded count, and a file back under the limit is a note
+// asking for its entry to be removed (lower the count when the file shrinks). Never add an entry.
 public class FileSizeTests(ITestOutputHelper output)
 {
     public const int FeatureFileLimit = 1500;
     public const int ControllerFileLimit = 1200;
+
+    // §7.1 names TagCacheService.cs (4,123 at the plan's count) as the first allow-list entry; the other files it
+    // listed (PosterTagSettings, SpoilerFieldStripFilter, SpoilerBlurImageFilter, SeerrParentalFilter,
+    // PosterTagRenderer) are under 1,500 lines today and need no entry.
+    public static readonly IReadOnlyDictionary<string, int> AllowList = new Dictionary<string, int>(StringComparer.Ordinal)
+    {
+        ["Features/MediaTags/Services/TagCache/TagCacheService.cs"] = 4128,
+    };
 
     internal static IEnumerable<(string Path, int Lines)> SourceFiles()
     {
@@ -30,15 +41,39 @@ public class FileSizeTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void ReportsOversizedFiles()
+    public void FilesStayUnderTheSizeLimits()
     {
         var files = SourceFiles().ToList();
-        var inScope = files.Where(f => LimitFor(f.Path) is int limit && f.Lines > limit).ToList();
-        var large = files.Where(f => !f.Path.EndsWith(".g.cs", StringComparison.Ordinal) && f.Lines > FeatureFileLimit)
-            .OrderByDescending(f => f.Lines).ToList();
-        output.WriteLine($"plugin .cs files: {files.Count}; over the Features/Shared/Je*Controller limits now: {inScope.Count}; over {FeatureFileLimit} lines anywhere: {large.Count}");
-        foreach (var file in inScope) output.WriteLine($"over limit ({LimitFor(file.Path)}): {file.Path} {file.Lines}");
-        foreach (var file in large) output.WriteLine($"over {FeatureFileLimit} anywhere: {file.Path} {file.Lines}");
+        var lines = files.ToDictionary(f => f.Path, f => f.Lines, StringComparer.Ordinal);
+        var failures = new List<string>();
+        foreach (var (path, count) in files)
+        {
+            if (LimitFor(path) is not int limit || count <= limit) continue;
+            if (AllowList.TryGetValue(path, out var cap) && limit == FeatureFileLimit)
+            {
+                if (count > cap) failures.Add($"{path}: {count} lines, allow-listed at {cap} (an allow-listed file may not grow)");
+                else output.WriteLine($"allow-listed: {path} {count} (cap {cap})");
+                continue;
+            }
+            failures.Add($"{path}: {count} lines, limit {limit}{(limit == ControllerFileLimit ? " (split into partials, backend.md §7.9)" : "")}");
+        }
+        foreach (var (path, cap) in AllowList)
+        {
+            if (!lines.TryGetValue(path, out var count)) output.WriteLine($"note: allow-listed {path} no longer exists; remove its entry");
+            else if (count <= FeatureFileLimit) output.WriteLine($"note: allow-listed {path} is {count} lines, under the limit; remove its entry");
+            else if (count < cap) output.WriteLine($"note: allow-listed {path} shrank to {count} (cap {cap}); lower its entry");
+        }
+        foreach (var file in files.Where(f => !f.Path.EndsWith(".g.cs", StringComparison.Ordinal) && f.Lines > FeatureFileLimit && LimitFor(f.Path) == null))
+            output.WriteLine($"outside the guardrail's scope, over {FeatureFileLimit}: {file.Path} {file.Lines}");
+        output.WriteLine($"plugin .cs files: {files.Count}; failures: {failures.Count}");
         Assert.NotEmpty(files);
+        Assert.True(failures.Count == 0, "Files over the backend.md §7.1 size limits:\n" + string.Join("\n", failures));
+    }
+
+    [Fact]
+    public void AllowListOnlyNamesFeatureOrSharedFiles()
+    {
+        foreach (var path in AllowList.Keys)
+            Assert.True(LimitFor(path) == FeatureFileLimit, $"{path}: only Features/** or Shared/** files (never a controller) may be allow-listed");
     }
 }

@@ -1,0 +1,30 @@
+{
+  "comment": "FeatureBoundaryTests ratchet (review M2): Shared.* and Infrastructure.* references into Features.*, referencing top-level type -> referenced type: occurrences. A new edge or a higher count fails; lower counts are a note, so shrink this file when an edge goes away. Never add an edge to make the test pass.",
+  "edges": {
+    "Infrastructure.Http.JeControllerBase -> Features.DetailsProviders.Services.ReviewAuthorCache": 1,
+    "Infrastructure.Http.JeControllerBase -> Features.Settings.Services.SettingsDefaults": 1,
+    "Infrastructure.Http.JeControllerBase -> Features.Settings.Services.SettingsDocumentService": 2,
+    "Shared.MediaTags.MediaTagsPageFields -> Features.MediaTags.PosterTags.PosterTagSettings": 1,
+    "Shared.MediaTags.MediaTagsPageFields -> Features.MediaTags.PosterTags.TagStyleKeys": 1,
+    "Shared.MediaTags.MediaTagsPageFields -> Features.MediaTags.PosterTags.TagStyleSet": 3,
+    "Shared.MediaTags.MediaTagsPageFields -> Features.MediaTags.Services.LeavingSoonService": 2,
+    "Shared.MediaTags.MediaTagsPortable -> Features.MediaTags.PosterTags.TagStyleKeys": 1,
+    "Shared.MediaTags.SeriesQualityAggregation -> Features.MediaTags.Models.TagCacheEntry": 9,
+    "Shared.MediaTags.SeriesQualityAggregation -> Features.MediaTags.Models.TagMediaSource": 4,
+    "Shared.MediaTags.SeriesQualityAggregation -> Features.MediaTags.Models.TagMediaStream": 30,
+    "Shared.MediaTags.SeriesQualityAggregation -> Features.MediaTags.Models.TagStreamData": 31,
+    "Shared.MediaTags.SeriesQualityAggregation -> Features.MediaTags.PosterTags.Resolution.LanguageFlagRules": 7,
+    "Shared.MediaTags.SeriesQualityAggregation -> Features.MediaTags.PosterTags.Resolution.LanguageFlagRules+ParsedTag": 7,
+    "Shared.MediaTags.SeriesQualityAggregation -> Features.MediaTags.PosterTags.Resolution.QualityTagRules": 22,
+    "Shared.SpoilerGuard.SpoilerPendingService -> Features.SpoilerGuard.Services.SpoilerSeerrPendingPromoter": 5,
+    "Shared.SpoilerGuard.SpoilerSeerrRedactor -> Features.SpoilerGuard.Services.SpoilerFieldStripFilter": 10,
+    "Shared.SpoilerGuard.SpoilerSeerrRedactor -> Features.SpoilerGuard.Services.SpoilerFieldStripFilter+CategoryReveal": 19,
+    "Shared.SpoilerGuard.SpoilerSeerrRedactor -> Features.SpoilerGuard.Services.SpoilerNextUnwatchedService": 4,
+    "Shared.SpoilerGuard.SpoilerTagDataStripper -> Features.MediaTags.Models.TagCacheEntry": 75,
+    "Shared.SpoilerGuard.SpoilerTagDataStripper -> Features.MediaTags.Models.TagMediaSource": 17,
+    "Shared.SpoilerGuard.SpoilerTagDataStripper -> Features.MediaTags.Models.TagMediaStream": 47,
+    "Shared.SpoilerGuard.SpoilerTagDataStripper -> Features.MediaTags.Models.TagSourceRatings": 1,
+    "Shared.SpoilerGuard.SpoilerTagDataStripper -> Features.MediaTags.Models.TagStreamData": 9,
+    "Shared.SpoilerGuard.SpoilerTagDataStripper -> Features.MediaTags.PosterTags.Resolution.QualityTagRules": 1
+  }
+}

@@ -102,12 +102,4 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Models
         /// <summary>Cumulative usage counters since Period started (config.AnalyticsShareUsageCounts). Null when that category is off.</summary>
         public List<UsageEventEntry>? Events { get; set; }
     }
-
-    /// <summary>On-disk format for usage-counters.json, mirroring the AwardsCacheDiskFormat pattern.</summary>
-    public class UsageCounterDiskFormat
-    {
-        public int SchemaVersion { get; set; }
-        public string PeriodStart { get; set; } = string.Empty;
-        public Dictionary<string, int> Counters { get; set; } = new();
-    }
 }

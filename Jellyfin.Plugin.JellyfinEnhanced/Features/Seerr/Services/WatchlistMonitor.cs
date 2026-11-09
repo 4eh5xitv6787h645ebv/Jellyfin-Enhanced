@@ -192,7 +192,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services
                 // filter out users in the import
                 // blocklist so a blocked user's existing requests don't keep
                 // syncing to their Jellyfin watchlist (defeats admin intent).
-                var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
+                var blockedIds = Shared.Seerr.JellyseerrUserImportHelper
                     .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
 
                 var requesterIds = matchingRequests

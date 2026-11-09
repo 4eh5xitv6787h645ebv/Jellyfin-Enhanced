@@ -16,6 +16,13 @@ export type { TagLooksPanel } from './settings/ui-panel-tag-looks';
 export type { TagPortableReopen, TagPortableTools, WireTagPortable } from './settings/ui-panel-tag-portable';
 export type { PreviewInteraction, PreviewInteractionOptions, TagPreview, TagPreviewData, TagPreviewOptions } from './settings/ui-panel-tag-preview';
 
+/**
+ * media-tags' `JE.mediaTagsSettingsUi` facade (step C4), published by core/tag-layout.js together with
+ * `JE.core.tagLayout`. `registry` forwards, on each read, the settings registry `JE.internals.enhancedUi` (where the
+ * Media Tags panels put their members): the admin configuration page's Media Tags tab waits for it before it draws.
+ */
+export interface MediaTagsSettingsUiFacade { readonly registry: MediaTagsSettingsUi | undefined }
+
 /** The open hub's controls other sections and tests drive (settings/ui-panel-media-tags.ts). */
 export interface MediaTagsHubApi {
     openTab(tab: string, options?: { focus?: boolean; focusTab?: boolean }): boolean;

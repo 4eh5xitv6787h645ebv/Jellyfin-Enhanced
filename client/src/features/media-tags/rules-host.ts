@@ -2,6 +2,9 @@ import type { LanguageConfig, LanguageSettings, MediaLanguage } from './types/la
 import type { RatingConfig, RatingSettings, RatingSources } from './types/ratings/rating-sources';
 /** Only the legacy host surface consumed by this rule slice. Values remain untrusted at rule inputs. */
 export interface TagRulesBridge {
+    /** The settings registry, read only through settingsUi() (host.ts), for the facade below (step C4). */
+    internals?: { enhancedUi?: import('./public-api').MediaTagsSettingsUi };
+    mediaTagsSettingsUi?: import('./public-api').MediaTagsSettingsUiFacade;
     statusVocabulary?: typeof import('./types/status/status-vocabulary').statusVocabulary;
     core?: {
         mediaLanguage?: MediaLanguage;

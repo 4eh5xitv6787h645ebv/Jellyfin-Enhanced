@@ -19,6 +19,8 @@ namespace JE.Tests.Architecture;
 //       IEventConsumer<…>, IHostedService and any future one), the ordered list of its implementations;
 //   (c) the resolved MvcOptions.Filters, in order (the Configure<MvcOptions> block is a single entry in (a)).
 // Types are written as namespace-free names with generic arguments, so a namespace move leaves the snapshot alone.
+// (a) writes factories as "factory" and options objects as "instance:…"; ServiceFactorySnapshotTests (review M4) describes
+// them concretely, with the HttpClient handler settings, against restructure-base.
 public class ServiceRegistrationSnapshotTests(ITestOutputHelper output)
 {
     public const string SnapshotFile = "service-registrations.snapshot.json";

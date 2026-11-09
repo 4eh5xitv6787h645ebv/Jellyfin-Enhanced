@@ -49,6 +49,8 @@ The admin page specs share `helpers/admin-tags-page.mjs` and run by concern;
 realm and independent coverage counters for each test.
 
 Specs are grouped by feature under `bootstrap/`, `core/`, `features/`, `pages/`,
-`requests/`, and `regressions/`. Both runners discover nested `*.test.mjs` files
+`requests/`, and `regressions/`. Feature specs mirror `client/src/features/`:
+`features/<feature>/` (Media Tags admin specs in `features/media-tags/admin/`), and
+the admin configuration page's specs are in `admin/config/`. Both runners discover nested `*.test.mjs` files
 through `helpers/discovery.mjs`; an empty discovery fails. Shared helpers live
 in `helpers/`. See the [test directory guide](../README.md) for contribution rules.

@@ -8,6 +8,7 @@
  * every lookup happens when it is used, never while an entry loads.
  */
 import { featureContext, type FeatureContext } from '../../host/context';
+import type { SpoilerBlurPeerApi } from '../spoiler-guard/public-api';
 export type MediaType = 'movie' | 'tv';
 export type TmdbId = number | string;
 export type UrlParams = Record<string, string | number | boolean>;
@@ -177,7 +178,7 @@ export interface SeerrDetailsBridge {
     takePrefetched?(key: 'SeerrStatus'): unknown;
     initializeSeerrDetailLinkScript?: () => void;
     seamlessScroll?: object;
-    internals?: { moreInfoModal?: MoreInfoRegistry; spoilerGuard?: { appendSeerrToggle?(mount: Element | null, details: unknown, type: MediaType): void } };
+    internals?: { moreInfoModal?: MoreInfoRegistry };
 }
 
 /** The host object Jellyfin Enhanced loads onto; a typed view, not a copy. */
@@ -291,6 +292,8 @@ export interface SeerrDetailsPeers {
     hiddenContent: { filterJellyseerrResults(results: readonly unknown[], surface: 'recommendations'): unknown[] };
     /** details-providers' official-rating colour key (colored ratings). */
     normalizeOfficialRating(rating: string): string;
+    /** spoiler-guard's facade: its more-info toggle (step C4). */
+    spoilerBlur: SpoilerBlurPeerApi;
 }
 export type SeerrDetailsContext = FeatureContext<SeerrDetailsOwn, SeerrDetailsPeers, SeerrDetailsBridge>;
 const detailsContexts = new WeakMap<SeerrDetailsBridge, SeerrDetailsContext>();

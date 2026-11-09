@@ -8,6 +8,8 @@ type PressHandler = (event: Event) => void;
 export interface EventsBridge {
     session?: ChromeSession;
     internals?: { canonicalCombo?: (combo: unknown) => unknown };
+    /** The same function, published as chrome's facade for the settings panel's shortcut editor (step C4). */
+    canonicalCombo?: (combo: unknown) => unknown;
     state: { activeShortcuts?: Record<string, unknown>; removeContext?: RemoveContext | null };
     pluginConfig: { ClearLocalStorageTimestamp?: unknown; DisableAllShortcuts?: unknown };
     currentSettings: {

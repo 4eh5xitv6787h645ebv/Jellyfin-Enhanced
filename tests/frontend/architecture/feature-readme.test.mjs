@@ -3,15 +3,17 @@
 // client/generated-manifest.json `entries`, with the load position in js/component-scripts.json), and names the
 // generated sources it holds. Its public-api.ts holds types only (frontend.md §2.3), so another feature can
 // `import type` from it without copying runtime code or module state into its own bundle (§2.2).
+// The feature list and each README's "Backend counterpart" come from docs/feature-map.json (PLAN.md step 12);
+// feature-map.test.mjs holds that list equal to the folders under client/src/features.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { generatedSourceFiles, parse, repoRoot, srcRoot, ts } from './scan.mjs';
+import { featureMapPath, generatedSourceFiles, mappedFeatures, parse, repoRoot, srcRoot, ts } from './scan.mjs';
 
 const featuresRoot = `${srcRoot}/features`;
-const features = readdirSync(join(repoRoot, featuresRoot), { withFileTypes: true })
-  .filter(entry => entry.isDirectory()).map(entry => entry.name).sort();
+const rows = new Map(mappedFeatures().map(row => [row.name, row]));
+const features = [...rows.keys()].sort();
 const manifest = JSON.parse(readFileSync(join(repoRoot, 'client/generated-manifest.json'), 'utf8'));
 const scripts = JSON.parse(readFileSync(join(repoRoot, 'Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json'), 'utf8'))
   .filter(path => typeof path === 'string' && !path.startsWith('//'));
@@ -39,6 +41,17 @@ for (const feature of features) {
     assert.ok(existsSync(join(repoRoot, readmePath)), `${readmePath} is missing (frontend.md §5 template)`);
     const readme = read(readmePath);
     assert.match(readme, new RegExp(`^# ${feature}\\n`), `${readmePath} must start with "# ${feature}"`);
+
+    const { backend, backendServedBy } = rows.get(feature);
+    const counterpart = /^.*Backend counterpart: (.*)$/m.exec(readme)?.[1];
+    assert.ok(counterpart, `${readmePath} has no "Backend counterpart:" line (frontend.md §5 template)`);
+    if (backend) {
+      assert.ok(counterpart.startsWith(`\`Features/${backend}/\``),
+        `${readmePath}: the backend counterpart is \`Features/${backend}/\` (${featureMapPath}), not: ${counterpart}`);
+    } else {
+      assert.ok(counterpart.startsWith('none'), `${readmePath}: ${feature} has no backend folder (${featureMapPath}), so the counterpart is "none …"`);
+      if (backendServedBy) assert.ok(counterpart.includes(backendServedBy), `${readmePath}: name ${backendServedBy}, which serves ${feature} (${featureMapPath})`);
+    }
 
     const entries = section(readme, 'Entry points');
     assert.notEqual(entries, null, `${readmePath} has no "## Entry points → shipped files" section`);
