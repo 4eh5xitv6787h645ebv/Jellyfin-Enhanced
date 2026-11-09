@@ -33,25 +33,9 @@ export function createLocales(m: LocalesDeps) {
                     ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('/JellyfinEnhanced/locales'), dataType: 'json' }),
                     culturesPromise
                 ]);
+                // The choices are the plugin's embedded locales only (BUG-014): the list never
+                // waits on, or asks, a third-party host.
                 const localeCodes = stringList(localeList);
-
-                // Check GitHub for any new locale files added since the last plugin release (1 request)
-                try {
-                    const ghResp = await fetch('https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales');
-                    if (ghResp.ok) {
-                        const files = asObjects(await ghResp.json());
-                        const serverSet = new Set(localeCodes.map(c => c.toLowerCase()));
-                        files.forEach(f => {
-                            const fileName = text(f.name);
-                            if (fileName.endsWith('.json') && fileName !== 'en.json') {
-                                const code = fileName.replace('.json', '');
-                                if (!serverSet.has(code.toLowerCase())) {
-                                    localeCodes.push(code);
-                                }
-                            }
-                        });
-                    }
-                } catch (_) { /* GitHub unavailable, server list is sufficient */ }
 
                 const cultureMap: Record<string, JsonObject> = {};
                 asObjects(cultures).forEach(c => {

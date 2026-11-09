@@ -3,9 +3,6 @@
   "client/src/admin/config/page/actions.ts": {
     "R5-interval-dom createActions.wire": 1
   },
-  "client/src/admin/config/page/locales.ts": {
-    "R6-remote-asset createLocales.wire": 1
-  },
   "client/src/bootstrap/loader/maintenance.ts": {
     "R5-interval-dom injectMaintenanceBanner": 1
   },
