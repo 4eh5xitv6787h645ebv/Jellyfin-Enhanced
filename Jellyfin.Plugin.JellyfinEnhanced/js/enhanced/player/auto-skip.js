@@ -1,11 +1,43 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/player/host.ts
   function playerHost() {
     const host = window;
     const JE2 = host.JellyfinEnhanced;
     if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("player", JE2, {
+      internalSlots: ["player", "nowPlaying", "autoSkip"],
+      internalsObject: () => JE2.internals = JE2.internals || {}
+    });
     const requireApi = () => {
       if (!host.ApiClient) throw new Error("Jellyfin API unavailable");
       return host.ApiClient;
@@ -22,7 +54,7 @@
       ajax: (options) => requireApi().ajax(options),
       getItem: (userId, itemId) => requireApi().getItem(userId, itemId)
     };
-    return { JE: JE2, ApiClient: ApiClient2 };
+    return { JE: JE2, ApiClient: ApiClient2, ctx: ctx2 };
   }
 
   // client/src/features/player/wire.ts
@@ -306,7 +338,7 @@
   }
 
   // client/src/features/player/auto-skip.ts
-  var { JE, ApiClient } = playerHost();
+  var { JE, ApiClient, ctx } = playerHost();
   var lifetime = createPlayerLifetime(JE, "auto-skip");
   function segmentTypeEnabled(type) {
     if (type === "Intro") return !!JE.currentSettings?.autoSkipIntro;
@@ -371,7 +403,7 @@
         fetchSegments: fetchMediaSegments,
         resolveItemId: createSessionItemResolver({
           parseFromSrc: parseItemIdFromVideosSrc,
-          fallbackId: () => JE.internals?.player?.getCurrentVideoItemId?.() || null,
+          fallbackId: () => ctx.own.player?.getCurrentVideoItemId?.() || null,
           probeNowPlayingId: () => probeNowPlayingItemId(userId)
         }),
         onSkipped: autoSkipToast,
@@ -387,15 +419,14 @@
   });
   JE.initializeAutoSkipObserver = () => {
     if (!currentUserId()) return;
-    const video = JE.internals?.player?.getVideo?.();
+    const video = ctx.own.player?.getVideo?.();
     if (!video) return;
     autoSkipEngine().attach(video);
   };
   JE.stopAutoSkip = () => {
     _engine?.detach();
   };
-  JE.internals = JE.internals || {};
-  JE.internals.autoSkip = {
+  ctx.own.autoSkip = {
     TICKS_PER_SECOND,
     MIN_SEGMENT_TICKS,
     createAutoSkipEngine,

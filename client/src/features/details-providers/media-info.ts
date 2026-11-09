@@ -1,5 +1,5 @@
 /** Details-page media-info chips: watch progress, file size and audio languages. */
-import { api, bridge, currentUserId, serverId } from './host';
+import { api, bridge, currentUserId, detailsContext, serverId } from './host';
 import type { ChipSelection, DetailsFeatures, MediaInfoBridge, MediaLanguage, VisitHandle } from './host';
 import { lookupItem } from './page';
 import { decodeDetailsItem, field, isRecord, list, num, str } from './wire';
@@ -9,8 +9,8 @@ import type { ItemStats, WatchProgress } from './media-info-domain';
 import { navigateRoute, tagListRoute } from './links';
 
 const JE = bridge<MediaInfoBridge>('Media info chips');
-const internals = JE.internals ??= {};
-const internal: DetailsFeatures = internals.features ??= {};
+const ctx = detailsContext(JE);
+const internal: DetailsFeatures = ctx.own.features ??= {};
 
 const HOUR = 60 * 60 * 1000;
 const WATCHPROGRESS_CACHE_TTL = HOUR;

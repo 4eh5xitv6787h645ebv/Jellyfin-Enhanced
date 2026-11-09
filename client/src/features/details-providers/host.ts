@@ -1,4 +1,4 @@
-import type { SaveOptions } from '../../host/context';
+import { featureContext, type FeatureContext, type SaveOptions } from '../../host/context';
 import type { BootstrapArrInstance, BootstrapPrivateConfig, BootstrapPublicConfig, ElsewhereSettings } from '../../contracts/generated';
 
 /**
@@ -161,7 +161,6 @@ export interface PeopleTagsInternals {
 }
 export interface DetailsInternals { features?: DetailsFeatures; peopleTags?: PeopleTagsInternals }
 export interface MediaInfoBridge {
-    internals?: DetailsInternals;
     session?: DetailsSession;
     currentSettings?: DisplaySettings;
     saveUserSettings?(file: 'settings.json', settings: DisplaySettings): unknown;
@@ -172,9 +171,7 @@ export interface MediaInfoBridge {
 }
 export interface SpoilerStateProbe { hasAnyState?(): boolean }
 export interface ReleaseBridge {
-    internals?: DetailsInternals;
     session?: DetailsSession;
-    spoilerBlur?: SpoilerStateProbe;
     pluginConfig?: Pub<'DEFAULT_REGION'>;
     helpers?: ItemCacheHelper & { addCSS?(id: string, css: string): void };
     core?: { api?: { manager?: ConcurrencyManager } };
@@ -194,9 +191,8 @@ export interface HiddenContentFacade {
     confirmAndHide(item: HiddenItemData, onHidden?: () => void, options?: { showEpisodeChoice?: boolean; onChooseShow?(): void | Promise<void> }): void;
 }
 export interface DetailsPageBridge {
+    /** Read only for media-tags' `peopleTags` slot (details-page.ts); its own `features` slot goes through the context. */
     internals?: DetailsInternals;
-    hiddenContent?: HiddenContentFacade;
-    spoilerBlur?: { addSpoilerBlurButton?(itemId: string, page: Element, itemType: string): void };
     helpers: ItemCacheHelper & DebounceHelper & BodyObserverHelper & ViewPageHelper;
     core: { navigation: DetailsNavigation };
     session?: DetailsSession;
@@ -228,7 +224,6 @@ export interface SpoilerGuardProbe {
 export interface ReviewsBridge {
     pluginConfig: Pub<'ShowReviews' | 'TmdbEnabled' | 'ShowUserReviews' | 'ShowAnilistReviews' | 'SpoilerBlurEnabled'
         | 'SpoilerStripReviews' | 'ReviewTranslationEnabled' | 'ReviewTranslationServer'>;
-    spoilerBlur?: SpoilerGuardProbe;
     core: { api: PluginApi & FetchApi };
     helpers: ItemCacheHelper & ViewPageHelper & { createExternalLink: ExternalLinkFactory };
     session?: DetailsSession;
@@ -239,8 +234,25 @@ export interface ReviewsBridge {
     currentSettings?: DisplaySettings;
     loadSettings?(): DisplaySettings;
     saveUserSettings?(file: 'settings.json', settings: DisplaySettings): unknown;
-    invalidateUserReviewTagCache?(tmdbKey: string): void;
     initializeReviewsScript?: () => void;
+}
+
+/** details-providers' own `JE.internals` slot (frontend.md §2.3; hidden-content co-owns `features`, internals-owners.json). */
+export type DetailsOwn = Pick<DetailsInternals, 'features'>;
+/** Other features' facades details-providers reads, read at call time (their owners may load later). */
+export interface DetailsPeers {
+    hiddenContent: HiddenContentFacade;
+    spoilerBlur: SpoilerStateProbe & SpoilerGuardProbe & { addSpoilerBlurButton?(itemId: string, page: Element, itemType: string): void };
+    invalidateUserReviewTagCache(tmdbKey: string): void;
+}
+export type DetailsContext<Core extends object> = FeatureContext<DetailsOwn, DetailsPeers, Core>;
+/** The feature context around an entry's bridge slice. Its own facades stay on that bridge. */
+export function detailsContext<Core extends object>(JE: Core): DetailsContext<Core> {
+    const holder = JE as { internals?: DetailsInternals };
+    return featureContext<DetailsOwn, DetailsPeers, Core>('details-providers', JE, {
+        internalSlots: ['features'],
+        internalsObject: () => holder.internals ??= {},
+    });
 }
 
 export interface AwardsBridge {

@@ -1,4 +1,4 @@
-import { captureIdentity, hostClient, isSameIdentity, type ChromeSession, type IdentitySnapshot, type BodyMutationCallback, type Unsubscribe } from './host';
+import { captureIdentity, hostClient, isSameIdentity, type ChromeSession, type EventsContext, type IdentitySnapshot, type BodyMutationCallback, type Unsubscribe } from './host';
 
 /** Home surface context captured on a card's menu trigger for the next action sheet. */
 export interface RemoveContext { itemId: string; surface: unknown; card: Element; ts: number }
@@ -21,7 +21,6 @@ export interface EventsBridge {
     IconName?: { LINK?: unknown };
     isVideoPage(): boolean;
     showEnhancedPanel?(): void;
-    bookmarks?: { showModal?(mode: string): void };
     cycleAspect?(): void; togglePlaybackInfo?(): void;
     cycleSubtitleTrack?(): void; cycleAudioTrack?(): void;
     resetPlaybackSpeed?(): void; adjustPlaybackSpeed?(direction: 'increase' | 'decrease'): void;
@@ -73,7 +72,8 @@ export function canonicalShortcuts(active: Record<string, unknown> | undefined):
 const isTyping = (): boolean => ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName ?? '');
 const SHEET_SELECTOR = '.actionSheet, .actionSheetScroller, .dialogContainer';
 
-export function createEvents(JE: EventsBridge) {
+export function createEvents(ctx: EventsContext) {
+    const JE = ctx.core;
     let installed = false;
 
     /** Always active: opens the panel unless it is open or the user is typing. */
@@ -90,7 +90,8 @@ export function createEvents(JE: EventsBridge) {
     function playerActions(event: KeyboardEvent): Array<[string, () => void]> {
         return [
             ['BookmarkCurrentTime', () => {
-                if (JE.bookmarks?.showModal) JE.bookmarks.showModal('add');
+                const bookmarks = ctx.peer('bookmarks');
+                if (bookmarks?.showModal) bookmarks.showModal('add');
                 else console.warn('🪼 Jellyfin Enhanced: New bookmark system not loaded, using fallback');
             }],
             ['CycleAspectRatio', () => JE.cycleAspect?.()],

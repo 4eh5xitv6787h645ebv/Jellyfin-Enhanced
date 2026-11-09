@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/details-providers/host.ts
   function hostWindow() {
     return window;
@@ -26,6 +54,13 @@
   }
   function dashboard() {
     return hostWindow().Dashboard;
+  }
+  function detailsContext(JE2) {
+    const holder = JE2;
+    return featureContext("details-providers", JE2, {
+      internalSlots: ["features"],
+      internalsObject: () => holder.internals ?? (holder.internals = {})
+    });
   }
 
   // client/src/features/details-providers/wire.ts
@@ -216,8 +251,9 @@
 
   // client/src/features/details-providers/media-info.ts
   var JE = bridge("Media info chips");
-  var internals = JE.internals ?? (JE.internals = {});
-  var internal = internals.features ?? (internals.features = {});
+  var ctx = detailsContext(JE);
+  var _a;
+  var internal = (_a = ctx.own).features ?? (_a.features = {});
   var HOUR = 60 * 60 * 1e3;
   var WATCHPROGRESS_CACHE_TTL = HOUR;
   var FILESIZE_CACHE_TTL = HOUR;

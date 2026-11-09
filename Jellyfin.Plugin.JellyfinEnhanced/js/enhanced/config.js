@@ -1,11 +1,41 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/settings/host.ts
   function settingsHost() {
-    const host2 = window;
-    if (!host2.JellyfinEnhanced) throw new Error("Settings require Jellyfin Enhanced");
-    return host2;
+    const host = window;
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error("Settings require Jellyfin Enhanced");
+    const ctx2 = featureContext("settings", JE, {});
+    return { JE, ctx: ctx2, apiClient: () => host.ApiClient };
   }
 
   // client/src/features/settings/state.ts
@@ -5154,7 +5184,7 @@
   function isReceipt(value) {
     return validateSchema(value, bootstrapSchema.$defs.SettingsSaveReceipt, bootstrapSchema.$defs);
   }
-  function installSave(JE, getClient) {
+  function installSave(JE, getClient, ctx2) {
     const _lastSavedJson = {};
     const acknowledgedSettings = /* @__PURE__ */ new WeakMap();
     const _saveChain = {};
@@ -5208,8 +5238,9 @@
         failureCurrent = current;
         const serialize = () => {
           let source = settings;
-          if (fileName === "settings.json" && isCurrentSettings && settings.statusTagsEnabled && typeof JE.getStatusDateContext === "function") {
-            const context = JE.getStatusDateContext();
+          const getStatusDateContext = fileName === "settings.json" && isCurrentSettings && settings.statusTagsEnabled ? ctx2.peer("getStatusDateContext") : void 0;
+          if (typeof getStatusDateContext === "function") {
+            const context = getStatusDateContext();
             source = { ...settings, nativePosterDateLocale: context.locale, nativePosterTimeZone: context.timeZone };
           }
           let dataToSave = source;
@@ -5286,12 +5317,11 @@
   }
 
   // client/src/features/settings/entry.ts
-  var host = settingsHost();
-  var je = host.JellyfinEnhanced;
+  var { JE: je, ctx, apiClient } = settingsHost();
   installState(je);
   installInheritance(je);
   je.loadSettings = () => loadSettings(je);
-  installSave(je, () => host.ApiClient);
+  installSave(je, apiClient, ctx);
 })();
 })();
 //# sourceMappingURL=config.js.map

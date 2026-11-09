@@ -1,4 +1,4 @@
-import { tagRuntimeHost } from '../../host';
+import { mediaTagsContext } from '../../host';
 import { createAgeRatingTags } from './ageratingtags';
 
-createAgeRatingTags(tagRuntimeHost());
+createAgeRatingTags(mediaTagsContext());

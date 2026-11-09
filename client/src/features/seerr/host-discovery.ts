@@ -3,6 +3,7 @@ import type {
     ScrollOptions, ScrollState, SeerrResult
 } from './discovery/types';
 import type { RecommendationsFacade, RecommendationsStage } from './recommendations/types';
+import { featureContext, type FeatureContext } from '../../host/context';
 
 type DiscoverySwitches = { readonly [K in DiscoveryConfigKey]?: boolean };
 export interface DiscoveryConfig extends DiscoverySwitches {
@@ -77,7 +78,6 @@ export interface SeerrDiscoveryHost {
     requestManager?: DiscoveryRequestManager;
     jellyseerrAPI?: DiscoveryApi;
     jellyseerrUI?: DiscoveryCardUi;
-    hiddenContent?: { filterJellyseerrResults(results: SeerrResult[], surface: string): SeerrResult[] };
     seerrStatus?: { readonly MEDIA: { readonly BLOCKED: number } };
     seamlessScroll?: DiscoveryScrollEngine;
     helpers?: DiscoveryHelpers;
@@ -106,6 +106,25 @@ export function discoveryHost(): { JE: SeerrDiscoveryHost; api(): DiscoveryApiCl
     const host: DiscoveryWindow = window;
     const JE = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
     return { JE, api: () => host.ApiClient };
+}
+
+/** The discovery group's own `JE.internals` slot (frontend.md §2.3). Its `JE.<name>` facades stay on the typed bridge. */
+export type SeerrDiscoveryOwn = { recommendationsPage?: RecommendationsStage };
+/** Other features' facades the discovery group reads (published by their owners; optional, they may load later). */
+export interface SeerrDiscoveryPeers { hiddenContent: { filterJellyseerrResults(results: SeerrResult[], surface: string): SeerrResult[] } }
+export type SeerrDiscoveryContext = FeatureContext<SeerrDiscoveryOwn, SeerrDiscoveryPeers, SeerrDiscoveryHost>;
+const discoveryContexts = new WeakMap<SeerrDiscoveryHost, SeerrDiscoveryContext>();
+/** The feature context around a discovery-group bridge, one per bridge object. */
+export function discoveryContext(JE: SeerrDiscoveryHost): SeerrDiscoveryContext {
+    let ctx = discoveryContexts.get(JE);
+    if (!ctx) {
+        ctx = featureContext<SeerrDiscoveryOwn, SeerrDiscoveryPeers, SeerrDiscoveryHost>('seerr', JE, {
+            internalSlots: ['recommendationsPage'],
+            internalsObject: () => JE.internals ?? (JE.internals = {}),
+        });
+        discoveryContexts.set(JE, ctx);
+    }
+    return ctx;
 }
 
 /** Consumers read the facade at call time: it is the published owner, and it may be replaced. */

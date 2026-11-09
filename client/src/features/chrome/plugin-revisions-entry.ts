@@ -1,5 +1,5 @@
-import { chromeBridge } from './host';
+import { chromeBridge, chromeContext } from './host';
 import { initializePluginRevisions, type PluginRevisionsBridge } from './plugin-revisions';
 
 const JE = chromeBridge<PluginRevisionsBridge>();
-JE.initializePluginRevisions = () => initializePluginRevisions(JE);
+chromeContext(JE, ['initializePluginRevisions']).own.initializePluginRevisions = () => initializePluginRevisions(JE);

@@ -1,6 +1,6 @@
 import { own } from './ownership';
 import { spoilerHost } from './host';
-const { JE, internal } = spoilerHost();
+const { JE, internal, ctx } = spoilerHost();
 const owner = own(JE, 'detail-button', true);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';
 
@@ -67,7 +67,7 @@ const owner = own(JE, 'detail-button', true);
             }
             JE.toast?.(JE.t(key));
 
-            try { void JE.tagPipeline?.invalidateServerCache?.(); }
+            try { void ctx.peer('tagPipeline')?.invalidateServerCache?.(); }
             catch (e) { console.warn(`${logPrefix} tag cache invalidation failed:`, e); }
 
             try {

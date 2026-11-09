@@ -1,7 +1,38 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/chrome/host.ts
+  function chromeContext(JE2, facades) {
+    return featureContext("chrome", JE2, { facades });
+  }
   function chromeBridge() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new Error("Jellyfin Enhanced must initialize before chrome modules");
@@ -1132,7 +1163,7 @@
   // client/src/features/chrome/active-streams-entry.ts
   var JE = chromeBridge();
   var streams = createActiveStreams(JE, () => hostClient());
-  JE.activeStreams = { initialize: streams.initialize, destroy: streams.destroy };
+  chromeContext(JE, ["activeStreams"]).own.activeStreams = { initialize: streams.initialize, destroy: streams.destroy };
   streams.bindSession();
 })();
 })();

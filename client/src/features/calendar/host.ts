@@ -1,4 +1,5 @@
 import type { CalendarLifetime } from './lifetime';
+import { featureContext, type FeatureContext } from '../../host/context';
 import type { CalendarEvent, CalendarInternal, CalendarFacade } from './types';
 interface Settings { calendarDefaultViewMode?: string; calendarDisplayMode?: string }
 interface Lifecycle {
@@ -20,7 +21,6 @@ export interface CalendarHost {
  session?: {userScopedKey(base: string): string; getEpoch(): number; isCurrent(epoch: number): boolean; getServerId?(): string | null; getUserId?(): string | null; createLease?(): {isCurrent(): boolean}; onUserChange(name: string, callback: () => void): (() => void) | void};
  t(key: string): string; escapeHtml(value: string | undefined): string; toast?(message: string): void;
  cdn: {selfhst(path: string): string}; themer?: {getThemeVariables(): {primaryAccent?: string}};
- hiddenContent?: {filterCalendarEvents(events: CalendarEvent[]): CalendarEvent[]};
  helpers: {escHtml?(value: unknown): string; onNavigate?(callback: () => void): () => void;
  onSidebarRebuilt(id: string, selector: string, callback: () => void): () => void;
  isActiveTabContainer(element: HTMLElement): boolean;
@@ -31,6 +31,18 @@ export interface CalendarHost {
  lifecycle: {register(name: string): Lifecycle}};
 }
 interface HostWindow extends Window { JellyfinEnhanced?: CalendarHost; ApiClient?: {serverAddress?(): string; getImageUrl(id: string, options: {type: string; quality: number}): string} }
+/**
+ * calendar's own slots (frontend.md §2.3): its JE.internals slots and the initializeCalendarPage facade. The
+ * `JE.calendarPage` facade stays on the typed bridge: it has the same name as the `JE.internals.calendarPage` slot,
+ * and `own` is a single namespace (featureContext throws on a duplicate key).
+ */
+export type CalendarOwn = Pick<CalendarHost, 'initializeCalendarPage'> & CalendarHost['internals'];
+/**
+ * The peer facade calendar reads: hidden-content's `JE.hiddenContent` (published by hidden-content only). Declared
+ * here with the one member calendar calls, because hidden-content/public-api.ts does not export that facade's type.
+ */
+export interface CalendarPeers { hiddenContent: {filterCalendarEvents(events: CalendarEvent[]): CalendarEvent[]} }
+export type CalendarContext = FeatureContext<CalendarOwn, CalendarPeers, CalendarHost>;
 /** Only this adapter touches the legacy namespace. Each ordered entry fills its declared facade slots. */
 export function calendarHost() {
  const host: HostWindow = window;
@@ -41,5 +53,10 @@ export function calendarHost() {
  // The production loader establishes data -> render -> actions -> init order.
  // This assertion describes that explicit staged facade, not an untrusted response.
  const P = partial as CalendarInternal;
- return {JE, host, P};
+ const ctx: CalendarContext = featureContext<CalendarOwn, CalendarPeers, CalendarHost>('calendar', JE, {
+  facades: ['initializeCalendarPage'],
+  internalSlots: ['calendarLifetime', 'calendarPage'],
+  internalsObject: () => JE.internals ||= {},
+ });
+ return {JE, ctx, host, P};
 }

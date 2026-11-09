@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/hidden-content/host.ts
   var browser = window;
   if (!browser.JellyfinEnhanced || !browser.ApiClient) throw new Error("Hidden Content host unavailable");
@@ -21,6 +49,13 @@
       if (value === void 0) throw new Error(`Missing hidden-content loader dependency: ${key}`);
       return value;
     } });
+  }
+  function hiddenContentContext(JE) {
+    return featureContext("hidden-content", JE, {
+      internalSlots: ["hiddenContent", "hiddenContentPage", "hiddenContentRuntime", "features"],
+      // Same expression as registry() and runtime() below.
+      internalsObject: () => JE.internals ?? (JE.internals = {})
+    });
   }
   function runtime(JE) {
     const internals = JE.internals ?? (JE.internals = {});
@@ -100,6 +135,7 @@
     if (!installOnce(JE, "features-remove-home")) return;
     "use strict";
     const internal = registry(JE, "features");
+    const featureCtx = hiddenContentContext(JE);
     const showNotification = (message, type = "info") => {
       try {
         if (host.Dashboard?.alert) {
@@ -316,7 +352,7 @@
         showNotification(JE.t("remove_continue_watching_error"), "error");
         return false;
       }
-      const intent = JE.internals?.hiddenContent?.captureItemIntent?.(itemId);
+      const intent = featureCtx.own.hiddenContent?.captureItemIntent?.(itemId);
       try {
         await JE.hiddenContent?.flushPendingSave?.();
       } catch (e) {

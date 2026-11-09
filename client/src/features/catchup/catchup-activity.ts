@@ -1,6 +1,6 @@
 import {readAdmin, readEvents, readSummary} from './model';
 import { catchupHost } from './host';
-import { errorMessage, currentLease } from '../activity/host';
+import { errorMessage, currentLease } from './wire';
 /**
  * @file Catch Up admin activity panel: a feed and a summary of who swiped what.
  * Docked next to the deck on wide screens, a full-screen dialog otherwise. Only shown to
@@ -8,13 +8,13 @@ import { errorMessage, currentLease } from '../activity/host';
  */
 (function () {
   'use strict';
-  const { JE: candidate, getApi } = catchupHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context, getApi } = catchupHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
 
 
   if (!JE?.pluginConfig?.CatchUpEnabled) return;
-  const runtime = JE.internals.catchUp;
+  const runtime = ctx.own.catchUp;
   if (!runtime) return;
   const S = runtime;
   const { tt, h, icon } = S;

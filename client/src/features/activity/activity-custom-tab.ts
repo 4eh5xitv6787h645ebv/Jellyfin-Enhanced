@@ -17,9 +17,9 @@ import type { ActivityHost } from './host';
 
 (function () {
   'use strict';
-  const { JE: candidate } = activityHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context } = activityHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
 
   if (!JE?.pluginConfig?.ActivityFeedEnabled) {
     return;
@@ -65,7 +65,7 @@ import type { ActivityHost } from './host';
     var check = setInterval(function () {
       if (++attempts > 300) { clearInterval(check); return; }
       
-      if (JE?.activityPage) {
+      if (ctx.own.activityPage) {
         clearInterval(check);
         callback(JE);
       }
@@ -104,8 +104,8 @@ import type { ActivityHost } from './host';
     container.textContent = '';
     container.appendChild(child);
 
-    JE.activityPage?.injectStyles();
-    JE.activityPage?.renderForCustomTab(child);
+    ctx.own.activityPage?.injectStyles();
+    ctx.own.activityPage?.renderForCustomTab(child);
 
     lastMountedContainer = container;
   }
@@ -124,7 +124,7 @@ import type { ActivityHost } from './host';
 
       if (!onHome) {
         if (wasOnHomePage) {
-          JE.activityPage?.stopPolling?.();
+          ctx.own.activityPage?.stopPolling?.();
           lastMountedContainer = null;
         }
         wasOnHomePage = false;
@@ -137,7 +137,7 @@ import type { ActivityHost } from './host';
       var container = findActiveContainer();
       if (!container) {
         if (lastMountedContainer) {
-          JE.activityPage?.stopPolling?.();
+          ctx.own.activityPage?.stopPolling?.();
         }
         lastMountedContainer = null;
         return;

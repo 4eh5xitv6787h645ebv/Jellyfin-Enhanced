@@ -1,15 +1,47 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/downloads/host.ts
   function downloadsHost() {
     var _a;
     const host = window;
     const JE = host.JellyfinEnhanced;
     if (!JE) throw new Error("Downloads loaded before Jellyfin Enhanced");
-    JE.internals || (JE.internals = {});
-    const P = (_a = JE.internals).requestsPage || (_a.requestsPage = {});
-    return { JE, P, host, getApi: () => {
+    const ctx = featureContext("downloads", JE, {
+      facades: ["downloadsPage", "initializeDownloadsPage"],
+      internalSlots: ["requestsPage"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+    const P = (_a = ctx.own).requestsPage || (_a.requestsPage = {});
+    return { JE, P, host, ctx, getApi: () => {
       if (!host.ApiClient) throw new Error("API client unavailable");
       return host.ApiClient;
     } };
@@ -119,7 +151,7 @@
 
   // client/src/features/downloads/render-helpers.ts
   function install(deps) {
-    const { JE, P, host, getApi } = deps;
+    const { JE, P, host, ctx, getApi } = deps;
     const life = runtime(deps);
     if (life.installed.has("render-helpers")) return;
     life.installed.add("render-helpers");
@@ -183,7 +215,8 @@
     }
     function getFilteredDownloads() {
       let filtered = state.downloads;
-      if (JE.hiddenContent) filtered = JE.hiddenContent.filterRequestItems(filtered);
+      const hiddenContent = ctx.peer("hiddenContent");
+      if (hiddenContent) filtered = hiddenContent.filterRequestItems(filtered);
       if (state.downloadsActiveTab !== "all") {
         filtered = filtered.filter((d) => d.status === state.downloadsActiveTab);
       }

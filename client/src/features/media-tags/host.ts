@@ -1,3 +1,4 @@
+import { featureContext, type FeatureContext } from '../../host/context';
 import type { Dom } from '../../core/dom/runtime';
 import type { Lifecycle } from '../../core/lifecycle';
 import type { Navigation } from '../../core/navigation';
@@ -153,6 +154,22 @@ export function tagRuntimeHost(): TagRuntimeBridge {
     const bridge = (host.JellyfinEnhanced ??= {}) as TagRuntimeBridge;
     bridge.core ??= {} as TagRuntimeCore;
     return bridge;
+}
+/** media-tags' own slots (frontend.md §2.3): its owner-only `JE.internals` slot (internals-owners.json). */
+export type MediaTagsOwn = Pick<TagRuntimeInternals, 'peopleTags'>;
+/**
+ * Other features' facades media-tags reads. `spoilerBlur` is spoiler-guard's; its public-api.ts exports no type
+ * for it yet, so the structural `SpoilerGuardFacade` above (only the members read here) types it.
+ */
+export interface MediaTagsPeers { spoilerBlur: SpoilerGuardFacade }
+export type MediaTagsContext = FeatureContext<MediaTagsOwn, MediaTagsPeers, TagRuntimeBridge>;
+/** The context the tag runtime modules get (step C3): `core` is the bridge `tagRuntimeHost()` returns. */
+export function mediaTagsContext(JE: TagRuntimeBridge = tagRuntimeHost()): MediaTagsContext {
+    return featureContext<MediaTagsOwn, MediaTagsPeers, TagRuntimeBridge>('media-tags', JE, {
+        internalSlots: ['peopleTags'],
+        // Same expression the modules used before (`JE.internals = JE.internals || {}`).
+        internalsObject: () => JE.internals = JE.internals || {},
+    });
 }
 /** ApiClient, resolved at each call: jellyfin-web replaces it on a server switch. */
 export function hasApiClient(): boolean {

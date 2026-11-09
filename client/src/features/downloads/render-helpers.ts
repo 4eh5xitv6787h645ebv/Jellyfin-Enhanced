@@ -3,7 +3,7 @@ import type { Dependencies, Item, Group } from "./types";
 
 import { runtime } from './runtime';
 export function install(deps: Dependencies) {
-  const {JE, P, host, getApi} = deps;
+  const {JE, P, host, ctx, getApi} = deps;
   const life = runtime(deps);
   if(life.installed.has('render-helpers'))return;
   life.installed.add('render-helpers');
@@ -94,7 +94,8 @@ export function install(deps: Dependencies) {
     let filtered = state.downloads;
 
     // Filter hidden content
-    if (JE.hiddenContent) filtered = JE.hiddenContent.filterRequestItems(filtered);
+    const hiddenContent = ctx.peer('hiddenContent');
+    if (hiddenContent) filtered = hiddenContent.filterRequestItems(filtered);
 
     // Filter by status tab
     if (state.downloadsActiveTab !== "all") {

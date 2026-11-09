@@ -2,6 +2,7 @@ import type { Session } from '../../core/session';
 import type { Lifecycle } from '../../core/lifecycle';
 import type { RequestOptions } from '../../core/api/types';
 import type { SpoilerBlurUserPrefs } from '../../contracts/generated';
+import { featureContext, type FeatureContext } from '../../host/context';
 export type Prefs = Partial<SpoilerBlurUserPrefs> & Record<string, boolean | null | undefined>;
 export interface MutationResult { promoted?: string; removedFrom?: string; jellyfinId?: string; removed?: boolean; prefs?: Prefs }
 export interface SettingsContext { presetBoxBackground: string; toggleAccentColor: string; help: Element; onClose?(callback: () => void): void; resetAutoCloseTimer(): void }
@@ -54,17 +55,28 @@ export interface SpoilerHost {
  pluginConfig?: { SpoilerBlurEnabled?: boolean; SpoilerBlurStrictRefresh?: boolean; SpoilerStripReviews?: boolean; SpoilerStripSeriesOverview?: boolean; SpoilerStripOverview?: boolean; SpoilerStripTags?: boolean; SpoilerStripChapters?: boolean; SpoilerStripTaglines?: boolean; SpoilerStripRatings?: boolean; SpoilerStripPremiereDate?: boolean; SpoilerReplaceTitle?: boolean; SpoilerStripCast?: boolean; SpoilerBlurTrickplay?: boolean; SpoilerAdvancedMode?: boolean };
  core: { lifecycle?: Lifecycle; api: { plugin(path: string, options?: RequestOptions): Promise<unknown>; manager?: { clearCacheMatching(pattern: string): void } }; ui: { injectCss(id: string, css: string): void } };
  takePrefetched?(key: 'SpoilerBlurSeries'): unknown;
- tagPipeline?: { clearProcessed?(): void; scheduleScan?(): void; invalidateServerCache?(): Promise<unknown> | void };
  t(key: string): string; escapeHtml?(value: string): string; toast?(value: string): void;
  icon(name: string): string; IconName: { BLUR_ON: string };
- jellyseerrMoreInfo?: { open?(id: string | number, type: string): Promise<unknown> };
  spoilerBlur?: Pick<SpoilerSurface, 'addSpoilerBlurButton' | 'isEnabledFor' | 'isMovieEnabledFor' | 'isMovieInScope' | 'isCollectionEnabledFor' | 'enableForSeries' | 'disableForSeries' | 'enableForMovie' | 'disableForMovie' | 'enableForCollection' | 'disableForCollection' | 'isTmdbEnabled' | 'enableForTmdb' | 'disableForTmdb' | 'hasAnyState' | 'whenLoaded' | 'isLoadOk' | 'isLoaded' | 'confirmDisableSpoiler' | 'getUserPrefs' | 'setUserPrefs'> & { init(): void };
 }
+/** spoiler-guard's own slots (frontend.md §2.3): the facade it publishes on JE and its JE.internals slot. */
+export type SpoilerOwn = Pick<SpoilerHost, 'spoilerBlur'> & NonNullable<SpoilerHost['internals']>;
+/** Other features' facades spoiler-guard reads, read at call time (their owners load later or not at all). */
+export interface SpoilerPeers {
+ tagPipeline: { clearProcessed?(): void; scheduleScan?(): void; invalidateServerCache?(): Promise<unknown> | void };
+ jellyseerrMoreInfo: { open?(id: string | number, type: string): Promise<unknown> };
+}
+export type SpoilerContext = FeatureContext<SpoilerOwn, SpoilerPeers, SpoilerHost>;
 export function spoilerHost() {
  const host: Window & { JellyfinEnhanced?: SpoilerHost; ApiClient?: { getCurrentUserId(): string | null }; Dashboard?: { confirm(html: string, title: string, callback: (ok: boolean) => void): void } } = window;
  const JE = host.JellyfinEnhanced;
  if (!JE) throw new Error('Spoiler Guard loaded before Jellyfin Enhanced');
- const registry = (JE.internals ??= {}).spoilerGuard ??= {};
+ const ctx: SpoilerContext = featureContext<SpoilerOwn, SpoilerPeers, SpoilerHost>('spoiler-guard', JE, {
+  facades: ['spoilerBlur'],
+  internalSlots: ['spoilerGuard'],
+  internalsObject: () => JE.internals ??= {},
+ });
+ const registry = ctx.own.spoilerGuard ??= {};
  function required<K extends keyof SpoilerSurface>(key: K): NonNullable<Partial<SpoilerSurface>[K]> {
    const value = registry[key];
    if (value == null) throw new Error(`Spoiler Guard loader dependency missing: ${key}`);
@@ -114,5 +126,5 @@ export function spoilerHost() {
   get wireSettings() { return required("wireSettings"); }, set wireSettings(value) { registry.wireSettings = value; },
  };
  const ApiClient = { getCurrentUserId: () => host.ApiClient?.getCurrentUserId() ?? null };
- return { JE, internal, ApiClient, host };
+ return { JE, internal, ApiClient, host, ctx };
 }

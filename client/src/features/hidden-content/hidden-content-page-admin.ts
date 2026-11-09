@@ -3,7 +3,7 @@ import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } f
 import { lease } from './host';
 import { record, decodeLibraryItem, decodeSeerrItem, decodeSeerrSearch, type HiddenItem, type ListedItem } from './model';
 import type { PageState, Group, SearchResult, PageSurface } from './page-model';
-import { host, registry, type HiddenHost } from './host';
+import { hiddenContentContext, host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content Page — admin cross-user view: user resolution, the
  * user filter, theming helpers, unhide routing, and the add-items modal.
@@ -15,6 +15,7 @@ import { host, registry, type HiddenHost } from './host';
 
   const JE = host.JellyfinEnhanced;
   const internal = registry(JE, 'hiddenContentPage');
+  const featureCtx = hiddenContentContext(JE);
 
   const { state, POSTER_MAX_WIDTH } = internal;
   // Late-bound cross-module reference (defined in hidden-content-page-render.js).
@@ -445,8 +446,9 @@ import { host, registry, type HiddenHost } from './host';
         userId: getApi().getCurrentUserId(), searchTerm: term, IncludeItemTypes: 'Movie,Series',
         Recursive: true, Limit: 24, Fields: 'ProviderIds', ImageTypeLimit: 1, EnableImageTypes: 'Primary',
       })).then(res => {const items=record(res).Items;if(!Array.isArray(items))throw new Error('Invalid item list');return items.map(decodeLibraryItem);}).catch(() => []);
-      const seerrP = (JE.jellyseerrAPI && JE.jellyseerrAPI.search)
-        ? JE.jellyseerrAPI.search(term).then(decodeSeerrSearch).then(res => res.results).catch(() => [])
+      const seerrApi = featureCtx.peer('jellyseerrAPI');
+      const seerrP = (seerrApi && seerrApi.search)
+        ? seerrApi.search(term).then(decodeSeerrSearch).then(res => res.results).catch(() => [])
         : Promise.resolve([]);
 
       const [libItems, seerrItems] = await Promise.all([libP, seerrP]);

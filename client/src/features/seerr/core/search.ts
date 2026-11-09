@@ -1,4 +1,4 @@
-import type { Deduplicator, ScrollHint, ScrollState, SeerrCoreHost } from '../host-core';
+import { seerrCoreContext, type Deduplicator, type ScrollHint, type ScrollState, type SeerrCoreHost } from '../host-core';
 import type { SeerrApiFacade, SeerrUiFacade } from './contract';
 import { parseItemAttribute } from './decode';
 import {
@@ -31,6 +31,7 @@ interface CollectionBatch { results: SeerrMediaItem[]; query: string; rowId: num
 export function installSearch(host: SeerrCoreHost): void {
     const { JE, document, window } = host;
     if (!firstInstall(JE, 'search')) return;
+    const seerr = seerrCoreContext(JE);
     let initialized = false;
 
     JE.initializeJellyseerrScript = function initializeJellyseerrScript(): void {
@@ -105,7 +106,10 @@ export function installSearch(host: SeerrCoreHost): void {
             return input instanceof HTMLInputElement ? input : null;
         };
         const updateIcon = () => ui.updateJellyseerrIcon?.(isJellyseerrActive, jellyseerrUserFound, isJellyseerrOnlyMode, toggleJellyseerrOnlyMode);
-        const hidden = <T>(items: T[]): T[] => JE.hiddenContent?.filterJellyseerrResults ? JE.hiddenContent.filterJellyseerrResults(items, 'search') : items;
+        const hidden = <T>(items: T[]): T[] => {
+            const hiddenContent = seerr.peer('hiddenContent');
+            return hiddenContent?.filterJellyseerrResults ? hiddenContent.filterJellyseerrResults(items, 'search') : items;
+        };
         const abortSignal = (): AbortSignal | null => JE.requestManager?.getAbortSignal?.('jellyseerr-search') || null;
         const createCard = (item: SeerrMediaItem) => ui.createJellyseerrCard?.(item, isJellyseerrActive, jellyseerrUserFound) ?? null;
 

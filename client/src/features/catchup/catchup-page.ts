@@ -5,13 +5,13 @@ import { catchupHost } from './host';
  */
 (function () {
   'use strict';
-  const { JE: candidate } = catchupHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context } = catchupHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
 
 
   if (!JE?.pluginConfig?.CatchUpEnabled) return;
-  const runtime = JE.internals.catchUp;
+  const runtime = ctx.own.catchUp;
   if (!runtime) return;
   const S = runtime;
 
@@ -38,5 +38,5 @@ import { catchupHost } from './host';
     activityModule!.mount(root, deck.headActions).catch((e) => console.warn(`${S.LOG} activity panel unavailable:`, e));
   }
 
-  JE.catchUpPage = { injectStyles, renderPage };
+  ctx.own.catchUpPage = { injectStyles, renderPage };
 })();

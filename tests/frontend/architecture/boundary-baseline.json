@@ -7,56 +7,8 @@
   "client/src/core/lifecycle-entry.ts": {
     "raw-global JellyfinEnhanced": 1
   },
-  "client/src/features/calendar/calendar-custom-tab.ts": {
-    "internals calendarPage": 1
-  },
-  "client/src/features/calendar/lifetime.ts": {
-    "internals calendarLifetime": 1,
-    "internals calendarPage": 3
-  },
-  "client/src/features/catchup/catchup-activity.ts": {
-    "import client/src/features/activity/host.ts": 1,
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/catchup-core.ts": {
-    "import client/src/features/activity/host.ts": 2,
-    "internals *": 2,
-    "internals catchUp": 2
-  },
-  "client/src/features/catchup/catchup-custom-tab.ts": {
-    "internals catchUp": 2
-  },
-  "client/src/features/catchup/catchup-deck.ts": {
-    "import client/src/features/activity/host.ts": 1,
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/catchup-page.ts": {
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/catchup-styles.ts": {
-    "internals catchUp": 1
-  },
-  "client/src/features/catchup/model.ts": {
-    "import client/src/features/activity/host.ts": 1
-  },
-  "client/src/features/catchup/types.ts": {
-    "import client/src/features/activity/host.ts": 1
-  },
-  "client/src/features/chrome/events-entry.ts": {
-    "internals *": 2,
-    "internals canonicalCombo": 1
-  },
   "client/src/features/details-providers/details-page.ts": {
     "internals *": 1
-  },
-  "client/src/features/details-providers/media-info.ts": {
-    "internals *": 1
-  },
-  "client/src/features/details-providers/release-dates.ts": {
-    "internals *": 1
-  },
-  "client/src/features/hidden-content/features-remove-home.ts": {
-    "internals hiddenContent": 1
   },
   "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts": {
     "import client/src/features/settings-panel/host.ts": 1
@@ -91,41 +43,8 @@
   "client/src/features/media-tags/settings/ui-panel-tag-preview.ts": {
     "import client/src/features/settings-panel/host.ts": 1
   },
-  "client/src/features/media-tags/types/people/peopletags.ts": {
-    "internals *": 2,
-    "internals peopleTags": 1
-  },
-  "client/src/features/player/auto-skip.ts": {
-    "internals *": 2,
-    "internals autoSkip": 1,
-    "internals player": 2
-  },
-  "client/src/features/player/now-playing.ts": {
-    "internals *": 2,
-    "internals nowPlaying": 1,
-    "internals player": 1
-  },
-  "client/src/features/player/pausescreen.ts": {
-    "internals nowPlaying": 1
-  },
-  "client/src/features/player/playback-rating-badge.ts": {
-    "internals nowPlaying": 1
-  },
-  "client/src/features/player/playback.ts": {
-    "internals *": 2,
-    "internals player": 2
-  },
-  "client/src/features/seerr/core/api.ts": {
-    "raw-global JellyfinEnhanced": 2
-  },
-  "client/src/features/seerr/core/runtime.ts": {
-    "internals *": 1
-  },
   "client/src/features/seerr/details/moreinfo/actions-entry.ts": {
     "internals spoilerGuard": 1
-  },
-  "client/src/features/seerr/recommendations/stage.ts": {
-    "internals *": 2
   },
   "client/src/features/settings-panel/ui-panel-shortcut-editor.ts": {
     "internals canonicalCombo": 1
@@ -135,9 +54,6 @@
   },
   "client/src/features/settings-panel/ui-panel.ts": {
     "internals spoilerGuard": 1
-  },
-  "client/src/features/settings/entry.ts": {
-    "raw-global JellyfinEnhanced": 1
   },
   "client/src/host/admin-config-host.ts": {
     "raw-global JellyfinEnhanced": 1

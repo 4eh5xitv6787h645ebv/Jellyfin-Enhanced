@@ -6,13 +6,13 @@ import { catchupHost } from './host';
  */
 (function () {
   'use strict';
-  const { JE: candidate } = catchupHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context } = catchupHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
 
 
   if (!JE?.pluginConfig?.CatchUpEnabled) return;
-  const internal = JE.internals.catchUp;
+  const internal = ctx.own.catchUp;
   if(!internal)return;
 
   const CSS = `

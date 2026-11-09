@@ -11,9 +11,9 @@ import type { CatchHost } from './host';
 
 (function () {
   'use strict';
-  const { JE: candidate } = catchupHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context } = catchupHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
 
   if (!JE?.pluginConfig?.CatchUpEnabled) {
     return;
@@ -59,7 +59,7 @@ import type { CatchHost } from './host';
     var check = setInterval(function () {
       if (++attempts > 300) { clearInterval(check); return; }
       
-      if (JE?.catchUpPage) {
+      if (ctx.own.catchUpPage) {
         clearInterval(check);
         callback(JE);
       }
@@ -95,8 +95,8 @@ import type { CatchHost } from './host';
     container.textContent = '';
     container.appendChild(child);
 
-    JE.catchUpPage?.injectStyles();
-    JE.catchUpPage?.renderPage(child);
+    ctx.own.catchUpPage?.injectStyles();
+    ctx.own.catchUpPage?.renderPage(child);
 
     lastMountedContainer = container;
   }
@@ -114,7 +114,7 @@ import type { CatchHost } from './host';
 
       if (!onHome) {
         if (wasOnHomePage) {
-          JE.internals.catchUp?.deck?.dispose();
+          ctx.own.catchUp?.deck?.dispose();
           lastMountedContainer = null;
         }
         wasOnHomePage = false;
@@ -126,7 +126,7 @@ import type { CatchHost } from './host';
 
       var container = findActiveContainer();
       if (!container) {
-        if (lastMountedContainer) {JE.internals.catchUp?.deck?.dispose();}
+        if (lastMountedContainer) {ctx.own.catchUp?.deck?.dispose();}
         lastMountedContainer = null;
         return;
       }

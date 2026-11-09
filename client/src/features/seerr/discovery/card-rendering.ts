@@ -1,4 +1,4 @@
-import type { SeerrDiscoveryHost } from '../host-discovery';
+import { discoveryContext, type SeerrDiscoveryHost } from '../host-discovery';
 import { mediaInfoOf, selectCardResults } from './domain';
 import type { AppendCardsOptions, AppendSliceOptions, SeerrResult } from './types';
 
@@ -30,7 +30,8 @@ export function createCardRendering(JE: SeerrDiscoveryHost) {
 
     /** The results a batch renders cards for: hidden, duplicate and excluded items are dropped. */
     function filterCardResults(results: SeerrResult[]): SeerrResult[] {
-        const visible = JE.hiddenContent ? JE.hiddenContent.filterJellyseerrResults(results, 'discovery') : results;
+        const hiddenContent = discoveryContext(JE).peer('hiddenContent');
+        const visible = hiddenContent ? hiddenContent.filterJellyseerrResults(results, 'discovery') : results;
         return selectCardResults(visible, {
             excludeLibrary: JE.pluginConfig?.JellyseerrExcludeLibraryItems === true,
             excludeBlocklisted: JE.pluginConfig?.JellyseerrExcludeBlocklistedItems === true,

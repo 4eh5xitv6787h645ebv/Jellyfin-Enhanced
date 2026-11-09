@@ -1,4 +1,4 @@
-import { tagRuntimeHost } from '../../host';
+import { mediaTagsContext } from '../../host';
 import { createPeopleTags } from './peopletags';
 
-createPeopleTags(tagRuntimeHost());
+createPeopleTags(mediaTagsContext());

@@ -1,4 +1,4 @@
-import type { DownloadsHost, DownloadsWindow, DownloadsApi } from './host';
+import type { DownloadsContext, DownloadsHost, DownloadsWindow, DownloadsApi } from './host';
 export type List = 'requests' | 'issues' | 'history';
 export interface Item {
  id?: string | number | undefined;
@@ -57,4 +57,4 @@ export interface Page {
 export interface PublicPage extends Pick<Page,'renderPage'|'injectStyles'|'filterDownloads'|'searchDownloads'|'filterRequests'|'filterIssues'|'nextPage'|'prevPage'|'nextIssuesPage'|'prevIssuesPage'|'nextHistoryPage'|'prevHistoryPage'> {
  initialize():void;showPage():void;hidePage():void;refresh():Promise<void>;startPolling():void;stopPolling():void;renderForCustomTab(target?:HTMLElement):void;_state:State;
 }
-export interface Dependencies {JE:DownloadsHost;P:Page;host:DownloadsWindow;getApi():DownloadsApi}
+export interface Dependencies {JE:DownloadsHost;P:Page;host:DownloadsWindow;ctx:DownloadsContext;getApi():DownloadsApi}

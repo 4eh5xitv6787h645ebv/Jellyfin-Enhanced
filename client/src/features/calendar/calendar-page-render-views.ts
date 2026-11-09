@@ -7,7 +7,7 @@ import type { CalendarEvent } from './types';
 (function () {
   "use strict";
 
-  const { JE, P } = calendarHost();
+  const { JE, ctx, P } = calendarHost();
 
   const state = P.state;
   const STATUS_COLORS = P.STATUS_COLORS;
@@ -71,7 +71,8 @@ import type { CalendarEvent } from './types';
     const daysInMonth = getDaysInMonth(anchor);
     const firstDay = getFirstDayOfMonth(anchor);
     let filteredEvents = filterEvents(state.events);
-    if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+    const hiddenContent = ctx.peer('hiddenContent');
+    if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
     const groupedEvents = groupEventsByDate(filteredEvents);
     if (filteredEvents.length === 0) {
       return `<div class="je-calendar-empty">${JE.t("calendar_no_releases")}</div>`;
@@ -128,7 +129,8 @@ import type { CalendarEvent } from './types';
     const { start } = getRangeForView(state.currentDate, "week");
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     let filteredEvents = filterEvents(state.events);
-    if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+    const hiddenContent = ctx.peer('hiddenContent');
+    if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
     const groupedEvents = groupEventsByDate(filteredEvents);
     if (filteredEvents.length === 0) {
       return `<div class="je-calendar-empty">${JE.t("calendar_no_releases")}</div>`;
@@ -168,7 +170,8 @@ import type { CalendarEvent } from './types';
   // Render agenda list view
   function renderAgendaView() {
     let filteredEvents = filterEvents(state.events);
-    if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+    const hiddenContent = ctx.peer('hiddenContent');
+    if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
     const groupedEvents = groupEventsByDate(filteredEvents);
     const dates = Object.keys(groupedEvents).sort();
 
@@ -205,7 +208,8 @@ import type { CalendarEvent } from './types';
 
   function renderDayView() {
     let filteredEvents = filterEvents(state.events);
-    if (JE.hiddenContent) filteredEvents = JE.hiddenContent.filterCalendarEvents(filteredEvents);
+    const hiddenContent = ctx.peer('hiddenContent');
+    if (hiddenContent) filteredEvents = hiddenContent.filterCalendarEvents(filteredEvents);
     const groupedEvents = groupEventsByDate(filteredEvents);
     const current = new Date(state.currentDate);
     const dateKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;

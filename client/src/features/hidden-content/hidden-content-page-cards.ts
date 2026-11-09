@@ -3,7 +3,7 @@ import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } f
 import { lease } from './host';
 import { record, decodeLibraryItem, decodeSeerrItem, decodeSeerrSearch, type HiddenItem, type ListedItem } from './model';
 import type { PageState, Group, SearchResult, PageSurface } from './page-model';
-import { host, registry, type HiddenHost } from './host';
+import { hiddenContentContext, host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content Page — grouped show cards: posters, episode lists,
  * expand/collapse, per-item unhide, and section containers.
@@ -15,6 +15,7 @@ import { host, registry, type HiddenHost } from './host';
 
   const JE = host.JellyfinEnhanced;
   const internal = registry(JE, 'hiddenContentPage');
+  const featureCtx = hiddenContentContext(JE);
 
   const { scopeBadgeText, scopeUnhideText, showUnhideConfirmation,
     handleUnhide, handleUnhideMany, POSTER_MAX_WIDTH } = internal;
@@ -71,21 +72,21 @@ import { host, registry, type HiddenHost } from './host';
       img.onerror = function() {
         var self = img;
         // Signal the card that Jellyfin item is gone
-        if (hasTmdbId && JE.jellyseerrMoreInfo) {
+        if (hasTmdbId && featureCtx.peer('jellyseerrMoreInfo')) {
           posterLink.dataset.jellyfinRemoved = '1';
         }
         // Item removed from Jellyfin — fall back to TMDB poster
         if (hasTmdbId && fallbackPosterPath) {
           self.src = `https://image.tmdb.org/t/p/w${POSTER_MAX_WIDTH}${fallbackPosterPath}`;
           self.onerror = function() { img.style.display = 'none'; };
-        } else if (hasTmdbId && JE.jellyseerrAPI) {
+        } else if (hasTmdbId && featureCtx.peer('jellyseerrAPI')) {
           // No posterPath stored — fetch it from Jellyseerr
           self.onerror = function() { img.style.display = 'none'; };
           var mainItem = group.items[0];
           var mediaType = (mainItem && mainItem.type === 'Series') ? 'tv' : 'movie';
           var fetchFn = mediaType === 'tv'
-              ? JE.jellyseerrAPI.fetchTvShowDetails
-              : JE.jellyseerrAPI.fetchMovieDetails;
+              ? featureCtx.peer('jellyseerrAPI')!.fetchTvShowDetails
+              : featureCtx.peer('jellyseerrAPI')!.fetchMovieDetails;
           fetchFn(parseInt(tmdbId, 10)).then(decodeSeerrItem).then(function(details) {
                         if(!imageToken.current() || !img.isConnected)return;
             var path = details && (details.posterPath || details.poster_path);
@@ -95,12 +96,12 @@ import { host, registry, type HiddenHost } from './host';
               self.style.display = 'none';
             }
           }).catch(function() { self.style.display = 'none'; });
-        } else if (group.seriesName && JE.jellyseerrAPI && JE.jellyseerrMoreInfo) {
+        } else if (group.seriesName && featureCtx.peer('jellyseerrAPI') && featureCtx.peer('jellyseerrMoreInfo')) {
           // No TMDB id stored (e.g. an episode hidden from Next Up) and the Jellyfin media is gone.
           // Resolve the show via a Seerr search by name so the card can still open the more-info
           // modal — instead of leaving a blank poster and a dead "#/details" link.
           self.style.display = 'none';
-          JE.jellyseerrAPI.search(group.seriesName).then(decodeSeerrSearch).then(function(res) {
+          featureCtx.peer('jellyseerrAPI')!.search(group.seriesName).then(decodeSeerrSearch).then(function(res) {
                         if(!imageToken.current() || !img.isConnected)return;
             var results = (res && res.results) || [];
             var hit = results.find(function(r) { return r.mediaType === 'tv'; }) || results[0];
@@ -369,7 +370,7 @@ import { host, registry, type HiddenHost } from './host';
     // Jellyfin id) or its Jellyfin media has been deleted. The TMDB id is either stored on the item,
     // or — for an orphan episode whose show is gone — resolved at render time by createGroupPoster
     // and stashed on the poster link's dataset.
-    if (JE.jellyseerrMoreInfo) {
+    if (featureCtx.peer('jellyseerrMoreInfo')) {
       const posterLink = card.querySelector<HTMLElement>('.je-hidden-group-poster-link');
       const baseMediaType = mainItem.type === 'Series' ? 'tv' : 'movie';
       const openJellyseerr = (e: Event) => {
@@ -377,7 +378,7 @@ import { host, registry, type HiddenHost } from './host';
         if (!id) return;
         const mediaType = tmdbId ? baseMediaType : (posterLink?.dataset.resolvedMediaType || 'tv');
         if (e) e.preventDefault();
-        JE.jellyseerrMoreInfo?.open(parseInt(id, 10), mediaType);
+        featureCtx.peer('jellyseerrMoreInfo')?.open(parseInt(id, 10), mediaType);
       };
       if (posterLink) {
         if (hasTmdbId && !hasJellyfinId) {

@@ -1,7 +1,7 @@
 import {catchupHost} from './host';
-import {currentLease, array, string} from '../activity/host';
+import {currentLease, array, string} from './wire';
 import type {CatchHost} from './host';
-import type {SocialApi, RequestOptions} from '../activity/host';
+import type {SocialApi, RequestOptions} from '../activity/public-api';
 import type {CatchRuntime, State, Item, Image, Gesture, Options} from './types';
 import {readItems} from './model';
 
@@ -61,12 +61,13 @@ export function createCatchUp(JE: CatchHost, api: () => SocialApi, navigate: (id
  const logSwipe=(item:Item,dir:Gesture,opts:Options|null|undefined,ok:boolean)=>logEvent({type:'swipe',action:ACT_NAME[dir],itemId:item.Id,ok,seasons:dir==='right'&&item.Type==='Series'?(opts?.numbers??['all']):undefined});
  return {LOG:'🪼 Jellyfin Enhanced: Catch Up:',state,tt,h,icon,userId,jf,imageOf,imageUrl,navigateToItem:navigate,loadDismissed,saveDismissed,isHidden,refill,ACTIONS,ACT_NAME,logEvent,logSwipe,reset,lease};
 }
-const {JE, getApi, Emby}=catchupHost();
-if(JE?.pluginConfig?.CatchUpEnabled) {
- JE.internals=JE.internals||{};
- if(!JE.internals.catchUp) {
+const {ctx, getApi, Emby}=catchupHost();
+const JE=ctx?.core;
+if(ctx && JE?.pluginConfig?.CatchUpEnabled) {
+ // ctx.own.catchUp creates JE.internals on first access (host.ts), as `JE.internals=JE.internals||{}` did here.
+ if(!ctx.own.catchUp) {
   const runtime=createCatchUp(JE,()=>{const api=getApi();if(!api)throw Error('Jellyfin API unavailable');return api;},id=>{try {if(Emby?.Page?.showItem){Emby.Page.showItem(id);return;}}catch{} window.location.hash=`#!/details?id=${id}`;});
-  JE.internals.catchUp=runtime;
+  ctx.own.catchUp=runtime;
   JE.session?.onUserChange('catchup',()=>{runtime.deck?.dispose();runtime.reset();runtime.state.dismissed.clear();});
  }
 }

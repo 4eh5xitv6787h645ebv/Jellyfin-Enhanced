@@ -2,7 +2,7 @@ import { getApi } from './host';
 import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } from './host';
 import { lease } from './host';
 import { decodeSeerrItem, decodeSeerrSearch, type HiddenItem } from './model';
-import { host, registry, type HiddenHost } from './host';
+import { hiddenContentContext, host, registry, type HiddenHost } from './host';
 /**
  * @file Hidden Content — management panel overlay (searchable grid of hidden
  * items with unhide actions) and the shared hidden-item card factory.
@@ -12,6 +12,7 @@ import { host, registry, type HiddenHost } from './host';
     if(!installOnce(JE,'hidden-content-panel'))return;
     'use strict';
     const internal = registry(JE, 'hiddenContent');
+    const featureCtx = hiddenContentContext(JE);
 
     const { getHiddenData, unhideItem, unhideAll } = internal;
 
@@ -84,19 +85,19 @@ import { host, registry, type HiddenHost } from './host';
             img.onerror = function() {
                 const self = img;
                 // Switch card to Jellyseerr navigation
-                if (hasTmdbId && JE.jellyseerrMoreInfo) {
+                if (hasTmdbId && featureCtx.peer('jellyseerrMoreInfo')) {
                     card.dataset.jellyfinRemoved = '1';
                 }
                 // Item removed from Jellyfin — fall back to TMDB poster
                 if (hasTmdbId && item.posterPath) {
                     self.src = `https://image.tmdb.org/t/p/w${POSTER_MAX_WIDTH}${item.posterPath}`;
                     self.onerror = function() { img.style.display = 'none'; };
-                } else if (hasTmdbId && JE.jellyseerrAPI) {
+                } else if (hasTmdbId && featureCtx.peer('jellyseerrAPI')) {
                     // No posterPath stored — fetch it from Jellyseerr
                     self.onerror = function() { img.style.display = 'none'; };
                     const fetchFn = mediaType === 'tv'
-                        ? JE.jellyseerrAPI.fetchTvShowDetails
-                        : JE.jellyseerrAPI.fetchMovieDetails;
+                        ? featureCtx.peer('jellyseerrAPI')!.fetchTvShowDetails
+                        : featureCtx.peer('jellyseerrAPI')!.fetchMovieDetails;
                     fetchFn(parseInt(String(item.tmdbId), 10)).then(decodeSeerrItem).then(function(details) {
                         if(!imageToken.current() || !img.isConnected)return;
                         const path = details && (details.posterPath || details.poster_path);
@@ -106,12 +107,12 @@ import { host, registry, type HiddenHost } from './host';
                             self.style.display = 'none';
                         }
                     }).catch(function() { self.style.display = 'none'; });
-                } else if (item.type !== 'Person' && item.name && JE.jellyseerrAPI && JE.jellyseerrMoreInfo) {
+                } else if (item.type !== 'Person' && item.name && featureCtx.peer('jellyseerrAPI') && featureCtx.peer('jellyseerrMoreInfo')) {
                     // No TMDB id stored and the Jellyfin media is gone — resolve via a Seerr search
                     // so the card opens the more-info modal instead of a blank poster + dead link.
                     self.style.display = 'none';
                     const wantType = (item.type === 'Series' || item.type === 'Episode' || item.type === 'Season') ? 'tv' : 'movie';
-                    JE.jellyseerrAPI.search(item.name).then(decodeSeerrSearch).then(function(res) {
+                    featureCtx.peer('jellyseerrAPI')!.search(item.name).then(decodeSeerrSearch).then(function(res) {
                         if(!imageToken.current() || !img.isConnected)return;
                         const results = (res && res.results) || [];
                         const hit = results.find(function(r) { return r.mediaType === wantType; })
@@ -165,15 +166,15 @@ import { host, registry, type HiddenHost } from './host';
                 const removedId = (card.dataset.jellyfinRemoved === '1')
                     ? (hasTmdbId ? item.tmdbId : card.dataset.resolvedTmdbId)
                     : '';
-                if (hasJellyfinId && removedId && JE.jellyseerrMoreInfo) {
+                if (hasJellyfinId && removedId && featureCtx.peer('jellyseerrMoreInfo')) {
                     e.preventDefault();
-                    JE.jellyseerrMoreInfo.open(parseInt(String(removedId), 10), hasTmdbId ? mediaType : (card.dataset.resolvedMediaType || mediaType));
+                    featureCtx.peer('jellyseerrMoreInfo')!.open(parseInt(String(removedId), 10), hasTmdbId ? mediaType : (card.dataset.resolvedMediaType || mediaType));
                     if (onNavigate) onNavigate();
                 } else if (hasJellyfinId) {
                     if (onNavigate) onNavigate();
-                } else if (hasTmdbId && JE.jellyseerrMoreInfo) {
+                } else if (hasTmdbId && featureCtx.peer('jellyseerrMoreInfo')) {
                     e.preventDefault();
-                    JE.jellyseerrMoreInfo.open(parseInt(String(item.tmdbId), 10), mediaType);
+                    featureCtx.peer('jellyseerrMoreInfo')!.open(parseInt(String(item.tmdbId), 10), mediaType);
                     if (onNavigate) onNavigate();
                 } else if (!hasJellyfinId) {
                     e.preventDefault();

@@ -3,7 +3,7 @@ import { createPlayerLifetime } from './lifetime';
 import { pauseStyles } from './pause-styles';
 import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment, record } from './wire';
-const { JE, ApiClient } = playerHost();
+const { JE, ApiClient, ctx } = playerHost();
 const lifetime = createPlayerLifetime(JE, 'pause-screen');
 JE.initializePauseScreen = function() {
     // Only run if the feature is enabled in the user's settings
@@ -14,7 +14,7 @@ JE.initializePauseScreen = function() {
     }
       if (JE.pauseScreenInstance?.overlay?.isConnected) return;
       JE.pauseScreenInstance?.destroy();
-      const nowPlaying = () => JE.internals.nowPlaying;
+      const nowPlaying = () => ctx.own.nowPlaying;
 
       class JellyfinPauseScreen {
         generation = 0;
@@ -472,8 +472,9 @@ JE.initializePauseScreen = function() {
               }
 
               // Resume colored ratings polling when paused
-              if (typeof JE?.resumeRatingsPolling === 'function') {
-                JE.resumeRatingsPolling();
+              const resumeRatingsPolling = ctx.peer('resumeRatingsPolling');
+              if (typeof resumeRatingsPolling === 'function') {
+                resumeRatingsPolling();
               }
 
               // New pause event — allow the pause screen to show again
@@ -491,8 +492,9 @@ JE.initializePauseScreen = function() {
                 this.pauseScreenTimer = null;
               }
               // Pause colored ratings polling when playing
-              if (typeof JE?.pauseRatingsPolling === 'function') {
-                JE.pauseRatingsPolling();
+              const pauseRatingsPolling = ctx.peer('pauseRatingsPolling');
+              if (typeof pauseRatingsPolling === 'function') {
+                pauseRatingsPolling();
               }
               this.hideOverlay();
             }

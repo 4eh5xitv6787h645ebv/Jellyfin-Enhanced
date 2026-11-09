@@ -1,7 +1,38 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/chrome/host.ts
+  function chromeContext(JE2, facades) {
+    return featureContext("chrome", JE2, { facades });
+  }
   function hostClient() {
     const host = window;
     return host.ApiClient;
@@ -377,7 +408,7 @@
 
   // client/src/features/chrome/theme-selector-entry.ts
   var JE = optionalBridge();
-  if (JE) JE.initializeThemeSelector = createThemeSelector(JE, () => hostClient()).initialize;
+  if (JE) chromeContext(JE, ["initializeThemeSelector"]).own.initializeThemeSelector = createThemeSelector(JE, () => hostClient()).initialize;
 })();
 })();
 //# sourceMappingURL=theme-selector.js.map

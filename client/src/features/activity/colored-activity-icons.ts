@@ -5,9 +5,9 @@ import type { ActivityHost } from './host';
 
 (function() {
     'use strict';
-  const { JE: candidate } = activityHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context } = activityHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
 
     // Inject CSS to hide original SVG icons ONLY in Activity & Alerts
     function injectCSS() {
@@ -475,8 +475,8 @@ import type { ActivityHost } from './host';
     }
 
     if (JE) {
-        JE.initializeActivityIcons = initialize;
-        JE.stopActivityIconsMonitoring = stopMonitoring;
+        ctx.own.initializeActivityIcons = initialize;
+        ctx.own.stopActivityIconsMonitoring = stopMonitoring;
     }
 
 })();
