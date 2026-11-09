@@ -1,10 +1,10 @@
-import { chromeBridge } from './host';
+import { chromeBridge, eventsContext } from './host';
 import { canonicalCombo, createEvents, type EventsBridge } from './events';
 
-const JE = chromeBridge<EventsBridge>();
+const ctx = eventsContext(chromeBridge<EventsBridge>());
 // The shortcut editor's conflict check compares bindings the same way.
-JE.internals = JE.internals || {};
-JE.internals.canonicalCombo = canonicalCombo;
-const events = createEvents(JE);
-JE.keyListener = events.keyListener;
-JE.initializeEnhancedScript = events.initializeEnhancedScript;
+// ctx.own.canonicalCombo creates JE.internals on first access (host.ts), as `JE.internals = JE.internals || {}` did here.
+ctx.own.canonicalCombo = canonicalCombo;
+const events = createEvents(ctx);
+ctx.own.keyListener = events.keyListener;
+ctx.own.initializeEnhancedScript = events.initializeEnhancedScript;

@@ -1,7 +1,38 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/chrome/host.ts
+  function chromeContext(JE2, facades) {
+    return featureContext("chrome", JE2, { facades });
+  }
   function idString(value) {
     return typeof value === "string" && value.length > 0 ? value : null;
   }
@@ -314,9 +345,10 @@
   var JE = optionalBridge();
   if (JE) {
     const icons = createPluginIcons(JE);
-    JE.initializePluginIcons = icons.initialize;
-    JE.stopPluginIconsMonitoring = icons.stopMonitoring;
-    JE.customPlugins = { refresh: icons.refresh };
+    const own = chromeContext(JE, ["initializePluginIcons", "stopPluginIconsMonitoring", "customPlugins"]).own;
+    own.initializePluginIcons = icons.initialize;
+    own.stopPluginIconsMonitoring = icons.stopMonitoring;
+    own.customPlugins = { refresh: icons.refresh };
   }
 })();
 })();

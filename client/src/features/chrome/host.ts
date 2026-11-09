@@ -2,6 +2,9 @@
  * Narrow host adapters for the header/chrome feature group. Each feature declares
  * the exact legacy facade members it consumes; nothing here is an aggregate bag.
  */
+import { featureContext, type FeatureContext } from '../../host/context';
+import type { BookmarkApi } from '../bookmarks/public-api';
+import type { EventsBridge } from './events';
 
 /** Identity-reset subscription of the JE session runtime (client/src/core/session.ts). */
 export interface ChromeSession {
@@ -34,6 +37,25 @@ export interface IdentityClient {
 }
 
 interface HostWindow extends Window { JellyfinEnhanced?: object; ApiClient?: object }
+
+/** The stateful peer facades chrome reads (frontend.md §2.3), typed by their owners' public-api.ts. */
+export interface ChromePeers { bookmarks: BookmarkApi }
+/** A chrome entry's context (frontend.md §2.3): `core` is the entry's typed bridge, `own` the facades it publishes. */
+export type ChromeContext<Bridge extends object, Own extends object> = FeatureContext<Own, ChromePeers, Bridge>;
+/** The context of an entry that publishes `facades` on the bridge it read (chromeBridge, ensureBridge or optionalBridge). */
+export function chromeContext<Bridge extends object, F extends keyof Bridge & string>(JE: Bridge, facades: readonly F[]): ChromeContext<Bridge, Pick<Bridge, F>> {
+    return featureContext<Pick<Bridge, F>, ChromePeers, Bridge>('chrome', JE, { facades });
+}
+/** The events entry's own slots: its two facades and chrome's owner-only `JE.internals.canonicalCombo` slot. */
+export type EventsOwn = Pick<EventsBridge, 'keyListener' | 'initializeEnhancedScript'> & NonNullable<EventsBridge['internals']>;
+export type EventsContext = ChromeContext<EventsBridge, EventsOwn>;
+export function eventsContext(JE: EventsBridge): EventsContext {
+    return featureContext<EventsOwn, ChromePeers, EventsBridge>('chrome', JE, {
+        facades: ['keyListener', 'initializeEnhancedScript'],
+        internalSlots: ['canonicalCombo'],
+        internalsObject: () => JE.internals ||= {},
+    });
+}
 
 /** The legacy JE global, typed by the caller's finite contract. The sole assertion at this boundary. */
 export function chromeBridge<T extends object>(): T {

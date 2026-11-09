@@ -1,7 +1,42 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/chrome/host.ts
+  function eventsContext(JE) {
+    return featureContext("chrome", JE, {
+      facades: ["keyListener", "initializeEnhancedScript"],
+      internalSlots: ["canonicalCombo"],
+      internalsObject: () => JE.internals || (JE.internals = {})
+    });
+  }
   function chromeBridge() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new Error("Jellyfin Enhanced must initialize before chrome modules");
@@ -78,25 +113,27 @@
   }
   var isTyping = () => ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName ?? "");
   var SHEET_SELECTOR = ".actionSheet, .actionSheetScroller, .dialogContainer";
-  function createEvents(JE2) {
+  function createEvents(ctx2) {
+    const JE = ctx2.core;
     let installed = false;
     function panelKeyListener(event) {
       if (document.getElementById("jellyfin-enhanced-panel") || isTyping()) return;
       if (event.key === "?") {
         event.preventDefault();
         event.stopPropagation();
-        JE2.showEnhancedPanel?.();
+        JE.showEnhancedPanel?.();
       }
     }
     function playerActions(event) {
       return [
         ["BookmarkCurrentTime", () => {
-          if (JE2.bookmarks?.showModal) JE2.bookmarks.showModal("add");
+          const bookmarks = ctx2.peer("bookmarks");
+          if (bookmarks?.showModal) bookmarks.showModal("add");
           else console.warn("🪼 Jellyfin Enhanced: New bookmark system not loaded, using fallback");
         }],
-        ["CycleAspectRatio", () => JE2.cycleAspect?.()],
+        ["CycleAspectRatio", () => JE.cycleAspect?.()],
         // Toggles the plugin-rendered playback-info overlay; no host settings menu opens.
-        ["ShowPlaybackInfo", () => JE2.togglePlaybackInfo?.()],
+        ["ShowPlaybackInfo", () => JE.togglePlaybackInfo?.()],
         ["SubtitleMenu", () => {
           const open = [...document.querySelectorAll(".actionSheetContent .actionSheetTitle")].find((el) => el.textContent === "Subtitles");
           if (open) {
@@ -108,14 +145,14 @@
         }],
         // Never on auto-repeat: each cycle is a real stream switch (transcode restarts).
         ["CycleSubtitleTracks", () => {
-          if (!event.repeat) JE2.cycleSubtitleTrack?.();
+          if (!event.repeat) JE.cycleSubtitleTrack?.();
         }],
         ["CycleAudioTracks", () => {
-          if (!event.repeat) JE2.cycleAudioTrack?.();
+          if (!event.repeat) JE.cycleAudioTrack?.();
         }],
-        ["ResetPlaybackSpeed", () => JE2.resetPlaybackSpeed?.()],
-        ["IncreasePlaybackSpeed", () => JE2.adjustPlaybackSpeed?.("increase")],
-        ["DecreasePlaybackSpeed", () => JE2.adjustPlaybackSpeed?.("decrease")],
+        ["ResetPlaybackSpeed", () => JE.resetPlaybackSpeed?.()],
+        ["IncreasePlaybackSpeed", () => JE.adjustPlaybackSpeed?.("increase")],
+        ["DecreasePlaybackSpeed", () => JE.adjustPlaybackSpeed?.("decrease")],
         ["OpenEpisodePreview", () => {
           const focus = document.getElementById("popupFocusContainer");
           if (focus?.classList.contains("opened")) {
@@ -129,41 +166,41 @@
             document.querySelector('button#popupPreviewButton.autoSize.paper-icon-button-light[is="paper-icon-button-light"]')?.click();
           }
         }],
-        ["SkipIntroOutro", () => JE2.skipIntroOutro?.()],
-        ["FrameStepBack", () => JE2.frameStep?.("back")],
-        ["FrameStepForward", () => JE2.frameStep?.("forward")],
-        ["JumpToLastPosition", () => JE2.jumpToLastPosition?.()]
+        ["SkipIntroOutro", () => JE.skipIntroOutro?.()],
+        ["FrameStepBack", () => JE.frameStep?.("back")],
+        ["FrameStepForward", () => JE.frameStep?.("forward")],
+        ["JumpToLastPosition", () => JE.jumpToLastPosition?.()]
       ];
     }
     function keyListener(event) {
       if (isTyping()) return;
       if (document.activeElement?.hasAttribute("data-je-key-recorder")) return;
       const key = event.key;
-      const combo = JE2.keyCombo(event);
+      const combo = JE.keyCombo(event);
       const video = document.querySelector("video");
-      const shortcuts = canonicalShortcuts(JE2.state.activeShortcuts);
+      const shortcuts = canonicalShortcuts(JE.state.activeShortcuts);
       if (combo === shortcuts.OpenSearch) {
         event.preventDefault();
         document.querySelector("button.headerSearchButton")?.click();
         setTimeout(() => document.querySelector('input[type="search"]')?.focus(), 100);
-        JE2.toast(JE2.t("toast_search"));
+        JE.toast(JE.t("toast_search"));
       } else if (combo === shortcuts.GoToHome) {
         event.preventDefault();
         window.location.hash = "#/home.html";
-        JE2.toast(JE2.t("toast_home"));
+        JE.toast(JE.t("toast_home"));
       } else if (combo === shortcuts.GoToDashboard) {
         event.preventDefault();
         window.location.hash = "#/dashboard";
-        JE2.toast(JE2.t("toast_dashboard"));
+        JE.toast(JE.t("toast_dashboard"));
       } else if (combo === shortcuts.QuickConnect) {
         event.preventDefault();
         window.location.hash = "#/quickconnect";
-        JE2.toast(`${JE2.icon?.(JE2.IconName?.LINK) ?? ""} Quick Connect`);
-      } else if (combo === shortcuts.PlayRandomItem && !JE2.isVideoPage()) {
+        JE.toast(`${JE.icon?.(JE.IconName?.LINK) ?? ""} Quick Connect`);
+      } else if (combo === shortcuts.PlayRandomItem && !JE.isVideoPage()) {
         event.preventDefault();
         document.getElementById("randomItemButton")?.click();
       }
-      if (!JE2.isVideoPage() || !video) return;
+      if (!JE.isVideoPage() || !video) return;
       const action = playerActions(event).find(([name]) => combo === shortcuts[name]);
       if (action) {
         event.preventDefault();
@@ -171,35 +208,35 @@
         action[1]();
       }
       if (shortcuts.JumpToPercentage !== "" && !event.altKey && !event.ctrlKey && !event.metaKey && /^[0-9]$/.test(key)) {
-        JE2.jumpToPercentage?.(parseInt(key, 10) * 10);
+        JE.jumpToPercentage?.(parseInt(key, 10) * 10);
       }
     }
     function setupDOMObserver() {
       const runPageSpecificFunctions = () => {
-        if (JE2.isVideoPage()) {
-          JE2.addOsdSettingsButton?.();
-          JE2.initializeAutoSkipObserver?.();
-          JE2.applySavedStylesWhenReady?.();
+        if (JE.isVideoPage()) {
+          JE.addOsdSettingsButton?.();
+          JE.initializeAutoSkipObserver?.();
+          JE.applySavedStylesWhenReady?.();
           const video = document.querySelector("video");
-          if (video) JE2.attachSeekTracker?.(video);
+          if (video) JE.attachSeekTracker?.(video);
         } else {
-          JE2.stopAutoSkip?.();
+          JE.stopAutoSkip?.();
         }
       };
-      JE2.helpers.createObserver("dom-observer", JE2.helpers.throttle(() => {
+      JE.helpers.createObserver("dom-observer", JE.helpers.throttle(() => {
         runPageSpecificFunctions();
-        JE2.addRandomButton?.();
-        JE2.addUserPreferencesLink?.();
+        JE.addRandomButton?.();
+        JE.addUserPreferencesLink?.();
       }, 100), document.body, { childList: true, subtree: true });
     }
     function observeActionSheets() {
       let scheduled = false;
       const runInjection = () => {
         scheduled = false;
-        if (!JE2.currentSettings.removeContinueWatchingEnabled) return;
-        if (typeof JE2.addRemoveButton === "function") JE2.addRemoveButton();
+        if (!JE.currentSettings.removeContinueWatchingEnabled) return;
+        if (typeof JE.addRemoveButton === "function") JE.addRemoveButton();
         else console.warn("🪼 Jellyfin Enhanced: addRemoveButton not available");
-        if (typeof JE2.addMultiSelectRemoveButton === "function") JE2.addMultiSelectRemoveButton();
+        if (typeof JE.addMultiSelectRemoveButton === "function") JE.addMultiSelectRemoveButton();
       };
       const touchesActionSheet = (mutations) => {
         for (const mutation of mutations) {
@@ -210,7 +247,7 @@
         }
         return false;
       };
-      JE2.helpers.onBodyMutation("action-sheets", (mutations) => {
+      JE.helpers.onBodyMutation("action-sheets", (mutations) => {
         if (scheduled || !touchesActionSheet(mutations)) return;
         scheduled = true;
         requestAnimationFrame(runInjection);
@@ -219,35 +256,35 @@
     function addContextMenuListener() {
       const capture = (itemElement) => {
         if (!itemElement) {
-          JE2.state.removeContext = null;
+          JE.state.removeContext = null;
           return;
         }
         const card = itemElement.closest(".card") || itemElement;
         const itemId = (card instanceof HTMLElement ? card.dataset.id : void 0) || (itemElement instanceof HTMLElement ? itemElement.dataset.id : void 0) || null;
         if (!itemId) {
-          JE2.state.removeContext = null;
+          JE.state.removeContext = null;
           return;
         }
-        const surface = typeof JE2.detectCardSurface === "function" ? JE2.detectCardSurface(card) : null;
-        JE2.state.removeContext = { itemId, surface, card, ts: Date.now() };
+        const surface = typeof JE.detectCardSurface === "function" ? JE.detectCardSurface(card) : null;
+        JE.state.removeContext = { itemId, surface, card, ts: Date.now() };
         if (surface) console.log(`🪼 Jellyfin Enhanced: ${String(surface)} item detected for Remove action sheet:`, itemId);
       };
       const insideOpenMenu = (target) => !!target.closest(".actionSheetContent, .actionSheet, .dialogContainer, dialog");
       document.body.addEventListener("mousedown", (event) => {
-        if (!JE2.currentSettings.removeContinueWatchingEnabled || !(event.target instanceof Element)) return;
+        if (!JE.currentSettings.removeContinueWatchingEnabled || !(event.target instanceof Element)) return;
         const menuButton = event.target.closest('button[data-action="menu"]');
         if (!menuButton) return;
         capture(menuButton.closest(".card[data-id]") || menuButton.closest("[data-id]"));
       }, true);
       document.body.addEventListener("contextmenu", (event) => {
-        if (!JE2.currentSettings.removeContinueWatchingEnabled || !(event.target instanceof Element)) return;
+        if (!JE.currentSettings.removeContinueWatchingEnabled || !(event.target instanceof Element)) return;
         if (insideOpenMenu(event.target)) return;
         capture(event.target.closest(".card[data-id]"));
       }, true);
     }
     function clearLocalStorageIfRequested() {
       try {
-        const serverClear = Number(JE2.pluginConfig.ClearLocalStorageTimestamp) || 0;
+        const serverClear = Number(JE.pluginConfig.ClearLocalStorageTimestamp) || 0;
         const localCleared = parseInt(localStorage.getItem("jellyfinEnhancedLastCleared") || "0", 10);
         if (serverClear > localCleared) {
           localStorage.removeItem("jellyfinEnhancedSettings");
@@ -259,10 +296,10 @@
     }
     function installLongPress() {
       const onVideoPage = (name) => (event) => {
-        if (!JE2.isVideoPage()) return;
+        if (!JE.isVideoPage()) return;
         if (event.isTrusted === false) return;
         if (event.target instanceof Element && event.target.closest(".osdControls, .pause-screen-active, .jellyfin-enhanced-panel")) return;
-        JE2[name]?.(event);
+        JE[name]?.(event);
       };
       document.addEventListener("mousedown", onVideoPage("handleLongPressDown"), true);
       document.addEventListener("mouseup", onVideoPage("handleLongPressUp"), true);
@@ -284,7 +321,7 @@
       for (const name of ["emptied", "loadstart"]) document.addEventListener(name, (event) => {
         if (event.target instanceof HTMLVideoElement) clearPaused(event.target);
       }, true);
-      JE2.session?.onUserChange("chrome-auto-resume", () => {
+      JE.session?.onUserChange("chrome-auto-resume", () => {
         for (const video of pausedOwners.keys()) delete video.dataset.wasPlayingBeforeHidden;
         pausedOwners.clear();
       });
@@ -303,14 +340,14 @@
       document.addEventListener("visibilitychange", () => {
         const video = document.querySelector("video");
         if (!video) return;
-        JE2.attachSeekTracker?.(video);
+        JE.attachSeekTracker?.(video);
         if (document.hidden) {
-          if (!video.paused && JE2.currentSettings.autoPauseEnabled) {
-            pausedOwners.set(video, { identity: captureIdentity(JE2.session, hostClient()), source: mediaSource(video) });
+          if (!video.paused && JE.currentSettings.autoPauseEnabled) {
+            pausedOwners.set(video, { identity: captureIdentity(JE.session, hostClient()), source: mediaSource(video) });
             video.pause();
             video.dataset.wasPlayingBeforeHidden = "true";
           }
-          if (JE2.currentSettings.autoPipEnabled && !document.pictureInPictureElement && canAutoPip(video)) {
+          if (JE.currentSettings.autoPipEnabled && !document.pictureInPictureElement && canAutoPip(video)) {
             video.requestPictureInPicture().then(() => {
               autoPipVideo = video;
               if (!document.hidden) exitAutoPip();
@@ -324,7 +361,7 @@
           }
         } else {
           const owner = pausedOwners.get(video);
-          if (video.paused && video.dataset.wasPlayingBeforeHidden === "true" && JE2.currentSettings.autoResumeEnabled && owner && owner.source === mediaSource(video) && isSameIdentity(owner.identity, captureIdentity(JE2.session, hostClient()))) {
+          if (video.paused && video.dataset.wasPlayingBeforeHidden === "true" && JE.currentSettings.autoResumeEnabled && owner && owner.source === mediaSource(video) && isSameIdentity(owner.identity, captureIdentity(JE.session, hostClient()))) {
             Promise.resolve(video.play()).catch((error) => console.debug("🪼 Jellyfin Enhanced: Auto resume refused:", error));
           }
           clearPaused(video);
@@ -334,18 +371,18 @@
     }
     function initializeEnhancedScript() {
       clearLocalStorageIfRequested();
-      JE2.injectGlobalStyles?.();
-      JE2.addPluginMenuButton?.();
-      JE2.addUserMenuLink?.();
-      JE2.addRandomButton?.();
-      JE2.applySavedStylesWhenReady?.();
+      JE.injectGlobalStyles?.();
+      JE.addPluginMenuButton?.();
+      JE.addUserMenuLink?.();
+      JE.addRandomButton?.();
+      JE.applySavedStylesWhenReady?.();
       setupDOMObserver();
       observeActionSheets();
       if (installed) return;
       installed = true;
       addContextMenuListener();
       document.addEventListener("keydown", panelKeyListener);
-      if (!JE2.pluginConfig.DisableAllShortcuts) document.addEventListener("keydown", keyListener, true);
+      if (!JE.pluginConfig.DisableAllShortcuts) document.addEventListener("keydown", keyListener, true);
       installLongPress();
       installVisibility();
     }
@@ -353,12 +390,11 @@
   }
 
   // client/src/features/chrome/events-entry.ts
-  var JE = chromeBridge();
-  JE.internals = JE.internals || {};
-  JE.internals.canonicalCombo = canonicalCombo;
-  var events = createEvents(JE);
-  JE.keyListener = events.keyListener;
-  JE.initializeEnhancedScript = events.initializeEnhancedScript;
+  var ctx = eventsContext(chromeBridge());
+  ctx.own.canonicalCombo = canonicalCombo;
+  var events = createEvents(ctx);
+  ctx.own.keyListener = events.keyListener;
+  ctx.own.initializeEnhancedScript = events.initializeEnhancedScript;
 })();
 })();
 //# sourceMappingURL=events.js.map

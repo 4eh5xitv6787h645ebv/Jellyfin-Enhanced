@@ -1,7 +1,38 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own2 = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own2, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own: own2,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/chrome/host.ts
+  function chromeContext(JE2, facades) {
+    return featureContext("chrome", JE2, { facades });
+  }
   function ensureBridge() {
     const host = window;
     if (!host.JellyfinEnhanced) host.JellyfinEnhanced = {};
@@ -332,8 +363,9 @@
   var JE = ensureBridge();
   var splash = createSplashScreen(() => optionalBridge()?.pluginConfig);
   splash.installPreemptiveStyles();
-  JE.initializeSplashScreen = splash.initializeSplashScreen;
-  JE.hideSplashScreen = splash.hide;
+  var own = chromeContext(JE, ["initializeSplashScreen", "hideSplashScreen"]).own;
+  own.initializeSplashScreen = splash.initializeSplashScreen;
+  own.hideSplashScreen = splash.hide;
   console.log("🪼 Jellyfin Enhanced: Splash screen module loaded.");
 })();
 })();
