@@ -433,7 +433,7 @@ export function createQualityRules(host: QualityHost) {
     }
 
     // A scene release group closing a file name after its codec, audio, resolution or source token
-    // (Features/MediaTags/Services/MediaNamingTags.cs TrailingGroup): its letters are a name, not a release word.
+    // (Shared/MediaTags/MediaNamingTags.cs TrailingGroup): its letters are a name, not a release word.
     const RELEASE_GROUP = /(?<=(?:^|[. _\-[\](){}])(?:[xh]\.?26[45]|hevc|avc|av1|vp9|xvid|divx|mpeg2|aac|ac3|e?ac3|dts|ma|ddp?|flac|opus|atmos|truehd|\d\.\d|\d{3,4}p|web|webrip|web[. _\-[\]()]*dl|bluray|remux|hdtv|dvdrip|10bit|hdr|hdr10|dv|sdr))-[A-Za-z0-9]{2,}$/i;
 
     /** @returns A path without the release group closing its file name (MediaNamingTags.WithoutReleaseGroup). */
