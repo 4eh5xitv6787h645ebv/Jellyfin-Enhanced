@@ -1,4 +1,4 @@
-import type { TagRuntimeBridge } from '../../host';
+import type { MediaTagsContext } from '../../host';
 import { isRecord, text as nonEmpty } from '../../pipeline/dto';
 import type { TagCtx, TagSpec } from '../../pipeline/contract';
 // /js/tags/ageratingtags.js
@@ -15,7 +15,8 @@ import type { TagCtx, TagSpec } from '../../pipeline/contract';
 // from the series and Jellyfin never shows it, so while ratings are stripped
 // the server hands those items the series rating instead; cached entries for
 // guarded series are re-fetched rather than trusted (see isGuardedSeries).
-export function createAgeRatingTags(JE: TagRuntimeBridge) {
+export function createAgeRatingTags(ctx: MediaTagsContext) {
+    const JE = ctx.core;
 
     const logPrefix = '🪼 Jellyfin Enhanced: Age Rating Tags:';
     const containerClass = 'age-rating-overlay-container';
@@ -111,7 +112,7 @@ export function createAgeRatingTags(JE: TagRuntimeBridge) {
         try {
             const cfg = JE.pluginConfig;
             if (!cfg || cfg.SpoilerBlurEnabled !== true || cfg.SpoilerStripRatings === false) return false;
-            const sg = JE.spoilerBlur;
+            const sg = ctx.peer('spoilerBlur');
             if (!sg || typeof sg.isEnabledFor !== 'function') return false;
             const prefs = (typeof sg.getUserPrefs === 'function' && sg.getUserPrefs()) || {};
             if (prefs.HideRatings === false) return false;

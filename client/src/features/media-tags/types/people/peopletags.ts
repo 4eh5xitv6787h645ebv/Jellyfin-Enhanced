@@ -1,4 +1,4 @@
-import { apiClient, type TagRuntimeBridge } from '../../host';
+import { apiClient, type MediaTagsContext } from '../../host';
 import { errorStatus, isRecord, record, type JsonRecord } from '../../pipeline/dto';
 import { COUNTRY_MAP } from './people-countries';
 import { describePerson, evictOldest, factsFromResponse, loadPeopleStore, parseCalendarDate, serializePeopleStore, todayDate, type CalendarDate, type PersonFacts, type PersonView, type StoredPerson } from './people-model';
@@ -18,7 +18,8 @@ function isHotPerson(value: unknown): value is HotPerson { return isRecord(value
 // managed observer and batch backend endpoint (people/info), so the
 // tag-renderer factory does not apply here. Facts are cached per person and
 // ages are derived locally, so episodes of a series share their cast.
-export function createPeopleTags(JE: TagRuntimeBridge) {
+export function createPeopleTags(ctx: MediaTagsContext) {
+    const JE = ctx.core;
 
     JE.initializePeopleTags = function() {
         if (!JE.currentSettings?.peopleTagsEnabled) {
@@ -1112,8 +1113,7 @@ export function createPeopleTags(JE: TagRuntimeBridge) {
 
             // For the details page's visits (features-details-page.js); a
             // re-init replaces the previous instance's.
-            JE.internals = JE.internals || {};
-            JE.internals.peopleTags = { prefetch, leave };
+            ctx.own.peopleTags = { prefetch, leave };
 
             console.debug(`${logPrefix} Initialization complete`);
         }

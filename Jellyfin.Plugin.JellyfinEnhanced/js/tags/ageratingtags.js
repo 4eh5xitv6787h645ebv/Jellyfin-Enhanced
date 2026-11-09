@@ -1,12 +1,47 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/media-tags/host.ts
   function tagRuntimeHost() {
     const host = window;
     const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
     bridge.core ?? (bridge.core = {});
     return bridge;
+  }
+  function mediaTagsContext(JE = tagRuntimeHost()) {
+    return featureContext("media-tags", JE, {
+      internalSlots: ["peopleTags"],
+      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
   }
 
   // client/src/features/media-tags/pipeline/dto.ts
@@ -19,7 +54,8 @@
   }
 
   // client/src/features/media-tags/types/age-rating/ageratingtags.ts
-  function createAgeRatingTags(JE) {
+  function createAgeRatingTags(ctx) {
+    const JE = ctx.core;
     const logPrefix = "🪼 Jellyfin Enhanced: Age Rating Tags:";
     const containerClass = "age-rating-overlay-container";
     const tagClass = "age-rating-tag";
@@ -68,7 +104,7 @@
       try {
         const cfg = JE.pluginConfig;
         if (!cfg || cfg.SpoilerBlurEnabled !== true || cfg.SpoilerStripRatings === false) return false;
-        const sg = JE.spoilerBlur;
+        const sg = ctx.peer("spoilerBlur");
         if (!sg || typeof sg.isEnabledFor !== "function") return false;
         const prefs = typeof sg.getUserPrefs === "function" && sg.getUserPrefs() || {};
         if (prefs.HideRatings === false) return false;
@@ -78,19 +114,19 @@
         return true;
       }
     }
-    function getCachedEntry(ctx, itemId) {
-      const entry = ctx.getPersistent(itemId) ?? ctx.hot?.get(itemId);
+    function getCachedEntry(ctx2, itemId) {
+      const entry = ctx2.getPersistent(itemId) ?? ctx2.hot?.get(itemId);
       if (!isRecord(entry)) return null;
       return { rating: text(entry.rating), seriesId: text(entry.s) };
     }
-    function setCachedEntry(ctx, itemId, rating, seriesId) {
+    function setCachedEntry(ctx2, itemId, rating, seriesId) {
       const entry = seriesId ? { rating, s: seriesId } : { rating };
-      ctx.setPersistent(itemId, entry);
-      ctx.hot?.set(itemId, entry);
+      ctx2.setPersistent(itemId, entry);
+      ctx2.hot?.set(itemId, entry);
     }
-    function applyAgeRatingTag(ctx, el, rating) {
+    function applyAgeRatingTag(ctx2, el, rating) {
       if (!rating) return;
-      ctx.removeExistingOverlay(el);
+      ctx2.removeExistingOverlay(el);
       const container = document.createElement("div");
       container.className = containerClass;
       const tag = document.createElement("div");
@@ -98,7 +134,7 @@
       tag.setAttribute("rating", rating);
       tag.textContent = rating;
       container.appendChild(tag);
-      ctx.commitOverlay(el, container);
+      ctx2.commitOverlay(el, container);
     }
     const spec = {
       logPrefix,
@@ -171,38 +207,38 @@
       pipeline: {
         needsFirstEpisode: false,
         needsParentSeries: false,
-        render(ctx, el, item, extras) {
-          if (ctx.shouldIgnore(el)) return;
-          if (ctx.isTagged(el)) return;
+        render(ctx2, el, item, extras) {
+          if (ctx2.shouldIgnore(el)) return;
+          if (ctx2.isTagged(el)) return;
           if (el.closest(".je-hidden")) return;
           const rating = normalizeRating(item.OfficialRating) ?? normalizeRating(extras?.parentSeries?.OfficialRating);
           const isChild = item.Type === "Episode" || item.Type === "Season";
           if (!isChild || item.SeriesId) {
-            setCachedEntry(ctx, String(item.Id), rating, isChild ? String(item.SeriesId) : null);
+            setCachedEntry(ctx2, String(item.Id), rating, isChild ? String(item.SeriesId) : null);
           }
-          applyAgeRatingTag(ctx, el, rating);
+          applyAgeRatingTag(ctx2, el, rating);
         },
-        renderFromCache(ctx, el, itemId) {
-          if (ctx.isTagged(el)) return true;
-          if (ctx.shouldIgnore(el)) return true;
+        renderFromCache(ctx2, el, itemId) {
+          if (ctx2.isTagged(el)) return true;
+          if (ctx2.shouldIgnore(el)) return true;
           if (el.closest(".je-hidden")) return true;
-          const cached = getCachedEntry(ctx, itemId);
+          const cached = getCachedEntry(ctx2, itemId);
           if (!cached) return false;
           if (isGuardedSeries(cached.seriesId)) return false;
-          applyAgeRatingTag(ctx, el, cached.rating);
+          applyAgeRatingTag(ctx2, el, cached.rating);
           return true;
         },
-        renderFromServerCache(ctx, el, entry) {
-          if (ctx.isTagged(el)) return;
-          if (ctx.shouldIgnore(el)) return;
-          applyAgeRatingTag(ctx, el, normalizeRating(entry.OfficialRating));
+        renderFromServerCache(ctx2, el, entry) {
+          if (ctx2.isTagged(el)) return;
+          if (ctx2.shouldIgnore(el)) return;
+          applyAgeRatingTag(ctx2, el, normalizeRating(entry.OfficialRating));
         }
       }
     };
     JE.initializeAgeRatingTags = function() {
       console.log(`${logPrefix} Starting...`);
-      const ctx = JE.core.tagRenderer.register("agerating", spec);
-      ctx.injectCss();
+      const ctx2 = JE.core.tagRenderer.register("agerating", spec);
+      ctx2.injectCss();
       ensureColourCss();
       console.log(`${logPrefix} Initialized successfully.`);
     };
@@ -214,7 +250,7 @@
   }
 
   // client/src/features/media-tags/types/age-rating/ageratingtags-entry.ts
-  createAgeRatingTags(tagRuntimeHost());
+  createAgeRatingTags(mediaTagsContext());
 })();
 })();
 //# sourceMappingURL=ageratingtags.js.map
