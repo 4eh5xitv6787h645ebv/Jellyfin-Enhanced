@@ -2,7 +2,7 @@ using System;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services
 {
     /// <summary>
     /// Records Activity Feed "Favorited" entries by watching

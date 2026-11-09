@@ -138,7 +138,15 @@
       "category": "Controllers"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/ActivityServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/Events/ActivityPlaybackConsumer.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/JeActivityController.cs",
       "category": "Features"
     },
     {
@@ -3478,17 +3486,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/activity",
-      "method": "GetActivityFeed",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/whats-new",
       "method": "GetWhatsNew",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3821,6 +3818,17 @@
       "method": "GetView",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/activity",
+      "method": "GetActivityFeed",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/JeActivityController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
     },
     {
       "verb": "POST",
@@ -10314,7 +10322,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 490,
+    "files": 492,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 88,

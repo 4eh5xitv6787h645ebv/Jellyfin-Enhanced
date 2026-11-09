@@ -8,6 +8,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

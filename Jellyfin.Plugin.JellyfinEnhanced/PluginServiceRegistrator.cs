@@ -1,6 +1,7 @@
 using System.Net.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
@@ -138,8 +139,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // ActivityFeedEnabled. ActivityFavoriteMonitor is a Singleton that
             // self-subscribes to IUserDataManager.UserDataSaved in its own
             // constructor (see StartupService, which forces its construction).
-            serviceCollection.AddSingleton<ActivityService>();
-            serviceCollection.AddSingleton<ActivityFavoriteMonitor>();
+            serviceCollection.AddJeActivity();
 
             // Spoiler Guard: an MVC action filter on the Image controller blurs
             // guarded-episode image bytes, so every client gets them via the native image API.

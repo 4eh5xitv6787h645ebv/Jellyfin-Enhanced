@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Events
 {
     /// <summary>
     /// Records an Activity Feed "Watched" entry on playback stop, threshold-
