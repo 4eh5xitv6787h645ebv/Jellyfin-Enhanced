@@ -67,3 +67,20 @@ export function isJson(value: unknown): value is JsonValue {
     if (typeof value === 'object') return Object.values(value).every(isJson);
     return false;
 }
+
+/**
+ * Whether a stored colour may go into CSS text (a stylesheet rule or a style attribute): a hex colour,
+ * rgb()/rgba()/hsl()/hsla() or a keyword such as `transparent`, accepted by the browser when it can tell.
+ * Anything with `;`, quotes or braces could add a declaration or leave the attribute.
+ */
+export function isSafeCssColor(value: unknown): value is string {
+    if (typeof value !== 'string') return false;
+    const v = value.trim();
+    if (!/^(?:#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|[a-z]+|(?:rgba?|hsla?)\([\d\s.,%/+-]*\))$/i.test(v)) return false;
+    return typeof CSS === 'undefined' || typeof CSS.supports !== 'function' || CSS.supports('color', v);
+}
+
+/** Whether a font-family list may go into CSS text: names, spaces, commas, dots, hyphens and paired single quotes. */
+export function isSafeFontFamily(value: unknown): value is string {
+    return typeof value === 'string' && /^[\w\s,.'-]+$/.test(value) && (value.split("'").length - 1) % 2 === 0;
+}

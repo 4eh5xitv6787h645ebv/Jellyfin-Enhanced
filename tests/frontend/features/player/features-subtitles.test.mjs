@@ -7,9 +7,25 @@ function setup(t,html=''){
   t.after(()=>h.close());h.load('enhanced/player/subtitles.js');
   return {...h, mutate:node=>callback([{addedNodes:[node]}]),counts:()=>({subscriptions,releases})};
 }
-for(const [color,expected] of [['transparent',{swatch:'#ffffff',alphaValue:0}],['#123456',{swatch:'#123456',alphaValue:255}],['#12345680',{swatch:'#123456',alphaValue:128}],[null,{swatch:'#ffffff',alphaValue:10}],['bad',{swatch:'#ffffff',alphaValue:10}]]){
+for(const [color,expected] of [['transparent',{swatch:'#ffffff',alphaValue:0}],['#123456',{swatch:'#123456',alphaValue:255}],['#12345680',{swatch:'#123456',alphaValue:128}],[null,{swatch:'#ffffff',alphaValue:10}],['bad',{swatch:'#ffffff',alphaValue:10}],['#"><b>x',{swatch:'#ffffff',alphaValue:10}],['#zzzzzz80',{swatch:'#ffffff',alphaValue:10}]]){
   test(`subtitle color decoding ${color}`,t=>{const h=setup(t);assert.deepEqual(plain(h.JE.decodeSubtitleColor(color,{fallbackSwatch:'#ffffff',fallbackAlphaValue:10})),expected);});
 }
+test('a crafted subtitle colour or font never adds a declaration to the ::cue rule or the subtitle element',t=>{
+  const h=setup(t,'<video></video><div class="videoSubtitles"><div class="videoSubtitlesInner">Cue</div></div>');
+  const native=h.document.createElement('style');native.id='htmlvideoplayer-cuestyle';h.document.head.append(native);
+  const payload='red; background-image: url(https://tracker.invalid/x)';
+  h.JE.currentSettings.customSubtitleTextColor=payload;h.JE.currentSettings.customSubtitleBgColor=payload;
+  h.JE.applySavedStylesWhenReady();
+  const rule=()=>h.document.getElementById('je-html-videoplayer-cuestyle').sheet.cssRules[0].cssText;
+  assert.doesNotMatch(rule(),/tracker\.invalid|background-image/);
+  assert.match(rule(),/color: #FFFFFFFF/i,'the default text colour instead');
+  // A font value from the caller is held to the same rule.
+  h.JE.applySubtitleStyles('#ffff00','transparent',1.8,'serif; background-image: url(https://tracker.invalid/f)','none');
+  assert.doesNotMatch(rule(),/tracker\.invalid|background-image/);
+  assert.match(rule(),/color: #ffff00/i,'a valid colour is kept');
+  const inner=h.document.querySelector('.videoSubtitlesInner');
+  assert.doesNotMatch(inner.getAttribute('style'),/tracker\.invalid/);
+});
 test('subtitle effects fall back to Auto for stale selections and honor explicit None',t=>{
   const h=setup(t);
   assert.notEqual(h.JE.getSubtitleTextShadow('transparent',999),'none');

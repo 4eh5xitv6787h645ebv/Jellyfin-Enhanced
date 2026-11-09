@@ -49,7 +49,7 @@
     "X2 createUserReviewTags.initializeUserReviewTags": 1
   },
   "client/src/features/player/subtitles.ts": {
-    "X2 applySubtitleStyles": 5,
+    "X2 applySubtitleStyles": 1,
     "X2 restoreOriginalStyle": 1
   },
   "client/src/features/seerr/core/modal.ts": {
@@ -68,7 +68,7 @@
     "X2 installUiPanelShortcutEditor.wireShortcutEditor.addIndicator": 1
   },
   "client/src/features/settings-panel/ui-panel-template.ts": {
-    "X2 installUiPanelTemplate.buildPanelHtml": 116,
+    "X2 installUiPanelTemplate.buildPanelHtml": 115,
     "X2 installUiPanelTemplate.buildPanelHtml.generatePresetHTML": 5
   },
   "client/src/features/settings-panel/ui-styles.ts": {

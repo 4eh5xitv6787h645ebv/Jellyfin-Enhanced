@@ -19,6 +19,17 @@
   var shared2 = /* @__PURE__ */ sharedModule("features/player/lifetime");
   var export02 = /* @__PURE__ */ sharedExport(shared2, "createPlayerLifetime");
 
+  // client/src/features/shared/settings-values.ts
+  function isSafeCssColor(value) {
+    if (typeof value !== "string") return false;
+    const v = value.trim();
+    if (!/^(?:#[0-9a-f]{3,4}|#[0-9a-f]{6}|#[0-9a-f]{8}|[a-z]+|(?:rgba?|hsla?)\([\d\s.,%/+-]*\))$/i.test(v)) return false;
+    return typeof CSS === "undefined" || typeof CSS.supports !== "function" || CSS.supports("color", v);
+  }
+  function isSafeFontFamily(value) {
+    return typeof value === "string" && /^[\w\s,.'-]+$/.test(value) && (value.split("'").length - 1) % 2 === 0;
+  }
+
   // client/src/features/player/subtitles.ts
   var { JE, ApiClient } = export0();
   var lifetime = export02(JE, "subtitles");
@@ -27,6 +38,7 @@
   var STYLED_ATTR = "data-je-subtitle-styled";
   var ORIGINAL_STYLE_ATTR = "data-je-original-style";
   var TEXT_SELECTOR = ".videoSubtitlesInner, .videoSecondarySubtitlesInner";
+  var isSafeFontSize = (value) => typeof value === "number" && Number.isFinite(value) && value > 0;
   function markStyled(el) {
     if (el.hasAttribute(STYLED_ATTR)) return;
     el.setAttribute(ORIGINAL_STYLE_ATTR, el.getAttribute("style") || "");
@@ -89,7 +101,7 @@
   };
   JE.decodeSubtitleColor = (input, fallback) => {
     if (input === "transparent") return { swatch: fallback.fallbackSwatch, alphaValue: 0 };
-    const isHex = typeof input === "string" && input.charCodeAt(0) === 35 && (input.length === 7 || input.length === 9);
+    const isHex = typeof input === "string" && /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(input);
     if (!isHex) return { swatch: fallback.fallbackSwatch, alphaValue: fallback.fallbackAlphaValue };
     const swatch = input.slice(0, 7);
     const alphaValue = input.length === 9 ? parseInt(input.slice(7, 9), 16) : 255;
@@ -173,7 +185,11 @@
       }
     });
   }
-  JE.applySubtitleStyles = (textColor, bgColor, fontSize, fontFamily, textShadow) => {
+  JE.applySubtitleStyles = (rawTextColor, rawBgColor, rawFontSize, rawFontFamily, textShadow) => {
+    const textColor = isSafeCssColor(rawTextColor) ? rawTextColor : "#FFFFFFFF";
+    const bgColor = isSafeCssColor(rawBgColor) ? rawBgColor : "#00000000";
+    const fontSize = isSafeFontSize(rawFontSize) ? rawFontSize : 1.2;
+    const fontFamily = isSafeFontFamily(rawFontFamily) ? rawFontFamily : "inherit";
     currentSubtitleStyle = { textColor, bgColor, fontSize, fontFamily, textShadow };
     document.querySelectorAll(TEXT_SELECTOR).forEach(forceApplyInlineStyles);
     applySubtitlePosition();
@@ -215,8 +231,8 @@
       removeInjectedStyles();
       return;
     }
-    const textColor = JE.currentSettings.customSubtitleTextColor || "#FFFFFFFF";
-    const bgColor = JE.currentSettings.customSubtitleBgColor || "#00000000";
+    const textColor = isSafeCssColor(JE.currentSettings.customSubtitleTextColor) ? JE.currentSettings.customSubtitleTextColor : "#FFFFFFFF";
+    const bgColor = isSafeCssColor(JE.currentSettings.customSubtitleBgColor) ? JE.currentSettings.customSubtitleBgColor : "#00000000";
     const textShadow = JE.getSubtitleTextShadow(bgColor);
     const fontSizePreset = JE.fontSizePresets[JE.currentSettings.selectedFontSizePresetIndex ?? 2];
     const fontFamilyPreset = JE.fontFamilyPresets[JE.currentSettings.selectedFontFamilyPresetIndex ?? 0];
