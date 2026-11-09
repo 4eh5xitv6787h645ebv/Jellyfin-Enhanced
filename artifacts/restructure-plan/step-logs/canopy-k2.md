@@ -78,6 +78,8 @@ That is 33 new tests in total (`node --test tests/frontend/guards/*.test.mjs`: 3
 
 [canopy-k2-triage.md](canopy-k2-triage.md) classifies all 376 keys: **12 likely real**, **265 benign**, **99 unclear**. No fixes were made.
 
+Triage kept privately by the maintainer.
+
 ## Gates
 
 - `npm test` (`node tests/frontend/run.mjs`), run in the foreground: **3827 tests, 3818 pass, 9 fail**. The 9 failures are exactly the ones in `baselines/npm-failures.txt` (bootstrap-media-tags-portable ×3, bootstrap-native-tabs ×3, core-translate-plural ×3). The same suite without the `guards/` folder, measured on this branch, gives 3794 tests, 3785 pass and the same 9 failures. So the total went up by the 33 guard tests and the failure list is unchanged.
