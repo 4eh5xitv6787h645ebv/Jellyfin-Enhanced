@@ -59,9 +59,6 @@
   "client/src/features/catchup/catchup-deck.ts": {
     "X1 toast": 1
   },
-  "client/src/features/catchup/wire.ts": {
-    "X1 errorMessage": 2
-  },
   "client/src/features/chrome/theme-selector.ts": {
     "X1 createThemeSelector.notify": 1
   },
@@ -275,6 +272,9 @@
   },
   "client/src/features/shared/icons.ts": {
     "X1 createIcons.wrapEmoji": 1
+  },
+  "client/src/features/shared/wire.ts": {
+    "X1 errorMessage": 2
   },
   "client/src/features/spoiler-guard/settings-tab.ts": {
     "X1 buildSettingsHtml": 3,

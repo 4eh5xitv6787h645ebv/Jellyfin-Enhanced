@@ -14,7 +14,9 @@
 //     arrays that are joined); a call to a function in client/src is as safe as everything it returns;
 //   - a function parameter is safe by caller contract when the function is only ever called (never passed
 //     around) and every call site, in its file or through a named import, passes a safe argument;
-//   - `.map(cb).join()` is as safe as what `cb` returns; a callback over a constant array gets safe elements.
+//   - `.map(cb).join()` is as safe as what `cb` returns; a callback over a constant array gets safe elements;
+//   - the default import of a client/src `.css` file (its text, inlined by the build's `text` loader).
+import { posix } from 'node:path';
 import {
   assignedValues, calleeName, functionOf, importedReferences, isExported, lastName, propertyName, receiverOf,
   references, resolve, resolveImport, returnedExpressions, rootIdentifier, ts, unwrap,
@@ -115,6 +117,7 @@ export function createChecker(project, vocab) {
     if (SAFE_GLOBALS.has(id.text) || UPPER_CONST.test(id.text)) return [];
     let binding = resolve(id);
     if (!binding) return [id];
+    if (cssTextImport(binding.decl)) return [];
     if (ts.isImportSpecifier(binding.decl)) {
       binding = resolveImport(project, binding);
       if (!binding) return [id];
@@ -130,6 +133,19 @@ export function createChecker(project, vocab) {
       return [...(decl.initializer ? leaves(decl.initializer) : []), ...all(assignedValues(binding))];
     }
     return [id];
+  }
+
+  /**
+   * The default import of a relative `.css` file under client/src is that file's text, inlined at build time as a
+   * string literal (frontend.md §3 D1, the esbuild `text` loader). It is as constant as a template literal without
+   * substitutions, which is what D2 moved into these files.
+   */
+  function cssTextImport(decl) {
+    if (!ts.isImportClause(decl) || !decl.name || decl.isTypeOnly) return false;
+    const specifier = decl.parent.moduleSpecifier;
+    if (!ts.isStringLiteral(specifier) || !specifier.text.startsWith('.') || !specifier.text.endsWith('.css')) return false;
+    const target = posix.normalize(posix.join(posix.dirname(decl.getSourceFile().fileName), specifier.text));
+    return target.startsWith('client/src/') && (project.synthetic || project.read(target) !== null);
   }
 
   /** A destructured name is safe when what it is destructured from is constant data. */
