@@ -1,0 +1,80 @@
+# Agent guide
+
+Guidance for AI coding agents working in this repository. Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Where things live
+
+- **Feature map:** [`docs/feature-map.json`](docs/feature-map.json) is the canonical list of features. For each one it gives the client folder, the backend folder, the controller and the test folders. CONTRIBUTING's ["Where things live"](CONTRIBUTING.md#where-things-live) table is rendered from it. To add or rename a feature, change the map first.
+- **Client:** TypeScript in `client/src/`. Features are in `features/<feature>/`, the admin page in `admin/config/`, and the platform in `bootstrap/`, `core/`, `host/`, `pages/` and `contracts/`. Each feature's `README.md` lists its entry outputs, public API and tests. `client/entries/*.json` maps every shipped script under `Jellyfin.Plugin.JellyfinEnhanced/js/` to its source; [its README](client/entries/README.md) explains why manifest names don't always match folders.
+- **Backend:** `Jellyfin.Plugin.JellyfinEnhanced/`.
+  - `Features/<Feature>/` holds `Je<Feature>Controller.cs` (+ partials `Je<Feature>Controller.<Area>.cs`), `Services/`, `Models/`, `Events/`, `Tasks/` and `PublicApi/`.
+  - `Shared/<Area>/` holds code that several features use.
+  - `Infrastructure/`, `Transport/` and `Configuration/` are the other layers.
+  - The pre-restructure folders `Controllers/`, `Services/`, `Helpers/`, `Model/`, `ScheduledTasks/`, `EventHandlers/` and `Extensions/` are retired and must stay empty.
+- **Tests:** `tests/frontend/` (node), `tests/backend/` (xUnit, `JE.Tests.csproj`), `tests/browser/` (Playwright). Each runner's README describes its layout; [`docs/advanced/project-structure.md`](docs/advanced/project-structure.md) has the detailed file index.
+
+## Invariants
+
+- **Shipped outputs.** Never rename a `client/entries` output key, and never edit `Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json` (it pins the bundle's load order). The gates compare both with `restructure-base`. Moving a source edits only the right-hand side of its manifest mapping.
+- **Generated files.** Never hand-edit `js/**` outputs and maps, `client/generated-manifest.json`, `docs/rewrite/migration-inventory.json`, `client/src/contracts/*.ts` or `tests/docs/production-inventory.json`. Regenerate them:
+  - `npm run client:build && npm run inventory:rewrite`;
+  - `npm run contracts:generate`;
+  - `python3 tests/inventory/generate.py` after moving or editing a controller file.
+- **Snapshots and baselines.** Never update a snapshot or baseline to make a gate pass, and never set `JE_UPDATE_SNAPSHOTS`. This covers:
+  - the route/auth, auth-helper, registration and `*.base.json` snapshots in `tests/backend/Architecture/`;
+  - `artifacts/restructure-plan/baselines/*`;
+  - `shared-feature-references.baseline.json`, the `FileSizeTests` allow-list and `tests/frontend/architecture/size-baseline.json`.
+
+  Failure lists and ratchets only shrink. If a gate fails, fix the code or stop and report.
+- **Frontend feature boundaries** (`tests/frontend/architecture/feature-boundaries.test.mjs`, strict):
+  - A file in `features/<A>/` imports only `features/<A>/**`, `core/**`, `contracts/**`, `features/shared/**`, `host/context.ts`, and another feature's `public-api.ts` with `import type`.
+  - Runtime access to another feature goes through the `FeatureContext` (`ctx.own`/`ctx.peer`, `host/context.ts`).
+  - `host/**` never imports `features/**`.
+  - `JE.internals.<slot>` is read only by the slot's owner (`internals-owners.json`).
+  - Raw `window.JellyfinEnhanced` is allowed only in host files, `bootstrap/**` and `core/lifecycle-entry.ts`.
+- **Backend feature boundaries** (backend.md §7.7, `FeatureBoundaryTests`):
+  - A controller references only its own feature plus `Shared`, `Infrastructure`, `Configuration`, `Transport` and `Logger`.
+  - Another feature is reached only through its `Features.<B>.PublicApi` static forwarders or an edge in `tests/backend/Architecture/feature-dependencies.json`. Don't add edges.
+  - A stateless helper or a cross-cutting policy or infrastructure service that several features need moves to `Shared/<Area>/` as a pure rename.
+  - References from `Shared`/`Infrastructure` into `Features` must not grow.
+- **Folder = namespace.** A file under `Features/<F>/` declares `…Features.<F>[.*]`. Scheduled-task types are the exception: they keep `Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks`, and `StartupService` keeps `…Services`, wherever their files live. Jellyfin keys a task's saved triggers and history by the type's full name, so renaming one resets admins' schedules.
+- **Sizes.** Controller files (`Je*Controller*.cs`) have at most **1,200** lines; split a controller into partials. Other `Features/**` and `Shared/**` files have at most 1,500. Each feature has one controller type, `Je<Feature>Controller`.
+- **Routes and auth.** Routes stay under `[Route("JellyfinEnhanced")]`. A route, verb or authorization change is a contract change. It shows up in the route/auth snapshot and needs the maintainer, not a regenerated snapshot.
+
+## How to verify
+
+Use Node 26.2.0 for `h` and for anything that regenerates poster language tables. Run one dotnet build or test at a time.
+
+```bash
+npm run verify:restructure                  # = restructure-gates.sh all && restructure-gates.sh browser (every gate except HOST)
+scripts/restructure-gates.sh be             # backend: build warnings, Architecture tests, dotnet + npm suites, INV, TOOL
+scripts/restructure-gates.sh fe             # frontend gate G (client build/check, typecheck, npm test, output keys), INV, TOOL
+scripts/restructure-gates.sh all            # be, then fe without a second npm suite (use at merges)
+scripts/restructure-gates.sh browser        # Playwright, ratcheted against baselines/browser-failures.txt
+scripts/restructure-gates.sh inv            # production inventory is current; route list unchanged
+scripts/restructure-gates.sh tool           # runner unit tests + mutation/history path check
+scripts/restructure-gates.sh h              # poster harness builds + ResolutionData.g.cs check
+scripts/restructure-gates.sh r '<pattern>'  # no stale reference outside artifacts/
+npm run verify:rewrite                      # the rewrite's CI gate
+```
+
+Gate details are in `artifacts/restructure-plan/PLAN.md` ("Gates"). A few tests are known to be flaky under load (`ApiSeerrProxyOutcomeTests.RealSocketWriteOnAReusedConnectionIsSentOnce`, `discovery-recommendations-rewrite.spec.cjs:70`). A failure counts as a flake only if an isolated rerun passes and then a clean full rerun passes. Never add a flaky test to a baseline.
+
+**HOST (real Jellyfin 12.4).** Run this before claiming that something works in Jellyfin:
+1. `scripts/restructure-gates.sh image` checks that the pinned image digest is unchanged.
+2. Start a disposable server with the maintainers' `je` lab tool: `je up <name> <port> --image jellyfin/jellyfin:12.4`. Always pass `--image`.
+3. Before opening any page, disable any Sonarr/Radarr instances the lab configuration points at.
+4. Install the plugin by hand. `je up`'s own deploy build fails: it builds a clean clone without `node_modules`, and it builds with `-warnaserror` against the one baselined CS8604 warning. So build with `dotnet build Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj -c Release -p:JellyfinTarget=jf12 -o <dir>`, then stop the container, copy the DLL and `meta.json` into `config/plugins/JellyfinEnhanced_<version>/` and start it again.
+5. Check that the plugin loads without JE errors, that the admin page, Media Tags hub and a tagged poster render, that the JE scheduled tasks are listed under their original names, and that `/api-docs/openapi.json` returns 200. Also compare `GET /JellyfinEnhanced/bundle.js` with `scripts/restructure-gates.sh bundle <file>` (`bundle-hash`).
+6. Remove the container and its data afterwards (`je rm <name>`).
+
+**Guardrail tests:**
+- `tests/frontend/architecture/`: `feature-boundaries`, `file-size`, `generated-markers`, `feature-map`, `feature-readme`.
+- `tests/backend/Architecture/`: `FeatureBoundaryTests`, `FileSizeTests`, `FolderNamespaceTests`, `FeatureMapParityTests`, `ControllerActivationTests`, `ServicesDoNotReadUserTests`, and the route/auth, auth-helper, auth-read, registration and service-factory snapshot tests.
+- To run only the backend guardrails: `dotnet test tests/backend/JE.Tests.csproj -p:JellyfinTarget=jf12 --filter FullyQualifiedName~Architecture`.
+
+[`tests/backend/README.md`](tests/backend/README.md) explains each backend check and its exemptions.
+
+---
+
+Structure informed by Jellyfin Canopy's agent guidance (GPL-3.0).
