@@ -10,14 +10,19 @@ namespace JE.Tests;
 public class ApiAssetTests
 {
     internal static JellyfinEnhancedController Controller(CoreFixture fixture, params object[] services)
+        => (JellyfinEnhancedController)Controller(typeof(JellyfinEnhancedController), fixture, services);
+
+    // Any plugin controller type: each constructor parameter is filled from `services` (first instance of a matching
+    // type), the fixture logger, or an inert SpoilerSeerrRedactor; anything else is null.
+    internal static ControllerBase Controller(Type controllerType, CoreFixture fixture, params object[] services)
     {
         // Asset actions use only the logger and HTTP context; unrelated host services are deliberately absent.
-        var constructor = typeof(JellyfinEnhancedController).GetConstructors().Single();
+        var constructor = controllerType.GetConstructors().Single();
         var arguments = constructor.GetParameters().Select(p => p.ParameterType == typeof(Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor) && !services.OfType<Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor>().Any()
             // Inert until a test turns Spoiler Guard on, and then it supplies its own.
             ? new Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor(null!, null!, null!, null!, null!)
             : p.ParameterType == typeof(Jellyfin.Plugin.JellyfinEnhanced.Logger) ? (object)fixture.Logger : services.FirstOrDefault(p.ParameterType.IsInstanceOfType)).ToArray();
-        var controller = (JellyfinEnhancedController)constructor.Invoke(arguments);
+        var controller = (ControllerBase)constructor.Invoke(arguments);
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
         return controller;
     }
@@ -130,11 +135,11 @@ public class ApiAssetTests
             var section = sections[i];
             var sourceMap = section.GetProperty("map");
             var line = section.GetProperty("offset").GetProperty("line").GetInt32();
-            using var original = typeof(JellyfinEnhancedController).Assembly.GetManifestResourceStream("Jellyfin.Plugin.JellyfinEnhanced.js." + paths[i].Replace('/', '.'))!;
+            using var original = typeof(Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced).Assembly.GetManifestResourceStream("Jellyfin.Plugin.JellyfinEnhanced.js." + paths[i].Replace('/', '.'))!;
             using var reader = new StreamReader(original);
             var source = reader.ReadToEnd();
             Assert.Equal(source, string.Join('\n', lines.Skip(line)).Substring(0, source.Length));
-            using var embeddedMap = typeof(JellyfinEnhancedController).Assembly.GetManifestResourceStream(
+            using var embeddedMap = typeof(Jellyfin.Plugin.JellyfinEnhanced.JellyfinEnhanced).Assembly.GetManifestResourceStream(
                 "Jellyfin.Plugin.JellyfinEnhanced.js." + paths[i].Replace('/', '.') + ".map");
             if (embeddedMap != null)
             {
