@@ -18,10 +18,10 @@ const settle = async (n = 6) => { for (let i = 0; i < n; i++) await new Promise(
 test('the server, What\'s New and the docs generator read the same declarations from the generated modules as from the hand-written ones', () => {
   const baseline = JSON.parse(readFileSync(new URL('./admin-tags-rewrite.declarations.json', import.meta.url), 'utf8'));
   const now = readAll(Object.fromEntries(sectionFiles().map((f) => [f, readFileSync(resolve(sectionsDir, f), 'utf8')])));
-  // Helpers/MediaTagsPageFields.cs: the field patch's allowlist (a missing field is refused, an extra one writable).
+  // Features/MediaTags/Admin/MediaTagsPageFields.cs: the field patch's allowlist (a missing field is refused, an extra one writable).
   assert.deepEqual(now.allowed, baseline.allowed);
   assert.ok(now.allowed.length > 100);
-  assert.deepEqual(now.settingIds, baseline.settingIds, 'Services/WhatsNewService.cs setting ids');
+  assert.deepEqual(now.settingIds, baseline.settingIds, 'Features/Admin/Services/WhatsNewService.cs setting ids');
   assert.deepEqual(now.locations, baseline.locations, 'What\'s New locations on the tab');
   assert.deepEqual(now.docs, baseline.docs, 'scripts/generate_config_flag_groups.py fields, groups and labels');
 });

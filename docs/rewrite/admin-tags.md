@@ -43,7 +43,7 @@ other 19 lazily, one after another, in `SECTION_FILES` order (two editors, then 
 
 ## Text the server reads from the section modules
 
-`Helpers/MediaTagsPageFields.cs` (the field patch's allowlist), `Services/WhatsNewService.cs` and
+`Features/MediaTags/Admin/MediaTagsPageFields.cs` (the field patch's allowlist), `Features/Admin/Services/WhatsNewService.cs` and
 `scripts/generate_config_flag_groups.py` read the section modules as text: one-line
 `{ id: '…', key: '…', … label: '…' }` declarations, `writes: […]`, `tab:`, `group: { id:` and
 `title:` lines. Bundled output prints double quotes and its own layout, which those patterns no

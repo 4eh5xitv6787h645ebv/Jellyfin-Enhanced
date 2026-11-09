@@ -370,7 +370,7 @@ test('What\'s New on the live page routes Media Tags settings through the tab', 
 });
 
 test('What\'s New: the server\'s text readers find exactly the baseline ids in the generated files', () => {
-  // Services/WhatsNewService.cs, SchemaIdRegex and SettingIdRegex, unchanged: renaming a declaration here would re-announce or lose a setting.
+  // Features/Admin/Services/WhatsNewService.cs, SchemaIdRegex and SettingIdRegex, unchanged: renaming a declaration here would re-announce or lose a setting.
   const type = 'toggle|text|password|number|textarea|select|position|button';
   const schema = new RegExp(`\\bid:\\s*'([^']+)'(?=[^{}]*\\btype:\\s*'(?:${type})')`
     + `|\\btype:\\s*'(?:${type})'[^{}]*?\\bid:\\s*'([^']+)'`

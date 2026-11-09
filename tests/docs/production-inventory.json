@@ -138,14 +138,6 @@
       "category": "Controllers"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/ContinueWatchingPlaybackEvents.cs",
-      "category": "EventHandlers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/MaintenancePlaybackReminder.cs",
-      "category": "EventHandlers"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/UserTopologyEvents.cs",
       "category": "EventHandlers"
     },
@@ -178,6 +170,30 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Events/MaintenancePlaybackReminder.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Models/WhatsNewData.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/MaintenanceModeService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/MaintenanceScheduleService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/PluginConfigurationPatch.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs",
       "category": "Features"
     },
@@ -187,6 +203,22 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Catchup/Services/CatchUpLogService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/Services/BrandingAssetStartupFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentResponseFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Admin/MediaTagsPageFields.cs",
       "category": "Features"
     },
     {
@@ -598,6 +630,14 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentPatch.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentService.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Events/SpoilerAutoEnableEvents.cs",
       "category": "Features"
     },
@@ -678,14 +718,6 @@
       "category": "Helpers"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MediaTagsPageFields.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/PluginConfigurationPatch.cs",
-      "category": "Helpers"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/PluralRules.cs",
       "category": "Helpers"
     },
@@ -747,10 +779,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/MdblistRatings.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/WhatsNewData.cs",
       "category": "Model"
     },
     {
@@ -818,10 +846,6 @@
       "category": "Services"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/BrandingAssetStartupFilter.cs",
-      "category": "Services"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/CdnAssetService.cs",
       "category": "Services"
     },
@@ -838,10 +862,6 @@
       "category": "Services"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/HiddenContentResponseFilter.cs",
-      "category": "Services"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/HostCompatibilityService.cs",
       "category": "Services"
     },
@@ -855,14 +875,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ItemStatsService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintenanceModeService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintenanceScheduleService.cs",
       "category": "Services"
     },
     {
@@ -886,14 +898,6 @@
       "category": "Services"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentPatch.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentService.cs",
-      "category": "Services"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SonarrService.cs",
       "category": "Services"
     },
@@ -903,10 +907,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/UsageEventCounterService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/WhatsNewService.cs",
       "category": "Services"
     },
     {
@@ -9826,12 +9826,32 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/ContinueWatchingPlaybackEvents.cs"
+      "literal": "maintenance-state.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/MaintenanceModeService.cs"
+    },
+    {
+      "literal": "Jellyfin.Plugin.JellyfinEnhanced.Configuration.whats-new-seed.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs"
+    },
+    {
+      "literal": "config-schema-snapshot.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs"
+    },
+    {
+      "literal": "whats-new.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs"
     },
     {
       "literal": "bookmark.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentResponseFilter.cs"
     },
     {
       "literal": "settings.json",
@@ -9918,6 +9938,10 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs"
     },
     {
+      "literal": "settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentService.cs"
+    },
+    {
       "literal": "spoilerblur.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerBlurImageFilter.cs"
     },
@@ -9954,40 +9978,16 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/ElsewhereDocumentService.cs"
     },
     {
-      "literal": "hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/HiddenContentResponseFilter.cs"
-    },
-    {
       "literal": "https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/manifest.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/HostCompatibilityService.cs"
-    },
-    {
-      "literal": "maintenance-state.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/MaintenanceModeService.cs"
     },
     {
       "literal": "mdblist-ratings.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/MdblistService.cs"
     },
     {
-      "literal": "settings.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/SettingsDocumentService.cs"
-    },
-    {
       "literal": "usage-counters.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/UsageEventCounterService.cs"
-    },
-    {
-      "literal": "Jellyfin.Plugin.JellyfinEnhanced.Configuration.whats-new-seed.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/WhatsNewService.cs"
-    },
-    {
-      "literal": "config-schema-snapshot.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/WhatsNewService.cs"
-    },
-    {
-      "literal": "whats-new.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/WhatsNewService.cs"
     },
     {
       "literal": "awards.json",

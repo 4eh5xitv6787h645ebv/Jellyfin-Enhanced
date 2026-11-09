@@ -348,7 +348,7 @@ test('each section module is a self-contained file the page loads, and every dec
     assert.ok(index, `${file} has its lexical index`);
     for (const line of index[0].split('\n')) {
       if (/^\s*\{ id: '/.test(line)) assert.match(line, /^\s*\{ id: '\w+', key: '\w+', type: '\w+'.*label: '.+'/, `${file}: ${line.trim().slice(0, 60)}`);
-      // Helpers/MediaTagsPageFields.cs reads a section's own writes from one line too.
+      // Features/MediaTags/Admin/MediaTagsPageFields.cs reads a section's own writes from one line too.
       if (/^\s*writes:/.test(line)) assert.match(line, /^\s*writes: \['\w+'(, '\w+')*\],$/, `${file}: ${line.trim()}`);
     }
   }

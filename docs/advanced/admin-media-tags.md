@@ -74,7 +74,7 @@ The **Media Tags** tab of the Jellyfin Enhanced configuration page (`#/configura
 
 ## Field declarations
 
-Keep each field on **one line** starting `{ id: '…', key: '…', type: '…'` with a `label: '…'`: `scripts/generate_config_flag_groups.py` and `Services/WhatsNewService.cs` read them lexically, and a frontend test enforces the shape.
+Keep each field on **one line** starting `{ id: '…', key: '…', type: '…'` with a `label: '…'`: `scripts/generate_config_flag_groups.py` and `Features/Admin/Services/WhatsNewService.cs` read them lexically, and a frontend test enforces the shape.
 
 | Property | Meaning |
 |---|---|
@@ -98,7 +98,7 @@ A section with `note: true` (an explanation with nothing to set) is drawn as a c
 
 A section whose own editors write fields that are not declared as above (the layout editor's profiles, order and caps; the Tag Styles document and preset; excluded library ids; the clear-cache signal) names them on one line: `writes: ['TagLayouts', 'TagGroupOrder', 'TagGroupCaps'],`.
 
-These declarations are the tab's whole field list. `JE.adminTags.pageFields()` collects them and the tab refuses to save anything else; `Helpers/MediaTagsPageFields.cs` reads the same declarations from the embedded modules, and `POST /JellyfinEnhanced/admin/configuration` answers `400` for any other field, so API keys (except the Leaving soon section's own Maintainerr key, a `secret` field) and the rest of the configuration stay with the configuration page's form. The server also checks each value against the field's contract (`MediaTagsPageFields.TryNormalize`, built on the normalisers the server already uses for these fields), so a value the page's controls cannot produce is refused with the reason; give a new field a case there when it has a range or a set of values. A set of values goes through `OneOf`, which also requires the canonical value to be in the set: several normalisers answer an empty string for a value they do not know, so without that check an empty value would pass. `tests/fixtures/admin-tags-page-fields.json` is the expected list; a frontend and a backend test compare both sides with it, so a new field means a declaration and a line there.
+These declarations are the tab's whole field list. `JE.adminTags.pageFields()` collects them and the tab refuses to save anything else; `Features/MediaTags/Admin/MediaTagsPageFields.cs` reads the same declarations from the embedded modules, and `POST /JellyfinEnhanced/admin/configuration` answers `400` for any other field, so API keys (except the Leaving soon section's own Maintainerr key, a `secret` field) and the rest of the configuration stay with the configuration page's form. The server also checks each value against the field's contract (`MediaTagsPageFields.TryNormalize`, built on the normalisers the server already uses for these fields), so a value the page's controls cannot produce is refused with the reason; give a new field a case there when it has a range or a set of values. A set of values goes through `OneOf`, which also requires the canonical value to be in the set: several normalisers answer an empty string for a value they do not know, so without that check an empty value would pass. `tests/fixtures/admin-tags-page-fields.json` is the expected list; a frontend and a backend test compare both sides with it, so a new field means a declaration and a line there.
 
 ## Porting a control from the configuration page's form
 
