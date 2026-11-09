@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('node:path');
 
 const js = path.resolve(__dirname, '../../Jellyfin.Plugin.JellyfinEnhanced/js');
-const load = async (page, files) => { for (const file of files) await page.addScriptTag({ path: path.join(js, file) }); };
+const load = async (page, files) => { await page.addScriptTag({ url: '/tests/browser/shared-modules.js' }); for (const file of files) await page.addScriptTag({ path: path.join(js, file) }); }; // canopy K1b: shared modules (client/shared-modules.json) whose providers these fixtures do not load
 const A = 'a0000000000000000000000000000000';
 const B = 'b0000000000000000000000000000000';
 const card = id => `<div class="card" data-id="${id}" data-type="Movie"><div class="cardBox"><div class="cardScalable"><div class="cardImageContainer" style="background:#334"></div><div class="cardOverlayContainer"></div></div></div></div>`;
