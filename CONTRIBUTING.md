@@ -77,6 +77,8 @@ The canonical list is [`docs/feature-map.json`](docs/feature-map.json). `tests/f
 | `admin` (area) | `admin/config/` | `Admin/` | `tests/frontend/admin/`, `tests/backend/Features/Admin/` |
 | `platform` (area) | `bootstrap/`, `core/`, `host/`, `pages/`, `features/shared/` | `Platform/` | `tests/frontend/bootstrap/`, `tests/frontend/core/`, `tests/frontend/pages/`, `tests/frontend/contracts/`, `tests/frontend/regressions/`, `tests/backend/Features/Platform/` |
 
+On the backend, each feature folder has one controller, `Je<Feature>Controller`, which can be split into partials named `Je<Feature>Controller.<Area>.cs`. Controller files may have at most 1,200 lines, and other `Features/` and `Shared/` files at most 1,500. A file declares its folder's namespace, `…Features.<Feature>[.*]`; scheduled-task types are the exception and keep their legacy namespace. A feature uses another feature only through that feature's `PublicApi/` or an edge listed in `tests/backend/Architecture/feature-dependencies.json`. A helper that several features need goes to `Shared/<Area>/`. `dotnet test tests/backend/JE.Tests.csproj -p:JellyfinTarget=jf12 --filter FullyQualifiedName~Architecture` enforces all of this, together with this table's backend column; [`tests/backend/README.md`](tests/backend/README.md) explains each check.
+
 ## 📝 Code Contribution Guidelines
 
 ### Code Style
