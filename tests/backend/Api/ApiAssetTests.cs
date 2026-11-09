@@ -36,6 +36,22 @@ public class ApiAssetTests
         return sibling;
     }
 
+    // A feature controller built from the constructor arguments `controller` holds (its injected fields, base class
+    // included) and sharing its ControllerContext, so it sees the same services and signed-in user. For tests whose
+    // fixture exposes only the main controller (restructure S2.11). Call it per action: a later SignIn replaces the
+    // main controller's context.
+    internal static T SiblingOf<T>(ControllerBase controller) where T : ControllerBase
+    {
+        var values = new List<object>();
+        for (var type = controller.GetType(); type != null && type != typeof(ControllerBase); type = type.BaseType)
+            values.AddRange(type.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly)
+                .Select(f => f.GetValue(controller)).OfType<object>());
+        var constructor = typeof(T).GetConstructors().Single();
+        var sibling = (T)constructor.Invoke(constructor.GetParameters().Select(p => values.FirstOrDefault(p.ParameterType.IsInstanceOfType)).ToArray());
+        sibling.ControllerContext = controller.ControllerContext;
+        return sibling;
+    }
+
     [Fact]
     public async Task EveryManifestModuleIsEmbeddedAndServedWithJavascriptMime()
     {

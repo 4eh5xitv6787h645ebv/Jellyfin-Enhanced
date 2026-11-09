@@ -7,10 +7,9 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
@@ -68,12 +67,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<WatchlistMonitor>();
             serviceCollection.AddJeCatchup();
             serviceCollection.AddSingleton<SeerrScanTriggerService>();
-            // Matroska track languages per file (size + mtime), so tag-cache
-            // rebuilds and tag-data requests don't reopen unchanged media files
-            // -- see MatroskaLanguageCache for why that matters on network mounts.
-            serviceCollection.AddSingleton<Helpers.MatroskaLanguageCache>();
-            serviceCollection.AddSingleton<TagCacheService>();
-            serviceCollection.AddSingleton<TagCacheMonitor>();
+            serviceCollection.AddJeMediaTags();
             // Local CDN subsystem: serves every third-party static asset (icons, fonts,
             // theme sheets, flags, remote locales) from the plugin's own route, backed by
             // an on-disk cache that the RefreshCdnAssetsTask warms/refreshes every 24h.
@@ -82,11 +76,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // endpoint (no API key), cached to disk indefinitely for hits / with a TTL
             // for misses — see WikidataAwardsService for details.
             serviceCollection.AddSingleton<WikidataAwardsService>();
-            serviceCollection.AddSingleton<AwardTagsService>();
-            // Leaving soon facts (Maintainerr API or collection names), refreshed by RefreshLeavingSoonTagsTask.
-            // Its Maintainerr client never follows redirects (the API key must not reach another origin).
-            LeavingSoonService.AddHttpClient(serviceCollection);
-            serviceCollection.AddSingleton<LeavingSoonService>();
             serviceCollection.AddSingleton<AnilistReviewsService>();
             serviceCollection.AddSingleton<ReviewTranslationService>();
             serviceCollection.AddSingleton<MdblistService>();
@@ -94,15 +83,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // In-memory, size-bounded cache + single-flight for TMDB passthrough and
             // person lookups -- see TmdbResponseCache for TTLs and why it is account-safe.
             serviceCollection.AddSingleton<TmdbResponseCache>();
-            // Server-wide trending list for the Status Tags poster badges (30-minute cache).
-            serviceCollection.AddSingleton<StatusTagsTrendingService>();
-            // TMDB schedule facts for the Status Tags series badges (rate-limited lookups).
-            serviceCollection.AddSingleton<StatusTagsSeriesService>();
-            serviceCollection.AddSingleton<NativeStatusRefreshService>();
-            serviceCollection.AddHostedService(sp => sp.GetRequiredService<NativeStatusRefreshService>());
-            // Logos tag group: daily TMDB provider/network/studio lookups and the logo image proxy cache.
-            serviceCollection.AddSingleton<TagLogoService>();
-            serviceCollection.AddSingleton<StatusTagsScenesService>();
             // Size / watch-progress of an item subtree in a handful of queries
             // (details-page media-info chips) -- see ItemStatsService.
             serviceCollection.AddSingleton<ItemStatsService>();
@@ -116,12 +96,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<AnalyticsReportingService>();
             serviceCollection.AddTransient<AnalyticsReportTask>();
             serviceCollection.AddTransient<RefreshCdnAssetsTask>();
-            serviceCollection.AddTransient<ArrTagsSyncTask>();
-            serviceCollection.AddTransient<AudioLanguageTagsSyncTask>();
             serviceCollection.AddTransient<MdblistRatingsFetchTask>();
             serviceCollection.AddTransient<MdblistRatingsSyncTask>();
-            serviceCollection.AddTransient<BuildTagCacheTask>();
-            serviceCollection.AddTransient<RefreshAwardTagsTask>();
             serviceCollection.AddTransient<JellyseerrWatchlistSyncTask>();
             serviceCollection.AddTransient<JellyfinToSeerrWatchlistSyncTask>();
             serviceCollection.AddTransient<JellyseerrUserImportTask>();
@@ -177,27 +153,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Spoiler Guard's tag-data strip, shared by GET /tag-cache, POST
             // /tag-data and native poster tags.
             serviceCollection.AddSingleton<SpoilerTagDataStripper>();
-
-            // Native Poster Tags (experimental, NativePosterTagsEnabled): JE's
-            // card tags drawn into Primary images for clients that don't run
-            // the web overlays. SpoilerIdentityTagFilter stamps a "-jet"
-            // variant token into eligible image tags (NativePosterTagStamper);
-            // PosterTagImageFilter draws the composite on matching image
-            // requests. Every service is inert while the master switch is off.
-            serviceCollection.AddSingleton<NativeClientPolicy>();
-            serviceCollection.AddSingleton<PosterTagSettingsProvider>();
-            // Short TTL in front of IUserManager.GetUserById (a DB transaction
-            // per call on Jellyfin 12) for the viewer and review-author lookups.
-            serviceCollection.AddSingleton<PosterTagUserCache>();
-            serviceCollection.AddSingleton<PosterTagVariantToken>();
-            serviceCollection.AddSingleton<PosterTagReviewRatings>();
-            serviceCollection.AddSingleton<PosterTagDataProvider>();
-            serviceCollection.AddSingleton<CompositeImageCache>();
-            serviceCollection.AddSingleton<PosterTagRenderer>();
-            serviceCollection.AddSingleton<PosterTagStatusProvider>();
-            serviceCollection.AddSingleton<PosterTagComposer>();
-            serviceCollection.AddSingleton<NativePosterTagStamper>();
-            serviceCollection.AddSingleton<PosterTagImageFilter>();
 
             serviceCollection.AddJeMvcFilters();
         }

@@ -4,11 +4,13 @@ using System.Linq;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

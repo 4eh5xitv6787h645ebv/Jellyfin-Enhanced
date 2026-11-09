@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace JE.Tests;
 

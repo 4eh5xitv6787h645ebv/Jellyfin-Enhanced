@@ -9,8 +9,10 @@ using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Search;
 using Microsoft.AspNetCore.Http;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     /// <summary>
     /// Per-response state for stamping native poster tag variant tokens, created by

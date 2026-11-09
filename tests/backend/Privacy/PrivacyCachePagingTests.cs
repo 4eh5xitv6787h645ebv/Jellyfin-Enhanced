@@ -7,6 +7,8 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
 using Moq;
 using Xunit;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace JellyfinEnhanced.Tests;
 
@@ -119,7 +121,7 @@ public class PrivacyCachePagingTests
         return (keys, pages, revisions);
     }
 
-    private static TagCacheService Create(JE.Tests.ApiPluginFixture f, Mock<ILibraryManager> library) => new(library.Object, f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), f.Core.Logger, new Jellyfin.Plugin.JellyfinEnhanced.Helpers.MatroskaLanguageCache(f.Core.Paths.Object, f.Core.Logger));
+    private static TagCacheService Create(JE.Tests.ApiPluginFixture f, Mock<ILibraryManager> library) => new(library.Object, f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), f.Core.Logger, new Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services.MatroskaLanguageCache(f.Core.Paths.Object, f.Core.Logger));
     private static TagCacheEntry Entry(long updated) => new() { Type = "Movie", Genres = ["Drama"], LastUpdated = updated };
     private static void Seed(JE.Tests.ApiPluginFixture f, Dictionary<string, TagCacheEntry> items)
     {

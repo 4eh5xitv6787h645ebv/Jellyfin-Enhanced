@@ -1,8 +1,9 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
 
 /// <summary>Technical labels shared by cache aggregation, batch and native posters; the web aspect table is generated from this table.</summary>
 internal static class TechnicalQualityRules

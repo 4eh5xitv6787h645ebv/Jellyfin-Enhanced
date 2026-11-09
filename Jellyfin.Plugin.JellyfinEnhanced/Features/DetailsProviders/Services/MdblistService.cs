@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

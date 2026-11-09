@@ -2,8 +2,10 @@ using System;
 using System.Threading;
 using System.Linq;
 using SkiaSharp;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {
     /// <summary>
     /// Draws JE's card tags (quality, genre, rating + user review, age rating, language) into a poster or thumb the

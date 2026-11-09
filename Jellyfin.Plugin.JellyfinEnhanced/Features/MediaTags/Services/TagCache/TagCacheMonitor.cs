@@ -2,7 +2,7 @@ using System;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
     /// <summary>
     /// Monitors library item changes and updates the tag cache incrementally.

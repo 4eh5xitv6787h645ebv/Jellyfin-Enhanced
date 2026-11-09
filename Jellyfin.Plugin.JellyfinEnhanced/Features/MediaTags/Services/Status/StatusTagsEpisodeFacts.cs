@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
     /// <summary>
     /// The Status Tags schedule and milestone facts of one Series or Season,

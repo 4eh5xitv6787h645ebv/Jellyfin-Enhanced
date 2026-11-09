@@ -190,10 +190,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/PluginConfigurationPatch.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs",
       "category": "Features"
     },
@@ -286,10 +282,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ReviewVisibility.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/WikidataAwardsService.cs",
       "category": "Features"
     },
@@ -330,11 +322,19 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Admin/MediaTagsPageFields.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Events/TagCacheAccessInvalidator.cs",
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Events/TagCacheAccessInvalidator.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/MediaTagsServiceRegistration.cs",
       "category": "Features"
     },
     {
@@ -518,6 +518,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/PublicApi/MediaTagsApi.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/AudioLanguageTagHelper.cs",
       "category": "Features"
     },
@@ -539,14 +543,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/MediaNamingTags.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/MediaTagsPortable.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/SeriesQualityAggregation.cs",
       "category": "Features"
     },
     {
@@ -1019,6 +1015,30 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/TrackRoles.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/MediaTagsPageFields.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/MediaTagsPortable.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/PluginConfigurationPatch.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/SeriesQualityAggregation.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Reviews/ReviewVisibility.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Reviews/ReviewVisibilityContext.cs",
       "category": "Shared"
     },
     {
@@ -2050,24 +2070,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/tag-styles",
-      "method": "GetTagStyles",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tag-styles/catalog",
-      "method": "GetTagStyleCatalog",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/jellyseerr/validate",
       "method": "ValidateJellyseerr",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -2308,26 +2310,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/status-tags/trending",
-      "method": "GetStatusTagsTrending",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/status-tags/series",
-      "method": "GetStatusTagsSeries",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
       ]
     },
     {
@@ -2716,15 +2698,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/audio-language-tags",
-      "method": "GetAudioLanguageTags",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/anilist/reviews",
       "method": "GetAnilistReviews",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -2836,13 +2809,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/logo/{size}/{file}",
-      "method": "GetLogoImage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/cdn/{source}/{**path}",
       "method": "GetCdnAsset",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -2870,60 +2836,6 @@
       "following_attributes": [
         "Authorize",
         "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/export",
-      "method": "ExportUserMediaTags",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/preview",
-      "method": "PreviewUserMediaTags",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "RequestSizeLimit(MediaTagsPortable.MaxDocumentBytes)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets",
-      "method": "GetMediaTagsPresets",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets",
-      "method": "SaveMediaTagsPreset",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "RequestSizeLimit(MediaTagsPortable.MaxDocumentBytes)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets/{presetId}",
-      "method": "DeleteMediaTagsPreset",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
       ]
     },
     {
@@ -3207,87 +3119,6 @@
       ]
     },
     {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/tag-cache/rebuild",
-      "method": "RebuildTagCache",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tag-cache/summary",
-      "method": "GetTagCacheSummary",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/admin/leaving-soon",
-      "method": "GetLeavingSoonStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/leaving-soon/refresh",
-      "method": "RefreshLeavingSoon",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/admin/media-tags/export",
-      "method": "ExportAdminMediaTags",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/media-tags/preview",
-      "method": "PreviewAdminMediaTags",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "RequestSizeLimit(PluginConfigurationPatch.MaxRequestBytes)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tag-cache/{userId}",
-      "method": "GetTagCache",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/tag-data/{userId}",
-      "method": "GetTagData",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
       "verb": "GET",
       "path": "/JellyfinEnhanced/item-stats/{userId}/{itemId}",
       "method": "GetItemStatsByItemId",
@@ -3295,15 +3126,6 @@
       "following_attributes": [
         "Authorize",
         "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/native-poster-tags/preview/{itemId}",
-      "method": "PreviewNativePosterTags",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
       ]
     },
     {
@@ -3838,6 +3660,204 @@
       "following_attributes": [
         "Authorize",
         "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tag-styles/catalog",
+      "method": "GetTagStyleCatalog",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/tag-cache/rebuild",
+      "method": "RebuildTagCache",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tag-cache/summary",
+      "method": "GetTagCacheSummary",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/admin/leaving-soon",
+      "method": "GetLeavingSoonStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/leaving-soon/refresh",
+      "method": "RefreshLeavingSoon",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/admin/media-tags/export",
+      "method": "ExportAdminMediaTags",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/media-tags/preview",
+      "method": "PreviewAdminMediaTags",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "following_attributes": [
+        "Authorize",
+        "RequestSizeLimit(PluginConfigurationPatch.MaxRequestBytes)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tag-styles",
+      "method": "GetTagStyles",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/status-tags/trending",
+      "method": "GetStatusTagsTrending",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/status-tags/series",
+      "method": "GetStatusTagsSeries",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/audio-language-tags",
+      "method": "GetAudioLanguageTags",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/logo/{size}/{file}",
+      "method": "GetLogoImage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/export",
+      "method": "ExportUserMediaTags",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/preview",
+      "method": "PreviewUserMediaTags",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "RequestSizeLimit(MediaTagsPortable.MaxDocumentBytes)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets",
+      "method": "GetMediaTagsPresets",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets",
+      "method": "SaveMediaTagsPreset",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "RequestSizeLimit(MediaTagsPortable.MaxDocumentBytes)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets/{presetId}",
+      "method": "DeleteMediaTagsPreset",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tag-cache/{userId}",
+      "method": "GetTagCache",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/tag-data/{userId}",
+      "method": "GetTagData",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/native-poster-tags/preview/{itemId}",
+      "method": "PreviewNativePosterTags",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize"
       ]
     },
     {
@@ -9983,6 +10003,10 @@
     },
     {
       "literal": "settings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs"
+    },
+    {
+      "literal": "settings.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/PosterTags/PosterTagSettingsProvider.cs"
     },
     {
@@ -10040,10 +10064,6 @@
     {
       "literal": "matroska-languages.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/MatroskaLanguageCache.cs"
-    },
-    {
-      "literal": "media-tag-presets.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/MediaTagsPortable.cs"
     },
     {
       "literal": "settings.json",
@@ -10132,6 +10152,10 @@
     {
       "literal": "hidden-content.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentResponseFilter.cs"
+    },
+    {
+      "literal": "media-tag-presets.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/MediaTagsPortable.cs"
     },
     {
       "literal": "settings.json",
@@ -10406,10 +10430,10 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 507,
+    "files": 512,
     "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 94,
+    "storage_references": 95,
     "scheduled_tasks": 15,
     "locales": 33
   }

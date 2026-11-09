@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
 /// <summary>Policy-independent quality facts for a Series or Season. No episode paths or names.</summary>
 public sealed class TagQualitySummary

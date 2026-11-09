@@ -8,7 +8,10 @@ namespace JE.Tests.Architecture;
 // fail only for features listed under "enforced" in feature-dependencies.json (none in S0). Reflection only: for every
 // type in namespace …Features.<A>, the types it references through constructor/method parameters, return types,
 // fields, properties, base types and IL member/type tokens (the Gate B decoder). An edge Features.<A> → Features.<B>
-// is a finding unless allow-listed; a controller may reference no other feature at all.
+// is a finding unless allow-listed; a controller may reference no other feature at all. One exception for both
+// (coordinator decision, step 8; backend.md §7.7): a reference into another feature's own …Features.<B>.PublicApi
+// namespace is allowed, the forwarding-only surface that feature defines for the others. Anything else in
+// Features.<B> stays a finding.
 public class FeatureBoundaryTests(ITestOutputHelper output)
 {
     private const string FeaturesPrefix = Arch.PluginNamespace + ".Features.";
@@ -19,6 +22,15 @@ public class FeatureBoundaryTests(ITestOutputHelper output)
         var ns = type.Namespace;
         if (ns == null || !ns.StartsWith(FeaturesPrefix, StringComparison.Ordinal)) return null;
         return ns[FeaturesPrefix.Length..].Split('.')[0];
+    }
+
+    // A type in Features.<F>.PublicApi (or below it): the surface feature F offers the other features.
+    internal static bool IsPublicApi(Type type)
+    {
+        var ns = type.Namespace;
+        if (ns == null || !ns.StartsWith(FeaturesPrefix, StringComparison.Ordinal)) return false;
+        var parts = ns[FeaturesPrefix.Length..].Split('.');
+        return parts.Length > 1 && parts[1] == "PublicApi";
     }
 
     private static IEnumerable<Type> Expand(Type? type)
@@ -76,8 +88,9 @@ public class FeatureBoundaryTests(ITestOutputHelper output)
             {
                 var to = FeatureOf(target);
                 if (to == null || to == from) continue;
-                edges.Add($"{from} -> {to}");
-                var allowed = !isController && map.Allow.TryGetValue(from, out var targets) && (targets.Contains("*") || targets.Contains(to));
+                var publicApi = IsPublicApi(target);
+                edges.Add($"{from} -> {to}{(publicApi ? " (PublicApi)" : "")}");
+                var allowed = publicApi || (!isController && map.Allow.TryGetValue(from, out var targets) && (targets.Contains("*") || targets.Contains(to)));
                 if (!allowed) findings.Add((from, $"{type.Name} ({from}{(isController ? ", controller" : "")}) -> {target.Name} ({to})"));
             }
         }

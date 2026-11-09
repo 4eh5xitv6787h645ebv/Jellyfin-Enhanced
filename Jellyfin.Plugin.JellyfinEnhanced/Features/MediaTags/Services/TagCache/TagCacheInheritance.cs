@@ -5,8 +5,9 @@ using System.Threading;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Controller.Entities;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
     /// <summary>
     /// Facts a season or episode takes from its series (scores, age rating; a season's genres). The full build and

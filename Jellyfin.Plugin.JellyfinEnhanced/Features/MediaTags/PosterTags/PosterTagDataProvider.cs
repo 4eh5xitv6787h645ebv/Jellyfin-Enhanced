@@ -13,8 +13,11 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Http;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     /// <summary>The tag data one poster is drawn from, already Spoiler Guard–stripped for its viewer.</summary>
     /// <param name="Entry">The (possibly stripped) tag-cache entry.</param>

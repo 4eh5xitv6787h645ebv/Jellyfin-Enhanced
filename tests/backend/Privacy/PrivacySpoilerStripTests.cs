@@ -2,12 +2,13 @@ using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using Moq;
 using Xunit;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 
 namespace JellyfinEnhanced.Tests;
 
@@ -73,7 +74,7 @@ public class PrivacySpoilerStripTests
         Assert.Equal(source.QualitySummary.NextPremiere, result.QualitySummary.NextPremiere);
         Assert.Equal(source.QualitySummary.EpisodeCount, result.QualitySummary.EpisodeCount);
         Assert.Equal(source.SubtitleLanguages, result.SubtitleLanguages);
-        var labels = Jellyfin.Plugin.JellyfinEnhanced.Services.SeriesQualityAggregation.Resolve(result, "latest", null);
+        var labels = Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.SeriesQualityAggregation.Resolve(result, "latest", null);
         Assert.Contains("4K", labels); Assert.Contains("IMAX", labels);
         Assert.DoesNotContain("WEB", labels); Assert.DoesNotContain("edition:Custom episode reveal", labels);
         Assert.Null(result.Source); Assert.Null(result.Edition);

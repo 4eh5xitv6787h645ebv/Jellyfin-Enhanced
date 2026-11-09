@@ -5,7 +5,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
     /// <summary>
     /// Selects a representative episode for Series/Season quality and language tags.

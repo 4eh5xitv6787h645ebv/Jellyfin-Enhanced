@@ -5,6 +5,7 @@ using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

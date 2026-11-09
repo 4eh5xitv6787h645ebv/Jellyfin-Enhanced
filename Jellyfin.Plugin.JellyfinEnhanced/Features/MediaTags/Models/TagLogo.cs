@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models
 {
     /// <summary>
     /// One logo chip of the Logos tag group: a streaming provider, a TV network

@@ -12,6 +12,8 @@ using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
 {
@@ -81,8 +83,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
                 var service = new Services.SettingsDocumentService(_userConfigurationManager);
                 if (!service.TrySave(authorizedUserId, request, IsAdminUser(), out var result))
                     return Conflict(new { message = "Settings changed in another tab or on the server. Reload before saving again." });
-                Jellyfin.Plugin.JellyfinEnhanced.Services.TagCacheService.Instance?.OnLogoSettingsChanged();
-                Jellyfin.Plugin.JellyfinEnhanced.Services.TagCacheService.Instance?.OnRatingSourceSettingsChanged();
+                MediaTagsApi.TagCache.OnLogoSettingsChanged();
+                MediaTagsApi.TagCache.OnRatingSourceSettingsChanged();
                 return TransportJson.Create(new SettingsSaveReceipt { Revision = result!.Revision });
             }
             catch (Exception ex) when (ex is System.IO.IOException || ex is System.IO.InvalidDataException || ex is Newtonsoft.Json.JsonException || ex is System.Text.Json.JsonException)
@@ -157,11 +159,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
                     _userConfigurationManager.SaveUserConfiguration(authorizedUserId, "settings.json", userConfiguration);
                     // Turning the Logos group on (or the last user off) changes whether cache entries carry logos.
                     if (existing.LogoTagsEnabled != userConfiguration.LogoTagsEnabled)
-                        Jellyfin.Plugin.JellyfinEnhanced.Services.TagCacheService.Instance?.OnLogoSettingsChanged();
+                        MediaTagsApi.TagCache.OnLogoSettingsChanged();
                     // The first user naming an MDBList source starts enrichment at once (and the last stops it).
                     if (existing.RatingTagsEnabled != userConfiguration.RatingTagsEnabled
                         || !(existing.RatingTagsSources ?? Array.Empty<string>()).SequenceEqual(userConfiguration.RatingTagsSources ?? Array.Empty<string>()))
-                        Jellyfin.Plugin.JellyfinEnhanced.Services.TagCacheService.Instance?.OnRatingSourceSettingsChanged();
+                        MediaTagsApi.TagCache.OnRatingSourceSettingsChanged();
 
                     if (changes.Count > 0)
                         _logger.Info($"Saved user settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)}: {string.Join(", ", changes)}");
@@ -278,7 +280,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
                 TagsHideOnHover = defaultConfig.TagsHideOnHover,
                 QualityTagsPosition = defaultConfig.QualityTagsPosition,
                 // Series/season quality aggregation default.
-                SeriesQualityAggregation = Jellyfin.Plugin.JellyfinEnhanced.Services.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
+                SeriesQualityAggregation = Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.SeriesQualityAggregation.Normalize(defaultConfig.SeriesQualityAggregation),
                 QualityHideSdr = defaultConfig.QualityHideSdr,
                 QualityMinimumResolution = QualityDisplayRules.Minimum(defaultConfig.QualityMinimumResolution),
                 QualityHdrDisplayMode = QualityDisplayRules.Mode(defaultConfig.QualityHdrDisplayMode),
@@ -392,8 +394,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
             }
 
             // Every user took the admin's Logos switch and rating sources: re-check who shows them.
-            Jellyfin.Plugin.JellyfinEnhanced.Services.TagCacheService.Instance?.OnLogoSettingsChanged();
-            Jellyfin.Plugin.JellyfinEnhanced.Services.TagCacheService.Instance?.OnRatingSourceSettingsChanged();
+            MediaTagsApi.TagCache.OnLogoSettingsChanged();
+            MediaTagsApi.TagCache.OnRatingSourceSettingsChanged();
             _logger.Info($"Reset settings for {userCount}/{userIds.Count()} users to plugin defaults. Skipped settings: {skippedSettings.Count}, skipped HC: {skippedHc.Count}.");
             return Ok(new
             {

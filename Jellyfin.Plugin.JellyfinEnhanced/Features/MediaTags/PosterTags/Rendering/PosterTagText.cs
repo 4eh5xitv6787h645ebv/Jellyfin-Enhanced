@@ -6,8 +6,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {
     /// <summary>
     /// Lays out and draws tag text the way Blink does on a DPR 1 card: HarfBuzz shaping (kerning) with every glyph

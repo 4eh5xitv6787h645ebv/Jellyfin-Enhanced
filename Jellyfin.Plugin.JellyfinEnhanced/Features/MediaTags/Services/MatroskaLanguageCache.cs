@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using MediaBrowser.Common.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 {
     /// <summary>
     /// Remembers the audio languages <see cref="MatroskaLanguageReader"/> parsed

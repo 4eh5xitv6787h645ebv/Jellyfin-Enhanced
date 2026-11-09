@@ -9,6 +9,8 @@ using MediaBrowser.Model.Globalization;
 using Moq;
 using Xunit;
 using Xunit.Abstractions;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace JellyfinEnhanced.Tests;
 
@@ -44,7 +46,7 @@ public class PrivacyCachePagingBenchmark
         library.Setup(x => x.GetItemIds(It.IsAny<InternalItemsQuery>())).Returns((InternalItemsQuery q) => q.User == restricted ? third : ids);
         Directory.CreateDirectory(f.Core.ConfigRoot);
         File.WriteAllText(Path.Combine(f.Core.ConfigRoot, "tag-cache.json"), JsonSerializer.Serialize(new { SchemaVersion = TagCacheService.CurrentCacheSchemaVersion, Version = 1, LastModified = 200, LastReconciledUtcTicks = new DateTime(2026, 1, 1).Ticks, Items = ids.ToDictionary(id => id.ToString("N"), _ => new TagCacheEntry { Type = "Movie", Genres = ["Drama"], LastUpdated = 100 }) }));
-        using var cache = new TagCacheService(library.Object, f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), f.Core.Logger, new Jellyfin.Plugin.JellyfinEnhanced.Helpers.MatroskaLanguageCache(f.Core.Paths.Object, f.Core.Logger));
+        using var cache = new TagCacheService(library.Object, f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), f.Core.Logger, new Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services.MatroskaLanguageCache(f.Core.Paths.Object, f.Core.Logger));
         cache.LoadFromDisk();
         // Warm the access sets (their library query is not what is measured).
         cache.GetCachePageForUser(everyone, null, 1, out _, out _, out _, out _);

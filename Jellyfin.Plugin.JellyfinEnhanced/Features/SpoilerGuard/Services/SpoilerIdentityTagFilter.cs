@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Querying;

@@ -6,10 +6,10 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering;
 using SkiaSharp;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     /// <summary>One tag's colour override. Every value is a normalised <c>rgba(r, g, b, a)</c> string or null (keep the default).</summary>
     /// <param name="Background">Background colour.</param>

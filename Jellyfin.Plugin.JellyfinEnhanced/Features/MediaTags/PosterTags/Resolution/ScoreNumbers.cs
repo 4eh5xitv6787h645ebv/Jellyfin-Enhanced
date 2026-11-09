@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution
 {
     /// <summary>
     /// Score numbers in the user's locale (decimal separator and digits), as the web writes them with

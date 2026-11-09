@@ -6,7 +6,7 @@ import { createHarness } from '../helpers/harness.mjs';
 // Media Tags import, export and presets in the settings panel hub
 // (settingspanel/ui-panel-tag-portable.js): the real panel host, hub and
 // settings save path over a mocked server that answers the portable
-// endpoints the way Features/MediaTags/Services/MediaTagsPortable.cs does.
+// endpoints the way Shared/MediaTags/MediaTagsPortable.cs does.
 
 const otherToggles = ['autoPauseToggle', 'autoResumeToggle', 'autoPipToggle', 'autoSkipIntroToggle', 'autoSkipOutroToggle',
   'randomButtonToggle', 'randomUnwatchedOnly', 'randomScopeCurrentContainer', 'showWatchProgressToggle', 'showFileSizesToggle', 'showAudioLanguagesToggle',
@@ -348,13 +348,13 @@ test('import preset adds a shared preset to your list and reports what it droppe
 const pluginRoot = new URL('../../../Jellyfin.Plugin.JellyfinEnhanced/', import.meta.url);
 
 /**
- * The nullable personal fields a user document carries: Features/MediaTags/Services/MediaTagsPortable.cs
+ * The nullable personal fields a user document carries: Shared/MediaTags/MediaTagsPortable.cs
  * UserFields that JellyfinEnhancedUserSettings declares nullable (null = follow the
  * server). Read from the sources so a new nullable field is covered here too.
  * @returns {string[]}
  */
 function nullablePortableFields() {
-  const portable = readFileSync(new URL('Features/MediaTags/Services/MediaTagsPortable.cs', pluginRoot), 'utf8');
+  const portable = readFileSync(new URL('Shared/MediaTags/MediaTagsPortable.cs', pluginRoot), 'utf8');
   const fields = [...portable.match(/UserFields = new\[\]\s*\{([\s\S]*?)\};/)[1].matchAll(/"(\w+)"/g)].map(m => m[1]);
   const config = readFileSync(new URL('Configuration/UserConfiguration.cs', pluginRoot), 'utf8');
   const start = config.indexOf('class JellyfinEnhancedUserSettings');

@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     // Rendered posters, content-addressed: the key is a hash of every input that
     // can change the pixels (base image identity, settings digest, renderer

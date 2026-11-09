@@ -1,7 +1,7 @@
 using System;
 using SkiaSharp;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {
     /// <summary>
     /// Area-average ("box") downscaling for the flag rasters. Averaging the covered source area per target pixel is what

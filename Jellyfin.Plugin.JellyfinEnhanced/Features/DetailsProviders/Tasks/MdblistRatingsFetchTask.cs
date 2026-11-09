@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 {

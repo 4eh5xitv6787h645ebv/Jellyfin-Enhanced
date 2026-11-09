@@ -6,6 +6,7 @@ using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.DependencyInjection;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Events;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.Events;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Events;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting
 {

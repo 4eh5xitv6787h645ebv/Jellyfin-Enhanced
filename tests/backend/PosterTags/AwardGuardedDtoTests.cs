@@ -1,3 +1,4 @@
+using JE.Tests.Features.MediaTags;
 using System.Text.Json;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
@@ -10,6 +11,9 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 
 namespace JE.Tests;
 
@@ -67,7 +71,7 @@ public class AwardGuardedDtoTests
         if (kind == "Series") state.Series[item.Id.ToString("N")] = new();
         else state.Movies[item.Id.ToString("N")] = new();
         f.Core.Manager.SaveUserConfiguration(user.Id.ToString("N"), SpoilerBlurImageFilter.SpoilerBlurFileName, state);
-        var result = Assert.IsType<OkObjectResult>(controller.GetTagData(user.Id, [item.Id.ToString()]));
+        var result = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeMediaTagsController>(controller).GetTagData(user.Id, [item.Id.ToString()]));
         var dto = JsonSerializer.SerializeToElement(result.Value).GetProperty("Items")[0];
         var shared = new TagCacheEntry { Type = kind, Awards = cache.GetAwards(item), Ratings = cache.GetSourceRatings(item), CommunityRating = 8 };
         var policy = SpoilerTagDataStripper.CreatePolicy(config, state);

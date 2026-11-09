@@ -14,8 +14,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     // Image-time half of native poster tags: an MVC action filter on Jellyfin's
     // item image actions that replaces a Primary image with the composite when

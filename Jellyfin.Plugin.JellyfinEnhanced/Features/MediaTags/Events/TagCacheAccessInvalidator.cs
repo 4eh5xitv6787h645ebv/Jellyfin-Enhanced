@@ -2,8 +2,9 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Events.Users;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Events
 {
     // Tag-cache responses are filtered by a per-user access set cached for up
     // to a minute; a policy change (libraries, parental limits, tags) must

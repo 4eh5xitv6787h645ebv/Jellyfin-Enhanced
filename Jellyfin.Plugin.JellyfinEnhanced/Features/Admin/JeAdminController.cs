@@ -17,6 +17,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
 {

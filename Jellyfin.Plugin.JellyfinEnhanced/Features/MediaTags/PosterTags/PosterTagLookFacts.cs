@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     /// <summary>
     /// What a tag look rule reads about an image owner, the facts core/tag-look.js factsFrom

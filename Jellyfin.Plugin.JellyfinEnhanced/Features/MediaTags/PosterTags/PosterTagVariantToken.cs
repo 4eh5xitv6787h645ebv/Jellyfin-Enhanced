@@ -4,8 +4,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using MediaBrowser.Common.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     /// <summary>Bits carried in a variant token. They are covered by its MAC.</summary>
     [Flags]

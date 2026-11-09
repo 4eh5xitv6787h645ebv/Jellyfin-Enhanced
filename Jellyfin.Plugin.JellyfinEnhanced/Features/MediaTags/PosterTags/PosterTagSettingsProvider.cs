@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
     // Effective per-user native poster tag settings, cached so both hot paths
     // (DTO stamping on every authenticated item response, and image requests)

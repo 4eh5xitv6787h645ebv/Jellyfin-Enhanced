@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Jellyfin.Plugin.JellyfinEnhanced.Model;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models
 {
     /// <summary>Immutable MDBList ratings in native display units. JSON keys are source ids.</summary>
     public sealed record TagSourceRatings
