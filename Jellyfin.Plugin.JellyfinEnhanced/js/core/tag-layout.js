@@ -1,6 +1,11 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/features/media-tags/host.ts
+  function settingsUi(JE) {
+    return JE.internals?.enhancedUi;
+  }
+
   // client/src/features/media-tags/rules-host.ts
   function tagRulesHost() {
     const host = window;
@@ -2608,6 +2613,9 @@ ${scoped} {${original}}`;
     session: { onUserChange: (name, callback) => bridge.session?.onUserChange?.(name, callback) },
     t: (key, values) => bridge.t(key, values)
   });
+  bridge.mediaTagsSettingsUi = { get registry() {
+    return settingsUi(bridge);
+  } };
   bridge.core.tagLayout = layout;
   bridge.reinitializeTagLayout = layout.reinitialize;
 })();

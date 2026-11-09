@@ -1,3 +1,4 @@
+import { settingsUi } from '../host';
 import { tagRulesHost } from '../rules-host';
 import { createTagLayout } from './tag-layout';
 const bridge = tagRulesHost();
@@ -20,5 +21,7 @@ const layout = createTagLayout({
     session: { onUserChange: (name, callback) => bridge.session?.onUserChange?.(name, callback) },
     t: (key, values) => bridge.t(key, values),
 });
+// The admin configuration page's Media Tags tab checks the settings registry through this facade, with tagLayout (step C4).
+bridge.mediaTagsSettingsUi = { get registry() { return settingsUi(bridge); } };
 bridge.core.tagLayout = layout;
 bridge.reinitializeTagLayout = layout.reinitialize;

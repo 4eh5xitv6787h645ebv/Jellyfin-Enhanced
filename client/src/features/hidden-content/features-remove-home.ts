@@ -2,7 +2,7 @@ import { installOnce, onDispose, selectionLease, enqueueWrite, pendingWrites } f
 import { lease } from './host';
 import { isHomeSurface, errorMessage, type HomeSurface, type RemoveTarget, type SurfaceConfig } from './home-model';
 import { record } from './model';
-import { hiddenContentContext, host, registry, type HiddenHost } from './host';
+import { hiddenContentContext, homeRemovalFacade, host, registry, type HiddenHost } from './host';
 /**
  * @file Remove from Continue Watching / Next Up: surface detection, the server
  * POST + optimistic hide, and the per-item action-sheet Remove button.
@@ -599,6 +599,8 @@ import { hiddenContentContext, host, registry, type HiddenHost } from './host';
     internal.showNotification = showNotification;
     internal.REMOVE_SURFACES = REMOVE_SURFACES;
     internal.buildNativeActionSheetItem = buildNativeActionSheetItem;
+    // And for Media Tags' item-menu row (tags/tag-item-menu.js), through hidden-content's facade (step C4).
+    JE.homeRemoval = homeRemovalFacade(JE);
     internal.setActionSheetItemIcon = setActionSheetItemIcon;
     internal.fitRemoveItemToMenu = fitRemoveItemToMenu;
     internal.removeFromHomeSurface = removeFromHomeSurface;

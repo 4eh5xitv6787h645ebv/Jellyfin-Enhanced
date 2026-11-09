@@ -27,7 +27,7 @@ registerSection({
         { id: 'tagOfferedPresets', key: 'TagOfferedPresets', type: 'custom', label: 'Presets for users' },
 */
 import type { JsonValue } from '../../../../contracts/generated';
-import { apiClient, currentUserId } from '../host';
+import { apiClient, currentUserId, settingsUi } from '../host';
 import type { PortableDialog, TagPortableTools } from '../../settings/ui-panel-tag-portable';
 import { closest, find, findAs } from '../dom';
 import type { PageContext } from '../types';
@@ -116,7 +116,7 @@ const actionOf = (e: Event): string | null => closest(e, '[data-pt-action]')?.ge
 
 installSection((A, JE) => {
     /** The shared dialogs and helpers. */
-    const tools = (): TagPortableTools | null => JE.internals?.enhancedUi?.tagPortable || null;
+    const tools = (): TagPortableTools | null => settingsUi(JE)?.tagPortable || null;
 
     /** Read the configuration again after an import: every editor shows what was stored. */
     async function reloadPage(ctx: PageContext): Promise<void> {

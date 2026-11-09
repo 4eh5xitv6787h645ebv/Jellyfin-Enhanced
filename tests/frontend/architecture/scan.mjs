@@ -274,6 +274,15 @@ export function cycles(edges) {
 
 const GLOBAL_NAMES = new Set(['window', 'globalThis', 'self']);
 
+/**
+ * Rule 4's platform files (frontend.md §2.4 rule 4, §5.2; step 1 decision, applied in C4): the core platform hosts
+ * that stay in host/ after C1 and core/lifecycle-entry.ts. They are how the platform reaches the global, not features.
+ */
+export const PLATFORM_GLOBAL_FILES = new Set([
+  'core-host.ts', 'api-host.ts', 'dom-host.ts', 'navigation-host.ts', 'session-host.ts', 'ui-host.ts',
+  'admin-config-host.ts', 'bootstrap-pages-host.ts',
+].map(name => `${srcRoot}/host/${name}`).concat(`${srcRoot}/core/lifecycle-entry.ts`));
+
 function typeIsGlobal(type, checker, seen = new Set()) {
   if (seen.has(type)) return false;
   seen.add(type);
@@ -350,7 +359,8 @@ function functionReturnsGlobal(declaration, checker, seen) {
  * It is allowed only in a feature host file, and there only for slots the feature owns
  * (internals-owners.json; a whole-object access `JE.internals` is the owner's own object).
  * Rule 4 flags `.JellyfinEnhanced` read off the browser global (and `{ JellyfinEnhanced } = window`),
- * allowed only in host/context.ts, features/<f>/host*.ts and bootstrap/**.
+ * allowed only in host/context.ts, features/<f>/host*.ts, bootstrap/**, and PLATFORM_GLOBAL_FILES: the core platform
+ * hosts that stay in host/ after C1 and core/lifecycle-entry.ts (frontend.md §2.4 rule 4, §5.2; step C4).
  */
 export function bridgeViolations(owners) {
   const violations = {};
@@ -362,7 +372,7 @@ export function bridgeViolations(owners) {
     if (!file.startsWith(`${srcRoot}/`)) continue;
     const where = classify(file);
     const hostFile = isFeatureHostFile(file);
-    const globalAllowed = hostFile || file === CONTEXT || where.area === 'bootstrap';
+    const globalAllowed = hostFile || file === CONTEXT || where.area === 'bootstrap' || PLATFORM_GLOBAL_FILES.has(file);
     (function visit(node) {
       const access = memberAccess(node);
       if (access?.name === 'internals' && unwrap(access.object).kind !== ts.SyntaxKind.ThisKeyword) {

@@ -1,6 +1,11 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/features/media-tags/host.ts
+  function settingsUi(JE2) {
+    return JE2.internals?.enhancedUi;
+  }
+
   // client/src/features/media-tags/admin/host.ts
   var host = () => window;
   function adminBridge() {
@@ -926,7 +931,7 @@
       previewBox.classList.toggle("je-ta-preview-open", open);
     }, { signal });
     const mount2 = must(root, ".je-ta-preview-mount");
-    const createPreview = JE2().internals?.enhancedUi?.createTagPreview;
+    const createPreview = settingsUi(JE2())?.createTagPreview;
     if (typeof createPreview === "function") {
       preview = createPreview(mount2, { source: () => ({ settings: deps.seedUser(config), plugin: config }) });
       const why = find(root, ".je-ta-preview-why");

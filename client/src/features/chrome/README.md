@@ -24,7 +24,7 @@ Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.Je
 
 `public-api.ts` is the only module another feature may import, and only with `import type` (feature-boundaries rule 1). It holds types only, no runtime code.
 
-- Facades this feature publishes on `window.JellyfinEnhanced`: none.
+- Facades this feature publishes on `window.JellyfinEnhanced`: `canonicalCombo` (step C4; the same function as its `JE.internals.canonicalCombo` slot, read by the settings panel's shortcut editor).
 - `JE.internals` slots it owns (`tests/frontend/architecture/internals-owners.json`): `canonicalCombo`.
 
 ## Settings / admin UI

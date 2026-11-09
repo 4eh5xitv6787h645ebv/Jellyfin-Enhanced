@@ -1,11 +1,45 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/settings-panel/host.ts
   function panelHost() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new TypeError("Jellyfin Enhanced must load before the settings panel");
     return host.JellyfinEnhanced;
+  }
+  function settingsPanelContext(JE) {
+    return featureContext("settings-panel", JE, {
+      internalSlots: ["enhancedUi"],
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
   }
   function registry(JE) {
     JE.internals = JE.internals || {};
@@ -69,7 +103,7 @@
   }
 
   // client/src/features/settings-panel/ui-panel-shortcut-editor.ts
-  function installUiPanelShortcutEditor(JE) {
+  function installUiPanelShortcutEditor(JE, featureCtx = settingsPanelContext(JE)) {
     const internal = registry(JE);
     internal.wireShortcutEditor = function(ctx) {
       const { help, pluginShortcuts, primaryAccentColor, kbdBackground } = ctx;
@@ -156,7 +190,7 @@
           }
           const labelWrapper = keyElement.parentElement?.nextElementSibling ?? null;
           const combo = JE.keyCombo(e);
-          const canonical = JE.internals.canonicalCombo || ((value) => value);
+          const canonical = featureCtx.peer("canonicalCombo") || ((value) => value);
           if (rejectsBinding(action, combo, JE.state.activeShortcuts, canonical)) {
             keyElement.style.background = "rgb(255 0 0 / 60%)";
             keyElement.classList.add("shake-error");

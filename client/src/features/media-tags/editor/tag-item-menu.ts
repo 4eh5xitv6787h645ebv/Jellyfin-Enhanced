@@ -1,4 +1,4 @@
-import { apiClient, type TagRuntimeBridge } from '../host';
+import { apiClient, mediaTagsContext, type TagRuntimeBridge } from '../host';
 import { isRecord, text, type JsonRecord } from '../pipeline/dto';
 
 /** The item whose menu is about to open, captured from the press that opens it. */
@@ -98,7 +98,7 @@ export function createItemMenu(JE: TagRuntimeBridge) {
      * .actionSheetItemText (as textContent).
      * */
     function buildRow(scroller: HTMLElement): HTMLButtonElement {
-        const shared = JE.internals?.features?.buildNativeActionSheetItem;
+        const shared = mediaTagsContext(JE).peer('homeRemoval')?.buildNativeActionSheetItem;
         if (typeof shared === 'function') return shared(scroller, { dataId: DATA_ID, icon: 'local_offer', text: JE.t('common_media_tags') });
         const ref = scroller.querySelector('.actionSheetMenuItem');
         const button = document.createElement('button');

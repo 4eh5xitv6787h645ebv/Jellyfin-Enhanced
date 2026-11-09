@@ -1,6 +1,11 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/features/media-tags/host.ts
+  function settingsUi(JE) {
+    return JE.internals?.enhancedUi;
+  }
+
   // client/src/features/media-tags/admin/host.ts
   var host = () => window;
   function adminBridge() {
@@ -148,7 +153,7 @@
   }
   var actionOf = (e) => closest(e, "[data-pt-action]")?.getAttribute("data-pt-action") ?? null;
   installSection((A, JE) => {
-    const tools = () => JE.internals?.enhancedUi?.tagPortable || null;
+    const tools = () => settingsUi(JE)?.tagPortable || null;
     async function reloadPage(ctx) {
       try {
         const fresh = configOf(await apiClient().getPluginConfiguration(A.PLUGIN_ID));

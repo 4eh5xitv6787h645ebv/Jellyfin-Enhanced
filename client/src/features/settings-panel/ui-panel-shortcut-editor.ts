@@ -3,14 +3,14 @@
  * Shortcuts tab (rebind, conflict shake, Backspace-to-reset).
  * Strict TypeScript replacement of the module split from ui.js (same markup, ids and behaviour).
  */
-import { panelHost, registry, type PanelBridge } from './host';
+import { panelHost, registry, settingsPanelContext, type PanelBridge } from './host';
 import type { PanelContext } from './context';
 import { queryElement, queryElements } from '../shared/dom';
 import { overrideFor, rejectsBinding } from './shortcut-rules';
 
 type Deps = Pick<PanelBridge, 'internals' | 'pluginConfig' | 'userConfig' | 'state' | 't' | 'saveUserSettings' | 'keyCombo'>;
 
-export function installUiPanelShortcutEditor(JE: Deps): void {
+export function installUiPanelShortcutEditor(JE: Deps, featureCtx = settingsPanelContext(JE)): void {
     const internal = registry(JE);
 
     /**
@@ -124,7 +124,7 @@ export function installUiPanelShortcutEditor(JE: Deps): void {
                 const combo = JE.keyCombo(e);
                 // Stored bindings may list their modifiers in any order ("Shift+Ctrl+S");
                 // compare them the way the key listener does (events.js).
-                const canonical = JE.internals.canonicalCombo || ((value: string) => value);
+                const canonical = featureCtx.peer('canonicalCombo') || ((value: string) => value);
                 if (rejectsBinding(action, combo, JE.state.activeShortcuts, canonical)) {
                     keyElement.style.background = 'rgb(255 0 0 / 60%)';
                     keyElement.classList.add('shake-error');

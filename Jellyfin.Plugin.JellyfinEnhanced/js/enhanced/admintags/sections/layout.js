@@ -1,6 +1,26 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/features/media-tags/host.ts
+  function settingsUi(JE) {
+    return JE.internals?.enhancedUi;
+  }
+
+  // client/src/features/media-tags/admin/host.ts
+  var host = () => window;
+  function adminBridge() {
+    const JE = host().JellyfinEnhanced;
+    if (!JE) throw new TypeError("Jellyfin Enhanced must load before the Media Tags admin tab");
+    return JE;
+  }
+  function adminTagsApi(JE) {
+    const facade = JE.adminTags;
+    return facade && isCore(facade) ? facade : null;
+  }
+  function isCore(facade) {
+    return typeof facade.registerSection === "function" && typeof facade.fmt === "function" && Array.isArray(facade.sections);
+  }
+
   // client/src/features/media-tags/admin/dom.ts
   function isDisabled(el) {
     return el instanceof HTMLButtonElement || el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement ? el.disabled : false;
@@ -46,21 +66,6 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
   var list = (value) => Array.isArray(value) ? value : [];
-
-  // client/src/features/media-tags/admin/host.ts
-  var host = () => window;
-  function adminBridge() {
-    const JE = host().JellyfinEnhanced;
-    if (!JE) throw new TypeError("Jellyfin Enhanced must load before the Media Tags admin tab");
-    return JE;
-  }
-  function adminTagsApi(JE) {
-    const facade = JE.adminTags;
-    return facade && isCore(facade) ? facade : null;
-  }
-  function isCore(facade) {
-    return typeof facade.registerSection === "function" && typeof facade.fmt === "function" && Array.isArray(facade.sections);
-  }
 
   // client/src/features/media-tags/admin/sections/install.ts
   function installSection(register) {
@@ -117,7 +122,7 @@
       if (!layout) throw new TypeError("core/tag-layout.js must load before the Media Tags tab");
       return layout;
     };
-    const editorData = () => JE.internals?.enhancedUi?.tagGroupEditorData || null;
+    const editorData = () => settingsUi(JE)?.tagGroupEditorData || null;
     const groupName = (g) => A.fmt(word(A.WORDS.group, `${g === "ageRating" ? "age_rating" : g}`));
     const enabledKey = (g) => `${g === "logos" ? "Logo" : pascal(g)}TagsEnabled`;
     const slotWord = (layout, slot) => A.fmt(slot === "off" ? "Hidden" : word(A.WORDS.slot, `${layout}_${slot}`));

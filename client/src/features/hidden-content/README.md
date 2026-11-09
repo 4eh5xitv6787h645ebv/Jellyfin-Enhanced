@@ -34,7 +34,7 @@ Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.Je
 
 `public-api.ts` is the only module another feature may import, and only with `import type` (feature-boundaries rule 1). It holds types only, no runtime code.
 
-- Facades this feature publishes on `window.JellyfinEnhanced`: `hiddenContent`.
+- Facades this feature publishes on `window.JellyfinEnhanced`: `hiddenContent`; `homeRemoval` (step C4: `buildNativeActionSheetItem`, forwarded from its `features` slot, for Media Tags' item menu).
 - `JE.internals` slots it owns (`tests/frontend/architecture/internals-owners.json`): `features`, `hiddenContent`, `hiddenContentPage`, `hiddenContentRuntime`.
 
 ## Settings / admin UI

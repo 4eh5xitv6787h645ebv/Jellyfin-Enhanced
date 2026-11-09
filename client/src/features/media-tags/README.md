@@ -65,7 +65,7 @@ Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.Je
 
 `public-api.ts` is the only module another feature may import, and only with `import type` (feature-boundaries rule 1). It holds types only, no runtime code.
 
-- Facades this feature publishes on `window.JellyfinEnhanced`: `tagPipeline`, `tagCacheStore`, `tagDirectPlay`, `reinitializeTagLayout`, `reinitializeQualityTags`, `adminTags`, `appendUserRatingToContainer`.
+- Facades this feature publishes on `window.JellyfinEnhanced`: `tagPipeline`, `tagCacheStore`, `tagDirectPlay`, `reinitializeTagLayout`, `reinitializeQualityTags`, `adminTags`, `appendUserRatingToContainer`; `peopleTags` (step C4: the same object as its `JE.internals.peopleTags` slot, for the details page).
 - `JE.internals` slots it owns (`tests/frontend/architecture/internals-owners.json`): `peopleTags`.
 
 ## Settings / admin UI

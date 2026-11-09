@@ -392,6 +392,7 @@
   // client/src/features/chrome/events-entry.ts
   var ctx = eventsContext(chromeBridge());
   ctx.own.canonicalCombo = canonicalCombo;
+  ctx.core.canonicalCombo = canonicalCombo;
   var events = createEvents(ctx);
   ctx.own.keyListener = events.keyListener;
   ctx.own.initializeEnhancedScript = events.initializeEnhancedScript;

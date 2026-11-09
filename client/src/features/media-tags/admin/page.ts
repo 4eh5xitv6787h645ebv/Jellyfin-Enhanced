@@ -4,7 +4,7 @@
  * snackbars. The edits themselves live in the document-wide save store.
  */
 import type { JsonValue } from '../../../contracts/generated';
-import { apiClient, cdnUrl, type AdminTagsBridge } from './host';
+import { apiClient, cdnUrl, settingsUi, type AdminTagsBridge } from './host';
 import type { TagPreview } from '../settings/ui-panel-tag-preview';
 import { activeElement, all, allAs, closest, find, focus, isDisabled, must, targetOf } from './dom';
 import { controlValue, fieldValue, fieldsHtml, type TextKit } from './fields';
@@ -655,7 +655,7 @@ export function createPage(deps: PageDeps, root: HTMLElement, initial: Config, o
         previewBox.classList.toggle('je-ta-preview-open', open);
     }, { signal });
     const mount = must(root, '.je-ta-preview-mount');
-    const createPreview = JE().internals?.enhancedUi?.createTagPreview;
+    const createPreview = settingsUi(JE())?.createTagPreview;
     if (typeof createPreview === 'function') {
         preview = createPreview(mount, { source: () => ({ settings: deps.seedUser(config), plugin: config }) });
         // The preview's explanation and the native poster line join "How looks are chosen", so the samples and that one

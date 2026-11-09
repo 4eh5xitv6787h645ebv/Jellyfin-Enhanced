@@ -1,4 +1,4 @@
-import { apiClient, type TagRuntimeBridge } from '../host';
+import { apiClient, settingsUi, type TagRuntimeBridge } from '../host';
 import { isRecord, own as tableEntry, record, type JsonRecord } from '../pipeline/dto';
 import { normalizeLayout, type Layout } from '../layout/layout-rules';
 import type { LayoutLock } from '../layout/tag-look';
@@ -640,7 +640,7 @@ export function createItemEditor(JE: TagRuntimeBridge) {
 
         const previewSide = must(dialog.querySelector<HTMLElement>('.je-tie-side'));
         const hoverNote = must(dialog.querySelector<HTMLElement>('[data-tie-hover-note]'));
-        const interaction = JE.internals?.enhancedUi?.bindTagPreviewInteraction([dialog.querySelector('.je-tie-card')], dialog.querySelector('.je-tie-view'), {
+        const interaction = settingsUi(JE)?.bindTagPreviewInteraction([dialog.querySelector('.je-tie-card')], dialog.querySelector('.je-tie-view'), {
             change: active => {
                 const hidden = !!JE.currentSettings?.tagsHideOnHover;
                 previewSide.dataset.jeHideOnHover = String(hidden);
