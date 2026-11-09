@@ -146,7 +146,7 @@ function fixture(t, order, moduleSource = 'export const greet = (name: string) =
   put('client/src/first.ts', "import { greet } from './greet';\n(window as unknown as { first: string }).first = greet('first');\n");
   put('client/src/second.ts', "import { greet } from './greet';\n(window as unknown as { second: string }).second = greet('second');\n");
   put('client/entries/core.json', JSON.stringify({ 'js/a/first.js': 'client/src/first.ts', 'js/a/second.js': 'client/src/second.ts' }));
-  put('Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json', JSON.stringify(order));
+  if (order) put('Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json', JSON.stringify(order));
   put('client/shared-modules.json', JSON.stringify({ modules: { 'client/src/greet.ts': 'js/a/first.js' } }));
   return { root, put, js: path => readFileSync(join(root, 'Jellyfin.Plugin.JellyfinEnhanced', path), 'utf8') };
 }
@@ -181,4 +181,11 @@ test('the build rejects a consumer listed before its provider, and a module with
   await assert.rejects(buildClient({ root: early.root }), /js\/a\/second\.js uses client\/src\/greet\.ts but loads before its provider js\/a\/first\.js/);
   const stateful = fixture(t, ['a/first.js', 'a/second.js'], 'let calls = 0;\nexport const greet = (name: string) => `hi ${name} ${++calls}`;\n');
   await assert.rejects(buildClient({ root: stateful.root }), /client\/src\/greet\.ts: calls: a let\/var binding/);
+});
+
+test('a tree without js/component-scripts.json has no component scripts, so nothing is shared', async t => {
+  const f = fixture(t, null);
+  await buildClient({ root: f.root });
+  assert.match(f.js('js/a/second.js'), /`hi \$\{name\}`/, 'each output inlines the module, as before K1b');
+  await buildClient({ root: f.root, check: true });
 });

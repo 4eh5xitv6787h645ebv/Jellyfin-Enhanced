@@ -225,8 +225,9 @@ async function bundle(esbuild, root, options, generated = () => false) {
  * provider in js/component-scripts.json and every listed module to have at least one consumer.
  */
 async function prepareSharedModules(ts, esbuild, root, entries, componentScripts) {
-  // Loaded only for trees with a manifest, as HTML support is (JS-only fixtures copy client-build.mjs alone).
-  if (!existsSync(safePath(root, 'client/shared-modules.json'))) {
+  // Loaded only for trees with a manifest, as HTML support is (JS-only fixtures copy client-build.mjs alone). Like the
+  // min/ twins, it applies to component scripts only: a tree without js/component-scripts.json has none.
+  if (!componentScripts.length || !existsSync(safePath(root, 'client/shared-modules.json'))) {
     return { options: () => ({}), generated: () => false, record() {}, verify() {} };
   }
   const { analyseSharedModule, isSharedModuleInput, readSharedModules, sharedManifestPath, sharedModulesBuild, statefulTopLevel, stubbedSource } =
