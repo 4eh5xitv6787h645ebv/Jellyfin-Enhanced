@@ -2,187 +2,38 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
-    }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/details-providers/host.ts
-  function hostWindow() {
-    return window;
-  }
-  function bridge(feature) {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error(`${feature} loaded before Jellyfin Enhanced`);
-    return JE2;
-  }
-  function api() {
-    const client = hostWindow().ApiClient;
-    if (!client) throw new Error("Jellyfin ApiClient unavailable");
-    return client;
-  }
-  function hasApi() {
-    return hostWindow().ApiClient !== void 0;
-  }
-  function currentUserId() {
-    const id = hostWindow().ApiClient?.getCurrentUserId();
-    return typeof id === "string" && id ? id : null;
-  }
-  function detailsContext(JE2) {
-    const holder = JE2;
-    return featureContext("details-providers", JE2, {
-      internalSlots: ["features"],
-      internalsObject: () => holder.internals ?? (holder.internals = {})
-    });
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/details-providers/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "api");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "bridge");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "currentUserId");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "detailsContext");
 
-  // client/src/features/details-providers/wire.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function field(value, key) {
-    return isRecord(value) ? value[key] : void 0;
-  }
-  function str(value) {
-    return typeof value === "string" ? value : void 0;
-  }
-  function num(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : void 0;
-  }
-  function bool(value) {
-    return typeof value === "boolean" ? value : void 0;
-  }
-  function list(value) {
-    return Array.isArray(value) ? value : [];
-  }
-  function stringList(value) {
-    return list(value).filter((entry) => typeof entry === "string");
-  }
-  function providerId(value) {
-    if (typeof value === "string") return value || void 0;
-    if (typeof value === "number" && Number.isFinite(value) && value !== 0) return String(value);
-    return void 0;
-  }
-  function decodeProviderIds(value) {
-    const ids = {};
-    if (!isRecord(value)) return ids;
-    const tmdb = providerId(value.Tmdb), imdb = providerId(value.Imdb), tvdb = providerId(value.Tvdb);
-    const aniList = providerId(value.AniList), anilist = providerId(value.Anilist);
-    if (tmdb !== void 0) ids.Tmdb = tmdb;
-    if (imdb !== void 0) ids.Imdb = imdb;
-    if (tvdb !== void 0) ids.Tvdb = tvdb;
-    if (aniList !== void 0) ids.AniList = aniList;
-    if (anilist !== void 0) ids.Anilist = anilist;
-    return ids;
-  }
-  function decodeStreams(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.filter(isRecord).map((stream) => {
-      const result = {};
-      const type = str(stream.Type), language = str(stream.Language);
-      if (type !== void 0) result.Type = type;
-      if (language !== void 0) result.Language = language;
-      return result;
-    });
-  }
-  function decodeSources(value) {
-    if (!Array.isArray(value)) return void 0;
-    return value.map((source) => {
-      const result = {};
-      const id = str(field(source, "Id")), streams = decodeStreams(field(source, "MediaStreams"));
-      if (id !== void 0) result.Id = id;
-      if (streams !== void 0) result.MediaStreams = streams;
-      return result;
-    });
-  }
-  function set(item, key, value) {
-    if (value !== void 0) item[key] = value;
-  }
-  function decodeDetailsItem(value) {
-    if (!isRecord(value)) return null;
-    const item = { ProviderIds: decodeProviderIds(value.ProviderIds), SeriesProviderIds: decodeProviderIds(value.SeriesProviderIds) };
-    set(item, "Id", str(value.Id));
-    set(item, "Type", str(value.Type));
-    set(item, "Name", str(value.Name));
-    set(item, "SeriesId", str(value.SeriesId));
-    set(item, "SeriesName", str(value.SeriesName));
-    set(item, "IndexNumber", num(value.IndexNumber));
-    set(item, "ParentIndexNumber", num(value.ParentIndexNumber));
-    set(item, "PremiereDate", str(value.PremiereDate));
-    set(item, "DisplayOrder", str(value.DisplayOrder));
-    set(item, "MediaSources", decodeSources(value.MediaSources));
-    set(item, "MediaStreams", decodeStreams(value.MediaStreams));
-    set(item, "FirstEpisodeId", str(field(value.FirstEpisode, "Id")));
-    if (Array.isArray(value.Tags)) item.Tags = stringList(value.Tags);
-    const userData = value.UserData;
-    set(item, "Played", bool(field(userData, "Played")));
-    set(item, "UnplayedItemCount", num(field(userData, "UnplayedItemCount")));
-    return item;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/page.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/details-providers/page");
+  var export12 = /* @__PURE__ */ sharedExport(shared2, "detailsLease");
+  var export32 = /* @__PURE__ */ sharedExport(shared2, "hashItemId");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "lookupDetailsItem");
+  var export8 = /* @__PURE__ */ sharedExport(shared2, "lookupItem");
+  var export11 = /* @__PURE__ */ sharedExport(shared2, "visibleDetailPage");
 
-  // client/src/features/details-providers/page.ts
-  function hashItemId(hash = window.location.hash) {
-    try {
-      return new URLSearchParams(hash.split("?")[1] ?? "").get("id");
-    } catch {
-      return null;
-    }
-  }
-  function visibleDetailPage() {
-    return document.querySelector("#itemDetailPage:not(.hide)");
-  }
-  function lookupItem(helpers, itemId, withUser, userId = currentUserId()) {
-    if (helpers?.getItemCached) {
-      return withUser ? helpers.getItemCached(itemId, { userId }) : helpers.getItemCached(itemId);
-    }
-    return api().getItem(userId, itemId);
-  }
-  async function lookupDetailsItem(helpers, itemId, withUser, userId = currentUserId()) {
-    return decodeDetailsItem(await lookupItem(helpers, itemId, withUser, userId));
-  }
-  function detailsLease(session, itemId, page) {
-    const sameSession = sessionLease(session);
-    return {
-      itemId,
-      page,
-      current: () => sameSession() && hashItemId() === itemId && page.isConnected && visibleDetailPage() === page
-    };
-  }
-  function sessionLease(session) {
-    const epoch = session?.getEpoch();
-    const userId = currentUserId();
-    const client = api();
-    const root = client.getUrl("/");
-    const token = client.accessToken();
-    return () => hasApi() && api() === client && client.getUrl("/") === root && client.accessToken() === token && (!session || epoch === void 0 || session.isCurrent(epoch)) && currentUserId() === userId;
-  }
+  // client/generated-shared/stub/client/src/features/details-providers/wire.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/details-providers/wire");
+  var export13 = /* @__PURE__ */ sharedExport(shared3, "decodeDetailsItem");
+  var export52 = /* @__PURE__ */ sharedExport(shared3, "field");
 
   // client/src/features/details-providers/details-page.ts
-  var JE = bridge("Details page features");
-  var ctx = detailsContext(JE);
+  var JE = export1("Details page features");
+  var ctx = export5(JE);
   void ctx.own.features;
   var features = () => {
     var _a;
@@ -220,7 +71,7 @@
       if (buttonContainer) break;
     }
     if (!buttonContainer) return;
-    const buttonLease = detailsLease(JE.session, itemId, visiblePage);
+    const buttonLease = export12(JE.session, itemId, visiblePage);
     const button = document.createElement("button");
     button.setAttribute("is", "emby-button");
     button.className = "button-flat detailButton emby-button je-detail-hide-btn";
@@ -275,13 +126,13 @@
         event.preventDefault();
         event.stopPropagation();
         if (!buttonLease.current()) return;
-        const clickLease = detailsLease(JE.session, itemId, visiblePage);
+        const clickLease = export12(JE.session, itemId, visiblePage);
         const nameEl = visiblePage.querySelector('.itemName, h1, h2, [class*="itemName"]');
         const itemName = nameEl?.textContent?.trim() || "Unknown";
         let tmdbId = "", seriesId = "", seriesName = "";
         let seasonNumber = null, episodeNumber = null;
         try {
-          const item = await lookupDetailsItem(JE.helpers, itemId, true);
+          const item = await export7(JE.helpers, itemId, true);
           tmdbId = item?.ProviderIds.Tmdb || "";
           seriesId = item?.SeriesId || "";
           seriesName = item?.SeriesName || "";
@@ -310,7 +161,7 @@
               if (!clickLease.current()) return;
               let seriesTmdbId = "";
               try {
-                const series = decodeDetailsItem(await api().getItem(currentUserId(), seriesId));
+                const series = export13(await export0().getItem(export3(), seriesId));
                 seriesTmdbId = series?.ProviderIds.Tmdb || "";
               } catch (err) {
                 console.warn("🪼 Jellyfin Enhanced: Could not fetch series metadata for hide-show action", err);
@@ -341,29 +192,29 @@
     return false;
   }
   function runItemDetails(settled) {
-    const visiblePage = visibleDetailPage();
+    const visiblePage = export11();
     if (!visiblePage) return;
     const container = visiblePage.querySelector(".itemMiscInfo.itemMiscInfo-primary");
     if (!container) return;
     try {
-      const itemId = hashItemId();
+      const itemId = export32();
       if (!itemId) return;
       if (lastDetailsItemId !== itemId || !lastDetailsLease?.current()) {
         visiblePage.querySelectorAll(".je-detail-hide-btn").forEach((button) => button.remove());
-        lastDetailsLease = detailsLease(JE.session, itemId, visiblePage);
+        lastDetailsLease = export12(JE.session, itemId, visiblePage);
         lastDetailsItemId = itemId;
         lastDetailsItemType = null;
         lastDetailsDefaultSourceId = null;
       }
       if (!lastDetailsItemType) {
         if (itemTypeFetch?.itemId !== itemId || !itemTypeFetch.current()) {
-          const lease = detailsLease(JE.session, itemId, visiblePage);
+          const lease = export12(JE.session, itemId, visiblePage);
           const lookup = { itemId, current: lease.current };
           itemTypeFetch = lookup;
-          lookupItem(JE.helpers, itemId, true).then((raw) => {
+          export8(JE.helpers, itemId, true).then((raw) => {
             if (itemTypeFetch === lookup) itemTypeFetch = null;
             if (lastDetailsItemId !== itemId || !lease.current()) return;
-            const item = decodeDetailsItem(raw);
+            const item = export13(raw);
             if (!item?.Type) return;
             lastDetailsItemType = item?.Type || null;
             lastDetailsDefaultSourceId = singleSourceId(item);
@@ -418,14 +269,14 @@
   }
   function beginDetailsVisit(view, detail) {
     endDetailsVisit();
-    const itemId = hashItemId();
-    const paramsId = field(field(detail, "params"), "id");
+    const itemId = export32();
+    const paramsId = export52(export52(detail, "params"), "id");
     if (!itemId || paramsId && paramsId !== itemId) return;
     const settings = JE.currentSettings || {};
     const config = JE.pluginConfig || {};
     if (!(settings.showWatchProgress || settings.showFileSizes || config.ShowReleaseDates && config.TmdbEnabled || settings.peopleTagsEnabled && ctx.peer("peopleTags"))) return;
     if (lastDetailsItemId === itemId && lastDetailsItemType) return;
-    const userId = currentUserId();
+    const userId = export3();
     const getItemCached = JE.helpers.getItemCached;
     if (!userId || !getItemCached) return;
     const current = visit = { itemId, view, epoch: JE.session ? JE.session.getEpoch() : 0, item: null, peopleStarted: false };
@@ -437,11 +288,11 @@
     });
   }
   function visitLive(current) {
-    return visit === current && (!JE.session || JE.session.isCurrent(current.epoch)) && hashItemId() === current.itemId && current.view.isConnected && !current.view.classList.contains("hide");
+    return visit === current && (!JE.session || JE.session.isCurrent(current.epoch)) && export32() === current.itemId && current.view.isConnected && !current.view.classList.contains("hide");
   }
   function prefetchChipData(current) {
     if (!visitLive(current)) return;
-    const item = decodeDetailsItem(current.item);
+    const item = export13(current.item);
     const settings = JE.currentSettings || {};
     const config = JE.pluginConfig || {};
     const sources = item?.MediaSources;
@@ -467,12 +318,12 @@
   }
   JE.core.navigation.onViewPage((_view, _element, _hash, _itemPromise, rawEvent) => {
     const target = rawEvent?.target;
-    if (target instanceof Element && target.id === "itemDetailPage" && field(eventDetail(rawEvent), "isRestored") !== true) {
+    if (target instanceof Element && target.id === "itemDetailPage" && export52(eventDetail(rawEvent), "isRestored") !== true) {
       beginDetailsVisit(target, eventDetail(rawEvent));
     }
   });
   JE.core.navigation.onNavigate(() => {
-    if (visit && hashItemId() !== visit.itemId) endDetailsVisit();
+    if (visit && export32() !== visit.itemId) endDetailsVisit();
   });
   JE.session?.onUserChange("details-prefetch", () => {
     endDetailsVisit();

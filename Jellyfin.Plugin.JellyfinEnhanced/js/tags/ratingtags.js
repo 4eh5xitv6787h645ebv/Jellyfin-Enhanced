@@ -2,62 +2,25 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const own2 = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own2, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
-    }
-    return {
-      feature,
-      core,
-      own: own2,
-      peer: (name) => core[name]
-    };
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
-  }
-  function mediaTagsContext(JE = tagRuntimeHost()) {
-    return featureContext("media-tags", JE, {
-      internalSlots: ["peopleTags"],
-      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
-      internalsObject: () => JE.internals = JE.internals || {}
-    });
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export2 = /* @__PURE__ */ sharedExport(shared, "mediaTagsContext");
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function finite(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : null;
-  }
-  function own(table, key) {
-    return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export22 = /* @__PURE__ */ sharedExport(shared2, "finite");
+  var export4 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export9 = /* @__PURE__ */ sharedExport(shared2, "own");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
 
   // client/src/features/media-tags/types/ratings/ratingtags.ts
   var SCOPE_OF_KEY = {
@@ -92,7 +55,7 @@
     };
     const HOME_ROW_SCOPE_LIST = Object.values(HOME_ROW_SCOPES);
     function isScopeEnabled(scope) {
-      const id = own(SCOPE_OF_KEY, scope.userKey);
+      const id = export9(SCOPE_OF_KEY, scope.userKey);
       if (id && JE.core?.tagScopes) return JE.core.tagScopes.allows("rating", id);
       const u = JE.currentSettings?.[scope.userKey];
       if (typeof u === "boolean") return u;
@@ -101,10 +64,10 @@
     }
     function isExcludedByScope(el, type) {
       const itemType = el.closest("[data-type]")?.getAttribute("data-type") || (typeof type === "string" ? type : null);
-      const typeScope = itemType ? own(ITEM_TYPE_SCOPES, itemType) : null;
+      const typeScope = itemType ? export9(ITEM_TYPE_SCOPES, itemType) : null;
       if (typeScope && !isScopeEnabled(typeScope)) return true;
       if (typeof JE.detectCardRowSurface === "function" && HOME_ROW_SCOPE_LIST.some((scope) => !isScopeEnabled(scope))) {
-        const rowScope = own(HOME_ROW_SCOPES, JE.detectCardRowSurface(el));
+        const rowScope = export9(HOME_ROW_SCOPES, JE.detectCardRowSurface(el));
         if (rowScope && !isScopeEnabled(rowScope)) return true;
       }
       return false;
@@ -140,7 +103,7 @@
           return stateReady ? sg.isEnabledFor(item.SeriesId) === true : true;
         }
         if (item.Type === "Episode") {
-          if (record(item.UserData).Played === true) return false;
+          if (export10(item.UserData).Played === true) return false;
           if (!item.SeriesId) return false;
           return stateReady ? sg.isEnabledFor(item.SeriesId) === true : true;
         }
@@ -152,12 +115,12 @@
     function getCachedEntry(ctx2, itemId) {
       const entry = ctx2.getPersistent(itemId) ?? ctx2.hot?.get(itemId);
       if (!entry) return null;
-      const refreshAt = isRecord(entry) ? finite(entry.refreshAt) : null;
+      const refreshAt = export4(entry) ? export22(entry.refreshAt) : null;
       if (refreshAt !== null && Date.now() >= refreshAt) return null;
       if (typeof entry === "string" || typeof entry === "number") {
         return { tmdb: String(entry), critic: null };
       }
-      if (isRecord(entry)) {
+      if (export4(entry)) {
         return {
           ...entry,
           tmdb: entry.tmdb ?? null,
@@ -297,12 +260,12 @@
           const tmdb = sourceItem.CommunityRating != null ? parseFloat(String(sourceItem.CommunityRating)).toFixed(1) : null;
           const critic = sourceItem.CriticRating != null ? normalizeCriticPercent(sourceItem.CriticRating) : null;
           const rating = { tmdb, critic, ratings: item.Ratings ?? extras.ratingParentSeries?.Ratings };
-          const providers = record(item.ProviderIds);
-          const seriesProviders = record(extras?.parentSeries?.ProviderIds);
+          const providers = export10(item.ProviderIds);
+          const seriesProviders = export10(extras?.parentSeries?.ProviderIds);
           const tmdbId = providers.Tmdb || providers.tmdb || null;
           const seriesTmdbId = seriesProviders.Tmdb || seriesProviders.tmdb || null;
           const tmdbMediaType = item.Type === "Series" ? "tv" : "movie";
-          const serverRefreshAt = finite(item.RatingsRefreshAt);
+          const serverRefreshAt = export22(item.RatingsRefreshAt);
           const refreshAt = item.RatingsPending === true ? Date.now() + PENDING_RETRY_MS : serverRefreshAt !== null ? Math.max(serverRefreshAt, Date.now() + PENDING_RETRY_MS) : null;
           setCachedEntry(ctx2, itemId, {
             ...rating,
@@ -315,7 +278,7 @@
             parentSeasonNumber: item.Type === "Episode" ? item.ParentIndexNumber : null,
             sgType: item.Type,
             sgSeriesId: item.SeriesId || (item.Type === "Series" ? item.Id : null),
-            sgPlayed: record(item.UserData).Played === true
+            sgPlayed: export10(item.UserData).Played === true
           });
           if (tmdb || critic !== null || rating.ratings) {
             applyRatingTag(ctx2, el, rating);
@@ -428,7 +391,7 @@
   }
 
   // client/src/features/media-tags/types/ratings/ratingtags-entry.ts
-  createRatingTags(mediaTagsContext());
+  createRatingTags(export2());
 })();
 })();
 //# sourceMappingURL=ratingtags.js.map

@@ -13,54 +13,23 @@
   }
 
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
-    }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/calendar/host.ts
-  function calendarHost() {
-    var _a;
-    const host = window;
-    const JE = host.JellyfinEnhanced;
-    if (!JE) throw new Error("Calendar loaded before Jellyfin Enhanced");
-    JE.internals || (JE.internals = {});
-    const partial = (_a = JE.internals).calendarPage || (_a.calendarPage = {});
-    const P = partial;
-    const ctx = featureContext("calendar", JE, {
-      facades: ["initializeCalendarPage"],
-      internalSlots: ["calendarLifetime", "calendarPage"],
-      internalsObject: () => JE.internals || (JE.internals = {})
-    });
-    return { JE, ctx, host, P };
-  }
+  // client/generated-shared/stub/client/src/features/calendar/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/calendar/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "calendarHost");
 
   // client/src/features/calendar/calendar-page-render-views.ts
   (function() {
     "use strict";
-    const { JE, ctx, P } = calendarHost();
+    const { JE, ctx, P } = export0();
     const state = P.state;
     const STATUS_COLORS = P.STATUS_COLORS;
     const filterEvents = P.filterEvents;

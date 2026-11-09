@@ -1,35 +1,37 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared(feature, core, slots);
+  }
+  function publishSharedModules(modules) {
+    const JE = window.JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ?? (JE.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
   }
 
   // client/src/features/calendar/host.ts
+  var host_exports = {};
+  __export(host_exports, {
+    calendarHost: () => calendarHost
+  });
   function calendarHost() {
     var _a;
     const host = window;
@@ -45,6 +47,9 @@
     });
     return { JE, ctx, host, P };
   }
+
+  // client/generated-shared/publish/js/arr/calendar/calendar-page-styles.js.ts
+  publishSharedModules({ "features/calendar/host": host_exports });
 
   // client/src/features/calendar/calendar-page.css
   var calendar_page_default = `

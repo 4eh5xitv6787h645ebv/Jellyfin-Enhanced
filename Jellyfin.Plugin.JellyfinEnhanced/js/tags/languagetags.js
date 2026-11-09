@@ -1,35 +1,27 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
-  function members(value) {
-    if (!value) return [];
-    if (!Array.isArray(value)) throw new TypeError("Expected a list");
-    return value;
-  }
-  function memberRecord(value) {
-    if (value === null || value === void 0) throw new TypeError("Read a missing list member");
-    return record(value);
-  }
-  function memberText(value) {
-    if (typeof value !== "string") throw new TypeError("Read a list member that is not text");
-    return value;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export5 = /* @__PURE__ */ sharedExport(shared2, "memberRecord");
+  var export6 = /* @__PURE__ */ sharedExport(shared2, "memberText");
+  var export7 = /* @__PURE__ */ sharedExport(shared2, "members");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
 
   // client/src/features/media-tags/types/language/languagetags.ts
   function isImage(element) {
@@ -58,7 +50,7 @@
       if (!sourceItem) return [];
       const languages = /* @__PURE__ */ new Set();
       const processStreams = function(streams) {
-        members(streams).map(memberRecord).filter(function(s) {
+        export7(streams).map(export5).filter(function(s) {
           return s.Type === type && !(type === "Audio" ? JE.core.mediaLanguage.isSecondaryAudio(s) : s.IsForced === true);
         }).forEach(function(stream) {
           const langCode = stream.Language;
@@ -67,8 +59,8 @@
           }
         });
       };
-      members(sourceItem.MediaSources).forEach(function(source) {
-        processStreams(memberRecord(source).MediaStreams);
+      export7(sourceItem.MediaSources).forEach(function(source) {
+        processStreams(export5(source).MediaStreams);
       });
       processStreams(sourceItem.MediaStreams);
       return normalizeLanguages(Array.from(languages, (fact) => JSON.parse(fact)));
@@ -77,8 +69,8 @@
       const tracks = extractLanguagesFromItem(sourceItem, "Subtitle");
       const codes = sourceItem.SubtitleLanguages || item.SubtitleLanguages;
       if (!codes) return tracks;
-      const sdh = members(sourceItem.SdhSubtitleLanguages || item.SdhSubtitleLanguages || tracks.filter((track) => track.sdh).map((track) => track.code));
-      return members(codes).map((code) => ({ code, sdh: sdh.some((track) => JE.core.mediaLanguage.matchesLanguage(code, track, { requireRegion: true })) }));
+      const sdh = export7(sourceItem.SdhSubtitleLanguages || item.SdhSubtitleLanguages || tracks.filter((track) => track.sdh).map((track) => track.code));
+      return export7(codes).map((code) => ({ code, sdh: sdh.some((track) => JE.core.mediaLanguage.matchesLanguage(code, track, { requireRegion: true })) }));
     }
     function normalizeLanguages(languages) {
       if (!Array.isArray(languages)) return [];
@@ -90,7 +82,7 @@
         if (typeof entry === "string") {
           const code = entry.toLowerCase();
           obj = { name: displayName(code), code };
-        } else if (isRecord(entry)) {
+        } else if (export42(entry)) {
           const code = String(entry.code || entry.Code || "");
           const name = String(entry.name || entry.Name || "") || null;
           if (code) {
@@ -182,7 +174,7 @@
       return orderByPriority(Array.from(unique.values()).sort((a, b) => Number(a.partial) - Number(b.partial)));
     }
     function buildGroup(languages, cap = 3, flagSource = JE.core.mediaLanguage.flagSrc) {
-      const data = Array.isArray(languages) ? { audio: languages } : record(languages);
+      const data = Array.isArray(languages) ? { audio: languages } : export10(languages);
       const conf = readSettings();
       const audio = conf.audio ? resolveChips(data.audio, conf.style) : [];
       const subtitles = conf.subtitles ? resolveChips(data.subtitles, conf.style) : [];
@@ -341,7 +333,7 @@
           if (ctx.isTagged(el)) return;
           if (el.closest(".je-hidden")) return;
           const itemId = String(item.Id);
-          const hot = record(ctx.hot?.get(itemId));
+          const hot = export10(ctx.hot?.get(itemId));
           if (typeof hot.timestamp === "number" && Date.now() - hot.timestamp < ctx.cacheTtl) {
             if (hot.value) insertLanguageTags(ctx, el, hot.value);
             return;
@@ -368,7 +360,7 @@
           const hot = ctx.hot?.get(itemId);
           const cached = hot || ctx.getPersistent(itemId);
           if (cached) {
-            const entry = record(cached);
+            const entry = export10(cached);
             const languages = Array.isArray(cached) ? cached : entry.value || entry.languages || cached;
             if (languages && !Array.isArray(languages)) {
               insertLanguageTags(ctx, el, languages);
@@ -380,14 +372,14 @@
         renderFromServerCache(ctx, el, entry) {
           if (ctx.isTagged(el)) return;
           if (ctx.shouldIgnore(el)) return;
-          const codes = members(entry.AudioLanguages);
-          const partial = new Set(members(entry.PartialAudioLanguages));
+          const codes = export7(entry.AudioLanguages);
+          const partial = new Set(export7(entry.PartialAudioLanguages));
           const languages = codes.map(function(member) {
-            const code = memberText(member);
+            const code = export6(member);
             return { name: displayName(code), code, partial: partial.has(code) };
           });
-          const sdhCodes = members(entry.SdhSubtitleLanguages);
-          insertLanguageTags(ctx, el, { audio: languages, subtitles: members(entry.SubtitleLanguages).map((code) => ({ code, sdh: sdhCodes.some((sdh) => JE.core.mediaLanguage.matchesLanguage(code, sdh, { requireRegion: true })) })) });
+          const sdhCodes = export7(entry.SdhSubtitleLanguages);
+          insertLanguageTags(ctx, el, { audio: languages, subtitles: export7(entry.SubtitleLanguages).map((code) => ({ code, sdh: sdhCodes.some((sdh) => JE.core.mediaLanguage.matchesLanguage(code, sdh, { requireRegion: true })) })) });
         }
       }
     };
@@ -401,7 +393,7 @@
   }
 
   // client/src/features/media-tags/types/language/languagetags-entry.ts
-  createLanguageTags(tagRuntimeHost());
+  createLanguageTags(export4());
 })();
 })();
 //# sourceMappingURL=languagetags.js.map

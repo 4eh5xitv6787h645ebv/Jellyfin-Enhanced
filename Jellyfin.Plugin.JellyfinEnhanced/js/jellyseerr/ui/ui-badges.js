@@ -3,30 +3,19 @@
 (() => {
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared4 = core.core?.featureContext;
+    if (typeof shared4 !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared4(feature, core, slots);
+  }
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
   // client/src/features/seerr/host-core.ts
@@ -49,274 +38,22 @@
     return { JE, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
   }
 
-  // client/src/features/seerr/core/decode.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
-  var isString = (value) => typeof value === "string";
-  var isSafeTmdbImagePath = (path) => typeof path === "string" && /^\/[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|avif)$/i.test(path);
-  var isBoolean = (value) => typeof value === "boolean";
-  var optional = (check) => (value) => value === void 0 || check(value);
-  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
-  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
-  var either = (...checks) => (value) => checks.some((check) => check(value));
-  function matches(value, checks) {
-    if (!isRecord(value)) return false;
-    const table = checks;
-    for (const [key, check] of Object.entries(table)) {
-      if (!check(value[key])) return false;
-    }
-    return true;
-  }
-  var seasonStatusChecks = {
-    seasonNumber: optional(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber)
-  };
-  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
-  var downloadChecks = {
-    title: nullable(isString),
-    status: nullable(isString),
-    size: nullable(isNumber),
-    sizeLeft: nullable(isNumber),
-    estimatedCompletionTime: nullable(isString),
-    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
-  };
-  var isDownload = (value) => matches(value, downloadChecks);
-  var requestSummaryChecks = {
-    is4k: nullable(isBoolean),
-    seasons: nullable(listOf((value) => matches(value, {
-      seasonNumber: optional(isNumber),
-      status: nullable(isNumber)
-    })))
-  };
-  var mediaInfoChecks = {
-    id: nullable(isNumber),
-    tvdbId: nullable(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber),
-    jellyfinMediaId: nullable(isString),
-    jellyfinMediaId4k: nullable(isString),
-    seasons: nullable(listOf(isSeasonStatus)),
-    downloadStatus: nullable(listOf(isDownload)),
-    downloadStatus4k: nullable(listOf(isDownload)),
-    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
-  };
-  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
-  var collectionChecks = {
-    id: nullable(isNumber),
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var isCollectionRef = (value) => matches(value, collectionChecks);
-  var mediaItemChecks = {
-    id: isNumber,
-    mediaType: isString,
-    title: nullable(isString),
-    name: nullable(isString),
-    originalTitle: nullable(isString),
-    originalName: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString),
-    overview: nullable(isString),
-    voteAverage: nullable(isNumber),
-    releaseDate: nullable(isString),
-    firstAirDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo),
-    collection: nullable(isCollectionRef)
-  };
-  var userStatusChecks = {
-    active: isBoolean,
-    userFound: isBoolean,
-    reason: optional(isString),
-    message: optional(isString),
-    jellyseerrUserId: optional(either(isString, isNumber)),
-    canRequestAdvanced: optional(isBoolean)
-  };
-  var quotaSideChecks = {
-    limit: nullable(isNumber),
-    used: nullable(isNumber),
-    remaining: nullable(isNumber),
-    days: nullable(isNumber),
-    restricted: nullable(isBoolean),
-    nextResetAt: nullable(isString)
-  };
-  var quotaChecks = {
-    movie: nullable((value) => matches(value, quotaSideChecks)),
-    tv: nullable((value) => matches(value, quotaSideChecks))
-  };
-  var overrideRuleChecks = {
-    id: nullable(either(isNumber, isString)),
-    radarrServiceId: nullable(isNumber),
-    sonarrServiceId: nullable(isNumber),
-    language: nullable(isString),
-    genre: nullable(isString),
-    keywords: nullable(isString),
-    users: nullable(isString),
-    profileId: nullable(isNumber),
-    rootFolder: nullable(isString),
-    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
-  };
-  var profileChecks = { id: isNumber, name: nullable(isString) };
-  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
-  var serviceChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    isDefault: nullable(isBoolean),
-    is4k: nullable(isBoolean),
-    activeProfileId: nullable(isNumber),
-    activeDirectory: nullable(isString)
-  };
-  var candidateChecks = {
-    tvdbId: isNumber,
-    title: nullable(isString),
-    year: nullable(either(isNumber, isString)),
-    overview: nullable(isString),
-    remotePoster: nullable(isString)
-  };
-  var movieCollectionChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var issueChecks = {
-    id: nullable(isNumber),
-    media: nullable((value) => matches(value, {
-      tmdbId: nullable(either(isNumber, isString)),
-      mediaType: nullable(isString)
-    }))
-  };
-  var tvSeasonChecks = {
-    seasonNumber: isNumber,
-    name: nullable(isString),
-    episodeCount: nullable(isNumber),
-    airDate: nullable(isString),
-    jeYear: nullable(isString)
-  };
-  var collectionPartChecks = {
-    id: isNumber,
-    title: nullable(isString),
-    posterPath: nullable(isString),
-    releaseDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo)
-  };
+  // client/generated-shared/stub/client/src/features/seerr/core/decode.ts
+  var shared = /* @__PURE__ */ sharedModule("features/seerr/core/decode");
+  var export19 = /* @__PURE__ */ sharedExport(shared, "isRecord");
+  var export20 = /* @__PURE__ */ sharedExport(shared, "isSafeTmdbImagePath");
+  var export22 = /* @__PURE__ */ sharedExport(shared, "isString");
 
-  // client/src/features/seerr/core/status.ts
-  var MEDIA = Object.freeze({
-    UNKNOWN: 1,
-    PENDING: 2,
-    PROCESSING: 3,
-    PARTIALLY_AVAILABLE: 4,
-    AVAILABLE: 5,
-    BLOCKED: 6,
-    DELETED: 7
-  });
-  var REQUEST = Object.freeze({
-    PENDING: 1,
-    APPROVED: 2,
-    DECLINED: 3,
-    FAILED: 4,
-    COMPLETED: 5
-  });
-  var DISPLAY = Object.freeze({
-    AVAILABLE: "available",
-    AVAILABLE_UPDATING: "available-updating",
-    PENDING: "pending",
-    PROCESSING: "processing",
-    REQUESTED: "requested",
-    PARTIAL: "partial",
-    BLOCKED: "blocked",
-    DELETED: "deleted",
-    NONE: "none"
-  });
-  function resolveDisplayStatus(status, hasActiveDownloads = false) {
-    switch (status) {
-      case MEDIA.AVAILABLE:
-        return hasActiveDownloads ? DISPLAY.AVAILABLE_UPDATING : DISPLAY.AVAILABLE;
-      case MEDIA.PENDING:
-        return DISPLAY.PENDING;
-      case MEDIA.PROCESSING:
-        return hasActiveDownloads ? DISPLAY.PROCESSING : DISPLAY.REQUESTED;
-      case MEDIA.PARTIALLY_AVAILABLE:
-        return DISPLAY.PARTIAL;
-      case MEDIA.BLOCKED:
-        return DISPLAY.BLOCKED;
-      case MEDIA.DELETED:
-        return DISPLAY.DELETED;
-      default:
-        return DISPLAY.NONE;
-    }
-  }
-  var AVAILABLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>`;
-  var BADGE_ICONS = {
-    [DISPLAY.AVAILABLE]: AVAILABLE_ICON,
-    [DISPLAY.AVAILABLE_UPDATING]: AVAILABLE_ICON,
-    [DISPLAY.PENDING]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0113.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 01-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 11-7.48 0 24.585 24.585 0 01-4.831-1.244.75.75 0 01-.298-1.205A8.217 8.217 0 005.25 9.75V9zm4.502 8.9a2.25 2.25 0 104.496 0 25.057 25.057 0 01-4.496 0z" clip-rule="evenodd" /></svg>`,
-    [DISPLAY.PROCESSING]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>`,
-    [DISPLAY.REQUESTED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd"></path></svg>`,
-    [DISPLAY.PARTIAL]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clip-rule="evenodd" /></svg>`,
-    [DISPLAY.BLOCKED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>`,
-    [DISPLAY.DELETED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" /></svg>`
-  };
-  var BADGE_CSS = {
-    [DISPLAY.AVAILABLE]: "status-available",
-    [DISPLAY.AVAILABLE_UPDATING]: "status-available",
-    [DISPLAY.PENDING]: "status-pending",
-    [DISPLAY.PROCESSING]: "status-processing",
-    [DISPLAY.REQUESTED]: "status-requested",
-    [DISPLAY.PARTIAL]: "status-partially-available",
-    [DISPLAY.BLOCKED]: "status-blocklisted",
-    [DISPLAY.DELETED]: "status-deleted"
-  };
-  function getBadgeConfig(displayStatus) {
-    const icon = BADGE_ICONS[displayStatus];
-    const cssClass = BADGE_CSS[displayStatus];
-    if (!icon || !cssClass) return null;
-    return { icon, cssClass };
-  }
+  // client/generated-shared/stub/client/src/features/seerr/core/display.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/seerr/core/display");
+  var export0 = /* @__PURE__ */ sharedExport(shared2, "analyzeSeasonStatuses");
+  var export5 = /* @__PURE__ */ sharedExport(shared2, "hasDownloads");
 
-  // client/src/features/seerr/core/display.ts
-  function analyzeSeasonStatuses(seasons, t) {
-    if (!Array.isArray(seasons) || seasons.length === 0) return { overallStatus: MEDIA.UNKNOWN, statusSummary: null, total: 0 };
-    const entries = seasons.filter(isRecord);
-    const regular = entries.filter((s) => isNumber(s.seasonNumber) && s.seasonNumber > 0);
-    const total = regular.length;
-    if (total === 0) return { overallStatus: MEDIA.UNKNOWN, statusSummary: null, total: 0 };
-    const count = (status) => regular.filter((s) => s.status === status).length;
-    const available = count(MEDIA.AVAILABLE);
-    const pending = count(MEDIA.PENDING);
-    const processing = count(MEDIA.PROCESSING);
-    const partiallyAvailable = count(MEDIA.PARTIALLY_AVAILABLE);
-    const notRequested = count(MEDIA.UNKNOWN);
-    const requestedCount = pending + processing;
-    const availableCount = available + partiallyAvailable;
-    const accountedForCount = requestedCount + availableCount;
-    let overallStatus;
-    let statusSummary = null;
-    if (notRequested === 0) {
-      overallStatus = availableCount === total ? MEDIA.AVAILABLE : MEDIA.DELETED;
-      if (overallStatus === MEDIA.DELETED) statusSummary = t("jellyseerr_seasons_accounted_for", { count: accountedForCount, total });
-    } else if (accountedForCount > 0) {
-      overallStatus = availableCount > 0 ? MEDIA.PARTIALLY_AVAILABLE : MEDIA.PROCESSING;
-      statusSummary = availableCount > 0 ? t("jellyseerr_seasons_available_count", { count: availableCount, total }) : t("jellyseerr_seasons_requested_count", { count: requestedCount, total });
-    } else {
-      overallStatus = MEDIA.UNKNOWN;
-    }
-    if (overallStatus === MEDIA.AVAILABLE) {
-      const specials = entries.find((s) => s.seasonNumber === 0);
-      if (specials && specials.status === MEDIA.UNKNOWN) {
-        overallStatus = MEDIA.DELETED;
-        statusSummary = t("jellyseerr_seasons_accounted_for", { count: accountedForCount, total });
-      }
-    }
-    return { overallStatus, statusSummary, total, availableCount };
-  }
-  function hasDownloads(item) {
-    return (item.mediaInfo?.downloadStatus?.length ?? 0) > 0 || (item.mediaInfo?.downloadStatus4k?.length ?? 0) > 0;
-  }
+  // client/generated-shared/stub/client/src/features/seerr/core/status.ts
+  var shared3 = /* @__PURE__ */ sharedModule("features/seerr/core/status");
+  var export02 = /* @__PURE__ */ sharedExport(shared3, "DISPLAY");
+  var export52 = /* @__PURE__ */ sharedExport(shared3, "getBadgeConfig");
+  var export11 = /* @__PURE__ */ sharedExport(shared3, "resolveDisplayStatus");
 
   // client/src/features/seerr/core/runtime.ts
   var LOG_UI = "🪼 Jellyfin Enhanced: Seerr UI:";
@@ -353,7 +90,7 @@
     if (!Array.isArray(list)) return null;
     const providers = [];
     for (const entry of list) {
-      if (isRecord(entry) && isString(entry.provider_name) && isSafeTmdbImagePath(entry.logo_path)) {
+      if (export19(entry) && export22(entry.provider_name) && export20(entry.logo_path)) {
         providers.push({ ...entry, provider_name: entry.provider_name, logo_path: entry.logo_path });
       }
     }
@@ -386,14 +123,14 @@
       }
       let status;
       if (item.mediaType === "tv" && info.seasons) {
-        const analysis = seasonAnalysis || analyzeSeasonStatuses(info.seasons, JE.t);
+        const analysis = seasonAnalysis || export0(info.seasons, JE.t);
         status = analysis ? analysis.overallStatus : info.status;
       } else {
         status = info.status || 1;
       }
-      const downloads = hasDownloads(item);
-      const displayStatus = resolveDisplayStatus(status, downloads);
-      const config = getBadgeConfig(displayStatus);
+      const downloads = export5(item);
+      const displayStatus = export11(status, downloads);
+      const config = export52(displayStatus);
       if (!config) {
         badge.style.display = "none";
         return;
@@ -402,7 +139,7 @@
       else badge.innerHTML = config.icon;
       badge.className = `jellyseerr-status-badge ${config.cssClass}`;
       badge.style.display = "flex";
-      if (displayStatus === DISPLAY.PARTIAL && item.mediaType === "tv" && downloads) {
+      if (displayStatus === export02.PARTIAL && item.mediaType === "tv" && downloads) {
         badge.style.cursor = "pointer";
         internals.addDownloadProgressHover?.(badge, item);
       }
@@ -457,7 +194,7 @@
       const api = JE.core?.api;
       const pending = api ? api.plugin(`/watch-providers?items=${items}&region=${region}`, { signal: batch.controller.signal, priority: "low" }) : Promise.reject(new Error("core API unavailable"));
       pending.then((data) => {
-        const results = isRecord(data) && isRecord(data.results) ? data.results : {};
+        const results = export19(data) && export19(data.results) ? data.results : {};
         const cacheable = !JE.session || epoch === void 0 || JE.session.isCurrent(epoch);
         for (const lookup of lookups) {
           const providers = sanitizeProviders(results[lookup.key]);
@@ -527,7 +264,7 @@
             console.error(`${LOG_UI} Invalid regex in IGNORE_PROVIDERS setting.`, error);
           }
         }
-        providers = providers.filter((p) => isSafeTmdbImagePath(p.logo_path));
+        providers = providers.filter((p) => export20(p.logo_path));
         for (const provider of providers.slice(0, 4)) {
           const img = document2.createElement("img");
           img.loading = "lazy";
@@ -579,7 +316,7 @@
     }
     internals.setStatusBadge = setStatusBadge;
     internals.fetchProviderIcons = fetchProviderIcons;
-    internals.isSafeTmdbImagePath = isSafeTmdbImagePath;
+    internals.isSafeTmdbImagePath = export20;
     internals.addMediaTypeBadge = addMediaTypeBadge;
     internals.addCollectionMembershipBadge = addCollectionMembershipBadge;
   }

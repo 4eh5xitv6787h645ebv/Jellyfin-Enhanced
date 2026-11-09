@@ -3,30 +3,19 @@
 (() => {
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared2 = core.core?.featureContext;
+    if (typeof shared2 !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared2(feature, core, slots);
+  }
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
   // client/src/features/seerr/host-core.ts
@@ -49,176 +38,11 @@
     return { JE, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
   }
 
-  // client/src/features/seerr/core/decode.ts
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  var isNumber = (value) => typeof value === "number" && Number.isFinite(value);
-  var isString = (value) => typeof value === "string";
-  var isSafeTmdbImagePath = (path) => typeof path === "string" && /^\/[A-Za-z0-9_\-.]+\.(jpg|jpeg|png|webp|avif)$/i.test(path);
-  var isBoolean = (value) => typeof value === "boolean";
-  var optional = (check) => (value) => value === void 0 || check(value);
-  var nullable = (check) => (value) => value === void 0 || value === null || check(value);
-  var listOf = (check) => (value) => Array.isArray(value) && value.every(check);
-  var either = (...checks) => (value) => checks.some((check) => check(value));
-  function matches(value, checks) {
-    if (!isRecord(value)) return false;
-    const table = checks;
-    for (const [key, check] of Object.entries(table)) {
-      if (!check(value[key])) return false;
-    }
-    return true;
-  }
-  var seasonStatusChecks = {
-    seasonNumber: optional(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber)
-  };
-  var isSeasonStatus = (value) => matches(value, seasonStatusChecks);
-  var downloadChecks = {
-    title: nullable(isString),
-    status: nullable(isString),
-    size: nullable(isNumber),
-    sizeLeft: nullable(isNumber),
-    estimatedCompletionTime: nullable(isString),
-    episode: nullable((value) => matches(value, { seasonNumber: nullable(isNumber) }))
-  };
-  var isDownload = (value) => matches(value, downloadChecks);
-  var requestSummaryChecks = {
-    is4k: nullable(isBoolean),
-    seasons: nullable(listOf((value) => matches(value, {
-      seasonNumber: optional(isNumber),
-      status: nullable(isNumber)
-    })))
-  };
-  var mediaInfoChecks = {
-    id: nullable(isNumber),
-    tvdbId: nullable(isNumber),
-    status: nullable(isNumber),
-    status4k: nullable(isNumber),
-    jellyfinMediaId: nullable(isString),
-    jellyfinMediaId4k: nullable(isString),
-    seasons: nullable(listOf(isSeasonStatus)),
-    downloadStatus: nullable(listOf(isDownload)),
-    downloadStatus4k: nullable(listOf(isDownload)),
-    requests: nullable(listOf((value) => matches(value, requestSummaryChecks)))
-  };
-  var isMediaInfo = (value) => matches(value, mediaInfoChecks);
-  var collectionChecks = {
-    id: nullable(isNumber),
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var isCollectionRef = (value) => matches(value, collectionChecks);
-  var mediaItemChecks = {
-    id: isNumber,
-    mediaType: isString,
-    title: nullable(isString),
-    name: nullable(isString),
-    originalTitle: nullable(isString),
-    originalName: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString),
-    overview: nullable(isString),
-    voteAverage: nullable(isNumber),
-    releaseDate: nullable(isString),
-    firstAirDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo),
-    collection: nullable(isCollectionRef)
-  };
-  var userStatusChecks = {
-    active: isBoolean,
-    userFound: isBoolean,
-    reason: optional(isString),
-    message: optional(isString),
-    jellyseerrUserId: optional(either(isString, isNumber)),
-    canRequestAdvanced: optional(isBoolean)
-  };
-  var quotaSideChecks = {
-    limit: nullable(isNumber),
-    used: nullable(isNumber),
-    remaining: nullable(isNumber),
-    days: nullable(isNumber),
-    restricted: nullable(isBoolean),
-    nextResetAt: nullable(isString)
-  };
-  var quotaChecks = {
-    movie: nullable((value) => matches(value, quotaSideChecks)),
-    tv: nullable((value) => matches(value, quotaSideChecks))
-  };
-  var overrideRuleChecks = {
-    id: nullable(either(isNumber, isString)),
-    radarrServiceId: nullable(isNumber),
-    sonarrServiceId: nullable(isNumber),
-    language: nullable(isString),
-    genre: nullable(isString),
-    keywords: nullable(isString),
-    users: nullable(isString),
-    profileId: nullable(isNumber),
-    rootFolder: nullable(isString),
-    tags: nullable(either(listOf(either(isNumber, isString)), isNumber, isString))
-  };
-  var profileChecks = { id: isNumber, name: nullable(isString) };
-  var folderChecks = { path: isString, freeSpace: nullable(isNumber) };
-  function decodeProfiles(value) {
-    return Array.isArray(value) ? value.filter((entry) => matches(entry, profileChecks)) : [];
-  }
-  function decodeFolders(value) {
-    return Array.isArray(value) ? value.filter((entry) => matches(entry, folderChecks)) : [];
-  }
-  var serviceChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    isDefault: nullable(isBoolean),
-    is4k: nullable(isBoolean),
-    activeProfileId: nullable(isNumber),
-    activeDirectory: nullable(isString)
-  };
-  var isServiceListing = (value) => matches(value, serviceChecks);
-  function decodeAdvancedData(value) {
-    if (!isRecord(value) || !Array.isArray(value.servers)) return { servers: [], tags: [] };
-    const servers = [];
-    for (const entry of value.servers) {
-      if (!isServiceListing(entry)) continue;
-      servers.push({ ...entry, qualityProfiles: decodeProfiles(entry.qualityProfiles), rootFolders: decodeFolders(entry.rootFolders) });
-    }
-    return { servers, tags: Array.isArray(value.tags) ? value.tags.filter(isNumber) : [] };
-  }
-  var candidateChecks = {
-    tvdbId: isNumber,
-    title: nullable(isString),
-    year: nullable(either(isNumber, isString)),
-    overview: nullable(isString),
-    remotePoster: nullable(isString)
-  };
-  var movieCollectionChecks = {
-    id: isNumber,
-    name: nullable(isString),
-    posterPath: nullable(isString),
-    backdropPath: nullable(isString)
-  };
-  var issueChecks = {
-    id: nullable(isNumber),
-    media: nullable((value) => matches(value, {
-      tmdbId: nullable(either(isNumber, isString)),
-      mediaType: nullable(isString)
-    }))
-  };
-  var tvSeasonChecks = {
-    seasonNumber: isNumber,
-    name: nullable(isString),
-    episodeCount: nullable(isNumber),
-    airDate: nullable(isString),
-    jeYear: nullable(isString)
-  };
-  var collectionPartChecks = {
-    id: isNumber,
-    title: nullable(isString),
-    posterPath: nullable(isString),
-    releaseDate: nullable(isString),
-    mediaInfo: nullable(isMediaInfo)
-  };
+  // client/generated-shared/stub/client/src/features/seerr/core/decode.ts
+  var shared = /* @__PURE__ */ sharedModule("features/seerr/core/decode");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "decodeAdvancedData");
+  var export19 = /* @__PURE__ */ sharedExport(shared, "isRecord");
+  var export20 = /* @__PURE__ */ sharedExport(shared, "isSafeTmdbImagePath");
 
   // client/src/features/seerr/core/runtime.ts
   function groupInternals(JE) {
@@ -265,7 +89,7 @@
     const retiredEntries = /* @__PURE__ */ new Map();
     const historyToken = () => {
       const state = window2.history.state;
-      return isRecord(state) && typeof state[historyKey] === "string" ? state[historyKey] : null;
+      return export19(state) && typeof state[historyKey] === "string" ? state[historyKey] : null;
     };
     window2.addEventListener("popstate", () => {
       const token = historyToken();
@@ -341,7 +165,7 @@
       modalElement.setAttribute("tabindex", "-1");
       let backdropImage;
       if (backdropUrl) backdropImage = `url('${escapeHtml(backdropUrl)}')`;
-      else if (backdropPath && isSafeTmdbImagePath(backdropPath)) backdropImage = `url('https://image.tmdb.org/t/p/w1280${escapeHtml(backdropPath)}')`;
+      else if (backdropPath && export20(backdropPath)) backdropImage = `url('https://image.tmdb.org/t/p/w1280${escapeHtml(backdropPath)}')`;
       else backdropImage = "linear-gradient(45deg, #3b82f6, #8b5cf6)";
       const contentEl = document2.createElement("div");
       contentEl.className = "jellyseerr-season-content";
@@ -433,7 +257,7 @@
       const close = () => dismiss(true);
       const onHistoryChange = (event) => {
         const state = event.state;
-        if (!isRecord(state) || state[historyKey] !== token || !ownsHistory()) dismiss(false);
+        if (!export19(state) || state[historyKey] !== token || !ownsHistory()) dismiss(false);
       };
       const show = () => {
         if (shown || isClosing) return;
@@ -442,7 +266,7 @@
         document2.body.appendChild(modalElement);
         document2.body.classList.add("jellyseerr-modal-is-open");
         const previous = window2.history.state;
-        window2.history.pushState({ ...isRecord(previous) ? previous : {}, [historyKey]: token }, "", openedUrl);
+        window2.history.pushState({ ...export19(previous) ? previous : {}, [historyKey]: token }, "", openedUrl);
         window2.addEventListener("popstate", onHistoryChange);
         document2.addEventListener("keydown", handleKeydown);
         window2.setTimeout(() => {
@@ -487,7 +311,7 @@
         `;
     }
     function populateAdvancedOptions(modalElement, value, idPrefix, is4k) {
-      const data = decodeAdvancedData(value);
+      const data = export1(value);
       if (!/^[A-Za-z0-9_-]+$/.test(idPrefix)) return;
       let attempts = 0;
       const maxAttempts = 50;

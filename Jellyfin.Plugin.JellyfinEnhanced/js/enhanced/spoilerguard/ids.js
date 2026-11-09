@@ -1,35 +1,37 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared(feature, core, slots);
+  }
+  function publishSharedModules(modules) {
+    const JE = window.JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ?? (JE.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
   }
 
   // client/src/features/spoiler-guard/host.ts
+  var host_exports = {};
+  __export(host_exports, {
+    spoilerHost: () => spoilerHost
+  });
   function spoilerHost() {
     var _a;
     const host = window;
@@ -297,6 +299,9 @@
     const ApiClient = { getCurrentUserId: () => host.ApiClient?.getCurrentUserId() ?? null };
     return { JE, internal: internal2, ApiClient, host, ctx };
   }
+
+  // client/generated-shared/publish/js/enhanced/spoilerguard/ids.js.ts
+  publishSharedModules({ "features/spoiler-guard/host": host_exports });
 
   // client/src/features/spoiler-guard/ids-logic.ts
   function normalizeId(id) {

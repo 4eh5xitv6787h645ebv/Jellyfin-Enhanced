@@ -1,63 +1,79 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // client/src/host/context.ts
   function featureContext(feature, core, slots) {
-    const own = {};
-    const bind = (keys, target) => {
-      for (const key of keys) {
-        Object.defineProperty(own, key, {
-          enumerable: true,
-          get: () => target()[key],
-          set: (value) => {
-            target()[key] = value;
-          }
-        });
-      }
-    };
-    bind(slots.facades ?? [], () => core);
-    const internalsObject = slots.internalsObject;
-    if (slots.internalSlots?.length) {
-      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
-      bind(slots.internalSlots, internalsObject);
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
     }
-    return {
-      feature,
-      core,
-      own,
-      peer: (name) => core[name]
-    };
+    return shared(feature, core, slots);
+  }
+  function publishSharedModules(modules) {
+    const JE2 = window.JellyfinEnhanced;
+    if (!JE2) return;
+    const core = JE2.core ?? (JE2.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
   }
 
-  // client/src/features/player/host.ts
-  function playerHost() {
-    const host = window;
-    const JE2 = host.JellyfinEnhanced;
-    if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
-    const ctx2 = featureContext("player", JE2, {
-      internalSlots: ["player", "nowPlaying", "autoSkip"],
-      internalsObject: () => JE2.internals = JE2.internals || {}
+  // client/src/features/player/wire.ts
+  var wire_exports = {};
+  __export(wire_exports, {
+    decodeItem: () => decodeItem,
+    decodeItems: () => decodeItems,
+    decodeSegments: () => decodeSegments,
+    decodeSessions: () => decodeSessions,
+    record: () => record
+  });
+  function record(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : {};
+  }
+  var text = (v) => typeof v === "string" ? v : void 0;
+  var number = (v) => typeof v === "number" && Number.isFinite(v) ? v : void 0;
+  var strings = (v) => Array.isArray(v) ? v.filter((s) => typeof s === "string") : [];
+  var list = (v) => Array.isArray(v) ? v : [];
+  function stream(v) {
+    const r = record(v);
+    const fps = (v2) => typeof v2 === "string" ? v2 : number(v2);
+    return { Type: text(r.Type), Index: number(r.Index), ReferenceFrameRate: fps(r.ReferenceFrameRate), RealFrameRate: fps(r.RealFrameRate), AverageFrameRate: fps(r.AverageFrameRate), DisplayTitle: text(r.DisplayTitle), Title: text(r.Title), Language: text(r.Language), Codec: text(r.Codec) };
+  }
+  function decodeItem(v) {
+    const r = record(v);
+    return { Id: text(r.Id), Type: text(r.Type), SeriesId: text(r.SeriesId), ParentId: text(r.ParentId), RunTimeTicks: number(r.RunTimeTicks), ProductionYear: number(r.ProductionYear), CommunityRating: number(r.CommunityRating), CriticRating: number(r.CriticRating), OfficialRating: text(r.OfficialRating), Overview: text(r.Overview), Container: text(r.Container), Genres: strings(r.Genres), Tags: strings(r.Tags), ImageTags: { Logo: text(record(r.ImageTags).Logo) }, MediaStreams: list(r.MediaStreams).map(stream), MediaSources: list(r.MediaSources).map((v2) => {
+      const s = record(v2);
+      return { Id: text(s.Id), MediaStreams: list(s.MediaStreams).map(stream) };
+    }) };
+  }
+  var decodeItems = (v) => list(record(v).Items).map(decodeItem);
+  function decodeSessions(v) {
+    return list(v).map((v2) => {
+      const r = record(v2), p = record(r.PlayState), t = record(r.TranscodingInfo);
+      return { Id: text(r.Id), DeviceId: text(r.DeviceId), NowPlayingItem: decodeItem(r.NowPlayingItem), PlayState: { PlayMethod: text(p.PlayMethod), MediaSourceId: text(p.MediaSourceId), AudioStreamIndex: number(p.AudioStreamIndex), SubtitleStreamIndex: number(p.SubtitleStreamIndex) }, TranscodingInfo: r.TranscodingInfo ? { CompletionPercentage: number(t.CompletionPercentage), Container: text(t.Container), VideoCodec: text(t.VideoCodec), AudioCodec: text(t.AudioCodec), Bitrate: number(t.Bitrate), TranscodeReasons: typeof t.TranscodeReasons === "string" ? [t.TranscodeReasons] : strings(t.TranscodeReasons) } : null };
     });
-    const requireApi = () => {
-      if (!host.ApiClient) throw new Error("Jellyfin API unavailable");
-      return host.ApiClient;
-    };
-    const ApiClient2 = {
-      getCurrentUserId: () => host.ApiClient?.getCurrentUserId() ?? null,
-      deviceId: () => host.ApiClient?.deviceId?.() ?? "",
-      serverId: () => {
-        const id = host.ApiClient?.serverId;
-        return typeof id === "function" ? id.call(host.ApiClient) : id ?? "";
-      },
-      serverAddress: () => requireApi().serverAddress(),
-      getUrl: (path, params) => requireApi().getUrl(path, params),
-      ajax: (options) => requireApi().ajax(options),
-      getItem: (userId, itemId) => requireApi().getItem(userId, itemId)
-    };
-    return { JE: JE2, ApiClient: ApiClient2, ctx: ctx2 };
+  }
+  function decodeSegments(v) {
+    return list(record(v).Items).map((v2) => {
+      const r = record(v2);
+      return { Id: text(r.Id), Type: text(r.Type), StartTicks: number(r.StartTicks), EndTicks: number(r.EndTicks) };
+    });
   }
 
   // client/src/features/player/lifetime.ts
+  var lifetime_exports = {};
+  __export(lifetime_exports, {
+    createPlayerLifetime: () => createPlayerLifetime
+  });
   function createPlayerLifetime(JE2, name) {
     let generation = 0;
     let controller = new AbortController();
@@ -119,6 +135,41 @@
     };
   }
 
+  // client/src/features/player/host.ts
+  var host_exports = {};
+  __export(host_exports, {
+    playerHost: () => playerHost
+  });
+  function playerHost() {
+    const host = window;
+    const JE2 = host.JellyfinEnhanced;
+    if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("player", JE2, {
+      internalSlots: ["player", "nowPlaying", "autoSkip"],
+      internalsObject: () => JE2.internals = JE2.internals || {}
+    });
+    const requireApi = () => {
+      if (!host.ApiClient) throw new Error("Jellyfin API unavailable");
+      return host.ApiClient;
+    };
+    const ApiClient2 = {
+      getCurrentUserId: () => host.ApiClient?.getCurrentUserId() ?? null,
+      deviceId: () => host.ApiClient?.deviceId?.() ?? "",
+      serverId: () => {
+        const id = host.ApiClient?.serverId;
+        return typeof id === "function" ? id.call(host.ApiClient) : id ?? "";
+      },
+      serverAddress: () => requireApi().serverAddress(),
+      getUrl: (path, params) => requireApi().getUrl(path, params),
+      ajax: (options) => requireApi().ajax(options),
+      getItem: (userId, itemId) => requireApi().getItem(userId, itemId)
+    };
+    return { JE: JE2, ApiClient: ApiClient2, ctx: ctx2 };
+  }
+
+  // client/generated-shared/publish/js/enhanced/player/playback.js.ts
+  publishSharedModules({ "features/player/wire": wire_exports, "features/player/lifetime": lifetime_exports, "features/player/host": host_exports });
+
   // client/src/features/player/identity.ts
   function getCurrentVideoItemId() {
     try {
@@ -138,39 +189,6 @@
   function parseItemIdFromVideosSrc(src) {
     const m = (src || "").match(/\/[Vv]ideos\/([0-9a-fA-F-]{32,36})\b/);
     return m?.[1] ?? null;
-  }
-
-  // client/src/features/player/wire.ts
-  function record(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : {};
-  }
-  var text = (v) => typeof v === "string" ? v : void 0;
-  var number = (v) => typeof v === "number" && Number.isFinite(v) ? v : void 0;
-  var strings = (v) => Array.isArray(v) ? v.filter((s) => typeof s === "string") : [];
-  var list = (v) => Array.isArray(v) ? v : [];
-  function stream(v) {
-    const r = record(v);
-    const fps = (v2) => typeof v2 === "string" ? v2 : number(v2);
-    return { Type: text(r.Type), Index: number(r.Index), ReferenceFrameRate: fps(r.ReferenceFrameRate), RealFrameRate: fps(r.RealFrameRate), AverageFrameRate: fps(r.AverageFrameRate), DisplayTitle: text(r.DisplayTitle), Title: text(r.Title), Language: text(r.Language), Codec: text(r.Codec) };
-  }
-  function decodeItem(v) {
-    const r = record(v);
-    return { Id: text(r.Id), Type: text(r.Type), SeriesId: text(r.SeriesId), ParentId: text(r.ParentId), RunTimeTicks: number(r.RunTimeTicks), ProductionYear: number(r.ProductionYear), CommunityRating: number(r.CommunityRating), CriticRating: number(r.CriticRating), OfficialRating: text(r.OfficialRating), Overview: text(r.Overview), Container: text(r.Container), Genres: strings(r.Genres), Tags: strings(r.Tags), ImageTags: { Logo: text(record(r.ImageTags).Logo) }, MediaStreams: list(r.MediaStreams).map(stream), MediaSources: list(r.MediaSources).map((v2) => {
-      const s = record(v2);
-      return { Id: text(s.Id), MediaStreams: list(s.MediaStreams).map(stream) };
-    }) };
-  }
-  function decodeSessions(v) {
-    return list(v).map((v2) => {
-      const r = record(v2), p = record(r.PlayState), t = record(r.TranscodingInfo);
-      return { Id: text(r.Id), DeviceId: text(r.DeviceId), NowPlayingItem: decodeItem(r.NowPlayingItem), PlayState: { PlayMethod: text(p.PlayMethod), MediaSourceId: text(p.MediaSourceId), AudioStreamIndex: number(p.AudioStreamIndex), SubtitleStreamIndex: number(p.SubtitleStreamIndex) }, TranscodingInfo: r.TranscodingInfo ? { CompletionPercentage: number(t.CompletionPercentage), Container: text(t.Container), VideoCodec: text(t.VideoCodec), AudioCodec: text(t.AudioCodec), Bitrate: number(t.Bitrate), TranscodeReasons: typeof t.TranscodeReasons === "string" ? [t.TranscodeReasons] : strings(t.TranscodeReasons) } : null };
-    });
-  }
-  function decodeSegments(v) {
-    return list(record(v).Items).map((v2) => {
-      const r = record(v2);
-      return { Id: text(r.Id), Type: text(r.Type), StartTicks: number(r.StartTicks), EndTicks: number(r.EndTicks) };
-    });
   }
 
   // client/src/features/player/frame-seek.ts

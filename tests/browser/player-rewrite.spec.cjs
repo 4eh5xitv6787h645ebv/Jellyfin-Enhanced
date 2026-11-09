@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const path = require('node:path');
+const path = require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const root = path.resolve(__dirname, '../../Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player');
 async function setup(page, files) {
  await page.route('http://player.fixture/**', route => route.fulfill({contentType:'text/html',body:'<!doctype html><html><head></head><body><div class="videoPlayerContainer"><video></video></div></body></html>'}));
@@ -11,7 +11,7 @@ async function setup(page, files) {
    helpers:{onBodyMutation(_name,callback){const observer=new MutationObserver(callback);observer.observe(document.body,{childList:true,subtree:true});return {unsubscribe:()=>observer.disconnect()};}}};
   window.ApiClient={getCurrentUserId:()=> 'user',deviceId:()=> 'device',getUrl:x=>x};
  });
- for(const file of files)await page.addScriptTag({path:path.join(root,file+'.js')});
+ await provideFeatureContext(page); for(const file of files)await page.addScriptTag({path:path.join(root,file+'.js')});
 }
 test('player subtitle styles apply to replacement cues and restore native style on navigation',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));await setup(page,['subtitles']);

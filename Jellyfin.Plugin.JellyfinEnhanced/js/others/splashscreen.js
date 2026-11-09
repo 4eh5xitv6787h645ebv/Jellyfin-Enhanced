@@ -2,7 +2,7 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
+  function createFeatureContext(feature, core, slots) {
     const own2 = {};
     const bind = (keys, target) => {
       for (const key of keys) {
@@ -30,8 +30,8 @@
   }
 
   // client/src/features/chrome/host.ts
-  function chromeContext(JE2, facades) {
-    return featureContext("chrome", JE2, { facades });
+  function preLoginChromeContext(JE2, facades) {
+    return createFeatureContext("chrome", JE2, { facades });
   }
   function ensureBridge() {
     const host = window;
@@ -363,7 +363,7 @@
   var JE = ensureBridge();
   var splash = createSplashScreen(() => optionalBridge()?.pluginConfig);
   splash.installPreemptiveStyles();
-  var own = chromeContext(JE, ["initializeSplashScreen", "hideSplashScreen"]).own;
+  var own = preLoginChromeContext(JE, ["initializeSplashScreen", "hideSplashScreen"]).own;
   own.initializeSplashScreen = splash.initializeSplashScreen;
   own.hideSplashScreen = splash.hide;
   console.log("🪼 Jellyfin Enhanced: Splash screen module loaded.");

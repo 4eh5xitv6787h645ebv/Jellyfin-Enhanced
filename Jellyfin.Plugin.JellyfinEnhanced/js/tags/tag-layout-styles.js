@@ -1,13 +1,19 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
+  function sharedExport(namespace, name) {
+    return namespace[name];
+  }
+
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
 
   // client/src/features/media-tags/layout/tag-layout-styles.ts
   function createLayoutStyles(JE) {
@@ -629,7 +635,7 @@
   }
 
   // client/src/features/media-tags/layout/tag-layout-styles-entry.ts
-  createLayoutStyles(tagRuntimeHost());
+  createLayoutStyles(export4());
 })();
 })();
 //# sourceMappingURL=tag-layout-styles.js.map

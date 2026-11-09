@@ -39,7 +39,7 @@ async function setup(page, answers = {}) {
       serverAddress: () => origin, getUrl: p => `${origin}${p}` };
     document.addEventListener('jellyseerr-media-requested', e => window.seen.push(e.detail));
   }, ORIGIN);
-  for (const script of SCRIPTS) await page.addScriptTag({ path: path.join(js, `${script}.js`) });
+  await page.addScriptTag({ content: require('../frontend/helpers/feature-context.cjs').sharedModulesInstaller() }); for (const script of SCRIPTS) await page.addScriptTag({ path: path.join(js, `${script}.js`) }); // canopy K1b: shared modules (client/shared-modules.json) whose providers these fixtures do not load
   return { errors, posts };
 }
 async function card(page) {

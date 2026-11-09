@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');
-const path=require('node:path');
+const path=require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const fs=require('node:fs');
 const jsRoot=path.resolve(__dirname,'../../Jellyfin.Plugin.JellyfinEnhanced/js');
 const entries=JSON.parse(fs.readFileSync(path.join(jsRoot,'component-scripts.json'),'utf8')).filter(p=>/^(enhanced\/hiddencontent\/|enhanced\/homeremoval\/)/.test(p));
@@ -21,7 +21,7 @@ async function setup(page){
    core:{api:{fetch:async()=>({Items:[]})},ui:{skeletonGridHtml:()=>'<span>Loading</span>'}}};
   window.switchAccount=()=>{epoch++;handlers.forEach(fn=>fn());window.JellyfinEnhanced.userConfig={hiddenContent:{items:{},settings:{}}};document.dispatchEvent(new Event('je:user-data-loaded'));};
  });
- for(const entry of entries)await page.addScriptTag({path:path.join(jsRoot,entry)});
+ await provideFeatureContext(page); for(const entry of entries)await page.addScriptTag({path:path.join(jsRoot,entry)});
  await page.evaluate(()=>window.JellyfinEnhanced.initializeHiddenContent());
 }
 test('shipped hide and undo update native cards and persist the final intent',async({page})=>{

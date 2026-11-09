@@ -35,393 +35,103 @@
     return () => owner === identity() && epoch === bridge2.session?.getEpoch?.();
   }
 
-  // client/src/features/media-tags/layout/layout-rules.ts
+  // client/generated-shared/stub/client/src/features/media-tags/layout/layout-rules.ts
   var layout_rules_exports = {};
   __export(layout_rules_exports, {
-    DEFAULT_CAPS: () => DEFAULT_CAPS,
-    DEFAULT_ORDER: () => DEFAULT_ORDER,
-    DEFAULT_PROFILES: () => DEFAULT_PROFILES,
-    EDGE_SPACINGS: () => EDGE_SPACINGS,
-    ENABLED_SETTING: () => ENABLED_SETTING,
-    GROUPS: () => GROUPS,
-    LAYOUTS: () => LAYOUTS,
-    LAYOUT_SLOTS: () => LAYOUT_SLOTS,
-    MAX_CAP: () => MAX_CAP,
-    POSITION_SETTINGS: () => POSITION_SETTINGS,
-    POSITION_TO_SLOT: () => POSITION_TO_SLOT,
-    RECOMMENDED_SHAPES: () => RECOMMENDED_SHAPES,
-    SHAPES: () => SHAPES,
-    SLOT_TO_POSITION: () => SLOT_TO_POSITION,
-    TAG_GAPS: () => TAG_GAPS,
-    TAG_SCALES: () => TAG_SCALES,
-    hasOwn: () => hasOwn,
-    isLayout: () => isLayout,
-    isLegacySettings: () => isLegacySettings,
-    lookKeyOf: () => lookKeyOf,
-    lookSettings: () => lookSettings,
-    normalizeGroup: () => normalizeGroup,
-    normalizeGroupCaps: () => normalizeGroupCaps,
-    normalizeLayout: () => normalizeLayout,
-    normalizeSettings: () => normalizeSettings,
-    pick: () => pick,
-    positionSlot: () => positionSlot,
-    promoteLegacySettings: () => promoteLegacySettings,
-    readCap: () => readCap,
-    readEdge: () => readEdge,
-    readGap: () => readGap,
-    readOrder: () => readOrder,
-    readProfile: () => readProfile,
-    readScale: () => readScale,
-    readShapeLook: () => readShapeLook,
-    readShapeOverrides: () => readShapeOverrides,
-    shapesToWire: () => shapesToWire,
-    singleChipGroup: () => singleChipGroup,
-    validSlots: () => validSlots,
-    withShape: () => withShape
+    DEFAULT_CAPS: () => export0,
+    DEFAULT_ORDER: () => export1,
+    DEFAULT_PROFILES: () => export2,
+    EDGE_SPACINGS: () => export3,
+    ENABLED_SETTING: () => export4,
+    GROUPS: () => export5,
+    LAYOUTS: () => export6,
+    LAYOUT_SLOTS: () => export7,
+    MAX_CAP: () => export8,
+    POSITION_SETTINGS: () => export9,
+    POSITION_TO_SLOT: () => export10,
+    RECOMMENDED_SHAPES: () => export11,
+    SHAPES: () => export12,
+    SLOT_TO_POSITION: () => export13,
+    TAG_GAPS: () => export14,
+    TAG_SCALES: () => export15,
+    hasOwn: () => export16,
+    isLayout: () => export17,
+    isLegacySettings: () => export18,
+    lookKeyOf: () => export19,
+    lookSettings: () => export20,
+    normalizeGroup: () => export21,
+    normalizeGroupCaps: () => export22,
+    normalizeLayout: () => export23,
+    normalizeSettings: () => export24,
+    pick: () => export25,
+    positionSlot: () => export26,
+    promoteLegacySettings: () => export27,
+    readCap: () => export28,
+    readEdge: () => export29,
+    readGap: () => export30,
+    readOrder: () => export31,
+    readProfile: () => export32,
+    readScale: () => export33,
+    readShapeLook: () => export34,
+    readShapeOverrides: () => export35,
+    shapesToWire: () => export36,
+    singleChipGroup: () => export37,
+    validSlots: () => export38,
+    withShape: () => export39
   });
-  var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
-  function isLayout(value) {
-    return LAYOUTS.some((layout) => layout === value);
+
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  var DEFAULT_ORDER = ["status", "quality", "rating", "ageRating", "language", "genre", "awards", "logos", "custom"];
-  var GROUPS = new Set(DEFAULT_ORDER);
-  var LAYOUT_SLOTS = withoutPrototype({
-    corners: ["tl", "tc", "tr", "ml", "c", "mr", "bl", "bc", "br", "off"],
-    bands: ["top", "bottom", "off"],
-    caption: ["poster", "caption", "off"],
-    summary: ["pill", "hover", "off"],
-    minimal: ["top", "dots", "corner", "hover", "off"]
-  });
-  var LAYOUTS = ["corners", "bands", "caption", "summary", "minimal"];
-  var DEFAULT_PROFILES = {
-    bands: { quality: "bottom", genre: "off", language: "bottom", rating: "bottom", ageRating: "top", status: "top", awards: "bottom", logos: "top", custom: "bottom" },
-    caption: { quality: "caption", genre: "off", language: "caption", rating: "caption", ageRating: "caption", status: "poster", awards: "caption", logos: "caption", custom: "caption" },
-    summary: { quality: "pill", genre: "hover", language: "hover", rating: "pill", ageRating: "hover", status: "pill", awards: "hover", logos: "hover", custom: "hover" },
-    minimal: { quality: "dots", genre: "hover", language: "hover", rating: "corner", ageRating: "hover", status: "top", awards: "hover", logos: "hover", custom: "hover" }
-  };
-  var SHAPES = ["landscape", "list"];
-  var RECOMMENDED_SHAPES = {
-    landscape: {
-      layout: "bands",
-      density: "compact",
-      caps: null,
-      slots: { status: "top", ageRating: "top", quality: "bottom", rating: "bottom", language: "off", genre: "off", custom: "off" }
-    },
-    list: {
-      layout: "corners",
-      density: "compact",
-      caps: { quality: 2, status: 2, rating: 2 },
-      slots: { quality: "tl", status: "tr", rating: "br", ageRating: "off", language: "off", genre: "off", custom: "off" }
-    }
-  };
-  var EDGE_SPACINGS = withoutPrototype({ default: 6, tight: 3, flush: 0 });
-  var DEFAULT_CAPS = { quality: 0, genre: 3, language: 3, rating: 0, ageRating: 1, status: 1, awards: 2, logos: 0, custom: 3 };
-  var MAX_CAP = 10;
-  var TAG_SCALES = { smaller: 0.85, default: 1, larger: 1.15, largest: 1.3 };
-  var TAG_GAPS = { tight: 0.75, default: 1, roomy: 1.5 };
-  function readScale(value) {
-    const key = typeof value === "string" ? value.trim().toLowerCase() : "";
-    return hasOwn(TAG_SCALES, key) ? key : null;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
-  function readGap(value) {
-    const key = typeof value === "string" ? value.trim().toLowerCase() : "";
-    return hasOwn(TAG_GAPS, key) ? key : null;
-  }
-  var POSITION_SETTINGS = {
-    quality: { userKey: "qualityTagsPosition", pluginKey: "QualityTagsPosition", fallback: "top-left" },
-    genre: { userKey: "genreTagsPosition", pluginKey: "GenreTagsPosition", fallback: "top-right" },
-    language: { userKey: "languageTagsPosition", pluginKey: "LanguageTagsPosition", fallback: "bottom-left" },
-    rating: { userKey: "ratingTagsPosition", pluginKey: "RatingTagsPosition", fallback: "bottom-right" },
-    ageRating: { userKey: "ageRatingTagsPosition", pluginKey: "AgeRatingTagsPosition", fallback: "bottom-right" },
-    awards: { userKey: "awardsTagsPosition", pluginKey: "AwardsTagsPosition", fallback: "top-left" },
-    status: { userKey: "statusTagsPosition", pluginKey: "StatusTagsPosition", fallback: "top-right" },
-    logos: { userKey: "logoTagsPosition", pluginKey: "LogoTagsPosition", fallback: "bottom-left" },
-    custom: { userKey: "customTagsPosition", pluginKey: "CustomTagsPosition", fallback: "top-left" }
-  };
-  var POSITION_TO_SLOT = withoutPrototype({ "top-left": "tl", "top-right": "tr", "bottom-left": "bl", "bottom-right": "br", "top-center": "tc", "bottom-center": "bc", "center-left": "ml", "center-right": "mr", "center": "c" });
-  var ENABLED_SETTING = {
-    quality: "qualityTagsEnabled",
-    genre: "genreTagsEnabled",
-    language: "languageTagsEnabled",
-    rating: "ratingTagsEnabled",
-    ageRating: "ageRatingTagsEnabled",
-    status: "statusTagsEnabled",
-    awards: "awardsTagsEnabled",
-    logos: "logoTagsEnabled",
-    custom: "customTagsEnabled"
-  };
-  var SLOT_TO_POSITION = withoutPrototype({ tl: "top-left", tr: "top-right", bl: "bottom-left", br: "bottom-right", tc: "top-center", bc: "bottom-center", ml: "center-left", mr: "center-right", c: "center" });
-  function pick(obj, key) {
-    if (!obj || typeof obj !== "object")
-      return void 0;
-    const record = Object.fromEntries(Object.entries(obj));
-    const pascal = key.charAt(0).toUpperCase() + key.slice(1);
-    return (hasOwn(record, key) ? record[key] : void 0) ?? (hasOwn(record, pascal) ? record[pascal] : void 0) ?? void 0;
-  }
-  function normalizeGroup(name) {
-    if (typeof name !== "string")
-      return null;
-    const lowered = name.trim().toLowerCase();
-    for (const group of DEFAULT_ORDER) {
-      if (group.toLowerCase() === lowered)
-        return group;
-    }
-    return null;
-  }
-  function normalizeLayout(value) {
-    const lowered = typeof value === "string" ? value.trim().toLowerCase() : "";
-    return isLayout(lowered) ? lowered : "corners";
-  }
-  function readProfile(profiles, layout) {
-    const out = {};
-    const groups = pick(pick(profiles, layout), "groups");
-    if (!Array.isArray(groups))
-      return out;
-    for (const entry of groups) {
-      const group = normalizeGroup(pick(entry, "group"));
-      const raw = pick(entry, "slot");
-      const slot = typeof raw === "string" ? raw.trim().toLowerCase() : "";
-      if (!group || out[group] || !LAYOUT_SLOTS[layout].includes(slot))
-        continue;
-      if (slot === "dots" && group !== "quality")
-        continue;
-      out[normalizeGroup(group) || "quality"] = slot;
-    }
-    return out;
-  }
-  function readOrder(order) {
-    if (!Array.isArray(order))
-      return null;
-    const out = [];
-    for (const entry of order) {
-      const group = normalizeGroup(entry);
-      if (group && !out.includes(group))
-        out.push(group);
-    }
-    return out.length ? out : null;
-  }
-  function readEdge(value) {
-    if (value === null || value === void 0 || value === "")
-      return null;
-    const lowered = String(value).trim().toLowerCase();
-    return hasOwn(EDGE_SPACINGS, lowered) ? lowered : "default";
-  }
-  function readCap(value) {
-    const n = Number(value);
-    if (value === null || value === void 0 || value === "" || !Number.isFinite(n))
-      return void 0;
-    return Math.max(0, Math.min(MAX_CAP, Math.round(n)));
-  }
-  function singleChipGroup(group, config = {}) {
-    return group === "status" || group === "ageRating" || group === "logos" && Number(pick(config, "logoTagsMaxLogos") ?? 1) < 2;
-  }
-  function normalizeGroupCaps(caps, config = {}) {
-    return { ...caps, ...Object.fromEntries(DEFAULT_ORDER.map((group) => [group, singleChipGroup(group, config) ? 1 : caps[group]])) };
-  }
-  function readShapeLook(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw))
-      return null;
-    const layoutRaw = pick(raw, "layout");
-    const candidate = typeof layoutRaw === "string" ? layoutRaw.trim().toLowerCase() : "";
-    const layout = isLayout(candidate) ? candidate : null;
-    const densityRaw = String(pick(raw, "density") ?? "").trim().toLowerCase();
-    const slotsRaw = pick(raw, "slots");
-    const slots = {};
-    const pairs = Array.isArray(slotsRaw) ? slotsRaw.map((entry) => [pick(entry, "group"), pick(entry, "slot")]) : slotsRaw && typeof slotsRaw === "object" ? Object.entries(slotsRaw) : [];
-    const valid = layout ? LAYOUT_SLOTS[layout] : LAYOUTS.flatMap((name) => LAYOUT_SLOTS[name]);
-    for (const [rawGroup, rawSlot] of pairs) {
-      const group = normalizeGroup(rawGroup);
-      const slot = typeof rawSlot === "string" ? rawSlot.trim().toLowerCase() : "";
-      if (!group || slots[group] || !valid.includes(slot) || slot === "dots" && group !== "quality")
-        continue;
-      slots[group] = slot;
-    }
-    const caps = {};
-    const capsRaw = pick(raw, "caps");
-    for (const group of DEFAULT_ORDER) {
-      const cap = readCap(pick(capsRaw, group));
-      if (cap !== void 0)
-        caps[group] = cap;
-    }
-    return {
-      layout,
-      density: densityRaw === "compact" || densityRaw === "full" ? densityRaw : null,
-      ...readScale(pick(raw, "tagScale")) ? { tagScale: readScale(pick(raw, "tagScale")) } : {},
-      ...readGap(pick(raw, "tagGap")) ? { tagGap: readGap(pick(raw, "tagGap")) } : {},
-      slots: Object.keys(slots).length ? slots : null,
-      caps: Object.keys(caps).length ? caps : null
-    };
-  }
-  function readShapeOverrides(raw) {
-    const out = { landscape: null, list: null };
-    if (!raw || typeof raw !== "object" || Array.isArray(raw))
-      return out;
-    for (const shape of SHAPES)
-      out[shape] = readShapeLook(pick(raw, shape));
-    return out;
-  }
-  function shapesToWire(shapes) {
-    if (!shapes || !SHAPES.some((shape) => shapes[shape]))
-      return null;
-    const out = {};
-    for (const shape of SHAPES) {
-      const look = shapes[shape];
-      out[shape] = look ? {
-        layout: look.layout || null,
-        density: look.density || null,
-        ...look.tagScale ? { tagScale: look.tagScale } : {},
-        ...look.tagGap ? { tagGap: look.tagGap } : {},
-        slots: look.slots ? Object.entries(look.slots).map(([group, slot]) => ({ group, slot })) : null,
-        caps: look.caps ? { ...look.caps } : null
-      } : null;
-    }
-    return out;
-  }
-  function positionSlot(settings, plugin, group) {
-    const p = POSITION_SETTINGS[group];
-    const pos = String(settings?.[p.userKey] || plugin?.[p.pluginKey] || p.fallback);
-    if (hasOwn(POSITION_TO_SLOT, pos))
-      return POSITION_TO_SLOT[pos] || "br";
-    const isTop = pos.includes("top");
-    const isLeft = pos.includes("left");
-    return isTop ? isLeft ? "tl" : "tr" : isLeft ? "bl" : "br";
-  }
-  function isLegacySettings(settings = {}) {
-    return !(Number(settings.tagLayoutSettingsVersion) >= 1);
-  }
-  function normalizeSettings(s = {}, p = {}) {
-    const legacy = isLegacySettings(s);
-    const layout = legacy ? "corners" : normalizeLayout(s.tagLayout);
-    const densityRaw = legacy ? "full" : String(s.tagLabelDensity || "").toLowerCase();
-    const density = densityRaw === "compact" ? "compact" : "full";
-    const profiles = { corners: {}, bands: {}, caption: {}, summary: {}, minimal: {} };
-    const indicatorGap = /* @__PURE__ */ new Set();
-    const ownCorners = readProfile(s.tagLayouts, "corners");
-    for (const group of DEFAULT_ORDER) {
-      const pos = POSITION_SETTINGS[group];
-      const raw = s[pos.userKey] || p[pos.pluginKey] || pos.fallback;
-      if (ownCorners[group] ? ownCorners[group] === "tr" : raw === "top-right")
-        indicatorGap.add(group);
-    }
-    for (const name of LAYOUTS) {
-      const own = readProfile(s.tagLayouts, name);
-      const admin = name === "corners" ? {} : readProfile(pick(p, "tagLayouts"), name);
-      const profile = {};
-      for (const group of DEFAULT_ORDER) {
-        profile[group] = own[group] || admin[group] || (name === "corners" ? positionSlot(s, p, group) : DEFAULT_PROFILES[name][group] || "off");
-      }
-      profiles[name] = profile;
-    }
-    let order = null;
-    let orderChosen = false;
-    if (!legacy) {
-      const own = readOrder(s.tagGroupOrder);
-      orderChosen = !!own;
-      const chosen = own || (layout === "corners" ? null : DEFAULT_ORDER);
-      if (chosen)
-        order = chosen.concat(DEFAULT_ORDER.filter((g) => !chosen.includes(g)));
-    }
-    const caps = {};
-    for (const group of DEFAULT_ORDER) {
-      const own = legacy ? void 0 : readCap(pick(s.tagGroupCaps, group));
-      const admin = legacy ? void 0 : readCap(pick(pick(p, "tagGroupCaps"), group));
-      caps[group] = singleChipGroup(group, p) ? 1 : own ?? admin ?? DEFAULT_CAPS[group];
-    }
-    const reserveCaption = layout === "caption" && DEFAULT_ORDER.some((g) => profiles.caption[g] === "caption" && !!s[ENABLED_SETTING[g]] && (g !== "awards" || p.AwardsTagsEnabled !== false));
-    const ownShapes = s.tagShapeOverrides;
-    const shapes = readShapeOverrides(ownShapes && typeof ownShapes === "object" ? ownShapes : legacy ? null : pick(p, "tagShapeOverrides"));
-    const tagScale = legacy ? "default" : readScale(s.tagScale) || (s.tagScale != null ? "default" : readScale(pick(p, "tagScale"))) || "default";
-    const tagGap = legacy ? "default" : readGap(s.tagGap) || (s.tagGap != null ? "default" : readGap(pick(p, "tagGap"))) || "default";
-    const edge = legacy ? "default" : readEdge(s.tagEdgeSpacing) || readEdge(pick(p, "tagEdgeSpacing")) || "default";
-    const conf = { layout, legacy, density, tagScale, tagGap, order, orderChosen, caps: { ...DEFAULT_CAPS, ...caps }, profiles, slots: profiles[layout], indicatorGap, reserveCaption, locked: false, shapes, edge, lookKey: "" };
-    conf.lookKey = lookKeyOf(conf);
-    return conf;
-  }
-  function promoteLegacySettings(s) {
-    if (!s || !isLegacySettings(s))
-      return false;
-    s.tagLayout = "corners";
-    s.tagLabelDensity = "full";
-    s.tagScale = "default";
-    s.tagGap = "default";
-    s.tagGroupCaps = { ...DEFAULT_CAPS };
-    s.tagGroupOrder = null;
-    if (!Array.isArray(s.tagLookRules))
-      s.tagLookRules = [];
-    if (!s.tagShapeOverrides || typeof s.tagShapeOverrides !== "object" || Array.isArray(s.tagShapeOverrides)) {
-      s.tagShapeOverrides = { landscape: null, list: null };
-    }
-    if (!readEdge(s.tagEdgeSpacing))
-      s.tagEdgeSpacing = "default";
-    s.tagLayoutSettingsVersion = 1;
-    return true;
-  }
-  function lookKeyOf(conf) {
-    return [
-      conf.layout,
-      conf.density,
-      conf.tagScale,
-      conf.tagGap,
-      conf.locked ? "L" : "",
-      DEFAULT_ORDER.map((g) => conf.slots[g] || "").join(","),
-      DEFAULT_ORDER.map((g) => conf.caps[g]).join(","),
-      conf.edge === "default" ? "" : conf.edge
-    ].join("|");
-  }
-  function validSlots(layout, slots) {
-    const out = {};
-    for (const [group, slot] of Object.entries(slots || {})) {
-      if (normalizeGroup(group) !== null && LAYOUT_SLOTS[layout].includes(slot) && (slot !== "dots" || group === "quality"))
-        out[normalizeGroup(group) || "quality"] = slot;
-    }
-    return out;
-  }
-  function withShape(look, shapeLook) {
-    if (!shapeLook)
-      return { ...look, caps: look.caps || null };
-    const switches = !!shapeLook.layout && shapeLook.layout !== look.layout;
-    const slots = switches ? shapeLook.slots : look.slots || shapeLook.slots ? { ...look.slots || {}, ...shapeLook.slots || {} } : null;
-    const caps = look.caps || shapeLook.caps ? { ...look.caps || {}, ...shapeLook.caps || {} } : null;
-    return {
-      layout: shapeLook.layout || look.layout,
-      density: shapeLook.density || look.density,
-      tagScale: shapeLook.tagScale || look.tagScale,
-      tagGap: shapeLook.tagGap || look.tagGap,
-      edge: look.edge || null,
-      slots,
-      caps
-    };
-  }
-  function lookSettings(base, look, locked, settings = {}, plugin = {}) {
-    const layout = look.layout ? normalizeLayout(look.layout) : base.layout;
-    const own = validSlots(layout, look.slots);
-    const slots = { ...base.profiles[layout], ...own };
-    const conf = {
-      ...base,
-      layout,
-      density: look.density ? look.density === "compact" ? "compact" : "full" : base.density,
-      tagScale: readScale(look.tagScale) || base.tagScale,
-      tagGap: readGap(look.tagGap) || base.tagGap,
-      // A lock or item look may set its own edge spacing (an unknown one inherits).
-      edge: (look.edge && hasOwn(EDGE_SPACINGS, look.edge) ? look.edge : null) || base.edge,
-      caps: look.caps ? normalizeGroupCaps({ ...base.caps, ...look.caps }, plugin) : base.caps,
-      // A chosen order applies everywhere; otherwise corners keeps
-      // arrival order and the other layouts the built-in order.
-      order: base.orderChosen ? base.order : layout === "corners" ? null : DEFAULT_ORDER,
-      profiles: { ...base.profiles, [layout]: slots },
-      slots,
-      indicatorGap: Object.keys(own).length && layout === "corners" ? new Set(DEFAULT_ORDER.filter((g) => slots[g] === "tr")) : base.indicatorGap,
-      reserveCaption: layout === "caption" && DEFAULT_ORDER.some((g) => slots[g] === "caption" && !!settings[ENABLED_SETTING[g]] && (g !== "awards" || plugin.AwardsTagsEnabled !== false)),
-      locked,
-      lookKey: ""
-    };
-    conf.lookKey = lookKeyOf(conf);
-    return conf;
-  }
-  function withoutPrototype(value) {
-    Object.setPrototypeOf(value, null);
-    return value;
-  }
+
+  // client/generated-shared/stub/client/src/features/media-tags/layout/layout-rules.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/layout/layout-rules");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "DEFAULT_CAPS");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "DEFAULT_ORDER");
+  var export2 = /* @__PURE__ */ sharedExport(shared, "DEFAULT_PROFILES");
+  var export3 = /* @__PURE__ */ sharedExport(shared, "EDGE_SPACINGS");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "ENABLED_SETTING");
+  var export5 = /* @__PURE__ */ sharedExport(shared, "GROUPS");
+  var export6 = /* @__PURE__ */ sharedExport(shared, "LAYOUTS");
+  var export7 = /* @__PURE__ */ sharedExport(shared, "LAYOUT_SLOTS");
+  var export8 = /* @__PURE__ */ sharedExport(shared, "MAX_CAP");
+  var export9 = /* @__PURE__ */ sharedExport(shared, "POSITION_SETTINGS");
+  var export10 = /* @__PURE__ */ sharedExport(shared, "POSITION_TO_SLOT");
+  var export11 = /* @__PURE__ */ sharedExport(shared, "RECOMMENDED_SHAPES");
+  var export12 = /* @__PURE__ */ sharedExport(shared, "SHAPES");
+  var export13 = /* @__PURE__ */ sharedExport(shared, "SLOT_TO_POSITION");
+  var export14 = /* @__PURE__ */ sharedExport(shared, "TAG_GAPS");
+  var export15 = /* @__PURE__ */ sharedExport(shared, "TAG_SCALES");
+  var export16 = /* @__PURE__ */ sharedExport(shared, "hasOwn");
+  var export17 = /* @__PURE__ */ sharedExport(shared, "isLayout");
+  var export18 = /* @__PURE__ */ sharedExport(shared, "isLegacySettings");
+  var export19 = /* @__PURE__ */ sharedExport(shared, "lookKeyOf");
+  var export20 = /* @__PURE__ */ sharedExport(shared, "lookSettings");
+  var export21 = /* @__PURE__ */ sharedExport(shared, "normalizeGroup");
+  var export22 = /* @__PURE__ */ sharedExport(shared, "normalizeGroupCaps");
+  var export23 = /* @__PURE__ */ sharedExport(shared, "normalizeLayout");
+  var export24 = /* @__PURE__ */ sharedExport(shared, "normalizeSettings");
+  var export25 = /* @__PURE__ */ sharedExport(shared, "pick");
+  var export26 = /* @__PURE__ */ sharedExport(shared, "positionSlot");
+  var export27 = /* @__PURE__ */ sharedExport(shared, "promoteLegacySettings");
+  var export28 = /* @__PURE__ */ sharedExport(shared, "readCap");
+  var export29 = /* @__PURE__ */ sharedExport(shared, "readEdge");
+  var export30 = /* @__PURE__ */ sharedExport(shared, "readGap");
+  var export31 = /* @__PURE__ */ sharedExport(shared, "readOrder");
+  var export32 = /* @__PURE__ */ sharedExport(shared, "readProfile");
+  var export33 = /* @__PURE__ */ sharedExport(shared, "readScale");
+  var export34 = /* @__PURE__ */ sharedExport(shared, "readShapeLook");
+  var export35 = /* @__PURE__ */ sharedExport(shared, "readShapeOverrides");
+  var export36 = /* @__PURE__ */ sharedExport(shared, "shapesToWire");
+  var export37 = /* @__PURE__ */ sharedExport(shared, "singleChipGroup");
+  var export38 = /* @__PURE__ */ sharedExport(shared, "validSlots");
+  var export39 = /* @__PURE__ */ sharedExport(shared, "withShape");
 
   // client/src/features/media-tags/layout/tag-look.ts
   function transportStatus(error) {
@@ -454,7 +164,7 @@
     const RULE_ID = /^[A-Za-z0-9_-]{1,40}$/;
     const PRESET = /^[a-z0-9_-]{1,64}$/;
     function layoutSlots() {
-      return LAYOUT_SLOTS || {};
+      return export7 || {};
     }
     function normalizeId(raw) {
       if (typeof raw !== "string")
@@ -462,9 +172,9 @@
       const id = raw.trim().replace(/-/g, "").toLowerCase();
       return /^[0-9a-f]{32}$/.test(id) ? id : null;
     }
-    function normalizeLayout2(raw) {
+    function normalizeLayout(raw) {
       const layout = typeof raw === "string" ? raw.trim().toLowerCase() : "";
-      return isLayout(layout) ? layout : null;
+      return export17(layout) ? layout : null;
     }
     function normalizeDensity(raw) {
       if (raw === void 0 || raw === null || raw === "")
@@ -475,12 +185,12 @@
     function normalizeSlots(raw, layout) {
       if (!raw || typeof raw !== "object")
         return null;
-      const pairs = Array.isArray(raw) ? raw.map((entry) => [pick(entry, "group"), pick(entry, "slot")]) : Object.entries(raw);
+      const pairs = Array.isArray(raw) ? raw.map((entry) => [export25(entry, "group"), export25(entry, "slot")]) : Object.entries(raw);
       const layouts = layoutSlots();
-      const valid = isLayout(layout) ? layouts[layout] : [];
+      const valid = export17(layout) ? layouts[layout] : [];
       const out = {};
       for (const [rawGroup, rawSlot] of pairs) {
-        const group = normalizeGroup(rawGroup);
+        const group = export21(rawGroup);
         const slot = typeof rawSlot === "string" ? rawSlot.trim().toLowerCase() : "";
         if (!group || out[group] || !valid.includes(slot))
           continue;
@@ -491,7 +201,7 @@
       return Object.keys(out).length ? out : null;
     }
     function normalizeShapes(raw) {
-      const shapes = readShapeOverrides(raw);
+      const shapes = export35(raw);
       return shapes && (shapes.landscape || shapes.list) ? shapes : null;
     }
     function normalizeCaps(raw) {
@@ -501,7 +211,7 @@
       const max = layout?.MAX_CAP ?? 10;
       const out = {};
       for (const group of layout?.GROUPS || []) {
-        const value = pick(raw, group);
+        const value = export25(raw, group);
         const n = Number(value);
         if (value === void 0 || value === null || value === "" || !Number.isFinite(n))
           continue;
@@ -514,9 +224,9 @@
       return values.includes(value) ? value : null;
     }
     function normalizeCondition(raw) {
-      const rawField = pick(raw, "field");
+      const rawField = export25(raw, "field");
       const field = FIELDS.find((f) => typeof rawField === "string" && f.toLowerCase() === rawField.trim().toLowerCase());
-      const rawValue = pick(raw, "value");
+      const rawValue = export25(raw, "value");
       const text = typeof rawValue === "string" ? rawValue.trim() : "";
       if (!field || !text)
         return null;
@@ -539,20 +249,20 @@
           break;
         if (!rule || typeof rule !== "object")
           continue;
-        const layout = normalizeLayout2(pick(rule, "layout"));
-        const density = normalizeDensity(pick(rule, "density"));
+        const layout = normalizeLayout(export25(rule, "layout"));
+        const density = normalizeDensity(export25(rule, "density"));
         if (!layout || !density)
           continue;
-        const whenRaw = pick(rule, "when");
+        const whenRaw = export25(rule, "when");
         const when = (Array.isArray(whenRaw) ? whenRaw : []).map(normalizeCondition);
         if (when.length === 0 || when.length > MAX_CONDITIONS || when.includes(null))
           continue;
-        let id = String(pick(rule, "id") ?? "").trim();
+        let id = String(export25(rule, "id") ?? "").trim();
         if (!RULE_ID.test(id) || ids.has(id))
           id = newRuleId(ids);
         ids.add(id);
-        const enabled = pick(rule, "enabled");
-        const preset = String(pick(rule, "colourPreset") ?? "").trim().toLowerCase();
+        const enabled = export25(rule, "enabled");
+        const preset = String(export25(rule, "colourPreset") ?? "").trim().toLowerCase();
         out.push({
           id,
           enabled: enabled !== false,
@@ -560,8 +270,8 @@
           layout,
           density,
           colourPreset: PRESET.test(preset) ? preset : null,
-          slots: normalizeSlots(pick(rule, "slots"), layout),
-          shapes: normalizeShapes(pick(rule, "shapes"))
+          slots: normalizeSlots(export25(rule, "slots"), layout),
+          shapes: normalizeShapes(export25(rule, "shapes"))
         });
       }
       return out;
@@ -576,23 +286,23 @@
     function normalizeLock(value) {
       if (!value || typeof value !== "object")
         return null;
-      const layout = normalizeLayout2(pick(value, "layout"));
-      const density = normalizeDensity(pick(value, "density"));
+      const layout = normalizeLayout(export25(value, "layout"));
+      const density = normalizeDensity(export25(value, "density"));
       if (!layout || !density)
         return null;
-      const preset = String(pick(value, "colourPreset") ?? "").trim().toLowerCase();
+      const preset = String(export25(value, "colourPreset") ?? "").trim().toLowerCase();
       return {
         layout,
         density,
         colourPreset: PRESET.test(preset) ? preset : null,
-        slots: normalizeSlots(pick(value, "slots"), layout),
-        shapes: normalizeShapes(pick(value, "shapes")),
-        caps: normalizeCaps(pick(value, "caps")),
-        tagScale: choice(pick(value, "tagScale"), SCALES),
-        tagGap: choice(pick(value, "tagGap"), GAPS),
-        edge: choice(pick(value, "edgeSpacing") ?? pick(value, "edge"), EDGES),
-        scope: String(pick(value, "scope") ?? "").trim().toLowerCase() === "item" ? "item" : null,
-        lockedAt: lockTimestamp(pick(value, "lockedAt"))
+        slots: normalizeSlots(export25(value, "slots"), layout),
+        shapes: normalizeShapes(export25(value, "shapes")),
+        caps: normalizeCaps(export25(value, "caps")),
+        tagScale: choice(export25(value, "tagScale"), SCALES),
+        tagGap: choice(export25(value, "tagGap"), GAPS),
+        edge: choice(export25(value, "edgeSpacing") ?? export25(value, "edge"), EDGES),
+        scope: String(export25(value, "scope") ?? "").trim().toLowerCase() === "item" ? "item" : null,
+        lockedAt: lockTimestamp(export25(value, "lockedAt"))
       };
     }
     function normalizeLocks(raw) {
@@ -619,11 +329,11 @@
         return /* @__PURE__ */ new Map();
       const byKey = {};
       for (const entry of raw) {
-        const id = normalizeId(String(pick(entry, "itemId") ?? ""));
+        const id = normalizeId(String(export25(entry, "itemId") ?? ""));
         if (!id)
           continue;
         const seen = byKey[id];
-        if (seen && lockTimestamp(pick(seen, "lockedAt")) >= lockTimestamp(pick(entry, "lockedAt")))
+        if (seen && lockTimestamp(export25(seen, "lockedAt")) >= lockTimestamp(export25(entry, "lockedAt")))
           continue;
         byKey[id] = entry;
       }
@@ -633,10 +343,10 @@
     function read(settings, plugin) {
       const s = settings || host.settings() || {};
       const p = plugin || host.config() || {};
-      const legacy = isLegacySettings(s);
+      const legacy = export18(s);
       const own = s.tagLookRules;
-      const rules = Array.isArray(own) ? normalizeRules(own) : legacy ? [] : normalizeRules(pick(p, "tagLookRules"));
-      return { rules, locks: normalizeLocks(s.tagLayoutLocks), overrides: normalizeItemOverrides(pick(p, "tagLookItemOverrides")) };
+      const rules = Array.isArray(own) ? normalizeRules(own) : legacy ? [] : normalizeRules(export25(p, "tagLookRules"));
+      return { rules, locks: normalizeLocks(s.tagLayoutLocks), overrides: normalizeItemOverrides(export25(p, "tagLookItemOverrides")) };
     }
     function normalizeRating(raw) {
       if (raw === null || raw === void 0)
@@ -644,8 +354,8 @@
       const text = String(raw).replace(/\s+/g, " ").trim();
       if (!text)
         return "";
-      const shared = host.normalizeOfficialRating;
-      return String((typeof shared === "function" ? shared(text) : text) || text).toLowerCase();
+      const shared2 = host.normalizeOfficialRating;
+      return String((typeof shared2 === "function" ? shared2(text) : text) || text).toLowerCase();
     }
     function matches(rule, facts) {
       if (!rule || !rule.enabled || !rule.when.length)
@@ -691,12 +401,12 @@
     }
     function factsFrom(entry, card = {}) {
       const e = entry;
-      const itemId = normalizeId(card.itemId || "") || normalizeId(String(pick(e, "id") ?? "")) || "";
+      const itemId = normalizeId(card.itemId || "") || normalizeId(String(export25(e, "id") ?? "")) || "";
       const cardId = normalizeId(card.cardId || "") || "";
-      const rawType = card.cardType || pick(e, "type");
+      const rawType = card.cardType || export25(e, "type");
       const type = typeof rawType === "string" ? rawType : null;
-      const genresRaw = pick(e, "genres");
-      const seriesId = type === "Season" || type === "Episode" || pick(e, "type") === "Season" || pick(e, "type") === "Episode" ? normalizeId(String(pick(e, "seriesId") ?? "")) : null;
+      const genresRaw = export25(e, "genres");
+      const seriesId = type === "Season" || type === "Episode" || export25(e, "type") === "Season" || export25(e, "type") === "Episode" ? normalizeId(String(export25(e, "seriesId") ?? "")) : null;
       const lockIds = [];
       for (const id of [cardId, itemId, seriesId]) {
         if (id && !lockIds.includes(id))
@@ -706,8 +416,8 @@
         itemId: itemId || cardId,
         type,
         genres: Array.isArray(genresRaw) ? genresRaw : [],
-        officialRating: pick(e, "officialRating") || null,
-        libraryId: normalizeId(String(pick(e, "libraryId") ?? "")),
+        officialRating: export25(e, "officialRating") || null,
+        libraryId: normalizeId(String(export25(e, "libraryId") ?? "")),
         seriesId,
         lockIds
       };
@@ -715,8 +425,8 @@
     function slotsToWire(slots) {
       return slots ? Object.entries(slots).map(([group, slot]) => ({ group, slot })) : null;
     }
-    function shapesToWire2(shapes) {
-      return shapes ? shapesToWire(shapes) || null : null;
+    function shapesToWire(shapes) {
+      return shapes ? export36(shapes) || null : null;
     }
     const represent = host.represent;
     const captureSession = host.captureSession;
@@ -749,14 +459,14 @@
       });
     }
     function saveRules(rules) {
-      return persist("tagLookRules", normalizeRules(rules).map((rule) => ({ ...rule, slots: slotsToWire(rule.slots), shapes: shapesToWire2(rule.shapes) })));
+      return persist("tagLookRules", normalizeRules(rules).map((rule) => ({ ...rule, slots: slotsToWire(rule.slots), shapes: shapesToWire(rule.shapes) })));
     }
     function lockToWire(lock) {
       const { edge, ...rest } = lock;
       return {
         ...rest,
         slots: slotsToWire(lock.slots),
-        shapes: shapesToWire2(lock.shapes),
+        shapes: shapesToWire(lock.shapes),
         caps: lock.caps ? { ...lock.caps } : null,
         edgeSpacing: edge || null
       };
@@ -768,7 +478,7 @@
       return Object.keys(out).length ? out : null;
     }
     function lockFrom(look, others) {
-      const lock = normalizeLock({ ...look && typeof look === "object" ? look : {}, edgeSpacing: pick(look, "edge") ?? null, lockedAt: 0, shapes: null, colourPreset: null });
+      const lock = normalizeLock({ ...look && typeof look === "object" ? look : {}, edgeSpacing: export25(look, "edge") ?? null, lockedAt: 0, shapes: null, colourPreset: null });
       if (!lock)
         return null;
       lock.lockedAt = Math.max(Date.now(), ...Array.from(others, (l) => l.lockedAt + 1));
@@ -885,7 +595,7 @@
           sets.set(id, value);
         else
           remove.push(id);
-        expected[id] = (Array.isArray(before) ? before.find((e) => normalizeId(pick(e, "itemId")) === id) : null) || null;
+        expected[id] = (Array.isArray(before) ? before.find((e) => normalizeId(export25(e, "itemId")) === id) : null) || null;
       }
       return { Set: itemOverridesToWire(sets) || [], Remove: remove, Expected: expected };
     }
@@ -938,7 +648,7 @@
       if (!Array.isArray(stored))
         return null;
       const visible = new Set(normalizeItemOverrides(previous).keys()).add(id);
-      const kept = stored.filter((entry) => visible.has(normalizeId(String(pick(entry, "itemId") ?? "")) || ""));
+      const kept = stored.filter((entry) => visible.has(normalizeId(String(export25(entry, "itemId") ?? "")) || ""));
       return kept.length ? kept : null;
     }
     return {

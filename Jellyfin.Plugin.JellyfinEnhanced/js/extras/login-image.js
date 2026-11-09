@@ -2,7 +2,7 @@
 "use strict";
 (() => {
   // client/src/host/context.ts
-  function featureContext(feature, core, slots) {
+  function createFeatureContext(feature, core, slots) {
     const own = {};
     const bind = (keys, target) => {
       for (const key of keys) {
@@ -30,8 +30,8 @@
   }
 
   // client/src/features/chrome/host.ts
-  function chromeContext(JE, facades) {
-    return featureContext("chrome", JE, { facades });
+  function preLoginChromeContext(JE, facades) {
+    return createFeatureContext("chrome", JE, { facades });
   }
   function ensureBridge() {
     const host = window;
@@ -365,7 +365,7 @@
 
   // client/src/features/chrome/login-image-entry.ts
   var loginImage = createLoginImage(() => hostClient());
-  chromeContext(ensureBridge(), ["initializeLoginImage"]).own.initializeLoginImage = loginImage.initializeLoginImage;
+  preLoginChromeContext(ensureBridge(), ["initializeLoginImage"]).own.initializeLoginImage = loginImage.initializeLoginImage;
   loginImage.initializeLoginImage();
 })();
 })();

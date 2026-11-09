@@ -8,6 +8,8 @@ import { checkTagData } from './tag-data.mjs';
 export const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const pluginDirectory = 'Jellyfin.Plugin.JellyfinEnhanced';
 const ledgerPath = 'client/generated-manifest.json';
+/** Minified twins of the component scripts, read only by the served bundle (ClientScriptBundle.cs). */
+export const minDirectory = 'min';
 const versions = { typescript: '6.0.3', esbuild: '0.28.2' };
 const require = createRequire(import.meta.url);
 
@@ -166,6 +168,16 @@ export function checkSourcePolicy(root = repositoryRoot) {
   if (failures.length) throw new Error(`Client source policy failed:\n${failures.join('\n')}`);
 }
 
+/** The `js/<path>` outputs js/component-scripts.json lists, in load order (its `//` entries are notes); empty when there is none. */
+function readComponentScripts(root) {
+  const path = `${pluginDirectory}/js/component-scripts.json`;
+  const file = safePath(root, path);
+  if (!existsSync(file)) return [];
+  const list = JSON.parse(readFileSync(file, 'utf8'));
+  if (!Array.isArray(list) || list.some(item => typeof item !== 'string')) throw new Error(`${path}: expected an array of strings`);
+  return list.map(item => item.trim()).filter(item => item && !item.startsWith('//')).map(item => `js/${item}`);
+}
+
 /** Loads HTML support only for trees with HTML sources; JS-only builds never need it. */
 async function loadHtmlPages(root, ts) {
   const present = ['client/html', 'client/html-entries'].some(path => lstatSync(join(root, path), { throwIfNoEntry: false }));
@@ -174,8 +186,8 @@ async function loadHtmlPages(root, ts) {
   return { support, pages: support.discoverHtmlPages({ root, ts, safePath, validatePath, pluginDirectory }) };
 }
 
-/** Every browser artifact shares one wrapper and one strict input policy. */
-async function bundle(esbuild, root, options) {
+/** Every browser artifact shares one wrapper and one strict input policy (`generated`: inputs a build plugin made). */
+async function bundle(esbuild, root, options, generated = () => false) {
   const result = await esbuild.build({
     absWorkingDir: root,
     tsconfig: 'client/tsconfig.json',
@@ -199,6 +211,7 @@ async function bundle(esbuild, root, options) {
   });
   // JS dependencies would evade strict checking; browser dependencies must be TS, or CSS text imports.
   for (const input of Object.keys(result.metafile.inputs)) {
+    if (generated(input)) continue;
     const typed = input.endsWith('.ts') && !input.endsWith('.d.ts');
     if (!input.startsWith('client/src/') || !(typed || input.endsWith('.css'))) {
       throw new Error(`Bundle input must be checked TypeScript under client/src (or a .css text import): ${input}`);
@@ -206,6 +219,60 @@ async function bundle(esbuild, root, options) {
     safePath(root, input);
   }
   return result;
+}
+
+/**
+ * canopy K1b: client/shared-modules.json. Checks each shared module's runtime import closure for state (statefulTopLevel)
+ * before anything is built, gives each component-script build its plugin and inject (shared.options), records which
+ * modules each readable output stubs (shared.record), and finally (shared.verify) requires every stub to load after its
+ * provider in js/component-scripts.json and every listed module to have at least one consumer.
+ */
+async function prepareSharedModules(ts, esbuild, root, entries, componentScripts) {
+  // Loaded only for trees with a manifest, as HTML support is (JS-only fixtures copy client-build.mjs alone). Like the
+  // min/ twins, it applies to component scripts only: a tree without js/component-scripts.json has none.
+  if (!componentScripts.length || !existsSync(safePath(root, 'client/shared-modules.json'))) {
+    return { options: () => ({}), generated: () => false, record() {}, verify() {} };
+  }
+  const { analyseSharedModule, isSharedModuleInput, readSharedModules, sharedManifestPath, sharedModulesBuild, statefulTopLevel, stubbedSource } =
+    await import('./client/shared-modules.mjs');
+  const { modules, reviewed } = readSharedModules(root, componentScripts, safePath);
+  const analysis = new Map();
+  for (const module of modules) {
+    const entry = entries.find(candidate => candidate.output === module.provider);
+    if (!entry) throw new Error(`${sharedManifestPath}: provider ${module.provider} is not a client/entries output`);
+    analysis.set(module.source, await analyseSharedModule(esbuild, root, module.source));
+  }
+  const closure = [...new Set([...analysis.values()].flatMap(item => item.closure))].sort();
+  const stale = Object.keys(reviewed).filter(file => !closure.includes(file));
+  if (stale.length) throw new Error(`${sharedManifestPath}: reviewed entries for files no shared module imports: ${stale.join(', ')}`);
+  const findings = statefulTopLevel(ts, root, closure, reviewed);
+  if (findings.length) {
+    throw new Error(`${sharedManifestPath}: a shared module (or a module it imports) may hold state, and one shared copy would merge `
+      + `the per-script copies. Remove it from the manifest, or review the binding (reviewed.<file>.bindings + reason):\n${findings.join('\n')}`);
+  }
+  const stubs = new Map();
+  return {
+    generated: isSharedModuleInput,
+    options(output) {
+      if (!componentScripts.includes(output)) return {};
+      const { plugins, inject } = sharedModulesBuild({ root, modules, output, exportsOf: source => analysis.get(source).exports });
+      return plugins.length ? { plugins, inject } : {};
+    },
+    record(output, result) {
+      if (componentScripts.includes(output)) stubs.set(output, Object.keys(result.metafile.inputs).map(stubbedSource).filter(Boolean));
+    },
+    verify() {
+      const errors = [];
+      for (const module of modules) {
+        const consumers = [...stubs].filter(([, sources]) => sources.includes(module.source)).map(([output]) => output);
+        if (!consumers.length) errors.push(`${module.source}: no component script other than ${module.provider} uses it`);
+        for (const output of consumers) {
+          if (componentScripts.indexOf(output) < module.providerIndex) errors.push(`${output} uses ${module.source} but loads before its provider ${module.provider}`);
+        }
+      }
+      if (errors.length) throw new Error(`${sharedManifestPath}:\n${errors.join('\n')}`);
+    },
+  };
 }
 
 /** Compile in memory first: invalid source never overwrites runnable legacy assets. */
@@ -220,13 +287,17 @@ export async function buildClient({ root = repositoryRoot, check = false, typech
   const sourceCount = checkTypes(ts, root, [...entries, ...htmlSources]);
   if (typecheckOnly) return { entries: entries.length, sources: sourceCount, html: pages.length };
   const artifacts = new Map();
+  const componentScripts = readComponentScripts(root);
+  const shared = await prepareSharedModules(ts, esbuild, root, entries, componentScripts);
   for (const entry of entries) {
     const result = await bundle(esbuild, root, {
       entryPoints: [entry.source],
       outfile: `${pluginDirectory}/${entry.output}`,
       charset: 'utf8',
       sourcemap: 'linked',
-    });
+      ...shared.options(entry.output),
+    }, shared.generated);
+    shared.record(entry.output, result);
     for (const output of result.outputFiles) {
       const path = relative(root, output.path).split(sep).join('/');
       const expected = `${pluginDirectory}/${entry.output}`;
@@ -235,6 +306,31 @@ export async function buildClient({ root = repositoryRoot, check = false, typech
       artifacts.set(path, output.contents);
     }
   }
+  // The served bundle (/JellyfinEnhanced/bundle.js, ClientScriptBundle.cs) concatenates the component scripts. Each
+  // gets a minified twin under min/ that only the bundle reads; js/** stays readable for tests, the per-file
+  // loader and debugging (canopy K1). Same source, same wrapper, plus `minify`; built at the readable output's own
+  // path so the external map's `sources` match the readable map's (the server copies sourcesContent from that map).
+  for (const entry of entries.filter(entry => componentScripts.includes(entry.output))) {
+    const result = await bundle(esbuild, root, {
+      entryPoints: [entry.source],
+      outfile: `${pluginDirectory}/${entry.output}`,
+      charset: 'utf8',
+      minify: true,
+      sourcemap: 'external',
+      sourcesContent: false,
+      ...shared.options(entry.output),
+    }, shared.generated);
+    for (const output of result.outputFiles) {
+      const path = relative(root, output.path).split(sep).join('/');
+      const readable = `${pluginDirectory}/${entry.output}`;
+      if (path !== readable && path !== `${readable}.map`) throw new Error(`Unexpected generated artifact: ${path}`);
+      const twin = `${pluginDirectory}/${minDirectory}/${path.slice(pluginDirectory.length + 1)}`;
+      safePath(root, twin);
+      if (artifacts.has(twin)) throw new Error(`Duplicate generated artifact: ${twin}`);
+      artifacts.set(twin, output.contents);
+    }
+  }
+  shared.verify();
   const htmlLedger = [];
   for (const page of pages) {
     const scripts = [];

@@ -1,31 +1,26 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
   }
-  function hasApiClient() {
-    const host = window;
-    return host.ApiClient !== void 0 && host.ApiClient !== null;
-  }
-  function apiClient() {
-    const host = window;
-    if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
-    return host.ApiClient;
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function record(value) {
-    return isRecord(value) ? value : EMPTY;
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export0 = /* @__PURE__ */ sharedExport(shared, "apiClient");
+  var export1 = /* @__PURE__ */ sharedExport(shared, "hasApiClient");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
+  var export10 = /* @__PURE__ */ sharedExport(shared2, "record");
 
   // client/src/features/media-tags/types/logo/logotags.ts
   function createLogoTags(JE) {
@@ -50,13 +45,13 @@
     function logoUrl(path) {
       if (typeof path !== "string" || !LOGO_PATH.test(path)) return null;
       const route = `JellyfinEnhanced/logo/w92${path}`;
-      return hasApiClient() && typeof apiClient().getUrl === "function" ? apiClient().getUrl(route) : `/${route}`;
+      return export1() && typeof export0().getUrl === "function" ? export0().getUrl(route) : `/${route}`;
     }
     function readLogos(raw) {
       if (!Array.isArray(raw)) return [];
       const out = [];
       for (const entry of raw) {
-        const fact = record(entry);
+        const fact = export10(entry);
         const kind = String(fact.kind ?? fact.Kind ?? "");
         const name = String(fact.name ?? fact.Name ?? "").trim();
         if (!KINDS.has(kind) || !name) continue;
@@ -211,7 +206,7 @@
           if (ctx.shouldIgnore(el)) return true;
           if (el.closest(".je-hidden")) return true;
           const cached = ctx.getPersistent(itemId) ?? ctx.hot?.get(itemId);
-          if (!isRecord(cached) || !Array.isArray(cached.l)) return false;
+          if (!export42(cached) || !Array.isArray(cached.l)) return false;
           applyLogoTags(ctx, el, readLogos(cached.l));
           return true;
         },
@@ -237,7 +232,7 @@
   }
 
   // client/src/features/media-tags/types/logo/logotags-entry.ts
-  createLogoTags(tagRuntimeHost());
+  createLogoTags(export4());
 })();
 })();
 //# sourceMappingURL=logotags.js.map

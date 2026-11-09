@@ -1,19 +1,23 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/host.ts
-  function tagRuntimeHost() {
-    const host = window;
-    const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
-    bridge.core ?? (bridge.core = {});
-    return bridge;
+  // client/src/host/context.ts
+  function sharedModule(id) {
+    const namespace = window.JellyfinEnhanced?.core?.sharedModules?.[id];
+    if (!namespace) throw new Error(`${id} is not in JE.core.sharedModules: load its provider first (client/shared-modules.json)`);
+    return namespace;
+  }
+  function sharedExport(namespace, name) {
+    return namespace[name];
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
+  // client/generated-shared/stub/client/src/features/media-tags/host.ts
+  var shared = /* @__PURE__ */ sharedModule("features/media-tags/host");
+  var export4 = /* @__PURE__ */ sharedExport(shared, "tagRuntimeHost");
+
+  // client/generated-shared/stub/client/src/features/media-tags/pipeline/dto.ts
+  var shared2 = /* @__PURE__ */ sharedModule("features/media-tags/pipeline/dto");
+  var export42 = /* @__PURE__ */ sharedExport(shared2, "isRecord");
 
   // client/src/features/media-tags/pipeline/tag-cache-store.ts
   function createTagCacheStore() {
@@ -101,7 +105,7 @@
       const db = await openDb();
       const tx = db.transaction(META_STORE, "readonly");
       const meta = await settle(tx.objectStore(META_STORE).get(scope));
-      return isRecord(meta) ? meta : null;
+      return export42(meta) ? meta : null;
     }
     async function getMany(scope, ids) {
       const found = /* @__PURE__ */ new Map();
@@ -114,12 +118,12 @@
         const request = store.get(prefix + id);
         request.onsuccess = () => {
           const entry = request.result;
-          if (isRecord(entry)) found.set(id, entry);
+          if (export42(entry)) found.set(id, entry);
         };
       }
       await committed(tx);
       const meta = metaRequest.result;
-      return { entries: found, meta: isRecord(meta) ? meta : null };
+      return { entries: found, meta: export42(meta) ? meta : null };
     }
     function isNewer(a, b) {
       return Number(a.servedAt || 0) > (b.servedAt || 0);
@@ -132,7 +136,7 @@
       let claimed = false;
       request.onsuccess = () => {
         const meta = request.result;
-        if (isRecord(meta) && isNewer(meta, snapshot)) return;
+        if (export42(meta) && isNewer(meta, snapshot)) return;
         claimed = true;
         tx.objectStore(ITEM_STORE).delete(scopeRange(scope));
         metaStore.put({ scope, pending: token, servedAt: snapshot.servedAt });
@@ -147,7 +151,7 @@
       let owned = false;
       request.onsuccess = () => {
         const claim = request.result;
-        owned = isRecord(claim) && claim.pending === token;
+        owned = export42(claim) && claim.pending === token;
         if (!owned) return;
         const items = tx.objectStore(ITEM_STORE);
         const prefix = scope + KEY_SEP;
@@ -164,7 +168,7 @@
       let owned = false;
       request.onsuccess = () => {
         const claim = request.result;
-        owned = isRecord(claim) && claim.pending === token;
+        owned = export42(claim) && claim.pending === token;
         if (owned) store.put({ ...meta, scope, entrySchema: ENTRY_SCHEMA });
       };
       await committed(tx);
@@ -178,7 +182,7 @@
       let applied = false;
       request.onsuccess = () => {
         const meta = request.result;
-        if (!isRecord(meta) || meta.pending || meta.timestamp !== base.timestamp || meta.version !== base.version || meta.filterRevision !== base.filterRevision) {
+        if (!export42(meta) || meta.pending || meta.timestamp !== base.timestamp || meta.version !== base.version || meta.filterRevision !== base.filterRevision) {
           return;
         }
         applied = true;
@@ -199,7 +203,7 @@
       const prefix = scope + KEY_SEP;
       const meta = await settle(metaStore.get(scope));
       const result = { applied: false, dropped: [] };
-      if (isRecord(meta) && !meta.pending && meta.timestamp === base.timestamp && meta.version === base.version && meta.filterRevision === base.filterRevision) {
+      if (export42(meta) && !meta.pending && meta.timestamp === base.timestamp && meta.version === base.version && meta.filterRevision === base.filterRevision) {
         const held = new Set((await settle(items.getAllKeys(scopeRange(scope)))).map((key) => String(key).slice(prefix.length)));
         for (const [id] of entries) held.add(id);
         let complete = true;
@@ -261,7 +265,7 @@
       const values = await settle(store.getAll(range));
       keys.map((key, i) => {
         const value = values[i];
-        return { key, t: isRecord(value) ? Number(value.t) || 0 : 0 };
+        return { key, t: export42(value) ? Number(value.t) || 0 : 0 };
       }).sort((a, b) => a.t - b.t).slice(0, keys.length - cap).forEach(({ key }) => store.delete(key));
     }
     async function getPosterColours(scope, algorithm) {
@@ -276,7 +280,7 @@
       const out = /* @__PURE__ */ new Map();
       keysRequest.result.forEach((key, i) => {
         const value = valuesRequest.result[i];
-        if (!isRecord(value)) return;
+        if (!export42(value)) return;
         const colour = readColour(value.d);
         if (colour !== void 0) out.set(String(key).slice(prefix.length), colour);
       });
@@ -304,7 +308,7 @@
       const out = /* @__PURE__ */ new Map();
       keysRequest.result.forEach((key, i) => {
         const value = valuesRequest.result[i];
-        if (!isRecord(value) || !isRecord(value.r) || typeof value.t !== "number") return;
+        if (!export42(value) || !export42(value.r) || typeof value.t !== "number") return;
         out.set(String(key).slice(prefix.length), { ...value, r: value.r, t: value.t });
       });
       return out;
@@ -344,7 +348,7 @@
   }
 
   // client/src/features/media-tags/pipeline/tag-cache-store-entry.ts
-  tagRuntimeHost().tagCacheStore = createTagCacheStore();
+  export4().tagCacheStore = createTagCacheStore();
 })();
 })();
 //# sourceMappingURL=tag-cache-store.js.map

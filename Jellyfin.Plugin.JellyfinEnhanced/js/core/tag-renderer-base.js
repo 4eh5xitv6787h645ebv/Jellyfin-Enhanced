@@ -1,12 +1,122 @@
 (() => {
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const shared = core.core?.featureContext;
+    if (typeof shared !== "function") {
+      throw new Error(`${feature}: JE.core.featureContext is missing; core/ui-kit.js must load before feature scripts`);
+    }
+    return shared(feature, core, slots);
+  }
+  function publishSharedModules(modules) {
+    const JE = window.JellyfinEnhanced;
+    if (!JE) return;
+    const core = JE.core ?? (JE.core = {});
+    let registry = core.sharedModules;
+    if (!registry) {
+      registry = /* @__PURE__ */ Object.create(null);
+      Object.defineProperty(core, "sharedModules", { value: registry, configurable: true, writable: true, enumerable: false });
+    }
+    for (const [id, namespace] of Object.entries(modules)) registry[id] ?? (registry[id] = namespace);
+  }
+
+  // client/src/features/media-tags/pipeline/dto.ts
+  var dto_exports = {};
+  __export(dto_exports, {
+    either: () => either,
+    errorStatus: () => errorStatus,
+    finite: () => finite,
+    idText: () => idText,
+    isRecord: () => isRecord,
+    memberRecord: () => memberRecord,
+    memberText: () => memberText,
+    members: () => members,
+    normalizeItemId: () => normalizeItemId,
+    own: () => own,
+    record: () => record,
+    records: () => records,
+    stringList: () => stringList,
+    text: () => text
+  });
+  var EMPTY = Object.freeze({});
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  function record(value) {
+    return isRecord(value) ? value : EMPTY;
+  }
+  function records(value) {
+    return Array.isArray(value) ? value.filter(isRecord) : [];
+  }
+  function stringList(value) {
+    return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
+  }
+  function members(value) {
+    if (!value) return [];
+    if (!Array.isArray(value)) throw new TypeError("Expected a list");
+    return value;
+  }
+  function memberRecord(value) {
+    if (value === null || value === void 0) throw new TypeError("Read a missing list member");
+    return record(value);
+  }
+  function memberText(value) {
+    if (typeof value !== "string") throw new TypeError("Read a list member that is not text");
+    return value;
+  }
+  function text(value) {
+    return typeof value === "string" && value ? value : null;
+  }
+  function finite(value) {
+    return typeof value === "number" && Number.isFinite(value) ? value : null;
+  }
+  function normalizeItemId(id) {
+    return String(id).replace(/-/g, "").toLowerCase();
+  }
+  function idText(value) {
+    return typeof value === "string" && value || typeof value === "number" && Number.isFinite(value) ? String(value) : null;
+  }
+  function either(value, key) {
+    return isRecord(value) ? value[key] ?? value[key.charAt(0).toUpperCase() + key.slice(1)] : void 0;
+  }
+  function errorStatus(error) {
+    return isRecord(error) && typeof error.status === "number" ? error.status : 0;
+  }
+  function own(table, key) {
+    return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
+  }
+
   // client/src/features/media-tags/host.ts
+  var host_exports = {};
+  __export(host_exports, {
+    apiClient: () => apiClient,
+    hasApiClient: () => hasApiClient,
+    mediaTagsContext: () => mediaTagsContext,
+    settingsUi: () => settingsUi,
+    tagRuntimeHost: () => tagRuntimeHost
+  });
   function tagRuntimeHost() {
     const host = window;
     const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
     bridge.core ?? (bridge.core = {});
     return bridge;
+  }
+  function mediaTagsContext(JE = tagRuntimeHost()) {
+    return featureContext("media-tags", JE, {
+      internalSlots: ["peopleTags"],
+      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
+  }
+  function settingsUi(JE) {
+    return JE.internals?.enhancedUi;
   }
   function hasApiClient() {
     const host = window;
@@ -18,20 +128,8 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/pipeline/dto.ts
-  var EMPTY = Object.freeze({});
-  function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-  }
-  function text(value) {
-    return typeof value === "string" && value ? value : null;
-  }
-  function finite(value) {
-    return typeof value === "number" && Number.isFinite(value) ? value : null;
-  }
-  function either(value, key) {
-    return isRecord(value) ? value[key] ?? value[key.charAt(0).toUpperCase() + key.slice(1)] : void 0;
-  }
+  // client/generated-shared/publish/js/core/tag-renderer-base.js.ts
+  publishSharedModules({ "features/media-tags/pipeline/dto": dto_exports, "features/media-tags/host": host_exports });
 
   // client/src/features/media-tags/pipeline/scopes.ts
   var SCOPE_IDS = ["movies", "series", "seasons", "episodes", "continueWatching", "nextUp"];

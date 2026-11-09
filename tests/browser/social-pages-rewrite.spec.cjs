@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');
-const path=require('node:path');
+const path=require('node:path'); const {provideFeatureContext}=require('../frontend/helpers/feature-context.cjs'); // canopy K1: ui-kit.js publishes featureContext in production; these fixtures load features without it
 const root=path.resolve(__dirname,'../../Jellyfin.Plugin.JellyfinEnhanced/js');
 async function setup(page) {
  await page.route('http://social.fixture/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html><head></head><body><main></main></body></html>'}));
@@ -11,7 +11,7 @@ async function setup(page) {
   window.changeAccount=()=>{epoch++;callbacks.forEach(fn=>fn());};
   window.ApiClient={getCurrentUserId:()=> 'user',getUrl:p=>{if(!p)throw Error('Url name cannot be empty');return 'http://social.fixture'+p;},getImageUrl:()=>''};
  });
- for(const file of ['core','styles','deck','activity','page'])await page.addScriptTag({path:path.join(root,`enhanced/catchup/catchup-${file}.js`)});
+ await provideFeatureContext(page); for(const file of ['core','styles','deck','activity','page'])await page.addScriptTag({path:path.join(root,`enhanced/catchup/catchup-${file}.js`)});
  await page.addScriptTag({path:path.join(root,'extras/activity-page.js')});
 }
 test('fixture Catch Up keyboard journey, failure recovery, season selection and account teardown',async({page})=>{
