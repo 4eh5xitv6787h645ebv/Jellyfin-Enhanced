@@ -1681,6 +1681,7 @@
   var identityStillCurrent = () => false;
   var identityRevision = 0;
   var identityAccount = "|";
+  var identityFailedFor = null;
   function identity() {
     try {
       if (!identityStillCurrent()) {
@@ -1690,14 +1691,20 @@
         const user = client?.getCurrentUserId?.();
         identityAccount = String(serverId || "") + "|" + String(user || "");
         const token = client?.accessToken?.();
-        const root = client?.getUrl("");
-        identityStillCurrent = () => optionalApiClient() === client && server() === serverId && client?.getCurrentUserId?.() === user && client?.accessToken?.() === token && client?.getUrl("") === root;
+        const root = client?.getUrl("/");
+        identityStillCurrent = () => optionalApiClient() === client && server() === serverId && client?.getCurrentUserId?.() === user && client?.accessToken?.() === token && client?.getUrl("/") === root;
+        identityFailedFor = null;
         identityRevision++;
       }
       return String(identityRevision);
     } catch {
       identityStillCurrent = () => false;
-      return String(++identityRevision);
+      const client = optionalApiClient();
+      if (!identityFailedFor || identityFailedFor.client !== client) {
+        identityFailedFor = { client };
+        identityRevision++;
+      }
+      return String(identityRevision);
     }
   }
   var signedIn = () => {
