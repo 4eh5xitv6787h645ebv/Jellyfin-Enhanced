@@ -21,11 +21,10 @@
  */
 import type { Group, Layout, Shape, ShapeLook } from '../media-tags/rules/layout-rules';
 import { apiClient, currentUserKey, optionalApiClient, panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../host/settings-panel-host';
-import type { PanelContext, SearchHit } from './context';
-import type { MediaTagsHubApi } from './registry';
-import { closestTarget, controlValue, focusElement, isDisabled, queryElement, queryElements, targetElement } from './dom';
+import type { MediaTagsHubApi, PanelContext, SearchHit } from './public-api';
+import { closestTarget, controlValue, focusElement, isDisabled, queryElement, queryElements, targetElement } from '../shared/dom';
 import type { TagPreview } from './ui-panel-tag-preview';
-import { isJson } from './settings-values';
+import { isJson } from '../shared/settings-values';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'currentSettings' | 'pluginConfig' | 'escapeHtml' | 't' | 'helpers' | 'icon' | 'IconName'
     | 'genreTags' | 'tagPosterColours' | 'saveUserSettings' | 'reinitializeTagLayout'>;

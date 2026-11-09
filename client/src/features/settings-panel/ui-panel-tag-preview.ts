@@ -18,7 +18,7 @@
 import type { Group } from '../media-tags/rules/layout-rules';
 import { panelHost, registry, type PanelBridge, type PanelTagLayout, type Settings, type PluginConfig, type CustomTagRule } from '../../host/settings-panel-host';
 import type { QualityCat } from './ui-panel-tag-editor';
-import { closestTarget, queryElement } from './dom';
+import { closestTarget, queryElement } from '../shared/dom';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'currentSettings' | 'pluginConfig' | 't' | 'getStatusDateContext' | 'awardsTags'
     | 'ratingSources' | 'genreTags' | 'logoTags' | 'customTags'>;

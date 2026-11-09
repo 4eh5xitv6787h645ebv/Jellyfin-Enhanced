@@ -5,7 +5,7 @@
  */
 import { panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
 import type { PanelContext } from './context';
-import { queryElement, queryElements } from './dom';
+import { queryElement, queryElements } from '../shared/dom';
 import { overrideFor, rejectsBinding } from './shortcut-rules';
 
 type Deps = Pick<PanelBridge, 'internals' | 'pluginConfig' | 'userConfig' | 'state' | 't' | 'saveUserSettings' | 'keyCombo'>;

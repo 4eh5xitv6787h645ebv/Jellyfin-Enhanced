@@ -12,7 +12,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/settings-values.ts
+  // client/src/features/shared/settings-values.ts
   function indexKey(value) {
     if (typeof value === "number") return Number.isInteger(value) && value >= 0 ? value : void 0;
     if (typeof value === "string" && value !== "" && String(Number(value)) === value) {

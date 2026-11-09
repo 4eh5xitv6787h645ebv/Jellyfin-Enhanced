@@ -5,7 +5,7 @@
  */
 import { apiClient, panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
 import type { PanelContext } from './context';
-import { selectById } from './dom';
+import { selectById } from '../shared/dom';
 import { decodeCultures, decodeLocaleCodes, displayLanguageOptions, githubLocaleCodes, mergeLocaleCodes, normalizeLangCode, normalizeSavedLanguage, type Culture } from './language-options';
 
 type Deps = Pick<PanelBridge, 'internals' | 'currentSettings' | 'userConfig' | 'session' | 'saveUserSettings' | 'toast' | 't'>;

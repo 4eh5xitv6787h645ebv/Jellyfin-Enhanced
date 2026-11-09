@@ -5,7 +5,7 @@
  * configuration page's CDN route. Everything is read when it is used, as the
  * legacy scripts read their globals, so a module loaded later still counts.
  */
-import type { SaveOptions, SettingsDocument } from './settings-host';
+import type { SaveOptions, SettingsDocument } from './context';
 import type { TagLayout } from '../features/media-tags/rules/tag-layout';
 import type { TagLook } from '../features/media-tags/rules/tag-look';
 import type { TagScopes, TagSettingsMatrix } from '../features/media-tags/runtime/scopes';

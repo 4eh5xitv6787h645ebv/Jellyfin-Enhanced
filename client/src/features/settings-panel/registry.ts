@@ -1,8 +1,8 @@
 import type { PanelContext } from './context';
-import type { TagGroupEditorApi, TagGroupEditorData } from './ui-panel-tag-editor';
-import type { TagLooksPanel } from './ui-panel-tag-looks';
-import type { TagPortableReopen, TagPortableTools, WireTagPortable } from './ui-panel-tag-portable';
-import type { PreviewInteraction, PreviewInteractionOptions, TagPreview, TagPreviewData, TagPreviewOptions } from './ui-panel-tag-preview';
+import type {
+    PreviewInteraction, PreviewInteractionOptions, TagGroupEditorApi, TagGroupEditorData, TagLooksPanel, TagPortableReopen,
+    TagPortableTools, TagPreview, TagPreviewData, TagPreviewOptions, WireTagPortable,
+} from '../media-tags/public-api';
 
 /**
  * `JE.internals.enhancedUi`: the registry the split panel modules share

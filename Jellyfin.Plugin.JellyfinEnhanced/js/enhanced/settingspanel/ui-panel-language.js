@@ -21,7 +21,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function selectById(id) {
     const element = document.getElementById(id);
     return element instanceof HTMLSelectElement ? element : null;

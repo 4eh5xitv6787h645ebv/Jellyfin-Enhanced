@@ -15,10 +15,10 @@
  */
 import type { JsonValue } from '../../contracts/generated';
 import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge, type PanelApiClient } from '../../host/settings-panel-host';
-import type { PanelContext } from './context';
-import { closestTarget, focusElement, queryButton, queryElement, queryElements, setDisabled } from './dom';
+import type { PanelContext } from './public-api';
+import { closestTarget, focusElement, queryButton, queryElement, queryElements, setDisabled } from '../shared/dom';
 import { decodePresets, decodePreview, exportedParts, isPresetSource, refusal, savedPreset, statusOf, type PortableChange, type Preset, type PresetList, type PresetSource } from './portable-model';
-import { isJson } from './settings-values';
+import { isJson } from '../shared/settings-values';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'currentSettings' | 'userConfig' | 'escapeHtml' | 't' | 'session' | 'toCamelCase'
     | 'isSettingInherited' | 'setSettingInherited' | 'saveUserSettings' | 'reinitializeTagLayout' | 'showEnhancedPanel'

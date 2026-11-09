@@ -17,8 +17,8 @@
 import type { Layout } from '../media-tags/rules/layout-rules';
 import type { LookRule } from '../media-tags/rules/tag-look';
 import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
-import type { PanelContext } from './context';
-import { focusElement, queryElements, querySelect } from './dom';
+import type { PanelContext } from './public-api';
+import { focusElement, queryElements, querySelect } from '../shared/dom';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'session' | 'currentSettings' | 't' | 'toast' | 'tagPipeline' | 'normalizeOfficialRating' | 'tagItemEditor'>;
 type TagLookApi = NonNullable<PanelBridge['core']['tagLook']>;

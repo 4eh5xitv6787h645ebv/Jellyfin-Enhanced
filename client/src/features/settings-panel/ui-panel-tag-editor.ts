@@ -14,10 +14,10 @@
 import type { JsonValue } from '../../contracts/generated';
 import type { Group, Layout, LayoutSettings } from '../media-tags/rules/layout-rules';
 import { panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../host/settings-panel-host';
-import type { PanelContext } from './context';
-import { closestTarget, focusElement, isDisabled, queryButton, queryElement, queryElements, queryInput, querySelect, setDisabled, targetElement } from './dom';
+import type { PanelContext } from './public-api';
+import { closestTarget, focusElement, isDisabled, queryButton, queryElement, queryElements, queryInput, querySelect, setDisabled, targetElement } from '../shared/dom';
 import { clampCap, stepCap, type CapPolicy } from './tag-caps';
-import { isJson } from './settings-values';
+import { isJson } from '../shared/settings-values';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'currentSettings' | 'pluginConfig' | 't' | 'escapeHtml' | 'ratingSources'
     | 'saveUserSettings' | 'toast' | 'isSettingInherited' | 'inheritedSettingDefault' | 'reinitializeTagLayout' | 'reinitializeGenreTags'

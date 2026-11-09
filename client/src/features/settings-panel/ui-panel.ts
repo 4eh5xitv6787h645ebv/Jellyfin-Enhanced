@@ -9,7 +9,7 @@
  */
 import { apiClient, panelHost, registry, settingsDocumentContract, type PanelBridge } from '../../host/settings-panel-host';
 import type { PanelContext, SearchHit, SearchProvider } from './context';
-import { closestTarget, queryButton, queryElement, queryElements, querySelect, queryInput } from './dom';
+import { closestTarget, queryButton, queryElement, queryElements, querySelect, queryInput } from '../shared/dom';
 import { isTextEntryType, paneSlug, shouldApplyRefresh } from './panel-refresh';
 import { pluginShortcutList } from './shortcut-rules';
 

@@ -7,9 +7,9 @@
 import type { JsonValue } from '../../contracts/generated';
 import { apiClient, optionalApiClient, panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge } from '../../host/settings-panel-host';
 import type { PanelContext } from './context';
-import { closestTarget, controlChecked, controlValue, inputById, isDisabled, queryElements, queryInput, requireId, selectById, setDisabled } from './dom';
+import { closestTarget, controlChecked, controlValue, inputById, isDisabled, queryElements, queryInput, requireId, selectById, setDisabled } from '../shared/dom';
 import { audioLanguageOptions, decodeCultures } from './language-options';
-import { entryAt } from './settings-values';
+import { entryAt } from '../shared/settings-values';
 import { activeSubtitleIsBitmap, clampPauseDelay, clampPosition, colorWithAlpha } from './subtitle-format';
 
 type Deps = Pick<PanelBridge, 'internals' | 'core' | 'currentSettings' | 'userConfig' | 'pluginConfig' | 'saveUserSettings' | 'toast' | 't'

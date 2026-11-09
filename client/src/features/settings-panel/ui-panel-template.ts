@@ -6,7 +6,7 @@
 import type { JsonValue } from '../../contracts/generated';
 import { panelHost, registry, type FontFamilyPreset, type FontSizePreset, type PanelBridge, type SubtitlePreset, type TextEffectPreset } from '../../host/settings-panel-host';
 import type { PanelContext } from './context';
-import { entryAt, numeric } from './settings-values';
+import { entryAt, numeric } from '../shared/settings-values';
 import { PLAYER_COLUMN, pluginShortcutList } from './shortcut-rules';
 
 type Deps = Pick<PanelBridge, 'internals' | 'escapeHtml' | 't' | 'icon' | 'IconName' | 'icons' | 'pluginVersion' | 'pluginConfig'

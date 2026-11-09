@@ -12,7 +12,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function targetElement(event) {
     return event.target instanceof Element ? event.target : null;
   }
