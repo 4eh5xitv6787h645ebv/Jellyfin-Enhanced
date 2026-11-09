@@ -14,6 +14,10 @@
 #   scripts/restructure-gates.sh bundle-hash <f> prints `<stable sha256> <comment-stripped sha256>` of a bundle file
 #   scripts/restructure-gates.sh size            served bundle raw and gzip -9 bytes vs client/bundle-budget.json (ratchet)
 #   scripts/restructure-gates.sh image           the HOST image tag in baselines/jf12-digest.txt still has the recorded RepoDigest
+#   scripts/restructure-gates.sh quick [feature…] inner loop, not a merge gate: typecheck, client build, inventory, the
+#                                                features' node tests + architecture + guards (new failures only), and
+#                                                their dotnet tests + Architecture when a .cs file changed. Features
+#                                                default to those the diff from restructure/integration touches.
 #
 # Pre-existing test failures are ratcheted, not fixed: a dotnet or node test run passes when every failing test is
 # listed in baselines/{dotnet,npm}-failures.txt and the total and passed counts are >= baselines/{dotnet,npm}-tests.txt.
@@ -404,6 +408,85 @@ gate_size() (
   return "$rc"
 )
 
+# quick: the inner loop for the features a change touches (docs/feature-map.json). Not a merge gate: `all` (and
+# `browser` for client changes) still run once on the final tree. Node failures are ratcheted by name only against
+# baselines/npm-failures.txt, because a subset cannot meet the full-suite totals.
+quick_map() { python3 - "$@" <<'PY'
+import json, pathlib, sys
+mode, args = sys.argv[1], sys.argv[2:]
+features = json.load(open('docs/feature-map.json'))['features']
+root = json.load(open('docs/feature-map.json'))['backendRoot']
+if mode == 'features':                      # changed paths on stdin -> feature names
+    hit = []
+    for p in sys.stdin.read().split():
+        if p.endswith(('.md', '.js', '.js.map')) or p.startswith(('docs/', 'artifacts/')) or p in (
+                'client/generated-manifest.json', 'tests/docs/production-inventory.json'):
+            continue
+        best, size = None, 0
+        for f in features:
+            prefixes = list(f.get('client') or []) + [x for x in (f.get('tests') or {}).get('frontend', [])
+                                                      if x.startswith('tests/frontend/features/')]
+            if f.get('backend'):
+                prefixes += [f"{root}/{f['backend']}", f"tests/backend/Features/{f['backend']}"]
+            for pre in prefixes:
+                if p.startswith(pre.rstrip('/') + '/') and len(pre) > size:
+                    best, size = f['name'], len(pre)
+        if best is None and p.startswith(('client/src/', 'Jellyfin.Plugin.JellyfinEnhanced/', 'tests/')):
+            best = 'platform'
+        if best and best not in hit:
+            hit.append(best)
+    print(' '.join(hit))
+elif mode == 'tests':                       # feature names -> node test files
+    names = set(args)
+    unknown = names - {f['name'] for f in features}
+    if unknown:
+        sys.exit(f"quick: unknown feature(s) {sorted(unknown)}")
+    dirs = {'tests/frontend/architecture', 'tests/frontend/guards'}
+    for f in features:
+        if f['name'] in names:
+            dirs |= set((f.get('tests') or {}).get('frontend', []))
+    print('\n'.join(sorted(str(p) for d in dirs for p in pathlib.Path(d).rglob('*.test.mjs'))))
+elif mode == 'filter':                      # feature names -> dotnet filter
+    parts = ['FullyQualifiedName~JE.Tests.Architecture'] + [
+        f"FullyQualifiedName~JE.Tests.Features.{f['backend']}" for f in features if f['name'] in args and f.get('backend')]
+    print('|'.join(parts))
+PY
+}
+
+gate_quick() (
+  set -e
+  no_snapshot_updates
+  local base changed feats dir rc=0 new
+  base=$(git merge-base HEAD restructure/integration 2>/dev/null || git rev-parse HEAD)
+  changed=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
+  if [ $# -gt 0 ]; then feats="$*"; else feats=$(printf '%s\n' "$changed" | quick_map features); fi
+  step "QUICK: features ${feats:-(none; architecture and guards only)}"
+  npm run client:typecheck
+  npm run client:build
+  npm run inventory:rewrite
+  dir=$(mktemp -d)
+  # shellcheck disable=SC2086  # feature names are single words
+  quick_map tests $feats > "$dir/files"
+  step "QUICK: $(wc -l < "$dir/files") node test files (failures ratcheted by name vs $BASELINES/npm-failures.txt)"
+  # shellcheck disable=SC2046
+  env TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node --test --test-timeout=300000 \
+    --test-concurrency="${JE_TEST_CONCURRENCY:-$(( $(nproc) > 5 ? $(nproc) - 1 : 4 ))}" \
+    --test-reporter=spec --test-reporter-destination=stdout \
+    --test-reporter="$ROOT/scripts/restructure-gates-reporter.mjs" --test-reporter-destination="$dir/results" \
+    $(cat "$dir/files") || true
+  [ -s "$dir/results" ] || { echo "QUICK: node wrote no results" >&2; rm -rf "$dir"; false; }
+  new=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -23 - "$BASELINES/npm-failures.txt")
+  echo "QUICK: node $(grep -c '^PASS ' "$dir/results" || true) passed, $(grep -c '^FAIL ' "$dir/results" || true) failed" >&2
+  if [ -n "$new" ]; then echo "QUICK: failing test(s) not in $BASELINES/npm-failures.txt:" >&2; printf '  %s\n' "$new" >&2; rc=1; fi
+  rm -rf "$dir"
+  if printf '%s\n' "$changed" | grep -q '\.cs$'; then
+    step "QUICK: dotnet tests for ${feats:-Architecture}"
+    # shellcheck disable=SC2086
+    dotnet test "$TESTS" -c Release -p:JellyfinTarget=jf12 --filter "$(quick_map filter $feats)" || rc=1
+  fi
+  return "$rc"
+)
+
 # baselines/jf12-digest.txt: `<tag> <RepoDigest>`; HOST runs `je up <name> <port> --image <tag>`.
 gate_image() (
   set -e
@@ -417,7 +500,7 @@ gate_image() (
   echo "image: $tag = $digest" >&2
 )
 
-usage() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
@@ -427,6 +510,7 @@ case "$cmd" in
   bundle) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_bundle "$1" ;;
   bundle-hash) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_bundle_hash "$1"; exit 0 ;;
   image) [ $# -eq 0 ] || usage; gate_image ;;
+  quick) gate_quick "$@" ;;
   *) usage ;;
 esac
 echo "restructure-gates: $cmd passed" >&2
