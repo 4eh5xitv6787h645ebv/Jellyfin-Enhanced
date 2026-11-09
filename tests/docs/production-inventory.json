@@ -190,6 +190,106 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Models/JellyseerrPermission.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Models/JellyseerrUser.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/AutoMovieRequestMonitor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/AutoMovieRequestService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/AutoSeasonRequestMonitor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/AutoSeasonRequestService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/JellyseerrPermissionHelper.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/JellyseerrUserImportHelper.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/MovieCollectionsBatch.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/ParentalRatingDecision.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/ParentalTagDecision.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCertificationExtractor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCsrfHandler.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrHttpHelper.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrParentalFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrRequestOutcome.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrScanTriggerService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrTagSignatureExtractor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbCompanyTvDiscover.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/WatchProvidersBatch.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/WatchlistMonitor.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyfinToSeerrWatchlistSyncTask.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyseerrUserImportTask.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyseerrWatchlistSyncTask.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Events/SpoilerAutoEnableEvents.cs",
       "category": "Features"
     },
@@ -267,42 +367,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/BuildAttestation.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/JellyseerrPermissionHelper.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/JellyseerrUserImportHelper.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/ParentalRatingDecision.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/ParentalTagDecision.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrCertificationExtractor.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrCsrfHandler.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrHttpHelper.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrRequestOutcome.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrTagSignatureExtractor.cs",
       "category": "Helpers"
     },
     {
@@ -394,14 +458,6 @@
       "category": "Model"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/Jellyseerr/JellyseerrPermission.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/Jellyseerr/JellyseerrUser.cs",
-      "category": "Model"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/MdblistRatings.cs",
       "category": "Model"
     },
@@ -486,18 +542,6 @@
       "category": "ScheduledTasks"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyfinToSeerrWatchlistSyncTask.cs",
-      "category": "ScheduledTasks"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyseerrUserImportTask.cs",
-      "category": "ScheduledTasks"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyseerrWatchlistSyncTask.cs",
-      "category": "ScheduledTasks"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/MdblistRatingsFetchRunner.cs",
       "category": "ScheduledTasks"
     },
@@ -527,22 +571,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AnilistReviewsService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AutoMovieRequestMonitor.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AutoMovieRequestService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AutoSeasonRequestMonitor.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AutoSeasonRequestService.cs",
       "category": "Services"
     },
     {
@@ -607,10 +635,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/MediaNamingTags.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/MovieCollectionsBatch.cs",
       "category": "Services"
     },
     {
@@ -790,14 +814,6 @@
       "category": "Services"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SeerrParentalFilter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SeerrScanTriggerService.cs",
-      "category": "Services"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SeriesQualityAggregation.cs",
       "category": "Services"
     },
@@ -886,23 +902,7 @@
       "category": "Services"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/TmdbCompanyTvDiscover.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/TmdbResponseCache.cs",
-      "category": "Services"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/UsageEventCounterService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/WatchProvidersBatch.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/WatchlistMonitor.cs",
       "category": "Services"
     },
     {
@@ -9834,6 +9834,10 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs"
     },
     {
+      "literal": "tmdb-cache.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs"
+    },
+    {
       "literal": "spoilerblur.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerBlurImageFilter.cs"
     },
@@ -9970,10 +9974,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/TagLogoService.cs"
     },
     {
-      "literal": "tmdb-cache.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/TmdbResponseCache.cs"
-    },
-    {
       "literal": "usage-counters.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/UsageEventCounterService.cs"
     },
@@ -10088,6 +10088,21 @@
   ],
   "scheduled_tasks": [
     {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyfinToSeerrWatchlistSyncTask.cs",
+      "class": "JellyfinToSeerrWatchlistSyncTask",
+      "key": "JellyfinEnhancedJellyfinToSeerrWatchlistSync"
+    },
+    {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyseerrUserImportTask.cs",
+      "class": "JellyseerrUserImportTask",
+      "key": "JellyfinEnhancedJellyseerrUserImport"
+    },
+    {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyseerrWatchlistSyncTask.cs",
+      "class": "JellyseerrWatchlistSyncTask",
+      "key": "JellyfinEnhancedJellyseerrWatchlistSync"
+    },
+    {
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs",
       "class": "SpoilerApplyExistingTitlesTask",
       "key": "JellyfinEnhancedSpoilerApplyExistingTitles"
@@ -10116,21 +10131,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/ClearTranslationCacheTask.cs",
       "class": "ClearTranslationCacheTask",
       "key": "JellyfinEnhancedClearTranslationCache"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyfinToSeerrWatchlistSyncTask.cs",
-      "class": "JellyfinToSeerrWatchlistSyncTask",
-      "key": "JellyfinEnhancedJellyfinToSeerrWatchlistSync"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyseerrUserImportTask.cs",
-      "class": "JellyseerrUserImportTask",
-      "key": "JellyfinEnhancedJellyseerrUserImport"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyseerrWatchlistSyncTask.cs",
-      "class": "JellyseerrWatchlistSyncTask",
-      "key": "JellyfinEnhancedJellyseerrWatchlistSync"
     },
     {
       "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/MdblistRatingsFetchTask.cs",

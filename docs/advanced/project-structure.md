@@ -547,7 +547,7 @@ Missing or wrong-length keys are recreated; old URLs can serve original artwork 
 |---|---|
 | `Helpers/` | `ArrUrlGuard.cs` checks integration URLs; `BuildAttestation.cs` handles release attestation; `PluginConfigurationPatch.cs` writes a few configuration fields on top of the live configuration and reports conflicting edits (the Media Tags tab's saves); `MediaTagsPageFields.cs` is the list of fields those saves may write, read from the page's section modules; `MediaTagsPortable.cs` reads and writes the versioned Media Tags documents (user and server export, import preview with the save paths' validators, presets: built-in, per-user and offered); `ProviderHelper.cs` and `UserHelper.cs` resolve provider/user identifiers; `ReviewVisibility.cs` applies author visibility; `TagEpisodeSelector.cs` chooses representative episodes with usable streams. |
 | `Helpers/` language handling | `MatroskaLanguageReader.cs`, `MediaStreamLanguageResolver.cs` recover stream language data; `MatroskaLanguageCache.cs` keeps each file's parsed languages (persisted, keyed by path, size and modification time) so unchanged files are not reopened; `AudioLanguageTagHelper.cs` maps base/regional codes to tag names and computes changes. |
-| `Helpers/Jellyseerr/` | `SeerrHttpHelper.cs`, `JellyseerrPermissionHelper.cs`, `JellyseerrUserImportHelper.cs`: HTTP, permission and import helpers. `ParentalRatingDecision.cs`, `ParentalTagDecision.cs`, `SeerrCertificationExtractor.cs`, `SeerrTagSignatureExtractor.cs`: shared parental decisions/extraction. |
+| `Features/Seerr/Services/` | `SeerrHttpHelper.cs`, `JellyseerrPermissionHelper.cs`, `JellyseerrUserImportHelper.cs`: HTTP, permission and import helpers. `ParentalRatingDecision.cs`, `ParentalTagDecision.cs`, `SeerrCertificationExtractor.cs`, `SeerrTagSignatureExtractor.cs`: shared parental decisions/extraction. |
 | `Extensions/` | `ItemRepositoryExtensions.cs`, `JellyfinDbContextExtensions.cs`, `UserManagerExtensions.cs`: repository/database provider lookups and compatible user enumeration across server API changes. |
 | `Services/MediaNamingTags.cs` | Server-side source/edition detection from file and immediate parent-folder names, physical-stub priority and resolution-ranked multi-version selection. Shared by the tag cache and `/tag-data`; only labels reach clients. |
 | `Model/TagCacheEntry.cs` | Tag data at the current cache schema (`CurrentCacheSchemaVersion` in `Services/TagCacheService.cs`), including source/edition labels, named-source ratings, Custom rule matches, Logos (`Model/TagLogo.cs`), series/season quality summaries, Status Tags facts and server-only contributor IDs for access filtering, plus precomputed item tag data, including parent-series IDs for Spoiler Guard filtering without per-entry library lookups. |
@@ -555,7 +555,7 @@ Missing or wrong-length keys are recreated; old URLs can serve original artwork 
 | `Model/AnalyticsData.cs`, `WhatsNewData.cs` | Report/counter records and inclusion/exclusion annotations; configuration-schema and pending-change records. |
 | `Model/AwardsData.cs`, `MdblistRatings.cs` | Awards cache records and MDBList cache/account models. |
 | `Model/Arr/` | `ArrInstance.cs`, `ArrItem.cs`, `ArrType.cs`: integration instance/item/type models. |
-| `Model/Jellyseerr/` | `JellyseerrPermission.cs`, `JellyseerrUser.cs`: Seerr permission/user models. |
+| `Features/Seerr/Models/` | `JellyseerrPermission.cs`, `JellyseerrUser.cs`: Seerr permission/user models. |
 
 ### Event handlers: `EventHandlers/`
 
