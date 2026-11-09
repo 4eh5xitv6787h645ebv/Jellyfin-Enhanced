@@ -88,6 +88,37 @@ artifacts still on disk fails with an orphan list. Restore its mapping, or remov
 its retired generated files explicitly after checking consumers, then rebuild.
 The builder deliberately does not delete production resources automatically.
 
+## The served bundle: minified twins, one featureContext, size budget
+
+`GET /JellyfinEnhanced/bundle.js` (`Features/Platform/Services/ClientScriptBundle.cs`)
+concatenates the scripts listed in `js/component-scripts.json`. For each of them
+the builder also writes a minified twin, `min/js/<path>` plus `min/js/<path>.map`:
+the same source and wrapper with esbuild `minify`, an external map without
+`sourcesContent` (the server copies each source's text from the readable map, so
+`bundle.js.map` still carries the TypeScript). Only the bundle reads `min/`; the
+readable `js/**` files stay what the per-file loader, dev tooling and tests use, and
+both are in the ledger and checked by `--check`. `JE_TEST_MIN_TWINS=1` makes the
+jsdom harness run the twins instead, to check that minifying changed no behaviour.
+
+The bundle is sent pre-compressed (brotli, else gzip, by `Accept-Encoding`, with
+`Vary: Accept-Encoding`) and a strong `ETag` per representation; a matching
+`If-None-Match` gets a 304. Brotli starts at quality 9 and is replaced in the
+background by quality 11.
+
+Feature hosts build their context with `featureContext` from `host/context.ts`,
+which delegates to the one implementation `core/ui-kit.js` publishes on
+`JE.core.featureContext` (non-enumerable) as its first statement, instead of each
+feature output inlining it. Every feature script must stay after `core/ui-kit.js`
+in `js/component-scripts.json` (`tests/client-build/feature-context.test.mjs`).
+Scripts that run before the bundle (splash, login image) use
+`createFeatureContext` directly. Tests that load a feature script on its own get
+the same function from `tests/frontend/helpers/feature-context.cjs`.
+
+`client/bundle-budget.json` caps the served bundle's identity body, raw and gzip
+-9 (`tests/backend/Api/BundleBudgetTests.cs` in the backend suite, and
+`scripts/restructure-gates.sh size`). It is a ratchet: lower `limits` freely; a
+new `history` entry that raises either limit must give a `reason`.
+
 ## Direct .NET builds
 
 Root `Directory.Build.targets` scopes `VerifyJellyfinEnhancedClient` to the plugin
