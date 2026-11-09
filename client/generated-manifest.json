@@ -1062,24 +1062,24 @@
       "manifest": "client/html-entries/admin-config.json",
       "template": "client/html/admin-config/configPage.html",
       "templateSha256": "6e0183d44fcc0d6cb16e3abad0b4a0e3475c5dce16983bb08c3ae515287e589b",
-      "outputSha256": "cd2477b1dd076f297541a0a8caea1aafd7d9fbc5b8cfa9604815f8736cac2840",
+      "outputSha256": "d4fad76c584599743a80a66f2b77836d0f8a0287cbc556529475dfc994baf915",
       "scripts": [
         {
           "name": "startup",
           "scriptIndex": 0,
           "source": "client/src/admin/config/startup-entry.ts",
-          "sha256": "1185ca41234e99a992cd2f430600e9c461b2dcc4b65ba1806b2bd8247853e733",
+          "sha256": "2cbd607328643a45fa142b676780ae13562df334b41e45d72e2ae1b0d159761b",
           "inputs": {
             "client/src/admin/config/startup-entry.ts": "c0f00cc5cb997a6cf30ed25c5121644ca6a748b3ee46a230bf504ee6bffbdc7e",
             "client/src/admin/config/startup.ts": "073f4d045361f56714042967ed446d8a2498230cff5dd724a19d5a13a2e42a04",
-            "client/src/host/admin-config-host.ts": "49de8cee697384ebb93ffc86705bbc3bc7fdd9c292482e16adafeb9e3e3db70f"
+            "client/src/host/admin-config-host.ts": "989accf101e6553f91f7b0700a756f326f46ce26104b89bf38c0b2d322deaa61"
           }
         },
         {
           "name": "main",
           "scriptIndex": 1,
           "source": "client/src/admin/config/page-entry.ts",
-          "sha256": "5c65e12e45f2f0d79be92f52b099e5806d29de237b836195fc6f4c8ea5662f4c",
+          "sha256": "f1030fd21b379ba6e8fcb6e96224cb688705a1df7d36cb9cd740c8fe12b5fe21",
           "inputs": {
             "client/src/admin/config/domain/config-values.ts": "438b48bcac728b62b61c59dd541e190beadc5329a3b387fce0857ef3c2c720e9",
             "client/src/admin/config/domain/config.ts": "9d01375f8e8fae1d4daba8d3b517bba38697fc32aad5926b57966703fa313e01",
@@ -1115,7 +1115,7 @@
             "client/src/admin/config/page/locales.ts": "4ceb5d3e5525471ca2db3a000e77ec799841498b121457f30e65e6f0f6738165",
             "client/src/admin/config/page/maintenance.ts": "d44d8cd1a3d74e0300a8ac96fdeb9ae34325e9c6802d45866d19bddfdec65ed7",
             "client/src/admin/config/page/mappings.ts": "89ded1954b38f6ff06c9395e189f994129eaa5d6c112146002f6df09f72759e1",
-            "client/src/admin/config/page/media-tags-tab.ts": "467237a7cf707c599c91f3193e5e29d05719b3e2202ad575f910436ffd0dd954",
+            "client/src/admin/config/page/media-tags-tab.ts": "b1ef6ad432722d3109ac36605cc7e23ab89ba26172907add02bacbe5391255b4",
             "client/src/admin/config/page/misc.ts": "808562b99544ab3e421f732428c630df6d0efd59c41a3e3a52d40a9bcef7082b",
             "client/src/admin/config/page/overview-cards.ts": "e2d2765c8eb5f1771074436ee4bf193bed3b477702c5dcf8e19c8fda0f603bde",
             "client/src/admin/config/page/page.ts": "55772763f8c4c9c39b06f96b2b0b9219bba1b786a80ed57531f045e31fd1ee25",
@@ -1131,7 +1131,7 @@
             "client/src/admin/config/page/theme.ts": "868561a93b240cdc9acdfb52d1a12baaab3dd0a54099a31240871c25ca87c83c",
             "client/src/admin/config/page/timing.ts": "07ccbaad41c85ad67dd26542456f550f43fd3247a9cd3a422bbd1b5d18f67012",
             "client/src/admin/config/page/whats-new.ts": "7ce186ba5636af208524dc6aae4df38ce6bbc91fde87128c175baa5c49fddfac",
-            "client/src/host/admin-config-host.ts": "49de8cee697384ebb93ffc86705bbc3bc7fdd9c292482e16adafeb9e3e3db70f"
+            "client/src/host/admin-config-host.ts": "989accf101e6553f91f7b0700a756f326f46ce26104b89bf38c0b2d322deaa61"
           }
         }
       ]
@@ -1160,15 +1160,15 @@
       "manifest": "client/html-entries/bootstrap-pages.json",
       "template": "client/html/bootstrap-pages/ActivityPage.html",
       "templateSha256": "b3e08a8e486376f1874abfb3e61003ac3949ba67d8a32645686b41b099c68a2c",
-      "outputSha256": "2e66b6a7bfc3e42a2a13f5ef4f4457cdbcb6262c100c4eae2cd31d4c51a2d576",
+      "outputSha256": "381b6be109648161126e6edd4b2b2435ac8321281e36f09ebf22434d7d0f05b1",
       "scripts": [
         {
           "name": "main",
           "scriptIndex": 0,
           "source": "client/src/pages/activity-page.ts",
-          "sha256": "368cb7af86ceb4071514c30da489882f626dcca141f4aa29ab3ca77e402e8b2a",
+          "sha256": "91ad3c0affc20cc516fef41c1fa5388aa7284a98c3481ca59908259202bce3ad",
           "inputs": {
-            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/host/bootstrap-pages-host.ts": "a76c9118590ad59c7d3e976ea9ce5863a2923380240c56c9e73cf97c96b79e87",
             "client/src/pages/activity-page.ts": "0f67b0273c6ae5f726a4fa8f90beccba0f1ed92a82b5dbe490eeb4459ae12377",
             "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
           }
@@ -1180,15 +1180,15 @@
       "manifest": "client/html-entries/bootstrap-pages.json",
       "template": "client/html/bootstrap-pages/BookmarksPage.html",
       "templateSha256": "ff4fa0e3b409d9ad0ff126a8d83947f77adf474a466627c742efe90ff9dae3e9",
-      "outputSha256": "c50965489216f03eaaf20111b897dcd32a2b27fdf70108a88c5a76e462d3db5d",
+      "outputSha256": "38ee14df3dc1211da2631ffad6aa619c65847c6419c2c7288c4840646926e6c9",
       "scripts": [
         {
           "name": "main",
           "scriptIndex": 0,
           "source": "client/src/pages/bookmarks-page.ts",
-          "sha256": "7663e7b9a8ff6ddc7fba0b3455f194fb2b6794df15dcfa810ede52860c7316a3",
+          "sha256": "e4d968ae6dd0561bffa4e194e03f7e4ff2bbe26a112645a6ff41f075fd39f9d0",
           "inputs": {
-            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/host/bootstrap-pages-host.ts": "a76c9118590ad59c7d3e976ea9ce5863a2923380240c56c9e73cf97c96b79e87",
             "client/src/pages/bookmarks-page.ts": "5a0f1d6c9f172a4af335a02148b4419097f9268feb4878cab6cffa0596ad1bd5",
             "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
           }
@@ -1200,15 +1200,15 @@
       "manifest": "client/html-entries/bootstrap-pages.json",
       "template": "client/html/bootstrap-pages/CalendarPage.html",
       "templateSha256": "f0d88ab442ca6249d401d361bf4c40a1bd5db81ab3984522e59f2ab035ba8696",
-      "outputSha256": "b12638bf3868205a6d8d91e8635444cac72727530233bd54315077ac4fdb4c40",
+      "outputSha256": "8f3477363e390cc9a6d45515b45b3eb11c0f266017a635255ca13e99fc4b99ef",
       "scripts": [
         {
           "name": "main",
           "scriptIndex": 0,
           "source": "client/src/pages/calendar-page.ts",
-          "sha256": "981c7936b07cce3983d154a33c12ca8f5b1dafedb9cde033666482de8010f883",
+          "sha256": "a1a2e71976de0454df13b8c97f05e486b93832387098f2f0af43b8cf9918ce0c",
           "inputs": {
-            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/host/bootstrap-pages-host.ts": "a76c9118590ad59c7d3e976ea9ce5863a2923380240c56c9e73cf97c96b79e87",
             "client/src/pages/calendar-page.ts": "dd55c6aa528645174c7bbfa03a229005961bded2a420af0b9a96a7b7816a6dba",
             "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
           }
@@ -1220,15 +1220,15 @@
       "manifest": "client/html-entries/bootstrap-pages.json",
       "template": "client/html/bootstrap-pages/CatchUpPage.html",
       "templateSha256": "4a948a68b0bed20492606a32441b511f8315c5d86fb32fe259d40f2536532671",
-      "outputSha256": "d6bb579873ce61ca5b24a9044f547799e2903a942e175c054eae75be58ed15d0",
+      "outputSha256": "f10182817f9a521175ed88277b996d79246fbb2906fccec1495ac7423000b25d",
       "scripts": [
         {
           "name": "main",
           "scriptIndex": 0,
           "source": "client/src/pages/catchup-page.ts",
-          "sha256": "ce98d93361736148cc61e88642ad84a47f9ea563405a10cf0423d2a5fbf0d053",
+          "sha256": "3be78188582c2e74867c35eff8843970b17856acbff5f0d855a899498e7e4599",
           "inputs": {
-            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/host/bootstrap-pages-host.ts": "a76c9118590ad59c7d3e976ea9ce5863a2923380240c56c9e73cf97c96b79e87",
             "client/src/pages/catchup-page.ts": "4c707015ecfb54585930f061695bfd26796754348cb2657f1a573896cd114839",
             "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
           }
@@ -1240,15 +1240,15 @@
       "manifest": "client/html-entries/bootstrap-pages.json",
       "template": "client/html/bootstrap-pages/DownloadsPage.html",
       "templateSha256": "38fb5eb8a2d38b92ea3d4fcdf6d318cc6eda63ec37aabcd0ee1d505840362414",
-      "outputSha256": "c1f57b3d64d5802f84b07fc1dce1d44044b478fdf5234e170ab714d0780d38db",
+      "outputSha256": "efdc6a038d34578c2c06a535f6fff15516d86a501633360214b6809aea6c68d8",
       "scripts": [
         {
           "name": "main",
           "scriptIndex": 0,
           "source": "client/src/pages/downloads-page.ts",
-          "sha256": "075566f24db9c5826afc40e0050343d4015cb9b54f6df553b8ed040ef0f1b2b6",
+          "sha256": "5b1e9f43dac6bc9ed4cf23c8a0f9d929f47a9c12f29cd7e8676843e8808539ad",
           "inputs": {
-            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/host/bootstrap-pages-host.ts": "a76c9118590ad59c7d3e976ea9ce5863a2923380240c56c9e73cf97c96b79e87",
             "client/src/pages/downloads-page.ts": "530f15abc22f8f97d83cda617d300a52971c596a94a2faf159be8e2527b5064b",
             "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
           }
@@ -1260,15 +1260,15 @@
       "manifest": "client/html-entries/bootstrap-pages.json",
       "template": "client/html/bootstrap-pages/HiddenContentPage.html",
       "templateSha256": "83fe4e7d51c02117c348a612f0e0f450797fda8f22dc9dbd5df3b2d8806f59c3",
-      "outputSha256": "0bd2f8aca47be38eda1f5e4f444bb2a65be2685d2580b4830462c2330835eee5",
+      "outputSha256": "676d6d22a8383f2b5db34dfc5ee0a8094500f82b77213f19ac4d2119b359abfe",
       "scripts": [
         {
           "name": "main",
           "scriptIndex": 0,
           "source": "client/src/pages/hidden-content-page.ts",
-          "sha256": "8e35c653fa0796e756e9c06e4f78d00e023ed21e061de14f6b1b4e18b1e9da78",
+          "sha256": "467b6db928e1964dde7ca783741651ab8c3d0911b73ca3d42c5e70c566e6812b",
           "inputs": {
-            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/host/bootstrap-pages-host.ts": "a76c9118590ad59c7d3e976ea9ce5863a2923380240c56c9e73cf97c96b79e87",
             "client/src/pages/hidden-content-page.ts": "4c24d91f833fd20104c0a4cfbafad94471cdb49f3387597bacef71c3c262f03f",
             "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6"
           }
@@ -1280,15 +1280,15 @@
       "manifest": "client/html-entries/bootstrap-pages.json",
       "template": "client/html/bootstrap-pages/RecommendationsPage.html",
       "templateSha256": "9da2dfe203a1f90efde6bbd2cb605f55eed67061df17de42d2f38b95bcbbe351",
-      "outputSha256": "1276033e9214a88186c629bcf8434f7e157ea0582a19663f7a642df0d14fc456",
+      "outputSha256": "105ba23d2af83cd75e67f8fa6f00904f7acacdc05b63c92a33b60c0b55139376",
       "scripts": [
         {
           "name": "main",
           "scriptIndex": 0,
           "source": "client/src/pages/recommendations-page.ts",
-          "sha256": "3159da92c7dae1cf2c33e557bcdab84d37629c9b4da1bf6c816f3b78ed973c85",
+          "sha256": "14fb5066cfdc55c764eb2bc4eb22b3e65dc43d5ce9336b41c302fa7d5d94f782",
           "inputs": {
-            "client/src/host/bootstrap-pages-host.ts": "29a885ced9365fa6aa09568a1ad0bb7e499751eff1ad1a55b1ca50e50b6242f9",
+            "client/src/host/bootstrap-pages-host.ts": "a76c9118590ad59c7d3e976ea9ce5863a2923380240c56c9e73cf97c96b79e87",
             "client/src/pages/page-mount.ts": "aaf32d9b5b4efb6d281d0669684b0a1ba291ece7ee491ab36b83c873cad627b6",
             "client/src/pages/recommendations-page.ts": "1f446dadc11776eaca2716b49c467149f8857f353b550ac2b34861fdc9471f55"
           }
@@ -1297,11 +1297,11 @@
     }
   ],
   "outputs": {
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js.map": "9b110e18ed5da597286dfd5ad410c0e28b9c25572e7b8f20e2433cc8a76b1fd4",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js.map": "70cae3a6821d1e14977bd0d2a0e7ab9613fc4c4eaf69ebaf20b06aac6a559e9a",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/per-user.js": "e9c56670091f27a78b3e5fc5ae7cdd3077a38bc6f447a2b8094a0eba2574e512",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js.map": "30026bf7cec06cb8f7808c223077c47b913e9ddcba998a8f6ad1fcde83d2c331",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js.map": "8a321ee86fd51a0228b24ce655619181bdc598d6107b8ed9ca0b8019aa5daa1b",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js": "25d5bd867614a4dbe8a9019ca1f6b89c5e1f30f0b0ace287748e88c2d99715dd",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js.map": "86b3dec98e44adfde3e950f4c56db95bef70eb47b5b45208993640f00d86ba5c",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js.map": "6c6502e0bbb17d6806faaa51b96dcbaec2a8b4bbc358d98ba201e0d0f749b515",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.js": "bf976589aea81fe7f903d2bf8de477881c82b37c2d3c6ad5e87a043e63b096f0",
     "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-links.js.map": "efd96d9c3a3d0b84d559b9fa5a9a12bad303f076f0c6c74601b51d897132a0e2",
     "Jellyfin.Plugin.JellyfinEnhanced/js/arr/arr-links.js": "4eb6a533a8ea3b18d3bf3d3b1617ec51c41fe5c3033aea7a8c942ded2e3ae014",
@@ -1347,15 +1347,15 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/dom-observer.js": "e612619bbd6f9ff7cf9f9fad77210adf14c89c94ccb4f549bb48cc70c5fb5131",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/lifecycle.js.map": "fcfceba2e08f10fea9f174bd33fc8eb666adb60296b2d39beb34dab5a77e3ee1",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/lifecycle.js": "7f49fcabcd088088d212726bb3cf55cb6703796d469aac5a461b6c266f4d9349",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/core/media-language.js.map": "f1acb61ba04c27f15221036878bc454cde110136a979dd674e495cc050298fb1",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/media-language.js.map": "baf44ebd60ff61cf3e979b18beed92e4c84253f149b61dafe78200ea1c92c787",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/media-language.js": "391ccca1658e2ac8ddc5c3f57e5ed0cb7b93ef28ceeffca740fb37b42a870f0a",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/navigation.js.map": "5b8f1de7170e9291d31cc1250c82f93856812a716fd8a184b9b3ffca15fdf1a9",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/navigation.js": "2d412064fddf90eca312a88429078b3859b04c750a87f898874bafc04b11cc41",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/session.js.map": "27eadb2fe81efa0ebbcbe2060d6e7c79b6fa125571d8cb1ddf69806d0c614da8",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/session.js": "738a9fe997608ef787131ef334143847262b3be12490b953b2c6af03cbb145c5",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js.map": "3f8165edf961ce65cf1cca33908e4cbd9638e5f76e88b3dbd1dfa8ddb9163426",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js": "36a05b0ff0a5cc5fc7a95599c78d5e5186fdfde9985f05c8ff02bd65173907b4",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-look.js.map": "a297fff074e1e2c9659125ef7ac559abc7cf73a89d028342aa1338090fa79b38",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js.map": "d42bf494b612ab450d52f10282fed1cb4f04a8a5ffd421ffff0337eb61b765e9",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js": "76285d9ed21697d75ef209071bc5a9552395cdc9e0e638808d982e76d0fc8413",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-look.js.map": "91b1e71756f1c511ec35f1f7526f17df2b32425b576db3af7248ff2a5846c964",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-look.js": "75762766f9d78f7c89ce6db43d54f4c3e891e8b434d9ec6b6444c7d9a96359d7",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-renderer-base.js.map": "991790ad0bef6f3b5a26e22e2fe47d755a21fbcea492ff144b513390609c6369",
     "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-renderer-base.js": "3afedfb2a92a2ce7b5ab3230c3816f20b6847abe642a8d2c4ade2f55d1439d0f",
@@ -1673,7 +1673,7 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/others/mdblist-ratings.js": "40ec761757d818e16fbd7cdaa52df3517d3bde9540ab3ef6fd830c04375574e6",
     "Jellyfin.Plugin.JellyfinEnhanced/js/others/splashscreen.js.map": "bb2df9f31dc39b57bd310e2e576887343b622a7f2b86ee2cf8b6e840abff949c",
     "Jellyfin.Plugin.JellyfinEnhanced/js/others/splashscreen.js": "40ed9bc992decda9f257fa9c5deb86bb7db3510a128381f09c387545690af6d4",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/plugin.js.map": "bd868c407a2c748a9fa88ebf00c0b205a73cd95c3b8789178fd1a46674ef3df8",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/plugin.js.map": "2ddf13f12c1dd10d9aa30df806ee56b231022e50e790e4aee4b41f141bcf0ca4",
     "Jellyfin.Plugin.JellyfinEnhanced/js/plugin.js": "4c28fe66a8be660b1e7d6360c4ba071faf4abe2dc00ef064a1d96efd69c06a87",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ageratingtags.js.map": "fa66dc69449ea4adb8faa6548b237f136f263ac16c9242d109108eb2e5bb94d2",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ageratingtags.js": "6de9aaad610ab200375f7668320462c2e2d2962740fadf0da0d59e3ddbda4e92",
@@ -1691,11 +1691,11 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/peopletags.js": "56a2458e5d0dd03cb11438f539323cbc2b6551301ef7170cd0ac1167e74d736d",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/qualitytags.js.map": "8381b9be0ded341138c3187d9c282753237d01b25d5daa92918040a29e958e4b",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/qualitytags.js": "189a9868a91963de2b141c65912537b0e1c3425a463b50e1e0d6b7f2fc2b5ab6",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/rating-sources.js.map": "e627206eb571f88dfd69c1e96e728caacee2f6b2131080b908f5d32d5dc0a984",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/rating-sources.js.map": "a3df4dceddf59a9125bbda76b473d0c737fa9211ad5f0323b5945fcfc3e709b3",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/rating-sources.js": "962f7d1051a00320cedef33a2640d065da878bca7651f8607bfcf8a6c7f8fe2e",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ratingtags.js.map": "d7ce0180cbb903d8b67aa69fd02c509da7ba10cf99b37fb2519c677ad3c52458",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/ratingtags.js": "72707d3eead3c9b320fb534740e6f4135dee86ddd6162b61d54f847fdc3b26b5",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/status-vocabulary.js.map": "9a2ee239b6307d3e328f6689664680d9dd5c40db740b82c7b6daa53ced4e1606",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/status-vocabulary.js.map": "9f7006f4c130f9a80a68aa4ddf4f65f550531f288bd3dddff41980395977aeeb",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/status-vocabulary.js": "780250de22ec99687d5050965bace80242d09de4deab204ab66d0251c8f0e8af",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js.map": "c782abfa740e8a47c91487221b0d8547936771ff8ab703f09ea4fba6d15fb864",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js": "3931c435dbef5a12718dbd2d42f5dc3987a3aeb2f9853bf44824cf348ed3da0c",
@@ -1711,20 +1711,20 @@
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-layout-styles.js": "e5be317c923e8486454956692eb90d9966f427d433674c01f6724ab785b096fc",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-pipeline.js.map": "4d8c2b49c9e1ab2055b5af9a19071686c7988baaf6b7654e0be1e8d14fa5277b",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-pipeline.js": "d086cfd04c3239cd5399c65dedf0b4c303e3a45a6ec8436b5f7af486a8ddf17a",
-    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-poster-colours.js.map": "108dbcaad12ced8934db2beb0a79fab6b1586a0674cd45b60d6feb1f4b81f9a2",
+    "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-poster-colours.js.map": "118033cf5bc94003e7ab8102bb115c539212b175dd81361bb35bcd5095b2fd7e",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-poster-colours.js": "1ace9f1f090f21b1ef9051cbd5a411b755d44d0ae47679bdcd535cccc4342a24",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-styles.js.map": "bfd0cc2238c050820c3a91df309f5fb0600d7cd9bd7182658eb89d5d88d3a4af",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-styles.js": "eec0d7b124ba5b846ccf5f656b05e9832bb306b5a3899c4c9f76bf15475e76fe",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/userreviewtags.js.map": "175d724bb558db893e5e8509832f107bdef54fa6826d6dd016547cd230706dfb",
     "Jellyfin.Plugin.JellyfinEnhanced/js/tags/userreviewtags.js": "834ab5580f5c5279022f5b7726eed2e5bddf144241b3719d2a2af9f9b01155ef",
-    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html": "cd2477b1dd076f297541a0a8caea1aafd7d9fbc5b8cfa9604815f8736cac2840",
+    "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html": "d4fad76c584599743a80a66f2b77836d0f8a0287cbc556529475dfc994baf915",
     "Jellyfin.Plugin.JellyfinEnhanced/Configuration/mediaTagsPage.html": "852a722753d35261a5456aa8e6b30ec435939344335c8ea1741bd836d6c7a691",
-    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/ActivityPage.html": "2e66b6a7bfc3e42a2a13f5ef4f4457cdbcb6262c100c4eae2cd31d4c51a2d576",
-    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/BookmarksPage.html": "c50965489216f03eaaf20111b897dcd32a2b27fdf70108a88c5a76e462d3db5d",
-    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/CalendarPage.html": "b12638bf3868205a6d8d91e8635444cac72727530233bd54315077ac4fdb4c40",
-    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/CatchUpPage.html": "d6bb579873ce61ca5b24a9044f547799e2903a942e175c054eae75be58ed15d0",
-    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/DownloadsPage.html": "c1f57b3d64d5802f84b07fc1dce1d44044b478fdf5234e170ab714d0780d38db",
-    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/HiddenContentPage.html": "0bd2f8aca47be38eda1f5e4f444bb2a65be2685d2580b4830462c2330835eee5",
-    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/RecommendationsPage.html": "1276033e9214a88186c629bcf8434f7e157ea0582a19663f7a642df0d14fc456"
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/ActivityPage.html": "381b6be109648161126e6edd4b2b2435ac8321281e36f09ebf22434d7d0f05b1",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/BookmarksPage.html": "38ee14df3dc1211da2631ffad6aa619c65847c6419c2c7288c4840646926e6c9",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/CalendarPage.html": "8f3477363e390cc9a6d45515b45b3eb11c0f266017a635255ca13e99fc4b99ef",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/CatchUpPage.html": "f10182817f9a521175ed88277b996d79246fbb2906fccec1495ac7423000b25d",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/DownloadsPage.html": "efdc6a038d34578c2c06a535f6fff15516d86a501633360214b6809aea6c68d8",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/HiddenContentPage.html": "676d6d22a8383f2b5db34dfc5ee0a8094500f82b77213f19ac4d2119b359abfe",
+    "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/RecommendationsPage.html": "105ba23d2af83cd75e67f8fa6f00904f7acacdc05b63c92a33b60c0b55139376"
   }
 }

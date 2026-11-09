@@ -75,7 +75,8 @@ export interface AdminTagsSurface {
 export interface MediaTagsHostSurface {
     t?: unknown;
     core?: { tagLayout?: unknown };
-    internals?: { enhancedUi?: unknown };
+    /** media-tags' facade (features/media-tags/public-api.ts `MediaTagsSettingsUiFacade`, step C4), typed structurally here. */
+    mediaTagsSettingsUi?: { readonly registry?: unknown };
     adminTags?: AdminTagsSurface;
     customPlugins?: { refresh?(): void };
 }

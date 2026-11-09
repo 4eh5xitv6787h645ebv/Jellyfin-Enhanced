@@ -1,9 +1,5 @@
 {
   "_comment": "frontend.md §2.4 ratchet, recorded at step S1 from the tree at restructure/integration 9087893a. {file: {violation: count}}. Counts may only fall: lower or delete an entry when a step removes violations. A file move renames its key with the same counts. Never add an entry or raise a count. Step C4 deletes this file (strict mode).",
-  "client/src/admin/config/page/media-tags-tab.ts": {
-    "internals *": 1,
-    "internals enhancedUi": 1
-  },
   "client/src/core/lifecycle-entry.ts": {
     "raw-global JellyfinEnhanced": 1
   },
@@ -14,9 +10,6 @@
     "raw-global JellyfinEnhanced": 1
   },
   "client/src/host/bootstrap-pages-host.ts": {
-    "host-import client/src/features/calendar/types.ts": 1,
-    "host-import client/src/features/downloads/types.ts": 1,
-    "host-import client/src/features/seerr/recommendations/types.ts": 1,
     "raw-global JellyfinEnhanced": 3
   },
   "client/src/host/core-host.ts": {

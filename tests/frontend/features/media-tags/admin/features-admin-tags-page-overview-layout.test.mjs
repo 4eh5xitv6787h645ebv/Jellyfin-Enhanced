@@ -295,7 +295,7 @@ test('What\'s New on the main page lists new Media Tags settings with a link to 
   const opened = [];
   const page = bootGenerated({
     saved: {},
-    globals: { JellyfinEnhanced: { t: key => key, core: { tagLayout: {} }, internals: { enhancedUi: {} }, adminTags: { mountTab: async () => ({ openTab: (section, options) => opened.push([section, options]) }), holdSaves: fn => fn() } } },
+    globals: { JellyfinEnhanced: { t: key => key, core: { tagLayout: {} }, mediaTagsSettingsUi: { registry: {} }, adminTags: { mountTab: async () => ({ openTab: (section, options) => opened.push([section, options]) }), holdSaves: fn => fn() } } },
     ajax: request => (/\/whats-new$/.test(request.url) && request.type === 'GET' ? {
       pluginVersion: '9.9.9',
       newSettings: { showFileSizes: '9.9.9', tagLayout: '9.9.9', ratingTagsOnNextUp: '9.9.9', tagDrawnAlready: '9.9.9', notOnAnyPage: '9.9.9' },
