@@ -12,7 +12,7 @@ For endpoint details, see the [API reference](api.md). For setup and placement, 
 
 This section follows the client from loader injection through initialization and user switches.
 
-`Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Controllers/JellyfinEnhancedController.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
+`Features/Platform/Services/ScriptInjectionStartupFilter.cs` injects the loader into web responses. `GET /JellyfinEnhanced/script` serves `js/plugin.js`; it is separate from the component bundle. `JellyfinEnhanced.csproj` embeds `js/**`, and `GetScript` in `Controllers/JellyfinEnhancedController.cs` serves individual resources at `/JellyfinEnhanced/js/{path}`.
 
 The ordered module list lives in `js/component-scripts.json`: 181 component modules, with paths relative to `js/`. Entries starting with `//` are ordering notes.
 
@@ -36,7 +36,7 @@ Components consume a value once, shortly after bootstrap, through `JE.takePrefet
 
 ### Bundle and development mode
 
-`Services/ClientScriptBundle.cs` builds the bundle on first use and caches it by the plugin's script cache key (version plus DLL timestamp). It wraps each manifest file in a function and publishes `window.__JE_BUNDLE_MODULES`.
+`Features/Platform/Services/ClientScriptBundle.cs` builds the bundle on first use and caches it by the plugin's script cache key (version plus DLL timestamp). It wraps each manifest file in a function and publishes `window.__JE_BUNDLE_MODULES`.
 
 The index source map at `/JellyfinEnhanced/bundle.js.map` uses `sections` to preserve original filenames and line numbers in DevTools and stack traces. Bundle and map routes are anonymous; production responses use `public, max-age=31536000, immutable`.
 
@@ -137,7 +137,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 
 ### Build targets and logging
 
-`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Directory organization does not always match C# namespaces: for example, services in `Features/SpoilerGuard/Services/` and `Services/Identity/` use `Jellyfin.Plugin.JellyfinEnhanced.Services`. Check declarations rather than deriving namespaces from folders.
+`JellyfinEnhanced.csproj` uses the root namespace and assembly name `Jellyfin.Plugin.JellyfinEnhanced`. Directory organization does not always match C# namespaces: for example, services in `Features/SpoilerGuard/Services/` and `Infrastructure/Identity/` use `Jellyfin.Plugin.JellyfinEnhanced.Services`. Check declarations rather than deriving namespaces from folders.
 
 | `JellyfinTarget` | Jellyfin references | Framework | Compilation symbol |
 |---|---|---|---|
@@ -145,7 +145,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 
 Only Jellyfin 12.x is supported; requesting `jf10` or a framework other than `net10.0` fails explicitly. Package-reference changes require refreshing `packages.jf12.lock.json` beside both the plugin and `tests/backend/JE.Tests.csproj`. See [CONTRIBUTING.md](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/CONTRIBUTING.md) for build and locked-restore instructions.
 
-`Logger.cs` forwards messages to Jellyfin's main log and writes `JellyfinEnhanced_YYYY-MM-DD.log` under Jellyfin's log directory. `Services/HostCompatibilityService.cs` compares the assembly's build target with the running host and exposes mismatch diagnostics.
+`Logger.cs` forwards messages to Jellyfin's main log and writes `JellyfinEnhanced_YYYY-MM-DD.log` under Jellyfin's log directory. `Features/Platform/Services/HostCompatibilityService.cs` compares the assembly's build target with the running host and exposes mismatch diagnostics.
 
 ### Configuration and persistence
 
@@ -374,7 +374,7 @@ The editor stores `TagStyleOverrides=""` until a group or tag colour is saved, t
 |---|---|
 | `js/elsewhere/elsewhere.js` | Streaming-provider discovery; see [Elsewhere & Reviews Features](../elsewhere/elsewhere-features.md). |
 | `js/elsewhere/reviews.js` | TMDB and JE user reviews. Review visibility uses the shared author policy; Spoiler Guard suppression of this web panel is client behavior. |
-| `js/awards/awards.js` | Details-page awards banner, backed by `Services/WikidataAwardsService.cs` and `Model/AwardsData.cs`. Authenticated `GET /JellyfinEnhanced/awards/{mediaType}/{tmdbId}` supports `movie`, `tv`, `person`; Wikidata needs no API key. Server results are cached. |
+| `js/awards/awards.js` | Details-page awards banner, backed by `Features/DetailsProviders/Services/WikidataAwardsService.cs` and `Features/DetailsProviders/Models/AwardsData.cs`. Authenticated `GET /JellyfinEnhanced/awards/{mediaType}/{tmdbId}` supports `movie`, `tv`, `person`; Wikidata needs no API key. Server results are cached. |
 | `js/extras/active-streams.js` | Active stream header widget and session details. |
 | `js/extras/colored-activity-icons.js`, `colored-ratings.js` | Colored activity icons and detail-page parental-rating backgrounds. |
 | `js/extras/plugin-icons.js` | Dashboard plugin icons and custom configuration-page links. |
@@ -416,9 +416,9 @@ Administrator settings under **Pages** (the final two controls are under **Extra
 
 ### MDBList display and metadata writes
 
-`js/others/mdblist-ratings.js` displays the details-page ratings row. `Services/MdblistService.cs` fetches/caches upstream results, with cache/account models in `Model/MdblistRatings.cs`.
+`js/others/mdblist-ratings.js` displays the details-page ratings row. `Features/DetailsProviders/Services/MdblistService.cs` fetches/caches upstream results, with cache/account models in `Features/DetailsProviders/Models/MdblistRatings.cs`.
 
-`ScheduledTasks/MdblistRatingsFetchTask.cs` uses `MdblistRatingsFetchRunner.cs` to populate the cache and stops when remaining quota reaches the reserve. `MdblistRatingsSyncTask.cs` writes cached scores into Jellyfin's `CommunityRating` and `CriticRating`; the display overlay does not write metadata.
+`Features/DetailsProviders/Tasks/MdblistRatingsFetchTask.cs` uses `MdblistRatingsFetchRunner.cs` to populate the cache and stops when remaining quota reaches the reserve. `MdblistRatingsSyncTask.cs` writes cached scores into Jellyfin's `CommunityRating` and `CriticRating`; the display overlay does not write metadata.
 
 See [MDBList Ratings](../other/other-settings.md#mdblist-ratings) for controls and defaults. Administrator settings under **Display** map to these properties:
 
@@ -499,7 +499,7 @@ All files in this table are under `Features/SpoilerGuard/Services/`:
 | `SpoilerExistingTitlesApplier.cs` | Preview/application for existing titles, run by `Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs`. |
 | `SpoilerSeerrPendingPromoter.cs` | Converts pending pre-acquisition protection into library-item entries when content arrives. |
 
-`Services/Identity/RequestIdentityService.cs` resolves authenticated claims first, then image markers, the single-user shortcut, validated cookies and session-by-IP candidates. Consumers distinguish confident identity from ambiguous shared-IP candidates.
+`Infrastructure/Identity/RequestIdentityService.cs` resolves authenticated claims first, then image markers, the single-user shortcut, validated cookies and session-by-IP candidates. Consumers distinguish confident identity from ambiguous shared-IP candidates.
 
 Server filters protect supported Jellyfin images/metadata, and `SpoilerSeerrRedactor.cs` protects what JE shows from Seerr, TMDB and MDBList; suppression of JE's Reviews panel happens in `js/elsewhere/reviews.js`. The review-list API uses author visibility rules and does not itself apply that web-panel suppression. See [Spoiler Guard](../spoiler-guard/spoiler-guard-features.md) for protection boundaries.
 
@@ -552,9 +552,9 @@ Missing or wrong-length keys are recreated; old URLs can serve original artwork 
 | `Features/MediaTags/Services/MediaNamingTags.cs` | Server-side source/edition detection from file and immediate parent-folder names, physical-stub priority and resolution-ranked multi-version selection. Shared by the tag cache and `/tag-data`; only labels reach clients. |
 | `Features/MediaTags/Models/TagCacheEntry.cs` | Tag data at the current cache schema (`CurrentCacheSchemaVersion` in `Features/MediaTags/Services/TagCache/TagCacheService.cs`), including source/edition labels, named-source ratings, Custom rule matches, Logos (`Features/MediaTags/Models/TagLogo.cs`), series/season quality summaries, Status Tags facts and server-only contributor IDs for access filtering, plus precomputed item tag data, including parent-series IDs for Spoiler Guard filtering without per-entry library lookups. |
 | `Features/MediaTags/Models/TagQualitySummary.cs`, `Features/MediaTags/Services/SeriesQualityAggregation.cs` | Policy-independent container quality facts, bounded distinct values, audio-language variants and policy resolution; built from existing episode streams and recomputed through the cache access filter for restricted users. |
-| `Model/AnalyticsData.cs`, `WhatsNewData.cs` | Report/counter records and inclusion/exclusion annotations; configuration-schema and pending-change records. |
-| `Model/AwardsData.cs`, `MdblistRatings.cs` | Awards cache records and MDBList cache/account models. |
-| `Model/Arr/` | `ArrInstance.cs`, `ArrItem.cs`, `ArrType.cs`: integration instance/item/type models. |
+| `Features/Platform/Models/AnalyticsData.cs`, `WhatsNewData.cs` | Report/counter records and inclusion/exclusion annotations; configuration-schema and pending-change records. |
+| `Features/DetailsProviders/Models/AwardsData.cs`, `MdblistRatings.cs` | Awards cache records and MDBList cache/account models. |
+| `Shared/Arr/` | `ArrInstance.cs`, `ArrItem.cs`, `ArrType.cs`: integration instance/item/type models. |
 | `Features/Seerr/Models/` | `JellyseerrPermission.cs`, `JellyseerrUser.cs`: Seerr permission/user models. |
 
 ### Event handlers: `EventHandlers/`
@@ -587,7 +587,7 @@ Feature gates still apply when a task runs. A task is hidden from the dashboard 
 | `MdblistRatingsSyncTask.cs` | **Sync Ratings from MDBList to Jellyfin** | None |
 | `RefreshCdnAssetsTask.cs` | **Refresh CDN Assets** | Application startup and every 24 hours |
 | `SpoilerApplyExistingTitlesTask.cs` | **Spoiler Guard: apply to existing titles** | None |
-| `Services/StartupService.cs` | **Jellyfin Enhanced Startup** | Application startup |
+| `Features/Platform/Services/StartupService.cs` | **Jellyfin Enhanced Startup** | Application startup |
 
 `MdblistRatingsFetchRunner.cs` is shared fetching logic, not another task. Hosted timers/monitors listed above are separate from this dashboard task system.
 
@@ -790,7 +790,7 @@ The layout, settings hub, Tag Styles and native resolver/plan/renderer use the s
 
 ### Technical poster chips and Scenes
 
-`Features/MediaTags/PosterTags/Resolution/TechnicalQualityRules.cs` mirrors `qualitytags.js` runtime formatting, the aspect-ratio tolerance table and frame-rate snapping. `Helpers/SubtitleAccessibility.cs` detects whole-word SDH/CC title markers and the hearing-impaired flag; stream summaries and `SdhSubtitleLanguages` carry that fact through the existing tag cache, batch and native Language group. `Helpers/TrackRoles.cs` (mirrored by `isSecondaryAudio` in `js/tags/languagetags.js`) keeps commentary and audio-description tracks out of `AudioLanguages`; forced subtitle tracks never add a `SubtitleLanguages` entry. `Features/MediaTags/Services/Status/StatusTagsScenesService.cs` resolves daily TMDB movie keywords via `TmdbResponseCache`; `Features/MediaTags/Services/TagCache/TagCacheScenes.cs` warms and publishes those facts outside native image composition. The shared Status vocabulary includes both scene badges and is regenerated by `scripts/generate_status_vocabulary.py`. Formatting fixtures live in `tests/fixtures/technical-quality.json`; frontend, backend and offline parity consume them. The current tag cache schema (`CurrentCacheSchemaVersion` in `Features/MediaTags/Services/TagCache/TagCacheService.cs`) invalidates older entries.
+`Features/MediaTags/PosterTags/Resolution/TechnicalQualityRules.cs` mirrors `qualitytags.js` runtime formatting, the aspect-ratio tolerance table and frame-rate snapping. `Shared/Media/SubtitleAccessibility.cs` detects whole-word SDH/CC title markers and the hearing-impaired flag; stream summaries and `SdhSubtitleLanguages` carry that fact through the existing tag cache, batch and native Language group. `Shared/Media/TrackRoles.cs` (mirrored by `isSecondaryAudio` in `js/tags/languagetags.js`) keeps commentary and audio-description tracks out of `AudioLanguages`; forced subtitle tracks never add a `SubtitleLanguages` entry. `Features/MediaTags/Services/Status/StatusTagsScenesService.cs` resolves daily TMDB movie keywords via `TmdbResponseCache`; `Features/MediaTags/Services/TagCache/TagCacheScenes.cs` warms and publishes those facts outside native image composition. The shared Status vocabulary includes both scene badges and is regenerated by `scripts/generate_status_vocabulary.py`. Formatting fixtures live in `tests/fixtures/technical-quality.json`; frontend, backend and offline parity consume them. The current tag cache schema (`CurrentCacheSchemaVersion` in `Features/MediaTags/Services/TagCache/TagCacheService.cs`) invalidates older entries.
 
 Per-genre Tag Styles labels come from `js/tags/genre-icons.json` (see above). `tests/fixtures/genre-styles.json` holds one Tag Styles document and, per genre, the label, glyph and colours web chips and native posters draw; `tests/backend/PosterTags/GenreStyleTests.cs`, `tests/frontend/features/features-genre-styles.test.mjs` and `tests/browser/genre-styles.spec.cjs` read it, and the offline poster parity compares each genre chip's label too.
 

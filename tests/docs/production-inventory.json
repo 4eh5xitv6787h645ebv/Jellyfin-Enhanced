@@ -138,22 +138,6 @@
       "category": "Controllers"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/EventHandlers/UserTopologyEvents.cs",
-      "category": "EventHandlers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Extensions/ItemRepositoryExtensions.cs",
-      "category": "Extensions"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Extensions/JellyfinDbContextExtensions.cs",
-      "category": "Extensions"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Extensions/UserManagerExtensions.cs",
-      "category": "Extensions"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Activity/Events/ActivityPlaybackConsumer.cs",
       "category": "Features"
     },
@@ -210,6 +194,78 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Events/ReviewAuthorCacheInvalidator.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Models/AwardsData.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Models/DoesTheDogDieData.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Models/MdblistRatings.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/AnilistReviewsService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/DoesTheDogDieService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ElsewhereDocumentService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ItemStatsService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/MdblistService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ProviderHelper.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ReviewAuthorCache.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ReviewTranslationService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ReviewVisibility.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/WikidataAwardsService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Tasks/ClearTranslationCacheTask.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Tasks/MdblistRatingsFetchRunner.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Tasks/MdblistRatingsFetchTask.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Tasks/MdblistRatingsSyncTask.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs",
       "category": "Features"
     },
@@ -219,6 +275,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Admin/MediaTagsPageFields.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Events/TagCacheAccessInvalidator.cs",
       "category": "Features"
     },
     {
@@ -530,6 +590,50 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Models/AnalyticsData.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/AnalyticsReportingService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/BuildAttestation.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/CdnAssetService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/ClientScriptBundle.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/HostCompatibilityService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/ScriptInjectionStartupFilter.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/StartupService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/UsageEventCounterService.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Tasks/AnalyticsReportTask.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Tasks/RefreshCdnAssetsTask.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Models/JellyseerrPermission.cs",
       "category": "Features"
     },
@@ -706,40 +810,28 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/ArrUrlGuard.cs",
-      "category": "Helpers"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Auth/UserHelper.cs",
+      "category": "Infrastructure"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/BuildAttestation.cs",
-      "category": "Helpers"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Extensions/ItemRepositoryExtensions.cs",
+      "category": "Infrastructure"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/MediaStreamLanguageResolver.cs",
-      "category": "Helpers"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Extensions/JellyfinDbContextExtensions.cs",
+      "category": "Infrastructure"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/PluralRules.cs",
-      "category": "Helpers"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Extensions/UserManagerExtensions.cs",
+      "category": "Infrastructure"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/ProviderHelper.cs",
-      "category": "Helpers"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Identity/RequestIdentityService.cs",
+      "category": "Infrastructure"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/ReviewVisibility.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/SubtitleAccessibility.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/TrackRoles.cs",
-      "category": "Helpers"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Helpers/UserHelper.cs",
-      "category": "Helpers"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Identity/UserTopologyEvents.cs",
+      "category": "Infrastructure"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Persistence/UserConfigurationDocument.cs",
@@ -752,34 +844,6 @@
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Logger.cs",
       "category": "Logger.cs"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/AnalyticsData.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/Arr/ArrInstance.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/Arr/ArrItem.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/Arr/ArrType.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/AwardsData.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/DoesTheDogDieData.cs",
-      "category": "Model"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Model/MdblistRatings.cs",
-      "category": "Model"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/PluginPages/ActivityPage.html",
@@ -814,104 +878,48 @@
       "category": "PluginServiceRegistrator.cs"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/AnalyticsReportTask.cs",
-      "category": "ScheduledTasks"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ArrInstance.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/ClearTranslationCacheTask.cs",
-      "category": "ScheduledTasks"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ArrItem.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/MdblistRatingsFetchRunner.cs",
-      "category": "ScheduledTasks"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ArrType.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/MdblistRatingsFetchTask.cs",
-      "category": "ScheduledTasks"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/ArrUrlGuard.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/MdblistRatingsSyncTask.cs",
-      "category": "ScheduledTasks"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/RadarrService.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/RefreshCdnAssetsTask.cs",
-      "category": "ScheduledTasks"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Arr/SonarrService.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AnalyticsReportingService.cs",
-      "category": "Services"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Library/ItemLibraryResolver.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/AnilistReviewsService.cs",
-      "category": "Services"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/MediaStreamLanguageResolver.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/CdnAssetService.cs",
-      "category": "Services"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/SubtitleAccessibility.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ClientScriptBundle.cs",
-      "category": "Services"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Media/TrackRoles.cs",
+      "category": "Shared"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/DoesTheDogDieService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ElsewhereDocumentService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/HostCompatibilityService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/Identity/RequestIdentityService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ItemLibraryResolver.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ItemStatsService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/MdblistService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/RadarrService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ReviewAuthorCache.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ReviewTranslationService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/ScriptInjectionStartupFilter.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/SonarrService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/StartupService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/UsageEventCounterService.cs",
-      "category": "Services"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Services/WikidataAwardsService.cs",
-      "category": "Services"
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Text/PluralRules.cs",
+      "category": "Shared"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Transport/BookmarkDocument.cs",
@@ -9846,6 +9854,22 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/Services/BookmarkDocumentService.cs"
     },
     {
+      "literal": "ddd-cache.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/DoesTheDogDieService.cs"
+    },
+    {
+      "literal": "elsewhere.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/ElsewhereDocumentService.cs"
+    },
+    {
+      "literal": "mdblist-ratings.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/MdblistService.cs"
+    },
+    {
+      "literal": "awards.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Services/WikidataAwardsService.cs"
+    },
+    {
       "literal": "hidden-content.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs"
     },
@@ -9934,6 +9958,34 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/TagLogoService.cs"
     },
     {
+      "literal": "bookmark.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/AnalyticsReportingService.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/AnalyticsReportingService.cs"
+    },
+    {
+      "literal": ".meta.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/CdnAssetService.cs"
+    },
+    {
+      "literal": "<hash>.meta.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/CdnAssetService.cs"
+    },
+    {
+      "literal": "component-scripts.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/ClientScriptBundle.cs"
+    },
+    {
+      "literal": "https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/manifest.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/HostCompatibilityService.cs"
+    },
+    {
+      "literal": "usage-counters.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/UsageEventCounterService.cs"
+    },
+    {
       "literal": "tmdb-cache.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs"
     },
@@ -9948,50 +10000,6 @@
     {
       "literal": "config.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.cs"
-    },
-    {
-      "literal": "bookmark.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/AnalyticsReportingService.cs"
-    },
-    {
-      "literal": "hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/AnalyticsReportingService.cs"
-    },
-    {
-      "literal": ".meta.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/CdnAssetService.cs"
-    },
-    {
-      "literal": "<hash>.meta.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/CdnAssetService.cs"
-    },
-    {
-      "literal": "component-scripts.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/ClientScriptBundle.cs"
-    },
-    {
-      "literal": "ddd-cache.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/DoesTheDogDieService.cs"
-    },
-    {
-      "literal": "elsewhere.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/ElsewhereDocumentService.cs"
-    },
-    {
-      "literal": "https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/manifest.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/HostCompatibilityService.cs"
-    },
-    {
-      "literal": "mdblist-ratings.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/MdblistService.cs"
-    },
-    {
-      "literal": "usage-counters.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/UsageEventCounterService.cs"
-    },
-    {
-      "literal": "awards.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/WikidataAwardsService.cs"
     },
     {
       "literal": "settings.json",
@@ -10088,6 +10096,21 @@
   ],
   "scheduled_tasks": [
     {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Tasks/ClearTranslationCacheTask.cs",
+      "class": "ClearTranslationCacheTask",
+      "key": "JellyfinEnhancedClearTranslationCache"
+    },
+    {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Tasks/MdblistRatingsFetchTask.cs",
+      "class": "MdblistRatingsFetchTask",
+      "key": "JellyfinEnhancedMdblistRatingsFetch"
+    },
+    {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/Tasks/MdblistRatingsSyncTask.cs",
+      "class": "MdblistRatingsSyncTask",
+      "key": "JellyfinEnhancedMdblistRatingsSync"
+    },
+    {
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Tasks/ArrTagsSyncTask.cs",
       "class": "ArrTagsSyncTask",
       "key": "JellyfinEnhancedArrTagsSync"
@@ -10113,6 +10136,21 @@
       "key": "JellyfinEnhancedRefreshLeavingSoonTags"
     },
     {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/StartupService.cs",
+      "class": "StartupService",
+      "key": "JellyfinEnhancedStartup"
+    },
+    {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Tasks/AnalyticsReportTask.cs",
+      "class": "AnalyticsReportTask",
+      "key": "JellyfinEnhancedAnalyticsReport"
+    },
+    {
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Tasks/RefreshCdnAssetsTask.cs",
+      "class": "RefreshCdnAssetsTask",
+      "key": "JellyfinEnhancedRefreshCdnAssets"
+    },
+    {
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Tasks/JellyfinToSeerrWatchlistSyncTask.cs",
       "class": "JellyfinToSeerrWatchlistSyncTask",
       "key": "JellyfinEnhancedJellyfinToSeerrWatchlistSync"
@@ -10131,36 +10169,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs",
       "class": "SpoilerApplyExistingTitlesTask",
       "key": "JellyfinEnhancedSpoilerApplyExistingTitles"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/AnalyticsReportTask.cs",
-      "class": "AnalyticsReportTask",
-      "key": "JellyfinEnhancedAnalyticsReport"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/ClearTranslationCacheTask.cs",
-      "class": "ClearTranslationCacheTask",
-      "key": "JellyfinEnhancedClearTranslationCache"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/MdblistRatingsFetchTask.cs",
-      "class": "MdblistRatingsFetchTask",
-      "key": "JellyfinEnhancedMdblistRatingsFetch"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/MdblistRatingsSyncTask.cs",
-      "class": "MdblistRatingsSyncTask",
-      "key": "JellyfinEnhancedMdblistRatingsSync"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/RefreshCdnAssetsTask.cs",
-      "class": "RefreshCdnAssetsTask",
-      "key": "JellyfinEnhancedRefreshCdnAssets"
-    },
-    {
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Services/StartupService.cs",
-      "class": "StartupService",
-      "key": "JellyfinEnhancedStartup"
     }
   ],
   "locales": [
@@ -10266,7 +10274,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 478,
+    "files": 480,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 88,

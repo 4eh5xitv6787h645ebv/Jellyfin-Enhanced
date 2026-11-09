@@ -14,14 +14,14 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[2]
 PLUGIN = 'Jellyfin.Plugin.JellyfinEnhanced/'
 CASES = [
-    dict(name='explicit-user-authorization', layer='backend', file=PLUGIN+'Helpers/UserHelper.cs',
+    dict(name='explicit-user-authorization', layer='backend', file=PLUGIN+'Infrastructure/Auth/UserHelper.cs',
          before='if (isAdministrator || (!currentUserId.IsNullOrEmpty() && userId.Equals(currentUserId)))',
          after='if (true)', test='ExplicitUserSelectionRequiresSelfOrAdministrator', assertion='Assert.Null'),
     dict(name='blocked-tags-precedence', layer='backend', file=PLUGIN+'Features/Seerr/Services/ParentalTagDecision.cs',
          before='return false; // blocked wins, even over an allowed match',
          after='return true; // MUTATION: allow a blocked title',
          test='TagsUseWholeValuesBlockedWinsAndGenresCannotGrantAccess', assertion='Assert.Equal'),
-    dict(name='cookie-negative-cache', layer='backend', file=PLUGIN+'Services/Identity/RequestIdentityService.cs',
+    dict(name='cookie-negative-cache', layer='backend', file=PLUGIN+'Infrastructure/Identity/RequestIdentityService.cs',
          before='if (!recentMiss)', after='if (true)',
          test='RepeatedForgedCookieDoesNotCauseSessionScanStorm', assertion='Expected invocation'),
     dict(name='stale-user-hidden-response', layer='frontend', file=PLUGIN+'js/enhanced/hiddencontent/hidden-content-data.js',

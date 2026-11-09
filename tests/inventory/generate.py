@@ -81,7 +81,7 @@ def inventory():
             # One entry per literal and file: repeating a known reference is not a new one.
             literals = sorted({match[1] for match in re.finditer(r'''["']([^"'\n]{1,180}\.(?:json|xml|db|sqlite))["']''', text)})
             result['storage_references'].extend({'literal': literal, 'file': relative} for literal in literals)
-        # Any plugin class implementing IScheduledTask, wherever it lives (Services/StartupService.cs too).
+        # Any plugin class implementing IScheduledTask, wherever it lives (Features/Platform/Services/StartupService.cs too).
         if path.suffix == '.cs':
             for task in re.finditer(r'\bclass\s+(\w+)[^{;]*?:[^{;]*?\bIScheduledTask\b', text):
                 result['scheduled_tasks'].append({'file': relative, 'class': task[1],

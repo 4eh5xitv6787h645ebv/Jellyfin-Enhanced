@@ -36,7 +36,7 @@ not occur. Unexpected default fetch calls fail teardown even when production
 catches them.
 
 `h.load()` wraps each file exactly as the production bundle does
-(`Services/ClientScriptBundle.cs`), and `bootstrap/bootstrap-manifest.test.mjs`
+(`Features/Platform/Services/ClientScriptBundle.cs`), and `bootstrap/bootstrap-manifest.test.mjs`
 loads every `js/component-scripts.json` entry in manifest order, so a module that
 needs another file's top-level declarations, or a module later in the manifest,
 while it loads fails here. Both runners
