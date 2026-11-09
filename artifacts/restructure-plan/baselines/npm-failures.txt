@@ -1,6 +1,3 @@
 tests/frontend/bootstrap/bootstrap-media-tags-portable.test.mjs :: an import whose save answers after a sign-in change (another user and back again) offers no Undo to the next session
 tests/frontend/bootstrap/bootstrap-media-tags-portable.test.mjs :: an import whose save answers after a sign-in change (another user) offers no Undo to the next session
 tests/frontend/bootstrap/bootstrap-media-tags-portable.test.mjs :: an import whose save answers after a sign-in change (the same user id on another server) offers no Undo to the next session
-tests/frontend/core/core-translate-plural.test.mjs :: a count picks the plural form of its language, else the base string
-tests/frontend/core/core-translate-plural.test.mjs :: a locale uses its own forms by its own rules, and never an English form for its own sentence
-tests/frontend/core/core-translate-plural.test.mjs :: a value is inserted as written: replacement patterns in it are not expanded
