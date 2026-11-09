@@ -16,7 +16,7 @@
  */
 import type { Layout } from '../layout/layout-rules';
 import type { LookRule } from '../layout/tag-look';
-import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge } from '../../settings-panel/host';
+import { apiClient, optionalApiClient, panelHost, registry, type PanelBridge } from './host';
 import type { PanelContext } from '../../settings-panel/public-api';
 import { focusElement, queryElements, querySelect } from '../../shared/dom';
 

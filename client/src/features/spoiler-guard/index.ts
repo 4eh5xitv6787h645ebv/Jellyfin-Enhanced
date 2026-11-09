@@ -38,6 +38,11 @@ const { JE, internal, ctx } = spoilerHost();
         confirmDisableSpoiler: internal.confirmDisableSpoiler,
         getUserPrefs: internal.getUserPrefs,
         setUserPrefs: internal.setUserPrefs,
+        // For seerr's more-info modal and the settings panel (step C4). Read from the registry on each access, as
+        // their `JE.internals.spoilerGuard?.<member>` reads did.
+        get appendSeerrToggle() { return ctx.own.spoilerGuard?.appendSeerrToggle; },
+        get buildSettingsHtml() { return ctx.own.spoilerGuard?.buildSettingsHtml; },
+        get wireSettings() { return ctx.own.spoilerGuard?.wireSettings; },
     };
 
     // pluginConfig is already available when component scripts execute. Starting

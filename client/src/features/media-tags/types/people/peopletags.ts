@@ -1111,9 +1111,9 @@ export function createPeopleTags(ctx: MediaTagsContext) {
             // settings panel, or JE loaded after the detail page rendered).
             handlePeopleTags();
 
-            // For the details page's visits (features-details-page.js); a
-            // re-init replaces the previous instance's.
-            ctx.own.peopleTags = { prefetch, leave };
+            // For the details page's visits (features-details-page.js), also as the facade it reads (step C4);
+            // a re-init replaces the previous instance's.
+            ctx.own.peopleTags = JE.peopleTags = { prefetch, leave };
 
             console.debug(`${logPrefix} Initialization complete`);
         }

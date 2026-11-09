@@ -1,12 +1,47 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/media-tags/host.ts
   function tagRuntimeHost() {
     const host = window;
     const bridge = host.JellyfinEnhanced ?? (host.JellyfinEnhanced = {});
     bridge.core ?? (bridge.core = {});
     return bridge;
+  }
+  function mediaTagsContext(JE = tagRuntimeHost()) {
+    return featureContext("media-tags", JE, {
+      internalSlots: ["peopleTags"],
+      // Same expression the modules used before (`JE.internals = JE.internals || {}`).
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
   }
   function apiClient() {
     const host = window;
@@ -68,7 +103,7 @@
       return scrollers[scrollers.length - 1] || null;
     }
     function buildRow(scroller) {
-      const shared = JE.internals?.features?.buildNativeActionSheetItem;
+      const shared = mediaTagsContext(JE).peer("homeRemoval")?.buildNativeActionSheetItem;
       if (typeof shared === "function") return shared(scroller, { dataId: DATA_ID, icon: "local_offer", text: JE.t("common_media_tags") });
       const ref = scroller.querySelector(".actionSheetMenuItem");
       const button = document.createElement("button");

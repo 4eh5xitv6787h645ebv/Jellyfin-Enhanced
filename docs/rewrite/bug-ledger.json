@@ -4795,7 +4795,7 @@
         "trigger": "Open Status badges with a Leaving soon source set and a successful last read (or with no source).",
         "impact": "The state chip's data-state is always 'warn' (amber) even when the status says 'Up to date' or 'No source set': the state line's keys became English text but the chip still tested `_ok`/`_off` suffixes.",
         "baseline": "key.endsWith('_ok') ? 'on' : key.endsWith('_off') ? 'off' : 'warn' over keys 'Up to date' / 'No source set' / … — never matches.",
-        "fix": "leavingState(): 'Up to date' → on, 'No source set' → off, everything else warn (client/src/features/admin-tags/sections/badges.ts).",
+        "fix": "leavingState(): 'Up to date' → on, 'No source set' → off, everything else warn (client/src/features/media-tags/admin/sections/badges.ts).",
         "test": "ADMIN-TAGS-01 in admin-tags-rewrite.test.mjs",
         "evidence": {
           "baseline": "fails (artifacts/rewrite-admin-tags/logs/baseline-bugs-01-03.log)",
@@ -4823,7 +4823,7 @@
         "trigger": "Jellyfin keeps the tab root; every rebuilt view (another deep link, a session change, Retry after a load error) calls createPage on the same root.",
         "impact": "The 'Where to show' change listener was added to the kept root without the page's AbortSignal, so each rebuild left another listener holding the old view's closure (a leak; the disposed view's setMany returns early, so no double save).",
         "baseline": "root.addEventListener('change', …) without { signal } (the only root listener without the page lifetime).",
-        "fix": "The listener carries the page signal like every other root listener (client/src/features/admin-tags/page.ts).",
+        "fix": "The listener carries the page signal like every other root listener (client/src/features/media-tags/admin/page.ts).",
         "test": "ADMIN-TAGS-02 in admin-tags-rewrite.test.mjs (asserts every root listener a page adds has the page signal, across a dispose and rebuild)",
         "evidence": {
           "baseline": "fails (logs/baseline-bugs-01-03.log)",
@@ -4851,7 +4851,7 @@
         "trigger": "GET plugin configuration answers null, an array or another non-object, or rejects without a reason; or a reload of a live tab answers a non-object.",
         "impact": "First load: `{ ...config }` built a full settings page over an empty configuration (every control blank or default) and an edit was sent with blank Expected values. Reload: `key in fresh` threw on a string, and the error path drew the load error over the live view while it stayed registered.",
         "baseline": "`if (failure)` is false for a falsy rejection; `createPage(root, config)` takes any value; `reload(fresh)` runs `key in fresh` for any truthy value.",
-        "fix": "configOf() validates every configuration document at the boundary (client/src/features/admin-tags/values.ts, mount.ts): a malformed first answer shows the load error with Retry; a malformed reload keeps the page and what it shows. The same validator guards a save's `values`, a 409's `conflicts` and the import preview's re-read.",
+        "fix": "configOf() validates every configuration document at the boundary (client/src/features/media-tags/admin/values.ts, mount.ts): a malformed first answer shows the load error with Retry; a malformed reload keeps the page and what it shows. The same validator guards a save's `values`, a 409's `conflicts` and the import preview's re-read.",
         "test": "ADMIN-TAGS-03 (four cases) in admin-tags-rewrite.test.mjs",
         "evidence": {
           "baseline": "all four fail (logs/baseline-bugs-01-03.log)",
@@ -4879,7 +4879,7 @@
         "trigger": "POST admin/configuration answers 409 with a body whose `conflicts` is not an object (a string, an array; e.g. a proxy or a malformed error body).",
         "impact": "Object.keys/entries over the string recorded its character indexes as 'conflicting fields', marked the request refused and flushed again: the same patch was re-sent without end (the jsdom run exhausted a 512 MB heap in ~20 s).",
         "baseline": "conflicts = err.status === 409 ? rejection.conflicts : null; any non-empty value counts as refused fields.",
-        "fix": "Only a JSON object of fields counts as conflicts; anything else is a failed save (state error, edits kept, Retry offered, one request) (client/src/features/admin-tags/save-store.ts).",
+        "fix": "Only a JSON object of fields counts as conflicts; anything else is a failed save (state error, edits kept, Retry offered, one request) (client/src/features/media-tags/admin/save-store.ts).",
         "test": "ADMIN-TAGS-04 in admin-tags-rewrite.test.mjs",
         "evidence": {
           "baseline": "heap out of memory (logs/baseline-bug-04.log, logs/baseline-new-tests-oom.log)",

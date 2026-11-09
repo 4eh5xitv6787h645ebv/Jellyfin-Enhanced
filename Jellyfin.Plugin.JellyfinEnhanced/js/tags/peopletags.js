@@ -1075,7 +1075,7 @@
           }
         );
         handlePeopleTags();
-        ctx.own.peopleTags = { prefetch, leave };
+        ctx.own.peopleTags = JE.peopleTags = { prefetch, leave };
         console.debug(`${logPrefix} Initialization complete`);
       }
       initialize();

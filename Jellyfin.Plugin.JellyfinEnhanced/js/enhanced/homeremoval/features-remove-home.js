@@ -57,6 +57,11 @@
       internalsObject: () => JE.internals ?? (JE.internals = {})
     });
   }
+  function homeRemovalFacade(JE) {
+    return { get buildNativeActionSheetItem() {
+      return JE.internals?.features?.buildNativeActionSheetItem;
+    } };
+  }
   function runtime(JE) {
     const internals = JE.internals ?? (JE.internals = {});
     if (internals.hiddenContentRuntime) return internals.hiddenContentRuntime;
@@ -522,6 +527,7 @@
     internal.showNotification = showNotification;
     internal.REMOVE_SURFACES = REMOVE_SURFACES;
     internal.buildNativeActionSheetItem = buildNativeActionSheetItem;
+    JE.homeRemoval = homeRemovalFacade(JE);
     internal.setActionSheetItemIcon = setActionSheetItemIcon;
     internal.fitRemoveItemToMenu = fitRemoveItemToMenu;
     internal.removeFromHomeSurface = removeFromHomeSurface;

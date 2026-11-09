@@ -101,14 +101,13 @@ export interface CoreSurface {
     languageTags?: LanguageTagsApi;
 }
 
+/** spoiler-guard's settings tab, on its `spoilerBlur` facade (each member undefined until settings-tab.ts loaded). */
 export interface SpoilerGuardSettings {
-    buildSettingsHtml?(ctx: import('./context').PanelContext): string;
-    wireSettings?(ctx: import('./context').PanelContext): void;
+    readonly buildSettingsHtml?: ((ctx: import('./context').PanelContext) => string) | undefined;
+    readonly wireSettings?: ((ctx: import('./context').PanelContext) => void) | undefined;
 }
 export interface Internals {
     enhancedUi?: EnhancedUi;
-    spoilerGuard?: SpoilerGuardSettings;
-    canonicalCombo?(value: string): string;
 }
 
 export interface Helpers {
@@ -242,12 +241,14 @@ export type SettingsPanelOwn = Pick<Internals, 'enhancedUi'>;
 /**
  * Other features' facades the panel shell reads: hidden-content's `hiddenContent` and media-tags' pipeline and
  * (re)initialisers. Their owners' public-api.ts files export no facade types yet, so the structural types above
- * (only the members read here) type them.
+ * (only the members read here) type them. Step C4 added spoiler-guard's `spoilerBlur` (its settings tab) and chrome's
+ * `canonicalCombo` (how the key listener compares bindings), typed the same way.
  */
 export type SettingsPanelPeers = Required<Pick<PanelBridge, 'hiddenContent' | 'tagPipeline'
     | 'initializeQualityTags' | 'initializeGenreTags' | 'initializeLanguageTags' | 'initializeRatingTags' | 'initializeAgeRatingTags'
     | 'initializeLogoTags' | 'initializeStatusTags' | 'initializeAwardsTags' | 'initializeCustomTags' | 'initializePeopleTags' | 'initializeTagStyles'
-    | 'reinitializeQualityTags' | 'reinitializeRatingTags' | 'reinitializeStatusTags' | 'reinitializeLogoTags' | 'reinitializeTagLayout'>>;
+    | 'reinitializeQualityTags' | 'reinitializeRatingTags' | 'reinitializeStatusTags' | 'reinitializeLogoTags' | 'reinitializeTagLayout'>>
+    & { spoilerBlur: SpoilerGuardSettings; canonicalCombo(value: string): string };
 export type SettingsPanelContext<Core extends Pick<PanelBridge, 'internals'> = PanelBridge> = FeatureContext<SettingsPanelOwn, SettingsPanelPeers, Core>;
 /** The context a panel module gets (step C3): `core` is the bridge `panelHost()` returned. */
 export function settingsPanelContext<Core extends Pick<PanelBridge, 'internals'>>(JE: Core): SettingsPanelContext<Core> {

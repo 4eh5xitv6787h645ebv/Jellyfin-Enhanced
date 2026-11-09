@@ -158,7 +158,7 @@ function setup(t, { config = {}, url, confirm = true, apiClient = {}, patch, rou
  * (configPage.html at aa1354dd) and the PluginConfiguration field its own
  * load/save line used there.
  */
-const OLD_FORM = JSON.parse(readFileSync(new URL('../features/features-admin-tags-page.old-form-fields.json', import.meta.url), 'utf8'));
+const OLD_FORM = JSON.parse(readFileSync(new URL('../features/media-tags/admin/features-admin-tags-page.old-form-fields.json', import.meta.url), 'utf8'));
 /** Positions are the nine anchors on Layout defaults now (Corners). */
 const POSITION_GROUPS = { qualityTagsPosition: 'quality', genreTagsPosition: 'genre', languageTagsPosition: 'language', ratingTagsPosition: 'rating', ageRatingTagsPosition: 'ageRating', statusTagsPosition: 'status', awardsTagsPosition: 'awards', logoTagsPosition: 'logos', customTagsPosition: 'custom' };
 /** Fields the new page writes with a control on purpose: without the server cache the browser cache is always on. */

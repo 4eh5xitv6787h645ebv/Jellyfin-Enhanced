@@ -1,4 +1,5 @@
 import { featureContext, type FeatureContext } from '../../host/context';
+import type { HomeRemovalFacade } from '../hidden-content/public-api';
 import type { Dom } from '../../core/dom/runtime';
 import type { Lifecycle } from '../../core/lifecycle';
 import type { Navigation } from '../../core/navigation';
@@ -59,9 +60,6 @@ export interface TagRuntimeInternals {
     enhancedUi?: {
         bindTagPreviewInteraction(cards: readonly (Element | null)[], view: Element | null, options: { change(active: boolean): void }): TagPreviewInteraction;
     };
-    features?: {
-        buildNativeActionSheetItem?(scroller: HTMLElement, options: { dataId: string; icon: string; text: string }): HTMLButtonElement;
-    };
     peopleTags?: {
         prefetch(itemId: string, item: JsonRecord, view: Element, epoch: number): void;
         leave(itemId: string): void;
@@ -98,6 +96,8 @@ export interface TagRuntimeBridge {
     helpers?: TagRuntimeHelpers;
     internals?: TagRuntimeInternals;
     spoilerBlur?: SpoilerGuardFacade;
+    /** media-tags' facade for the details page's visits: the object in `JE.internals.peopleTags` (step C4). */
+    peopleTags?: TagRuntimeInternals['peopleTags'];
     cdn: { url(bucket: string, file: string): string; flagPng(code: string): string };
     t(key: string, values?: Readonly<Record<string, unknown>>): string;
     toast?(message: string): unknown;
@@ -159,9 +159,10 @@ export function tagRuntimeHost(): TagRuntimeBridge {
 export type MediaTagsOwn = Pick<TagRuntimeInternals, 'peopleTags'>;
 /**
  * Other features' facades media-tags reads. `spoilerBlur` is spoiler-guard's; its public-api.ts exports no type
- * for it yet, so the structural `SpoilerGuardFacade` above (only the members read here) types it.
+ * for it yet, so the structural `SpoilerGuardFacade` above (only the members read here) types it. `homeRemoval` is
+ * hidden-content's (step C4; the item menu's row builder).
  */
-export interface MediaTagsPeers { spoilerBlur: SpoilerGuardFacade }
+export interface MediaTagsPeers { spoilerBlur: SpoilerGuardFacade; homeRemoval: HomeRemovalFacade }
 export type MediaTagsContext = FeatureContext<MediaTagsOwn, MediaTagsPeers, TagRuntimeBridge>;
 /** The context the tag runtime modules get (step C3): `core` is the bridge `tagRuntimeHost()` returns. */
 export function mediaTagsContext(JE: TagRuntimeBridge = tagRuntimeHost()): MediaTagsContext {
@@ -170,6 +171,14 @@ export function mediaTagsContext(JE: TagRuntimeBridge = tagRuntimeHost()): Media
         // Same expression the modules used before (`JE.internals = JE.internals || {}`).
         internalsObject: () => JE.internals = JE.internals || {},
     });
+}
+/**
+ * media-tags' read of the settings registry `JE.internals.enhancedUi` (co-owned with settings-panel and
+ * hidden-content: internals-owners.json, step C4), the same expression its admin page, admin sections and item
+ * editor used (`JE.internals?.enhancedUi`).
+ */
+export function settingsUi<T>(JE: { internals?: { enhancedUi?: T } | undefined }): T | undefined {
+    return JE.internals?.enhancedUi;
 }
 /** ApiClient, resolved at each call: jellyfin-web replaces it on a server switch. */
 export function hasApiClient(): boolean {

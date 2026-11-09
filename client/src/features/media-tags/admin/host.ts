@@ -15,6 +15,8 @@ import type { PosterColours } from '../layout/poster-colours';
 import type { ItemEditorOptions } from '../editor/tag-item-editor';
 import type { EnhancedUi } from '../../settings-panel/public-api';
 import type { AdminTagsApi, AdminTagsFacade } from './types';
+// The settings registry read (step C4), for the page and its sections.
+export { settingsUi } from '../host';
 
 /** The layout controller members the tab reads (core/tag-layout.js). */
 export type AdminTagLayout = Pick<TagLayout,

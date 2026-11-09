@@ -1,4 +1,4 @@
-import { bridge, escaper, identityLease, moreInfoRegistry, SEERR_LOG, sibling, translator, type ActionContext, type MediaType, type MoreInfoModalElement } from '../../host-details';
+import { bridge, escaper, identityLease, moreInfoRegistry, SEERR_LOG, seerrDetailsContext, sibling, translator, type ActionContext, type MediaType, type MoreInfoModalElement } from '../../host-details';
 import { idText, isRecord, num, record, type JsonRecord } from '../domain/json';
 import { anyTitle, mediaState, ownMediaInfo, requesters, tmdbIdOf, type MediaState } from '../domain/media';
 import { attachFourKPopup, silent, splitButton } from './four-k-popup';
@@ -321,7 +321,7 @@ function renderActions(rawDetails: unknown, mediaType: MediaType, modal: MoreInf
 
     const context = beginRender(modal);
     renderRequestedBy(requestedBy, rawDetails.mediaInfo);
-    JE.internals?.spoilerGuard?.appendSeerrToggle?.(secondary, rawDetails, mediaType);
+    seerrDetailsContext(JE).peer('spoilerBlur')?.appendSeerrToggle?.(secondary, rawDetails, mediaType);
 
     const media = mediaState(rawDetails);
     renderChips(chips, media, mediaType === 'movie');

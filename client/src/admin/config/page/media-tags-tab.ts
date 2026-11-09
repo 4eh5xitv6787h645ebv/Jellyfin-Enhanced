@@ -33,7 +33,7 @@ export function createMediaTagsTab(m: MediaTagsTabDeps) {
             /** @returns {boolean} Whether the JE client bundle the tab runs on (JE.t, the layout controller, the hub's preview) is loaded. */
             function jeMediaTagsReady() : boolean {
                 var je = mediaTagsSurface();
-                return !!(je && typeof je.t === 'function' && je.core && je.core.tagLayout && je.internals && je.internals.enhancedUi);
+                return !!(je && typeof je.t === 'function' && je.core && je.core.tagLayout && je.mediaTagsSettingsUi && je.mediaTagsSettingsUi.registry);
             }
 
             /**

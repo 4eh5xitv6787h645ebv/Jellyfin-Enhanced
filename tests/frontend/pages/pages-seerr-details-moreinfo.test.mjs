@@ -358,7 +358,7 @@ test('a refresh takes what Seerr no longer sends off the title, and keeps the ra
   const h = moreInfoHarness(t, { ratings: async () => ({ rt: { criticsScore: 80, url: 'https://rt.test/a' } }),
     details: async id => (++calls === 1 ? movie(id, { mediaInfo: { status: 2 }, jeSpoilerGuard: true }) : movie(id)) });
   let seen;
-  h.JE.internals.spoilerGuard = { appendSeerrToggle: (_mount, data) => { seen = data; } };
+  h.JE.spoilerBlur = { appendSeerrToggle: (_mount, data) => { seen = data; } };
   await h.P.open(1, 'movie');
   await h.settle();
   assert.equal(h.modal.querySelector('.jellyseerr-request-button'), null);

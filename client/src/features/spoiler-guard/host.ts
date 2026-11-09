@@ -57,8 +57,13 @@ export interface SpoilerHost {
  takePrefetched?(key: 'SpoilerBlurSeries'): unknown;
  t(key: string): string; escapeHtml?(value: string): string; toast?(value: string): void;
  icon(name: string): string; IconName: { BLUR_ON: string };
- spoilerBlur?: Pick<SpoilerSurface, 'addSpoilerBlurButton' | 'isEnabledFor' | 'isMovieEnabledFor' | 'isMovieInScope' | 'isCollectionEnabledFor' | 'enableForSeries' | 'disableForSeries' | 'enableForMovie' | 'disableForMovie' | 'enableForCollection' | 'disableForCollection' | 'isTmdbEnabled' | 'enableForTmdb' | 'disableForTmdb' | 'hasAnyState' | 'whenLoaded' | 'isLoadOk' | 'isLoaded' | 'confirmDisableSpoiler' | 'getUserPrefs' | 'setUserPrefs'> & { init(): void };
+ spoilerBlur?: Pick<SpoilerSurface, 'addSpoilerBlurButton' | 'isEnabledFor' | 'isMovieEnabledFor' | 'isMovieInScope' | 'isCollectionEnabledFor' | 'enableForSeries' | 'disableForSeries' | 'enableForMovie' | 'disableForMovie' | 'enableForCollection' | 'disableForCollection' | 'isTmdbEnabled' | 'enableForTmdb' | 'disableForTmdb' | 'hasAnyState' | 'whenLoaded' | 'isLoadOk' | 'isLoaded' | 'confirmDisableSpoiler' | 'getUserPrefs' | 'setUserPrefs'> & { init(): void } & SpoilerBlurForwards;
 }
+/**
+ * The `JE.spoilerBlur` members other features call (step C4): read from the `JE.internals.spoilerGuard` registry on
+ * each access, so each is undefined until the module that fills it has loaded (seerr-toggle.ts, settings-tab.ts).
+ */
+export type SpoilerBlurForwards = { readonly [K in 'appendSeerrToggle' | 'buildSettingsHtml' | 'wireSettings']?: SpoilerSurface[K] | undefined };
 /** spoiler-guard's own slots (frontend.md §2.3): the facade it publishes on JE and its JE.internals slot. */
 export type SpoilerOwn = Pick<SpoilerHost, 'spoilerBlur'> & NonNullable<SpoilerHost['internals']>;
 /** Other features' facades spoiler-guard reads, read at call time (their owners load later or not at all). */

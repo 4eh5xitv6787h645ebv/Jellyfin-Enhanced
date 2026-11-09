@@ -10,8 +10,8 @@ import type { DetailsItem } from './wire';
 
 const JE = bridge<DetailsPageBridge>('Details page features');
 const ctx = detailsContext(JE);
-// Only for media-tags' `peopleTags` slot: a cross-feature read until media-tags publishes it as a peer facade.
-const internals = JE.internals ??= {};
+// `JE.internals ??= {}` at load, as before; media-tags' people tags are its `peopleTags` facade (ctx.peer, step C4).
+void ctx.own.features;
 const features = (): DetailsFeatures => ctx.own.features ??= {};
 
 // Cache the last item id and type to avoid repeated lookups.
@@ -301,7 +301,7 @@ function endDetailsVisit(): void {
     visit = null;
     features().discardItemStatsPrefetch?.(ended);
     features().discardReleasePrefetch?.(ended);
-    internals.peopleTags?.leave?.(ended.itemId);
+    ctx.peer('peopleTags')?.leave?.(ended.itemId);
 }
 
 function beginDetailsVisit(view: Element, detail: unknown): void {
@@ -312,7 +312,7 @@ function beginDetailsVisit(view: Element, detail: unknown): void {
     const settings = JE.currentSettings || {};
     const config = JE.pluginConfig || {};
     if (!(settings.showWatchProgress || settings.showFileSizes || (config.ShowReleaseDates && config.TmdbEnabled)
-        || (settings.peopleTagsEnabled && internals.peopleTags))) return;
+        || (settings.peopleTagsEnabled && ctx.peer('peopleTags')))) return;
     // runItemDetails already knows this item (A, home, A again): no lookup.
     if (lastDetailsItemId === itemId && lastDetailsItemType) return;
     const userId = currentUserId();
@@ -363,7 +363,7 @@ function prefetchChipData(current: Visit): void {
 function startPeoplePrefetch(current: Visit): void {
     if (current.peopleStarted || !current.item || !visitLive(current)) return;
     current.peopleStarted = true;
-    internals.peopleTags?.prefetch?.(current.itemId, current.item, current.view, current.epoch);
+    ctx.peer('peopleTags')?.prefetch?.(current.itemId, current.item, current.view, current.epoch);
 }
 
 JE.core.navigation.onViewPage((_view, _element, _hash, _itemPromise, rawEvent) => {

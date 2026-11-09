@@ -234,6 +234,14 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Arr.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
       "category": "Features"
     },
@@ -319,6 +327,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.Admin.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.TagCache.cs",
       "category": "Features"
     },
     {
@@ -2411,6 +2423,121 @@
     },
     {
       "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/identify-url",
+      "method": "IdentifyUrl",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Arr.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/series-slug",
+      "method": "GetSeriesSlug",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Arr.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/series-slugs",
+      "method": "GetSeriesSlugs",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Arr.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/links",
+      "method": "GetArrLinks",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Arr.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/movie-instances",
+      "method": "GetMovieInstances",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Arr.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
+      "method": "GetItemReviews",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/reviews/ratings",
+      "method": "GetReviewRatings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
+      "method": "UpsertReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
+      "method": "AdminUpsertReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
+      "method": "DeleteReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/reviews/admin/all",
+      "method": "AdminListReviews",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
+      "method": "AdminDeleteReview",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.Reviews.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
       "path": "/JellyfinEnhanced/anilist/reviews",
       "method": "GetAnilistReviews",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
@@ -2532,76 +2659,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
-      "method": "GetItemReviews",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/reviews/ratings",
-      "method": "GetReviewRatings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
-      "method": "UpsertReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
-      "method": "AdminUpsertReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/reviews/{mediaType}/{tmdbId}",
-      "method": "DeleteReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/reviews/admin/all",
-      "method": "AdminListReviews",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/reviews/admin/{userIdN}/{mediaType}/{tmdbId}",
-      "method": "AdminDeleteReview",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/item-stats/{userId}/{itemId}",
       "method": "GetItemStatsByItemId",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
@@ -2628,51 +2685,6 @@
       "following_attributes": [
         "Authorize",
         "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/identify-url",
-      "method": "IdentifyUrl",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/series-slug",
-      "method": "GetSeriesSlug",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/series-slugs",
-      "method": "GetSeriesSlugs",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/links",
-      "method": "GetArrLinks",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/movie-instances",
-      "method": "GetMovieInstances",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/DetailsProviders/JeDetailsProvidersController.cs",
-      "following_attributes": [
-        "Authorize"
       ]
     },
     {
@@ -2895,6 +2907,26 @@
     },
     {
       "verb": "GET",
+      "path": "/JellyfinEnhanced/tag-cache/{userId}",
+      "method": "GetTagCache",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.TagCache.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/tag-data/{userId}",
+      "method": "GetTagData",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.TagCache.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
       "path": "/JellyfinEnhanced/tag-styles",
       "method": "GetTagStyles",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
@@ -2986,26 +3018,6 @@
       "verb": "DELETE",
       "path": "/JellyfinEnhanced/user-settings/{userId}/media-tags/presets/{presetId}",
       "method": "DeleteMediaTagsPreset",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tag-cache/{userId}",
-      "method": "GetTagCache",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/tag-data/{userId}",
-      "method": "GetTagData",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
       "following_attributes": [
         "Authorize",
@@ -10506,7 +10518,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 530,
+    "files": 533,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,

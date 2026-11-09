@@ -20,7 +20,7 @@
  * finds each control here through the provider this module registers.
  */
 import type { Group, Layout, Shape, ShapeLook } from '../layout/layout-rules';
-import { apiClient, currentUserKey, optionalApiClient, panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../settings-panel/host';
+import { apiClient, currentUserKey, optionalApiClient, panelHost, registry, type PanelBridge, type PanelTagLayout } from './host';
 import type { MediaTagsHubApi } from '../public-api';
 import type { PanelContext, SearchHit } from '../../settings-panel/public-api';
 import { closestTarget, controlValue, focusElement, isDisabled, queryElement, queryElements, targetElement } from '../../shared/dom';

@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/settings-panel/host.ts
   function panelHost() {
     const host = window;
@@ -15,6 +43,12 @@
   function optionalApiClient() {
     const host = window;
     return host.ApiClient;
+  }
+  function settingsPanelContext(JE) {
+    return featureContext("settings-panel", JE, {
+      internalSlots: ["enhancedUi"],
+      internalsObject: () => JE.internals = JE.internals || {}
+    });
   }
   function registry(JE) {
     JE.internals = JE.internals || {};
@@ -96,7 +130,7 @@
   var PANEL_ID = "jellyfin-enhanced-panel";
   var POINTER_EVENTS = ["pointerdown", "mousedown", "click"];
   var MAX_RESULTS = 8;
-  function installUiPanel(JE) {
+  function installUiPanel(JE, featureCtx = settingsPanelContext(JE)) {
     const internal = registry(JE);
     let closeOpenPanel = null;
     let cancelOpening = null;
@@ -646,7 +680,7 @@
       internal.wireSettingsListeners?.(ctx);
       internal.wireTagLooks?.(ctx);
       internal.wireHiddenContentListeners?.(ctx);
-      JE.internals.spoilerGuard?.wireSettings?.(ctx);
+      featureCtx.peer("spoilerBlur")?.wireSettings?.(ctx);
       internal.wireMiscSettingsControls?.(ctx);
       internal.wireTagGroupEditor?.(ctx);
       internal.wireLanguageControls?.(ctx);
