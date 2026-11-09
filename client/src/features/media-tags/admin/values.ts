@@ -3,7 +3,7 @@
  * The configuration and every server answer are untrusted JSON: they are
  * checked here once, at the boundary, and read through these narrowing helpers.
  */
-import type { JsonValue } from '../../contracts/generated';
+import type { JsonValue } from '../../../contracts/generated';
 
 /** The plugin configuration (PascalCase fields), as the page's working copy holds it. */
 export type Config = { [key: string]: JsonValue | undefined };

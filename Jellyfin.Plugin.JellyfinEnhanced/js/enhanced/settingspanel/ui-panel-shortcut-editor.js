@@ -12,7 +12,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function queryElement(root, selector) {
     const found = root.querySelector(selector);
     return found instanceof HTMLElement ? found : null;

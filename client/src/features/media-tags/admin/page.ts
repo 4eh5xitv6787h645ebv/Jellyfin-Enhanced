@@ -3,9 +3,9 @@
  * wiring, the tabs and group rows, the preview, the save indicator and the
  * snackbars. The edits themselves live in the document-wide save store.
  */
-import type { JsonValue } from '../../contracts/generated';
-import { apiClient, cdnUrl, type AdminTagsBridge } from '../../host/admin-tags-host';
-import type { TagPreview } from '../settings-panel/ui-panel-tag-preview';
+import type { JsonValue } from '../../../contracts/generated';
+import { apiClient, cdnUrl, type AdminTagsBridge } from './host';
+import type { TagPreview } from '../settings/ui-panel-tag-preview';
 import { activeElement, all, allAs, closest, find, focus, isDisabled, must, targetOf } from './dom';
 import { controlValue, fieldValue, fieldsHtml, type TextKit } from './fields';
 import { fmt, word, WORDS } from './format';

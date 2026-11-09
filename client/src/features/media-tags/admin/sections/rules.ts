@@ -25,9 +25,9 @@ registerSection({
     title: 'Server-wide item looks',
     writes: ['TagLookItemOverrides'],
 */
-import type { JsonValue } from '../../../contracts/generated';
-import { apiClient, currentUserId } from '../../../host/admin-tags-host';
-import type { LayoutLock } from '../../media-tags/rules/tag-look';
+import type { JsonValue } from '../../../../contracts/generated';
+import { apiClient, currentUserId } from '../host';
+import type { LayoutLock } from '../../rules/tag-look';
 import { activeElement, all, closest, find, findAs, focus, isDisabled, must, mustAs } from '../dom';
 import { word } from '../format';
 import type { PageContext } from '../types';

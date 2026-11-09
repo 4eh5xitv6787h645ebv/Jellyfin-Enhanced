@@ -12,9 +12,9 @@
  * preset's palette resolved per label, so each chip is drawn in its effective
  * colours: label override, else group override, else the preset.
  */
-import type { JsonValue } from '../../contracts/generated';
-import { adminBridge, apiClient, cdnUrl } from '../../host/admin-tags-host';
-import type { RatingSourceId } from '../media-tags/rules/rating-data';
+import type { JsonValue } from '../../../contracts/generated';
+import { adminBridge, apiClient, cdnUrl } from './host';
+import type { RatingSourceId } from '../rules/rating-data';
 import { allAs, activeElement, find, findAs } from './dom';
 import { fmt } from './format';
 import { contrastLevel, contrastRatio, compositeOver, luminance, rgbaOf, type Rgba } from './tag-style-contrast';

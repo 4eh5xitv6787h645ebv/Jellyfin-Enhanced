@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/admin-tags-host.ts
+  // client/src/features/media-tags/admin/host.ts
   var host = () => window;
   function adminBridge() {
     const JE2 = host().JellyfinEnhanced;
@@ -19,7 +19,7 @@
     return route(path);
   }
 
-  // client/src/features/admin-tags/dom.ts
+  // client/src/features/media-tags/admin/dom.ts
   function find(scope, selector) {
     const el2 = scope?.querySelector(selector);
     return el2 instanceof HTMLElement ? el2 : null;
@@ -36,7 +36,7 @@
     return el2 instanceof HTMLElement ? el2 : null;
   }
 
-  // client/src/features/admin-tags/format.ts
+  // client/src/features/media-tags/admin/format.ts
   var fmt = (text, params) => {
     let out = String(text);
     if (params) {
@@ -46,7 +46,7 @@
     return out;
   };
 
-  // client/src/features/admin-tags/tag-style-contrast.ts
+  // client/src/features/media-tags/admin/tag-style-contrast.ts
   function rgbaOf(css) {
     const value = String(css || "").trim().toLowerCase();
     const hex = /^#([0-9a-f]{6})$/.exec(value);
@@ -81,7 +81,7 @@
     return { level: "low", label: fmt("Low contrast") };
   }
 
-  // client/src/features/admin-tags/tag-styles-model.ts
+  // client/src/features/media-tags/admin/tag-styles-model.ts
   var member = (value, key) => value && typeof value === "object" ? Reflect.get(value, key) : void 0;
   var entriesOf = (value) => value && typeof value === "object" && !Array.isArray(value) ? Object.entries(value) : [];
   var strings = (value) => Array.isArray(value) ? value.filter((v) => typeof v === "string") : [];
@@ -125,7 +125,7 @@
     return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : void 0;
   }
 
-  // client/src/features/admin-tags/tag-styles-editor.ts
+  // client/src/features/media-tags/admin/tag-styles-editor.ts
   var T = fmt;
   var JE = adminBridge();
   var EDITOR_HTML = `

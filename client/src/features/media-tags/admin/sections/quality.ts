@@ -34,7 +34,7 @@ registerSection({
         { id: 'qualityTagsPreferredAudioLanguage', key: 'QualityTagsPreferredAudioLanguage', type: 'select', label: 'Preferred audio language for sound tags' },
         { id: 'qualityTagsAudioLanguageFromUser', key: 'QualityTagsAudioLanguageFromUser', type: 'switch', label: 'Use each user\'s Jellyfin audio language' },
 */
-import { apiClient } from '../../../host/admin-tags-host';
+import { apiClient } from '../host';
 import { findAs } from '../dom';
 import type { SampleChip } from '../types';
 import { installSection } from './install';

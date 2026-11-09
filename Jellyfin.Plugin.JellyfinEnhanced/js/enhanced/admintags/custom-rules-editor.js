@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/admin-tags-host.ts
+  // client/src/features/media-tags/admin/host.ts
   var host = () => window;
   function adminBridge() {
     const JE2 = host().JellyfinEnhanced;
@@ -12,7 +12,7 @@
     return host().ApiClient;
   }
 
-  // client/src/features/admin-tags/dom.ts
+  // client/src/features/media-tags/admin/dom.ts
   function find(scope, selector) {
     const el = scope?.querySelector(selector);
     return el instanceof HTMLElement ? el : null;
@@ -22,7 +22,7 @@
     return el instanceof type ? el : null;
   }
 
-  // client/src/features/admin-tags/format.ts
+  // client/src/features/media-tags/admin/format.ts
   var fmt = (text, params) => {
     let out = String(text);
     if (params) {
@@ -33,7 +33,7 @@
   };
   var escapeText = (text) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-  // client/src/features/admin-tags/values.ts
+  // client/src/features/media-tags/admin/values.ts
   function isObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
   }
@@ -46,7 +46,7 @@
     return other !== void 0 && other !== null ? other : void 0;
   }
 
-  // client/src/features/admin-tags/custom-rules-model.ts
+  // client/src/features/media-tags/admin/custom-rules-model.ts
   var MAX_RULES = 20;
   var MAX_LABEL = 24;
   var ICONS = [
@@ -110,7 +110,7 @@
     });
   }
 
-  // client/src/features/admin-tags/custom-rules-editor.ts
+  // client/src/features/media-tags/admin/custom-rules-editor.ts
   var tr = fmt;
   var trHtml = (key, params) => escapeText(String(tr(key, params)));
   var customHtml = () => `<div id="customTagRules" class="je-ct-rules" role="table" aria-describedby="customTagRulesHelp">

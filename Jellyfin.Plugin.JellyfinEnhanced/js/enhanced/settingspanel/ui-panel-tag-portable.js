@@ -21,7 +21,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function targetElement(event) {
     return event.target instanceof Element ? event.target : null;
   }
@@ -47,7 +47,7 @@
     if (node instanceof HTMLElement || node instanceof SVGElement) node.focus(options);
   }
 
-  // client/src/features/settings-panel/portable-model.ts
+  // client/src/features/media-tags/settings/portable-model.ts
   var record = (value) => value !== null && typeof value === "object" ? value : {};
   var get = (value, key) => Reflect.get(record(value), key);
   var list = (value) => Array.isArray(value) ? value : [];
@@ -85,7 +85,7 @@
   }
   var statusOf = (err) => get(err, "status");
 
-  // client/src/features/settings-panel/settings-values.ts
+  // client/src/features/shared/settings-values.ts
   function isJson(value) {
     if (value === null || typeof value === "string" || typeof value === "boolean") return true;
     if (typeof value === "number") return Number.isFinite(value);
@@ -94,7 +94,7 @@
     return false;
   }
 
-  // client/src/features/settings-panel/ui-panel-tag-portable.ts
+  // client/src/features/media-tags/settings/ui-panel-tag-portable.ts
   var PRESET_KIND = "je-media-tags-preset";
   var UNDO_MS = 1e4;
   var MAX_NAME = 60;

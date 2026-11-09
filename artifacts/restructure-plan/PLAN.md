@@ -49,7 +49,7 @@ One map for both sides. The final step checks it in as `docs/feature-map.json`; 
 | # | Step | Runs | Plan reference |
 |---|---|---|---|
 | 1 | Gates and baselines: backend **S0** ∥ frontend **S0 → S1**. **First, before any file moves:** backend S0 makes `tests/inventory/generate.py` find routes outside `Controllers/` (review-r3 #1, [backend.md §4 S0](backend.md#phase-0-gates-sequential)) and regenerates `tests/docs/production-inventory.json` with an unchanged route set. Add `scripts/restructure-gates.sh be\|fe\|r <pattern>\|h\|inv\|tool\|bundle <out.js>` (wraps each gate in a `set -e` subshell; non-zero exit on failure). Record the baselines below (gates **INV** and **TOOL** must pass on the untouched base before S0 edits anything, and again after S0), then run **HOST** once. | ∥ | [BE §3, §4 Phase 0](backend.md#3-keeping-authorization-identical); [FE §3](frontend.md#3-migration-steps) |
-| 2 | Frontend **A1 → A2 → A3** (fixes the media-tags naming) | → | [FE §1a, §3](frontend.md#1a-file-move-table-settings-panel--admin-tags-finding-a) |
+| 2 | Frontend **A0 → A1 → A2 → A3** (A0 makes the moves' cross-feature edges legal first; A1–A3 fix the media-tags naming) | → | [FE §1a, §3](frontend.md#1a-file-move-table-settings-panel--admin-tags-finding-a) |
 | 3 | Backend **P1-a, b, c, e, f, g** (P1-d folded into P1-g) ∥ frontend **S2** (READMEs / public-api stubs) | ∥ | [BE §4 Phase 1](backend.md#4-migration-order); [FE §3](frontend.md#3-migration-steps) |
 | 4 | Frontend **B1 → B2** (B2 based on a tree containing P1-e) | → | [FE §1b, §3](frontend.md#1b-file-move-table-media-tags-finding-b) |
 | 5 | Backend **S2.0a → S2.0b**; then **HOST** | → | [BE §3 Shared base, §4 Phase 2](backend.md#shared-base-phase-2-step-2) |

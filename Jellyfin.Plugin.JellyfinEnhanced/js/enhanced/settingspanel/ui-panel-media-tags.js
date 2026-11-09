@@ -24,7 +24,7 @@
     return optionalApiClient()?.getCurrentUserId?.() || "";
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function targetElement(event) {
     return event.target instanceof Element ? event.target : null;
   }
@@ -49,7 +49,7 @@
     if (node instanceof HTMLElement || node instanceof SVGElement) node.focus(options);
   }
 
-  // client/src/features/settings-panel/settings-values.ts
+  // client/src/features/shared/settings-values.ts
   function isJson(value) {
     if (value === null || typeof value === "string" || typeof value === "boolean") return true;
     if (typeof value === "number") return Number.isFinite(value);
@@ -58,7 +58,7 @@
     return false;
   }
 
-  // client/src/features/settings-panel/ui-panel-media-tags.ts
+  // client/src/features/media-tags/settings/ui-panel-media-tags.ts
   var LAYOUTS = ["corners", "bands", "caption", "summary", "minimal"];
   var isLayout = (value) => LAYOUTS.some((id) => id === value);
   var PRESETS = ["default", "glass", "outline", "dark", "light", "mono", "poster"];

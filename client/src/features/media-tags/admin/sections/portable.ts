@@ -26,9 +26,9 @@ registerSection({
     title: 'Presets for users',
         { id: 'tagOfferedPresets', key: 'TagOfferedPresets', type: 'custom', label: 'Presets for users' },
 */
-import type { JsonValue } from '../../../contracts/generated';
-import { apiClient, currentUserId } from '../../../host/admin-tags-host';
-import type { PortableDialog, TagPortableTools } from '../../settings-panel/ui-panel-tag-portable';
+import type { JsonValue } from '../../../../contracts/generated';
+import { apiClient, currentUserId } from '../host';
+import type { PortableDialog, TagPortableTools } from '../../settings/ui-panel-tag-portable';
 import { closest, find, findAs } from '../dom';
 import type { PageContext } from '../types';
 import { configOf, copy, isObject, type Config, type JsonObject } from '../values';

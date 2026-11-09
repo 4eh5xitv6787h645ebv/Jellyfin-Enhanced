@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/admin-tags-host.ts
+  // client/src/features/media-tags/admin/host.ts
   var host = () => window;
   function adminBridge() {
     const JE = host().JellyfinEnhanced;
@@ -24,7 +24,7 @@
     return String(client.getCurrentUserId?.());
   }
 
-  // client/src/features/admin-tags/dom.ts
+  // client/src/features/media-tags/admin/dom.ts
   function isDisabled(el) {
     return el instanceof HTMLButtonElement || el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement ? el.disabled : false;
   }
@@ -62,12 +62,12 @@
     if (el instanceof HTMLElement) el.focus(options);
   }
 
-  // client/src/features/admin-tags/format.ts
+  // client/src/features/media-tags/admin/format.ts
   function word(table, key) {
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/admin-tags/values.ts
+  // client/src/features/media-tags/admin/values.ts
   function isJson(value) {
     if (value === null || typeof value === "string" || typeof value === "boolean") return true;
     if (typeof value === "number") return Number.isFinite(value);
@@ -91,14 +91,14 @@
   }
   var list = (value) => Array.isArray(value) ? value : [];
 
-  // client/src/features/admin-tags/sections/install.ts
+  // client/src/features/media-tags/admin/sections/install.ts
   function installSection(register) {
     const JE = adminBridge();
     const A = adminTagsApi(JE);
     if (A) register(A, JE);
   }
 
-  // client/src/features/admin-tags/sections/rules.ts
+  // client/src/features/media-tags/admin/sections/rules.ts
   /*! Lexical index of this module's declarations, in the order Helpers/MediaTagsPageFields.cs (the field
    *  patch's allowlist), Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
    *  from the generated file. Not code: tests/frontend/features/admin-tags-rewrite.test.mjs keeps it equal

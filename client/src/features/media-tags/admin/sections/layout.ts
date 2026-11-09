@@ -47,9 +47,9 @@ registerSection({
         { id: 'tagsHideOnHover', key: 'TagsHideOnHover', type: 'switch', label: 'Hide tags on hover' },
         { id: 'disableTagsOnSearchPage', key: 'DisableTagsOnSearchPage', type: 'switch', label: 'No tags on the search page' },
 */
-import type { JsonValue } from '../../../contracts/generated';
-import type { AdminTagLayout } from '../../../host/admin-tags-host';
-import type { Group, Layout, Shape } from '../../media-tags/rules/layout-rules';
+import type { JsonValue } from '../../../../contracts/generated';
+import type { AdminTagLayout } from '../host';
+import type { Group, Layout, Shape } from '../../rules/layout-rules';
 import { allAs, closest, find, findAs, focus, isDisabled } from '../dom';
 import { word } from '../format';
 import type { PageContext, SectionDef } from '../types';

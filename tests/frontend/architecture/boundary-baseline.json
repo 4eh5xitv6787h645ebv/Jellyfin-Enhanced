@@ -19,60 +19,6 @@
   "client/src/features/activity/model.ts": {
     "import client/src/host/activity-host.ts": 1
   },
-  "client/src/features/admin-tags/admin-tags.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/custom-rules-editor.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/mount.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/page.ts": {
-    "import client/src/features/settings-panel/ui-panel-tag-preview.ts": 1,
-    "import client/src/host/admin-tags-host.ts": 1,
-    "internals enhancedUi": 1
-  },
-  "client/src/features/admin-tags/save-store.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/sections/awards.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/sections/badges.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/sections/install.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/sections/layout.ts": {
-    "import client/src/host/admin-tags-host.ts": 1,
-    "internals enhancedUi": 1
-  },
-  "client/src/features/admin-tags/sections/overview.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/sections/portable.ts": {
-    "import client/src/features/settings-panel/ui-panel-tag-portable.ts": 1,
-    "import client/src/host/admin-tags-host.ts": 1,
-    "internals enhancedUi": 1
-  },
-  "client/src/features/admin-tags/sections/quality.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/sections/rules.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/sections/server.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/tag-styles-editor.ts": {
-    "import client/src/host/admin-tags-host.ts": 1
-  },
-  "client/src/features/admin-tags/types.ts": {
-    "import client/src/features/settings-panel/ui-panel-tag-preview.ts": 1,
-    "import client/src/host/admin-tags-host.ts": 1
-  },
   "client/src/features/bookmarks/bookmarks.ts": {
     "import client/src/host/bookmarks-host.ts": 1
   },
@@ -360,6 +306,18 @@
   "client/src/features/hidden-content/hidden-content-styles.ts": {
     "import client/src/host/hidden-content-host.ts": 2
   },
+  "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/media-tags/admin/page.ts": {
+    "internals enhancedUi": 1
+  },
+  "client/src/features/media-tags/admin/sections/layout.ts": {
+    "internals enhancedUi": 1
+  },
+  "client/src/features/media-tags/admin/sections/portable.ts": {
+    "internals enhancedUi": 1
+  },
   "client/src/features/media-tags/rules/media-language-entry.ts": {
     "import client/src/host/tag-rules-host.ts": 1
   },
@@ -492,6 +450,21 @@
   },
   "client/src/features/media-tags/runtime/userreviewtags.ts": {
     "import client/src/host/tag-runtime-host.ts": 1
+  },
+  "client/src/features/media-tags/settings/ui-panel-media-tags.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/media-tags/settings/ui-panel-tag-editor.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/media-tags/settings/ui-panel-tag-looks.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/media-tags/settings/ui-panel-tag-portable.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
+  },
+  "client/src/features/media-tags/settings/ui-panel-tag-preview.ts": {
+    "import client/src/host/settings-panel-host.ts": 1
   },
   "client/src/features/player/auto-skip-engine.ts": {
     "import client/src/host/player-host.ts": 1
@@ -753,14 +726,7 @@
   "client/src/features/settings-panel/ui-entry-points.ts": {
     "import client/src/host/settings-panel-host.ts": 1
   },
-  "client/src/features/settings-panel/ui-panel-hidden-content.ts": {
-    "import client/src/host/settings-panel-host.ts": 1
-  },
   "client/src/features/settings-panel/ui-panel-language.ts": {
-    "import client/src/host/settings-panel-host.ts": 1
-  },
-  "client/src/features/settings-panel/ui-panel-media-tags.ts": {
-    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
     "import client/src/host/settings-panel-host.ts": 1
   },
   "client/src/features/settings-panel/ui-panel-resize.ts": {
@@ -772,22 +738,6 @@
   "client/src/features/settings-panel/ui-panel-shortcut-editor.ts": {
     "import client/src/host/settings-panel-host.ts": 1,
     "internals canonicalCombo": 1
-  },
-  "client/src/features/settings-panel/ui-panel-tag-editor.ts": {
-    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
-    "import client/src/host/settings-panel-host.ts": 1
-  },
-  "client/src/features/settings-panel/ui-panel-tag-looks.ts": {
-    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
-    "import client/src/features/media-tags/rules/tag-look.ts": 1,
-    "import client/src/host/settings-panel-host.ts": 1
-  },
-  "client/src/features/settings-panel/ui-panel-tag-portable.ts": {
-    "import client/src/host/settings-panel-host.ts": 1
-  },
-  "client/src/features/settings-panel/ui-panel-tag-preview.ts": {
-    "import client/src/features/media-tags/rules/layout-rules.ts": 1,
-    "import client/src/host/settings-panel-host.ts": 1
   },
   "client/src/features/settings-panel/ui-panel-template.ts": {
     "import client/src/host/settings-panel-host.ts": 1,
@@ -865,18 +815,6 @@
     "raw-global JellyfinEnhanced": 1
   },
   "client/src/host/admin-config-host.ts": {
-    "raw-global JellyfinEnhanced": 1
-  },
-  "client/src/host/admin-tags-host.ts": {
-    "host-import client/src/features/admin-tags/types.ts": 1,
-    "host-import client/src/features/media-tags/rules/poster-colours.ts": 1,
-    "host-import client/src/features/media-tags/rules/rating-sources.ts": 1,
-    "host-import client/src/features/media-tags/rules/tag-layout.ts": 1,
-    "host-import client/src/features/media-tags/rules/tag-look.ts": 1,
-    "host-import client/src/features/media-tags/runtime/scopes.ts": 1,
-    "host-import client/src/features/media-tags/runtime/tag-item-editor.ts": 1,
-    "host-import client/src/features/media-tags/runtime/tag-styles.ts": 1,
-    "host-import client/src/features/settings-panel/registry.ts": 1,
     "raw-global JellyfinEnhanced": 1
   },
   "client/src/host/api-host.ts": {

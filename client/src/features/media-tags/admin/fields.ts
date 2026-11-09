@@ -2,7 +2,7 @@
  * @file The declared fields' values and markup: what a field shows for a
  * configuration, what its control holds, and the control rows themselves.
  */
-import type { JsonValue } from '../../contracts/generated';
+import type { JsonValue } from '../../../contracts/generated';
 import { isDisabled } from './dom';
 import { fmt, type FmtParams } from './format';
 import type { FieldDef } from './types';

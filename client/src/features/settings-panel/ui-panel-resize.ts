@@ -12,7 +12,7 @@
  */
 import { currentUserKey, panelHost, registry, type PanelBridge } from '../../host/settings-panel-host';
 import type { PanelContext } from './context';
-import { queryElement, queryElements } from './dom';
+import { queryElement, queryElements } from '../shared/dom';
 import { GUTTER, KEY_STEPS, PANEL_SIZE_PRESETS, STORE_PREFIX, clampSize as clampTo, isPreset, parseSize, resolveSize as resolveIn, sizeBounds as boundsIn, type Box, type PanelSize, type PanelSizePreset } from './panel-size';
 
 type Deps = Pick<PanelBridge, 'internals' | 't' | 'escapeHtml' | 'core'>;

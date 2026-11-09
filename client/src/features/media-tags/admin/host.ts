@@ -5,16 +5,16 @@
  * configuration page's CDN route. Everything is read when it is used, as the
  * legacy scripts read their globals, so a module loaded later still counts.
  */
-import type { SaveOptions, SettingsDocument } from './settings-host';
-import type { TagLayout } from '../features/media-tags/rules/tag-layout';
-import type { TagLook } from '../features/media-tags/rules/tag-look';
-import type { TagScopes, TagSettingsMatrix } from '../features/media-tags/runtime/scopes';
-import type { TagStyles } from '../features/media-tags/runtime/tag-styles';
-import type { RatingSources } from '../features/media-tags/rules/rating-sources';
-import type { PosterColours } from '../features/media-tags/rules/poster-colours';
-import type { ItemEditorOptions } from '../features/media-tags/runtime/tag-item-editor';
-import type { EnhancedUi } from '../features/settings-panel/registry';
-import type { AdminTagsApi, AdminTagsFacade } from '../features/admin-tags/types';
+import type { SaveOptions, SettingsDocument } from '../../../host/context';
+import type { TagLayout } from '../rules/tag-layout';
+import type { TagLook } from '../rules/tag-look';
+import type { TagScopes, TagSettingsMatrix } from '../runtime/scopes';
+import type { TagStyles } from '../runtime/tag-styles';
+import type { RatingSources } from '../rules/rating-sources';
+import type { PosterColours } from '../rules/poster-colours';
+import type { ItemEditorOptions } from '../runtime/tag-item-editor';
+import type { EnhancedUi } from '../../settings-panel/public-api';
+import type { AdminTagsApi, AdminTagsFacade } from './types';
 
 /** The layout controller members the tab reads (core/tag-layout.js). */
 export type AdminTagLayout = Pick<TagLayout,

@@ -12,7 +12,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function targetElement(event) {
     return event.target instanceof Element ? event.target : null;
   }
@@ -49,7 +49,7 @@
     if (node instanceof HTMLElement || node instanceof SVGElement) node.focus(options);
   }
 
-  // client/src/features/settings-panel/tag-caps.ts
+  // client/src/features/media-tags/settings/tag-caps.ts
   var MAX_CAP = 10;
   function stepCap(cap, dir, meta) {
     if (meta.capFixed) return null;
@@ -63,7 +63,7 @@
   }
   var clampCap = (cap) => Math.max(0, Math.min(MAX_CAP, cap));
 
-  // client/src/features/settings-panel/settings-values.ts
+  // client/src/features/shared/settings-values.ts
   function isJson(value) {
     if (value === null || typeof value === "string" || typeof value === "boolean") return true;
     if (typeof value === "number") return Number.isFinite(value);
@@ -72,7 +72,7 @@
     return false;
   }
 
-  // client/src/features/settings-panel/ui-panel-tag-editor.ts
+  // client/src/features/media-tags/settings/ui-panel-tag-editor.ts
   var GROUP_META = {
     awards: { toggleId: "awardsTagsToggle", settingKey: "awardsTagsEnabled", nameKey: "awards_label", descKey: "awards_tags_description", color: "#d7ae52", capAll: true },
     status: { toggleId: "statusTagsToggle", settingKey: "statusTagsEnabled", nameKey: "panel_settings_ui_tag_group_status", descKey: "panel_settings_ui_status_tags_desc", color: "#e53935", capFixed: true },

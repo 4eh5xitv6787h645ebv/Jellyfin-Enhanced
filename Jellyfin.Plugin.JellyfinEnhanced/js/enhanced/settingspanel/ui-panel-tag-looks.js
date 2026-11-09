@@ -21,7 +21,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function querySelect(root, selector) {
     const found = root.querySelector(selector);
     return found instanceof HTMLSelectElement ? found : null;
@@ -33,7 +33,7 @@
     if (node instanceof HTMLElement || node instanceof SVGElement) node.focus(options);
   }
 
-  // client/src/features/settings-panel/ui-panel-tag-looks.ts
+  // client/src/features/media-tags/settings/ui-panel-tag-looks.ts
   var LAYOUTS = ["corners", "bands", "caption", "summary", "minimal"];
   var TITLE_BATCH = 50;
   var CONFIRM_MS = 4e3;

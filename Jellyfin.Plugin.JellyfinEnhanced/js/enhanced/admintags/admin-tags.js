@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/admin-tags-host.ts
+  // client/src/features/media-tags/admin/host.ts
   var host = () => window;
   function adminBridge() {
     const JE2 = host().JellyfinEnhanced;
@@ -25,7 +25,7 @@
     return route(path);
   }
 
-  // client/src/features/admin-tags/dom.ts
+  // client/src/features/media-tags/admin/dom.ts
   function isDisabled(el) {
     return el instanceof HTMLButtonElement || el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement ? el.disabled : false;
   }
@@ -60,7 +60,7 @@
     if (el instanceof HTMLElement) el.focus(options);
   }
 
-  // client/src/features/admin-tags/values.ts
+  // client/src/features/media-tags/admin/values.ts
   function isJson(value) {
     if (value === null || typeof value === "string" || typeof value === "boolean") return true;
     if (typeof value === "number") return Number.isFinite(value);
@@ -93,7 +93,7 @@
   var list = (value) => Array.isArray(value) ? value : [];
   var objects = (value) => list(value).filter(isObject);
 
-  // client/src/features/admin-tags/mount.ts
+  // client/src/features/media-tags/admin/mount.ts
   var toolbarRoot = null;
   function followToolbar(root) {
     const measure = () => {
@@ -266,7 +266,7 @@
     return { activate, mountTab };
   }
 
-  // client/src/features/admin-tags/format.ts
+  // client/src/features/media-tags/admin/format.ts
   var fmt = (text, params) => {
     let out = String(text);
     if (params) {
@@ -339,7 +339,7 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/admin-tags/fields.ts
+  // client/src/features/media-tags/admin/fields.ts
   var checkbox = (f) => f.type === "switch" || f.type === "enable" || f.type === "ordered";
   function fieldValue(f, config) {
     if (f.secret) return "";
@@ -451,7 +451,7 @@
     if (again instanceof HTMLElement && !isDisabled(again)) again.focus({ preventScroll: true });
   }
 
-  // client/src/features/admin-tags/page.ts
+  // client/src/features/media-tags/admin/page.ts
   function fieldName(sections2, key) {
     for (const s of sections2) {
       for (const f of s.fields || []) {
@@ -1111,7 +1111,7 @@
     return ctx;
   }
 
-  // client/src/features/admin-tags/save-store.ts
+  // client/src/features/media-tags/admin/save-store.ts
   var ITEM_KEY = "TagLookItemOverrides";
   async function rejectionOf(err) {
     if (!err || typeof err !== "object") return null;
@@ -1456,10 +1456,10 @@
     };
   }
 
-  // client/src/features/admin-tags/types.ts
+  // client/src/features/media-tags/admin/types.ts
   var TAB_IDS = ["overview", "layout", "groups", "rules", "colours", "badges", "server"];
 
-  // client/src/features/admin-tags/admin-tags.ts
+  // client/src/features/media-tags/admin/admin-tags.ts
   var JE = adminBridge();
   var PLUGIN_ID = "f69e946a-4b3c-4e9a-8f0a-8d7c1b2c4d9b";
   var MAIN_PAGE_NAME = "Jellyfin Enhanced";

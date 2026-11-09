@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/host/admin-tags-host.ts
+  // client/src/features/media-tags/admin/host.ts
   var host = () => window;
   function adminBridge() {
     const JE = host().JellyfinEnhanced;
@@ -21,7 +21,7 @@
     return client;
   }
 
-  // client/src/features/admin-tags/dom.ts
+  // client/src/features/media-tags/admin/dom.ts
   function find(scope, selector) {
     const el = scope?.querySelector(selector);
     return el instanceof HTMLElement ? el : null;
@@ -39,14 +39,14 @@
     return el instanceof HTMLElement ? el : null;
   }
 
-  // client/src/features/admin-tags/sections/install.ts
+  // client/src/features/media-tags/admin/sections/install.ts
   function installSection(register) {
     const JE = adminBridge();
     const A = adminTagsApi(JE);
     if (A) register(A, JE);
   }
 
-  // client/src/features/admin-tags/sections/server.ts
+  // client/src/features/media-tags/admin/sections/server.ts
   /*! Lexical index of this module's declarations, in the order Helpers/MediaTagsPageFields.cs (the field
    *  patch's allowlist), Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
    *  from the generated file. Not code: tests/frontend/features/admin-tags-rewrite.test.mjs keeps it equal

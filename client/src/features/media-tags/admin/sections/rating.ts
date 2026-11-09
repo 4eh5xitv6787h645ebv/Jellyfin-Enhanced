@@ -24,7 +24,7 @@ registerSection({
         { id: 'ratingTagsColorByScore', key: 'RatingTagsColorByScore', type: 'switch', label: 'Colour by score' },
         { id: 'showRatingInPlayer', key: 'ShowRatingInPlayer', type: 'switch', label: 'Show the rating in the video player' },
 */
-import type { RatingSourceId } from '../../media-tags/rules/rating-data';
+import type { RatingSourceId } from '../../rules/rating-data';
 import { all, closest, find, focus, isDisabled, must } from '../dom';
 import type { PageContext } from '../types';
 import type { Config } from '../values';

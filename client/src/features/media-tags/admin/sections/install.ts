@@ -2,8 +2,8 @@
  * @file How a section module joins the tab: it runs only once admin-tags.js
  * installed the facade (a section loaded on its own does nothing, as before).
  */
-import { adminBridge, adminTagsApi, type AdminTagsBridge } from '../../../host/admin-tags-host';
-import type { JsonValue } from '../../../contracts/generated';
+import { adminBridge, adminTagsApi, type AdminTagsBridge } from '../host';
+import type { JsonValue } from '../../../../contracts/generated';
 import type { AdminTagsApi } from '../types';
 
 /**

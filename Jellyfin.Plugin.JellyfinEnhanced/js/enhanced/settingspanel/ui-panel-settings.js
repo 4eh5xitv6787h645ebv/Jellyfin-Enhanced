@@ -21,7 +21,7 @@
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
   }
 
-  // client/src/features/settings-panel/dom.ts
+  // client/src/features/shared/dom.ts
   function requireId(id) {
     const element = document.getElementById(id);
     if (!element) throw new TypeError(`Missing panel control #${id}`);
@@ -81,7 +81,7 @@
     return cultures.map((c) => ({ code: c.twoLetter || c.threeLetter, name: c.displayName || c.name })).filter((o) => o.code && o.name && !seen.has(o.code) && seen.add(o.code)).sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  // client/src/features/settings-panel/settings-values.ts
+  // client/src/features/shared/settings-values.ts
   function indexKey(value) {
     if (typeof value === "number") return Number.isInteger(value) && value >= 0 ? value : void 0;
     if (typeof value === "string" && value !== "" && String(Number(value)) === value) {
