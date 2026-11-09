@@ -9,7 +9,7 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -18,7 +18,7 @@
     return isRecord(value) ? value : EMPTY;
   }
 
-  // client/src/features/media-tags/runtime/userreviewtags.ts
+  // client/src/features/media-tags/types/ratings/userreviewtags.ts
   function createUserReviewTags(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: User Review Tags:";
     const _reviewCache = /* @__PURE__ */ new Map();
@@ -396,7 +396,7 @@
     };
   }
 
-  // client/src/features/media-tags/runtime/userreviewtags-entry.ts
+  // client/src/features/media-tags/types/ratings/userreviewtags-entry.ts
   createUserReviewTags(tagRuntimeHost());
 })();
 })();

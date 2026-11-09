@@ -20,14 +20,14 @@ Outputs (relative to the output directory):
                               in font units (y down from hhea.ascent) plus metrics.
   vector-icons.json           jellyfin-web's Rotten Tomatoes fresh/rotten SVGs as
                               path data + fills.
-  rating-source-icons.json    Bundled source logos (LOGOS in media-tags/rules/rating-data.ts).
-  flags/<code>.webp           flag-icons 4x3 for every code media-tags/rules/media-language.ts
+  rating-source-icons.json    Bundled source logos (LOGOS in media-tags/types/ratings/rating-data.ts).
+  flags/<code>.webp           flag-icons 4x3 for every code media-tags/types/language/media-language.ts
                               can emit (+ its inline "zxx" no-dialogue artwork),
                               rasterised by headless Chromium at 160x120, lossless WebP.
   age-rating-colours.json     [rating=...] colours from css/ratings.css, resolved
                               with the CSS cascade exactly as ageratingtags.js scopes them.
   quality-colours.json        qualityColors (+ the LOW-RES rule and the composite
-                              audio bases) from media-tags/runtime/quality-data.ts.
+                              audio bases) from media-tags/types/quality/quality-data.ts.
   THIRD_PARTY_NOTICES.md      Provenance of every asset plus the full licence texts
                               taken from the pinned upstream packages.
   manifest.json               Pins, tool versions, options and sha256 of every output.
@@ -127,10 +127,10 @@ IN_REPO = {
 # Typed modules that hold the tables. client-build emits the IN_REPO scripts from them, so the manifest keeps naming
 # what ships while the tables are read here, where their source formatting is stable.
 TABLE_SOURCE = {
-    "media-language": REPO / "client/src/features/media-tags/rules/media-language.ts",
-    "qualitytags": REPO / "client/src/features/media-tags/runtime/quality-data.ts",
-    "rating-sources": REPO / "client/src/features/media-tags/rules/rating-data.ts",
-    "award-tags": REPO / "client/src/features/media-tags/runtime/awards-data.ts",
+    "media-language": REPO / "client/src/features/media-tags/types/language/media-language.ts",
+    "qualitytags": REPO / "client/src/features/media-tags/types/quality/quality-data.ts",
+    "rating-sources": REPO / "client/src/features/media-tags/types/ratings/rating-data.ts",
+    "award-tags": REPO / "client/src/features/media-tags/types/awards/awards-data.ts",
 }
 # A declaration's optional TypeScript annotation.
 TYPED = r"(?:: [^=\n]+)?"

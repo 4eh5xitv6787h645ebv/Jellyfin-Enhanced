@@ -9,7 +9,7 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/tag-layout-styles.ts
+  // client/src/features/media-tags/layout/tag-layout-styles.ts
   function createLayoutStyles(JE) {
     const ACTIVE_CARD = ":is(:is(.card, .listItem):is(:hover, :focus-within), .je-tag-reveal)";
     const HIDE_ACTIVE = "body.je-tags-hide-on-hover .card:hover";
@@ -628,7 +628,7 @@
     }
   }
 
-  // client/src/features/media-tags/runtime/tag-layout-styles-entry.ts
+  // client/src/features/media-tags/layout/tag-layout-styles-entry.ts
   createLayoutStyles(tagRuntimeHost());
 })();
 })();

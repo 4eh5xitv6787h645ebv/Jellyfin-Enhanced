@@ -9,8 +9,8 @@
  * replaced by a save or another administrator's change. Also the server-wide
  * item looks (TagLookItemOverrides) and a note on user locks.
  */
-/*! Lexical index of this module's declarations, in the order Helpers/MediaTagsPageFields.cs (the field
- *  patch's allowlist), Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
+/*! Lexical index of this module's declarations, in the order Features/MediaTags/Admin/MediaTagsPageFields.cs (the field
+ *  patch's allowlist), Features/Admin/Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
  *  from the generated file. Not code: tests/frontend/features/admin-tags-rewrite.test.mjs keeps it equal
  *  to the sections this module registers and to what those readers found in the JavaScript module.
 registerSection({
@@ -27,7 +27,7 @@ registerSection({
 */
 import type { JsonValue } from '../../../../contracts/generated';
 import { apiClient, currentUserId } from '../host';
-import type { LayoutLock } from '../../rules/tag-look';
+import type { LayoutLock } from '../../layout/tag-look';
 import { activeElement, all, closest, find, findAs, focus, isDisabled, must, mustAs } from '../dom';
 import { word } from '../format';
 import type { PageContext } from '../types';

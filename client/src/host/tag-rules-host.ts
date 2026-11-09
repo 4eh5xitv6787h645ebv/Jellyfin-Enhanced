@@ -1,12 +1,12 @@
-import type { LanguageConfig, LanguageSettings, MediaLanguage } from '../features/media-tags/rules/media-language';
-import type { RatingConfig, RatingSettings, RatingSources } from '../features/media-tags/rules/rating-sources';
+import type { LanguageConfig, LanguageSettings, MediaLanguage } from '../features/media-tags/types/language/media-language';
+import type { RatingConfig, RatingSettings, RatingSources } from '../features/media-tags/types/ratings/rating-sources';
 /** Only the legacy host surface consumed by this rule slice. Values remain untrusted at rule inputs. */
 export interface TagRulesBridge {
-    statusVocabulary?: typeof import('../features/media-tags/rules/status-vocabulary').statusVocabulary;
+    statusVocabulary?: typeof import('../features/media-tags/types/status/status-vocabulary').statusVocabulary;
     core?: {
         mediaLanguage?: MediaLanguage;
-        tagLook?: import('../features/media-tags/rules/tag-look').TagLook;
-        tagLayout?: import('../features/media-tags/rules/tag-layout').TagLayout;
+        tagLook?: import('../features/media-tags/layout/tag-look').TagLook;
+        tagLayout?: import('../features/media-tags/layout/tag-layout').TagLayout;
         ui?: {
             injectCss(id: string, css: string): unknown;
         };
@@ -20,16 +20,16 @@ export interface TagRulesBridge {
             excludes(group: string, element: HTMLElement): boolean;
         };
     };
-    currentSettings?: LanguageSettings & RatingSettings & import('../features/media-tags/rules/layout-rules').LayoutDocument;
-    pluginConfig?: LanguageConfig & RatingConfig & import('../features/media-tags/rules/layout-rules').LayoutDocument;
+    currentSettings?: LanguageSettings & RatingSettings & import('../features/media-tags/layout/layout-rules').LayoutDocument;
+    pluginConfig?: LanguageConfig & RatingConfig & import('../features/media-tags/layout/layout-rules').LayoutDocument;
     session?: {
         getUserId?(): string | null;
         getServerId?(): string | null;
         getEpoch?(): unknown;
         onUserChange?(name: string, callback: () => void): unknown;
     };
-    tagCacheStore?: import('../features/media-tags/rules/poster-colours').PosterColourStore;
-    tagPosterColours?: import('../features/media-tags/rules/poster-colours').PosterColours;
+    tagCacheStore?: import('../features/media-tags/layout/poster-colours').PosterColourStore;
+    tagPosterColours?: import('../features/media-tags/layout/poster-colours').PosterColours;
     cdn: {
         flagSvg(code: string): string;
         url?(bucket: string, file: string): string;
@@ -39,7 +39,7 @@ export interface TagRulesBridge {
     }): string;
     ratingSources?: RatingSources;
     normalizeOfficialRating?(text: string): unknown;
-    saveUserSettings?: import('../features/media-tags/rules/tag-look').LookHost['saveUserSettings'];
+    saveUserSettings?: import('../features/media-tags/layout/tag-look').LookHost['saveUserSettings'];
     reinitializeTagLayout?(): unknown;
 }
 export function tagRulesHost(): TagRulesBridge {
@@ -87,7 +87,7 @@ interface LookApiClient {
         data: string;
         contentType: string;
         dataType: string;
-    }): ReturnType<import('../features/media-tags/rules/tag-look').ItemLookApi['patch']>;
+    }): ReturnType<import('../features/media-tags/layout/tag-look').ItemLookApi['patch']>;
 }
 export function lookApiClient(): LookApiClient {
     const host: Window & {

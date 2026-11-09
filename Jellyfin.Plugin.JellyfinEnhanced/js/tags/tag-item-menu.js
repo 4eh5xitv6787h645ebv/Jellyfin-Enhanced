@@ -14,7 +14,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -23,7 +23,7 @@
     return typeof value === "string" && value ? value : null;
   }
 
-  // client/src/features/media-tags/runtime/tag-item-menu.ts
+  // client/src/features/media-tags/editor/tag-item-menu.ts
   function createItemMenu(JE) {
     const DATA_ID = "je-media-tags";
     const CONTEXT_TTL_MS = 5e3;
@@ -161,7 +161,7 @@
     JE.tagItemMenu = { inject, DATA_ID };
   }
 
-  // client/src/features/media-tags/runtime/tag-item-menu-entry.ts
+  // client/src/features/media-tags/editor/tag-item-menu-entry.ts
   createItemMenu(tagRuntimeHost());
 })();
 })();

@@ -18,7 +18,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -54,7 +54,7 @@
     return isRecord(error) && typeof error.status === "number" ? error.status : 0;
   }
 
-  // client/src/features/media-tags/runtime/tag-pipeline.ts
+  // client/src/features/media-tags/pipeline/tag-pipeline.ts
   function entryPairs(items) {
     return Object.entries(record(items)).filter((pair) => isRecord(pair[1]));
   }
@@ -1819,7 +1819,7 @@
     console.log(`${logPrefix} Module loaded`);
   }
 
-  // client/src/features/media-tags/runtime/tag-pipeline-entry.ts
+  // client/src/features/media-tags/pipeline/tag-pipeline-entry.ts
   createTagPipeline(tagRuntimeHost());
 })();
 })();

@@ -11,7 +11,7 @@ import vm from 'node:vm';
 // emits the browser scripts, and the poster assets are derived from those typed tables.
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const plugin = 'Jellyfin.Plugin.JellyfinEnhanced';
-const runtime = 'client/src/features/media-tags/runtime';
+const types = 'client/src/features/media-tags/types';
 const read = path => readFileSync(resolve(root, path), 'utf8');
 
 /** A throwaway tree holding only `paths`; generators resolve their root from their own location. */
@@ -45,13 +45,13 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const genre = {
   script: 'scripts/generate_genre_labels.py',
   source: `${plugin}/js/tags/genre-icons.json`,
-  table: `${runtime}/genre-table.ts`,
+  table: `${types}/genre/genre-table.ts`,
   emitted: `${plugin}/js/tags/genretags.js`
 };
 const ratios = {
   script: 'scripts/generate_technical_ratios.py',
   source: `${plugin}/Features/MediaTags/PosterTags/Resolution/TechnicalQualityRules.cs`,
-  table: `${runtime}/quality-data.ts`,
+  table: `${types}/quality/quality-data.ts`,
   emitted: `${plugin}/js/tags/qualitytags.js`
 };
 

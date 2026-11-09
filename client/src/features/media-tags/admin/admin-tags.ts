@@ -12,7 +12,7 @@
  * keep tracking it), `key` the PluginConfiguration field it reads and writes.
  * These declarations, and each section's `writes`, are the only fields the
  * page writes: pageFields() collects them, and the server's patch
- * (Helpers/MediaTagsPageFields.cs) accepts the same list and nothing else.
+ * (Features/MediaTags/Admin/MediaTagsPageFields.cs) accepts the same list and nothing else.
  *
  * Every change writes the field into the page's working copy and saves it on
  * its own after a short pause (save-store.ts). The configuration page's own

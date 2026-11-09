@@ -9,7 +9,7 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -27,7 +27,7 @@
     return value;
   }
 
-  // client/src/features/media-tags/runtime/genre-table.ts
+  // client/src/features/media-tags/types/genre/genre-table.ts
   var tables = /* @__PURE__ */ (() => {
     const genreIconMap2 = {
       // Default
@@ -231,7 +231,7 @@
   var genreLabelOfIcon = tables.genreLabelOfIcon;
   var genreOtherLabel = tables.genreOtherLabel;
 
-  // client/src/features/media-tags/runtime/genretags.ts
+  // client/src/features/media-tags/types/genre/genretags.ts
   var has = (table, key) => Object.prototype.hasOwnProperty.call(table, key);
   function createGenreTags(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: Genre Tags:";
@@ -469,7 +469,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/genretags-entry.ts
+  // client/src/features/media-tags/types/genre/genretags-entry.ts
   createGenreTags(tagRuntimeHost());
 })();
 })();

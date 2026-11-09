@@ -6,13 +6,13 @@
  * legacy scripts read their globals, so a module loaded later still counts.
  */
 import type { SaveOptions, SettingsDocument } from '../../../host/context';
-import type { TagLayout } from '../rules/tag-layout';
-import type { TagLook } from '../rules/tag-look';
-import type { TagScopes, TagSettingsMatrix } from '../runtime/scopes';
-import type { TagStyles } from '../runtime/tag-styles';
-import type { RatingSources } from '../rules/rating-sources';
-import type { PosterColours } from '../rules/poster-colours';
-import type { ItemEditorOptions } from '../runtime/tag-item-editor';
+import type { TagLayout } from '../layout/tag-layout';
+import type { TagLook } from '../layout/tag-look';
+import type { TagScopes, TagSettingsMatrix } from '../pipeline/scopes';
+import type { TagStyles } from '../layout/tag-styles';
+import type { RatingSources } from '../types/ratings/rating-sources';
+import type { PosterColours } from '../layout/poster-colours';
+import type { ItemEditorOptions } from '../editor/tag-item-editor';
 import type { EnhancedUi } from '../../settings-panel/public-api';
 import type { AdminTagsApi, AdminTagsFacade } from './types';
 

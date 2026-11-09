@@ -9,7 +9,7 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -31,7 +31,7 @@
     return value;
   }
 
-  // client/src/features/media-tags/runtime/languagetags.ts
+  // client/src/features/media-tags/types/language/languagetags.ts
   function isImage(element) {
     return element.tagName === "IMG";
   }
@@ -400,7 +400,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/languagetags-entry.ts
+  // client/src/features/media-tags/types/language/languagetags-entry.ts
   createLanguageTags(tagRuntimeHost());
 })();
 })();

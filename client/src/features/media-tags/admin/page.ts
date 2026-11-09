@@ -705,7 +705,7 @@ export function createPage(deps: PageDeps, root: HTMLElement, initial: Config, o
         const on = config.NativePosterTagsEnabled === true;
         const colours = config.TagStylesEnabled === true && ['native', 'both'].includes(String(config.TagStyleTarget || 'both'));
         // The look new users' native posters get: Corners and Bands as set, the title and hover layouts as Corners
-        // with full labels (Services/PosterTags/PosterTagSettings.cs).
+        // with full labels (Features/MediaTags/PosterTags/PosterTagSettings.cs).
         const names = WORDS.layout;
         const layout = String(config.TagLayout || 'corners').toLowerCase();
         const name = (l: string) => fmt(word(names, l) || word(names, 'corners') || 'Corners');

@@ -14,7 +14,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -26,7 +26,7 @@
     return Array.isArray(value) ? value.filter(isRecord) : [];
   }
 
-  // client/src/features/media-tags/runtime/tag-styles.ts
+  // client/src/features/media-tags/layout/tag-styles.ts
   function createTagStyles(JE) {
     const logPrefix = "🪼 Jellyfin Enhanced: Tag Styles:";
     const styleId = "je-tag-style-overrides";
@@ -225,7 +225,7 @@
     JE.tagStyles = { PRESETS, SCOPE_ATTR, buildCss, deactivate };
   }
 
-  // client/src/features/media-tags/runtime/tag-styles-entry.ts
+  // client/src/features/media-tags/layout/tag-styles-entry.ts
   createTagStyles(tagRuntimeHost());
 })();
 })();

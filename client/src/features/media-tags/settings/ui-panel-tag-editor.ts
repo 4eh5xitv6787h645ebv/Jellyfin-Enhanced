@@ -12,7 +12,7 @@
  * before; this module only adds the editor-owned controls.
  */
 import type { JsonValue } from '../../../contracts/generated';
-import type { Group, Layout, LayoutSettings } from '../rules/layout-rules';
+import type { Group, Layout, LayoutSettings } from '../layout/layout-rules';
 import { panelHost, registry, type PanelBridge, type PanelTagLayout } from '../../../host/settings-panel-host';
 import type { PanelContext } from '../../settings-panel/public-api';
 import { closestTarget, focusElement, isDisabled, queryButton, queryElement, queryElements, queryInput, querySelect, setDisabled, targetElement } from '../../shared/dom';

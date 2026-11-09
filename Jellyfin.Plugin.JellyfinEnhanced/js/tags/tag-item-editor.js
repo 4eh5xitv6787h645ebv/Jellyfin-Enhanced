@@ -14,7 +14,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -26,7 +26,7 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/media-tags/rules/layout-rules.ts
+  // client/src/features/media-tags/layout/layout-rules.ts
   function isLayout(value) {
     return LAYOUTS.some((layout) => layout === value);
   }
@@ -52,7 +52,7 @@
     return value;
   }
 
-  // client/src/features/media-tags/runtime/tag-item-editor.ts
+  // client/src/features/media-tags/editor/tag-item-editor.ts
   function must(value) {
     if (!value) throw new Error("Item editor markup is incomplete");
     return value;
@@ -914,7 +914,7 @@
     return api;
   }
 
-  // client/src/features/media-tags/runtime/tag-item-editor-entry.ts
+  // client/src/features/media-tags/editor/tag-item-editor-entry.ts
   createItemEditor(tagRuntimeHost());
 })();
 })();

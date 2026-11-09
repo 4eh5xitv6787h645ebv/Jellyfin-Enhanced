@@ -11,8 +11,8 @@
  * position settings; TagLayouts.Corners only stores "Hidden") and
  * TagShapeOverrides. The layout vocabulary comes from core/tag-layout.js.
  */
-/*! Lexical index of this module's declarations, in the order Helpers/MediaTagsPageFields.cs (the field
- *  patch's allowlist), Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
+/*! Lexical index of this module's declarations, in the order Features/MediaTags/Admin/MediaTagsPageFields.cs (the field
+ *  patch's allowlist), Features/Admin/Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
  *  from the generated file. Not code: tests/frontend/features/admin-tags-rewrite.test.mjs keeps it equal
  *  to the sections this module registers and to what those readers found in the JavaScript module.
 registerSection({
@@ -49,7 +49,7 @@ registerSection({
 */
 import type { JsonValue } from '../../../../contracts/generated';
 import type { AdminTagLayout } from '../host';
-import type { Group, Layout, Shape } from '../../rules/layout-rules';
+import type { Group, Layout, Shape } from '../../layout/layout-rules';
 import { allAs, closest, find, findAs, focus, isDisabled } from '../dom';
 import { word } from '../format';
 import type { PageContext, SectionDef } from '../types';

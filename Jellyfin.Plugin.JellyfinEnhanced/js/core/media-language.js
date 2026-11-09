@@ -19,7 +19,7 @@
     return [saved, bridge2.currentSettings?.displayLanguage, document.documentElement?.getAttribute("lang")];
   }
 
-  // client/src/features/media-tags/rules/media-language.ts
+  // client/src/features/media-tags/types/language/media-language.ts
   var baseLanguageFlags = {
     English: "gb",
     eng: "gb",
@@ -1245,7 +1245,7 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/media-tags/rules/media-language-entry.ts
+  // client/src/features/media-tags/types/language/media-language-entry.ts
   var bridge = tagRulesHost();
   bridge.core ?? (bridge.core = {});
   bridge.core.mediaLanguage = createMediaLanguage({

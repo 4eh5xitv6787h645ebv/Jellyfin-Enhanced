@@ -35,7 +35,7 @@
     return () => owner === identity() && epoch === bridge2.session?.getEpoch?.();
   }
 
-  // client/src/features/media-tags/rules/layout-rules.ts
+  // client/src/features/media-tags/layout/layout-rules.ts
   var layout_rules_exports = {};
   __export(layout_rules_exports, {
     DEFAULT_CAPS: () => DEFAULT_CAPS,
@@ -423,7 +423,7 @@
     return value;
   }
 
-  // client/src/features/media-tags/rules/tag-look.ts
+  // client/src/features/media-tags/layout/tag-look.ts
   function transportStatus(error) {
     try {
       if (typeof error === "object" && error !== null && "status" in error) {
@@ -976,7 +976,7 @@
     };
   }
 
-  // client/src/features/media-tags/rules/tag-look-entry.ts
+  // client/src/features/media-tags/layout/tag-look-entry.ts
   var bridge = tagRulesHost();
   bridge.core ?? (bridge.core = {});
   bridge.core.tagLook = createTagLook({

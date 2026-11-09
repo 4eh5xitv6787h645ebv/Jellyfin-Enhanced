@@ -9,7 +9,7 @@
     return host.JellyfinEnhanced;
   }
 
-  // client/src/features/media-tags/rules/compact-quality.ts
+  // client/src/features/media-tags/types/quality/compact-quality.ts
   var COMPACT_QUALITY = {
     "Dolby Vision": [
       "DV",
@@ -81,7 +81,7 @@
     ]
   };
 
-  // client/src/features/media-tags/rules/layout-rules.ts
+  // client/src/features/media-tags/layout/layout-rules.ts
   var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
   function isLayout(value) {
     return LAYOUTS.some((layout2) => layout2 === value);
@@ -426,7 +426,7 @@
     return value;
   }
 
-  // client/src/features/media-tags/rules/layout-fitting.ts
+  // client/src/features/media-tags/layout/layout-fitting.ts
   var SHAPE_RATIO = 1.2;
   function preserveLegacySizing(css) {
     return css.replace(/([^{}]+)\{([^{}]*)\}/g, (rule, selector, body) => {
@@ -527,7 +527,7 @@ ${scoped} {${original}}`;
     return used.reduce((sum, h) => sum + h, 0) + gap * Math.max(0, used.length - 1);
   }
 
-  // client/src/features/media-tags/rules/tag-layout.ts
+  // client/src/features/media-tags/layout/tag-layout.ts
   function contextElement(context) {
     return context instanceof HTMLElement ? context : context && "host" in context ? context.host : null;
   }
@@ -2536,7 +2536,7 @@ ${scoped} {${original}}`;
     return api;
   }
 
-  // client/src/features/media-tags/rules/tag-layout-entry.ts
+  // client/src/features/media-tags/layout/tag-layout-entry.ts
   var bridge = tagRulesHost();
   bridge.core ?? (bridge.core = {});
   var layout = createTagLayout({

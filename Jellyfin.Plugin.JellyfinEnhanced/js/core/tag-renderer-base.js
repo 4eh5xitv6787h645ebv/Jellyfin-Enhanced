@@ -18,7 +18,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -33,7 +33,7 @@
     return isRecord(value) ? value[key] ?? value[key.charAt(0).toUpperCase() + key.slice(1)] : void 0;
   }
 
-  // client/src/features/media-tags/runtime/scopes.ts
+  // client/src/features/media-tags/pipeline/scopes.ts
   var SCOPE_IDS = ["movies", "series", "seasons", "episodes", "continueWatching", "nextUp"];
   var SCOPED_GROUPS = ["quality", "genre", "language", "ageRating", "status", "awards", "logos", "custom"];
   var TYPE_SCOPES = { Movie: "movies", Series: "series", Season: "seasons", Episode: "episodes" };
@@ -121,7 +121,7 @@
     return { ...SETTINGS_MATRIX, offers };
   }
 
-  // client/src/features/media-tags/runtime/tag-renderer-base.ts
+  // client/src/features/media-tags/pipeline/tag-renderer-base.ts
   function isHostList(value) {
     return Array.isArray(value);
   }
@@ -764,7 +764,7 @@
     console.log("🪼 Jellyfin Enhanced: Tag renderer core initialized");
   }
 
-  // client/src/features/media-tags/runtime/tag-renderer-base-entry.ts
+  // client/src/features/media-tags/pipeline/tag-renderer-base-entry.ts
   createTagRenderer(tagRuntimeHost());
 })();
 })();

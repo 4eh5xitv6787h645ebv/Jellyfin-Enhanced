@@ -14,7 +14,7 @@
  */
 import type { JsonValue } from '../../../contracts/generated';
 import { adminBridge, apiClient, cdnUrl } from './host';
-import type { RatingSourceId } from '../rules/rating-data';
+import type { RatingSourceId } from '../types/ratings/rating-data';
 import { allAs, activeElement, find, findAs } from './dom';
 import { fmt } from './format';
 import { contrastLevel, contrastRatio, compositeOver, luminance, rgbaOf, type Rgba } from './tag-style-contrast';

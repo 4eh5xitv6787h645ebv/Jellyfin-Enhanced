@@ -15,7 +15,7 @@
     return server && user ? `${server}:${user}` : "";
   }
 
-  // client/src/features/media-tags/rules/poster-colour-rules.ts
+  // client/src/features/media-tags/layout/poster-colour-rules.ts
   var logPrefix = "🪼 Jellyfin Enhanced: Poster colours:";
   var ALGORITHM = 1;
   var SAMPLE_SIZE = 32;
@@ -136,7 +136,7 @@
     }
   }
 
-  // client/src/features/media-tags/rules/poster-colours.ts
+  // client/src/features/media-tags/layout/poster-colours.ts
   function errorName(error) {
     return error && typeof error === "object" && "name" in error ? error.name : void 0;
   }
@@ -660,7 +660,7 @@
     };
   }
 
-  // client/src/features/media-tags/rules/poster-colours-entry.ts
+  // client/src/features/media-tags/layout/poster-colours-entry.ts
   var bridge = tagRulesHost();
   bridge.tagPosterColours = createPosterColours({
     scope: () => posterScope(bridge),

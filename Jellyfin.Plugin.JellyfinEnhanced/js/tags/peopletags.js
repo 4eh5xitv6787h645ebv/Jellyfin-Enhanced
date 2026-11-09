@@ -14,7 +14,7 @@
     return host.ApiClient;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -26,7 +26,7 @@
     return isRecord(error) && typeof error.status === "number" ? error.status : 0;
   }
 
-  // client/src/features/media-tags/runtime/people-countries.ts
+  // client/src/features/media-tags/types/people/people-countries.ts
   var COUNTRY_MAP = {
     "United States": "US",
     "USA": "US",
@@ -186,7 +186,7 @@
     "Tonga": "TO"
   };
 
-  // client/src/features/media-tags/runtime/people-model.ts
+  // client/src/features/media-tags/types/people/people-model.ts
   var DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/;
   var PERSON_ID_PATTERN = /^[0-9a-f]{32}$/;
   var MAX_BIRTHPLACE_LENGTH = 300;
@@ -291,7 +291,7 @@
     return JSON.stringify({ v: 2, owner, people: Object.fromEntries(people) });
   }
 
-  // client/src/features/media-tags/runtime/peopletags.ts
+  // client/src/features/media-tags/types/people/peopletags.ts
   function isHotPerson(value) {
     return isRecord(value) && isRecord(value.data) && typeof value.timestamp === "number";
   }
@@ -1047,7 +1047,7 @@
     };
   }
 
-  // client/src/features/media-tags/runtime/peopletags-entry.ts
+  // client/src/features/media-tags/types/people/peopletags-entry.ts
   createPeopleTags(tagRuntimeHost());
 })();
 })();

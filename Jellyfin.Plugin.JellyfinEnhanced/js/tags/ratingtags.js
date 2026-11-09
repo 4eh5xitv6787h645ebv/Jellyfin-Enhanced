@@ -9,7 +9,7 @@
     return bridge;
   }
 
-  // client/src/features/media-tags/runtime/dto.ts
+  // client/src/features/media-tags/pipeline/dto.ts
   var EMPTY = Object.freeze({});
   function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -24,7 +24,7 @@
     return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : void 0;
   }
 
-  // client/src/features/media-tags/runtime/ratingtags.ts
+  // client/src/features/media-tags/types/ratings/ratingtags.ts
   var SCOPE_OF_KEY = {
     ratingTagsOnMovies: "movies",
     ratingTagsOnSeries: "series",
@@ -391,7 +391,7 @@
     JE.core.tagRenderer.registerStyles(spec);
   }
 
-  // client/src/features/media-tags/runtime/ratingtags-entry.ts
+  // client/src/features/media-tags/types/ratings/ratingtags-entry.ts
   createRatingTags(tagRuntimeHost());
 })();
 })();

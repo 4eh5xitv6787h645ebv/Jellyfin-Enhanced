@@ -4,8 +4,8 @@
  * the rating in the video player, and the state of MDBList (its own settings
  * stay with the MDBList Ratings feature on the main configuration page).
  */
-/*! Lexical index of this module's declarations, in the order Helpers/MediaTagsPageFields.cs (the field
- *  patch's allowlist), Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
+/*! Lexical index of this module's declarations, in the order Features/MediaTags/Admin/MediaTagsPageFields.cs (the field
+ *  patch's allowlist), Features/Admin/Services/WhatsNewService.cs and scripts/generate_config_flag_groups.py read them
  *  from the generated file. Not code: tests/frontend/features/admin-tags-rewrite.test.mjs keeps it equal
  *  to the sections this module registers and to what those readers found in the JavaScript module.
 registerSection({
@@ -24,7 +24,7 @@ registerSection({
         { id: 'ratingTagsColorByScore', key: 'RatingTagsColorByScore', type: 'switch', label: 'Colour by score' },
         { id: 'showRatingInPlayer', key: 'ShowRatingInPlayer', type: 'switch', label: 'Show the rating in the video player' },
 */
-import type { RatingSourceId } from '../../rules/rating-data';
+import type { RatingSourceId } from '../../types/ratings/rating-data';
 import { all, closest, find, focus, isDisabled, must } from '../dom';
 import type { PageContext } from '../types';
 import type { Config } from '../values';
