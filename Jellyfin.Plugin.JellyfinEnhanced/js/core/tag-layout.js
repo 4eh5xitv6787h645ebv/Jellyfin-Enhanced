@@ -9,78 +9,6 @@
     return host.JellyfinEnhanced;
   }
 
-  // client/src/features/media-tags/types/quality/compact-quality.ts
-  var COMPACT_QUALITY = {
-    "Dolby Vision": [
-      "DV",
-      true
-    ],
-    "HDR10+": [
-      "HDR+",
-      true
-    ],
-    "BluRay": [
-      "BD",
-      true
-    ],
-    "Dolby Digital": [
-      "DD",
-      true
-    ],
-    "Dolby Digital+": [
-      "DD+",
-      true
-    ],
-    "DTS-HD MA": [
-      "DTS-HD",
-      true
-    ],
-    "DTS-HD HRA": [
-      "DTS-HD",
-      true
-    ],
-    "DTS-HD": [
-      "DTS-HD",
-      true
-    ],
-    "Dolby TrueHD": [
-      "TrueHD",
-      true
-    ],
-    "Dolby Atmos": [
-      "Atmos",
-      true
-    ],
-    "DTS:X": [
-      "DTS:X",
-      true
-    ],
-    "ATMOS": [
-      "ATMOS",
-      false
-    ],
-    "TRUEHD ATMOS": [
-      "ATMOS",
-      false
-    ],
-    "DD+ ATMOS": [
-      "ATMOS",
-      false
-    ],
-    "DTS-X": [
-      "DTS-X",
-      false
-    ],
-    "TRUEHD": [
-      "TRUEHD",
-      false
-    ],
-    "DTS": [
-      "DTS",
-      false
-    ]
-  };
-
   // client/src/features/media-tags/layout/layout-rules.ts
   var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
   function isLayout(value) {
@@ -426,108 +354,7 @@
     return value;
   }
 
-  // client/src/features/media-tags/layout/layout-fitting.ts
-  var SHAPE_RATIO = 1.2;
-  function preserveLegacySizing(css) {
-    return css.replace(/([^{}]+)\{([^{}]*)\}/g, (rule, selector, body) => {
-      if (!body.includes("--je-tag-scale"))
-        return rule;
-      const declarations = body.split(";").filter((declaration) => declaration.includes("--je-tag-scale")).join(";") + ";";
-      const original = declarations.replace(/calc\((clamp\([^)]*\)|[\d.]+(?:px|rem|em|cqw|vw)) \* var\(--je-tag-scale, 1\)(?: \* var\(--je-tag-gap, 1\))?\)/g, "$1");
-      if (original === declarations)
-        return rule;
-      const scoped = selector.includes(".je-tag-host") ? selector.trim().replace(/\.je-tag-host/g, ".je-tag-host[data-je-legacy]") : `.je-tag-host[data-je-legacy] :is(${selector.trim()})`;
-      return `${rule}
-${scoped} {${original}}`;
-    });
-  }
-  function revealSettings(conf) {
-    return conf.density === "compact" ? conf : { ...conf, density: "compact" };
-  }
-  var FIT_MAX_ROWS = 2;
-  var centreRowLimit = (height, offset) => Math.max(0, Math.min(height / 3, height / 2 - offset));
-  function shapeOfSize(width, height) {
-    return width > 0 && height > 0 && width / height > SHAPE_RATIO ? "landscape" : "portrait";
-  }
-  function compactQualityLabel(label) {
-    const audio = /^(.*) (\d+\.\d+(?:\.\d+)?)$/.exec(label);
-    const base = audio?.[1] || label;
-    const compact = hasOwn(COMPACT_QUALITY, base) ? COMPACT_QUALITY[base] : void 0;
-    if (!compact)
-      return label;
-    const [text, keepChannels] = compact;
-    return text + (audio && keepChannels ? ` ${audio[2]}` : "");
-  }
-  function chipsThatFit(widths, available, gap, maxRows, moreWidth, rowsOut, moreOut) {
-    const fits = (need, room) => need <= room + 0.01;
-    const rowOf = [];
-    let rows = 0;
-    let x = 0;
-    for (const w of widths) {
-      if (rows === 0 || !fits(x + gap + w, available)) {
-        rows++;
-        x = w;
-      } else
-        x += gap + w;
-      rowOf.push(rows);
-    }
-    if (rows <= maxRows && widths.every((w) => fits(w, available))) {
-      rowsOut?.push(...rowOf);
-      if (moreOut)
-        moreOut.row = 0;
-      return widths.map(() => true);
-    }
-    const roomOn = (row2) => row2 === maxRows ? available - gap - moreWidth : available;
-    const usable = (w) => fits(w, maxRows === 1 ? roomOn(1) : available);
-    let row = 1;
-    x = 0;
-    let ended = false;
-    const shown = widths.map((w) => {
-      if (maxRows > 0 && !ended && usable(w)) {
-        if (fits(x === 0 ? w : x + gap + w, roomOn(row))) {
-          x = x === 0 ? w : x + gap + w;
-          rowsOut?.push(row);
-          return true;
-        }
-        if (row < maxRows && x > 0 && fits(w, roomOn(row + 1))) {
-          row++;
-          x = w;
-          rowsOut?.push(row);
-          return true;
-        }
-        ended = true;
-      }
-      rowsOut?.push(0);
-      return false;
-    });
-    if (moreOut)
-      moreOut.row = x === 0 || fits(x + gap + moreWidth, available) ? Math.max(1, row) : row + 1;
-    return shown;
-  }
-  function rowBudget(heights, moreHeight, limit, rowGap) {
-    const tallest = [moreHeight, ...heights].filter((h) => h > 0).sort((a, b) => b - a);
-    if (!tallest.length)
-      return FIT_MAX_ROWS;
-    for (let rows = FIT_MAX_ROWS; rows >= 1; rows--) {
-      const height = tallest.slice(0, rows).reduce((sum, h) => sum + h, 0) + rowGap * (rows - 1);
-      if (height <= limit + 0.01)
-        return rows;
-    }
-    return 0;
-  }
-  function rowsHeight(shown, rows, heights, moreHeight, gap, moreRow) {
-    const tallest = [];
-    shown.forEach((on, i) => {
-      if (on)
-        tallest[(rows[i] ?? 0) - 1] = Math.max(tallest[(rows[i] ?? 0) - 1] || 0, heights[i] ?? 0);
-    });
-    if (shown.includes(false) && moreRow > 0)
-      tallest[moreRow - 1] = Math.max(tallest[moreRow - 1] || 0, moreHeight);
-    const used = tallest.filter((h) => h !== void 0);
-    return used.reduce((sum, h) => sum + h, 0) + gap * Math.max(0, used.length - 1);
-  }
-
-  // client/src/features/media-tags/layout/tag-layout.ts
+  // client/src/features/media-tags/layout/state.ts
   function contextElement(context) {
     return context instanceof HTMLElement ? context : context && "host" in context ? context.host : null;
   }
@@ -540,121 +367,61 @@ ${scoped} {${original}}`;
       throw new Error("Expected an HTML tag");
     return clone;
   }
-  function createTagLayout(JE) {
-    function requireLook() {
-      const look = JE.core.tagLook;
-      if (!look)
-        throw new Error("Tag looks must load before resolving item rules");
-      return look;
-    }
-    const normalizeSettings2 = (settings, plugin) => normalizeSettings(settings ?? JE.currentSettings, plugin ?? JE.pluginConfig);
-    const isLegacySettings2 = (settings) => isLegacySettings(settings ?? JE.currentSettings);
-    const singleChipGroup2 = (group, config = JE.pluginConfig) => singleChipGroup(group, config);
-    const promoteLegacySettings2 = (settings) => {
-      const source = settings ?? JE.currentSettings;
-      const changed = promoteLegacySettings(source);
-      if (changed && source === JE.currentSettings) invalidateSettings();
-      return changed;
+  var STACK_INSET = 6;
+  var STACK_LIFT = "--je-stack-lift";
+  var INDICATOR_BEFORE = "--je-indicator-before";
+  function createLayoutState() {
+    return {
+      SLOT_ORDER: [...new Set(Object.values(LAYOUT_SLOTS).flat().filter((slot) => slot !== "off"))],
+      PORTRAIT_CARD: /^(?:overflow)?(?:portrait|square)card$/i,
+      LANDSCAPE_CARD: /^(?:overflow)?(?:backdrop|smallbackdrop|banner|thumb)card$/i,
+      CONTAINER_CLASS: {
+        quality: "quality-overlay-container",
+        genre: "genre-overlay-container",
+        language: "language-overlay-container",
+        rating: "rating-overlay-container",
+        ageRating: "age-rating-overlay-container",
+        status: "status-overlay-container",
+        awards: "awards-overlay-container",
+        logos: "logo-overlay-container",
+        custom: "custom-overlay-container"
+      },
+      SUMMARY_SLOTS: /* @__PURE__ */ new Set(["pill", "dots", "corner"]),
+      FIT_LAYOUTS: /* @__PURE__ */ new Set(["bands", "caption", "summary", "minimal"]),
+      CENTRE_SLOTS: /* @__PURE__ */ new Set(["tc", "bc", "ml", "mr", "c"]),
+      STACK_SLOTS: { minimal: ["top", "corner"], caption: ["poster"] },
+      DYNAMIC_RANGE: ["Dolby Vision", "HDR10+", "HDR10", "HLG", "HDR"],
+      DOT_KIND: [
+        ["resolution", "resolution"],
+        ["video-codec", "range"],
+        ["audio-codec", "audio"],
+        ["video-format", "codec"],
+        ["other-quality", "codec"]
+      ],
+      cachedSettings: null,
+      cachedSource: null,
+      cachedLooks: null,
+      controllers: /* @__PURE__ */ new WeakMap(),
+      cardData: /* @__PURE__ */ new WeakMap(),
+      awaitingData: /* @__PURE__ */ new WeakMap(),
+      waitGeneration: 0,
+      outletSeq: 0,
+      stylesInjected: false,
+      resizeQueued: false,
+      pendingFit: /* @__PURE__ */ new Set(),
+      fitScheduled: false,
+      fitting: false,
+      sizeObserver: null,
+      genreAfterFit: /* @__PURE__ */ new Set(),
+      revealedCard: null,
+      moreTipSeq: 0,
+      reinitPending: null
     };
-    const lookSettingsCache = /* @__PURE__ */ new Map();
-    const lookSettings2 = (base, look, locked) => {
-      const settings = lookSettings(base, look, locked, JE.currentSettings, JE.pluginConfig);
-      const key = settings.lookKey + "|" + (settings.order ? "o" : "");
-      const cached = lookSettingsCache.get(key);
-      if (cached)
-        return cached;
-      lookSettingsCache.set(key, settings);
-      return settings;
-    };
-    const SLOT_ORDER = [...new Set(Object.values(LAYOUT_SLOTS).flat().filter((slot) => slot !== "off"))];
-    const PORTRAIT_CARD = /^(?:overflow)?(?:portrait|square)card$/i;
-    const LANDSCAPE_CARD = /^(?:overflow)?(?:backdrop|smallbackdrop|banner|thumb)card$/i;
-    function applySize(element, conf) {
-      element.style.setProperty("--je-tag-scale", String(TAG_SCALES[conf.tagScale] ?? 1));
-      element.style.setProperty("--je-tag-gap", String(TAG_GAPS[conf.tagGap] ?? 1));
-    }
-    const CONTAINER_CLASS = {
-      quality: "quality-overlay-container",
-      genre: "genre-overlay-container",
-      language: "language-overlay-container",
-      rating: "rating-overlay-container",
-      ageRating: "age-rating-overlay-container",
-      status: "status-overlay-container",
-      awards: "awards-overlay-container",
-      logos: "logo-overlay-container",
-      custom: "custom-overlay-container"
-    };
-    const SUMMARY_SLOTS = /* @__PURE__ */ new Set(["pill", "dots", "corner"]);
-    const PILL_MAX_FACTS = 3;
-    const FIT_LAYOUTS = /* @__PURE__ */ new Set(["bands", "caption", "summary", "minimal"]);
-    const CENTRE_SLOTS = /* @__PURE__ */ new Set(["tc", "bc", "ml", "mr", "c"]);
-    const STACK_SLOTS = { minimal: ["top", "corner"], caption: ["poster"] };
-    const STACK_INSET = 6;
-    const STACK_LIFT = "--je-stack-lift";
-    const NARROW_CARD_PX = 160;
-    const DYNAMIC_RANGE = ["Dolby Vision", "HDR10+", "HDR10", "HLG", "HDR"];
-    const DOT_KIND = [
-      ["resolution", "resolution"],
-      ["video-codec", "range"],
-      ["audio-codec", "audio"],
-      ["video-format", "codec"],
-      ["other-quality", "codec"]
-    ];
-    let cachedSettings = null;
-    let cachedSource = null;
-    function settingsSource() {
-      const s = JE.currentSettings;
-      return { settings: s, plugin: JE.pluginConfig, enabled: DEFAULT_ORDER.map((g) => s?.[ENABLED_SETTING[g]] ? "1" : "0").join("") };
-    }
-    function currentSettings() {
-      const source = settingsSource();
-      if (!cachedSettings || !cachedSource || cachedSource.settings !== source.settings || cachedSource.plugin !== source.plugin || cachedSource.enabled !== source.enabled) {
-        cachedSettings = normalizeSettings2();
-        cachedSource = source;
-      }
-      return cachedSettings;
-    }
-    function invalidateSettings() {
-      lookSettingsCache.clear();
-      cachedSettings = null;
-      cachedLooks = null;
-    }
-    let cachedLooks = null;
-    function currentLooks() {
-      if (!cachedLooks)
-        cachedLooks = JE.core.tagLook?.read() || { rules: [], locks: /* @__PURE__ */ new Map(), overrides: /* @__PURE__ */ new Map() };
-      if (!cachedLooks.overrides)
-        cachedLooks.overrides = /* @__PURE__ */ new Map();
-      return cachedLooks;
-    }
-    const controllers = /* @__PURE__ */ new WeakMap();
-    let cardData = /* @__PURE__ */ new WeakMap();
-    let awaitingData = /* @__PURE__ */ new WeakMap();
-    let waitGeneration = 0;
-    const AWAIT_CONTEXT_MS = 8e3;
-    let outletSeq = 0;
-    let stylesInjected = false;
-    function injectStyles() {
-      if (stylesInjected || typeof api.buildStyles !== "function" || !JE.core.ui?.injectCss)
-        return;
-      stylesInjected = true;
-      JE.core.ui.injectCss("je-tag-layout", api.buildStyles());
-      window.addEventListener("resize", refitOnResize, { passive: true });
-    }
-    let resizeQueued = false;
-    function refitOnResize() {
-      if (resizeQueued)
-        return;
-      resizeQueued = true;
-      requestAnimationFrame(() => {
-        resizeQueued = false;
-        for (const host of document.querySelectorAll(".je-tag-host")) {
-          const ctrl = controllers.get(host);
-          if (ctrl)
-            scheduleFit(ctrl);
-        }
-      });
-    }
+  }
+
+  // client/src/features/media-tags/layout/card-context.ts
+  var AWAIT_CONTEXT_MS = 8e3;
+  function createCardContext(s, JE, deps) {
     function identityOf(el) {
       const holder = el.closest("[data-id]") || el.closest("[data-itemid]");
       const raw = holder?.getAttribute("data-id") || holder?.getAttribute("data-itemid") || "";
@@ -673,9 +440,9 @@ ${scoped} {${original}}`;
       if (!card)
         return null;
       for (const cls of card.classList) {
-        if (PORTRAIT_CARD.test(cls))
+        if (s.PORTRAIT_CARD.test(cls))
           return "portrait";
-        if (LANDSCAPE_CARD.test(cls))
+        if (s.LANDSCAPE_CARD.test(cls))
           return "landscape";
       }
       return null;
@@ -684,16 +451,16 @@ ${scoped} {${original}}`;
       if (cardContext && "host" in cardContext)
         return cardContext.shape || "portrait";
       if (cardContext instanceof HTMLElement) {
-        const ctrl = controllers.get(findHost(cardContext) || cardContext);
+        const ctrl = s.controllers.get(findHost(cardContext) || cardContext);
         return ctrl?.shape || shapeOfCard(cardContext) || "portrait";
       }
       return cardContext?.shape === "list" || cardContext?.shape === "landscape" ? cardContext.shape : "portrait";
     }
     function shapesInUse() {
-      const base = currentSettings();
+      const base = deps.currentSettings();
       if (SHAPES.some((shape) => shape === "list" || shape === "landscape" ? base.shapes[shape] : null))
         return true;
-      const looks = currentLooks();
+      const looks = deps.currentLooks();
       return looks.rules.some((rule) => !!rule.shapes) || Array.from(looks.locks.values()).some((lock) => !!lock.shapes) || Array.from(looks.overrides.values()).some((look) => !!look.shapes);
     }
     function findHost(target) {
@@ -739,26 +506,26 @@ ${scoped} {${original}}`;
       const host = create ? ensureHost(target) : findHost(target);
       if (!host)
         return null;
-      let ctrl = controllers.get(host) || null;
+      let ctrl = s.controllers.get(host) || null;
       const itemId = identityOf(host);
       if (ctrl && ctrl.itemId !== itemId) {
-        forget(ctrl);
+        deps.forget(ctrl);
         ctrl = null;
       }
       if (!ctrl && create) {
-        injectStyles();
+        deps.injectStyles();
         ctrl = { host, itemId, groups: /* @__PURE__ */ new Map(), nodes: /* @__PURE__ */ new Map(), outlet: null, pill: null, layout: null, seq: 0, moreTip: null, described: null, lookKey: "", shape: shapeOfCard(host) };
-        controllers.set(host, ctrl);
+        s.controllers.set(host, ctrl);
       }
       return ctrl;
     }
     function cardFacts(cardContext) {
-      const look = requireLook();
+      const look = deps.requireLook();
       const el = contextElement(cardContext);
       if (!el)
         return look.factsFrom(cardContext, { itemId: cardContext && "itemId" in cardContext ? cardContext.itemId || "" : "", cardType: cardContext && "cardType" in cardContext ? cardContext.cardType || null : null });
       const cardId = cardContext && "host" in cardContext ? cardContext.itemId : identityOf(el);
-      const data = contextOf(cardData, el);
+      const data = contextOf(s.cardData, el);
       const usable = data && (!data.cardId || data.cardId === cardId);
       const cardType = el.closest("[data-type]")?.getAttribute("data-type") || null;
       return look.factsFrom(usable ? data.entry : null, { itemId: usable ? data.itemId : "", cardId, cardType });
@@ -767,7 +534,7 @@ ${scoped} {${original}}`;
       return map.get(el) || (el.parentElement ? map.get(el.parentElement) : void 0);
     }
     function needsCardData(cardType) {
-      const looks = currentLooks();
+      const looks = deps.currentLooks();
       const perItem = looks.locks.size + looks.overrides.size;
       if (!looks.rules.length && !perItem)
         return false;
@@ -778,41 +545,41 @@ ${scoped} {${original}}`;
       return perItem > 0 && (cardType === "Season" || cardType === "Episode");
     }
     function isAwaiting(host) {
-      const rec = contextOf(awaitingData, host);
+      const rec = contextOf(s.awaitingData, host);
       return !!rec && rec.cardId === identityOf(host);
     }
     function resolveLayout(cardContext) {
-      const base = currentSettings();
+      const base = deps.currentSettings();
       const source = lookSource(cardContext);
       const shape = source.shape;
       if (source.lock)
-        return lookSettings2(base, withShape(source.lock, shape === "list" || shape === "landscape" ? source.lock.shapes?.[shape] : null), source.source === "lock" || "locked" in source.lock && !!source.lock.locked);
+        return deps.lookSettings(base, withShape(source.lock, shape === "list" || shape === "landscape" ? source.lock.shapes?.[shape] : null), source.source === "lock" || "locked" in source.lock && !!source.lock.locked);
       if (source.rule)
-        return lookSettings2(base, withShape(source.rule, shape === "list" || shape === "landscape" ? source.rule.shapes?.[shape] : null), false);
+        return deps.lookSettings(base, withShape(source.rule, shape === "list" || shape === "landscape" ? source.rule.shapes?.[shape] : null), false);
       if (source.source === "shape") {
-        return lookSettings2(base, withShape({ layout: base.layout, density: base.density, slots: null, caps: null }, shape === "list" || shape === "landscape" ? base.shapes[shape] : null), false);
+        return deps.lookSettings(base, withShape({ layout: base.layout, density: base.density, slots: null, caps: null }, shape === "list" || shape === "landscape" ? base.shapes[shape] : null), false);
       }
       return base;
     }
     function lookSource(cardContext) {
-      const looks = currentLooks();
+      const looks = deps.currentLooks();
       const shape = shapeOf(cardContext);
       const el = contextElement(cardContext);
       const preview = el ? contextOf(previewLooks, el) : void 0;
       if (preview)
         return { source: "preview", lock: preview, rule: null, index: -1, shape };
-      const shaped = (shape === "list" || shape === "landscape") && !!currentSettings().shapes[shape];
+      const shaped = (shape === "list" || shape === "landscape") && !!deps.currentSettings().shapes[shape];
       const none = { source: shaped ? "shape" : "default", lock: null, rule: null, index: -1, shape };
       if (!looks.rules.length && !looks.locks.size && !looks.overrides.size)
         return none;
       const facts = cardFacts(cardContext);
-      const lock = requireLook().findLock(looks.locks, facts);
+      const lock = deps.requireLook().findLock(looks.locks, facts);
       if (lock)
         return { source: "lock", lock, rule: null, index: -1, shape };
-      const override = requireLook().findLock(looks.overrides, facts);
+      const override = deps.requireLook().findLock(looks.overrides, facts);
       if (override)
         return { source: "override", lock: override, rule: null, index: -1, shape };
-      const rule = requireLook().firstMatch(looks.rules, facts);
+      const rule = deps.requireLook().firstMatch(looks.rules, facts);
       return rule ? { source: "rule", lock: null, rule, index: looks.rules.indexOf(rule), shape } : none;
     }
     const previewLooks = /* @__PURE__ */ new WeakMap();
@@ -823,7 +590,7 @@ ${scoped} {${original}}`;
         previewLooks.set(target, look);
       else
         previewLooks.delete(target);
-      refreshPresentation(target);
+      deps.refreshPresentation(target);
     }
     function cardIdentity(target) {
       return target ? identityOf(findHost(target) || target) : "";
@@ -835,14 +602,14 @@ ${scoped} {${original}}`;
       const current = identityOf(host);
       if (cardId !== void 0 && cardId !== null && cardId !== current)
         return false;
-      cardData.set(host, { entry, itemId, cardId: current });
+      s.cardData.set(host, { entry, itemId, cardId: current });
       const waited = endAwait(host);
-      const ctrl = controllers.get(host);
+      const ctrl = s.controllers.get(host);
       if (!ctrl || !ctrl.host.isConnected || !ctrl.groups.size)
         return true;
-      const looks = currentLooks();
+      const looks = deps.currentLooks();
       if (waited || (looks.rules.length || looks.locks.size) && resolveLayout(ctrl).lookKey !== ctrl.lookKey)
-        presentAll(ctrl);
+        deps.presentAll(ctrl);
       return true;
     }
     function awaitCardContext(target, cardId, cardType) {
@@ -850,20 +617,20 @@ ${scoped} {${original}}`;
         return false;
       const host = findHost(target) || target;
       endAwait(host);
-      const token = { cardId, generation: ++waitGeneration };
+      const token = { cardId, generation: ++s.waitGeneration };
       const timer = setTimeout(() => releaseCardContext(target, token), AWAIT_CONTEXT_MS);
-      awaitingData.set(host, { cardId, timer, token });
+      s.awaitingData.set(host, { cardId, timer, token });
       return token;
     }
     function endAwait(el) {
       let waited = false;
       for (const key of [el, el.parentElement]) {
-        const rec = key ? awaitingData.get(key) : void 0;
+        const rec = key ? s.awaitingData.get(key) : void 0;
         if (!rec)
           continue;
         clearTimeout(rec.timer);
         if (key)
-          awaitingData.delete(key);
+          s.awaitingData.delete(key);
         waited = true;
       }
       return waited;
@@ -872,1034 +639,45 @@ ${scoped} {${original}}`;
       if (!target)
         return;
       const host = findHost(target) || target;
-      const rec = contextOf(awaitingData, host);
+      const rec = contextOf(s.awaitingData, host);
       if (!rec || rec.token !== token || token.cardId !== identityOf(host))
         return;
       if (!endAwait(host))
         return;
-      const ctrl = controllers.get(host);
+      const ctrl = s.controllers.get(host);
       if (!ctrl || !ctrl.groups.size)
         return;
       if (ctrl.host.isConnected)
-        presentAll(ctrl);
+        deps.presentAll(ctrl);
       else
         ctrl.pendingPresentation = true;
     }
     function resumePresentation(target) {
       const ctrl = target ? controllerFor(target, false) : null;
       if (ctrl?.pendingPresentation && ctrl.host.isConnected)
-        presentAll(ctrl);
+        deps.presentAll(ctrl);
     }
-    function applyDensityAndCap(group, node, conf) {
-      if (conf.density === "compact") {
-        if (group === "quality") {
-          for (const chip of node.querySelectorAll(".quality-overlay-label")) {
-            const text = chip.textContent || "";
-            const short = chip.dataset.jeCompact || compactQualityLabel(text);
-            if (short !== text)
-              chip.textContent = short;
-          }
-        } else if (group === "rating") {
-          for (const chip of node.querySelectorAll(".rating-tag--source"))
-            chip.dataset.jeRatingCompact = "1";
-          if (node.querySelector(".rating-tag-tmdb"))
-            node.querySelector(".rating-tag-critic")?.remove();
-        } else if (group === "status") {
-          for (const chip of node.querySelectorAll("[data-je-compact]")) {
-            chip.textContent = chip.dataset.jeCompact || chip.textContent;
-          }
-        }
-      }
-      const cap = conf.caps[group];
-      if (cap > 0) {
-        while (node.children.length > cap)
-          node.lastElementChild?.remove();
-      }
-    }
-    function buildChips(group, master, conf, host) {
-      const node = cloneElement(master);
-      node.dataset.jeGroup = group;
-      for (const img of node.querySelectorAll("img"))
-        img.onerror = () => img.remove();
-      applyDensityAndCap(group, node, conf);
-      if ((group === "language" || group === "awards") && host) {
-        const link = cardLinkOf(host);
-        if (link?.matches("a[href]") && !link.contains(host)) {
-          for (const chip of childrenOf(node)) {
-            const anchor = document.createElement("a");
-            anchor.className = group === "language" ? "language-link" : "awards-link";
-            anchor.href = link.getAttribute("href") || "";
-            anchor.title = chip.getAttribute("title") || "";
-            anchor.setAttribute("tabindex", "-1");
-            for (const attr of ["target", "rel"]) {
-              if (link.hasAttribute(attr))
-                anchor.setAttribute(attr, link.getAttribute(attr) || "");
-            }
-            chip.replaceWith(anchor);
-            anchor.appendChild(chip);
-          }
-        }
-      }
-      return node;
-    }
-    function buildDots(master, conf) {
-      const copy = buildChips("quality", master, { ...conf, density: "full" });
-      const labels = [];
-      const dots = document.createElement("div");
-      dots.className = "je-tag-dots";
-      dots.dataset.jeGroup = "quality";
-      for (const chip of childrenOf(copy)) {
-        const label = chip.textContent || "";
-        const kind = DOT_KIND.find(([cls]) => !!cls && chip.classList.contains(cls))?.[1] || "codec";
-        const dot = document.createElement("span");
-        dot.className = "je-tag-dot";
-        dot.dataset.jeDot = kind;
-        dot.title = label;
-        dot.setAttribute("aria-hidden", "true");
-        dots.appendChild(dot);
-        labels.push(label);
-      }
-      if (labels.length === 0)
-        return null;
-      dots.setAttribute("role", "img");
-      dots.setAttribute("aria-label", labels.join(", "));
-      dots.title = labels.join(" · ");
-      return dots;
-    }
-    function pillFact(group, master) {
-      switch (group) {
-        case "quality": {
-          const labels = Array.from(master.querySelectorAll(".quality-overlay-label"));
-          const resolution = labels.find((l) => l.classList.contains("resolution"))?.textContent || "";
-          const range = labels.map((l) => l.dataset.quality || "").find((q) => DYNAMIC_RANGE.includes(q)) || "";
-          const text = [resolution, range ? compactQualityLabel(range) : ""].filter(Boolean).join(" ") || labels[0]?.textContent || "";
-          return text ? { text } : null;
-        }
-        case "rating": {
-          const source = master.querySelector(".rating-tag--source");
-          if (source)
-            return { text: source.getAttribute("aria-label") || source.textContent };
-          const community = master.querySelector(".rating-tag-tmdb .rating-text")?.textContent;
-          if (community)
-            return { text: community, glyph: "★" };
-          const critic = master.querySelector(".rating-tag-critic .rating-text")?.textContent;
-          if (critic)
-            return { text: critic };
-          const review = master.querySelector(".je-userreview-tag .rating-text")?.textContent;
-          return review ? { text: review, glyph: "♥" } : null;
-        }
-        case "awards": {
-          const chip = childrenOf(master)[0];
-          return chip ? { text: chip.textContent, title: chip.title } : null;
-        }
-        case "status":
-        case "ageRating": {
-          const text = (master.firstElementChild?.textContent || "").trim();
-          return text ? { text } : null;
-        }
-        case "language": {
-          const first = childrenOf(master)[0];
-          if (first?.classList.contains("language-code") || first?.classList.contains("language-count-badge")) {
-            const copy = cloneElement(first);
-            const marker = copy.querySelector(".language-cc");
-            const glyph = marker?.textContent || void 0;
-            marker?.remove();
-            return { text: (copy.textContent || "").trim(), glyph, title: first.getAttribute("title") || void 0 };
-          }
-          const img = first instanceof HTMLImageElement ? first : first?.querySelector("img");
-          if (!img)
-            return null;
-          const flag = cloneElement(img);
-          flag.className = "je-tag-pill-flag";
-          flag.onerror = () => flag.remove();
-          return {
-            text: img.getAttribute("alt") || "",
-            title: first?.getAttribute("title") || void 0,
-            glyph: first?.querySelector(".language-cc")?.textContent || void 0,
-            flag
-          };
-        }
-        case "genre": {
-          const text = master.querySelector(".genre-tag")?.getAttribute("title") || "";
-          return text ? { text } : null;
-        }
-        case "logos": {
-          const text = master.querySelector(".je-logo-chip")?.getAttribute("title") || "";
-          return text ? { text } : null;
-        }
-        case "custom": {
-          const text = childrenOf(master)[0]?.dataset.jeCustom || "";
-          return text ? { text } : null;
-        }
-        default:
-          return null;
-      }
-    }
-    function rankOf(ctrl, conf, group) {
-      if (conf.order)
-        return conf.order.indexOf(group);
-      return ctrl.groups.get(group)?.seq ?? Number.MAX_SAFE_INTEGER;
-    }
-    function slotElement(ctrl, slot) {
-      if (slot === "caption")
-        return ensureOutlet(ctrl);
-      for (const child of childrenOf(ctrl.host)) {
-        if (child.classList.contains("je-tag-slot") && child.dataset.jeSlot === slot) {
-          return child;
-        }
-      }
-      const el = document.createElement("div");
-      el.className = "je-tag-slot";
-      el.dataset.jeSlot = slot;
-      const rank = SLOT_ORDER.indexOf(slot);
-      const children = childrenOf(ctrl.host);
-      const isSlot = (child) => child.classList.contains("je-tag-slot");
-      let next = children.find((child) => isSlot(child) && SLOT_ORDER.indexOf(child.dataset.jeSlot || "") > rank);
-      if (!next) {
-        let last = -1;
-        children.forEach((child, i) => {
-          if (isSlot(child))
-            last = i;
-        });
-        next = last >= 0 ? children[last + 1] : void 0;
-      }
-      if (next)
-        ctrl.host.insertBefore(el, next);
-      else
-        ctrl.host.appendChild(el);
-      return el;
-    }
-    function ensureOutlet(ctrl) {
-      if (ctrl.outlet && ctrl.outlet.isConnected)
-        return ctrl.outlet;
-      const anchor = captionAnchor(ctrl.host);
-      if (!anchor)
-        return null;
-      let outlet = childrenOf(anchor.parent).find((c) => c.classList.contains("je-tag-caption")) || null;
-      if (!outlet) {
-        outlet = document.createElement("div");
-        outlet.className = "je-tag-slot je-tag-caption";
-        outlet.dataset.jeSlot = "caption";
-        anchor.parent.insertBefore(outlet, anchor.before);
-      }
-      outlet.dataset.jeOwner = String(++outletSeq);
-      outlet.replaceChildren();
-      ctrl.outlet = outlet;
-      return ctrl.outlet;
-    }
-    function reservesCaption(conf, el) {
-      if (!conf.reserveCaption)
-        return false;
-      const scopes = JE.core.tagScopes;
-      if (!scopes)
-        return true;
-      return DEFAULT_ORDER.some((g) => conf.slots[g] === "caption" && !!JE.currentSettings?.[ENABLED_SETTING[g]] && !scopes.excludes(g, el));
-    }
-    function placeSorted(ctrl, conf, slotEl, node) {
-      if (!slotEl)
-        return;
-      const rank = rankOf(ctrl, conf, normalizeGroup(node.dataset.jeGroup) || "quality");
-      let before = null;
-      for (const sibling of childrenOf(slotEl)) {
-        const group = normalizeGroup(sibling.dataset.jeGroup);
-        if (group && rankOf(ctrl, conf, group) > rank) {
-          before = sibling;
-          break;
-        }
-      }
-      slotEl.insertBefore(node, before || moreChipOf(slotEl));
-    }
-    function removeNodes(ctrl, group) {
-      const nodes = ctrl.nodes.get(group);
-      if (!nodes)
-        return;
-      ctrl.nodes.delete(group);
-      for (const node of nodes) {
-        const slot = node.parentElement;
-        node.remove();
-        if (slot && slot !== ctrl.outlet && slot.classList.contains("je-tag-slot") && !holdsGroups(slot))
-          slot.remove();
-      }
-    }
-    function effectiveSlot(ctrl, conf, group) {
-      const slot = conf.slots[group] || "off";
-      if (slot === "caption" && !ensureOutlet(ctrl))
-        return "poster";
-      return slot;
-    }
-    function refreshPill(ctrl, conf) {
-      if (ctrl.pill) {
-        const slot = ctrl.pill.parentElement;
-        ctrl.pill.remove();
-        if (slot && slot.children.length === 0)
-          slot.remove();
-        ctrl.pill = null;
-      }
-      if (conf.layout !== "summary")
-        return;
-      const groups = Array.from(ctrl.groups.keys()).filter((g) => conf.slots[g] === "pill").sort((a, b) => rankOf(ctrl, conf, a) - rankOf(ctrl, conf, b));
-      const facts = [];
-      for (const group of groups) {
-        const master = ctrl.groups.get(group)?.master;
-        if (!master)
-          continue;
-        const shown = buildChips(group, master, conf);
-        const fact = pillFact(group, shown);
-        if (fact)
-          facts.push({ group, ...fact });
-        if (facts.length >= PILL_MAX_FACTS)
-          break;
-      }
-      if (facts.length === 0)
-        return;
-      const link = facts.some((f) => f.group === "language" || f.group === "awards") ? cardLinkOf(ctrl.host) : null;
-      const pill = document.createElement(link?.matches("a[href]") && !link.contains(ctrl.host) ? "a" : "div");
-      if (pill.tagName === "A" && link) {
-        pill.setAttribute("href", link.getAttribute("href") || "");
-        pill.setAttribute("tabindex", "-1");
-        for (const attr of ["target", "rel"]) {
-          if (link.hasAttribute(attr))
-            pill.setAttribute(attr, link.getAttribute(attr) || "");
-        }
-      }
-      pill.className = "je-tag-pill";
-      const spoken = [];
-      facts.forEach((fact, i) => {
-        if (i > 0) {
-          const sep = document.createElement("span");
-          sep.className = "je-tag-pill-sep";
-          sep.setAttribute("aria-hidden", "true");
-          sep.textContent = "·";
-          pill.appendChild(sep);
-        }
-        const span = document.createElement("span");
-        span.className = "je-tag-pill-fact";
-        span.dataset.jeGroup = fact.group;
-        if (fact.title)
-          span.title = fact.title;
-        if (fact.glyph) {
-          const glyph = document.createElement("span");
-          glyph.className = fact.group === "language" ? "language-cc" : "je-tag-pill-glyph";
-          glyph.setAttribute("aria-hidden", "true");
-          glyph.textContent = fact.glyph;
-          span.append(glyph, " ");
-        }
-        if (fact.flag) {
-          span.appendChild(fact.flag);
-        } else {
-          span.append(fact.text);
-        }
-        pill.appendChild(span);
-        spoken.push(fact.title || fact.text);
-      });
-      pill.title = spoken.join(" · ");
-      pill.setAttribute("aria-label", spoken.join(", "));
-      slotElement(ctrl, "pill")?.appendChild(pill);
-      ctrl.pill = pill;
-    }
-    function presentGroup(ctrl, conf, group) {
-      removeNodes(ctrl, group);
-      const rec = ctrl.groups.get(group);
-      if (!rec)
-        return;
-      const slot = effectiveSlot(ctrl, conf, group);
-      if (slot === "off")
-        return;
-      const nodes = [];
-      if (slot === "dots") {
-        const dots = buildDots(rec.master, conf);
-        if (dots) {
-          placeSorted(ctrl, conf, slotElement(ctrl, "dots"), dots);
-          nodes.push(dots);
-        }
-      } else if (slot !== "pill") {
-        const chips = buildChips(group, rec.master, slot === "hover" || conf.layout === "bands" && ctrl.narrow ? revealSettings(conf) : conf, ctrl.host);
-        if (conf.layout === "corners")
-          chips.dataset.jeCorner = SLOT_TO_POSITION[slot];
-        if (conf.layout === "corners" && conf.legacy && conf.indicatorGap.has(group))
-          chips.dataset.jeIndicatorGap = "1";
-        if (chips.children.length > 0) {
-          placeSorted(ctrl, conf, slotElement(ctrl, slot), chips);
-          nodes.push(chips);
-        }
-      }
-      if (SUMMARY_SLOTS.has(slot) && (conf.layout === "summary" || conf.layout === "minimal")) {
-        const full = buildChips(group, rec.master, revealSettings(conf), ctrl.host);
-        if (full.children.length > 0) {
-          placeSorted(ctrl, conf, slotElement(ctrl, "hover"), full);
-          nodes.push(full);
-        }
-      }
-      ctrl.nodes.set(group, nodes);
-    }
-    function syncIndicatorGap(ctrl, conf) {
-      const on = conf.layout === "corners" && !conf.legacy && Array.from(ctrl.groups.keys()).some((g) => conf.indicatorGap.has(g) && (ctrl.nodes.get(g)?.length || 0) > 0);
-      if (on)
-        ctrl.host.dataset.jeIndicatorGap = "1";
-      else
-        delete ctrl.host.dataset.jeIndicatorGap;
-    }
-    function teardown(ctrl) {
-      for (const group of Array.from(ctrl.nodes.keys()))
-        removeNodes(ctrl, group);
-      ctrl.pill?.remove();
-      ctrl.pill = null;
-      for (const child of childrenOf(ctrl.host)) {
-        if (child.classList.contains("je-tag-slot"))
-          child.remove();
-      }
-      ctrl.outlet?.remove();
-      ctrl.outlet = null;
-      describeHidden(ctrl, []);
-      ctrl.layout = null;
-      ctrl.lookKey = "";
-      ctrl.host.style.removeProperty("--je-tag-scale");
-      ctrl.host.style.removeProperty("--je-tag-gap");
-      delete ctrl.host.dataset.jeLayout;
-      delete ctrl.host.dataset.jeLegacy;
-      delete ctrl.host.dataset.jeLocked;
-      delete ctrl.host.dataset.jeIndicatorGap;
-      delete ctrl.host.dataset.jeShape;
-      delete ctrl.host.dataset.jeEdge;
-      delete ctrl.host.dataset.jeGenreBound;
-    }
-    function presentAll(ctrl) {
-      ctrl.pendingPresentation = false;
-      const declaredShape = shapeOfCard(ctrl.host);
-      if (declaredShape)
-        ctrl.shape = declaredShape;
-      const conf = resolveLayout(ctrl);
-      const shaped = shapesInUse();
-      teardown(ctrl);
-      ctrl.layout = conf.layout;
-      ctrl.lookKey = conf.lookKey;
-      ctrl.host.dataset.jeLayout = conf.layout;
-      applySize(ctrl.host, conf);
-      if (shaped) {
-        if (ctrl.shape === null) {
-          ctrl.lookKey = "";
-          scheduleFit(ctrl);
-          return;
-        }
-        ctrl.host.dataset.jeShape = ctrl.shape;
-      }
-      if (conf.legacy)
-        ctrl.host.dataset.jeLegacy = "1";
-      if (reservesCaption(conf, ctrl.host) && !isIgnoredContext(ctrl.host)) {
-        const outlet = ensureOutlet(ctrl);
-        if (outlet)
-          applySize(outlet, conf);
-      }
-      if (conf.locked)
-        ctrl.host.dataset.jeLocked = "1";
-      if (conf.layout === "corners" && conf.edge && conf.edge !== "default")
-        ctrl.host.dataset.jeEdge = conf.edge;
-      if (isAwaiting(ctrl.host))
-        return;
-      const groups = Array.from(ctrl.groups.keys()).sort((a, b) => rankOf(ctrl, conf, a) - rankOf(ctrl, conf, b));
-      for (const group of groups)
-        presentGroup(ctrl, conf, group);
-      refreshPill(ctrl, conf);
-      syncIndicatorGap(ctrl, conf);
-      scheduleFit(ctrl);
-      JE.tagPosterColours?.track(ctrl.host);
-    }
-    function holdsGroups(slotEl) {
-      return childrenOf(slotEl).some((c) => !!c.dataset.jeGroup);
-    }
-    function moreChipOf(slotEl) {
-      const last = slotEl.lastElementChild;
-      return last instanceof HTMLElement && last.classList.contains("je-tag-more") ? last : null;
-    }
-    function rowSlots(ctrl) {
-      const slots = [];
-      if (ctrl.outlet && ctrl.outlet.isConnected)
-        slots.push(ctrl.outlet);
-      const wrapping = ctrl.layout === "bands" ? "bottom" : "hover";
-      for (const child of childrenOf(ctrl.host)) {
-        if (child.classList.contains("je-tag-slot") && (child.dataset.jeSlot === wrapping || ctrl.layout === "corners" && CENTRE_SLOTS.has(child.dataset.jeSlot || ""))) {
-          slots.push(child);
-        }
-      }
-      return slots;
-    }
-    function posterStack(ctrl) {
-      const slot = ctrl.layout === "caption" ? ctrl.host.querySelector(':scope > .je-tag-slot[data-je-slot="poster"]') : null;
-      return slot ? [slot] : [];
-    }
-    function slotChips(slotEl) {
-      const chips = [];
-      for (const child of childrenOf(slotEl)) {
-        if (child.dataset.jeGroup)
-          chips.push(...childrenOf(child));
-      }
-      return chips;
-    }
-    function chipLabel(chip) {
-      return chip.getAttribute("title") || chip.getAttribute("alt") || chip.querySelector(".rating-text")?.textContent?.trim() || (chip.textContent || "").trim();
-    }
-    function rowWidth(slotEl, style) {
-      const pad = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
-      const width = parseFloat(style.width);
-      if (!Number.isFinite(width))
-        return slotEl.clientWidth - pad;
-      return style.boxSizing === "border-box" ? width - pad - (parseFloat(style.borderLeftWidth) || 0) - (parseFloat(style.borderRightWidth) || 0) : width;
-    }
-    const pendingFit = /* @__PURE__ */ new Set();
-    let fitScheduled = false;
-    let fitting = false;
-    const INDICATOR_BEFORE = "--je-indicator-before";
-    function indicatorGapsToMeasure(ctrl) {
-      if (ctrl.layout !== "corners" || ctrl.host.dataset.jeLegacy !== "1")
-        return null;
-      for (const child of childrenOf(ctrl.host)) {
-        const slot = child;
-        if (!slot.classList.contains("je-tag-slot") || slot.dataset.jeSlot !== "tr")
-          continue;
-        const items = childrenOf(slot);
-        const needs = items.some((el, i) => !!el.dataset.jeIndicatorGap && (i > 0 && !items[i - 1]?.dataset.jeIndicatorGap || !!el.style.getPropertyValue(INDICATOR_BEFORE)));
-        return needs ? slot : null;
-      }
-      return null;
-    }
-    function needsShape(ctrl) {
-      return shapeOfCard(ctrl.host) === null && shapesInUse();
-    }
-    function scheduleFit(ctrl) {
-      if (fitting || !(FIT_LAYOUTS.has(ctrl.layout || "") || centreSlots(ctrl).length || cornerLanguageGroups(ctrl).length || indicatorGapsToMeasure(ctrl) || needsShape(ctrl) || needsRadius(ctrl)))
-        return;
-      pendingFit.add(ctrl);
-      watchSize(ctrl.host);
-      if (fitScheduled)
-        return;
-      fitScheduled = true;
-      if (typeof JE.core.dom?.afterNextPaint === "function")
-        JE.core.dom.afterNextPaint(flushFit);
-      else
-        requestAnimationFrame(flushFit);
-    }
-    let sizeObserver = null;
-    const fittedWidths = /* @__PURE__ */ new WeakMap();
-    const SAME_WIDTH_PX = 0.01;
-    function watchSize(host) {
-      if (typeof ResizeObserver !== "function" || fittedWidths.has(host))
-        return;
-      sizeObserver ?? (sizeObserver = new ResizeObserver(refitOnSizeChange));
-      fittedWidths.set(host, { observed: -1, observedHeight: -1, fitted: -1, fittedHeight: -1, measured: null });
-      sizeObserver.observe(host);
-    }
-    function unwatchSize(host) {
-      if (!fittedWidths.has(host))
-        return;
-      fittedWidths.delete(host);
-      sizeObserver?.unobserve(host);
-    }
-    function refitOnSizeChange(entries) {
-      for (const entry of entries) {
-        const host = entry.target;
-        if (!(host instanceof HTMLElement))
-          continue;
-        const ctrl = controllers.get(host);
-        const sizes = fittedWidths.get(host);
-        if (!ctrl || !sizes || !host.isConnected) {
-          unwatchSize(host);
-          continue;
-        }
-        const width = entry.contentRect.width;
-        const height = entry.contentRect.height;
-        if (width <= 0)
-          continue;
-        sizes.observed = width;
-        sizes.observedHeight = height;
-        if (sizes.fitted < 0) {
-          sizes.fitted = width;
-          sizes.fittedHeight = height;
-          continue;
-        }
-        const measured = sizes.measured;
-        sizes.measured = null;
-        if (measured && Math.abs(width - measured.width) < 1 && Math.abs(height - measured.height) < 1) {
-          sizes.fitted = width;
-          sizes.fittedHeight = height;
-          continue;
-        }
-        if (Math.abs(width - sizes.fitted) < SAME_WIDTH_PX && Math.abs(height - sizes.fittedHeight) < SAME_WIDTH_PX)
-          continue;
-        scheduleFit(ctrl);
-      }
-    }
-    function edgeOf(ctrl) {
-      const edge = ctrl.layout === "corners" ? ctrl.host.dataset.jeEdge : void 0;
-      return (edge && hasOwn(EDGE_SPACINGS, edge) ? EDGE_SPACINGS[edge] : EDGE_SPACINGS.default) ?? 6;
-    }
-    function needsRadius(ctrl) {
-      return ctrl.host.dataset.jeEdge === "flush" && !ctrl.host.style.getPropertyValue("--je-card-radius");
-    }
-    function cardRadiusOf(ctrl) {
-      const parent = ctrl.host.parentElement;
-      const art = parent?.classList.contains("cardScalable") && parent.querySelector(".cardImageContainer") || parent;
-      if (!art)
-        return "0px";
-      const style = getComputedStyle(art);
-      return style.borderTopLeftRadius || style.borderRadius.split(" ")[0] || "0px";
-    }
-    function flushFit() {
-      fitScheduled = false;
-      const list = Array.from(pendingFit).filter((c) => c.host.isConnected && controllers.get(c.host) === c);
-      pendingFit.clear();
-      if (list.length === 0)
-        return;
-      fitting = true;
-      try {
-        const widths = list.map((ctrl) => ctrl.host.clientWidth);
-        const hostHeights = list.map((ctrl, i) => (widths[i] ?? 0) > 0 ? ctrl.host.clientHeight : 0);
-        list.forEach((ctrl, i) => {
-          const sizes = fittedWidths.get(ctrl.host);
-          if (!sizes)
-            return;
-          sizes.fitted = (widths[i] ?? 0) > 0 ? sizes.observed : 0;
-          sizes.fittedHeight = (widths[i] ?? 0) > 0 ? sizes.observedHeight : 0;
-          const moved = (widths[i] ?? 0) > 0 && sizes.observed >= 0 && (Math.abs((widths[i] ?? 0) - sizes.observed) >= 1 || Math.abs((hostHeights[i] ?? 0) - sizes.observedHeight) >= 1);
-          sizes.measured = moved ? { width: widths[i] ?? 0, height: hostHeights[i] ?? 0 } : null;
-        });
-        const heights = list.map((ctrl, i) => needsShape(ctrl) ? hostHeights[i] ?? 0 : 0);
-        const radii = list.map((ctrl, i) => (widths[i] ?? 0) > 0 && needsRadius(ctrl) ? cardRadiusOf(ctrl) : null);
-        const shown = list.filter((ctrl, i) => (widths[i] ?? 0) > 0);
-        const presented = /* @__PURE__ */ new Set();
-        const narrowed = /* @__PURE__ */ new Set();
-        list.forEach((ctrl, i) => {
-          const narrow = (widths[i] ?? 0) > 0 && (widths[i] ?? 0) < NARROW_CARD_PX;
-          if ((widths[i] ?? 0) === 0 || narrow === !!ctrl.narrow)
-            return;
-          ctrl.narrow = narrow;
-          narrowed.add(ctrl);
-        });
-        list.forEach((ctrl, i) => {
-          if (!needsShape(ctrl))
-            return;
-          const shape = (widths[i] ?? 0) > 0 ? shapeOfSize(widths[i] ?? 0, heights[i] ?? 0) : "portrait";
-          const changed = shape !== ctrl.shape;
-          ctrl.shape = shape;
-          if (changed) {
-            presentAll(ctrl);
-            presented.add(ctrl);
-          }
-        });
-        for (const ctrl of narrowed) {
-          if (ctrl.layout === "bands" && !presented.has(ctrl))
-            presentAll(ctrl);
-        }
-        list.forEach((ctrl, i) => {
-          if (typeof radii[i] === "string")
-            ctrl.host.style.setProperty("--je-card-radius", radii[i]);
-        });
-        for (const ctrl of shown)
-          prepareFit(ctrl);
-        const languages = shown.map(measureCornerLanguages);
-        languages.forEach(applyChipRows);
-        const anchors = shown.map(measureAnchors);
-        shown.forEach((ctrl, i) => applyAnchors(anchors[i] || []));
-        const plans = shown.map((ctrl, i) => {
-          const plan = measureFit(ctrl);
-          plan.rows.unshift(...languages[i] || []);
-          return plan;
-        });
-        shown.forEach((ctrl, i) => plans[i] && applyFit(ctrl, plans[i]));
-      } finally {
-        fitting = false;
-      }
-      const bound = new Set(genreAfterFit);
-      genreAfterFit.clear();
-      for (const ctrl of list)
-        if (ctrl.host.dataset.jeGenreBound && isRevealed(ctrl.host))
-          bound.add(ctrl.host);
-      for (const host of bound)
-        if (host.isConnected)
-          fitReveal(host);
-    }
-    function centreSlots(ctrl) {
-      return ctrl.layout === "corners" ? childrenOf(ctrl.host).filter((el) => CENTRE_SLOTS.has(el.dataset.jeSlot || "")) : [];
-    }
-    function measureAnchors(ctrl) {
-      const centres = centreSlots(ctrl);
-      if (!centres.length)
-        return [];
-      const conf = resolveLayout(ctrl);
-      const gap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
-      const edge = edgeOf(ctrl);
-      const host = ctrl.host.getBoundingClientRect();
-      const boxes = {};
-      for (const el of childrenOf(ctrl.host)) {
-        const slot = el.dataset.jeSlot;
-        if (!["tl", "tr", "bl", "br"].includes(slot || ""))
-          continue;
-        boxes[slot || ""] = childrenOf(el).filter((g) => g.dataset.jeGroup).map((g) => g.getBoundingClientRect());
-      }
-      const width = (slots) => Math.max(edge, ...slots.flatMap((s) => (boxes[s] || []).map((b) => s.endsWith("l") ? b.right - host.left + gap : host.right - b.left + gap)));
-      const height = (slots) => Math.max(edge, ...slots.flatMap((s) => (boxes[s] || []).map((b) => s.startsWith("t") ? b.bottom - host.top + gap : host.bottom - b.top + gap)));
-      const scalable = ctrl.host.parentElement;
-      const progress = scalable?.querySelector(".itemProgressBar, .cardProgressBar, .cardProgress");
-      const flush = conf.edge === "flush";
-      const bottom = progress ? Math.max(edge, host.bottom - progress.getBoundingClientRect().top + (flush ? 0 : gap)) : edge;
-      let top = edge;
-      const cornerReserve = width(["tl", "tr"]);
-      let topReserve = cornerReserve;
-      let overlayBottom = 0;
-      for (const overlay of scalable?.querySelectorAll(".cardIndicators > *, .countIndicator, .playedIndicator") || []) {
-        if (flush && overlay.querySelector(".countIndicator, .playedIndicator"))
-          continue;
-        const b = overlay.getBoundingClientRect();
-        if (flush && (!b.width || !b.height))
-          continue;
-        if (b.bottom <= host.top || b.top >= host.top + host.height / 3)
-          continue;
-        overlayBottom = Math.max(overlayBottom, b.bottom - host.top + gap);
-        const middle = host.left + host.width / 2;
-        if (b.left < middle && b.right > middle)
-          top = Math.max(top, b.bottom - host.top + gap);
-        else
-          topReserve = Math.max(topReserve, b.right <= middle ? b.right - host.left + gap : host.right - b.left + gap);
-      }
-      if (flush) {
-        const row = centres.find((el) => el.dataset.jeSlot === "tc");
-        const first = row && slotChips(row)[0];
-        const firstWidth = first?.getBoundingClientRect().width || 0;
-        if (top > 0 || firstWidth > host.width - 2 * topReserve + 0.01) {
-          const below = Math.max(overlayBottom, height(["tl", "tr"]));
-          if (below + (first?.getBoundingClientRect().height || 0) <= host.height / 2 + 0.01) {
-            top = below;
-            topReserve = 0;
-          }
-        } else
-          top = 0;
-      }
-      const crossing = (slots, from, to) => Math.max(0, ...slots.flatMap((s) => (boxes[s] || []).filter((b) => b.bottom - host.top > from && b.top - host.top < to).map((b) => s.endsWith("l") ? b.right - host.left + gap : host.right - b.left + gap)));
-      const topRow = top + centreRowLimit(host.height, top);
-      const bottomRow = host.height - bottom - centreRowLimit(host.height, bottom);
-      topReserve = Math.max(topReserve, crossing(["bl", "br"], top, topRow));
-      const bottomReserve = Math.max(width(["bl", "br"]), crossing(["tl", "tr"], bottomRow, host.height - bottom));
-      return centres.map((el) => {
-        const slot = el.dataset.jeSlot;
-        return { el, top, bottom, reserve: slot === "tc" ? topReserve : slot === "bc" ? bottomReserve : slot === "ml" ? height(["tl", "bl"]) : slot === "mr" ? height(["tr", "br"]) : edge };
-      });
-    }
-    function applyAnchors(anchors) {
-      for (const { el, reserve, top, bottom } of anchors) {
-        el.style.setProperty("--je-anchor-reserve", `${reserve}px`);
-        el.style.setProperty("--je-anchor-top", `${top}px`);
-        el.style.setProperty("--je-anchor-bottom", `${bottom}px`);
-        el.toggleAttribute("data-je-flush-detached", el.dataset.jeSlot === "tc" && top > 0);
-      }
-    }
-    function cornerLanguageGroups(ctrl) {
-      return ctrl.layout === "corners" ? Array.from(ctrl.host.querySelectorAll(':scope > .je-tag-slot:is([data-je-slot="tl"], [data-je-slot="tr"], [data-je-slot="bl"], [data-je-slot="br"]) > [data-je-group="language"]')).filter((group) => group.querySelector(".language-chip") && childrenOf(ctrl.host).some((slot) => slot.dataset.jeSlot === ((group.parentElement?.dataset.jeSlot || "").startsWith("t") ? "tc" : "bc") && slot.querySelector(".rating-tag"))) : [];
-    }
-    function measureCornerLanguages(ctrl) {
-      const rows = [];
-      const conf = resolveLayout(ctrl);
-      const gap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
-      const inner = Math.max(0, ctrl.host.clientWidth - 2 * edgeOf(ctrl));
-      for (const group of cornerLanguageGroups(ctrl)) {
-        const slot = group.parentElement?.dataset.jeSlot || "";
-        const centre = childrenOf(ctrl.host).find((el) => el.dataset.jeSlot === (slot.startsWith("t") ? "tc" : "bc"));
-        const rating = centre?.querySelector(".rating-tag");
-        const centreMore = centre && moreChipOf(centre);
-        const more = moreChipOf(group);
-        if (!rating || !centreMore || !more)
-          continue;
-        const chips = childrenOf(group).filter((chip) => chip !== more);
-        if (!chips.length)
-          continue;
-        const rects = chips.map((chip) => chip.getBoundingClientRect());
-        const ratingWidth = rating.getBoundingClientRect().width;
-        const moreRect = more.getBoundingClientRect();
-        const languageMinimum = Math.max(rects[0]?.width || 0, chips.length > 1 ? moreRect.width : 0);
-        const fullRoom = (inner - ratingWidth) / 2 - gap;
-        const minimum = languageMinimum <= fullRoom ? Math.max(ratingWidth, centreMore.getBoundingClientRect().width) : centreMore.getBoundingClientRect().width;
-        const available = Math.max(rects[0]?.width || 0, (inner - minimum) / 2 - gap);
-        const height = ctrl.host.clientHeight * 0.9;
-        const rowGap = parseFloat(getComputedStyle(group).rowGap) || 0;
-        const shown = chipsThatFit(rects.map((rect, i) => i === 0 || rect.width <= available + 0.01 ? rect.height : Infinity), height, rowGap, 1, moreRect.height);
-        shown[0] = true;
-        rows.push({ slot: group, chips, shown, more: moreRect.width <= available + 0.01 && (rects[0]?.height || 0) + rowGap + moreRect.height <= height });
-      }
-      return rows;
-    }
-    function prepareFit(ctrl) {
-      ctrl.host.querySelector(':scope > .je-tag-slot[data-je-slot="corner"]')?.style.removeProperty(STACK_LIFT);
-      for (const root of [ctrl.host, ctrl.outlet]) {
-        root?.querySelectorAll("[data-je-overflow]").forEach((el) => el.removeAttribute("data-je-overflow"));
-        root?.querySelectorAll(".je-tag-fit-text").forEach((text) => text.replaceWith(...text.childNodes));
-        root?.querySelectorAll("[data-je-fit-width]").forEach((el) => {
-          el.removeAttribute("data-je-fit-width");
-          el.style.removeProperty("--je-chip-fit-width");
-        });
-      }
-      const languages = cornerLanguageGroups(ctrl);
-      for (const slotEl of [...rowSlots(ctrl), ...languages, ...posterStack(ctrl)]) {
-        const count = languages.includes(slotEl) ? childrenOf(slotEl).filter((el) => !el.classList.contains("je-tag-more")).length : slotChips(slotEl).length;
-        let more = moreChipOf(slotEl) || slotEl.querySelector(":scope > .je-tag-more");
-        if (count === 0) {
-          more?.remove();
-          continue;
-        }
-        if (!more) {
-          more = document.createElement("span");
-          more.className = "je-tag-more";
-        }
-        if (more !== slotEl.lastElementChild)
-          slotEl.appendChild(more);
-        const text = `+${count}`;
-        if (more.textContent !== text)
-          more.textContent = text;
-      }
-    }
-    function rowRoom(ctrl, style, slotEl) {
-      const raw = style.maxHeight;
-      if (slotEl === ctrl.outlet) {
-        const height = parseFloat(style.height);
-        return height > 0 ? { inside: height, oneRow: height, gap: parseFloat(style.rowGap) || 0 } : null;
-      }
-      if (!raw || raw === "none")
-        return ctrl.layout === "bands" && slotEl.dataset.jeSlot === "bottom" ? bandRoom(ctrl, style) : null;
-      let limit = parseFloat(raw);
-      if (raw.endsWith("%")) {
-        const height = ctrl.host.clientHeight;
-        if (!(height > 0))
-          return null;
-        limit = limit / 100 * height;
-      }
-      if (!Number.isFinite(limit))
-        return null;
-      const padTop = parseFloat(style.paddingTop) || 0;
-      const padBottom = parseFloat(style.paddingBottom) || 0;
-      return { inside: limit - padTop - padBottom, oneRow: limit - padBottom, gap: parseFloat(style.rowGap) || 0 };
-    }
-    function bandRoom(ctrl, style) {
-      const height = ctrl.host.clientHeight;
-      const top = ctrl.host.querySelector(':scope > .je-tag-slot[data-je-slot="top"]');
-      const bottoms = Array.from(top?.querySelectorAll(":scope > [data-je-group] > *") || []).map((chip) => chip.getBoundingClientRect()).filter((r) => r.height > 0).map((r) => r.bottom);
-      if (!(height > 0) || !bottoms.length)
-        return null;
-      const below = Math.max(...bottoms) - ctrl.host.getBoundingClientRect().top;
-      const gap = parseFloat(style.rowGap) || 0;
-      const inside = height - (parseFloat(style.paddingBottom) || 0) - below - gap;
-      return { inside, oneRow: inside, gap };
-    }
-    function measureFit(ctrl) {
-      const plan = { pillFacts: ctrl.pill ? pillFactsThatFit(ctrl.pill) : -1, rows: measurePosterStack(ctrl), indicator: measureIndicatorGaps(ctrl), stacks: measureStacks(ctrl), lift: measureCornerLift(ctrl) };
-      const slots = rowSlots(ctrl);
-      const sides = new Map(slots.filter((el) => ["ml", "mr"].includes(el.dataset.jeSlot || "")).map((el) => [el.dataset.jeSlot, slotChips(el).map((chip) => chip.getBoundingClientRect())]));
-      const conf = resolveLayout(ctrl);
-      const mixedRatingSlots = new Set(cornerLanguageGroups(ctrl).map((group) => (group.parentElement?.dataset.jeSlot || "").startsWith("t") ? "tc" : "bc"));
-      const innerWidth = sides.size ? Math.max(0, ctrl.host.clientWidth - 2 * edgeOf(ctrl)) : 0;
-      const sideGap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
-      const half = Math.max(0, (innerWidth - sideGap) / 2);
-      for (const slotEl of slots) {
-        const chips = slotChips(slotEl);
-        const more = moreChipOf(slotEl);
-        if (chips.length === 0 || !more)
-          continue;
-        const style = getComputedStyle(slotEl);
-        const vertical = ctrl.layout === "corners" && ["ml", "mr"].includes(slotEl.dataset.jeSlot || "");
-        const opposite = sides.get(slotEl.dataset.jeSlot === "ml" ? "mr" : "ml") || [];
-        const oppositeWidth = Math.min(half, Math.max(0, ...opposite.map((rect) => rect.width)));
-        const available = vertical ? Math.max(0, Math.min(opposite.length ? half : innerWidth, innerWidth - oppositeWidth - sideGap)) : rowWidth(slotEl, style);
-        const gap = parseFloat(style.columnGap) || 0;
-        const rects = chips.map((chip) => chip.getBoundingClientRect());
-        const widths = rects.map((r) => r.width);
-        const moreRect = more.getBoundingClientRect();
-        if (!(available > 0) && ctrl.layout !== "corners") {
-          plan.rows.push({ slot: slotEl, chips, shown: chips.map(() => true), more: true });
-          continue;
-        }
-        if (ctrl.layout === "corners") {
-          const measured = parseFloat(slotEl.style.getPropertyValue("--je-anchor-reserve"));
-          const reserve = Number.isFinite(measured) ? measured : edgeOf(ctrl);
-          const offset = parseFloat(slotEl.style.getPropertyValue(slotEl.dataset.jeSlot === "tc" ? "--je-anchor-top" : "--je-anchor-bottom"));
-          const limit = Math.max(0, vertical ? ctrl.host.clientHeight - 2 * reserve : ["tc", "bc"].includes(slotEl.dataset.jeSlot || "") ? centreRowLimit(ctrl.host.clientHeight, Number.isFinite(offset) ? offset : reserve) : ctrl.host.clientHeight / 3);
-          if (!vertical && ctrl.host.clientHeight > 0 && available < moreRect.width - 0.01) {
-            plan.rows.push({ slot: slotEl, chips, shown: chips.map(() => false), more: false });
-            continue;
-          }
-          const heights2 = rects.map((r) => r.height);
-          const rowGap = parseFloat(style.rowGap) || 0;
-          let shown2 = null;
-          let fittedRows = [];
-          let fittedMoreRow = 0;
-          const ratingFirst = mixedRatingSlots.has(slotEl.dataset.jeSlot || "") && !!chips[0]?.matches(".rating-tag");
-          const fitWidths = widths.map((width, i) => i === 0 && !ratingFirst ? Math.min(width, Math.max(0, available)) : width);
-          if (vertical) {
-            shown2 = chipsThatFit(heights2.map((height, i) => (fitWidths[i] ?? 0) <= available + 0.01 ? height : Infinity), limit, rowGap, 1, moreRect.height);
-          } else {
-            const rows = [], moreRow = { row: 0 };
-            const budget2 = rowBudget(heights2, moreRect.height, limit, rowGap);
-            if (budget2 > 0) {
-              shown2 = chipsThatFit(fitWidths, available, gap, budget2, moreRect.width, rows, moreRow);
-              fittedRows = rows;
-              fittedMoreRow = moreRow.row;
-            }
-          }
-          if (!shown2?.[0] && !ratingFirst) {
-            shown2 = chips.map((_, i) => i === 0);
-            fittedRows = chips.map((_, i) => i === 0 ? 1 : 0);
-            fittedMoreRow = 2;
-          }
-          if (!shown2)
-            shown2 = chips.map(() => false);
-          const moreFits = vertical ? (shown2.some(Boolean) ? (heights2[0] ?? 0) + rowGap : 0) + moreRect.height <= limit : rowsHeight(shown2, fittedRows, heights2, moreRect.height, rowGap, fittedMoreRow) <= limit;
-          plan.rows.push({
-            slot: slotEl,
-            chips,
-            shown: shown2,
-            fittedRows,
-            fittedMoreRow,
-            width: vertical ? available : void 0,
-            firstWidth: !ratingFirst && (widths[0] ?? 0) > available ? Math.max(0, available) : void 0,
-            more: moreFits && limit >= moreRect.height && available >= moreRect.width
-          });
-          continue;
-        }
-        const room = rowRoom(ctrl, style, slotEl);
-        if (!room) {
-          plan.rows.push({ slot: slotEl, chips, shown: chipsThatFit(widths, available, gap, FIT_MAX_ROWS, moreRect.width), more: true });
-          continue;
-        }
-        const heights = rects.map((r) => r.height);
-        let budget = rowBudget(heights, moreRect.height, room.inside, room.gap);
-        if (budget === 0 && Math.max(moreRect.height, ...heights) <= room.oneRow + 0.01)
-          budget = 1;
-        const shown = chipsThatFit(widths, available, gap, budget, moreRect.width);
-        plan.rows.push(budget > 0 ? { slot: slotEl, chips, shown, more: true } : { slot: slotEl, chips, shown: chips.map(() => false), more: false });
-      }
-      return plan;
-    }
-    function measurePosterStack(ctrl) {
-      const slot = posterStack(ctrl)[0];
-      const more = slot && moreChipOf(slot);
-      if (!more)
-        return [];
-      const height = ctrl.host.clientHeight;
-      const chips = slotChips(slot);
-      const top = ctrl.host.getBoundingClientRect().top;
-      const bottoms = chips.map((chip) => chip.getBoundingClientRect().bottom - top);
-      const limit = height - STACK_INSET;
-      if (!(height > 0) || bottoms.every((bottom) => bottom <= limit + 0.01))
-        return [{ slot, chips, shown: chips.map(() => true), more: true }];
-      const room = limit - more.getBoundingClientRect().height - (parseFloat(getComputedStyle(slot).rowGap) || 0);
-      let fits = true;
-      return [{ slot, chips, shown: bottoms.map((bottom) => fits = fits && bottom <= room + 0.01), more: true }];
-    }
-    function measureStacks(ctrl) {
-      const slots = STACK_SLOTS[ctrl.layout || ""];
-      if (!slots)
-        return [];
-      const width = Math.max(0, ctrl.host.clientWidth - 2 * STACK_INSET);
-      const out = [];
-      for (const slot of childrenOf(ctrl.host)) {
-        if (!slots.includes(slot.dataset.jeSlot || ""))
-          continue;
-        for (const group of childrenOf(slot)) {
-          if (!group.dataset.jeGroup)
-            continue;
-          for (const chip of childrenOf(group)) {
-            if (chip.getBoundingClientRect().width > width + 0.01)
-              out.push({ chip, width });
-          }
-        }
-      }
-      return out;
-    }
-    function measureCornerLift(ctrl) {
-      if (ctrl.layout !== "minimal")
-        return null;
-      const slots = childrenOf(ctrl.host);
-      const corner = slots.find((el) => el.dataset.jeSlot === "corner");
-      if (!corner)
-        return null;
-      const dots = slots.find((el) => el.dataset.jeSlot === "dots")?.getBoundingClientRect();
-      const chipRects = (slot) => Array.from(slot?.querySelectorAll(":scope > [data-je-group] > *") || []).map((chip) => ({ chip, r: chip.getBoundingClientRect() })).filter(({ r }) => r.width > 0);
-      const chips = chipRects(corner);
-      const conf = resolveLayout(ctrl);
-      const gap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
-      const meets = !!dots?.width && chips.some(({ r }) => r.left < dots.right + gap && r.top < dots.bottom && r.bottom > dots.top);
-      const lift = meets ? Math.max(0, corner.getBoundingClientRect().bottom - dots.top + gap) : 0;
-      const host = ctrl.host.getBoundingClientRect();
-      if (!(ctrl.host.clientHeight > 0))
-        return { slot: corner, lift, hidden: [] };
-      const ceiling = host.top + STACK_INSET;
-      const above = chipRects(slots.find((el) => el.dataset.jeSlot === "top")).map(({ r }) => r);
-      const hidden = [];
-      for (const { chip, r } of chips.sort((a, b) => b.r.bottom - a.r.bottom)) {
-        const top = r.top - lift;
-        if (hidden.length || top < ceiling - 0.01 || above.some((t) => r.left < t.right && r.right > t.left && top < t.bottom + gap - 0.01))
-          hidden.push(chip);
-      }
-      return { slot: corner, lift, hidden };
-    }
-    function measureIndicatorGaps(ctrl) {
-      const slot = indicatorGapsToMeasure(ctrl);
-      if (!slot)
-        return [];
-      const items = childrenOf(slot);
-      const top = slot.getBoundingClientRect().top;
-      const gap = parseFloat(getComputedStyle(slot).rowGap) || 0;
-      const out = [];
-      items.forEach((el, i) => {
-        if (!el.dataset.jeIndicatorGap)
-          return;
-        const prev = items[i - 1];
-        out.push({ el, before: !prev || prev.dataset.jeIndicatorGap ? null : Math.max(0, prev.getBoundingClientRect().bottom + gap - top) });
-      });
-      return out;
-    }
-    function pillFactsThatFit(pill) {
-      const facts = Array.from(pill.querySelectorAll(".je-tag-pill-fact"));
-      const excess = pill.scrollWidth - pill.clientWidth;
-      let keep = facts.length;
-      let freed = 0;
-      while (keep > 1 && freed < excess - 0.5) {
-        const fact = facts[keep - 1];
-        if (!fact)
-          break;
-        const sep = fact.previousElementSibling;
-        freed += fact.getBoundingClientRect().width + (sep ? sep.getBoundingClientRect().width : 0);
-        keep--;
-      }
-      return keep;
-    }
-    function prepareFitText(first) {
-      const chip = first.matches(".awards-link, .language-link") ? first.firstElementChild : first;
-      if (!chip)
-        return;
-      if (chip.matches(".status-tag, .quality-overlay-label, .age-rating-tag, .je-logo-text")) {
-        const text = document.createElement("span");
-        text.className = "je-tag-fit-text";
-        text.append(...chip.childNodes);
-        chip.append(text);
-      } else if (chip.matches(".language-chip")) {
-        for (const node of Array.from(chip.childNodes)) {
-          if (node.nodeType !== 3)
-            continue;
-          const text = document.createElement("span");
-          text.className = "je-tag-fit-text";
-          node.replaceWith(text);
-          text.append(node);
-        }
-      }
-    }
+    return { shapeOfCard, shapeOf, shapesInUse, findHost, ensureHost, captionAnchor, isIgnoredContext, controllerFor, contextOf, isAwaiting, resolveLayout, lookSource, setPreviewLook, cardIdentity, setCardContext, awaitCardContext, endAwait, releaseCardContext, resumePresentation };
+  }
+
+  // client/src/features/media-tags/layout/fit-apply.ts
+  var GENRE_NAME_GAP = 4;
+  var GENRE_NAME_MIN = 24;
+  var GENRE_NAME_SHARE = 0.6;
+  var FOCUSABLE = 'a[href], button, [tabindex]:not([tabindex="-1"])';
+  function createFitApply(s, JE, deps) {
     function applyFit(ctrl, plan) {
       for (const row of plan.rows) {
         if (row.width !== void 0)
           row.slot.style.setProperty("--je-anchor-width", `${row.width}px`);
         if (row.firstWidth !== void 0 && row.chips[0]) {
-          prepareFitText(row.chips[0]);
+          deps.prepareFitText(row.chips[0]);
           row.chips[0].setAttribute("data-je-fit-width", "");
           row.chips[0].style.setProperty("--je-chip-fit-width", `${row.firstWidth}px`);
         }
       }
       for (const { chip, width } of plan.stacks) {
-        prepareFitText(chip);
+        deps.prepareFitText(chip);
         chip.setAttribute("data-je-fit-width", "");
         chip.style.setProperty("--je-chip-fit-width", `${width}px`);
       }
@@ -1913,7 +691,7 @@ ${scoped} {${original}}`;
             group.setAttribute("data-je-overflow", "");
         }
       }
-      if (ctrl.layout === "corners" && resolveLayout(ctrl).edge === "flush") {
+      if (ctrl.layout === "corners" && deps.resolveLayout(ctrl).edge === "flush") {
         for (const row of plan.rows) {
           const slot = row.slot.dataset.jeSlot;
           if (!["tc", "bc"].includes(slot || ""))
@@ -1923,7 +701,7 @@ ${scoped} {${original}}`;
             chip.toggleAttribute("data-je-flush-top", slot === "tc" && !row.slot.hasAttribute("data-je-flush-detached") && row.shown[i] && row.fittedRows?.[i] === 1);
             chip.toggleAttribute("data-je-flush-bottom", slot === "bc" && row.shown[i] && row.fittedRows?.[i] === last);
           });
-          const more = moreChipOf(row.slot);
+          const more = deps.moreChipOf(row.slot);
           const visible = row.more && row.shown.includes(false);
           more?.toggleAttribute("data-je-flush-top", visible && slot === "tc" && !row.slot.hasAttribute("data-je-flush-detached") && row.fittedMoreRow === 1);
           more?.toggleAttribute("data-je-flush-bottom", visible && slot === "bc" && row.fittedMoreRow === last);
@@ -1937,7 +715,7 @@ ${scoped} {${original}}`;
       }
       const names = applyChipRows(plan.rows);
       describeHidden(ctrl, names);
-      for (const slot of posterStack(ctrl)) {
+      for (const slot of deps.posterStack(ctrl)) {
         for (const group of childrenOf(slot)) {
           const chips = childrenOf(group);
           if (group.dataset.jeGroup && chips.length && chips.every((chip) => chip.hasAttribute("data-je-overflow")))
@@ -1957,13 +735,13 @@ ${scoped} {${original}}`;
     function applyChipRows(rows) {
       const names = [];
       for (const { slot, chips, shown, more: room } of rows) {
-        const more = moreChipOf(slot);
+        const more = deps.moreChipOf(slot);
         if (!more)
           continue;
         const hidden = chips.filter((chip, i) => !shown[i]);
         for (const chip of hidden)
           chip.setAttribute("data-je-overflow", "");
-        names.push(...hidden.map(chipLabel).filter(Boolean));
+        names.push(...hidden.map(deps.chipLabel).filter(Boolean));
         if (!room && !shown.some(Boolean))
           slot.setAttribute("data-je-overflow", "");
         if (hidden.length === 0 || !room) {
@@ -1972,14 +750,10 @@ ${scoped} {${original}}`;
           continue;
         }
         more.textContent = `+${hidden.length}`;
-        more.title = hidden.map(chipLabel).filter(Boolean).join(", ");
+        more.title = hidden.map(deps.chipLabel).filter(Boolean).join(", ");
       }
       return names;
     }
-    const GENRE_NAME_GAP = 4;
-    const GENRE_NAME_MIN = 24;
-    const GENRE_NAME_SHARE = 0.6;
-    const genreAfterFit = /* @__PURE__ */ new Set();
     function isRevealed(host) {
       const card = host.closest(".card, .je-mtp-card, .je-tie-card");
       if (!card)
@@ -1993,9 +767,9 @@ ${scoped} {${original}}`;
     function fitReveal(host) {
       if (!host)
         return;
-      const ctrl = controllers.get(host);
-      if (ctrl && fitScheduled && pendingFit.has(ctrl)) {
-        genreAfterFit.add(host);
+      const ctrl = s.controllers.get(host);
+      if (ctrl && s.fitScheduled && s.pendingFit.has(ctrl)) {
+        s.genreAfterFit.add(host);
         return;
       }
       const names = Array.from(host.querySelectorAll(':scope > .je-tag-slot:not([data-je-slot="hover"]) .genre-tag > .genre-text'));
@@ -2106,25 +880,22 @@ ${scoped} {${original}}`;
       tip.dataset.jeTipFit = "placed";
       tip.style.top = `${Math.round((top - card.top) * 100) / 100}px`;
     }
-    let revealedCard = null;
     function onReveal(event) {
       const target = event.target instanceof Element ? event.target : null;
       const card = target?.closest(".card");
-      if (!card || card === revealedCard)
+      if (!card || card === s.revealedCard)
         return;
-      revealedCard = card;
+      s.revealedCard = card;
       fitReveal(card.querySelector(".je-tag-host"));
     }
     if (typeof document !== "undefined" && document.addEventListener) {
       document.addEventListener("pointerover", onReveal, { passive: true });
       document.addEventListener("focusin", onReveal);
       document.addEventListener("pointerout", (event) => {
-        if (revealedCard && !(event.relatedTarget instanceof Node && revealedCard.contains(event.relatedTarget)))
-          revealedCard = null;
+        if (s.revealedCard && !(event.relatedTarget instanceof Node && s.revealedCard.contains(event.relatedTarget)))
+          s.revealedCard = null;
       }, { passive: true });
     }
-    const FOCUSABLE = 'a[href], button, [tabindex]:not([tabindex="-1"])';
-    let moreTipSeq = 0;
     function cardLinkOf(host) {
       const card = host.closest(".card, .listItem");
       const image = card?.querySelector(`.cardImageContainer:is(${FOCUSABLE})`);
@@ -2160,7 +931,7 @@ ${scoped} {${original}}`;
         tip?.remove();
         tip = document.createElement("span");
         tip.className = "je-tag-more-tip";
-        tip.id = `je-tag-more-${++moreTipSeq}`;
+        tip.id = `je-tag-more-${++s.moreTipSeq}`;
         tip.setAttribute("aria-hidden", "true");
         ctrl.host.appendChild(tip);
         ctrl.moreTip = tip;
@@ -2175,6 +946,769 @@ ${scoped} {${original}}`;
         ctrl.described = link;
       }
     }
+    return { applyFit, applyChipRows, isRevealed, fitReveal, cardLinkOf, describeHidden };
+  }
+
+  // client/src/features/media-tags/types/quality/compact-quality.ts
+  var COMPACT_QUALITY = {
+    "Dolby Vision": [
+      "DV",
+      true
+    ],
+    "HDR10+": [
+      "HDR+",
+      true
+    ],
+    "BluRay": [
+      "BD",
+      true
+    ],
+    "Dolby Digital": [
+      "DD",
+      true
+    ],
+    "Dolby Digital+": [
+      "DD+",
+      true
+    ],
+    "DTS-HD MA": [
+      "DTS-HD",
+      true
+    ],
+    "DTS-HD HRA": [
+      "DTS-HD",
+      true
+    ],
+    "DTS-HD": [
+      "DTS-HD",
+      true
+    ],
+    "Dolby TrueHD": [
+      "TrueHD",
+      true
+    ],
+    "Dolby Atmos": [
+      "Atmos",
+      true
+    ],
+    "DTS:X": [
+      "DTS:X",
+      true
+    ],
+    "ATMOS": [
+      "ATMOS",
+      false
+    ],
+    "TRUEHD ATMOS": [
+      "ATMOS",
+      false
+    ],
+    "DD+ ATMOS": [
+      "ATMOS",
+      false
+    ],
+    "DTS-X": [
+      "DTS-X",
+      false
+    ],
+    "TRUEHD": [
+      "TRUEHD",
+      false
+    ],
+    "DTS": [
+      "DTS",
+      false
+    ]
+  };
+
+  // client/src/features/media-tags/layout/layout-fitting.ts
+  var SHAPE_RATIO = 1.2;
+  function preserveLegacySizing(css) {
+    return css.replace(/([^{}]+)\{([^{}]*)\}/g, (rule, selector, body) => {
+      if (!body.includes("--je-tag-scale"))
+        return rule;
+      const declarations = body.split(";").filter((declaration) => declaration.includes("--je-tag-scale")).join(";") + ";";
+      const original = declarations.replace(/calc\((clamp\([^)]*\)|[\d.]+(?:px|rem|em|cqw|vw)) \* var\(--je-tag-scale, 1\)(?: \* var\(--je-tag-gap, 1\))?\)/g, "$1");
+      if (original === declarations)
+        return rule;
+      const scoped = selector.includes(".je-tag-host") ? selector.trim().replace(/\.je-tag-host/g, ".je-tag-host[data-je-legacy]") : `.je-tag-host[data-je-legacy] :is(${selector.trim()})`;
+      return `${rule}
+${scoped} {${original}}`;
+    });
+  }
+  function revealSettings(conf) {
+    return conf.density === "compact" ? conf : { ...conf, density: "compact" };
+  }
+  var FIT_MAX_ROWS = 2;
+  var centreRowLimit = (height, offset) => Math.max(0, Math.min(height / 3, height / 2 - offset));
+  function shapeOfSize(width, height) {
+    return width > 0 && height > 0 && width / height > SHAPE_RATIO ? "landscape" : "portrait";
+  }
+  function compactQualityLabel(label) {
+    const audio = /^(.*) (\d+\.\d+(?:\.\d+)?)$/.exec(label);
+    const base = audio?.[1] || label;
+    const compact = hasOwn(COMPACT_QUALITY, base) ? COMPACT_QUALITY[base] : void 0;
+    if (!compact)
+      return label;
+    const [text, keepChannels] = compact;
+    return text + (audio && keepChannels ? ` ${audio[2]}` : "");
+  }
+  function chipsThatFit(widths, available, gap, maxRows, moreWidth, rowsOut, moreOut) {
+    const fits = (need, room) => need <= room + 0.01;
+    const rowOf = [];
+    let rows = 0;
+    let x = 0;
+    for (const w of widths) {
+      if (rows === 0 || !fits(x + gap + w, available)) {
+        rows++;
+        x = w;
+      } else
+        x += gap + w;
+      rowOf.push(rows);
+    }
+    if (rows <= maxRows && widths.every((w) => fits(w, available))) {
+      rowsOut?.push(...rowOf);
+      if (moreOut)
+        moreOut.row = 0;
+      return widths.map(() => true);
+    }
+    const roomOn = (row2) => row2 === maxRows ? available - gap - moreWidth : available;
+    const usable = (w) => fits(w, maxRows === 1 ? roomOn(1) : available);
+    let row = 1;
+    x = 0;
+    let ended = false;
+    const shown = widths.map((w) => {
+      if (maxRows > 0 && !ended && usable(w)) {
+        if (fits(x === 0 ? w : x + gap + w, roomOn(row))) {
+          x = x === 0 ? w : x + gap + w;
+          rowsOut?.push(row);
+          return true;
+        }
+        if (row < maxRows && x > 0 && fits(w, roomOn(row + 1))) {
+          row++;
+          x = w;
+          rowsOut?.push(row);
+          return true;
+        }
+        ended = true;
+      }
+      rowsOut?.push(0);
+      return false;
+    });
+    if (moreOut)
+      moreOut.row = x === 0 || fits(x + gap + moreWidth, available) ? Math.max(1, row) : row + 1;
+    return shown;
+  }
+  function rowBudget(heights, moreHeight, limit, rowGap) {
+    const tallest = [moreHeight, ...heights].filter((h) => h > 0).sort((a, b) => b - a);
+    if (!tallest.length)
+      return FIT_MAX_ROWS;
+    for (let rows = FIT_MAX_ROWS; rows >= 1; rows--) {
+      const height = tallest.slice(0, rows).reduce((sum, h) => sum + h, 0) + rowGap * (rows - 1);
+      if (height <= limit + 0.01)
+        return rows;
+    }
+    return 0;
+  }
+  function rowsHeight(shown, rows, heights, moreHeight, gap, moreRow) {
+    const tallest = [];
+    shown.forEach((on, i) => {
+      if (on)
+        tallest[(rows[i] ?? 0) - 1] = Math.max(tallest[(rows[i] ?? 0) - 1] || 0, heights[i] ?? 0);
+    });
+    if (shown.includes(false) && moreRow > 0)
+      tallest[moreRow - 1] = Math.max(tallest[moreRow - 1] || 0, moreHeight);
+    const used = tallest.filter((h) => h !== void 0);
+    return used.reduce((sum, h) => sum + h, 0) + gap * Math.max(0, used.length - 1);
+  }
+
+  // client/src/features/media-tags/layout/fit-measure.ts
+  var NARROW_CARD_PX = 160;
+  var SAME_WIDTH_PX = 0.01;
+  function createFitMeasure(s, JE, deps) {
+    function holdsGroups(slotEl) {
+      return childrenOf(slotEl).some((c) => !!c.dataset.jeGroup);
+    }
+    function moreChipOf(slotEl) {
+      const last = slotEl.lastElementChild;
+      return last instanceof HTMLElement && last.classList.contains("je-tag-more") ? last : null;
+    }
+    function rowSlots(ctrl) {
+      const slots = [];
+      if (ctrl.outlet && ctrl.outlet.isConnected)
+        slots.push(ctrl.outlet);
+      const wrapping = ctrl.layout === "bands" ? "bottom" : "hover";
+      for (const child of childrenOf(ctrl.host)) {
+        if (child.classList.contains("je-tag-slot") && (child.dataset.jeSlot === wrapping || ctrl.layout === "corners" && s.CENTRE_SLOTS.has(child.dataset.jeSlot || ""))) {
+          slots.push(child);
+        }
+      }
+      return slots;
+    }
+    function posterStack(ctrl) {
+      const slot = ctrl.layout === "caption" ? ctrl.host.querySelector(':scope > .je-tag-slot[data-je-slot="poster"]') : null;
+      return slot ? [slot] : [];
+    }
+    function slotChips(slotEl) {
+      const chips = [];
+      for (const child of childrenOf(slotEl)) {
+        if (child.dataset.jeGroup)
+          chips.push(...childrenOf(child));
+      }
+      return chips;
+    }
+    function chipLabel(chip) {
+      return chip.getAttribute("title") || chip.getAttribute("alt") || chip.querySelector(".rating-text")?.textContent?.trim() || (chip.textContent || "").trim();
+    }
+    function rowWidth(slotEl, style) {
+      const pad = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+      const width = parseFloat(style.width);
+      if (!Number.isFinite(width))
+        return slotEl.clientWidth - pad;
+      return style.boxSizing === "border-box" ? width - pad - (parseFloat(style.borderLeftWidth) || 0) - (parseFloat(style.borderRightWidth) || 0) : width;
+    }
+    function indicatorGapsToMeasure(ctrl) {
+      if (ctrl.layout !== "corners" || ctrl.host.dataset.jeLegacy !== "1")
+        return null;
+      for (const child of childrenOf(ctrl.host)) {
+        const slot = child;
+        if (!slot.classList.contains("je-tag-slot") || slot.dataset.jeSlot !== "tr")
+          continue;
+        const items = childrenOf(slot);
+        const needs = items.some((el, i) => !!el.dataset.jeIndicatorGap && (i > 0 && !items[i - 1]?.dataset.jeIndicatorGap || !!el.style.getPropertyValue(INDICATOR_BEFORE)));
+        return needs ? slot : null;
+      }
+      return null;
+    }
+    function needsShape(ctrl) {
+      return deps.shapeOfCard(ctrl.host) === null && deps.shapesInUse();
+    }
+    function scheduleFit(ctrl) {
+      if (s.fitting || !(s.FIT_LAYOUTS.has(ctrl.layout || "") || centreSlots(ctrl).length || cornerLanguageGroups(ctrl).length || indicatorGapsToMeasure(ctrl) || needsShape(ctrl) || needsRadius(ctrl)))
+        return;
+      s.pendingFit.add(ctrl);
+      watchSize(ctrl.host);
+      if (s.fitScheduled)
+        return;
+      s.fitScheduled = true;
+      if (typeof JE.core.dom?.afterNextPaint === "function")
+        JE.core.dom.afterNextPaint(flushFit);
+      else
+        requestAnimationFrame(flushFit);
+    }
+    const fittedWidths = /* @__PURE__ */ new WeakMap();
+    function watchSize(host) {
+      if (typeof ResizeObserver !== "function" || fittedWidths.has(host))
+        return;
+      s.sizeObserver ?? (s.sizeObserver = new ResizeObserver(refitOnSizeChange));
+      fittedWidths.set(host, { observed: -1, observedHeight: -1, fitted: -1, fittedHeight: -1, measured: null });
+      s.sizeObserver.observe(host);
+    }
+    function unwatchSize(host) {
+      if (!fittedWidths.has(host))
+        return;
+      fittedWidths.delete(host);
+      s.sizeObserver?.unobserve(host);
+    }
+    function refitOnSizeChange(entries) {
+      for (const entry of entries) {
+        const host = entry.target;
+        if (!(host instanceof HTMLElement))
+          continue;
+        const ctrl = s.controllers.get(host);
+        const sizes = fittedWidths.get(host);
+        if (!ctrl || !sizes || !host.isConnected) {
+          unwatchSize(host);
+          continue;
+        }
+        const width = entry.contentRect.width;
+        const height = entry.contentRect.height;
+        if (width <= 0)
+          continue;
+        sizes.observed = width;
+        sizes.observedHeight = height;
+        if (sizes.fitted < 0) {
+          sizes.fitted = width;
+          sizes.fittedHeight = height;
+          continue;
+        }
+        const measured = sizes.measured;
+        sizes.measured = null;
+        if (measured && Math.abs(width - measured.width) < 1 && Math.abs(height - measured.height) < 1) {
+          sizes.fitted = width;
+          sizes.fittedHeight = height;
+          continue;
+        }
+        if (Math.abs(width - sizes.fitted) < SAME_WIDTH_PX && Math.abs(height - sizes.fittedHeight) < SAME_WIDTH_PX)
+          continue;
+        scheduleFit(ctrl);
+      }
+    }
+    function edgeOf(ctrl) {
+      const edge = ctrl.layout === "corners" ? ctrl.host.dataset.jeEdge : void 0;
+      return (edge && hasOwn(EDGE_SPACINGS, edge) ? EDGE_SPACINGS[edge] : EDGE_SPACINGS.default) ?? 6;
+    }
+    function needsRadius(ctrl) {
+      return ctrl.host.dataset.jeEdge === "flush" && !ctrl.host.style.getPropertyValue("--je-card-radius");
+    }
+    function cardRadiusOf(ctrl) {
+      const parent = ctrl.host.parentElement;
+      const art = parent?.classList.contains("cardScalable") && parent.querySelector(".cardImageContainer") || parent;
+      if (!art)
+        return "0px";
+      const style = getComputedStyle(art);
+      return style.borderTopLeftRadius || style.borderRadius.split(" ")[0] || "0px";
+    }
+    function flushFit() {
+      s.fitScheduled = false;
+      const list = Array.from(s.pendingFit).filter((c) => c.host.isConnected && s.controllers.get(c.host) === c);
+      s.pendingFit.clear();
+      if (list.length === 0)
+        return;
+      s.fitting = true;
+      try {
+        const widths = list.map((ctrl) => ctrl.host.clientWidth);
+        const hostHeights = list.map((ctrl, i) => (widths[i] ?? 0) > 0 ? ctrl.host.clientHeight : 0);
+        list.forEach((ctrl, i) => {
+          const sizes = fittedWidths.get(ctrl.host);
+          if (!sizes)
+            return;
+          sizes.fitted = (widths[i] ?? 0) > 0 ? sizes.observed : 0;
+          sizes.fittedHeight = (widths[i] ?? 0) > 0 ? sizes.observedHeight : 0;
+          const moved = (widths[i] ?? 0) > 0 && sizes.observed >= 0 && (Math.abs((widths[i] ?? 0) - sizes.observed) >= 1 || Math.abs((hostHeights[i] ?? 0) - sizes.observedHeight) >= 1);
+          sizes.measured = moved ? { width: widths[i] ?? 0, height: hostHeights[i] ?? 0 } : null;
+        });
+        const heights = list.map((ctrl, i) => needsShape(ctrl) ? hostHeights[i] ?? 0 : 0);
+        const radii = list.map((ctrl, i) => (widths[i] ?? 0) > 0 && needsRadius(ctrl) ? cardRadiusOf(ctrl) : null);
+        const shown = list.filter((ctrl, i) => (widths[i] ?? 0) > 0);
+        const presented = /* @__PURE__ */ new Set();
+        const narrowed = /* @__PURE__ */ new Set();
+        list.forEach((ctrl, i) => {
+          const narrow = (widths[i] ?? 0) > 0 && (widths[i] ?? 0) < NARROW_CARD_PX;
+          if ((widths[i] ?? 0) === 0 || narrow === !!ctrl.narrow)
+            return;
+          ctrl.narrow = narrow;
+          narrowed.add(ctrl);
+        });
+        list.forEach((ctrl, i) => {
+          if (!needsShape(ctrl))
+            return;
+          const shape = (widths[i] ?? 0) > 0 ? shapeOfSize(widths[i] ?? 0, heights[i] ?? 0) : "portrait";
+          const changed = shape !== ctrl.shape;
+          ctrl.shape = shape;
+          if (changed) {
+            deps.presentAll(ctrl);
+            presented.add(ctrl);
+          }
+        });
+        for (const ctrl of narrowed) {
+          if (ctrl.layout === "bands" && !presented.has(ctrl))
+            deps.presentAll(ctrl);
+        }
+        list.forEach((ctrl, i) => {
+          if (typeof radii[i] === "string")
+            ctrl.host.style.setProperty("--je-card-radius", radii[i]);
+        });
+        for (const ctrl of shown)
+          prepareFit(ctrl);
+        const languages = shown.map(measureCornerLanguages);
+        languages.forEach(deps.applyChipRows);
+        const anchors = shown.map(measureAnchors);
+        shown.forEach((ctrl, i) => applyAnchors(anchors[i] || []));
+        const plans = shown.map((ctrl, i) => {
+          const plan = measureFit(ctrl);
+          plan.rows.unshift(...languages[i] || []);
+          return plan;
+        });
+        shown.forEach((ctrl, i) => plans[i] && deps.applyFit(ctrl, plans[i]));
+      } finally {
+        s.fitting = false;
+      }
+      const bound = new Set(s.genreAfterFit);
+      s.genreAfterFit.clear();
+      for (const ctrl of list)
+        if (ctrl.host.dataset.jeGenreBound && deps.isRevealed(ctrl.host))
+          bound.add(ctrl.host);
+      for (const host of bound)
+        if (host.isConnected)
+          deps.fitReveal(host);
+    }
+    function centreSlots(ctrl) {
+      return ctrl.layout === "corners" ? childrenOf(ctrl.host).filter((el) => s.CENTRE_SLOTS.has(el.dataset.jeSlot || "")) : [];
+    }
+    function measureAnchors(ctrl) {
+      const centres = centreSlots(ctrl);
+      if (!centres.length)
+        return [];
+      const conf = deps.resolveLayout(ctrl);
+      const gap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
+      const edge = edgeOf(ctrl);
+      const host = ctrl.host.getBoundingClientRect();
+      const boxes = {};
+      for (const el of childrenOf(ctrl.host)) {
+        const slot = el.dataset.jeSlot;
+        if (!["tl", "tr", "bl", "br"].includes(slot || ""))
+          continue;
+        boxes[slot || ""] = childrenOf(el).filter((g) => g.dataset.jeGroup).map((g) => g.getBoundingClientRect());
+      }
+      const width = (slots) => Math.max(edge, ...slots.flatMap((s2) => (boxes[s2] || []).map((b) => s2.endsWith("l") ? b.right - host.left + gap : host.right - b.left + gap)));
+      const height = (slots) => Math.max(edge, ...slots.flatMap((s2) => (boxes[s2] || []).map((b) => s2.startsWith("t") ? b.bottom - host.top + gap : host.bottom - b.top + gap)));
+      const scalable = ctrl.host.parentElement;
+      const progress = scalable?.querySelector(".itemProgressBar, .cardProgressBar, .cardProgress");
+      const flush = conf.edge === "flush";
+      const bottom = progress ? Math.max(edge, host.bottom - progress.getBoundingClientRect().top + (flush ? 0 : gap)) : edge;
+      let top = edge;
+      const cornerReserve = width(["tl", "tr"]);
+      let topReserve = cornerReserve;
+      let overlayBottom = 0;
+      for (const overlay of scalable?.querySelectorAll(".cardIndicators > *, .countIndicator, .playedIndicator") || []) {
+        if (flush && overlay.querySelector(".countIndicator, .playedIndicator"))
+          continue;
+        const b = overlay.getBoundingClientRect();
+        if (flush && (!b.width || !b.height))
+          continue;
+        if (b.bottom <= host.top || b.top >= host.top + host.height / 3)
+          continue;
+        overlayBottom = Math.max(overlayBottom, b.bottom - host.top + gap);
+        const middle = host.left + host.width / 2;
+        if (b.left < middle && b.right > middle)
+          top = Math.max(top, b.bottom - host.top + gap);
+        else
+          topReserve = Math.max(topReserve, b.right <= middle ? b.right - host.left + gap : host.right - b.left + gap);
+      }
+      if (flush) {
+        const row = centres.find((el) => el.dataset.jeSlot === "tc");
+        const first = row && slotChips(row)[0];
+        const firstWidth = first?.getBoundingClientRect().width || 0;
+        if (top > 0 || firstWidth > host.width - 2 * topReserve + 0.01) {
+          const below = Math.max(overlayBottom, height(["tl", "tr"]));
+          if (below + (first?.getBoundingClientRect().height || 0) <= host.height / 2 + 0.01) {
+            top = below;
+            topReserve = 0;
+          }
+        } else
+          top = 0;
+      }
+      const crossing = (slots, from, to) => Math.max(0, ...slots.flatMap((s2) => (boxes[s2] || []).filter((b) => b.bottom - host.top > from && b.top - host.top < to).map((b) => s2.endsWith("l") ? b.right - host.left + gap : host.right - b.left + gap)));
+      const topRow = top + centreRowLimit(host.height, top);
+      const bottomRow = host.height - bottom - centreRowLimit(host.height, bottom);
+      topReserve = Math.max(topReserve, crossing(["bl", "br"], top, topRow));
+      const bottomReserve = Math.max(width(["bl", "br"]), crossing(["tl", "tr"], bottomRow, host.height - bottom));
+      return centres.map((el) => {
+        const slot = el.dataset.jeSlot;
+        return { el, top, bottom, reserve: slot === "tc" ? topReserve : slot === "bc" ? bottomReserve : slot === "ml" ? height(["tl", "bl"]) : slot === "mr" ? height(["tr", "br"]) : edge };
+      });
+    }
+    function applyAnchors(anchors) {
+      for (const { el, reserve, top, bottom } of anchors) {
+        el.style.setProperty("--je-anchor-reserve", `${reserve}px`);
+        el.style.setProperty("--je-anchor-top", `${top}px`);
+        el.style.setProperty("--je-anchor-bottom", `${bottom}px`);
+        el.toggleAttribute("data-je-flush-detached", el.dataset.jeSlot === "tc" && top > 0);
+      }
+    }
+    function cornerLanguageGroups(ctrl) {
+      return ctrl.layout === "corners" ? Array.from(ctrl.host.querySelectorAll(':scope > .je-tag-slot:is([data-je-slot="tl"], [data-je-slot="tr"], [data-je-slot="bl"], [data-je-slot="br"]) > [data-je-group="language"]')).filter((group) => group.querySelector(".language-chip") && childrenOf(ctrl.host).some((slot) => slot.dataset.jeSlot === ((group.parentElement?.dataset.jeSlot || "").startsWith("t") ? "tc" : "bc") && slot.querySelector(".rating-tag"))) : [];
+    }
+    function measureCornerLanguages(ctrl) {
+      const rows = [];
+      const conf = deps.resolveLayout(ctrl);
+      const gap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
+      const inner = Math.max(0, ctrl.host.clientWidth - 2 * edgeOf(ctrl));
+      for (const group of cornerLanguageGroups(ctrl)) {
+        const slot = group.parentElement?.dataset.jeSlot || "";
+        const centre = childrenOf(ctrl.host).find((el) => el.dataset.jeSlot === (slot.startsWith("t") ? "tc" : "bc"));
+        const rating = centre?.querySelector(".rating-tag");
+        const centreMore = centre && moreChipOf(centre);
+        const more = moreChipOf(group);
+        if (!rating || !centreMore || !more)
+          continue;
+        const chips = childrenOf(group).filter((chip) => chip !== more);
+        if (!chips.length)
+          continue;
+        const rects = chips.map((chip) => chip.getBoundingClientRect());
+        const ratingWidth = rating.getBoundingClientRect().width;
+        const moreRect = more.getBoundingClientRect();
+        const languageMinimum = Math.max(rects[0]?.width || 0, chips.length > 1 ? moreRect.width : 0);
+        const fullRoom = (inner - ratingWidth) / 2 - gap;
+        const minimum = languageMinimum <= fullRoom ? Math.max(ratingWidth, centreMore.getBoundingClientRect().width) : centreMore.getBoundingClientRect().width;
+        const available = Math.max(rects[0]?.width || 0, (inner - minimum) / 2 - gap);
+        const height = ctrl.host.clientHeight * 0.9;
+        const rowGap = parseFloat(getComputedStyle(group).rowGap) || 0;
+        const shown = chipsThatFit(rects.map((rect, i) => i === 0 || rect.width <= available + 0.01 ? rect.height : Infinity), height, rowGap, 1, moreRect.height);
+        shown[0] = true;
+        rows.push({ slot: group, chips, shown, more: moreRect.width <= available + 0.01 && (rects[0]?.height || 0) + rowGap + moreRect.height <= height });
+      }
+      return rows;
+    }
+    function prepareFit(ctrl) {
+      ctrl.host.querySelector(':scope > .je-tag-slot[data-je-slot="corner"]')?.style.removeProperty(STACK_LIFT);
+      for (const root of [ctrl.host, ctrl.outlet]) {
+        root?.querySelectorAll("[data-je-overflow]").forEach((el) => el.removeAttribute("data-je-overflow"));
+        root?.querySelectorAll(".je-tag-fit-text").forEach((text) => text.replaceWith(...text.childNodes));
+        root?.querySelectorAll("[data-je-fit-width]").forEach((el) => {
+          el.removeAttribute("data-je-fit-width");
+          el.style.removeProperty("--je-chip-fit-width");
+        });
+      }
+      const languages = cornerLanguageGroups(ctrl);
+      for (const slotEl of [...rowSlots(ctrl), ...languages, ...posterStack(ctrl)]) {
+        const count = languages.includes(slotEl) ? childrenOf(slotEl).filter((el) => !el.classList.contains("je-tag-more")).length : slotChips(slotEl).length;
+        let more = moreChipOf(slotEl) || slotEl.querySelector(":scope > .je-tag-more");
+        if (count === 0) {
+          more?.remove();
+          continue;
+        }
+        if (!more) {
+          more = document.createElement("span");
+          more.className = "je-tag-more";
+        }
+        if (more !== slotEl.lastElementChild)
+          slotEl.appendChild(more);
+        const text = `+${count}`;
+        if (more.textContent !== text)
+          more.textContent = text;
+      }
+    }
+    function rowRoom(ctrl, style, slotEl) {
+      const raw = style.maxHeight;
+      if (slotEl === ctrl.outlet) {
+        const height = parseFloat(style.height);
+        return height > 0 ? { inside: height, oneRow: height, gap: parseFloat(style.rowGap) || 0 } : null;
+      }
+      if (!raw || raw === "none")
+        return ctrl.layout === "bands" && slotEl.dataset.jeSlot === "bottom" ? bandRoom(ctrl, style) : null;
+      let limit = parseFloat(raw);
+      if (raw.endsWith("%")) {
+        const height = ctrl.host.clientHeight;
+        if (!(height > 0))
+          return null;
+        limit = limit / 100 * height;
+      }
+      if (!Number.isFinite(limit))
+        return null;
+      const padTop = parseFloat(style.paddingTop) || 0;
+      const padBottom = parseFloat(style.paddingBottom) || 0;
+      return { inside: limit - padTop - padBottom, oneRow: limit - padBottom, gap: parseFloat(style.rowGap) || 0 };
+    }
+    function bandRoom(ctrl, style) {
+      const height = ctrl.host.clientHeight;
+      const top = ctrl.host.querySelector(':scope > .je-tag-slot[data-je-slot="top"]');
+      const bottoms = Array.from(top?.querySelectorAll(":scope > [data-je-group] > *") || []).map((chip) => chip.getBoundingClientRect()).filter((r) => r.height > 0).map((r) => r.bottom);
+      if (!(height > 0) || !bottoms.length)
+        return null;
+      const below = Math.max(...bottoms) - ctrl.host.getBoundingClientRect().top;
+      const gap = parseFloat(style.rowGap) || 0;
+      const inside = height - (parseFloat(style.paddingBottom) || 0) - below - gap;
+      return { inside, oneRow: inside, gap };
+    }
+    function measureFit(ctrl) {
+      const plan = { pillFacts: ctrl.pill ? pillFactsThatFit(ctrl.pill) : -1, rows: measurePosterStack(ctrl), indicator: measureIndicatorGaps(ctrl), stacks: measureStacks(ctrl), lift: measureCornerLift(ctrl) };
+      const slots = rowSlots(ctrl);
+      const sides = new Map(slots.filter((el) => ["ml", "mr"].includes(el.dataset.jeSlot || "")).map((el) => [el.dataset.jeSlot, slotChips(el).map((chip) => chip.getBoundingClientRect())]));
+      const conf = deps.resolveLayout(ctrl);
+      const mixedRatingSlots = new Set(cornerLanguageGroups(ctrl).map((group) => (group.parentElement?.dataset.jeSlot || "").startsWith("t") ? "tc" : "bc"));
+      const innerWidth = sides.size ? Math.max(0, ctrl.host.clientWidth - 2 * edgeOf(ctrl)) : 0;
+      const sideGap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
+      const half = Math.max(0, (innerWidth - sideGap) / 2);
+      for (const slotEl of slots) {
+        const chips = slotChips(slotEl);
+        const more = moreChipOf(slotEl);
+        if (chips.length === 0 || !more)
+          continue;
+        const style = getComputedStyle(slotEl);
+        const vertical = ctrl.layout === "corners" && ["ml", "mr"].includes(slotEl.dataset.jeSlot || "");
+        const opposite = sides.get(slotEl.dataset.jeSlot === "ml" ? "mr" : "ml") || [];
+        const oppositeWidth = Math.min(half, Math.max(0, ...opposite.map((rect) => rect.width)));
+        const available = vertical ? Math.max(0, Math.min(opposite.length ? half : innerWidth, innerWidth - oppositeWidth - sideGap)) : rowWidth(slotEl, style);
+        const gap = parseFloat(style.columnGap) || 0;
+        const rects = chips.map((chip) => chip.getBoundingClientRect());
+        const widths = rects.map((r) => r.width);
+        const moreRect = more.getBoundingClientRect();
+        if (!(available > 0) && ctrl.layout !== "corners") {
+          plan.rows.push({ slot: slotEl, chips, shown: chips.map(() => true), more: true });
+          continue;
+        }
+        if (ctrl.layout === "corners") {
+          const measured = parseFloat(slotEl.style.getPropertyValue("--je-anchor-reserve"));
+          const reserve = Number.isFinite(measured) ? measured : edgeOf(ctrl);
+          const offset = parseFloat(slotEl.style.getPropertyValue(slotEl.dataset.jeSlot === "tc" ? "--je-anchor-top" : "--je-anchor-bottom"));
+          const limit = Math.max(0, vertical ? ctrl.host.clientHeight - 2 * reserve : ["tc", "bc"].includes(slotEl.dataset.jeSlot || "") ? centreRowLimit(ctrl.host.clientHeight, Number.isFinite(offset) ? offset : reserve) : ctrl.host.clientHeight / 3);
+          if (!vertical && ctrl.host.clientHeight > 0 && available < moreRect.width - 0.01) {
+            plan.rows.push({ slot: slotEl, chips, shown: chips.map(() => false), more: false });
+            continue;
+          }
+          const heights2 = rects.map((r) => r.height);
+          const rowGap = parseFloat(style.rowGap) || 0;
+          let shown2 = null;
+          let fittedRows = [];
+          let fittedMoreRow = 0;
+          const ratingFirst = mixedRatingSlots.has(slotEl.dataset.jeSlot || "") && !!chips[0]?.matches(".rating-tag");
+          const fitWidths = widths.map((width, i) => i === 0 && !ratingFirst ? Math.min(width, Math.max(0, available)) : width);
+          if (vertical) {
+            shown2 = chipsThatFit(heights2.map((height, i) => (fitWidths[i] ?? 0) <= available + 0.01 ? height : Infinity), limit, rowGap, 1, moreRect.height);
+          } else {
+            const rows = [], moreRow = { row: 0 };
+            const budget2 = rowBudget(heights2, moreRect.height, limit, rowGap);
+            if (budget2 > 0) {
+              shown2 = chipsThatFit(fitWidths, available, gap, budget2, moreRect.width, rows, moreRow);
+              fittedRows = rows;
+              fittedMoreRow = moreRow.row;
+            }
+          }
+          if (!shown2?.[0] && !ratingFirst) {
+            shown2 = chips.map((_, i) => i === 0);
+            fittedRows = chips.map((_, i) => i === 0 ? 1 : 0);
+            fittedMoreRow = 2;
+          }
+          if (!shown2)
+            shown2 = chips.map(() => false);
+          const moreFits = vertical ? (shown2.some(Boolean) ? (heights2[0] ?? 0) + rowGap : 0) + moreRect.height <= limit : rowsHeight(shown2, fittedRows, heights2, moreRect.height, rowGap, fittedMoreRow) <= limit;
+          plan.rows.push({
+            slot: slotEl,
+            chips,
+            shown: shown2,
+            fittedRows,
+            fittedMoreRow,
+            width: vertical ? available : void 0,
+            firstWidth: !ratingFirst && (widths[0] ?? 0) > available ? Math.max(0, available) : void 0,
+            more: moreFits && limit >= moreRect.height && available >= moreRect.width
+          });
+          continue;
+        }
+        const room = rowRoom(ctrl, style, slotEl);
+        if (!room) {
+          plan.rows.push({ slot: slotEl, chips, shown: chipsThatFit(widths, available, gap, FIT_MAX_ROWS, moreRect.width), more: true });
+          continue;
+        }
+        const heights = rects.map((r) => r.height);
+        let budget = rowBudget(heights, moreRect.height, room.inside, room.gap);
+        if (budget === 0 && Math.max(moreRect.height, ...heights) <= room.oneRow + 0.01)
+          budget = 1;
+        const shown = chipsThatFit(widths, available, gap, budget, moreRect.width);
+        plan.rows.push(budget > 0 ? { slot: slotEl, chips, shown, more: true } : { slot: slotEl, chips, shown: chips.map(() => false), more: false });
+      }
+      return plan;
+    }
+    function measurePosterStack(ctrl) {
+      const slot = posterStack(ctrl)[0];
+      const more = slot && moreChipOf(slot);
+      if (!more)
+        return [];
+      const height = ctrl.host.clientHeight;
+      const chips = slotChips(slot);
+      const top = ctrl.host.getBoundingClientRect().top;
+      const bottoms = chips.map((chip) => chip.getBoundingClientRect().bottom - top);
+      const limit = height - STACK_INSET;
+      if (!(height > 0) || bottoms.every((bottom) => bottom <= limit + 0.01))
+        return [{ slot, chips, shown: chips.map(() => true), more: true }];
+      const room = limit - more.getBoundingClientRect().height - (parseFloat(getComputedStyle(slot).rowGap) || 0);
+      let fits = true;
+      return [{ slot, chips, shown: bottoms.map((bottom) => fits = fits && bottom <= room + 0.01), more: true }];
+    }
+    function measureStacks(ctrl) {
+      const slots = s.STACK_SLOTS[ctrl.layout || ""];
+      if (!slots)
+        return [];
+      const width = Math.max(0, ctrl.host.clientWidth - 2 * STACK_INSET);
+      const out = [];
+      for (const slot of childrenOf(ctrl.host)) {
+        if (!slots.includes(slot.dataset.jeSlot || ""))
+          continue;
+        for (const group of childrenOf(slot)) {
+          if (!group.dataset.jeGroup)
+            continue;
+          for (const chip of childrenOf(group)) {
+            if (chip.getBoundingClientRect().width > width + 0.01)
+              out.push({ chip, width });
+          }
+        }
+      }
+      return out;
+    }
+    function measureCornerLift(ctrl) {
+      if (ctrl.layout !== "minimal")
+        return null;
+      const slots = childrenOf(ctrl.host);
+      const corner = slots.find((el) => el.dataset.jeSlot === "corner");
+      if (!corner)
+        return null;
+      const dots = slots.find((el) => el.dataset.jeSlot === "dots")?.getBoundingClientRect();
+      const chipRects = (slot) => Array.from(slot?.querySelectorAll(":scope > [data-je-group] > *") || []).map((chip) => ({ chip, r: chip.getBoundingClientRect() })).filter(({ r }) => r.width > 0);
+      const chips = chipRects(corner);
+      const conf = deps.resolveLayout(ctrl);
+      const gap = 4 * (TAG_SCALES[conf.tagScale] ?? 1) * (TAG_GAPS[conf.tagGap] ?? 1);
+      const meets = !!dots?.width && chips.some(({ r }) => r.left < dots.right + gap && r.top < dots.bottom && r.bottom > dots.top);
+      const lift = meets ? Math.max(0, corner.getBoundingClientRect().bottom - dots.top + gap) : 0;
+      const host = ctrl.host.getBoundingClientRect();
+      if (!(ctrl.host.clientHeight > 0))
+        return { slot: corner, lift, hidden: [] };
+      const ceiling = host.top + STACK_INSET;
+      const above = chipRects(slots.find((el) => el.dataset.jeSlot === "top")).map(({ r }) => r);
+      const hidden = [];
+      for (const { chip, r } of chips.sort((a, b) => b.r.bottom - a.r.bottom)) {
+        const top = r.top - lift;
+        if (hidden.length || top < ceiling - 0.01 || above.some((t) => r.left < t.right && r.right > t.left && top < t.bottom + gap - 0.01))
+          hidden.push(chip);
+      }
+      return { slot: corner, lift, hidden };
+    }
+    function measureIndicatorGaps(ctrl) {
+      const slot = indicatorGapsToMeasure(ctrl);
+      if (!slot)
+        return [];
+      const items = childrenOf(slot);
+      const top = slot.getBoundingClientRect().top;
+      const gap = parseFloat(getComputedStyle(slot).rowGap) || 0;
+      const out = [];
+      items.forEach((el, i) => {
+        if (!el.dataset.jeIndicatorGap)
+          return;
+        const prev = items[i - 1];
+        out.push({ el, before: !prev || prev.dataset.jeIndicatorGap ? null : Math.max(0, prev.getBoundingClientRect().bottom + gap - top) });
+      });
+      return out;
+    }
+    function pillFactsThatFit(pill) {
+      const facts = Array.from(pill.querySelectorAll(".je-tag-pill-fact"));
+      const excess = pill.scrollWidth - pill.clientWidth;
+      let keep = facts.length;
+      let freed = 0;
+      while (keep > 1 && freed < excess - 0.5) {
+        const fact = facts[keep - 1];
+        if (!fact)
+          break;
+        const sep = fact.previousElementSibling;
+        freed += fact.getBoundingClientRect().width + (sep ? sep.getBoundingClientRect().width : 0);
+        keep--;
+      }
+      return keep;
+    }
+    function prepareFitText(first) {
+      const chip = first.matches(".awards-link, .language-link") ? first.firstElementChild : first;
+      if (!chip)
+        return;
+      if (chip.matches(".status-tag, .quality-overlay-label, .age-rating-tag, .je-logo-text")) {
+        const text = document.createElement("span");
+        text.className = "je-tag-fit-text";
+        text.append(...chip.childNodes);
+        chip.append(text);
+      } else if (chip.matches(".language-chip")) {
+        for (const node of Array.from(chip.childNodes)) {
+          if (node.nodeType !== 3)
+            continue;
+          const text = document.createElement("span");
+          text.className = "je-tag-fit-text";
+          node.replaceWith(text);
+          text.append(node);
+        }
+      }
+    }
+    return { holdsGroups, moreChipOf, posterStack, chipLabel, scheduleFit, unwatchSize, flushFit, prepareFitText };
+  }
+
+  // client/src/features/media-tags/layout/groups.ts
+  function createGroups(s, JE, deps) {
     function commitGroup(target, groupId, overlay) {
       const group = normalizeGroup(groupId);
       if (!group || !target)
@@ -2183,10 +1717,10 @@ ${scoped} {${original}}`;
         removeGroup(target, group);
         return false;
       }
-      const ctrl = controllerFor(target, true);
+      const ctrl = deps.controllerFor(target, true);
       if (!ctrl)
         return false;
-      const conf = resolveLayout(ctrl);
+      const conf = deps.resolveLayout(ctrl);
       const previous = ctrl.groups.get(group);
       if (!ctrl.arrived)
         ctrl.arrived = /* @__PURE__ */ new Map();
@@ -2194,54 +1728,54 @@ ${scoped} {${original}}`;
         ctrl.arrived.set(group, previous ? previous.seq : ++ctrl.seq);
       ctrl.groups.set(group, { master: overlay, seq: ctrl.arrived.get(group) ?? ctrl.seq });
       if (ctrl.layout !== conf.layout || ctrl.lookKey !== conf.lookKey) {
-        presentAll(ctrl);
-      } else if (!isAwaiting(ctrl.host)) {
-        presentGroup(ctrl, conf, group);
+        deps.presentAll(ctrl);
+      } else if (!deps.isAwaiting(ctrl.host)) {
+        deps.presentGroup(ctrl, conf, group);
         if (conf.layout === "summary")
-          refreshPill(ctrl, conf);
-        syncIndicatorGap(ctrl, conf);
-        scheduleFit(ctrl);
+          deps.refreshPill(ctrl, conf);
+        deps.syncIndicatorGap(ctrl, conf);
+        deps.scheduleFit(ctrl);
       }
       return true;
     }
     function removeGroup(target, groupId) {
       const group = normalizeGroup(groupId);
-      const ctrl = target ? controllerFor(target, false) : null;
+      const ctrl = target ? deps.controllerFor(target, false) : null;
       if (!group || !ctrl || !ctrl.groups.has(group))
         return;
       ctrl.groups.delete(group);
-      removeNodes(ctrl, group);
-      if (isAwaiting(ctrl.host))
+      deps.removeNodes(ctrl, group);
+      if (deps.isAwaiting(ctrl.host))
         return;
-      const conf = resolveLayout(ctrl);
+      const conf = deps.resolveLayout(ctrl);
       if (conf.layout === "summary")
-        refreshPill(ctrl, conf);
-      syncIndicatorGap(ctrl, conf);
-      scheduleFit(ctrl);
+        deps.refreshPill(ctrl, conf);
+      deps.syncIndicatorGap(ctrl, conf);
+      deps.scheduleFit(ctrl);
     }
     function hasGroup(target, groupId) {
       const group = normalizeGroup(groupId);
-      const ctrl = target ? controllerFor(target, false) : null;
+      const ctrl = target ? deps.controllerFor(target, false) : null;
       return !!(group && ctrl && ctrl.groups.has(group));
     }
     function getGroup(target, groupId) {
       const group = normalizeGroup(groupId);
-      const ctrl = target ? controllerFor(target, false) : null;
+      const ctrl = target ? deps.controllerFor(target, false) : null;
       return group && ctrl?.groups.get(group)?.master || null;
     }
     function refreshPresentation(targets) {
       const list = targets === void 0 ? Array.from(document.querySelectorAll(".je-tag-host")) : Array.isArray(targets) ? targets : [targets];
       for (const target of list) {
-        const ctrl = controllerFor(target, false);
+        const ctrl = deps.controllerFor(target, false);
         if (ctrl && ctrl.host.isConnected)
-          presentAll(ctrl);
+          deps.presentAll(ctrl);
       }
     }
     function describe(target) {
-      const ctrl = target ? controllerFor(target, false) : null;
+      const ctrl = target ? deps.controllerFor(target, false) : null;
       if (!ctrl)
         return [];
-      const conf = resolveLayout(ctrl);
+      const conf = deps.resolveLayout(ctrl);
       return Array.from(ctrl.groups.entries()).sort((a, b) => a[1].seq - b[1].seq).map(([group, rec]) => ({
         group,
         slot: conf.slots[group] === "caption" && !ctrl.outlet ? "poster" : conf.slots[group] || "off",
@@ -2253,34 +1787,34 @@ ${scoped} {${original}}`;
       if (target?.dataset)
         delete target.dataset.jeReviewKey;
       if (target)
-        cardData.delete(target);
-      const host = findHost(target);
+        s.cardData.delete(target);
+      const host = deps.findHost(target);
       if (!host)
         return;
-      cardData.delete(host);
+      s.cardData.delete(host);
       if (host.parentElement)
-        cardData.delete(host.parentElement);
+        s.cardData.delete(host.parentElement);
       delete host.dataset.jeReviewKey;
-      endAwait(host);
-      const ctrl = host ? controllers.get(host) : null;
+      deps.endAwait(host);
+      const ctrl = host ? s.controllers.get(host) : null;
       if (!ctrl)
         return;
       forget(ctrl);
     }
     function forget(ctrl) {
-      if (contextOf(awaitingData, ctrl.host)?.cardId === ctrl.itemId)
-        endAwait(ctrl.host);
-      teardown(ctrl);
-      controllers.delete(ctrl.host);
-      unwatchSize(ctrl.host);
+      if (deps.contextOf(s.awaitingData, ctrl.host)?.cardId === ctrl.itemId)
+        deps.endAwait(ctrl.host);
+      deps.teardown(ctrl);
+      s.controllers.delete(ctrl.host);
+      deps.unwatchSize(ctrl.host);
       JE.tagPosterColours?.release(ctrl.host);
     }
     function removeGroupEverywhere(groupId) {
       for (const host of document.querySelectorAll(".je-tag-host")) {
-        const reserve = reservesCaption(resolveLayout(controllers.get(host) || host), host);
+        const reserve = deps.reservesCaption(deps.resolveLayout(s.controllers.get(host) || host), host);
         removeGroup(host, groupId);
-        const ctrl = reserve ? null : controllers.get(host);
-        if (ctrl?.outlet && !holdsGroups(ctrl.outlet)) {
+        const ctrl = reserve ? null : s.controllers.get(host);
+        if (ctrl?.outlet && !deps.holdsGroups(ctrl.outlet)) {
           ctrl.outlet.remove();
           ctrl.outlet = null;
         }
@@ -2295,37 +1829,36 @@ ${scoped} {${original}}`;
       });
     }
     function prepareCard(target) {
-      if (!target || !reservesCaption(resolveLayout(findHost(target) || target), target))
+      if (!target || !deps.reservesCaption(deps.resolveLayout(deps.findHost(target) || target), target))
         return;
-      const host = ensureHost(target);
-      if (!host || isIgnoredContext(host))
+      const host = deps.ensureHost(target);
+      if (!host || deps.isIgnoredContext(host))
         return;
-      const ctrl = controllerFor(host, true);
-      if (ctrl && (ctrl.layout !== "caption" || !ctrl.outlet?.isConnected && captionAnchor(ctrl.host)))
-        presentAll(ctrl);
+      const ctrl = deps.controllerFor(host, true);
+      if (ctrl && (ctrl.layout !== "caption" || !ctrl.outlet?.isConnected && deps.captionAnchor(ctrl.host)))
+        deps.presentAll(ctrl);
     }
     function syncBodyClasses() {
       if (!document.body)
         return;
       document.body.classList.toggle("je-tags-hide-on-hover", !!JE.currentSettings?.tagsHideOnHover);
     }
-    let reinitPending = null;
     function reinitialize() {
-      invalidateSettings();
+      deps.invalidateSettings();
       syncBodyClasses();
-      if (reinitPending)
-        return reinitPending;
-      reinitPending = Promise.resolve().then(() => {
-        reinitPending = null;
-        invalidateSettings();
+      if (s.reinitPending)
+        return s.reinitPending;
+      s.reinitPending = Promise.resolve().then(() => {
+        s.reinitPending = null;
+        deps.invalidateSettings();
         const owned = /* @__PURE__ */ new Set();
         for (const host of document.querySelectorAll(".je-tag-host")) {
           const el = host;
-          const reserve = reservesCaption(resolveLayout(controllers.get(el) || el), el);
-          const ctrl = controllerFor(el, reserve && !isIgnoredContext(el));
+          const reserve = deps.reservesCaption(deps.resolveLayout(s.controllers.get(el) || el), el);
+          const ctrl = deps.controllerFor(el, reserve && !deps.isIgnoredContext(el));
           if (!ctrl)
             continue;
-          presentAll(ctrl);
+          deps.presentAll(ctrl);
           if (ctrl.outlet)
             owned.add(ctrl.outlet);
         }
@@ -2335,13 +1868,524 @@ ${scoped} {${original}}`;
         });
         document.dispatchEvent(new CustomEvent("je:tag-layout-changed"));
       });
-      return reinitPending;
+      return s.reinitPending;
     }
+    return { commitGroup, removeGroup, hasGroup, getGroup, refreshPresentation, describe, clearCard, forget, removeGroupEverywhere, clearAll, prepareCard, reinitialize };
+  }
+
+  // client/src/features/media-tags/layout/looks.ts
+  function createLooks(s, JE, deps) {
+    function requireLook() {
+      const look = JE.core.tagLook;
+      if (!look)
+        throw new Error("Tag looks must load before resolving item rules");
+      return look;
+    }
+    const normalizeSettings2 = (settings, plugin) => normalizeSettings(settings ?? JE.currentSettings, plugin ?? JE.pluginConfig);
+    const isLegacySettings2 = (settings) => isLegacySettings(settings ?? JE.currentSettings);
+    const singleChipGroup2 = (group, config = JE.pluginConfig) => singleChipGroup(group, config);
+    const promoteLegacySettings2 = (settings) => {
+      const source = settings ?? JE.currentSettings;
+      const changed = promoteLegacySettings(source);
+      if (changed && source === JE.currentSettings) invalidateSettings();
+      return changed;
+    };
+    const lookSettingsCache = /* @__PURE__ */ new Map();
+    const lookSettings2 = (base, look, locked) => {
+      const settings = lookSettings(base, look, locked, JE.currentSettings, JE.pluginConfig);
+      const key = settings.lookKey + "|" + (settings.order ? "o" : "");
+      const cached = lookSettingsCache.get(key);
+      if (cached)
+        return cached;
+      lookSettingsCache.set(key, settings);
+      return settings;
+    };
+    function applySize(element, conf) {
+      element.style.setProperty("--je-tag-scale", String(TAG_SCALES[conf.tagScale] ?? 1));
+      element.style.setProperty("--je-tag-gap", String(TAG_GAPS[conf.tagGap] ?? 1));
+    }
+    function settingsSource() {
+      const s2 = JE.currentSettings;
+      return { settings: s2, plugin: JE.pluginConfig, enabled: DEFAULT_ORDER.map((g) => s2?.[ENABLED_SETTING[g]] ? "1" : "0").join("") };
+    }
+    function currentSettings() {
+      const source = settingsSource();
+      if (!s.cachedSettings || !s.cachedSource || s.cachedSource.settings !== source.settings || s.cachedSource.plugin !== source.plugin || s.cachedSource.enabled !== source.enabled) {
+        s.cachedSettings = normalizeSettings2();
+        s.cachedSource = source;
+      }
+      return s.cachedSettings;
+    }
+    function invalidateSettings() {
+      lookSettingsCache.clear();
+      s.cachedSettings = null;
+      s.cachedLooks = null;
+    }
+    function currentLooks() {
+      if (!s.cachedLooks)
+        s.cachedLooks = JE.core.tagLook?.read() || { rules: [], locks: /* @__PURE__ */ new Map(), overrides: /* @__PURE__ */ new Map() };
+      if (!s.cachedLooks.overrides)
+        s.cachedLooks.overrides = /* @__PURE__ */ new Map();
+      return s.cachedLooks;
+    }
+    function injectStyles() {
+      if (s.stylesInjected || typeof deps.api.buildStyles !== "function" || !JE.core.ui?.injectCss)
+        return;
+      s.stylesInjected = true;
+      JE.core.ui.injectCss("je-tag-layout", deps.api.buildStyles());
+      window.addEventListener("resize", refitOnResize, { passive: true });
+    }
+    function refitOnResize() {
+      if (s.resizeQueued)
+        return;
+      s.resizeQueued = true;
+      requestAnimationFrame(() => {
+        s.resizeQueued = false;
+        for (const host of document.querySelectorAll(".je-tag-host")) {
+          const ctrl = s.controllers.get(host);
+          if (ctrl)
+            deps.scheduleFit(ctrl);
+        }
+      });
+    }
+    return { requireLook, normalizeSettings: normalizeSettings2, isLegacySettings: isLegacySettings2, singleChipGroup: singleChipGroup2, promoteLegacySettings: promoteLegacySettings2, lookSettings: lookSettings2, applySize, settingsSource, currentSettings, invalidateSettings, currentLooks, injectStyles };
+  }
+
+  // client/src/features/media-tags/layout/present.ts
+  var PILL_MAX_FACTS = 3;
+  function createPresent(s, JE, deps) {
+    function applyDensityAndCap(group, node, conf) {
+      if (conf.density === "compact") {
+        if (group === "quality") {
+          for (const chip of node.querySelectorAll(".quality-overlay-label")) {
+            const text = chip.textContent || "";
+            const short = chip.dataset.jeCompact || compactQualityLabel(text);
+            if (short !== text)
+              chip.textContent = short;
+          }
+        } else if (group === "rating") {
+          for (const chip of node.querySelectorAll(".rating-tag--source"))
+            chip.dataset.jeRatingCompact = "1";
+          if (node.querySelector(".rating-tag-tmdb"))
+            node.querySelector(".rating-tag-critic")?.remove();
+        } else if (group === "status") {
+          for (const chip of node.querySelectorAll("[data-je-compact]")) {
+            chip.textContent = chip.dataset.jeCompact || chip.textContent;
+          }
+        }
+      }
+      const cap = conf.caps[group];
+      if (cap > 0) {
+        while (node.children.length > cap)
+          node.lastElementChild?.remove();
+      }
+    }
+    function buildChips(group, master, conf, host) {
+      const node = cloneElement(master);
+      node.dataset.jeGroup = group;
+      for (const img of node.querySelectorAll("img"))
+        img.onerror = () => img.remove();
+      applyDensityAndCap(group, node, conf);
+      if ((group === "language" || group === "awards") && host) {
+        const link = deps.cardLinkOf(host);
+        if (link?.matches("a[href]") && !link.contains(host)) {
+          for (const chip of childrenOf(node)) {
+            const anchor = document.createElement("a");
+            anchor.className = group === "language" ? "language-link" : "awards-link";
+            anchor.href = link.getAttribute("href") || "";
+            anchor.title = chip.getAttribute("title") || "";
+            anchor.setAttribute("tabindex", "-1");
+            for (const attr of ["target", "rel"]) {
+              if (link.hasAttribute(attr))
+                anchor.setAttribute(attr, link.getAttribute(attr) || "");
+            }
+            chip.replaceWith(anchor);
+            anchor.appendChild(chip);
+          }
+        }
+      }
+      return node;
+    }
+    function buildDots(master, conf) {
+      const copy = buildChips("quality", master, { ...conf, density: "full" });
+      const labels = [];
+      const dots = document.createElement("div");
+      dots.className = "je-tag-dots";
+      dots.dataset.jeGroup = "quality";
+      for (const chip of childrenOf(copy)) {
+        const label = chip.textContent || "";
+        const kind = s.DOT_KIND.find(([cls]) => !!cls && chip.classList.contains(cls))?.[1] || "codec";
+        const dot = document.createElement("span");
+        dot.className = "je-tag-dot";
+        dot.dataset.jeDot = kind;
+        dot.title = label;
+        dot.setAttribute("aria-hidden", "true");
+        dots.appendChild(dot);
+        labels.push(label);
+      }
+      if (labels.length === 0)
+        return null;
+      dots.setAttribute("role", "img");
+      dots.setAttribute("aria-label", labels.join(", "));
+      dots.title = labels.join(" · ");
+      return dots;
+    }
+    function pillFact(group, master) {
+      switch (group) {
+        case "quality": {
+          const labels = Array.from(master.querySelectorAll(".quality-overlay-label"));
+          const resolution = labels.find((l) => l.classList.contains("resolution"))?.textContent || "";
+          const range = labels.map((l) => l.dataset.quality || "").find((q) => s.DYNAMIC_RANGE.includes(q)) || "";
+          const text = [resolution, range ? compactQualityLabel(range) : ""].filter(Boolean).join(" ") || labels[0]?.textContent || "";
+          return text ? { text } : null;
+        }
+        case "rating": {
+          const source = master.querySelector(".rating-tag--source");
+          if (source)
+            return { text: source.getAttribute("aria-label") || source.textContent };
+          const community = master.querySelector(".rating-tag-tmdb .rating-text")?.textContent;
+          if (community)
+            return { text: community, glyph: "★" };
+          const critic = master.querySelector(".rating-tag-critic .rating-text")?.textContent;
+          if (critic)
+            return { text: critic };
+          const review = master.querySelector(".je-userreview-tag .rating-text")?.textContent;
+          return review ? { text: review, glyph: "♥" } : null;
+        }
+        case "awards": {
+          const chip = childrenOf(master)[0];
+          return chip ? { text: chip.textContent, title: chip.title } : null;
+        }
+        case "status":
+        case "ageRating": {
+          const text = (master.firstElementChild?.textContent || "").trim();
+          return text ? { text } : null;
+        }
+        case "language": {
+          const first = childrenOf(master)[0];
+          if (first?.classList.contains("language-code") || first?.classList.contains("language-count-badge")) {
+            const copy = cloneElement(first);
+            const marker = copy.querySelector(".language-cc");
+            const glyph = marker?.textContent || void 0;
+            marker?.remove();
+            return { text: (copy.textContent || "").trim(), glyph, title: first.getAttribute("title") || void 0 };
+          }
+          const img = first instanceof HTMLImageElement ? first : first?.querySelector("img");
+          if (!img)
+            return null;
+          const flag = cloneElement(img);
+          flag.className = "je-tag-pill-flag";
+          flag.onerror = () => flag.remove();
+          return {
+            text: img.getAttribute("alt") || "",
+            title: first?.getAttribute("title") || void 0,
+            glyph: first?.querySelector(".language-cc")?.textContent || void 0,
+            flag
+          };
+        }
+        case "genre": {
+          const text = master.querySelector(".genre-tag")?.getAttribute("title") || "";
+          return text ? { text } : null;
+        }
+        case "logos": {
+          const text = master.querySelector(".je-logo-chip")?.getAttribute("title") || "";
+          return text ? { text } : null;
+        }
+        case "custom": {
+          const text = childrenOf(master)[0]?.dataset.jeCustom || "";
+          return text ? { text } : null;
+        }
+        default:
+          return null;
+      }
+    }
+    function rankOf(ctrl, conf, group) {
+      if (conf.order)
+        return conf.order.indexOf(group);
+      return ctrl.groups.get(group)?.seq ?? Number.MAX_SAFE_INTEGER;
+    }
+    function slotElement(ctrl, slot) {
+      if (slot === "caption")
+        return ensureOutlet(ctrl);
+      for (const child of childrenOf(ctrl.host)) {
+        if (child.classList.contains("je-tag-slot") && child.dataset.jeSlot === slot) {
+          return child;
+        }
+      }
+      const el = document.createElement("div");
+      el.className = "je-tag-slot";
+      el.dataset.jeSlot = slot;
+      const rank = s.SLOT_ORDER.indexOf(slot);
+      const children = childrenOf(ctrl.host);
+      const isSlot = (child) => child.classList.contains("je-tag-slot");
+      let next = children.find((child) => isSlot(child) && s.SLOT_ORDER.indexOf(child.dataset.jeSlot || "") > rank);
+      if (!next) {
+        let last = -1;
+        children.forEach((child, i) => {
+          if (isSlot(child))
+            last = i;
+        });
+        next = last >= 0 ? children[last + 1] : void 0;
+      }
+      if (next)
+        ctrl.host.insertBefore(el, next);
+      else
+        ctrl.host.appendChild(el);
+      return el;
+    }
+    function ensureOutlet(ctrl) {
+      if (ctrl.outlet && ctrl.outlet.isConnected)
+        return ctrl.outlet;
+      const anchor = deps.captionAnchor(ctrl.host);
+      if (!anchor)
+        return null;
+      let outlet = childrenOf(anchor.parent).find((c) => c.classList.contains("je-tag-caption")) || null;
+      if (!outlet) {
+        outlet = document.createElement("div");
+        outlet.className = "je-tag-slot je-tag-caption";
+        outlet.dataset.jeSlot = "caption";
+        anchor.parent.insertBefore(outlet, anchor.before);
+      }
+      outlet.dataset.jeOwner = String(++s.outletSeq);
+      outlet.replaceChildren();
+      ctrl.outlet = outlet;
+      return ctrl.outlet;
+    }
+    function reservesCaption(conf, el) {
+      if (!conf.reserveCaption)
+        return false;
+      const scopes = JE.core.tagScopes;
+      if (!scopes)
+        return true;
+      return DEFAULT_ORDER.some((g) => conf.slots[g] === "caption" && !!JE.currentSettings?.[ENABLED_SETTING[g]] && !scopes.excludes(g, el));
+    }
+    function placeSorted(ctrl, conf, slotEl, node) {
+      if (!slotEl)
+        return;
+      const rank = rankOf(ctrl, conf, normalizeGroup(node.dataset.jeGroup) || "quality");
+      let before = null;
+      for (const sibling of childrenOf(slotEl)) {
+        const group = normalizeGroup(sibling.dataset.jeGroup);
+        if (group && rankOf(ctrl, conf, group) > rank) {
+          before = sibling;
+          break;
+        }
+      }
+      slotEl.insertBefore(node, before || deps.moreChipOf(slotEl));
+    }
+    function removeNodes(ctrl, group) {
+      const nodes = ctrl.nodes.get(group);
+      if (!nodes)
+        return;
+      ctrl.nodes.delete(group);
+      for (const node of nodes) {
+        const slot = node.parentElement;
+        node.remove();
+        if (slot && slot !== ctrl.outlet && slot.classList.contains("je-tag-slot") && !deps.holdsGroups(slot))
+          slot.remove();
+      }
+    }
+    function effectiveSlot(ctrl, conf, group) {
+      const slot = conf.slots[group] || "off";
+      if (slot === "caption" && !ensureOutlet(ctrl))
+        return "poster";
+      return slot;
+    }
+    function refreshPill(ctrl, conf) {
+      if (ctrl.pill) {
+        const slot = ctrl.pill.parentElement;
+        ctrl.pill.remove();
+        if (slot && slot.children.length === 0)
+          slot.remove();
+        ctrl.pill = null;
+      }
+      if (conf.layout !== "summary")
+        return;
+      const groups = Array.from(ctrl.groups.keys()).filter((g) => conf.slots[g] === "pill").sort((a, b) => rankOf(ctrl, conf, a) - rankOf(ctrl, conf, b));
+      const facts = [];
+      for (const group of groups) {
+        const master = ctrl.groups.get(group)?.master;
+        if (!master)
+          continue;
+        const shown = buildChips(group, master, conf);
+        const fact = pillFact(group, shown);
+        if (fact)
+          facts.push({ group, ...fact });
+        if (facts.length >= PILL_MAX_FACTS)
+          break;
+      }
+      if (facts.length === 0)
+        return;
+      const link = facts.some((f) => f.group === "language" || f.group === "awards") ? deps.cardLinkOf(ctrl.host) : null;
+      const pill = document.createElement(link?.matches("a[href]") && !link.contains(ctrl.host) ? "a" : "div");
+      if (pill.tagName === "A" && link) {
+        pill.setAttribute("href", link.getAttribute("href") || "");
+        pill.setAttribute("tabindex", "-1");
+        for (const attr of ["target", "rel"]) {
+          if (link.hasAttribute(attr))
+            pill.setAttribute(attr, link.getAttribute(attr) || "");
+        }
+      }
+      pill.className = "je-tag-pill";
+      const spoken = [];
+      facts.forEach((fact, i) => {
+        if (i > 0) {
+          const sep = document.createElement("span");
+          sep.className = "je-tag-pill-sep";
+          sep.setAttribute("aria-hidden", "true");
+          sep.textContent = "·";
+          pill.appendChild(sep);
+        }
+        const span = document.createElement("span");
+        span.className = "je-tag-pill-fact";
+        span.dataset.jeGroup = fact.group;
+        if (fact.title)
+          span.title = fact.title;
+        if (fact.glyph) {
+          const glyph = document.createElement("span");
+          glyph.className = fact.group === "language" ? "language-cc" : "je-tag-pill-glyph";
+          glyph.setAttribute("aria-hidden", "true");
+          glyph.textContent = fact.glyph;
+          span.append(glyph, " ");
+        }
+        if (fact.flag) {
+          span.appendChild(fact.flag);
+        } else {
+          span.append(fact.text);
+        }
+        pill.appendChild(span);
+        spoken.push(fact.title || fact.text);
+      });
+      pill.title = spoken.join(" · ");
+      pill.setAttribute("aria-label", spoken.join(", "));
+      slotElement(ctrl, "pill")?.appendChild(pill);
+      ctrl.pill = pill;
+    }
+    function presentGroup(ctrl, conf, group) {
+      removeNodes(ctrl, group);
+      const rec = ctrl.groups.get(group);
+      if (!rec)
+        return;
+      const slot = effectiveSlot(ctrl, conf, group);
+      if (slot === "off")
+        return;
+      const nodes = [];
+      if (slot === "dots") {
+        const dots = buildDots(rec.master, conf);
+        if (dots) {
+          placeSorted(ctrl, conf, slotElement(ctrl, "dots"), dots);
+          nodes.push(dots);
+        }
+      } else if (slot !== "pill") {
+        const chips = buildChips(group, rec.master, slot === "hover" || conf.layout === "bands" && ctrl.narrow ? revealSettings(conf) : conf, ctrl.host);
+        if (conf.layout === "corners")
+          chips.dataset.jeCorner = SLOT_TO_POSITION[slot];
+        if (conf.layout === "corners" && conf.legacy && conf.indicatorGap.has(group))
+          chips.dataset.jeIndicatorGap = "1";
+        if (chips.children.length > 0) {
+          placeSorted(ctrl, conf, slotElement(ctrl, slot), chips);
+          nodes.push(chips);
+        }
+      }
+      if (s.SUMMARY_SLOTS.has(slot) && (conf.layout === "summary" || conf.layout === "minimal")) {
+        const full = buildChips(group, rec.master, revealSettings(conf), ctrl.host);
+        if (full.children.length > 0) {
+          placeSorted(ctrl, conf, slotElement(ctrl, "hover"), full);
+          nodes.push(full);
+        }
+      }
+      ctrl.nodes.set(group, nodes);
+    }
+    function syncIndicatorGap(ctrl, conf) {
+      const on = conf.layout === "corners" && !conf.legacy && Array.from(ctrl.groups.keys()).some((g) => conf.indicatorGap.has(g) && (ctrl.nodes.get(g)?.length || 0) > 0);
+      if (on)
+        ctrl.host.dataset.jeIndicatorGap = "1";
+      else
+        delete ctrl.host.dataset.jeIndicatorGap;
+    }
+    function teardown(ctrl) {
+      for (const group of Array.from(ctrl.nodes.keys()))
+        removeNodes(ctrl, group);
+      ctrl.pill?.remove();
+      ctrl.pill = null;
+      for (const child of childrenOf(ctrl.host)) {
+        if (child.classList.contains("je-tag-slot"))
+          child.remove();
+      }
+      ctrl.outlet?.remove();
+      ctrl.outlet = null;
+      deps.describeHidden(ctrl, []);
+      ctrl.layout = null;
+      ctrl.lookKey = "";
+      ctrl.host.style.removeProperty("--je-tag-scale");
+      ctrl.host.style.removeProperty("--je-tag-gap");
+      delete ctrl.host.dataset.jeLayout;
+      delete ctrl.host.dataset.jeLegacy;
+      delete ctrl.host.dataset.jeLocked;
+      delete ctrl.host.dataset.jeIndicatorGap;
+      delete ctrl.host.dataset.jeShape;
+      delete ctrl.host.dataset.jeEdge;
+      delete ctrl.host.dataset.jeGenreBound;
+    }
+    function presentAll(ctrl) {
+      ctrl.pendingPresentation = false;
+      const declaredShape = deps.shapeOfCard(ctrl.host);
+      if (declaredShape)
+        ctrl.shape = declaredShape;
+      const conf = deps.resolveLayout(ctrl);
+      const shaped = deps.shapesInUse();
+      teardown(ctrl);
+      ctrl.layout = conf.layout;
+      ctrl.lookKey = conf.lookKey;
+      ctrl.host.dataset.jeLayout = conf.layout;
+      deps.applySize(ctrl.host, conf);
+      if (shaped) {
+        if (ctrl.shape === null) {
+          ctrl.lookKey = "";
+          deps.scheduleFit(ctrl);
+          return;
+        }
+        ctrl.host.dataset.jeShape = ctrl.shape;
+      }
+      if (conf.legacy)
+        ctrl.host.dataset.jeLegacy = "1";
+      if (reservesCaption(conf, ctrl.host) && !deps.isIgnoredContext(ctrl.host)) {
+        const outlet = ensureOutlet(ctrl);
+        if (outlet)
+          deps.applySize(outlet, conf);
+      }
+      if (conf.locked)
+        ctrl.host.dataset.jeLocked = "1";
+      if (conf.layout === "corners" && conf.edge && conf.edge !== "default")
+        ctrl.host.dataset.jeEdge = conf.edge;
+      if (deps.isAwaiting(ctrl.host))
+        return;
+      const groups = Array.from(ctrl.groups.keys()).sort((a, b) => rankOf(ctrl, conf, a) - rankOf(ctrl, conf, b));
+      for (const group of groups)
+        presentGroup(ctrl, conf, group);
+      refreshPill(ctrl, conf);
+      syncIndicatorGap(ctrl, conf);
+      deps.scheduleFit(ctrl);
+      JE.tagPosterColours?.track(ctrl.host);
+    }
+    return { reservesCaption, removeNodes, refreshPill, presentGroup, syncIndicatorGap, teardown, presentAll };
+  }
+
+  // client/src/features/media-tags/layout/tag-layout.ts
+  function createTagLayout(JE) {
+    const s = createLayoutState();
+    const deps = {};
+    Object.assign(deps, createLooks(s, JE, deps));
+    Object.assign(deps, createCardContext(s, JE, deps));
+    Object.assign(deps, createPresent(s, JE, deps));
+    Object.assign(deps, createFitMeasure(s, JE, deps));
+    Object.assign(deps, createFitApply(s, JE, deps));
+    Object.assign(deps, createGroups(s, JE, deps));
     JE.session?.onUserChange?.("tag-layout", () => {
-      invalidateSettings();
-      clearAll();
-      cardData = /* @__PURE__ */ new WeakMap();
-      awaitingData = /* @__PURE__ */ new WeakMap();
+      deps.invalidateSettings();
+      deps.clearAll();
+      s.cardData = /* @__PURE__ */ new WeakMap();
+      s.awaitingData = /* @__PURE__ */ new WeakMap();
     });
     const VOCABULARY_KEYS = {
       group: {},
@@ -2475,7 +2519,7 @@ ${scoped} {${original}}`;
     const api = {
       sizeLabel,
       VOCABULARY_KEYS,
-      isLegacySettings: isLegacySettings2,
+      isLegacySettings: deps.isLegacySettings,
       GROUPS: DEFAULT_ORDER.slice(),
       LAYOUT_SLOTS,
       DEFAULT_ORDER: DEFAULT_ORDER.slice(),
@@ -2490,49 +2534,50 @@ ${scoped} {${original}}`;
       DEFAULT_PROFILES,
       SHAPES: SHAPES.slice(),
       RECOMMENDED_SHAPES,
-      CONTAINER_CLASS,
+      CONTAINER_CLASS: s.CONTAINER_CLASS,
       SLOT_TO_POSITION,
       POSITION_TO_SLOT,
       POSITION_SETTINGS,
       buildStyles: null,
       normalizeGroup,
       readEdge,
-      normalizeSettings: normalizeSettings2,
-      promoteLegacySettings: promoteLegacySettings2,
-      invalidateSettings,
-      resolveLayout,
-      lookSource,
-      setPreviewLook,
-      shapeOf,
-      shapeOfCard,
+      normalizeSettings: deps.normalizeSettings,
+      promoteLegacySettings: deps.promoteLegacySettings,
+      invalidateSettings: deps.invalidateSettings,
+      resolveLayout: deps.resolveLayout,
+      lookSource: deps.lookSource,
+      setPreviewLook: deps.setPreviewLook,
+      shapeOf: deps.shapeOf,
+      shapeOfCard: deps.shapeOfCard,
       readShapeOverrides,
       shapesToWire,
-      setCardContext,
-      cardIdentity,
-      awaitCardContext,
-      releaseCardContext,
-      resumePresentation,
-      ensureHost,
-      commitGroup,
-      removeGroup,
-      hasGroup,
-      getGroup,
-      refreshPresentation,
-      describe,
-      clearCard,
-      clearAll,
-      removeGroupEverywhere,
-      prepareCard,
+      setCardContext: deps.setCardContext,
+      cardIdentity: deps.cardIdentity,
+      awaitCardContext: deps.awaitCardContext,
+      releaseCardContext: deps.releaseCardContext,
+      resumePresentation: deps.resumePresentation,
+      ensureHost: deps.ensureHost,
+      commitGroup: deps.commitGroup,
+      removeGroup: deps.removeGroup,
+      hasGroup: deps.hasGroup,
+      getGroup: deps.getGroup,
+      refreshPresentation: deps.refreshPresentation,
+      describe: deps.describe,
+      clearCard: deps.clearCard,
+      clearAll: deps.clearAll,
+      removeGroupEverywhere: deps.removeGroupEverywhere,
+      prepareCard: deps.prepareCard,
       compactQualityLabel,
-      singleChipGroup: singleChipGroup2,
-      reinitialize,
-      flushFit,
-      fitReveal,
+      singleChipGroup: deps.singleChipGroup,
+      reinitialize: deps.reinitialize,
+      flushFit: deps.flushFit,
+      fitReveal: deps.fitReveal,
       chipsThatFit,
       rowsHeight,
       rowBudget,
       isGroup: (name) => normalizeGroup(name) !== null
     };
+    Object.assign(deps, { api });
     return api;
   }
 
