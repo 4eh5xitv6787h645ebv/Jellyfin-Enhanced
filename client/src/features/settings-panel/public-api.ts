@@ -5,3 +5,5 @@
  */
 export type { PanelContext, SearchHit } from './context';
 export type { EnhancedUi, MediaTagsHubApi } from './registry';
+// S2: nothing else is imported from outside this folder today (host/settings-panel-host.ts takes `EnhancedUi`
+// from registry.ts directly until C1 moves it here).

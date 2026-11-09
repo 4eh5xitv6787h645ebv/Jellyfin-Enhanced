@@ -1,0 +1,95 @@
+# media-tags
+
+Media tags: the poster tag pipeline and per-type renderers (`runtime/`), the layout, look and rule data (`rules/`), the user-settings panels (`settings/`) and the admin Media Tags page (`admin/`; formerly `features/admin-tags`).
+
+Owner: Jellyfin Enhanced maintainers. Backend counterpart: `Features/MediaTags/` (with `JeMediaTagsController.Admin.cs` and `Admin/`) (PLAN.md canonical feature list).
+
+## Entry points → shipped files
+
+Sources are relative to this folder; outputs are relative to `Jellyfin.Plugin.JellyfinEnhanced/` and declared in `client/entries/admin-tags.json`, `client/entries/tag-rules.json`, `client/entries/tag-runtime.json`, `client/entries/settings-panel.json`. Load position is the 1-based index among the scripts in `js/component-scripts.json` (`–` = not in that list; loaded by its page or another script). `tests/frontend/architecture/feature-readme.test.mjs` checks this table against `client/generated-manifest.json`: update it whenever an entry source moves or an output is added.
+
+| source | output | load position |
+|---|---|---|
+| `admin/admin-tags.ts` | `js/enhanced/admintags/admin-tags.js` | – |
+| `admin/custom-rules-editor.ts` | `js/enhanced/admintags/custom-rules-editor.js` | – |
+| `admin/sections/agerating.ts` | `js/enhanced/admintags/sections/agerating.js` | – |
+| `admin/sections/awards.ts` | `js/enhanced/admintags/sections/awards.js` | – |
+| `admin/sections/badges.ts` | `js/enhanced/admintags/sections/badges.js` | – |
+| `admin/sections/colours.ts` | `js/enhanced/admintags/sections/colours.js` | – |
+| `admin/sections/custom.ts` | `js/enhanced/admintags/sections/custom.js` | – |
+| `admin/sections/genre.ts` | `js/enhanced/admintags/sections/genre.js` | – |
+| `admin/sections/language.ts` | `js/enhanced/admintags/sections/language.js` | – |
+| `admin/sections/layout.ts` | `js/enhanced/admintags/sections/layout.js` | – |
+| `admin/sections/logos.ts` | `js/enhanced/admintags/sections/logos.js` | – |
+| `admin/sections/overview.ts` | `js/enhanced/admintags/sections/overview.js` | – |
+| `admin/sections/people.ts` | `js/enhanced/admintags/sections/people.js` | – |
+| `admin/sections/portable.ts` | `js/enhanced/admintags/sections/portable.js` | – |
+| `admin/sections/quality.ts` | `js/enhanced/admintags/sections/quality.js` | – |
+| `admin/sections/rating.ts` | `js/enhanced/admintags/sections/rating.js` | – |
+| `admin/sections/rules.ts` | `js/enhanced/admintags/sections/rules.js` | – |
+| `admin/sections/server.ts` | `js/enhanced/admintags/sections/server.js` | – |
+| `admin/sections/status.ts` | `js/enhanced/admintags/sections/status.js` | – |
+| `admin/tag-styles-editor.ts` | `js/enhanced/admintags/tag-styles-editor.js` | – |
+| `rules/media-language-entry.ts` | `js/core/media-language.js` | 6 |
+| `rules/poster-colours-entry.ts` | `js/tags/tag-poster-colours.js` | 150 |
+| `rules/rating-sources-entry.ts` | `js/tags/rating-sources.js` | 11 |
+| `rules/status-vocabulary-entry.ts` | `js/tags/status-vocabulary.js` | 148 |
+| `rules/tag-layout-entry.ts` | `js/core/tag-layout.js` | 9 |
+| `rules/tag-look-entry.ts` | `js/core/tag-look.js` | 10 |
+| `runtime/ageratingtags-entry.ts` | `js/tags/ageratingtags.js` | 145 |
+| `runtime/awardstags-entry.ts` | `js/tags/awardstags.js` | 146 |
+| `runtime/customtags-entry.ts` | `js/tags/customtags.js` | 152 |
+| `runtime/genretags-entry.ts` | `js/tags/genretags.js` | 140 |
+| `runtime/languagetags-entry.ts` | `js/tags/languagetags.js` | 141 |
+| `runtime/logotags-entry.ts` | `js/tags/logotags.js` | 151 |
+| `runtime/peopletags-entry.ts` | `js/tags/peopletags.js` | 142 |
+| `runtime/qualitytags-entry.ts` | `js/tags/qualitytags.js` | 143 |
+| `runtime/ratingtags-entry.ts` | `js/tags/ratingtags.js` | 144 |
+| `runtime/statustags-entry.ts` | `js/tags/statustags.js` | 149 |
+| `runtime/tag-cache-store-entry.ts` | `js/tags/tag-cache-store.js` | 16 |
+| `runtime/tag-direct-play-entry.ts` | `js/tags/tag-direct-play.js` | 147 |
+| `runtime/tag-item-editor-entry.ts` | `js/tags/tag-item-editor.js` | 155 |
+| `runtime/tag-item-menu-entry.ts` | `js/tags/tag-item-menu.js` | 156 |
+| `runtime/tag-layout-styles-entry.ts` | `js/tags/tag-layout-styles.js` | 18 |
+| `runtime/tag-pipeline-entry.ts` | `js/tags/tag-pipeline.js` | 17 |
+| `runtime/tag-renderer-base-entry.ts` | `js/core/tag-renderer-base.js` | 8 |
+| `runtime/tag-styles-entry.ts` | `js/tags/tag-styles.js` | 153 |
+| `runtime/userreviewtags-entry.ts` | `js/tags/userreviewtags.js` | 154 |
+| `settings/ui-panel-media-tags.ts` | `js/enhanced/settingspanel/ui-panel-media-tags.js` | 78 |
+| `settings/ui-panel-tag-editor.ts` | `js/enhanced/settingspanel/ui-panel-tag-editor.js` | 72 |
+| `settings/ui-panel-tag-looks.ts` | `js/enhanced/settingspanel/ui-panel-tag-looks.js` | 75 |
+| `settings/ui-panel-tag-portable.ts` | `js/enhanced/settingspanel/ui-panel-tag-portable.js` | 77 |
+| `settings/ui-panel-tag-preview.ts` | `js/enhanced/settingspanel/ui-panel-tag-preview.js` | 76 |
+
+## Public API and global slots
+
+`public-api.ts` is the only module another feature may import, and only with `import type` (feature-boundaries rule 1). It holds types only, no runtime code.
+
+- Facades this feature publishes on `window.JellyfinEnhanced`: `tagPipeline`, `tagCacheStore`, `tagDirectPlay`, `reinitializeTagLayout`, `reinitializeQualityTags`, `adminTags`, `appendUserRatingToContainer`.
+- `JE.internals` slots it owns (`tests/frontend/architecture/internals-owners.json`): `peopleTags`.
+
+## Settings / admin UI
+
+`settings/` holds the Media Tags user-settings panels (`js/enhanced/settingspanel/ui-panel-media-tags.js`, `ui-panel-tag-*.js`); `admin/` holds the admin Media Tags page (`js/enhanced/admintags/**`) and its bridge `admin/host.ts`.
+
+## Tests
+
+```bash
+node --test tests/frontend/core/core-tag-*.test.mjs tests/frontend/core/core-media-language.test.mjs tests/frontend/features/features-tag-*.test.mjs tests/frontend/features/features-*-tags*.test.mjs tests/frontend/features/features-admin-tags-*.test.mjs tests/frontend/features/admin-tags-*.test.mjs tests/frontend/features/features-admin-config-media-tags-*.test.mjs tests/frontend/features/features-media-tags-*.test.mjs tests/frontend/features/features-{awards-tags,quality-*,rating-sources,language-display,genre-styles,technical-quality,series-quality-aggregation}.test.mjs tests/frontend/bootstrap/bootstrap-{tag-*,media-tags-*,custom-tags-hub}.test.mjs
+```
+
+Also: `tests/client-build/tag-data.test.mjs` (run by `npm run test:client-build`).
+
+Step F1 mirrors these into `tests/frontend/features/media-tags/`. `npm test` runs them all.
+
+## Generated files here (do not edit)
+
+Listed in `GENERATED_SOURCES` (`tests/frontend/architecture/scan.mjs`). Scripts and tests pin their paths (frontend.md §0.1), so a move updates those in the same commit:
+
+- `rules/status-vocabulary.ts`
+- `rules/compact-quality.ts`
+- `runtime/quality-data.ts`
+- `runtime/genre-table.ts`
+- `runtime/awards-data.ts`
+- `rules/rating-data.ts`
+- `rules/media-language.ts`
