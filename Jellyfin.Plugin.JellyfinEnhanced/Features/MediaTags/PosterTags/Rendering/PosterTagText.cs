@@ -6,8 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Rendering;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
 {

@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using SkiaSharp;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
 {
     /// <summary>
     /// The Poster Tag Styles preset's colours: a tag's background is the dominant colour of the artwork it sits on,

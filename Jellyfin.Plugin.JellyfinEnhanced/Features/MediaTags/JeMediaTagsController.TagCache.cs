@@ -42,7 +42,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
 {
@@ -593,7 +592,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                                     Channels = s.Channels,
                                     ChannelLayout = s.ChannelLayout,
                                     VideoRangeType = s.VideoRangeType,
-                                    VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
+                                    VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
                                     // DisplayTitle's GETTER prepends the raw Title field,
                                     // which on user-muxed mkvs (MakeMKV / Plex / Sonarr
                                     // renamers) commonly carries the episode name — under
@@ -742,7 +741,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                                     Channels = s.Channels,
                                     ChannelLayout = s.ChannelLayout,
                                     VideoRangeType = s.VideoRangeType,
-                                    VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
+                                    VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
                                     DisplayTitle = default(string?),
                                 };
                             })
@@ -834,14 +833,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 // Series and Season are containers with no media files — skip the expensive call
                 List<object>? trimmedStreams = null;
                 List<object>? trimmedSources = null;
-                var namingTags = new Services.MediaNamingTags();
+                var namingTags = new Shared.MediaTags.MediaNamingTags();
                 string[]? subtitleLanguages = null;
                 string[]? sdhSubtitleLanguages = null;
                 if (!isContainer)
                 {
                     var mediaSources =
                         SelectTagDataMediaSources(item.GetMediaSources(false));
-                    namingTags = Services.MediaNamingTags.Detect(item.Path, mediaSources, item.Name, item.OriginalTitle);
+                    namingTags = Shared.MediaTags.MediaNamingTags.Detect(item.Path, mediaSources, item.Name, item.OriginalTitle);
                     subtitleLanguages = TagDataSubtitleLanguages(mediaSources);
                     sdhSubtitleLanguages = mediaSources.SelectMany(source => source.MediaStreams ?? new List<MediaStream>())
                         .Where(stream => stream.Type == MediaStreamType.Subtitle && !stream.IsForced && SubtitleAccessibility.IsSdh(stream.IsHearingImpaired, stream.Title, stream.DisplayTitle))
@@ -875,7 +874,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                                 Channels = s.Channels,
                                 ChannelLayout = s.ChannelLayout,
                                 VideoRangeType = s.VideoRangeType,
-                                    VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
+                                    VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(s.VideoRangeType.ToString(), s.VideoRange.ToString()) : null,
                                 DisplayTitle = s.DisplayTitle,
                             };
                         })
@@ -885,15 +884,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     trimmedSources = mediaSources
                         .Select(s =>
                         {
-                            var versionNaming = Services.MediaNamingTags.Detect(item.Path, new[] { s }, item.Name, item.OriginalTitle);
+                            var versionNaming = Shared.MediaTags.MediaNamingTags.Detect(item.Path, new[] { s }, item.Name, item.OriginalTitle);
                             return (object)new
                             {
                                 Id = s.Id,
                                 Source = versionNaming.Source,
                                 Edition = versionNaming.Edition,
                                 RunTimeTicks = s.RunTimeTicks,
-                                Path = Services.MediaNamingTags.FileName(s.Path),
-                                Name = Services.MediaNamingTags.FileName(s.Name),
+                                Path = Shared.MediaTags.MediaNamingTags.FileName(s.Path),
+                                Name = Shared.MediaTags.MediaNamingTags.FileName(s.Name),
                                 Is3D = s.Video3DFormat != null ? true : (bool?)null,
                                 Revision = Services.TagCacheService.MediaRevision(s),
                             };
@@ -949,7 +948,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     ProviderIds = item.ProviderIds,
                     Name = item.Name,
                     RunTimeTicks = item.RunTimeTicks,
-                    Path = Services.MediaNamingTags.FileName(item.Path),
+                    Path = Shared.MediaTags.MediaNamingTags.FileName(item.Path),
                     Source = namingTags.Source,
                     Edition = namingTags.Edition,
                     MediaStreams = trimmedStreams,

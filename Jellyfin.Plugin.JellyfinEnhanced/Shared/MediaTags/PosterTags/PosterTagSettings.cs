@@ -8,13 +8,12 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
 {
     /// <summary>
     /// The effective poster tag settings of one user: every value the card tag groups read,

@@ -17,7 +17,6 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Querying;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
@@ -3208,7 +3207,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
             return new TagStreamData
             {
                 Streams = streams,
-                DistinctQualities = PosterTags.Resolution.QualityTagRules.DetectDistinct(streams),
+                DistinctQualities = Shared.MediaTags.PosterTags.Resolution.QualityTagRules.DetectDistinct(streams),
                 Sources = sources,
                 ItemName = item.Name,
                 RunTimeTicks = item.RunTimeTicks,
@@ -3368,7 +3367,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
                             Channels = s.Channels,
                             ChannelLayout = s.ChannelLayout,
                             VideoRangeType = videoRangeType,
-                            VideoRange = s.Type == MediaStreamType.Video ? PosterTags.Resolution.QualityTagRules.CoarseRange(videoRangeType, s.VideoRange.ToString()) : null,
+                            VideoRange = s.Type == MediaStreamType.Video ? Shared.MediaTags.PosterTags.Resolution.QualityTagRules.CoarseRange(videoRangeType, s.VideoRange.ToString()) : null,
                             DisplayTitle = s.DisplayTitle
                         });
 

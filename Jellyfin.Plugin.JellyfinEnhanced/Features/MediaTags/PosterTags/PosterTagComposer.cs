@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering;
 using SkiaSharp;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 {
@@ -115,7 +116,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
             // Include remote facts, the filtered parent and the badge the status resolves to (what the pixels show),
             // not the status inputs or the five-minute URL bucket: the URL still retires every bucket, but a poster
             // whose badge did not change is drawn once.
-            var badge = status == null ? null : Resolution.StatusRules.Resolve(data.Entry, settings, status);
+            var badge = status == null ? null : Shared.MediaTags.PosterTags.Resolution.StatusRules.Resolve(data.Entry, settings, status);
             var dataKey = status == null ? data.DataKey
                 : data.DataKey + "|status:" + (badge == null ? "-" : badge.Key + "\u001f" + badge.Text + "\u001f" + badge.StyleKey);
             var key = CompositeKey(image, settings.RenderDigest, topRightOffset, dataKey, quality);
@@ -193,7 +194,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
             string itemType,
             bool topRightOffset,
             int quality,
-            Resolution.PosterStatusContext? status)
+            Shared.MediaTags.PosterTags.Resolution.PosterStatusContext? status)
         {
             var source = await image.Load().ConfigureAwait(false);
             // The file loader already refuses oversized files before reading

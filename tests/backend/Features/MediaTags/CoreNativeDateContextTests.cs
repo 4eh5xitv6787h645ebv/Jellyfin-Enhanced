@@ -62,11 +62,11 @@ public class CoreNativeDateContextTests
         if (expectedLocale?.Contains("-u-", StringComparison.OrdinalIgnoreCase) == true)
         {
             var baseLocale = expectedLocale.Split("-u-", StringSplitOptions.None)[0];
-            var settings = Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.PosterTagSettings.FromSettingsJson(
+            var settings = Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.PosterTagSettings.FromSettingsJson(
                 System.Text.Json.JsonSerializer.Serialize(saved), fixture.Plugin.Configuration);
             Assert.Equal(System.Globalization.CultureInfo.GetCultureInfo(baseLocale).Name, settings.StatusCulture.Name);
             Assert.Equal(baseLocale == "fa" ? "۱۲ مهر" : baseLocale == "en-GB" ? "4 Oct" : "4. Okt.",
-                Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution.StatusRules.FormatShortDate(new DateOnly(2026, 10, 4), settings.StatusCulture));
+                Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution.StatusRules.FormatShortDate(new DateOnly(2026, 10, 4), settings.StatusCulture));
         }
         var disk = File.ReadAllText(Path.Combine(fixture.Core.ConfigRoot, userId, "settings.json"));
         Assert.DoesNotContain(new string('x', 100), disk);

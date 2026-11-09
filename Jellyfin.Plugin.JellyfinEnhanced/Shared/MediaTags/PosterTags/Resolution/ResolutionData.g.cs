@@ -3,7 +3,7 @@
 // Source: Node 26.2.0, ICU 78.3, CLDR 48.0, Unicode 17.0.
 // </auto-generated>
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution
 {
     /// <summary>
     /// Locale data the web reads from the browser's ICU (Intl.DisplayNames in English, String case

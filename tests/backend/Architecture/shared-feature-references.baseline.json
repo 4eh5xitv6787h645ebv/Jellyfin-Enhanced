@@ -3,14 +3,6 @@
   "edges": {
     "Shared/Media/MediaStreamLanguageResolver -> Features/MediaTags/Services/MatroskaLanguageCache": 2,
     "Shared/Media/MediaStreamLanguageResolver -> Features/MediaTags/Services/MatroskaLanguageReader": 1,
-    "Shared/Media/SubtitleAccessibility -> Features/MediaTags/Services/TagCache/TagCacheService": 1,
-    "Shared/MediaTags/MediaTagsPageFields -> Features/MediaTags/PosterTags/PosterTagSettings": 1,
-    "Shared/MediaTags/MediaTagsPageFields -> Features/MediaTags/PosterTags/TagStyleKeys": 1,
-    "Shared/MediaTags/MediaTagsPageFields -> Features/MediaTags/PosterTags/TagStyleSet": 3,
-    "Shared/MediaTags/MediaTagsPortable -> Features/MediaTags/PosterTags/TagStyleKeys": 1,
-    "Shared/MediaTags/SeriesQualityAggregation -> Features/MediaTags/PosterTags/Resolution/LanguageFlagRules": 7,
-    "Shared/MediaTags/SeriesQualityAggregation -> Features/MediaTags/PosterTags/Resolution/LanguageFlagRules+ParsedTag": 7,
-    "Shared/MediaTags/SeriesQualityAggregation -> Features/MediaTags/PosterTags/Resolution/QualityTagRules": 22,
-    "Shared/SpoilerGuard/SpoilerTagDataStripper -> Features/MediaTags/PosterTags/Resolution/QualityTagRules": 1
+    "Shared/Media/SubtitleAccessibility -> Features/MediaTags/Services/TagCache/TagCacheService": 1
   }
 }

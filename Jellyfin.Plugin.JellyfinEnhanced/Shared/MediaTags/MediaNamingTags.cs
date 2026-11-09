@@ -1,11 +1,11 @@
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 
 /// <summary>Path-derived quality facts. Only these labels, never directory paths, leave the server.</summary>
 internal sealed record MediaNamingTags(string? Source = null, string? Edition = null)

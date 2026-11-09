@@ -160,7 +160,7 @@ public class TagCacheSubtitleLanguagesTests
     [InlineData("ga", "ie")]
     [InlineData("gle", "ie")]
     public void NorwegianCantoneseSwissGermanAndIrishHaveFlags(string code, string flag)
-        => Assert.Equal(flag, Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution.LanguageFlagRules.ResolveFlag(code, string.Empty));
+        => Assert.Equal(flag, Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution.LanguageFlagRules.ResolveFlag(code, string.Empty));
 
     [Theory]
     [InlineData("Commentary by director", null, true)]

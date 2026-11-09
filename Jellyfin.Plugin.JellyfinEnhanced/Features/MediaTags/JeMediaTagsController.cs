@@ -43,6 +43,7 @@ using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
 {
@@ -503,9 +504,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                     _ => Guid.Empty,
                 };
                 var previewSeriesIdN = previewSeriesId == Guid.Empty ? null : previewSeriesId.ToString("N");
-                PosterTags.PosterTagLookFacts? LookFacts() => _tagCacheService.TryGetEntry(item.Id, out var lookEntry)
-                    ? PosterTags.PosterTagLookFacts.FromEntry(lookEntry)
-                    : PosterTags.PosterTagLookFacts.FromItem(_libraryManager, item);
+                Shared.MediaTags.PosterTags.PosterTagLookFacts? LookFacts() => _tagCacheService.TryGetEntry(item.Id, out var lookEntry)
+                    ? Shared.MediaTags.PosterTags.PosterTagLookFacts.FromEntry(lookEntry)
+                    : Shared.MediaTags.PosterTags.PosterTagLookFacts.FromItem(_libraryManager, item);
                 var userPosterSettings = posterTagSettings.Get(user.Id);
                 var settings = userPosterSettings.ForItem(item.Id, previewSeriesIdN, LookFacts);
                 var lookSource = userPosterSettings.ResolveLook(item.Id.ToString("N"), previewSeriesIdN, LookFacts).Source;

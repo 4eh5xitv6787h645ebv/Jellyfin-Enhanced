@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
 {
     /// <summary>Card anchor for a tag group (four corners and five centre positions).</summary>
     public enum PosterTagCorner

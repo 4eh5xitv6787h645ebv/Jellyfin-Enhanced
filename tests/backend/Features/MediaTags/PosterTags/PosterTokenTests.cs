@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 namespace JE.Tests.Features.MediaTags;
 
 public class PosterTokenTests : IDisposable

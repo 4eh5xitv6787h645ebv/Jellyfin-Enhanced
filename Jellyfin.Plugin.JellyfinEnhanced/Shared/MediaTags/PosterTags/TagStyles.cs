@@ -6,10 +6,10 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Rendering;
 using SkiaSharp;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags
 {
     /// <summary>One tag's colour override. Every value is a normalised <c>rgba(r, g, b, a)</c> string or null (keep the default).</summary>
     /// <param name="Background">Background colour.</param>
@@ -801,7 +801,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags
 
         private static JsonDocument Read(string name)
         {
-            using var stream = typeof(TagStyleCatalog).Assembly.GetManifestResourceStream(PosterTagAssets.ResourcePrefix + name)
+            using var stream = typeof(TagStyleCatalog).Assembly.GetManifestResourceStream(Features.MediaTags.PosterTags.Rendering.PosterTagAssets.ResourcePrefix + name)
                 ?? throw new InvalidDataException($"Missing resource {name}");
             return JsonDocument.Parse(stream);
         }

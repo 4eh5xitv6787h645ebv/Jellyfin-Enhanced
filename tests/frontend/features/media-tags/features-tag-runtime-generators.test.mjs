@@ -50,7 +50,7 @@ const genre = {
 };
 const ratios = {
   script: 'scripts/generate_technical_ratios.py',
-  source: `${plugin}/Features/MediaTags/PosterTags/Resolution/TechnicalQualityRules.cs`,
+  source: `${plugin}/Shared/MediaTags/PosterTags/Resolution/TechnicalQualityRules.cs`,
   table: `${types}/quality/quality-data.ts`,
   emitted: `${plugin}/js/tags/qualitytags.js`
 };

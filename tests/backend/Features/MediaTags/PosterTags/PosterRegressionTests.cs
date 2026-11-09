@@ -1,5 +1,6 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering;
 using SkiaSharp;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
@@ -334,7 +335,7 @@ public class PosterRegressionTests
     [InlineData("sh-petr1708", "Serbian (Latin, PETR1708)")]
     public void Language_name_variant_aliases_match_browser_display_names(string code, string expected)
     {
-        Assert.Equal(expected, Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Resolution.LanguageNames.Of(code));
+        Assert.Equal(expected, Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Resolution.LanguageNames.Of(code));
     }
 
 }

@@ -2,10 +2,10 @@ using System;
 using System.Globalization;
 using SkiaSharp;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags.Rendering
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags.Rendering
 {
     /// <summary>
     /// The web tags' CSS, evaluated for one logical card width. Every length is in CSS px of a card

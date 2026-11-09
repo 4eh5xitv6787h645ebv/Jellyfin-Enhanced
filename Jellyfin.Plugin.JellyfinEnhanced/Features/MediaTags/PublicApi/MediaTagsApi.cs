@@ -27,14 +27,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi
             public static bool Configured(Configuration.PluginConfiguration? config) => LeavingSoonSources.Configured(config);
         }
 
-        /// <summary>Forwards to the static Tag Styles members (<see cref="PosterTags.TagStyleSet"/>, <see cref="PosterTags.TagStyleKeys"/>) other features call.</summary>
+        /// <summary>Forwards to the static Tag Styles members (<see cref="Shared.MediaTags.PosterTags.TagStyleSet"/>, <see cref="Shared.MediaTags.PosterTags.TagStyleKeys"/>) other features call.</summary>
         public static class TagStyles
         {
             /// <summary><c>TagStyleSet.Parse(json, preset).IsEmpty</c>.</summary>
-            public static bool ParseIsEmpty(string? json, string? preset) => PosterTags.TagStyleSet.Parse(json, preset).IsEmpty;
+            public static bool ParseIsEmpty(string? json, string? preset) => Shared.MediaTags.PosterTags.TagStyleSet.Parse(json, preset).IsEmpty;
 
             /// <summary><c>TagStyleKeys.NormalizePreset(preset)</c>.</summary>
-            public static string NormalizePreset(string? preset) => PosterTags.TagStyleKeys.NormalizePreset(preset);
+            public static string NormalizePreset(string? preset) => Shared.MediaTags.PosterTags.TagStyleKeys.NormalizePreset(preset);
         }
 
         /// <summary>Forwards to the static <see cref="PosterTags.NativeClientPolicy"/> members other features read.</summary>
