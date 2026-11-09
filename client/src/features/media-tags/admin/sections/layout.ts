@@ -48,7 +48,7 @@ registerSection({
         { id: 'disableTagsOnSearchPage', key: 'DisableTagsOnSearchPage', type: 'switch', label: 'No tags on the search page' },
 */
 import type { JsonValue } from '../../../../contracts/generated';
-import type { AdminTagLayout } from '../host';
+import { settingsUi, type AdminTagLayout } from '../host';
 import type { Group, Layout, Shape } from '../../layout/layout-rules';
 import { allAs, closest, find, findAs, focus, isDisabled } from '../dom';
 import { word } from '../format';
@@ -84,7 +84,7 @@ installSection((A, JE) => {
         return layout;
     };
     /** The settings panel editor's cap rules (stepCap, GROUP_META). */
-    const editorData = () => JE.internals?.enhancedUi?.tagGroupEditorData || null;
+    const editorData = () => settingsUi(JE)?.tagGroupEditorData || null;
     const groupName = (g: string): string => A.fmt(word(A.WORDS.group, `${g === 'ageRating' ? 'age_rating' : g}`));
     /** The group's enable setting. */
     const enabledKey = (g: string): string => `${g === 'logos' ? 'Logo' : pascal(g)}TagsEnabled`;

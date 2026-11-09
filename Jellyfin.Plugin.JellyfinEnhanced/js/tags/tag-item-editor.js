@@ -8,6 +8,9 @@
     bridge.core ?? (bridge.core = {});
     return bridge;
   }
+  function settingsUi(JE) {
+    return JE.internals?.enhancedUi;
+  }
   function apiClient() {
     const host = window;
     if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
@@ -544,7 +547,7 @@
       const everyoneBox = dialog.querySelector("[data-tie-everyone]");
       const previewSide = must(dialog.querySelector(".je-tie-side"));
       const hoverNote = must(dialog.querySelector("[data-tie-hover-note]"));
-      const interaction = JE.internals?.enhancedUi?.bindTagPreviewInteraction([dialog.querySelector(".je-tie-card")], dialog.querySelector(".je-tie-view"), {
+      const interaction = settingsUi(JE)?.bindTagPreviewInteraction([dialog.querySelector(".je-tie-card")], dialog.querySelector(".je-tie-view"), {
         change: (active2) => {
           const hidden = !!JE.currentSettings?.tagsHideOnHover;
           previewSide.dataset.jeHideOnHover = String(hidden);

@@ -7,36 +7,6 @@
   "client/src/core/lifecycle-entry.ts": {
     "raw-global JellyfinEnhanced": 1
   },
-  "client/src/features/hidden-content/settings/ui-panel-hidden-content.ts": {
-    "import client/src/features/settings-panel/host.ts": 1
-  },
-  "client/src/features/media-tags/admin/page.ts": {
-    "internals enhancedUi": 1
-  },
-  "client/src/features/media-tags/admin/sections/layout.ts": {
-    "internals enhancedUi": 1
-  },
-  "client/src/features/media-tags/admin/sections/portable.ts": {
-    "internals enhancedUi": 1
-  },
-  "client/src/features/media-tags/editor/tag-item-editor.ts": {
-    "internals enhancedUi": 1
-  },
-  "client/src/features/media-tags/settings/ui-panel-media-tags.ts": {
-    "import client/src/features/settings-panel/host.ts": 1
-  },
-  "client/src/features/media-tags/settings/ui-panel-tag-editor.ts": {
-    "import client/src/features/settings-panel/host.ts": 1
-  },
-  "client/src/features/media-tags/settings/ui-panel-tag-looks.ts": {
-    "import client/src/features/settings-panel/host.ts": 1
-  },
-  "client/src/features/media-tags/settings/ui-panel-tag-portable.ts": {
-    "import client/src/features/settings-panel/host.ts": 1
-  },
-  "client/src/features/media-tags/settings/ui-panel-tag-preview.ts": {
-    "import client/src/features/settings-panel/host.ts": 1
-  },
   "client/src/host/admin-config-host.ts": {
     "raw-global JellyfinEnhanced": 1
   },

@@ -172,6 +172,14 @@ export function mediaTagsContext(JE: TagRuntimeBridge = tagRuntimeHost()): Media
         internalsObject: () => JE.internals = JE.internals || {},
     });
 }
+/**
+ * media-tags' read of the settings registry `JE.internals.enhancedUi` (co-owned with settings-panel and
+ * hidden-content: internals-owners.json, step C4), the same expression its admin page, admin sections and item
+ * editor used (`JE.internals?.enhancedUi`).
+ */
+export function settingsUi<T>(JE: { internals?: { enhancedUi?: T } | undefined }): T | undefined {
+    return JE.internals?.enhancedUi;
+}
 /** ApiClient, resolved at each call: jellyfin-web replaces it on a server switch. */
 export function hasApiClient(): boolean {
     const host: Window & { ApiClient?: TagApiClient } = window;

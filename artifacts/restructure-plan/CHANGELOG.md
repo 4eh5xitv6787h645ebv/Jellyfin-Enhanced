@@ -134,3 +134,10 @@ Record: [step-logs/step8-backend.md](step-logs/step8-backend.md). S2.10–S2.13 
 | S8-c | **Cross-cutting policy services → `Shared/<Policy>/` (coordinator decision, option B; backend.md §7.7).** A service that enforces one rule across features and that another feature's constructors receive moves to `Shared/<Policy>/` as a pure rename (no logic, DI or registration-snapshot change; still registered by its feature). S2.13: `SpoilerSeerrRedactor`, `SpoilerUserResolver`, `SpoilerIdentityService`, `SpoilerTagDataStripper` (+ `SpoilerTagStripPolicy`, `SpoilerTagDataStub`), `ImageTagDecoration`/`ImageTagParts` → `Shared/SpoilerGuard/`. The new `SpoilerPendingService` is created there instead of `Features/SpoilerGuard/Services/` (§4 row), because the Seerr request route calls it. S2.14 applies the same rule to `SeerrParentalFilter` → `Shared/Parental/`. |
 | S8-d | **Scheduled-task types keep `…ScheduledTasks` (coordinator decision; backend.md §7.8).** Jellyfin keys saved triggers and last results by MD5 of the task type's full name, so a namespace change would reset admins' schedules. Files live in `Features/<F>/Tasks/`; S3's `FolderNamespaceTests` exempts `IScheduledTask` types. Applies to S2.11–S2.15. |
 | S8-e | **Over-cap controllers (backend.md §7.9).** Downloads (1,421), MediaTags (1,530) and DetailsProviders (1,499) exceed the 1,200-line controller cap. S3 splits them into partials by sub-area as a pure move; no allow-list entries. |
+
+## Lane L-C: frontend F1 and C4 (2026-11-09)
+Record: [step-logs/lane-lc.md](step-logs/lane-lc.md).
+
+| # | Change |
+|---|---|
+| LC-a | **`enhancedUi` co-owned (C4, coordinator decision D1).** `internals-owners.json` lists `enhancedUi` as `["settings-panel", "media-tags", "hidden-content"]`, because the Media Tags and Hidden Content settings panels create and fill that registry themselves (they load without the shell in tests) and media-tags' admin page and item editor read it back. Only that slot is widened; frontend.md §2.4 records the reason. |
