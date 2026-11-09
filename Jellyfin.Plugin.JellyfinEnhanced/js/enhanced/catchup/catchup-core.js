@@ -40,7 +40,7 @@
     return { host, ctx: ctx2, getApi: () => host.ApiClient, Emby: host.Emby };
   }
 
-  // client/src/features/catchup/wire.ts
+  // client/src/features/shared/wire.ts
   function currentLease(session, getApi2) {
     const epoch = session?.getEpoch(), user = getApi2?.()?.getCurrentUserId(), server = getApi2?.()?.getUrl("/");
     return () => (epoch === void 0 || session?.isCurrent(epoch) === true) && user === getApi2?.()?.getCurrentUserId() && server === getApi2?.()?.getUrl("/");

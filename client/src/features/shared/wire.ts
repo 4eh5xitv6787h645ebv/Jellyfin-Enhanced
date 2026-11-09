@@ -1,11 +1,13 @@
-import type { SocialApi, SocialSession } from '../activity/public-api';
 /**
- * Pure helpers catchup used to import at runtime from activity/host.ts (step C3-catchup). They are copied here
- * verbatim, because a runtime import of another feature's module is a boundary violation (frontend.md §2.2, §2.4
- * rule 1) and each entry is bundled as its own IIFE, so every catchup output already carried its own copy. They are
- * stateless: no module-level state, and each one reads only its arguments.
+ * Pure response decoders and the session lease check shared by activity and catchup (review D2: they used to be
+ * one copy in activity/host.ts and a verbatim copy in catchup, from step C3-catchup). Stateless: no module-level state, and each
+ * function reads only its arguments, so inlining it into each IIFE output is harmless (frontend.md §2.2).
  */
-export function currentLease(session: SocialSession | undefined, getApi?: () => SocialApi | undefined): () => boolean {
+/** The part of the session service a lease reads (activity's `SocialSession` satisfies it). */
+export interface LeaseSession { getEpoch(): number; isCurrent(epoch: number): boolean }
+/** The part of ApiClient a lease reads (activity's `SocialApi` satisfies it). */
+export interface LeaseApi { getCurrentUserId(): string; getUrl(path: string): string }
+export function currentLease(session: LeaseSession | undefined, getApi?: () => LeaseApi | undefined): () => boolean {
  const epoch = session?.getEpoch(), user = getApi?.()?.getCurrentUserId(), server = getApi?.()?.getUrl('/');
  return () => (epoch === undefined || session?.isCurrent(epoch) === true) && user === getApi?.()?.getCurrentUserId() && server === getApi?.()?.getUrl('/');
 }

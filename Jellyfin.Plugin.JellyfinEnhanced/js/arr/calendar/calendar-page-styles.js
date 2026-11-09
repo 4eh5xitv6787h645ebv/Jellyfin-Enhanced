@@ -46,11 +46,8 @@
     return { JE, ctx, host, P };
   }
 
-  // client/src/features/calendar/calendar-page-styles.ts
-  (function() {
-    "use strict";
-    const { JE, P } = calendarHost();
-    const CSS_STYLES = `
+  // client/src/features/calendar/calendar-page.css
+  var calendar_page_default = `
 
     .je-msym-rounded {
       font-family: 'JE Material Symbols Rounded';
@@ -1153,6 +1150,12 @@
       }
     }
   `;
+
+  // client/src/features/calendar/calendar-page-styles.ts
+  (function() {
+    "use strict";
+    const { JE, P } = calendarHost();
+    const CSS_STYLES = calendar_page_default;
     function injectStyles() {
       if (document.getElementById("je-calendar-styles")) return;
       JE.core.ui.injectCss("je-calendar-styles", CSS_STYLES);
