@@ -195,13 +195,14 @@
       if (!modal || !api) return;
       const origin = captureOrigin(host);
       const backdropPath = export19(searchResultItem) && export22(searchResultItem.backdropPath) ? searchResultItem.backdropPath : null;
+      let optionsFailed = false;
       const { modalElement, show } = modal.create({
         title: JE.t("jellyseerr_modal_title_movie"),
         subtitle: title,
         bodyHtml: modal.createAdvancedOptionsHTML("movie"),
         backdropPath,
         onSave: async (modalEl, requestBtn, closeFn) => {
-          const settings = chosenSettings(modalEl, "movie");
+          const settings = optionsFailed ? {} : chosenSettings(modalEl, "movie");
           if (!settings) {
             JE.toast?.(JE.t("jellyseerr_modal_toast_options_missing"), 3e3);
             return;
@@ -235,6 +236,7 @@
         const data = await api.fetchAdvancedRequestData("movie");
         if (origin.current()) modal.populateAdvancedOptions(modalElement, data, "movie", is4k);
       } catch (error) {
+        optionsFailed = true;
         console.error(`${LOG_UI} Failed to load advanced options:`, error);
         JE.toast?.(JE.t("jellyseerr_err_load_server_options"), 3e3);
       }
@@ -312,6 +314,7 @@
             ${showAdvanced ? modal.createAdvancedOptionsHTML("movie") : ""}
         `;
       const buttonText = label("jellyseerr_modal_request_selected_movies", "Request Selected Movies");
+      let optionsFailed = false;
       const backdrop = export22(details.backdrop_path) && details.backdrop_path ? details.backdrop_path : export22(details.backdropPath) ? details.backdropPath : null;
       const instance = modal.create({
         title: label("jellyseerr_modal_request_collection", "Request Collection"),
@@ -331,7 +334,7 @@
           requestBtn.disabled = true;
           requestBtn.innerHTML = `${label("jellyseerr_modal_requesting", "Requesting")}<span class="jellyseerr-button-spinner"></span>`;
           let settings = {};
-          if (showAdvanced) {
+          if (showAdvanced && !optionsFailed) {
             const chosen = chosenSettings(modalEl, "movie");
             if (!chosen) {
               JE.toast?.(label("jellyseerr_modal_toast_options_missing", "Please select all options"), 3e3);
@@ -395,7 +398,9 @@
           const data = await api.fetchAdvancedRequestData("movie");
           modal.populateAdvancedOptions(instance.modalElement, data, "movie", false);
         } catch (error) {
+          optionsFailed = true;
           console.error("Failed to load advanced options:", error);
+          JE.toast?.(JE.t("jellyseerr_err_load_server_options"), 3e3);
         }
       }
       if (!origin.current()) return;

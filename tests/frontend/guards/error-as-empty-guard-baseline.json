@@ -38,7 +38,6 @@
     "R9-fail-empty installSegmentControls.fetchMediaSegments": 1
   },
   "client/src/features/seerr/core/api.ts": {
-    "R9-fail-empty installApi.fetchAdvancedRequestData": 1,
     "R9-fail-empty installApi.fetchGenreSlider": 1,
     "R9-fail-empty installApi.fetchIssuesForMedia": 1
   },

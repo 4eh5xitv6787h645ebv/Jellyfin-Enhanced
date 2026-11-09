@@ -470,24 +470,20 @@ export function installApi(host: SeerrCoreHost): void {
 
         async fetchAdvancedRequestData(mediaType) {
             const serverType = mediaType === 'movie' ? 'radarr' : 'sonarr';
-            try {
-                const listed = await get(`/${serverType}`);
-                const serverList: unknown[] = Array.isArray(listed) ? listed : [listed];
-                const servers = await Promise.all(serverList.filter(isServiceListing).map(async (server): Promise<AdvancedServer> => {
-                    try {
-                        const details = await get(`/${serverType}/${server.id}`);
-                        const record = isRecord(details) ? details : {};
-                        return { ...server, qualityProfiles: decodeProfiles(record.profiles), rootFolders: decodeFolders(record.rootFolders) };
-                    } catch (error) {
-                        console.error(`${LOG} Could not fetch details for ${serverType} server ID ${server.id}:`, error);
-                        return { ...server, qualityProfiles: [], rootFolders: [] };
-                    }
-                }));
-                return decodeAdvancedData({ servers, tags: [] });
-            } catch (error) {
-                console.error(`${LOG} Failed to fetch ${serverType} servers:`, error);
-                return { servers: [], tags: [] };
-            }
+            // A failed listing rejects: "no servers" would leave the callers' error toast unreachable.
+            const listed = await get(`/${serverType}`);
+            const serverList: unknown[] = Array.isArray(listed) ? listed : [listed];
+            const servers = await Promise.all(serverList.filter(isServiceListing).map(async (server): Promise<AdvancedServer> => {
+                try {
+                    const details = await get(`/${serverType}/${server.id}`);
+                    const record = isRecord(details) ? details : {};
+                    return { ...server, qualityProfiles: decodeProfiles(record.profiles), rootFolders: decodeFolders(record.rootFolders) };
+                } catch (error) {
+                    console.error(`${LOG} Could not fetch details for ${serverType} server ID ${server.id}:`, error);
+                    return { ...server, qualityProfiles: [], rootFolders: [] };
+                }
+            }));
+            return decodeAdvancedData({ servers, tags: [] });
         },
 
         async fetchUserQuota(options = {}) {

@@ -652,24 +652,19 @@
       },
       async fetchAdvancedRequestData(mediaType) {
         const serverType = mediaType === "movie" ? "radarr" : "sonarr";
-        try {
-          const listed = await get(`/${serverType}`);
-          const serverList = Array.isArray(listed) ? listed : [listed];
-          const servers = await Promise.all(serverList.filter(export21).map(async (server) => {
-            try {
-              const details = await get(`/${serverType}/${server.id}`);
-              const record = export19(details) ? details : {};
-              return { ...server, qualityProfiles: export7(record.profiles), rootFolders: export4(record.rootFolders) };
-            } catch (error) {
-              console.error(`${LOG} Could not fetch details for ${serverType} server ID ${server.id}:`, error);
-              return { ...server, qualityProfiles: [], rootFolders: [] };
-            }
-          }));
-          return export1({ servers, tags: [] });
-        } catch (error) {
-          console.error(`${LOG} Failed to fetch ${serverType} servers:`, error);
-          return { servers: [], tags: [] };
-        }
+        const listed = await get(`/${serverType}`);
+        const serverList = Array.isArray(listed) ? listed : [listed];
+        const servers = await Promise.all(serverList.filter(export21).map(async (server) => {
+          try {
+            const details = await get(`/${serverType}/${server.id}`);
+            const record = export19(details) ? details : {};
+            return { ...server, qualityProfiles: export7(record.profiles), rootFolders: export4(record.rootFolders) };
+          } catch (error) {
+            console.error(`${LOG} Could not fetch details for ${serverType} server ID ${server.id}:`, error);
+            return { ...server, qualityProfiles: [], rootFolders: [] };
+          }
+        }));
+        return export1({ servers, tags: [] });
       },
       async fetchUserQuota(options = {}) {
         if (host.liveBridge()?.pluginConfig?.JellyseerrShowQuotaInfo === false) return null;
