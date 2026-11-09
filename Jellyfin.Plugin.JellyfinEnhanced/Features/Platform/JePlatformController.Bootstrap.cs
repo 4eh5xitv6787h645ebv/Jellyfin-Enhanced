@@ -49,8 +49,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags.PosterTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.PublicApi;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks.PublicApi;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
@@ -284,10 +284,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
                 ShowPlaybackRatingBadge = config.ShowPlaybackRatingBadge,
                 NativePosterTagsEnabled = config.NativePosterTagsEnabled,
                 TagStyleWebActive = config.TagStylesEnabled && config.TagStyleTarget is "web" or "both"
-                    && (config.TagStylesAllowUserPreset || !MediaTagsApi.TagStyles.ParseIsEmpty(config.TagStyleOverrides, config.TagStylePreset)),
+                    && (config.TagStylesAllowUserPreset || !TagStyleSet.Parse(config.TagStyleOverrides, config.TagStylePreset).IsEmpty),
                 // Tag Styles: user presets
                 TagStylesAllowUserPreset = config.TagStylesEnabled && config.TagStylesAllowUserPreset,
-                TagStylePreset = MediaTagsApi.TagStyles.NormalizePreset(config.TagStylePreset),
+                TagStylePreset = TagStyleKeys.NormalizePreset(config.TagStylePreset),
                 QualityTagsEnabled = config.QualityTagsEnabled,
                 ShowResolutionTag = config.ShowResolutionTag,
                 ShowSourceTag = config.ShowSourceTag,
@@ -391,7 +391,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
                 // Leaving soon source is set (never its URL, key or collection names).
                 StatusTagsLeaving = config.StatusTagsLeaving,
                 StatusTagsDirectPlay = config.StatusTagsDirectPlay,
-                LeavingSoonAvailable = MediaTagsApi.LeavingSoon.Configured(config),
+                LeavingSoonAvailable = LeavingSoonSources.Configured(config),
                 StatusTagsJustAddedDays = config.StatusTagsJustAddedDays,
                 StatusTagsNewReleaseDays = config.StatusTagsNewReleaseDays,
                 // Poster tag layout starting defaults (normalized; null = built-in)

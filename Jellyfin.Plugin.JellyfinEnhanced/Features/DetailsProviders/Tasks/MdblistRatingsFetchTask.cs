@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Tasks;
 
@@ -91,7 +91,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 
             // The tag cache copies the scores it finds in the MDBList cache when it is built or refreshed, so what this run
             // just saved would wait for the next rebuild. Publish it now, with no further MDBList calls.
-            try { TagCacheService.Instance?.RefreshRatingSourceAvailability(); }
+            try { MediaTagsApi.TagCache.RefreshRatingSourceAvailability(); }
             catch (Exception ex) { _logger.Warning($"MDBList Ratings Fetch: could not publish the new scores to the tag cache: {ex.Message}"); }
         }
     }
