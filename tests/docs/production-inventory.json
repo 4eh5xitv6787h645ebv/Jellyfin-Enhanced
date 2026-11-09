@@ -314,7 +314,15 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentResponseFilter.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/HiddenContentServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentDocumentService.cs",
       "category": "Features"
     },
     {
@@ -975,6 +983,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentDefaults.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentResponseFilter.cs",
       "category": "Shared"
     },
     {
@@ -2918,27 +2930,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
-      "method": "GetUserHiddenContent",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
-      "method": "SaveUserHiddenContent",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/user-settings/{userId}/spoilerblur.json",
       "method": "GetUserSpoilerBlur",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -2958,46 +2949,6 @@
         "Produces(\"application/json\")",
         "Consumes(\"application/json\")",
         "RequestSizeLimit(2 * 1024 * 1024)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/admin/hidden-content-users",
-      "method": "GetHiddenContentUsers",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}",
-      "method": "GetUserHiddenContentForAdmin",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/unhide",
-      "method": "AdminUnhideForUser",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/hide",
-      "method": "AdminHideForUser",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
       ]
     },
     {
@@ -3171,46 +3122,6 @@
       "verb": "DELETE",
       "path": "/JellyfinEnhanced/spoiler-blur/pending/{mediaType}/{tmdbId}",
       "method": "DisableSpoilerBlurPending",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
-      "method": "HideFromContinueWatching",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
-      "method": "HideFromNextUp",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
-      "method": "UnhideFromContinueWatching",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
-      "method": "UnhideFromNextUp",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize",
@@ -3818,6 +3729,107 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
       "following_attributes": [
         "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
+      "method": "GetUserHiddenContent",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/hidden-content.json",
+      "method": "SaveUserHiddenContent",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/admin/hidden-content-users",
+      "method": "GetHiddenContentUsers",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}",
+      "method": "GetUserHiddenContentForAdmin",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/unhide",
+      "method": "AdminUnhideForUser",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/hidden-content/{userId}/hide",
+      "method": "AdminHideForUser",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
+      "method": "HideFromContinueWatching",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
+      "method": "HideFromNextUp",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/continue-watching/hide/{itemId}",
+      "method": "UnhideFromContinueWatching",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/next-up/hide/{itemId}",
+      "method": "UnhideFromNextUp",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
       ]
     },
     {
@@ -9850,10 +9862,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "Saved hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
       "literal": "Saved user elsewhere settings for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to elsewhere.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
@@ -9891,10 +9899,6 @@
     },
     {
       "literal": "user-settings/{userId}/elsewhere.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
-      "literal": "user-settings/{userId}/hidden-content.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
@@ -9954,8 +9958,20 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Events/ContinueWatchingPlaybackEvents.cs"
     },
     {
+      "literal": "Saved hidden content for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs"
+    },
+    {
       "literal": "hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentResponseFilter.cs"
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentDocumentService.cs"
     },
     {
       "literal": "settings.json",
@@ -10104,6 +10120,10 @@
     {
       "literal": "config.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.cs"
+    },
+    {
+      "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentResponseFilter.cs"
     },
     {
       "literal": "settings.json",
@@ -10378,10 +10398,10 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 502,
+    "files": 505,
     "routes": 202,
     "configuration_properties": 741,
-    "storage_references": 92,
+    "storage_references": 94,
     "scheduled_tasks": 15,
     "locales": 33
   }

@@ -2,6 +2,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting
 {

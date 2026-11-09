@@ -1,6 +1,6 @@
 {
   "comment": "FeatureBoundaryTests (artifacts/restructure-plan/backend.md §7.2). allow: Features.<A> types may reference Features.<B> for each B listed under A (\"*\" = any). Controllers may reference only their own feature plus Shared/Infrastructure/Configuration/Transport/Logger, whatever this list says. enforced: features whose violations fail the test; each Phase 2 step adds its feature, S3 makes it every feature. Until then the test is report-only. A new edge needs an edit to this file in the same PR.",
-  "enforced": ["Catchup", "Activity", "Bookmarks", "Calendar", "Chrome", "Admin", "Settings"],
+  "enforced": ["Catchup", "Activity", "Bookmarks", "Calendar", "Chrome", "Admin", "Settings", "HiddenContent"],
   "allow": {
     "Downloads": ["Seerr"],
     "Seerr": ["SpoilerGuard"],

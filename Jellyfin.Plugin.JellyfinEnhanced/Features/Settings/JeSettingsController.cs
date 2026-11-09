@@ -354,7 +354,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
                             hc.Settings = HiddenContentDefaults.BuildHcDefaultSettings(defaultConfig);
                             return 1;
                         });
-                    Jellyfin.Plugin.JellyfinEnhanced.Services.HiddenContentResponseFilter.InvalidateUser(userId);
+                    HiddenContentResponseFilter.InvalidateUser(userId);
                 }
                 catch (Exception ex) when (ex is InvalidDataException
                                         || ex is Newtonsoft.Json.JsonException
@@ -519,7 +519,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
 
                             return 1;
                         });
-                        Jellyfin.Plugin.JellyfinEnhanced.Services.HiddenContentResponseFilter.InvalidateUser(userId);
+                        HiddenContentResponseFilter.InvalidateUser(userId);
                         touched = true;
                     }
 

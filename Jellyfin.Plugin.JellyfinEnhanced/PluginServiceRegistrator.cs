@@ -6,6 +6,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags;
@@ -134,8 +135,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // and expires timed manual windows, plus the per-playback-start reminder popup.
             serviceCollection.AddHostedService<MaintenanceScheduleService>();
             serviceCollection.AddJeEventConsumers();
-            serviceCollection.AddSingleton<HiddenContentResponseFilter>();
-            serviceCollection.AddHostedService<ContinueWatchingLibraryHook>();
+            serviceCollection.AddJeHiddenContent();
 
             // Activity Feed: recently watched / favorited / reviewed, gated by
             // ActivityFeedEnabled. ActivityFavoriteMonitor is a Singleton that
