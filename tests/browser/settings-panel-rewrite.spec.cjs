@@ -2,13 +2,9 @@
 // order, the real template and section wiring, the real settings save path and the generated
 // settings-document validator. Server calls are answered from fixtures.
 const { test, expect } = require('@playwright/test');
-const path = require('node:path');
-const { base, load, root } = require('./helpers/settings-surfaces.cjs');
-
-// plugin.js's own document key conversions (the settings document crosses them both ways).
-const pluginSource = require('node:fs').readFileSync(path.join(root, 'plugin.js'), 'utf8');
-const caseSource = [['    function toCamelCase(obj) {', '    JE.toPascalCase = toPascalCase;'], ['    function toPascalCase(obj) {', '    /**\n     * Injects Druidblack']]
-  .map(([start, end]) => pluginSource.slice(pluginSource.indexOf(start), pluginSource.indexOf(end))).join('\n');
+const { base, load } = require('./helpers/settings-surfaces.cjs');
+// The loader's own document key conversions (bootstrap/loader/keys.ts; the settings document crosses them both ways).
+const { loaderSource } = require('./helpers/loader-source.cjs');
 
 const CORE = ['core/ui-kit.js', 'core/media-language.js', 'core/tag-renderer-base.js', 'core/tag-layout.js', 'core/tag-look.js', 'tags/tag-layout-styles.js',
   'tags/rating-sources.js', 'tags/status-vocabulary.js', 'tags/statustags.js', 'tags/qualitytags.js', 'tags/ratingtags.js', 'tags/ageratingtags.js',
@@ -21,9 +17,9 @@ async function boot(page) {
   const { contractValue } = await import('../frontend/contracts/fixtures.mjs');
   const snapshot = contractValue('RevisionedSettingsResponse', { Revision: 'browser-r2', Settings: { IsAdmin: true, AutoPauseEnabled: false, SubtitleHorizontalPosition: 50, SubtitleVerticalPosition: 95 } });
   await base(page);
-  await page.evaluate(({ snapshot, caseSource }) => {
+  await page.evaluate(({ snapshot, loader }) => {
     // eslint-disable-next-line no-eval
-    const { toCamelCase, toPascalCase } = (0, eval)(`(() => { ${caseSource}; return { toCamelCase, toPascalCase }; })()`);
+    const { toCamelCase, toPascalCase } = (0, eval)(loader);
     Object.assign(window.JellyfinEnhanced, { toCamelCase, toPascalCase });
     document.body.innerHTML = '<main id="page"><button id="opener">Open settings</button><a id="outside" href="#">outside</a></main>';
     window.panelRequests = [];
@@ -48,7 +44,7 @@ async function boot(page) {
       },
     });
     window.fetch = async () => new Response('[]', { status: 404 });
-  }, { snapshot, caseSource });
+  }, { snapshot, loader: loaderSource() });
   await load(page, CORE);
   await page.evaluate(() => {
     const JE = window.JellyfinEnhanced;
