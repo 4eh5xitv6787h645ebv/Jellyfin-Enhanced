@@ -726,10 +726,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/WatchlistMonitor.cs",
       "category": "Features"
     },
@@ -1067,6 +1063,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Text/PluralRules.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Tmdb/TmdbResponseCache.cs",
       "category": "Shared"
     },
     {
@@ -10134,10 +10134,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/UsageEventCounterService.cs"
     },
     {
-      "literal": "tmdb-cache.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs"
-    },
-    {
       "literal": "Saved user shortcuts for {_userDisplayResolver.ResolveUserDisplay(authorizedUserId)} to shortcuts.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs"
     },
@@ -10184,6 +10180,10 @@
     {
       "literal": "media-tag-presets.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/MediaTagsPortable.cs"
+    },
+    {
+      "literal": "tmdb-cache.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Tmdb/TmdbResponseCache.cs"
     },
     {
       "literal": "settings.json",

@@ -15,7 +15,7 @@ using MediaBrowser.Common.Configuration;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb
 {
     /// <summary>
     /// In-memory cache for raw TMDB API responses (the /tmdb/{**apiPath}

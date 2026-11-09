@@ -5,6 +5,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
 namespace JE.Tests;
 

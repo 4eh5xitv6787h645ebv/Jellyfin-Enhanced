@@ -8,6 +8,7 @@ using MediaBrowser.Model.Globalization;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
 namespace JE.Tests.Features.MediaTags;
 

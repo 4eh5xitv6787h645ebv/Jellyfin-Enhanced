@@ -273,7 +273,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             Response.Headers["Cache-Control"] = "public, max-age=604800";
             Response.Headers["ETag"] = image.ETag;
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            if (Jellyfin.Plugin.JellyfinEnhanced.Services.TmdbResponseCache.IfNoneMatchMatches(Request.Headers["If-None-Match"], image.ETag))
+            if (Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb.TmdbResponseCache.IfNoneMatchMatches(Request.Headers["If-None-Match"], image.ETag))
             {
                 return StatusCode(StatusCodes.Status304NotModified);
             }

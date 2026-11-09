@@ -23,6 +23,7 @@ using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced
 {

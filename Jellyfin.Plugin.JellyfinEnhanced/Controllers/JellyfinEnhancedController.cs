@@ -53,6 +53,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 {
@@ -83,7 +84,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         private readonly Services.UsageEventCounterService _usageEventCounterService;
         private readonly Services.AnalyticsReportingService _analyticsReportingService;
         private readonly Services.HostCompatibilityService _hostCompatibility;
-        private readonly Services.TmdbResponseCache _tmdbResponseCache;
+        private readonly Shared.Tmdb.TmdbResponseCache _tmdbResponseCache;
         private readonly Features.DetailsProviders.Services.ItemStatsService _itemStats;
         private readonly IServerConfigurationManager _serverConfigurationManager;
         private readonly INetworkManager _networkManager;
@@ -142,7 +143,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             Services.UsageEventCounterService usageEventCounterService,
             Services.AnalyticsReportingService analyticsReportingService,
             Services.HostCompatibilityService hostCompatibility,
-            Services.TmdbResponseCache tmdbResponseCache,
+            Shared.Tmdb.TmdbResponseCache tmdbResponseCache,
             Features.DetailsProviders.Services.ItemStatsService itemStats,
             IServerConfigurationManager serverConfigurationManager,
             INetworkManager networkManager,
@@ -3752,7 +3753,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     Response.Headers["Cache-Control"] = "private, no-cache";
                     Response.Headers["Vary"] = "Authorization, X-Emby-Token, X-Jellyfin-User-Id";
                     Response.Headers["ETag"] = response.ETag;
-                    if (Services.TmdbResponseCache.IfNoneMatchMatches(Request.Headers["If-None-Match"], response.ETag))
+                    if (Shared.Tmdb.TmdbResponseCache.IfNoneMatchMatches(Request.Headers["If-None-Match"], response.ETag))
                     {
                         return StatusCode(StatusCodes.Status304NotModified);
                     }
@@ -3880,13 +3881,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             var body = Shared.Tmdb.WatchProvidersBatch.Serialize(regionCode, requested, results);
-            var etag = Services.TmdbResponseCache.ComputeETag(body);
+            var etag = Shared.Tmdb.TmdbResponseCache.ComputeETag(body);
             // Same browser-cache policy as the passthrough: every reuse revalidates
             // here (so gating runs again) and costs a 304 when nothing changed.
             Response.Headers["Cache-Control"] = "private, no-cache";
             Response.Headers["Vary"] = "Authorization, X-Emby-Token, X-Jellyfin-User-Id";
             Response.Headers["ETag"] = etag;
-            if (Services.TmdbResponseCache.IfNoneMatchMatches(Request.Headers["If-None-Match"], etag))
+            if (Shared.Tmdb.TmdbResponseCache.IfNoneMatchMatches(Request.Headers["If-None-Match"], etag))
             {
                 return StatusCode(StatusCodes.Status304NotModified);
             }
