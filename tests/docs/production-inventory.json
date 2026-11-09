@@ -306,6 +306,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.Requests.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
       "category": "Features"
     },
@@ -2693,6 +2697,35 @@
     },
     {
       "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/requests",
+      "method": "GetRequests",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.Requests.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/arr/requests/{requestId}/approve",
+      "method": "ActOnRequest",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.Requests.cs",
+      "following_attributes": [
+        "HttpPost(\"arr/requests/{requestId}/decline\")",
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/arr/requests/{requestId}/decline",
+      "method": "ActOnRequest",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
       "path": "/JellyfinEnhanced/arr/queue",
       "method": "GetDownloadQueue",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
@@ -2704,35 +2737,6 @@
       "verb": "GET",
       "path": "/JellyfinEnhanced/arr/history",
       "method": "GetDownloadHistory",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/requests",
-      "method": "GetRequests",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/arr/requests/{requestId}/approve",
-      "method": "ActOnRequest",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
-      "following_attributes": [
-        "HttpPost(\"arr/requests/{requestId}/decline\")",
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/arr/requests/{requestId}/decline",
-      "method": "ActOnRequest",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Downloads/JeDownloadsController.cs",
       "following_attributes": [
         "Authorize"
@@ -10522,7 +10526,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 534,
+    "files": 535,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,
