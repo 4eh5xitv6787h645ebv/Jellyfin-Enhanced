@@ -1,3 +1,4 @@
+import { featureContext, type FeatureContext } from '../../host/context';
 export interface SocialSession {
  getEpoch(): number; isCurrent(epoch: number): boolean;
  onUserChange(name: string, callback: () => void): (() => void) | void;
@@ -22,7 +23,19 @@ export interface ActivityHost {
 export interface SocialApi {getCurrentUserId(): string; getUrl(path: string, query?: Record<string, string | number>): string;
  getImageUrl(id: string, options: {type: string; width: number; quality: number; tag?: string}): string}
 interface ActivityWindow extends Window {JellyfinEnhanced?: ActivityHost; JE?: ActivityHost; ApiClient?: SocialApi; Emby?: {Page?: {showItem(id: string): void}}}
-export function activityHost() { const host: ActivityWindow = window; return {host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby}; }
+/** activity's own slots (frontend.md §2.3): the facades it publishes on JE. It has no JE.internals slot. */
+export type ActivityOwn = Pick<ActivityHost, 'activityPage' | 'initializeActivityIcons' | 'stopActivityIconsMonitoring'>;
+/** activity reads no other feature's facade. */
+export type ActivityPeers = Record<never, never>;
+export type ActivityContext = FeatureContext<ActivityOwn, ActivityPeers, ActivityHost>;
+/** `ctx` is undefined when the script loads before Jellyfin Enhanced (the entries then do nothing, as before). */
+export function activityHost() {
+ const host: ActivityWindow = window, JE = host.JellyfinEnhanced;
+ const ctx: ActivityContext | undefined = JE && featureContext<ActivityOwn, ActivityPeers, ActivityHost>('activity', JE, {
+  facades: ['activityPage', 'initializeActivityIcons', 'stopActivityIconsMonitoring'],
+ });
+ return {host, ctx, getApi: () => host.ApiClient, Emby: host.Emby};
+}
 export function currentLease(session: SocialSession | undefined, getApi?: () => SocialApi | undefined): () => boolean {
  const epoch = session?.getEpoch(), user = getApi?.()?.getCurrentUserId(), server = getApi?.()?.getUrl('/');
  return () => (epoch === undefined || session?.isCurrent(epoch) === true) && user === getApi?.()?.getCurrentUserId() && server === getApi?.()?.getUrl('/');

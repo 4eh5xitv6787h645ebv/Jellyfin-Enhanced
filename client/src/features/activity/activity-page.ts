@@ -14,9 +14,9 @@ import { currentLease, record } from './host';
 
 (function () {
     'use strict';
-  const { JE: candidate, getApi, Emby } = activityHost();
-  if (!candidate) return;
-  const JE = candidate;
+  const { ctx: context, getApi, Emby } = activityHost();
+  if (!context) return;
+  const ctx = context, JE = ctx.core;
   const ApiClient = () => {const apiCandidate=getApi();if (!apiCandidate) throw Error("Jellyfin API unavailable"); return apiCandidate;};
 
     if (!JE?.pluginConfig?.ActivityFeedEnabled) {
@@ -449,7 +449,7 @@ import { currentLease, record } from './host';
     let activeIdentity: () => boolean = () => true;
     let removeRouteListener: (() => void) | undefined;
     let disconnectObserver: MutationObserver | undefined;
-    JE.activityPage?.stopPolling();
+    ctx.own.activityPage?.stopPolling();
     JE.session?.onUserChange('activity-page',stopActiveStreamsPolling);
     function stopActiveStreamsPolling() {
         // Invalidate pending initial loads too: they must not restart a poller
@@ -633,7 +633,7 @@ import { currentLease, record } from './host';
         }
     }
 
-    JE.activityPage = {
+    ctx.own.activityPage = {
         injectStyles,
         renderForCustomTab,
         stopPolling: stopActiveStreamsPolling

@@ -1,18 +1,49 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/activity/host.ts
   function activityHost() {
-    const host = window;
-    return { host, JE: host.JellyfinEnhanced, getApi: () => host.ApiClient, Emby: host.Emby };
+    const host = window, JE = host.JellyfinEnhanced;
+    const ctx = JE && featureContext("activity", JE, {
+      facades: ["activityPage", "initializeActivityIcons", "stopActivityIconsMonitoring"]
+    });
+    return { host, ctx, getApi: () => host.ApiClient, Emby: host.Emby };
   }
 
   // client/src/features/activity/activity-custom-tab.ts
   (function() {
     "use strict";
-    const { JE: candidate } = activityHost();
-    if (!candidate) return;
-    const JE = candidate;
+    const { ctx: context } = activityHost();
+    if (!context) return;
+    const ctx = context, JE = ctx.core;
     if (!JE?.pluginConfig?.ActivityFeedEnabled) {
       return;
     }
@@ -48,7 +79,7 @@
           clearInterval(check);
           return;
         }
-        if (JE?.activityPage) {
+        if (ctx.own.activityPage) {
           clearInterval(check);
           callback(JE);
         }
@@ -69,8 +100,8 @@
       child.id = "je-activity-container-tab";
       container.textContent = "";
       container.appendChild(child);
-      JE2.activityPage?.injectStyles();
-      JE2.activityPage?.renderForCustomTab(child);
+      ctx.own.activityPage?.injectStyles();
+      ctx.own.activityPage?.renderForCustomTab(child);
       lastMountedContainer = container;
     }
     function watchForContainer(JE2) {
@@ -79,7 +110,7 @@
         var onHome = isOnHomePage();
         if (!onHome) {
           if (wasOnHomePage) {
-            JE2.activityPage?.stopPolling?.();
+            ctx.own.activityPage?.stopPolling?.();
             lastMountedContainer = null;
           }
           wasOnHomePage = false;
@@ -90,7 +121,7 @@
         var container = findActiveContainer();
         if (!container) {
           if (lastMountedContainer) {
-            JE2.activityPage?.stopPolling?.();
+            ctx.own.activityPage?.stopPolling?.();
           }
           lastMountedContainer = null;
           return;
