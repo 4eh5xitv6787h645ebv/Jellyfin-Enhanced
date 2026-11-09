@@ -144,7 +144,7 @@ Jellyfin.Plugin.JellyfinEnhanced/
 
 Only Jellyfin 12.x is supported; requesting `jf10` or a framework other than `net10.0` fails explicitly. Package-reference changes require refreshing `packages.jf12.lock.json` beside both the plugin and `tests/backend/JE.Tests.csproj`. See [CONTRIBUTING.md](https://github.com/n00bcodr/Jellyfin-Enhanced/blob/main/CONTRIBUTING.md) for build and locked-restore instructions.
 
-`Logger.cs` forwards messages to Jellyfin's main log and writes `JellyfinEnhanced_YYYY-MM-DD.log` under Jellyfin's log directory. `Features/Platform/Services/HostCompatibilityService.cs` compares the assembly's build target with the running host and exposes mismatch diagnostics.
+`Logger.cs` forwards messages to Jellyfin's main log and writes `JellyfinEnhanced_YYYY-MM-DD.log` under Jellyfin's log directory. `Shared/Host/HostCompatibilityService.cs` compares the assembly's build target with the running host and exposes mismatch diagnostics.
 
 ### Configuration and persistence
 

@@ -26,6 +26,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced
 {

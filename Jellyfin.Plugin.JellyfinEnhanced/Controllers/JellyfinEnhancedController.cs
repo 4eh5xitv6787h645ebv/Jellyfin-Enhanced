@@ -40,7 +40,6 @@ using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome.Services;
-using Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
@@ -53,8 +52,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.PublicApi;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PublicApi;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Bookmarks.PublicApi;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Sessions;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 {
@@ -64,7 +67,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILibraryManager _libraryManager;
-        private readonly Features.Admin.Services.MaintenanceModeService _maintenanceModeService;
+        private readonly Shared.Maintenance.MaintenanceModeService _maintenanceModeService;
         private readonly Services.CdnAssetService _cdnAssetService;
         private readonly Services.UsageEventCounterService _usageEventCounterService;
         private readonly Services.AnalyticsReportingService _analyticsReportingService;
@@ -81,7 +84,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             ILibraryManager libraryManager,
             UserConfigurationManager userConfigurationManager,
             MediaBrowser.Controller.Session.ISessionManager sessionManager,
-            Features.Admin.Services.MaintenanceModeService maintenanceModeService,
+            Shared.Maintenance.MaintenanceModeService maintenanceModeService,
             Services.CdnAssetService cdnAssetService,
             Services.UsageEventCounterService usageEventCounterService,
             Services.AnalyticsReportingService analyticsReportingService,
@@ -471,7 +474,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 // Leaving soon source is set (never its URL, key or collection names).
                 StatusTagsLeaving = config.StatusTagsLeaving,
                 StatusTagsDirectPlay = config.StatusTagsDirectPlay,
-                LeavingSoonAvailable = Features.MediaTags.Services.LeavingSoonService.Configured(config),
+                LeavingSoonAvailable = MediaTagsApi.LeavingSoon.Configured(config),
                 StatusTagsJustAddedDays = config.StatusTagsJustAddedDays,
                 StatusTagsNewReleaseDays = config.StatusTagsNewReleaseDays,
                 // Poster tag layout starting defaults (normalized; null = built-in)
@@ -719,7 +722,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var isAdmin = IsAdminUser();
 
             var settingsSnapshot = TryLoadUserDocument("settings.json", authorizedUserId, () => LoadRevisionedSettings(authorizedUserId));
-            var bookmarkSnapshot = TryLoadUserDocument("bookmark.json", authorizedUserId, () => new Features.Bookmarks.Services.BookmarkDocumentService(_userConfigurationManager).Read(authorizedUserId));
+            var bookmarkSnapshot = TryLoadUserDocument("bookmark.json", authorizedUserId, () => BookmarksApi.Documents.Read(_userConfigurationManager, authorizedUserId));
             return TransportJson.Create(new BootstrapResponse
             {
                 Version = JellyfinEnhanced.Instance?.Version.ToString() ?? "unknown",

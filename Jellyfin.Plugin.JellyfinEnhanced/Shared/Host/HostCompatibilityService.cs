@@ -4,7 +4,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using MediaBrowser.Controller;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Host
 {
     /// <summary>
     /// Diagnoses whether the running host is in the supported Jellyfin 12.x line.

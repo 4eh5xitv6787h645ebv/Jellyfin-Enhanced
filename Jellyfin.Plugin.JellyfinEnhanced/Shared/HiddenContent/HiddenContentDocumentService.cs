@@ -1,9 +1,8 @@
 using System;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
-using Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.HiddenContent
 {
     /// <summary>
     /// Reads a user's hidden-content.json, seeding it from the plugin defaults on first access. Moved verbatim from the

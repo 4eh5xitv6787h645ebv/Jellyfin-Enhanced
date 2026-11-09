@@ -39,7 +39,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             IXmlSerializer xmlSerializer,
             Logger logger,
             Services.AnalyticsReportingService analyticsReportingService,
-            Services.HostCompatibilityService hostCompatibility) : base(applicationPaths, xmlSerializer)
+            Shared.Host.HostCompatibilityService hostCompatibility) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
             _applicationPaths = applicationPaths;

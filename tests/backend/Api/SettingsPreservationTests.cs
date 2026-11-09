@@ -7,6 +7,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace JE.Tests;
 

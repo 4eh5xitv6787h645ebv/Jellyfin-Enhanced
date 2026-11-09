@@ -24,6 +24,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace JE.Tests.Features.MediaTags;
 

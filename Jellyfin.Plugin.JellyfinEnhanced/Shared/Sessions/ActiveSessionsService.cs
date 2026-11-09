@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MediaBrowser.Controller.Session;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Sessions
 {
     /// <summary>
     /// The active-streams session list, shared by GET active-streams/sessions (Chrome) and the bootstrap payload

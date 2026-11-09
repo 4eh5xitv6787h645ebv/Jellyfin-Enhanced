@@ -11,6 +11,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace JE.Tests;
 

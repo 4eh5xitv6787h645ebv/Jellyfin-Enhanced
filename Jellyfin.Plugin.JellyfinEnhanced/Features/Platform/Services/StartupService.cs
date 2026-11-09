@@ -12,6 +12,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

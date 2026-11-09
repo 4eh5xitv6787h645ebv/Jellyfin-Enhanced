@@ -14,6 +14,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

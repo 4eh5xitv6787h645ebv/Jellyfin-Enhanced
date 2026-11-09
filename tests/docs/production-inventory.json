@@ -182,10 +182,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/MaintenanceModeService.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/MaintenanceScheduleService.cs",
       "category": "Features"
     },
@@ -195,6 +191,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/JeBookmarksController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Bookmarks/PublicApi/BookmarksApi.cs",
       "category": "Features"
     },
     {
@@ -223,10 +223,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/JeChromeController.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Chrome/Services/ActiveSessionsService.cs",
       "category": "Features"
     },
     {
@@ -319,10 +315,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentDocumentService.cs",
       "category": "Features"
     },
     {
@@ -666,10 +658,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/HostCompatibilityService.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/ScriptInjectionStartupFilter.cs",
       "category": "Features"
     },
@@ -970,7 +958,15 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentDocumentService.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentResponseFilter.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Host/HostCompatibilityService.cs",
       "category": "Shared"
     },
     {
@@ -983,6 +979,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Library/UserDisplayResolver.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Maintenance/MaintenanceModeService.cs",
       "category": "Shared"
     },
     {
@@ -1071,6 +1071,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/SeerrUserLookup.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Sessions/ActiveSessionsService.cs",
       "category": "Shared"
     },
     {
@@ -9978,10 +9982,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "maintenance-state.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/MaintenanceModeService.cs"
-    },
-    {
       "literal": "Jellyfin.Plugin.JellyfinEnhanced.Configuration.whats-new-seed.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/WhatsNewService.cs"
     },
@@ -10060,10 +10060,6 @@
     {
       "literal": "user-settings/{userId}/hidden-content.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/JeHiddenContentController.cs"
-    },
-    {
-      "literal": "hidden-content.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/HiddenContent/Services/HiddenContentDocumentService.cs"
     },
     {
       "literal": "settings.json",
@@ -10166,10 +10162,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/ClientScriptBundle.cs"
     },
     {
-      "literal": "https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/manifest.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/HostCompatibilityService.cs"
-    },
-    {
       "literal": "usage-counters.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Platform/Services/UsageEventCounterService.cs"
     },
@@ -10215,7 +10207,19 @@
     },
     {
       "literal": "hidden-content.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentDocumentService.cs"
+    },
+    {
+      "literal": "hidden-content.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/HiddenContent/HiddenContentResponseFilter.cs"
+    },
+    {
+      "literal": "https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/manifest.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Host/HostCompatibilityService.cs"
+    },
+    {
+      "literal": "maintenance-state.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Maintenance/MaintenanceModeService.cs"
     },
     {
       "literal": "media-tag-presets.json",
@@ -10498,7 +10502,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 528,
+    "files": 529,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,

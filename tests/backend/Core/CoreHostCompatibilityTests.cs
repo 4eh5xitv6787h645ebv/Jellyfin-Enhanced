@@ -4,6 +4,7 @@ using System.Reflection.PortableExecutable;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
 
 namespace JE.Tests;
 

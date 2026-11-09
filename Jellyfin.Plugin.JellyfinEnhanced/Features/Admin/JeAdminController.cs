@@ -18,6 +18,7 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
 {
@@ -29,7 +30,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
         private readonly MaintenanceModeService _maintenanceModeService;
         private readonly ISessionManager _sessionManager;
         private readonly WhatsNewService _whatsNewService;
-        private readonly Jellyfin.Plugin.JellyfinEnhanced.Services.HostCompatibilityService _hostCompatibility;
+        private readonly Jellyfin.Plugin.JellyfinEnhanced.Shared.Host.HostCompatibilityService _hostCompatibility;
         private readonly IServerConfigurationManager _serverConfigurationManager;
         private readonly INetworkManager _networkManager;
 
@@ -41,7 +42,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
             MaintenanceModeService maintenanceModeService,
             ISessionManager sessionManager,
             WhatsNewService whatsNewService,
-            Jellyfin.Plugin.JellyfinEnhanced.Services.HostCompatibilityService hostCompatibility,
+            Jellyfin.Plugin.JellyfinEnhanced.Shared.Host.HostCompatibilityService hostCompatibility,
             IServerConfigurationManager serverConfigurationManager,
             INetworkManager networkManager)
             : base(userManager, logger, userConfigurationManager)
@@ -138,14 +139,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
             var isStale = _hostCompatibility.IsStale;
             return new JsonResult(new
             {
-                builtFor = Jellyfin.Plugin.JellyfinEnhanced.Services.HostCompatibilityService.BuiltFor,
+                builtFor = Jellyfin.Plugin.JellyfinEnhanced.Shared.Host.HostCompatibilityService.BuiltFor,
                 hostTarget = _hostCompatibility.HostTarget,
                 hostVersion = _hostCompatibility.HostVersionString,
                 pluginVersion = JellyfinEnhanced.Instance?.Version.ToString(),
                 mismatch = _hostCompatibility.IsMismatch,
                 stale = isStale,
                 expectedAsset = _hostCompatibility.ExpectedAssetName,
-                manifestUrl = Jellyfin.Plugin.JellyfinEnhanced.Services.HostCompatibilityService.ManifestUrl,
+                manifestUrl = Jellyfin.Plugin.JellyfinEnhanced.Shared.Host.HostCompatibilityService.ManifestUrl,
                 message = _hostCompatibility.GetCompatibilityMessage(isStale)
             });
         }

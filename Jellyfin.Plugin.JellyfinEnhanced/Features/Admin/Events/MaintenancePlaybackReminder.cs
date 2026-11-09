@@ -8,6 +8,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Maintenance;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Events
 {

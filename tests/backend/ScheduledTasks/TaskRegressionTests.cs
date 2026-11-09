@@ -8,6 +8,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Host;
 
 namespace JE.Tests;
 
