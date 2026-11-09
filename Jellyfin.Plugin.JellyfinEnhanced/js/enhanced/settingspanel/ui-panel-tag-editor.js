@@ -1,12 +1,14 @@
 (() => {
 "use strict";
 (() => {
-  // client/src/features/media-tags/settings/host.ts
+  // client/src/features/shared/panel-host.ts
   function panelHost() {
     const host = window;
     if (!host.JellyfinEnhanced) throw new TypeError("Jellyfin Enhanced must load before the settings panel");
     return host.JellyfinEnhanced;
   }
+
+  // client/src/features/media-tags/settings/host.ts
   function registry(JE) {
     JE.internals = JE.internals || {};
     return JE.internals.enhancedUi = JE.internals.enhancedUi || {};
