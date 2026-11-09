@@ -49,12 +49,6 @@
   "client/src/features/details-providers/details-page.ts": {
     "internals *": 1
   },
-  "client/src/features/details-providers/media-info.ts": {
-    "internals *": 1
-  },
-  "client/src/features/details-providers/release-dates.ts": {
-    "internals *": 1
-  },
   "client/src/features/hidden-content/features-remove-home.ts": {
     "internals hiddenContent": 1
   },

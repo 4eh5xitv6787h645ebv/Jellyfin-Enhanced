@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/details-providers/host.ts
   function hostWindow() {
     return window;
@@ -22,6 +50,13 @@
   function currentUserId() {
     const id = hostWindow().ApiClient?.getCurrentUserId();
     return typeof id === "string" && id ? id : null;
+  }
+  function detailsContext(JE2) {
+    const holder = JE2;
+    return featureContext("details-providers", JE2, {
+      internalSlots: ["features"],
+      internalsObject: () => holder.internals ?? (holder.internals = {})
+    });
   }
 
   // client/src/features/details-providers/wire.ts
@@ -222,11 +257,12 @@
 
   // client/src/features/details-providers/release-dates.ts
   var JE = bridge("Release dates");
-  var internals = JE.internals ?? (JE.internals = {});
-  var internal = internals.features ?? (internals.features = {});
+  var ctx = detailsContext(JE);
+  var _a;
+  var internal = (_a = ctx.own).features ?? (_a.features = {});
   var RELEASEDATE_CACHE_TTL = 60 * 60 * 1e3;
   var RELEASEDATE_GUARDED_CACHE_TTL = 30 * 1e3;
-  var cacheTtl = () => JE.spoilerBlur?.hasAnyState?.() ? RELEASEDATE_GUARDED_CACHE_TTL : RELEASEDATE_CACHE_TTL;
+  var cacheTtl = () => ctx.peer("spoilerBlur")?.hasAnyState?.() ? RELEASEDATE_GUARDED_CACHE_TTL : RELEASEDATE_CACHE_TTL;
   var releaseDateCache = /* @__PURE__ */ new Map();
   var releaseLookups = /* @__PURE__ */ new Map();
   var guardRevision = 0;

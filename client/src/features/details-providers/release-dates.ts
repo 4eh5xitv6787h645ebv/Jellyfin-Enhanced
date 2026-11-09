@@ -1,5 +1,5 @@
 /** Details-page release/air-date chips resolved from TMDB via the plugin proxy. */
-import { api, bridge, currentUserId } from './host';
+import { api, bridge, currentUserId, detailsContext } from './host';
 import type { DetailsFeatures, ReleaseBridge, VisitHandle } from './host';
 import { lookupDetailsItem, sessionLease } from './page';
 import { decodeDetailsItem } from './wire';
@@ -12,14 +12,14 @@ import {
 import type { ReleaseInfo } from './release-domain';
 
 const JE = bridge<ReleaseBridge>('Release dates');
-const internals = JE.internals ??= {};
-const internal: DetailsFeatures = internals.features ??= {};
+const ctx = detailsContext(JE);
+const internal: DetailsFeatures = ctx.own.features ??= {};
 
 const RELEASEDATE_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 // With guards on, an answer also depends on what this user has played, and
 // nothing announces a change to that. Long enough to dedupe repeat calls.
 const RELEASEDATE_GUARDED_CACHE_TTL = 30 * 1000;
-const cacheTtl = () => (JE.spoilerBlur?.hasAnyState?.() ? RELEASEDATE_GUARDED_CACHE_TTL : RELEASEDATE_CACHE_TTL);
+const cacheTtl = () => (ctx.peer('spoilerBlur')?.hasAnyState?.() ? RELEASEDATE_GUARDED_CACHE_TTL : RELEASEDATE_CACHE_TTL);
 const releaseDateCache = new Map<string, { infos: ReleaseInfo[]; ts: number }>();
 /**
  * Lookups in flight, so a chip takes one over instead of starting another. A

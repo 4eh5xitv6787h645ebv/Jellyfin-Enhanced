@@ -2,15 +2,17 @@
  * Details-page dispatcher: the debounced item-details observer, the Hide
  * button on detail pages, and the per-item-type feature gating.
  */
-import { bridge, currentUserId, api } from './host';
+import { bridge, currentUserId, api, detailsContext } from './host';
 import type { DetailsFeatures, DetailsPageBridge, HiddenContentFacade, HiddenItemData } from './host';
 import { detailsLease, hashItemId, lookupDetailsItem, lookupItem, visibleDetailPage } from './page';
 import { decodeDetailsItem, field } from './wire';
 import type { DetailsItem } from './wire';
 
 const JE = bridge<DetailsPageBridge>('Details page features');
+const ctx = detailsContext(JE);
+// Only for media-tags' `peopleTags` slot: a cross-feature read until media-tags publishes it as a peer facade.
 const internals = JE.internals ??= {};
-const features = (): DetailsFeatures => internals.features ??= {};
+const features = (): DetailsFeatures => ctx.own.features ??= {};
 
 // Cache the last item id and type to avoid repeated lookups.
 let lastDetailsItemId: string | null = null;
@@ -236,14 +238,16 @@ function runItemDetails(settled: boolean): void {
         const itemType = lastDetailsItemType;
 
         // Hide button on detail pages (including Person pages)
-        if (JE.hiddenContent) addHideContentButton(JE.hiddenContent, itemId, visiblePage, itemType);
+        const hiddenContent = ctx.peer('hiddenContent');
+        if (hiddenContent) addHideContentButton(hiddenContent, itemId, visiblePage, itemType);
 
         // Spoiler Guard supports Series, Movie and BoxSet detail pages. Kept
         // before the media-info gate so it stays available when other detail
         // enhancements are off.
-        const addSpoilerButton = JE.spoilerBlur?.addSpoilerBlurButton;
+        const spoilerBlur = ctx.peer('spoilerBlur');
+        const addSpoilerButton = spoilerBlur?.addSpoilerBlurButton;
         if ((itemType === 'Series' || itemType === 'Movie' || itemType === 'BoxSet') && typeof addSpoilerButton === 'function') {
-            addSpoilerButton.call(JE.spoilerBlur, itemId, visiblePage, itemType);
+            addSpoilerButton.call(spoilerBlur, itemId, visiblePage, itemType);
         }
 
         if (!FEATURES_SUPPORTED_TYPES.includes(itemType)) return;
