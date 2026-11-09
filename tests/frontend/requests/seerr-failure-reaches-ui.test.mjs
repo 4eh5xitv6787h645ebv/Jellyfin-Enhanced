@@ -6,9 +6,10 @@ import { createHarness, plain } from '../helpers/harness.mjs';
 const settle = async () => { for (let i = 0; i < 8; i++) await new Promise(resolve => setImmediate(resolve)); };
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function setup(t, { get, files = [] }) {
+function setup(t, { get, files = [], je = {} }) {
   const posts = [], toasts = [];
   const h = createHarness({ JE: {
+    ...je,
     pluginConfig: {}, t: key => key, escapeHtml, toast: (...args) => toasts.push(args[0]), helpers: { trackUsage() {} },
     session: { getEpoch: () => 0, isCurrent: value => value === 0, onUserChange() {} },
     requestManager: { clearCacheMatching() {} },
@@ -66,4 +67,14 @@ test('BUG-021: the season dialog says the server options failed, and Request sti
   assert.equal(requests.length, 1);
   assert.equal(requests[0][1].body.mediaId, 42);
   assert.equal('serverId' in requests[0][1].body, false);
+});
+
+test('BUG-022: a failed issue list says the issues could not be loaded, not that there are none', async t => {
+  const h = setup(t, { get: path => (path === '/issue' ? unavailable() : Promise.resolve({})), files: ['modal.js', 'issue-reporter.js'], je: {
+    pluginConfig: { JellyseerrEnabled: true, JellyseerrShowReportButton: true }, icon: () => '', IconName: {},
+    jellyseerrUI: { addMainStyles() {} } } });
+  h.expectConsoleError(/Failed to load existing issues/);
+  h.JE.jellyseerrIssueReporter.showReportModal('603', 'Film', 'movie');
+  await settle();
+  assert.equal(h.document.querySelector('.jellyseerr-issues-empty')?.textContent, 'jellyseerr_load_issues_error');
 });

@@ -627,20 +627,15 @@
       },
       async fetchIssuesForMedia(tmdbId, mediaType, options = {}) {
         const { take = 20, skip = 0, filter = "open", sort = "added" } = options;
-        try {
-          const query = new URLSearchParams({ take: String(take), skip: String(skip), filter, sort });
-          const page = export5(await get(`/issue?${query.toString()}`));
-          const results = page.results.filter((issue) => {
-            const media = issue.media || {};
-            const tmdbMatch = !!media.tmdbId && Number(media.tmdbId) === Number(tmdbId);
-            const typeMatch = (media.mediaType || "").toLowerCase() === (mediaType || "").toLowerCase();
-            return tmdbMatch && typeMatch;
-          });
-          return { ...page, results };
-        } catch (error) {
-          console.error(`${LOG} Failed to fetch issues for ${mediaType} ${tmdbId}:`, error);
-          return { results: [] };
-        }
+        const query = new URLSearchParams({ take: String(take), skip: String(skip), filter, sort });
+        const page = export5(await get(`/issue?${query.toString()}`));
+        const results = page.results.filter((issue) => {
+          const media = issue.media || {};
+          const tmdbMatch = !!media.tmdbId && Number(media.tmdbId) === Number(tmdbId);
+          const typeMatch = (media.mediaType || "").toLowerCase() === (mediaType || "").toLowerCase();
+          return tmdbMatch && typeMatch;
+        });
+        return { ...page, results };
       },
       async fetchIssueById(issueId) {
         try {

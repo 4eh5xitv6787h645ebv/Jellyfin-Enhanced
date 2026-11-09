@@ -38,8 +38,7 @@
     "R9-fail-empty installSegmentControls.fetchMediaSegments": 1
   },
   "client/src/features/seerr/core/api.ts": {
-    "R9-fail-empty installApi.fetchGenreSlider": 1,
-    "R9-fail-empty installApi.fetchIssuesForMedia": 1
+    "R9-fail-empty installApi.fetchGenreSlider": 1
   },
   "client/src/features/seerr/details/moreinfo/seasons-entry.ts": {
     "R9-fail-empty fetchJellyfinSeasonMap": 1
