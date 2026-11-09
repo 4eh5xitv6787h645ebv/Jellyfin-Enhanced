@@ -7,6 +7,7 @@
  * `unknown` here: a consumer earns a shape by narrowing. Scripts load one at a time, so
  * every lookup happens when it is used, never while an entry loads.
  */
+import { featureContext, type FeatureContext } from '../../host/context';
 export type MediaType = 'movie' | 'tv';
 export type TmdbId = number | string;
 export type UrlParams = Record<string, string | number | boolean>;
@@ -160,7 +161,6 @@ export interface SeerrDetailsBridge {
     t?(key: string, params?: Record<string, string | number>): string;
     toast?(message: string, duration?: number): void;
     escapeHtml?(value: unknown): string;
-    normalizeOfficialRating?(rating: string): string;
     icon?(name: string): string;
     IconName?: { VIDEO: string; AUDIO: string; SUBTITLES: string; QUESTION: string };
     cdn?: CdnFacade;
@@ -174,7 +174,6 @@ export interface SeerrDetailsBridge {
     jellyseerrModal?: { create(options: SeerrModalOptions): SeerrModalHandle };
     jellyseerrMoreInfo?: MoreInfoFacade;
     jellyseerrIssueReporter?: object;
-    hiddenContent?: { filterJellyseerrResults(results: readonly unknown[], surface: 'recommendations'): unknown[] };
     takePrefetched?(key: 'SeerrStatus'): unknown;
     initializeSeerrDetailLinkScript?: () => void;
     seamlessScroll?: object;
@@ -285,10 +284,33 @@ export interface MoreInfoSurface {
 
 export type MoreInfoRegistry = Partial<MoreInfoSurface> & { state: MoreInfoState };
 
+/** The details group's own `JE.internals` slot (frontend.md §2.3). Its `JE.<name>` facades stay on the typed bridge. */
+export type SeerrDetailsOwn = { moreInfoModal?: MoreInfoRegistry };
+/** Other features' facades the details group reads (published by their owners; optional, they may load later). */
+export interface SeerrDetailsPeers {
+    hiddenContent: { filterJellyseerrResults(results: readonly unknown[], surface: 'recommendations'): unknown[] };
+    /** details-providers' official-rating colour key (colored ratings). */
+    normalizeOfficialRating(rating: string): string;
+}
+export type SeerrDetailsContext = FeatureContext<SeerrDetailsOwn, SeerrDetailsPeers, SeerrDetailsBridge>;
+const detailsContexts = new WeakMap<SeerrDetailsBridge, SeerrDetailsContext>();
+/** The feature context around a details-group bridge, one per bridge object. */
+export function seerrDetailsContext(JE: SeerrDetailsBridge): SeerrDetailsContext {
+    let ctx = detailsContexts.get(JE);
+    if (!ctx) {
+        ctx = featureContext<SeerrDetailsOwn, SeerrDetailsPeers, SeerrDetailsBridge>('seerr', JE, {
+            internalSlots: ['moreInfoModal'],
+            internalsObject: () => JE.internals ?? (JE.internals = {}),
+        });
+        detailsContexts.set(JE, ctx);
+    }
+    return ctx;
+}
+
 /** The registry the eight more-info scripts share across their bundles. */
 export function moreInfoRegistry(JE: SeerrDetailsBridge): MoreInfoRegistry {
-    const internals = JE.internals ?? (JE.internals = {});
-    return internals.moreInfoModal ?? (internals.moreInfoModal = { state: { currentModal: null } });
+    const own = seerrDetailsContext(JE).own;
+    return own.moreInfoModal ?? (own.moreInfoModal = { state: { currentModal: null } });
 }
 
 /** A sibling script's export. Scripts load in order; a missing one is a loader fault. */

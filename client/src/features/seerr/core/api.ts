@@ -491,7 +491,7 @@ export function installApi(host: SeerrCoreHost): void {
         },
 
         async fetchUserQuota(options = {}) {
-            if (host.window.JellyfinEnhanced?.pluginConfig?.JellyseerrShowQuotaInfo === false) return null;
+            if (host.liveBridge()?.pluginConfig?.JellyseerrShowQuotaInfo === false) return null;
             try {
                 const quota = await get('/quota', readOptions(options));
                 if (isUserQuota(quota)) return quota;
@@ -520,7 +520,7 @@ export function installApi(host: SeerrCoreHost): void {
 
         async addToWatchlist(tmdbId, mediaType) {
             try {
-                const config = host.window.JellyfinEnhanced?.pluginConfig;
+                const config = host.liveBridge()?.pluginConfig;
                 if (!config) {
                     console.debug(`${LOG} Plugin config not loaded yet`);
                     return false;

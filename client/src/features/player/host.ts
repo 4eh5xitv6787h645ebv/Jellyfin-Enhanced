@@ -1,6 +1,7 @@
 import type { Session } from '../../core/session';
 import type { Lifecycle } from '../../core/lifecycle';
 import type { MediaSegment } from './wire';
+import { featureContext, type FeatureContext } from '../../host/context';
 export interface Subscription { unsubscribe(): void }
 export interface PlayerSettings {
     longPress2xEnabled?: boolean; autoSkipIntro?: boolean; autoSkipOutro?: boolean;
@@ -68,7 +69,6 @@ export interface PlayerBridge {
     applySavedStylesWhenReady(): void;
     initializeOsdRating(): void; initializePauseScreen(): void; initializePlaybackRatingBadge(): void;
     pauseScreenInstance?: { overlay: HTMLElement; destroy(): void };
-    resumeRatingsPolling?(): void; pauseRatingsPolling?(): void;
 }
 interface AjaxOptions { type: string; url: string; dataType?: string; contentType?: string; data?: string }
 interface PlayerApi {
@@ -77,11 +77,20 @@ interface PlayerApi {
     ajax(options: AjaxOptions): Promise<unknown>;
     getItem(userId: string | null, itemId: string): Promise<unknown>;
 }
+/** player's own `JE.internals` slots (frontend.md §2.3). Its `JE.<name>` facades stay on the typed bridge. */
+export type PlayerOwn = PlayerBridge['internals'];
+/** Other features' facades player reads (details-providers' colored ratings polling; it may load later or not at all). */
+export interface PlayerPeers { resumeRatingsPolling(): void; pauseRatingsPolling(): void }
+export type PlayerFeatureContext = FeatureContext<PlayerOwn, PlayerPeers, PlayerBridge>;
 /** Structural bridge confined to the fields the player actually consumes. */
 export function playerHost() {
     const host: Window & { JellyfinEnhanced?: PlayerBridge; ApiClient?: PlayerApi } = window;
     const JE = host.JellyfinEnhanced;
     if (!JE) throw new Error('Player loaded before Jellyfin Enhanced');
+    const ctx: PlayerFeatureContext = featureContext<PlayerOwn, PlayerPeers, PlayerBridge>('player', JE, {
+        internalSlots: ['player', 'nowPlaying', 'autoSkip'],
+        internalsObject: () => JE.internals = JE.internals || {} as PlayerBridge['internals'],
+    });
     // Read the active API for every operation; Jellyfin replaces it on server changes.
     const requireApi = () => { if (!host.ApiClient) throw new Error('Jellyfin API unavailable'); return host.ApiClient; };
     const ApiClient = {
@@ -93,5 +102,5 @@ export function playerHost() {
         ajax: (options: AjaxOptions) => requireApi().ajax(options),
         getItem: (userId: string | null, itemId: string) => requireApi().getItem(userId, itemId)
     };
-    return { JE, ApiClient };
+    return { JE, ApiClient, ctx };
 }

@@ -28,11 +28,43 @@
     return names.filter((n) => !names.some((o) => o !== n && o.toLowerCase().includes(n.toLowerCase()))).map((n) => n.replace(/(^|\s)(\S)/g, (_, sp, ch) => sp + ch.toUpperCase()));
   }
 
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/player/host.ts
   function playerHost() {
     const host = window;
     const JE2 = host.JellyfinEnhanced;
     if (!JE2) throw new Error("Player loaded before Jellyfin Enhanced");
+    const ctx2 = featureContext("player", JE2, {
+      internalSlots: ["player", "nowPlaying", "autoSkip"],
+      internalsObject: () => JE2.internals = JE2.internals || {}
+    });
     const requireApi = () => {
       if (!host.ApiClient) throw new Error("Jellyfin API unavailable");
       return host.ApiClient;
@@ -49,7 +81,7 @@
       ajax: (options) => requireApi().ajax(options),
       getItem: (userId, itemId) => requireApi().getItem(userId, itemId)
     };
-    return { JE: JE2, ApiClient: ApiClient2 };
+    return { JE: JE2, ApiClient: ApiClient2, ctx: ctx2 };
   }
 
   // client/src/features/player/wire.ts
@@ -137,7 +169,7 @@
   }
 
   // client/src/features/player/playback-rating-badge.ts
-  var { JE, ApiClient } = playerHost();
+  var { JE, ApiClient, ctx } = playerHost();
   var lifetime = createPlayerLifetime(JE, "playback-rating-badge");
   var logPrefix = "🪼 Jellyfin Enhanced: Playback Rating Badge:";
   var BADGE_ID = "je-playback-rating-badge";
@@ -145,7 +177,7 @@
   var SHOW_MS = 5e3;
   var FADE_MS = 400;
   var MAX_LINE_ITEMS = 3;
-  var nowPlaying = JE.internals.nowPlaying;
+  var nowPlaying = ctx.own.nowPlaying;
   var infoCache = /* @__PURE__ */ new Map();
   var seriesCache = /* @__PURE__ */ new Map();
   var lastShownId = null;

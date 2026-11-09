@@ -4,7 +4,7 @@ import type { RequestOptions } from '../../core/api/types';
 import { decodeState, decodeMutation, decodePrefs, record } from './wire';
 import { own } from './ownership';
 import { spoilerHost } from './host';
-const { JE, internal } = spoilerHost();
+const { JE, internal, ctx } = spoilerHost();
 const owner = own(JE, 'state', false);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';
 
@@ -65,8 +65,8 @@ const owner = own(JE, 'state', false);
                 // If tag renderers already ran fail-closed while this request was
                 // in flight, give them one authoritative pass now.
                 try {
-                    JE.tagPipeline?.clearProcessed?.();
-                    JE.tagPipeline?.scheduleScan?.();
+                    ctx.peer('tagPipeline')?.clearProcessed?.();
+                    ctx.peer('tagPipeline')?.scheduleScan?.();
                 } catch (e) {
                     console.warn(`${logPrefix} post-load tag rescan failed:`, e);
                 }
@@ -81,8 +81,8 @@ const owner = own(JE, 'state', false);
                 // settled — failed, so ratings stay suppressed — give them
                 // their final pass too.
                 try {
-                    JE.tagPipeline?.clearProcessed?.();
-                    JE.tagPipeline?.scheduleScan?.();
+                    ctx.peer('tagPipeline')?.clearProcessed?.();
+                    ctx.peer('tagPipeline')?.scheduleScan?.();
                 } catch (e) {
                     console.warn(`${logPrefix} post-failure tag rescan failed:`, e);
                 }

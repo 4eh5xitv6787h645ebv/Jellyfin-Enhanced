@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/details-providers/host.ts
   function hostWindow() {
     return window;
@@ -28,6 +56,13 @@
   }
   function browserTranslator() {
     return hostWindow().Translator;
+  }
+  function detailsContext(JE2) {
+    const holder = JE2;
+    return featureContext("details-providers", JE2, {
+      internalSlots: ["features"],
+      internalsObject: () => holder.internals ?? (holder.internals = {})
+    });
   }
 
   // client/src/features/details-providers/wire.ts
@@ -347,6 +382,7 @@ ${content}` : content,
 
   // client/src/features/details-providers/reviews.ts
   var JE = bridge("Reviews");
+  var ctx = detailsContext(JE);
   var REVIEW_PREVIEW_LENGTH = 350;
   JE.initializeReviewsScript = function initializeReviewsScript() {
     const config = JE.pluginConfig;
@@ -372,7 +408,7 @@ ${content}` : content,
         if (mediaType !== "Series" && mediaType !== "Movie" && mediaType !== "Season" && mediaType !== "Episode") return false;
         if (!JE.pluginConfig.SpoilerBlurEnabled) return false;
         if (JE.pluginConfig.SpoilerStripReviews === false) return false;
-        const guard = JE.spoilerBlur;
+        const guard = ctx.peer("spoilerBlur");
         if (!guard) return false;
         if (typeof guard.whenLoaded === "function") await guard.whenLoaded();
         if (typeof guard.isLoadOk === "function" && !guard.isLoadOk()) {
@@ -981,7 +1017,8 @@ ${message}` : message);
       if (!current()) return;
       addReviewsToPage(externalReviews, userReviews, page, target, viewer);
       renderedOwners.set(page, lease);
-      if (typeof JE.invalidateUserReviewTagCache === "function") JE.invalidateUserReviewTagCache(target.tmdbKey);
+      const invalidateTags = ctx.peer("invalidateUserReviewTagCache");
+      if (typeof invalidateTags === "function") invalidateTags(target.tmdbKey);
     }
     async function refreshReviews(contextPage) {
       try {

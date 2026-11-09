@@ -4,9 +4,9 @@ import { validateSchema } from '../../contracts/validate';
 function isReceipt(value: unknown): value is SettingsSaveReceipt {
     return validateSchema(value, bootstrapSchema.$defs.SettingsSaveReceipt, bootstrapSchema.$defs);
 }
-import type { SettingsBridge, SettingsClient, SettingsDocument } from './host';
+import type { SettingsBridge, SettingsClient, SettingsContext, SettingsDocument } from './host';
 import { withInheritance } from './inheritance';
-export function installSave(JE: SettingsBridge, getClient: () => SettingsClient | undefined): void {
+export function installSave(JE: SettingsBridge, getClient: () => SettingsClient | undefined, ctx: SettingsContext): void {
 const _lastSavedJson: Record<string, string | null | undefined> = {};
 const acknowledgedSettings = new WeakMap<SettingsDocument, { json: string | null; revision: string; identity: string; origin: SettingsBridge['userConfig'] }>();
 const _saveChain: Record<string, Promise<void>> = {};
@@ -62,9 +62,10 @@ if (typeof document !== 'undefined') document.addEventListener('je:user-changed'
             const serialize = () => {
                 // Capture browser date context at this save's turn, after queued changes/rollbacks.
                 let source = settings;
-                if (fileName === 'settings.json' && isCurrentSettings && settings.statusTagsEnabled
-                    && typeof JE.getStatusDateContext === 'function') {
-                    const context = JE.getStatusDateContext();
+                const getStatusDateContext = fileName === 'settings.json' && isCurrentSettings && settings.statusTagsEnabled
+                    ? ctx.peer('getStatusDateContext') : undefined;
+                if (typeof getStatusDateContext === 'function') {
+                    const context = getStatusDateContext();
                     source = { ...settings, nativePosterDateLocale: context.locale, nativePosterTimeZone: context.timeZone };
                 }
                 // Convert data back to PascalCase for server C# deserialization

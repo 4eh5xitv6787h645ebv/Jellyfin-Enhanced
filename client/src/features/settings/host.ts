@@ -1,5 +1,5 @@
 import type { JsonValue } from '../../contracts/generated';
-import type { SaveOptions, SettingsDocument } from '../../host/context';
+import { featureContext, type FeatureContext, type SaveOptions, type SettingsDocument } from '../../host/context';
 // Declared in host/context.ts (the core settings service's types, frontend.md §2.3); re-exported for this feature.
 export type { SaveOptions, SettingsDocument };
 interface Shortcut { Name: string; Key: string }
@@ -12,7 +12,6 @@ export interface SettingsBridge {
     core?: { mediaLanguage?: { priorityList(value: unknown): string[] | null } };
     ratingSources?: { normalizeSources(value: unknown): string[] | null; settings(user: SettingsDocument, plugin?: SettingsDocument): { minimum: number; color: boolean } };
     toast?(message: string): void;
-    getStatusDateContext?(): { locale: string; timeZone: string };
     toPascalCase?(value: SettingsDocument): SettingsDocument;
     inheritedSettingKeys: readonly string[];
     isSettingInherited(settings: SettingsDocument, key: string): boolean;
@@ -32,8 +31,15 @@ export interface SettingsClient {
     serverId?: string | (() => string);
     ajax(request: { type: string; url: string; data?: string; contentType?: string; dataType?: string }): Promise<unknown>;
 }
-export function settingsHost(): Window & { JellyfinEnhanced: SettingsBridge; ApiClient?: SettingsClient } {
+/** settings converts no own slot: the settings service it installs (loadSettings, saveUserSettings, …) is the injected core bridge. */
+export type SettingsOwn = Record<never, never>;
+/** Other features' facades settings reads, read at call time (media-tags' status tags may load later or not at all). */
+export interface SettingsPeers { getStatusDateContext(): { locale: string; timeZone: string } }
+export type SettingsContext = FeatureContext<SettingsOwn, SettingsPeers, SettingsBridge>;
+export function settingsHost(): { JE: SettingsBridge; ctx: SettingsContext; apiClient(): SettingsClient | undefined } {
     const host: Window & { JellyfinEnhanced?: SettingsBridge; ApiClient?: SettingsClient } = window;
-    if (!host.JellyfinEnhanced) throw new Error('Settings require Jellyfin Enhanced');
-    return host as Window & { JellyfinEnhanced: SettingsBridge; ApiClient?: SettingsClient };
+    const JE = host.JellyfinEnhanced;
+    if (!JE) throw new Error('Settings require Jellyfin Enhanced');
+    const ctx: SettingsContext = featureContext<SettingsOwn, SettingsPeers, SettingsBridge>('settings', JE, {});
+    return { JE, ctx, apiClient: () => host.ApiClient };
 }

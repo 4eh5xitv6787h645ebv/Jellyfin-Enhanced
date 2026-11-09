@@ -1,7 +1,7 @@
 import { decodeSeerr } from './wire';
 import { own } from './ownership';
 import { spoilerHost } from './host';
-const { JE, internal } = spoilerHost();
+const { JE, internal, ctx } = spoilerHost();
 const owner = own(JE, 'seerr-toggle', true);
     const logPrefix = '🪼 Jellyfin Enhanced [SpoilerGuard]:';
 
@@ -104,7 +104,7 @@ const owner = own(JE, 'seerr-toggle', true);
                 // Reopened so the modal shows what the server now sends for this title, unless
                 // it has since been closed, replaced or left behind by a change of user.
                 if (changed && sameView()) {
-                    try { await JE.jellyseerrMoreInfo?.open?.(tmdbId, mediaType); }
+                    try { await ctx.peer('jellyseerrMoreInfo')?.open?.(tmdbId, mediaType); }
                     catch (error) { if (sameView()) console.warn(`${logPrefix} Seerr refresh failed:`, error); }
                 }
             })();

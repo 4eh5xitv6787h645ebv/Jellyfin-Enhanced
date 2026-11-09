@@ -2,7 +2,7 @@ import type { Dependencies, Group, List } from "./types";
 
 import { runtime } from './runtime';
 export function install(deps: Dependencies) {
-  const {JE, P, host, getApi} = deps;
+  const {JE, P, host, ctx, getApi} = deps;
   const life = runtime(deps);
   if(life.installed.has('render'))return;
   life.installed.add('render');
@@ -65,7 +65,8 @@ export function install(deps: Dependencies) {
       } else {
         // Apply client-side filtering only for Processing tab (exclude Partially Available)
         let filteredRequests = state.requests;
-        if (JE.hiddenContent) filteredRequests = JE.hiddenContent.filterRequestItems(filteredRequests);
+        const hiddenContent = ctx.peer('hiddenContent');
+        if (hiddenContent) filteredRequests = hiddenContent.filterRequestItems(filteredRequests);
         if (state.requestsFilter === "processing") {
           // Exclude "Partially Available" items from Processing tab
           filteredRequests = filteredRequests.filter(item => {
@@ -457,8 +458,9 @@ export function install(deps: Dependencies) {
         const tmdbId = viewIssueBtn.getAttribute('data-issue-tmdb-id');
         const mediaType = viewIssueBtn.getAttribute('data-issue-media-type');
         const title = viewIssueBtn.getAttribute('data-issue-title') || '';
-        if (tmdbId && mediaType && JE.jellyseerrIssueReporter?.showReportModal) {
-          JE.jellyseerrIssueReporter.showReportModal(tmdbId, title, mediaType, null, null);
+        const issueReporter = ctx.peer('jellyseerrIssueReporter');
+        if (tmdbId && mediaType && issueReporter?.showReportModal) {
+          issueReporter.showReportModal(tmdbId, title, mediaType, null, null);
         }
         return;
       }

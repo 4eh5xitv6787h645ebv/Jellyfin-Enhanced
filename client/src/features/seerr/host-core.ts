@@ -1,4 +1,5 @@
 import type { SeerrApiFacade, SeerrModalFacade, SeerrStatusFacade, SeerrUiFacade, SeerrUiInternals } from './core/contract';
+import { featureContext, type FeatureContext } from '../../host/context';
 
 /**
  * The narrow legacy-global boundary of the Seerr core group. Each member is
@@ -118,7 +119,6 @@ export interface SeerrCoreBridge {
     core?: { api?: SeerrCoreApi; ui?: SeerrCoreUi };
     cdn?: { url?(host: string, path: string): string; selfhst?(path: string): string };
     helpers?: SeerrHelpers;
-    hiddenContent?: SeerrHiddenContent;
     seamlessScroll?: SeerrSeamlessScroll;
     discoveryFilter?: SeerrDiscoveryFilter;
     jellyseerrMoreInfo?: SeerrMoreInfo;
@@ -155,6 +155,27 @@ export interface SeerrCoreHost {
     document: Document;
     /** The live ApiClient, read at call time (the host can replace it on sign-in). */
     apiClient(): SeerrApiClient | undefined;
+    /** `window.JellyfinEnhanced`, read at call time. */
+    liveBridge(): SeerrCoreBridge | undefined;
+}
+
+/** The core group's own `JE.internals` slot (frontend.md §2.3). Its `JE.<name>` facades stay on the typed bridge. */
+export type SeerrCoreOwn = { jellyseerrUi?: SeerrUiInternals };
+/** Other features' facades the core group reads (published by their owners; optional, they may load later). */
+export interface SeerrCorePeers { hiddenContent: SeerrHiddenContent }
+export type SeerrCoreContext = FeatureContext<SeerrCoreOwn, SeerrCorePeers, SeerrCoreBridge>;
+const coreContexts = new WeakMap<SeerrCoreBridge, SeerrCoreContext>();
+/** The feature context around a core-group bridge, one per bridge object. */
+export function seerrCoreContext(JE: SeerrCoreBridge): SeerrCoreContext {
+    let ctx = coreContexts.get(JE);
+    if (!ctx) {
+        ctx = featureContext<SeerrCoreOwn, SeerrCorePeers, SeerrCoreBridge>('seerr', JE, {
+            internalSlots: ['jellyseerrUi'],
+            internalsObject: () => JE.internals ||= {},
+        });
+        coreContexts.set(JE, ctx);
+    }
+    return ctx;
 }
 
 /** The only access to the legacy global: no assertion, the bridge is structurally optional. */
@@ -162,5 +183,5 @@ export function seerrCoreHost(): SeerrCoreHost {
     const host: SeerrWindow = window;
     const JE = host.JellyfinEnhanced;
     if (!JE) throw new Error('Jellyfin Enhanced must be initialized before the Seerr core group');
-    return { JE, window: host, document, apiClient: () => host.ApiClient };
+    return { JE, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
 }

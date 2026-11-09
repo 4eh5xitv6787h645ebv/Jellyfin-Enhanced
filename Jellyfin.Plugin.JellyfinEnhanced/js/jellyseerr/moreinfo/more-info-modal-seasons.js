@@ -1,6 +1,34 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/seerr/host-details.ts
   function bridge() {
     const host = window;
@@ -12,9 +40,21 @@
     if (!host.ApiClient) throw new Error("Jellyfin ApiClient unavailable");
     return host.ApiClient;
   }
+  var detailsContexts = /* @__PURE__ */ new WeakMap();
+  function seerrDetailsContext(JE2) {
+    let ctx = detailsContexts.get(JE2);
+    if (!ctx) {
+      ctx = featureContext("seerr", JE2, {
+        internalSlots: ["moreInfoModal"],
+        internalsObject: () => JE2.internals ?? (JE2.internals = {})
+      });
+      detailsContexts.set(JE2, ctx);
+    }
+    return ctx;
+  }
   function moreInfoRegistry(JE2) {
-    const internals = JE2.internals ?? (JE2.internals = {});
-    return internals.moreInfoModal ?? (internals.moreInfoModal = { state: { currentModal: null } });
+    const own = seerrDetailsContext(JE2).own;
+    return own.moreInfoModal ?? (own.moreInfoModal = { state: { currentModal: null } });
   }
   function translator(JE2) {
     return (key, fallback = "", params) => {

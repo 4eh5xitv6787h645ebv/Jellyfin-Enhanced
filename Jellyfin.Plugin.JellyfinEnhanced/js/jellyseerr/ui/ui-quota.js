@@ -1,12 +1,52 @@
 (() => {
 "use strict";
 (() => {
+  // client/src/host/context.ts
+  function featureContext(feature, core, slots) {
+    const own = {};
+    const bind = (keys, target) => {
+      for (const key of keys) {
+        Object.defineProperty(own, key, {
+          enumerable: true,
+          get: () => target()[key],
+          set: (value) => {
+            target()[key] = value;
+          }
+        });
+      }
+    };
+    bind(slots.facades ?? [], () => core);
+    const internalsObject = slots.internalsObject;
+    if (slots.internalSlots?.length) {
+      if (!internalsObject) throw new Error(`${feature}: internal slots need the host's internalsObject accessor`);
+      bind(slots.internalSlots, internalsObject);
+    }
+    return {
+      feature,
+      core,
+      own,
+      peer: (name) => core[name]
+    };
+  }
+
   // client/src/features/seerr/host-core.ts
+  var coreContexts = /* @__PURE__ */ new WeakMap();
+  function seerrCoreContext(JE) {
+    let ctx = coreContexts.get(JE);
+    if (!ctx) {
+      ctx = featureContext("seerr", JE, {
+        internalSlots: ["jellyseerrUi"],
+        internalsObject: () => JE.internals || (JE.internals = {})
+      });
+      coreContexts.set(JE, ctx);
+    }
+    return ctx;
+  }
   function seerrCoreHost() {
     const host = window;
     const JE = host.JellyfinEnhanced;
     if (!JE) throw new Error("Jellyfin Enhanced must be initialized before the Seerr core group");
-    return { JE, window: host, document, apiClient: () => host.ApiClient };
+    return { JE, window: host, document, apiClient: () => host.ApiClient, liveBridge: () => host.JellyfinEnhanced };
   }
 
   // client/src/features/seerr/core/decode.ts
@@ -247,8 +287,8 @@
   // client/src/features/seerr/core/runtime.ts
   var LOG_UI = "🪼 Jellyfin Enhanced: Seerr UI:";
   function groupInternals(JE) {
-    const internals = JE.internals || (JE.internals = {});
-    return internals.jellyseerrUi || (internals.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
+    const own = seerrCoreContext(JE).own;
+    return own.jellyseerrUi || (own.jellyseerrUi = { state: { jellyseerrHoverPopover: null, jellyseerrHoverLock: false, active4KPopup: null } });
   }
   function firstInstall(JE, name) {
     const internals = groupInternals(JE);

@@ -2,7 +2,7 @@ import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment } from './wire';
 import type { AutoSkipDependencies, ResolverOptions, SkipEngine } from './host';
 import { createPlayerLifetime } from './lifetime';
-const { JE, ApiClient } = playerHost();
+const { JE, ApiClient, ctx } = playerHost();
 const lifetime = createPlayerLifetime(JE, 'auto-skip');
 import { TICKS_PER_SECOND, MIN_SEGMENT_TICKS, parseTranscodeOffsetTicksFromSrc, createSessionItemResolver, createAutoSkipEngine } from './auto-skip-engine';
     // ── DOM glue ─────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ import { TICKS_PER_SECOND, MIN_SEGMENT_TICKS, parseTranscodeOffsetTicksFromSrc, 
                 fetchSegments: fetchMediaSegments,
                 resolveItemId: createSessionItemResolver({
                     parseFromSrc: parseItemIdFromVideosSrc,
-                    fallbackId: () => JE.internals?.player?.getCurrentVideoItemId?.() || null,
+                    fallbackId: () => ctx.own.player?.getCurrentVideoItemId?.() || null,
                     probeNowPlayingId: () => probeNowPlayingItemId(userId)
                 }),
                 onSkipped: autoSkipToast,
@@ -162,7 +162,7 @@ import { TICKS_PER_SECOND, MIN_SEGMENT_TICKS, parseTranscodeOffsetTicksFromSrc, 
         // Signed out (or mid sign-in): every segment fetch would 401. Wait for a
         // later tick rather than attaching an engine that can only warn-spam.
         if (!currentUserId()) return;
-        const video = JE.internals?.player?.getVideo?.();
+        const video = ctx.own.player?.getVideo?.();
         if (!video) return; // catch it on a later tick once the element mounts
         autoSkipEngine().attach(video);
     };
@@ -173,8 +173,7 @@ import { TICKS_PER_SECOND, MIN_SEGMENT_TICKS, parseTranscodeOffsetTicksFromSrc, 
     };
 
     // Exposed for unit tests and for other modules that need the primitives.
-    JE.internals = JE.internals || {};
-    JE.internals.autoSkip = {
+    ctx.own.autoSkip = {
         TICKS_PER_SECOND,
         MIN_SEGMENT_TICKS,
         createAutoSkipEngine,

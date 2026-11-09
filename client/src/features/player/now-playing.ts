@@ -1,7 +1,7 @@
 import { playerHost } from './host';
 import { decodeItem, decodeItems, decodeSessions, decodeSegments, type Item, type Stream, type PlayingSession, type MediaSegment } from './wire';
 import { createPlayerLifetime } from './lifetime';
-const { JE, ApiClient } = playerHost();
+const { JE, ApiClient, ctx } = playerHost();
 const lifetime = createPlayerLifetime(JE, 'now-playing');
 const logPrefix = '🪼 Jellyfin Enhanced: Now Playing:';
   const DURATION_TOLERANCE_SECONDS = 2;
@@ -19,7 +19,7 @@ const logPrefix = '🪼 Jellyfin Enhanced: Now Playing:';
   }
 
   function itemIdFromRoute() {
-    return normalizeId(JE.internals?.player?.getCurrentVideoItemId?.());
+    return normalizeId(ctx.own.player?.getCurrentVideoItemId?.());
   }
 
   /** Item the server reports for this device; null unless one session matches and its runtime fits the video. */
@@ -55,5 +55,4 @@ const logPrefix = '🪼 Jellyfin Enhanced: Now Playing:';
     return itemIdFromSource(video) || itemIdFromRoute() || await itemIdFromSession(video);
   }
 
-  JE.internals = JE.internals || {};
-  JE.internals.nowPlaying = { normalizeId, itemIdFromSource, itemIdFromRoute, itemIdFromSession, resolveItemId };
+  ctx.own.nowPlaying = { normalizeId, itemIdFromSource, itemIdFromRoute, itemIdFromSession, resolveItemId };

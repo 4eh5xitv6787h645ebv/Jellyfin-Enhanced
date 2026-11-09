@@ -1,5 +1,5 @@
 /** TMDB, AniList and Jellyfin Enhanced user reviews on item details pages. */
-import { api, bridge, browserTranslator, currentUserId, dashboard } from './host';
+import { api, bridge, browserTranslator, currentUserId, dashboard, detailsContext } from './host';
 import type { ReviewsBridge } from './host';
 import { detailsLease, hashItemId, lookupDetailsItem, visibleDetailPage } from './page';
 import { pathSegment } from './links';
@@ -11,7 +11,7 @@ import {
 } from './review-domain';
 import type { ExternalReview, UserReview } from './review-domain';
 
-const JE = bridge<ReviewsBridge>('Reviews');
+const JE = bridge<ReviewsBridge>('Reviews'), ctx = detailsContext(JE);
 type ApiMediaType = 'movie' | 'tv';
 interface ReviewTarget { tmdbKey: string; apiMediaType: ApiMediaType }
 interface Viewer { id: string; isAdmin: boolean }
@@ -48,7 +48,7 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
             if (!JE.pluginConfig.SpoilerBlurEnabled) return false;
             // Default-on when the field is missing (older plugin XML).
             if (JE.pluginConfig.SpoilerStripReviews === false) return false;
-            const guard = JE.spoilerBlur;
+            const guard = ctx.peer('spoilerBlur');
             if (!guard) return false;
             if (typeof guard.whenLoaded === 'function') await guard.whenLoaded();
             if (typeof guard.isLoadOk === 'function' && !guard.isLoadOk()) {
@@ -750,7 +750,7 @@ JE.initializeReviewsScript = function initializeReviewsScript() {
         addReviewsToPage(externalReviews, userReviews, page, target, viewer);
         renderedOwners.set(page, lease);
         // Bust the poster tag cache for this item so the overlay updates
-        if (typeof JE.invalidateUserReviewTagCache === 'function') JE.invalidateUserReviewTagCache(target.tmdbKey);
+        const invalidateTags = ctx.peer('invalidateUserReviewTagCache'); if (typeof invalidateTags === 'function') invalidateTags(target.tmdbKey);
     }
 
     /** Re-fetches and re-renders after a mutation (series looked up directly, as before). */

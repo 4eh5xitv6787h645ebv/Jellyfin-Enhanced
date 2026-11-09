@@ -2,7 +2,7 @@ import type { Dependencies } from "./types";
 
 import { runtime } from './runtime';
 export function install(deps: Dependencies) {
-  const {JE, P, host, getApi} = deps;
+  const {JE, P, host, ctx, getApi} = deps;
   const life = runtime(deps);
   if(life.installed.has('init'))return;
   life.installed.add('init');
@@ -474,7 +474,7 @@ export function install(deps: Dependencies) {
   }
 
   // Export to JE namespace
-  JE.downloadsPage = {
+  ctx.own.downloadsPage = {
     initialize,
     showPage,
     hidePage,
@@ -497,6 +497,6 @@ export function install(deps: Dependencies) {
     _state: state
   };
 
-  JE.initializeDownloadsPage = initialize;
+  ctx.own.initializeDownloadsPage = initialize;
 
 }
