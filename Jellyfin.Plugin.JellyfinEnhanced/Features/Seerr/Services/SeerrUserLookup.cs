@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
 using static Jellyfin.Plugin.JellyfinEnhanced.Services.SeerrCaches;
 
@@ -63,7 +63,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
             // _logger.Info($"Attempting to find Seerr user for Jellyfin User ID: {jellyfinUserId}");
             var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             httpClient.Timeout = TimeSpan.FromSeconds(15);
 
             foreach (var url in urls)
@@ -72,10 +72,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 var requestUri = $"{trimmedUrl.TrimEnd('/')}/api/v1/user?take=1000"; // Fetch all users to find a match
                 try
                 {
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, config.JellyseerrApiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (json, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (json, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error != null)
                     {
@@ -172,11 +172,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     var importUri = $"{url.Trim().TrimEnd('/')}/api/v1/user/import-from-jellyfin";
                     var requestBody = JsonSerializer.Serialize(new { jellyfinUserIds = new[] { normalizedUserId } });
 
-                    using var importRequest = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var importRequest = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Post, importUri, apiKey, bodyJson: requestBody);
                     using var importResponse = await httpClient.SendAsync(importRequest);
                     reachedJellyseerr = true;
-                    var (importJson, importError) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(importResponse, importUri);
+                    var (importJson, importError) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(importResponse, importUri);
 
                     if (importError != null)
                     {
@@ -207,10 +207,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     // but wasn't in the import response). Fall back to a full user list query to find them.
                     _logger.Info($"Import succeeded at {url.Trim()} but user not in response. Doing fresh lookup...");
                     var lookupUri = $"{url.Trim().TrimEnd('/')}/api/v1/user?take=1000";
-                    using var lookupRequest = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var lookupRequest = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, lookupUri, apiKey);
                     using var lookupResponse = await httpClient.SendAsync(lookupRequest);
-                    var (lookupJson, lookupError) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(lookupResponse, lookupUri);
+                    var (lookupJson, lookupError) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(lookupResponse, lookupUri);
                     if (lookupError == null && lookupJson != null)
                     {
                         var lookupRoot = JsonSerializer.Deserialize<JsonElement>(lookupJson);

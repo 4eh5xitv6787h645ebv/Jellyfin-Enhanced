@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
 {

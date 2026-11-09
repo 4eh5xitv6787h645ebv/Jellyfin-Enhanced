@@ -1110,7 +1110,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
             if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { reachable = false, service = "unknown" });
 
-            var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var http = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             http.Timeout = TimeSpan.FromSeconds(5);
             var cleanUrl = url.TrimEnd('/');
 

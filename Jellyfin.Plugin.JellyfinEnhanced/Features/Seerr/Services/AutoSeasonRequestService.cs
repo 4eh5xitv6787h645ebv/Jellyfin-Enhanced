@@ -98,17 +98,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             async Task<string?> FetchAsync()
             {
                 var urls = GetConfiguredUrls(config.JellyseerrUrls);
-                var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
                 foreach (var url in urls)
                 {
                     try
                     {
                         var requestUrl = $"{url}/api/v1/tv/{tmdbId}";
-                        using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                        using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                             HttpMethod.Get, requestUrl, config.JellyseerrApiKey);
                         using var response = await httpClient.SendAsync(request);
-                        var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUrl);
+                        var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUrl);
                         if (error != null)
                         {
                             _logger.Debug($"[Auto-Season-Request] Series details fetch for TMDB {tmdbId} failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
@@ -437,7 +437,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             try
             {
                 var urls = GetConfiguredUrls(config.JellyseerrUrls);
-                var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
                 string? content = null;
                 foreach (var url in urls)
@@ -445,10 +445,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     try
                     {
                         var requestUrl = $"{url}/api/v1/tv/{tmdbId}";
-                        using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                        using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                             HttpMethod.Get, requestUrl, config.JellyseerrApiKey);
                         using var response = await httpClient.SendAsync(request);
-                        var (body, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUrl);
+                        var (body, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUrl);
                         if (error != null)
                         {
                             _logger.Debug($"[Auto-Season-Request] Status check for TMDB {tmdbId} failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
@@ -597,7 +597,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
 
             var urls = GetConfiguredUrls(config.JellyseerrUrls);
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
             foreach (var url in urls)
             {
@@ -614,10 +614,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 
                     var jsonContent = JsonSerializer.Serialize(requestBody);
 
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Post, requestUri, config.JellyseerrApiKey, jellyseerrUserId, jsonContent);
                     using var response = await httpClient.SendAsync(request);
-                    var (_, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (_, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error == null)
                     {
@@ -655,17 +655,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             }
 
             var urls = GetConfiguredUrls(config.JellyseerrUrls);
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
             foreach (var url in urls)
             {
                 try
                 {
                     var requestUri = $"{url.Trim().TrimEnd('/')}/api/v1/user?take=1000";
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, config.JellyseerrApiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error == null && content != null)
                     {

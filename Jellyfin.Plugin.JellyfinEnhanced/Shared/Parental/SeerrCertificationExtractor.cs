@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental
 {
     /// <summary>
     /// Extracts the content-rating certification from a Seerr movie/TV detail

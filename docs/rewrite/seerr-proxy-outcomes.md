@@ -18,7 +18,7 @@ A failed write returns the existing failure envelope with one more property:
 | `rejected` | Seerr answered with its own JSON 4xx (other than 408): quota, permission, duplicate (409), validation, rate limit, API key (401/403). | Definite failure. |
 | `not_sent` | JE refused or failed the write before any byte reached a Seerr URL. | Definite failure; retrying is safe. |
 
-- The property name is lowercase `requestOutcome` under every host serializer (default, PascalCase, CamelCase profile); the value is exactly one of the three strings. The typed contract is `Features/Seerr/Services/SeerrRequestOutcome.cs`: `SeerrRequestOutcome` (enum, pinned wire names), `SeerrRequestOutcomes.PropertyName`, and `SeerrProxyErrorResponse` (the envelope).
+- The property name is lowercase `requestOutcome` under every host serializer (default, PascalCase, CamelCase profile); the value is exactly one of the three strings. The typed contract is `Shared/Seerr/SeerrRequestOutcome.cs`: `SeerrRequestOutcome` (enum, pinned wire names), `SeerrRequestOutcomes.PropertyName`, and `SeerrProxyErrorResponse` (the envelope).
 - Successful writes are unchanged: Seerr's JSON body is returned as-is (`ContentResult`, `application/json`) with no envelope.
 - Reads never carry `requestOutcome`; their envelopes are byte-for-byte what they were.
 - `code`, `message`, `error`, `httpStatus` and the HTTP status keep their existing values. Non-admins get the sanitized message only; Jellyfin administrators also get the technical message, `url` and `cfRay`, as before.

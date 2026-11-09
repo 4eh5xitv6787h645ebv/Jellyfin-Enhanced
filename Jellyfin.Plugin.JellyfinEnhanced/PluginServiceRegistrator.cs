@@ -21,6 +21,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced
 {
@@ -50,7 +52,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // silently followed and producing a 200 + login HTML body.
             // SeerrHttpHelper.UseClientName(name) selects this for outbound
             // Seerr/TMDB calls.
-            serviceCollection.AddHttpClient(Helpers.Jellyseerr.SeerrHttpHelper.NamedClient)
+            serviceCollection.AddHttpClient(Shared.Seerr.SeerrHttpHelper.NamedClient)
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
                 {
                     AllowAutoRedirect = false,

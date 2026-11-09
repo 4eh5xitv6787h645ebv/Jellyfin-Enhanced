@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
 {
     /// <summary>
     /// What the Seerr proxy knows about a failed write (POST) it was asked to forward.

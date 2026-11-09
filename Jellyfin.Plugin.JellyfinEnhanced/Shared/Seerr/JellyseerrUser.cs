@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr {
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr {
     public class JellyseerrUser
     {
         [JsonPropertyName("id")]

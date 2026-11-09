@@ -1,4 +1,4 @@
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental
 {
     /// <summary>
     /// Pure, side-effect-free port of the rating branches of Jellyfin's parental

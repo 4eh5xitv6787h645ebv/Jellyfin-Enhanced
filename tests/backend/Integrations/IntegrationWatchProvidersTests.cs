@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
 namespace JE.Tests;
 

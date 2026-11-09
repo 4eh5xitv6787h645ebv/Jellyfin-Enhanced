@@ -168,7 +168,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                     return;
                 }
 
-                var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
                 // Fetch all requests at once (no X-Api-User header = all requests)
                 var allRequests = await GetAllJellyseerrRequests(httpClient, jellyseerrUrl, config.JellyseerrApiKey);
@@ -277,10 +277,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 {
                     var requestUri = $"{cacheKey}/api/v1/request?take=1000&skip=0&sort=added&filter=all";
 
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, apiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
                     if (error != null)
                     {
                         _logger.Warning($"[Watchlist] Failed to fetch requests from Jellyseerr: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");

@@ -257,7 +257,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin
             if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { ok = false, message = "Invalid URL" });
 
-            var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var http = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             http.DefaultRequestHeaders.Clear();
             http.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
             http.Timeout = TimeSpan.FromSeconds(10);

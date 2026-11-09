@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental
 {
     /// <summary>
     /// Port of the TAG branch of Jellyfin's <c>BaseItem.IsParentalAllowed</c>

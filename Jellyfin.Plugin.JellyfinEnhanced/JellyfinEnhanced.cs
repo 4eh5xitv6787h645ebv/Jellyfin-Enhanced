@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
             // Set the User-Agent used by every Seerr/TMDB outbound HTTP call.
             // Cloudflare's Browser Integrity Check / Bot Fight Mode flags
-            // empty UA as bot �            Helpers.Jellyseerr.SeerrHttpHelper.UserAgent = $"JellyfinEnhanced/{Version}";
+            // empty UA as bot �            Shared.Seerr.SeerrHttpHelper.UserAgent = $"JellyfinEnhanced/{Version}";
             CleanupOldScript();
             CheckPluginPages(applicationPaths, serverConfigurationManager, 1);
             BackfillMissingDefaultShortcuts();

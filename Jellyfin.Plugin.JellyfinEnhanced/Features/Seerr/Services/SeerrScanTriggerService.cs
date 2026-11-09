@@ -169,13 +169,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
             var endpoint = $"{url.TrimEnd('/')}/api/v1/settings/jobs/{ScanJobId}/run";
             try
             {
-                var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var http = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
                 http.Timeout = TimeSpan.FromSeconds(15);
-                using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Post, endpoint, apiKey, bodyJson: "{}");
 
                 using var response = await http.SendAsync(request).ConfigureAwait(false);
-                var (json, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, endpoint).ConfigureAwait(false);
+                var (json, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, endpoint).ConfigureAwait(false);
                 return new DispatchResult
                 {
                     Url = url,

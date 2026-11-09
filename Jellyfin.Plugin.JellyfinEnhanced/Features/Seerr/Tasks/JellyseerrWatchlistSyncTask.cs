@@ -127,7 +127,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 return null;
             }
 
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
             // Use the first configured URL that answers, as the Seerr proxy and the
             // auto-request services do (WatchlistMonitor and the Jellyfin→Seerr sync
@@ -328,10 +328,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 while (true)
                 {
                     var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user?take={pageSize}&skip={skip}";
-                    using var request = Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, apiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error != null)
                     {
@@ -395,10 +395,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             try
             {
                 var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user/{jellyseerrUserId}/watchlist";
-                using var request = Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Get, requestUri, apiKey, jellyseerrUserId);
                 using var response = await httpClient.SendAsync(request);
-                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                 if (error == null && content != null)
                 {
@@ -451,10 +451,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             try
             {
                 var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/request?take=500&skip=0&sort=added&filter=all";
-                using var request = Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Get, requestUri, apiKey, jellyseerrUserId);
                 using var response = await httpClient.SendAsync(request);
-                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                 if (error != null)
                 {

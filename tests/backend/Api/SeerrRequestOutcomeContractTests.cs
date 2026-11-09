@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 using System.Text.Json;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 
 namespace JE.Tests;
 

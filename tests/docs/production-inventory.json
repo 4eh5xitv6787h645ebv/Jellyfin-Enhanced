@@ -690,14 +690,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Models/JellyseerrPermission.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Models/JellyseerrUser.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/AutoMovieRequestMonitor.cs",
       "category": "Features"
     },
@@ -714,10 +706,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/JellyseerrPermissionHelper.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/JellyseerrUserImportHelper.cs",
       "category": "Features"
     },
@@ -726,19 +714,7 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/ParentalRatingDecision.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/ParentalTagDecision.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCaches.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrCertificationExtractor.cs",
       "category": "Features"
     },
     {
@@ -746,23 +722,7 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrHttpHelper.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrParentalFilter.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrRequestOutcome.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrScanTriggerService.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/SeerrTagSignatureExtractor.cs",
       "category": "Features"
     },
     {
@@ -775,10 +735,6 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/TmdbResponseCache.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/WatchProvidersBatch.cs",
       "category": "Features"
     },
     {
@@ -1034,11 +990,51 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Parental/ParentalRatingDecision.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Parental/ParentalTagDecision.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Parental/SeerrCertificationExtractor.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Parental/SeerrParentalFilter.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Parental/SeerrTagSignatureExtractor.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Reviews/ReviewVisibility.cs",
       "category": "Shared"
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Reviews/ReviewVisibilityContext.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/JellyseerrPermission.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/JellyseerrPermissionHelper.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/JellyseerrUser.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/SeerrHttpHelper.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Seerr/SeerrRequestOutcome.cs",
       "category": "Shared"
     },
     {
@@ -1071,6 +1067,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Text/PluralRules.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Tmdb/WatchProvidersBatch.cs",
       "category": "Shared"
     },
     {

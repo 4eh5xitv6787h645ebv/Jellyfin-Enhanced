@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb
 {
     /// <summary>
     /// Parsing and shaping for the batched watch-providers endpoint used by Seerr

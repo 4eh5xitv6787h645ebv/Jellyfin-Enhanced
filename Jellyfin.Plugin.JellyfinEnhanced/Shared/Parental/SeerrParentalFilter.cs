@@ -11,12 +11,12 @@ using System.Threading.Tasks;
 using Jellyfin.Data;
 using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental
 {
     /// <summary>
     /// Enforces each Jellyfin user's parental-rating limit on the Seerr surfaces

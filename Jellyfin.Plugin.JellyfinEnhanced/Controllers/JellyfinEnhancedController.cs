@@ -32,7 +32,7 @@ using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model;
@@ -61,7 +61,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
     public class JellyfinEnhancedController : JeControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly Services.SeerrParentalFilter _parentalFilter;
+        private readonly Shared.Parental.SeerrParentalFilter _parentalFilter;
         private readonly Shared.SpoilerGuard.SpoilerSeerrRedactor _spoilerSeerrRedactor;
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
@@ -136,7 +136,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             Features.DetailsProviders.Services.ReviewTranslationService reviewTranslationService,
             Features.DetailsProviders.Services.MdblistService mdblistService,
             Features.DetailsProviders.Services.DoesTheDogDieService doesTheDogDieService,
-            Services.SeerrParentalFilter parentalFilter,
+            Shared.Parental.SeerrParentalFilter parentalFilter,
             Shared.SpoilerGuard.SpoilerSeerrRedactor spoilerSeerrRedactor,
             Features.Admin.Services.WhatsNewService whatsNewService,
             Services.UsageEventCounterService usageEventCounterService,
@@ -412,14 +412,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // been applied (docs/rewrite/seerr-proxy-outcomes.md), and once one has been
             // handed to the network it is never retried or failed over to another URL.
             var isWrite = method != HttpMethod.Get;
-            Helpers.Jellyseerr.SeerrRequestOutcome? notSent = isWrite ? Helpers.Jellyseerr.SeerrRequestOutcome.NotSent : null;
+            Shared.Seerr.SeerrRequestOutcome? notSent = isWrite ? Shared.Seerr.SeerrRequestOutcome.NotSent : null;
 
             var config = JellyfinEnhanced.Instance?.Configuration;
             if (config == null || !config.JellyseerrEnabled || string.IsNullOrEmpty(config.JellyseerrUrls) || string.IsNullOrEmpty(config.JellyseerrApiKey))
             {
                 _logger.Warning("Seerr integration is not configured or enabled.");
                 return isWrite
-                    ? StatusCode(503, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("not_configured", "Seerr integration is not configured or enabled.", notSent))
+                    ? StatusCode(503, Shared.Seerr.SeerrProxyErrorResponse.Create("not_configured", "Seerr integration is not configured or enabled.", notSent))
                     : StatusCode(503, "Seerr integration is not configured or enabled.");
             }
 
@@ -457,13 +457,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var unreachableMsg = IsAdminUser()
                         ? "Can't reach Seerr. Check the JE log for cf-ray / Content-Type / status details."
                         : "Can't reach Seerr right now. Please try again in a moment.";
-                    return StatusCode(502, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", unreachableMsg, notSent));
+                    return StatusCode(502, Shared.Seerr.SeerrProxyErrorResponse.Create("unreachable", unreachableMsg, notSent));
                 }
                 if (Services.SeerrUserLookup.IsJellyseerrImportBlocked(jellyfinUserId, JellyfinEnhanced.Instance?.Configuration ?? new Configuration.PluginConfiguration()))
                 {
-                    return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("blocked", "Your administrator has disabled Seerr for your account.", notSent));
+                    return StatusCode(403, Shared.Seerr.SeerrProxyErrorResponse.Create("blocked", "Your administrator has disabled Seerr for your account.", notSent));
                 }
-                return NotFound(Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unlinked", "Current Jellyfin user is not linked to a Jellyseerr user.", notSent));
+                return NotFound(Shared.Seerr.SeerrProxyErrorResponse.Create("unlinked", "Current Jellyfin user is not linked to a Jellyseerr user.", notSent));
             }
 
             // Enforce Seerr permissions for write operations and sensitive reads.
@@ -486,7 +486,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         {
                             if (!JellyseerrPermissionHelper.HasAnyPermission(perms,
                                 JellyseerrPermission.REQUEST | JellyseerrPermission.REQUEST_MOVIE | JellyseerrPermission.REQUEST_TV))
-                                return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("no_request_permission", "You do not have permission to make requests in Seerr.", notSent, error: false));
+                                return StatusCode(403, Shared.Seerr.SeerrProxyErrorResponse.Create("no_request_permission", "You do not have permission to make requests in Seerr.", notSent, error: false));
 
                             if (content != null && !JellyseerrPermissionHelper.HasAnyPermission(perms, AdvancedRequestPermissions))
                                 content = StripAdvancedRequestOptions(content);
@@ -497,7 +497,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                         {
                             if (!JellyseerrPermissionHelper.HasAnyPermission(perms,
                                 JellyseerrPermission.CREATE_ISSUES | JellyseerrPermission.MANAGE_ISSUES))
-                                return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("no_issue_permission", "You do not have permission to report issues in Seerr.", notSent, error: false));
+                                return StatusCode(403, Shared.Seerr.SeerrProxyErrorResponse.Create("no_issue_permission", "You do not have permission to report issues in Seerr.", notSent, error: false));
                         }
 
                         // GET /api/v1/issue — view issues list (any of: ?query, exact, /id)
@@ -547,7 +547,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 && content != null
                 && await IsRequestBodyParentalBlockedAsync(content, jellyfinUserId))
             {
-                return StatusCode(403, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("parental_block", "This title is above your parental rating limit.", notSent));
+                return StatusCode(403, Shared.Seerr.SeerrProxyErrorResponse.Create("parental_block", "This title is above your parental rating limit.", notSent));
             }
 
             if (isCacheable)
@@ -568,7 +568,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             httpClient.Timeout = TimeSpan.FromSeconds(15);
 
             int lastStatusCode = 502;
@@ -577,7 +577,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             // anything sent returns from inside the loop.
             if (isWrite)
             {
-                lastErrorBody = Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", "Can't reach Seerr right now. Please try again in a moment.", notSent);
+                lastErrorBody = Shared.Seerr.SeerrProxyErrorResponse.Create("unreachable", "Can't reach Seerr right now. Please try again in a moment.", notSent);
             }
 
             foreach (var url in urls)
@@ -614,7 +614,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 try
                 {
                     string? json = null;
-                    Helpers.Jellyseerr.SeerrError? error = null;
+                    Shared.Seerr.SeerrError? error = null;
                     var upstreamStatus = 0;
                     // Seerr answers 5xx when its own TMDB call fails, which happens in
                     // bursts (a cold page fires several TMDB calls at once) and clears
@@ -623,17 +623,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var attempts = method == HttpMethod.Get ? 3 : 1;
                     for (var attempt = 1; attempt <= attempts; attempt++)
                     {
-                        using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                        using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                             method, requestUri, config.JellyseerrApiKey, jellyseerrUserId, content);
                         if (content != null && attempt == 1) _logger.Debug($"Request body: {content}");
 
                         writeDispatched = isWrite;
                         using var response = await httpClient.SendAsync(request, ct);
                         upstreamStatus = (int)response.StatusCode;
-                        (json, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri, ct);
+                        (json, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri, ct);
                         var transient = error != null && error.HttpStatus >= 500 && error.HttpStatus <= 599
-                            && error.Code != Helpers.Jellyseerr.SeerrErrorCode.HtmlResponse
-                            && error.Code != Helpers.Jellyseerr.SeerrErrorCode.Cloudflare5xx;
+                            && error.Code != Shared.Seerr.SeerrErrorCode.HtmlResponse
+                            && error.Code != Shared.Seerr.SeerrErrorCode.Cloudflare5xx;
                         if (!transient || attempt == attempts) break;
                         _logger.Debug($"Seerr returned {error!.HttpStatus} for {apiPath}; retrying ({attempt}/{attempts - 1})");
                         await Task.Delay(TimeSpan.FromMilliseconds(400 * attempt), ct);
@@ -641,11 +641,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
 
                     // A 2xx that is not a complete JSON document cannot confirm the write
                     // (truncated, empty or garbled), so it is reported as unknown below.
-                    if (isWrite && error == null && json != null && !Helpers.Jellyseerr.SeerrRequestOutcomes.IsUsableWriteResponse(json))
+                    if (isWrite && error == null && json != null && !Shared.Seerr.SeerrRequestOutcomes.IsUsableWriteResponse(json))
                     {
-                        error = new Helpers.Jellyseerr.SeerrError
+                        error = new Shared.Seerr.SeerrError
                         {
-                            Code = Helpers.Jellyseerr.SeerrErrorCode.ParseError,
+                            Code = Shared.Seerr.SeerrErrorCode.ParseError,
                             HttpStatus = upstreamStatus,
                             Url = requestUri,
                             Message = $"Seerr answered {upstreamStatus} from {requestUri} with a body that is not valid JSON; the write may have been applied.",
@@ -699,12 +699,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     // banner instead of "discovery silently disappeared".
                     lastStatusCode = error.Code switch
                     {
-                        Helpers.Jellyseerr.SeerrErrorCode.HtmlResponse => 502,
-                        Helpers.Jellyseerr.SeerrErrorCode.UpstreamRedirect => 502,
-                        Helpers.Jellyseerr.SeerrErrorCode.Cloudflare5xx => 502,
-                        Helpers.Jellyseerr.SeerrErrorCode.ParseError => 502,
-                        Helpers.Jellyseerr.SeerrErrorCode.Unauthorized => 401,
-                        Helpers.Jellyseerr.SeerrErrorCode.Forbidden => 403,
+                        Shared.Seerr.SeerrErrorCode.HtmlResponse => 502,
+                        Shared.Seerr.SeerrErrorCode.UpstreamRedirect => 502,
+                        Shared.Seerr.SeerrErrorCode.Cloudflare5xx => 502,
+                        Shared.Seerr.SeerrErrorCode.ParseError => 502,
+                        Shared.Seerr.SeerrErrorCode.Unauthorized => 401,
+                        Shared.Seerr.SeerrErrorCode.Forbidden => 403,
                         _ => error.HttpStatus > 0 ? error.HttpStatus : 502,
                     };
 
@@ -712,7 +712,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     {
                         // Seerr (or something in front of it) answered this write: report
                         // that answer; another URL would be a second, independent write.
-                        var outcome = Helpers.Jellyseerr.SeerrRequestOutcomes.ForUpstreamError(error);
+                        var outcome = Shared.Seerr.SeerrRequestOutcomes.ForUpstreamError(error);
                         return SeerrWriteFailure(lastStatusCode, error.ToProxyErrorResponse(IsAdminUser(), outcome), apiPath, content, trimmedUrl);
                     }
 
@@ -745,12 +745,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     // A refused connect or failed DNS lookup proves nothing reached this
                     // URL, so the next one may still be tried. Anything else (timeout,
                     // reset, a response cut short) may have been applied.
-                    if (writeDispatched && !Helpers.Jellyseerr.SeerrRequestOutcomes.IsProvablyUnsent(ex))
+                    if (writeDispatched && !Shared.Seerr.SeerrRequestOutcomes.IsProvablyUnsent(ex))
                     {
-                        return SeerrWriteFailure(502, Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", message, Helpers.Jellyseerr.SeerrRequestOutcome.Unknown), apiPath, content, trimmedUrl);
+                        return SeerrWriteFailure(502, Shared.Seerr.SeerrProxyErrorResponse.Create("unreachable", message, Shared.Seerr.SeerrRequestOutcome.Unknown), apiPath, content, trimmedUrl);
                     }
 
-                    lastErrorBody = Helpers.Jellyseerr.SeerrProxyErrorResponse.Create("unreachable", message, notSent);
+                    lastErrorBody = Shared.Seerr.SeerrProxyErrorResponse.Create("unreachable", message, notSent);
                 }
             }
 
@@ -769,11 +769,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
         /// <param name="content">The forwarded request body.</param>
         /// <param name="url">The configured Seerr base URL the write went to (log only).</param>
         /// <returns>The failure result.</returns>
-        private ObjectResult SeerrWriteFailure(int status, Helpers.Jellyseerr.SeerrProxyErrorResponse body, string apiPath, string? content, string url)
+        private ObjectResult SeerrWriteFailure(int status, Shared.Seerr.SeerrProxyErrorResponse body, string apiPath, string? content, string url)
         {
-            var outcome = body.RequestOutcome ?? Helpers.Jellyseerr.SeerrRequestOutcome.Unknown;
+            var outcome = body.RequestOutcome ?? Shared.Seerr.SeerrRequestOutcome.Unknown;
             _logger.Warning($"Seerr write {apiPath} at {url} ended with outcome={outcome.ToWireValue()} status={status}; not retried on another URL.");
-            if (outcome == Helpers.Jellyseerr.SeerrRequestOutcome.Unknown
+            if (outcome == Shared.Seerr.SeerrRequestOutcome.Unknown
                 && apiPath.StartsWith("/api/v1/request", StringComparison.OrdinalIgnoreCase)
                 && content != null)
             {
@@ -807,7 +807,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             httpClient.Timeout = TimeSpan.FromSeconds(15);
 
             foreach (var url in urls)
@@ -815,10 +815,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 var requestUri = $"{url.Trim().TrimEnd('/')}/api/v1/status";
                 try
                 {
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, config.JellyseerrApiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (_, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (_, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
                     if (error == null)
                     {
                         return true;
@@ -850,7 +850,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { ok = false, message = "Invalid URL" });
 
-            var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var http = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             http.Timeout = TimeSpan.FromSeconds(10);
 
             // Use the SeerrHttpHelper so the admin gets the same typed errors
@@ -861,18 +861,18 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var requestUri = $"{url.TrimEnd('/')}/api/v1/user";
             try
             {
-                using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Get, requestUri, apiKey);
                 using var resp = await http.SendAsync(request);
-                var (_, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(resp, requestUri);
+                var (_, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(resp, requestUri);
                 if (error == null) return Ok(new { ok = true });
 
                 _logger.Warning($"Seerr validate failed for {url}: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
                 int httpCode = error.Code switch
                 {
-                    Helpers.Jellyseerr.SeerrErrorCode.HtmlResponse => 502,
-                    Helpers.Jellyseerr.SeerrErrorCode.UpstreamRedirect => 502,
-                    Helpers.Jellyseerr.SeerrErrorCode.Cloudflare5xx => 502,
+                    Shared.Seerr.SeerrErrorCode.HtmlResponse => 502,
+                    Shared.Seerr.SeerrErrorCode.UpstreamRedirect => 502,
+                    Shared.Seerr.SeerrErrorCode.Cloudflare5xx => 502,
                     _ => error.HttpStatus > 0 ? error.HttpStatus : 502,
                 };
                 return StatusCode(httpCode, new
@@ -914,7 +914,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (!ArrUrlGuard.IsAllowedUrl(url, _logger))
                 return BadRequest(new { ok = false, message = "Invalid URL" });
 
-            var http = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var http = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             http.Timeout = TimeSpan.FromSeconds(15);
 
             // route via SeerrHttpHelper so a Cloudflare/forward-auth
@@ -922,10 +922,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var requestUri = $"{url.TrimEnd('/')}/api/v1/settings/jobs/jellyfin-recently-added-scan/run";
             try
             {
-                using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                     HttpMethod.Post, requestUri, apiKey, bodyJson: "{}");
                 using var resp = await http.SendAsync(request);
-                var (_, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(resp, requestUri);
+                var (_, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(resp, requestUri);
                 if (error == null)
                 {
                     _logger.Info($"[SeerrScan] Manually triggered Seerr recently-added scan via admin button — {url}");
@@ -935,9 +935,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 _logger.Warning($"[SeerrScan] Manual trigger failed for {url}: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
                 int httpCode = error.Code switch
                 {
-                    Helpers.Jellyseerr.SeerrErrorCode.HtmlResponse => 502,
-                    Helpers.Jellyseerr.SeerrErrorCode.UpstreamRedirect => 502,
-                    Helpers.Jellyseerr.SeerrErrorCode.Cloudflare5xx => 502,
+                    Shared.Seerr.SeerrErrorCode.HtmlResponse => 502,
+                    Shared.Seerr.SeerrErrorCode.UpstreamRedirect => 502,
+                    Shared.Seerr.SeerrErrorCode.Cloudflare5xx => 502,
                     _ => error.HttpStatus > 0 ? error.HttpStatus : 502,
                 };
                 return StatusCode(httpCode, new
@@ -1307,11 +1307,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(503, new { error = "No valid Seerr URL configured." });
             }
 
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/settings/{type}";
-            using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(HttpMethod.Get, requestUri, config.JellyseerrApiKey);
+            using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(HttpMethod.Get, requestUri, config.JellyseerrApiKey);
             using var response = await httpClient.SendAsync(request);
-            var (json, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+            var (json, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
             if (error != null)
             {
@@ -1545,7 +1545,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             if (limit <= 0 || used <= 0 || days <= 0) return null;
 
             var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
             httpClient.Timeout = TimeSpan.FromSeconds(8);
 
             // Iterate URLs for multi-instance failover, matching ProxyJellyseerrRequest.
@@ -1558,10 +1558,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var requestUri = $"{trimmedUrl}/api/v1/request" +
                                      $"?take=20&skip=0&sortDirection=asc&requestedBy={seerrUserId}&mediaType={mediaType}";
 
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, config.JellyseerrApiKey, seerrUserId);
                     using var response = await httpClient.SendAsync(request);
-                    var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
                     if (error != null)
                     {
                         _logger.Debug($"ComputeNextResetAsync({mediaType}) on {trimmedUrl} failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
@@ -2774,7 +2774,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             }
 
             var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
             foreach (var url in urls)
             {
@@ -2784,10 +2784,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var requestUri = $"{trimmedUrl.TrimEnd('/')}/api/v1/settings/main";
                     _logger.Info($"Fetching Seerr partial requests setting from: {requestUri}");
 
-                    using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, requestUri, config.JellyseerrApiKey);
                     using var response = await httpClient.SendAsync(request);
-                    var (responseContent, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                    var (responseContent, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
                     if (error == null && responseContent != null)
                     {
@@ -3710,11 +3710,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 {
                     return ParentalBlockedResult();
                 }
-                switch (Services.SeerrParentalFilter.ClassifyTmdbPassthrough(apiPath + (decodedQuery.Length > 0 ? "?" + decodedQuery : string.Empty), out var gatedType, out var gatedId))
+                switch (Shared.Parental.SeerrParentalFilter.ClassifyTmdbPassthrough(apiPath + (decodedQuery.Length > 0 ? "?" + decodedQuery : string.Empty), out var gatedType, out var gatedId))
                 {
-                    case Services.SeerrParentalFilter.TmdbAccess.Deny:
+                    case Shared.Parental.SeerrParentalFilter.TmdbAccess.Deny:
                         return ParentalBlockedResult();
-                    case Services.SeerrParentalFilter.TmdbAccess.GateTitle:
+                    case Shared.Parental.SeerrParentalFilter.TmdbAccess.GateTitle:
                         if (await _parentalFilter.IsBlockedAsync(gatedType, gatedId, tmdbCallerId))
                         {
                             return ParentalBlockedResult();
@@ -3797,13 +3797,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 return StatusCode(503, "TMDB API key is not configured.");
             }
 
-            if (!Services.WatchProvidersBatch.TryParseItems(items, out var requested, out var itemsError))
+            if (!Shared.Tmdb.WatchProvidersBatch.TryParseItems(items, out var requested, out var itemsError))
             {
                 return BadRequest(itemsError);
             }
 
-            var regionCode = string.IsNullOrEmpty(region) ? Services.WatchProvidersBatch.DefaultRegion(config.DEFAULT_REGION) : region;
-            if (!Services.WatchProvidersBatch.IsValidRegion(regionCode))
+            var regionCode = string.IsNullOrEmpty(region) ? Shared.Tmdb.WatchProvidersBatch.DefaultRegion(config.DEFAULT_REGION) : region;
+            if (!Shared.Tmdb.WatchProvidersBatch.IsValidRegion(regionCode))
             {
                 return BadRequest("Invalid region.");
             }
@@ -3812,12 +3812,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
             var callerId = UserHelper.GetCurrentUserId(User)?.ToString();
             var restricted = _parentalFilter.TryGetRestrictedPolicy(callerId, out _);
             var aborted = HttpContext.RequestAborted;
-            var results = new ConcurrentDictionary<string, List<Services.WatchProvidersBatch.Provider>?>(StringComparer.Ordinal);
+            var results = new ConcurrentDictionary<string, List<Shared.Tmdb.WatchProvidersBatch.Provider>?>(StringComparer.Ordinal);
             using var slots = new SemaphoreSlim(6);
             var failures = 0;
             string? lastError = null;
 
-            async Task LoadAsync(Services.WatchProvidersBatch.Item item)
+            async Task LoadAsync(Shared.Tmdb.WatchProvidersBatch.Item item)
             {
                 await slots.WaitAsync(aborted).ConfigureAwait(false);
                 try
@@ -3826,11 +3826,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     // {type}/{id}/watch/providers; anything refused stays null.
                     if (restricted)
                     {
-                        switch (Services.SeerrParentalFilter.ClassifyTmdbPassthrough(item.ApiPath, out var gatedType, out var gatedId))
+                        switch (Shared.Parental.SeerrParentalFilter.ClassifyTmdbPassthrough(item.ApiPath, out var gatedType, out var gatedId))
                         {
-                            case Services.SeerrParentalFilter.TmdbAccess.Deny:
+                            case Shared.Parental.SeerrParentalFilter.TmdbAccess.Deny:
                                 return;
-                            case Services.SeerrParentalFilter.TmdbAccess.GateTitle:
+                            case Shared.Parental.SeerrParentalFilter.TmdbAccess.GateTitle:
                                 if (await _parentalFilter.IsBlockedAsync(gatedType, gatedId, callerId, aborted).ConfigureAwait(false))
                                 {
                                     return;
@@ -3842,7 +3842,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     var response = await _tmdbResponseCache.GetAsync(item.ApiPath, string.Empty, apiKey, aborted).ConfigureAwait(false);
                     if (response.IsSuccess)
                     {
-                        results[item.Key] = Services.WatchProvidersBatch.ExtractFlatrate(response.Content, regionCode);
+                        results[item.Key] = Shared.Tmdb.WatchProvidersBatch.ExtractFlatrate(response.Content, regionCode);
                     }
                 }
                 catch (OperationCanceledException) when (aborted.IsCancellationRequested)
@@ -3879,7 +3879,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                 _logger.Warning($"Watch providers batch: {failures} of {requested.Count} lookups failed ({lastError}).");
             }
 
-            var body = Services.WatchProvidersBatch.Serialize(regionCode, requested, results);
+            var body = Shared.Tmdb.WatchProvidersBatch.Serialize(regionCode, requested, results);
             var etag = Services.TmdbResponseCache.ComputeETag(body);
             // Same browser-cache policy as the passthrough: every reuse revalidates
             // here (so gating runs again) and costs a 304 when nothing changed.
@@ -4381,14 +4381,14 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Controllers
                     return File(cached.Content, cached.ContentType);
                 }
 
-                var client = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var client = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
                 client.Timeout = TimeSpan.FromSeconds(10);
 
                 using var avatarRequest = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{jellyseerrUrl}{avatarPath}");
                 // explicit User-Agent + Accept so Cloudflare's bot
                 // mode doesn't return an HTML challenge page that we'd try to
                 // serve as an image.
-                avatarRequest.Headers.UserAgent.ParseAdd(Helpers.Jellyseerr.SeerrHttpHelper.UserAgent);
+                avatarRequest.Headers.UserAgent.ParseAdd(Shared.Seerr.SeerrHttpHelper.UserAgent);
                 avatarRequest.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("image/*"));
                 var response = await client.SendAsync(avatarRequest);
                 if (!response.IsSuccessStatusCode)

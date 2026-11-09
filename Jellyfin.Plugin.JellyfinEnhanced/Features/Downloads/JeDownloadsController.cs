@@ -9,10 +9,9 @@ using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Model.Arr;
-using Jellyfin.Plugin.JellyfinEnhanced.Model.Jellyseerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Arr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Library;
@@ -30,7 +29,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
     public class JeDownloadsController : JeControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly Services.SeerrParentalFilter _parentalFilter;
+        private readonly Shared.Parental.SeerrParentalFilter _parentalFilter;
         private readonly Shared.SpoilerGuard.SpoilerSeerrRedactor _spoilerSeerrRedactor;
         private readonly UserDisplayResolver _userDisplayResolver;
         private readonly ArrInstanceClient _arrInstanceClient;
@@ -41,7 +40,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
             Logger logger,
             IUserManager userManager,
             UserConfigurationManager userConfigurationManager,
-            Services.SeerrParentalFilter parentalFilter,
+            Shared.Parental.SeerrParentalFilter parentalFilter,
             Shared.SpoilerGuard.SpoilerSeerrRedactor spoilerSeerrRedactor)
             : base(userManager, logger, userConfigurationManager)
         {
@@ -64,7 +63,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                 }
 
                 var urls = config.JellyseerrUrls.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var httpClient = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var httpClient = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
 
                 foreach (var url in urls)
                 {
@@ -72,10 +71,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                     try
                     {
                         var requestUri = $"{trimmedUrl.TrimEnd('/')}/api/v1/request?take=500&skip=0&sort=added";
-                        using var request = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                        using var request = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                             HttpMethod.Get, requestUri, config.JellyseerrApiKey, userId);
                         using var response = await httpClient.SendAsync(request);
-                        var (content, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+                        var (content, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
                         if (error != null)
                         {
                             _logger.Warning($"Failed to get requests from {trimmedUrl}: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay} — {error.Message}");
@@ -741,7 +740,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                 {
                     return StatusCode(503, new { error = true, code = "disabled", message = "Seerr URL not configured." });
                 }
-                var client = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+                var client = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
                 client.Timeout = TimeSpan.FromSeconds(15);
                 bool hasRequestViewPermission = false;
 
@@ -797,16 +796,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                 // escape and prevent URL #2 from being tried.
                 string? json = null;
                 string? jellyseerrUrl = null;     // url that responded (for downstream enrichment)
-                Helpers.Jellyseerr.SeerrError? lastError = null;
+                Shared.Seerr.SeerrError? lastError = null;
                 foreach (var candidateUrl in allUrls)
                 {
                     var requestsUri = $"{candidateUrl}/api/v1/request?take={seerrTake}&skip={seerrSkip}{filterParam}";
                     try
                     {
-                        using var requestsRequest = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                        using var requestsRequest = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                             HttpMethod.Get, requestsUri, config.JellyseerrApiKey);
                         using var response = await client.SendAsync(requestsRequest);
-                        var (urlJson, urlError) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestsUri);
+                        var (urlJson, urlError) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestsUri);
                         if (urlError == null && urlJson != null)
                         {
                             json = urlJson;
@@ -818,9 +817,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                     }
                     catch (Exception innerEx)
                     {
-                        lastError = new Helpers.Jellyseerr.SeerrError
+                        lastError = new Shared.Seerr.SeerrError
                         {
-                            Code = Helpers.Jellyseerr.SeerrErrorCode.Unreachable,
+                            Code = Shared.Seerr.SeerrErrorCode.Unreachable,
                             HttpStatus = 0,
                             Url = candidateUrl,
                             Message = $"Failed to reach {candidateUrl}: {innerEx.Message}",
@@ -848,9 +847,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                     var error = lastError!;
                     int httpCode = error.Code switch
                     {
-                        Helpers.Jellyseerr.SeerrErrorCode.HtmlResponse => 502,
-                        Helpers.Jellyseerr.SeerrErrorCode.UpstreamRedirect => 502,
-                        Helpers.Jellyseerr.SeerrErrorCode.Cloudflare5xx => 502,
+                        Shared.Seerr.SeerrErrorCode.HtmlResponse => 502,
+                        Shared.Seerr.SeerrErrorCode.UpstreamRedirect => 502,
+                        Shared.Seerr.SeerrErrorCode.Cloudflare5xx => 502,
                         _ => error.HttpStatus > 0 ? error.HttpStatus : 502,
                     };
                     return StatusCode(httpCode, new
@@ -858,7 +857,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                         error = true,
                         code = error.Code.ToString(),
                         cfRay = error.CfRay,
-                        message = IsAdminUser() ? error.Message : Helpers.Jellyseerr.SeerrError.SanitizeMessage(error.Message),
+                        message = IsAdminUser() ? error.Message : Shared.Seerr.SeerrError.SanitizeMessage(error.Message),
                         requests = new List<object>(),
                         totalPages = 0,
                         totalResults = 0
@@ -1198,11 +1197,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                 return StatusCode(503, new { error = true, message = "No valid Seerr URL configured." });
 
             var requestUri = $"{jellyseerrUrl}/api/v1/request/{requestId}/{action}";
-            var client = Helpers.Jellyseerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
-            using var httpRequest = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+            var client = Shared.Seerr.SeerrHttpHelper.CreateClient(_httpClientFactory);
+            using var httpRequest = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                 HttpMethod.Post, requestUri, config.JellyseerrApiKey, jellyseerrUser.Id.ToString());
             using var response = await client.SendAsync(httpRequest);
-            var (_, error) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
+            var (_, error) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
 
             if (error != null)
             {
@@ -1239,10 +1238,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                 {
                     var endpoint = type == "movie" ? "movie" : "tv";
                     var enrichUri = $"{jellyseerrUrl}/api/v1/{endpoint}/{tmdbId}";
-                    using var enrichRequest = Helpers.Jellyseerr.SeerrHttpHelper.BuildRequest(
+                    using var enrichRequest = Shared.Seerr.SeerrHttpHelper.BuildRequest(
                         HttpMethod.Get, enrichUri, apiKey);
                     using var response = await client.SendAsync(enrichRequest);
-                    var (content, enrichError) = await Helpers.Jellyseerr.SeerrHttpHelper.ReadResponseAsync(response, enrichUri);
+                    var (content, enrichError) = await Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, enrichUri);
 
                     if (enrichError != null || content == null)
                     {
