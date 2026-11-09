@@ -12,7 +12,7 @@ using MediaBrowser.Controller.Library;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     /// <summary>
     /// The effective Spoiler Guard tag-strip policy for one user: the admin strip toggles with the user's

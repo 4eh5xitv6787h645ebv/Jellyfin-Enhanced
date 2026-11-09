@@ -9,8 +9,9 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.EventHandlers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Events
 {
     // On PlaybackStart of an Episode that is S1E1 of a series the user has
     // never played any episode of before, automatically add the series to

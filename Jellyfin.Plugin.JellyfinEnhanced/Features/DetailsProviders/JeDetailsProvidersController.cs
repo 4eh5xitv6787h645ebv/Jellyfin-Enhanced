@@ -56,7 +56,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
     public class JeDetailsProvidersController : JeControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor _spoilerSeerrRedactor;
+        private readonly Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerSeerrRedactor _spoilerSeerrRedactor;
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
         private readonly WikidataAwardsService _wikidataAwardsService;
@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
             ReviewTranslationService reviewTranslationService,
             MdblistService mdblistService,
             DoesTheDogDieService doesTheDogDieService,
-            Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerSeerrRedactor spoilerSeerrRedactor,
+            Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerSeerrRedactor spoilerSeerrRedactor,
             ItemStatsService itemStats)
             : base(userManager, logger, userConfigurationManager)
         {

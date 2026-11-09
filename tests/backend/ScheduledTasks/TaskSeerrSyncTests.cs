@@ -192,7 +192,7 @@ public class TaskSeerrSyncTests
                 : "{\"results\":[{\"requestedBy\":{\"id\":27},\"media\":{\"tmdbId\":555,\"mediaType\":\"movie\"}}]}"));
         });
         var controller = ApiAssetTests.Controller(f.Core, Users(admin, blocked).Object, library.Object, data.Object, transport, f.Core.Manager);
-        controller.ControllerContext.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(admin.Id, admin: true);
+        controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
 
         var result = Assert.IsType<OkObjectResult>(await controller.SyncJellyseerrWatchlist());
         // Only the admin's new watchlist item: not the blocked user's 456, not the
@@ -219,7 +219,7 @@ public class TaskSeerrSyncTests
         var admin = new User("admin", "default", "default") { Id = Guid.NewGuid() };
         using var transport = new IntegrationTransport((_, _) => throw new InvalidOperationException("Must not call Seerr"));
         var controller = ApiAssetTests.Controller(f.Core, Users(admin).Object, new Mock<ILibraryManager>().Object, new Mock<IUserDataManager>().Object, transport, f.Core.Manager);
-        controller.ControllerContext.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(admin.Id, admin: true);
+        controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
 
         var result = Assert.IsType<BadRequestObjectResult>(await controller.SyncJellyseerrWatchlist());
         Assert.Equal("{\"error\":\"Jellyseerr URL or API key is not configured\"}", JsonSerializer.Serialize(result.Value));
@@ -258,7 +258,7 @@ public class TaskSeerrSyncTests
                 : "{\"results\":[{\"tmdbId\":123,\"mediaType\":\"movie\"}]}"));
         });
         var controller = ApiAssetTests.Controller(f.Core, Users(admin).Object, library.Object, data.Object, transport, f.Core.Manager);
-        controller.ControllerContext.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(admin.Id, admin: true);
+        controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
 
         var result = await controller.SyncJellyseerrWatchlist();
 

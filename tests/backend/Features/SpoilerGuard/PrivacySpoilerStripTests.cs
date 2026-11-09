@@ -9,8 +9,9 @@ using MediaBrowser.Controller.Library;
 using Moq;
 using Xunit;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 public class PrivacySpoilerStripTests
 {

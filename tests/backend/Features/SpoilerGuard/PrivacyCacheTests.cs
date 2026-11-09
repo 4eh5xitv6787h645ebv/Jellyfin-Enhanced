@@ -11,7 +11,7 @@ using Xunit;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 [Collection("Plugin singleton")]
 public class PrivacyCacheTests

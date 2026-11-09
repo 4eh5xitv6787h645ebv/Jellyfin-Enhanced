@@ -31,7 +31,7 @@ public class ApiMediaTagsPortableTests
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
         var controller = ApiAssetTests.Controller(f.Core, maintenance, f.Core.Manager);
         var user = Guid.NewGuid();
-        void SignIn(bool asAdmin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user, asAdmin) } };
+        void SignIn(bool asAdmin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user, asAdmin) } };
         SignIn(admin);
         return (controller, user, SignIn);
     }
@@ -107,7 +107,7 @@ public class ApiMediaTagsPortableTests
 
         // Imported into a fresh user, its settings export identically.
         var other = Guid.NewGuid().ToString("N");
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.ParseExact(other, "N")) } };
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(Guid.ParseExact(other, "N")) } };
         f.Core.Manager.SaveUserConfiguration(other, "settings.json", new JellyfinEnhancedUserSettings { DisplayLanguage = "fr" });
         var preview = Body(ApiAssetTests.SiblingOf<JeMediaTagsController>(controller).PreviewUserMediaTags(other, Json(exported)));
         Assert.NotEmpty(preview["changes"]!.AsArray());

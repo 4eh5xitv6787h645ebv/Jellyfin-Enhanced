@@ -25,6 +25,8 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
 namespace JE.Tests.Features.MediaTags;
 
@@ -687,7 +689,7 @@ public sealed class LeavingSoonTests : IDisposable
                 var guard = new SpoilerUserResolver(f.Core.Manager, library.Object, f.Core.Logger, null!);
                 var stripper = new SpoilerTagDataStripper(library.Object, userData.Object, guard);
                 var controller = ApiAssetTests.Controller(f.Core, users.Object, cache, library.Object, userData.Object, f.Core.Manager, guard, stripper);
-                controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(admin.Id);
+                controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id);
                 var answer = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeMediaTagsController>(controller).GetTagData(admin.Id, new BaseItem[] { member, series, season, episode }.Select(i => i.Id.ToString()).ToArray()));
                 var facts = JsonSerializer.SerializeToElement(answer.Value).GetProperty("Items").EnumerateArray().ToList();
                 Assert.Equal(4, facts.Count);

@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 public sealed class PrivacyIdentityTests : IDisposable
 {

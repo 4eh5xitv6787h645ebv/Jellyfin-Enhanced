@@ -6,7 +6,7 @@ using System.Text;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     // Per-user identity markers embedded in image tags ("tagged image URLs").
     //

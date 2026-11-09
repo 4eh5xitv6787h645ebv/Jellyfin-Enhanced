@@ -70,7 +70,7 @@ public class ApiMediaTagsPageTests
         f.Plugin.Configuration.TagCacheServerMode = true;
         using var cache = new TagCacheService(Mock.Of<ILibraryManager>(), f.Core.Paths.Object, Mock.Of<ILocalizationManager>(), f.Core.Logger, new MatroskaLanguageCache(f.Core.Paths.Object, f.Core.Logger));
         var controller = ApiAssetTests.Controller(f.Core, cache);
-        void SignIn(bool admin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin) } };
+        void SignIn(bool admin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin) } };
 
         SignIn(admin: false);
         Assert.IsType<ForbidResult>(ApiAssetTests.SiblingOf<JeMediaTagsController>(controller).GetTagCacheSummary());
@@ -107,7 +107,7 @@ public class ApiMediaTagsPageTests
     private static (JeAdminController Controller, Action<bool> SignIn) PatchController(ApiPluginFixture f)
     {
         var controller = (JeAdminController)ApiAssetTests.Controller(typeof(JeAdminController), f.Core);
-        void SignIn(bool admin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin) } };
+        void SignIn(bool admin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin) } };
         SignIn(true);
         return (controller, SignIn);
     }
@@ -606,7 +606,7 @@ public class ApiMediaTagsPageTests
         using var f = new ApiPluginFixture();
         var service = new WhatsNewService(f.Core.Paths.Object, f.Core.Logger);
         var controller = (JeAdminController)ApiAssetTests.Controller(typeof(JeAdminController), f.Core, service);
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), true) } };
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(Guid.NewGuid(), true) } };
         // An acknowledged baseline announces nothing again.
         service.Dismiss();
         service.CheckForNewSettings();
@@ -668,7 +668,7 @@ public class ApiMediaTagsPageTests
         var controller = ApiAssetTests.Controller(f.Core, maintenance, f.Core.Manager);
         var userId = Guid.NewGuid();
         var id = userId.ToString("N");
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(userId) } };
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(userId) } };
         Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).GetUserSettingsSettings(id));
         var own = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(id, "settings.json");
         own.ShowFileSizes = false;
@@ -679,7 +679,7 @@ public class ApiMediaTagsPageTests
         f.Plugin.Configuration.QualityTagsEnabled = true;
         f.Plugin.Configuration.QualityTagsPosition = "bottom-right";
 
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin: true) } };
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin: true) } };
         var result = Assert.IsType<OkObjectResult>(ApiAssetTests.Sibling<JeSettingsController>(controller, f.Core, f.Core.Manager).ApplyUserSettings(new JeSettingsController.ApplyUserSettingsRequest
         {
             Properties = new List<string> { "ShowFileSizes", "QualityTagsEnabled", "QualityTagsPosition" },

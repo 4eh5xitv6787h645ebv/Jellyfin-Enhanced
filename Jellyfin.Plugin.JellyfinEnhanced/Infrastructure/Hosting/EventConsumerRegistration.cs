@@ -8,6 +8,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Events;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.Events;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Events;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Events;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Events;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting
 {

@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 
 namespace JE.Tests;
 
@@ -24,7 +26,7 @@ public class BootstrapContractTests
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
         var controller = ApiAssetTests.Controller(fixture.Core, maintenance, documents ? fixture.Core.Manager : new object());
-        controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user, admin);
+        controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user, admin);
         return controller;
     }
 
@@ -139,7 +141,7 @@ public class BootstrapContractTests
         else if (document == "full")
             fixture.Core.Manager.SaveUserConfiguration(user.ToString("N"), SpoilerBlurImageFilter.SpoilerBlurFileName, state);
         var controller = Controller(fixture, user, false);
-        var endpoint = Assert.IsType<OkObjectResult>(controller.GetSpoilerBlurSeries());
+        var endpoint = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(controller).GetSpoilerBlurSeries());
         var bootstrap = Assert.IsType<JsonResult>(controller.GetBootstrap());
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (root != null && !File.Exists(Path.Combine(root.FullName, "client/entries/contracts.json"))) root = root.Parent;

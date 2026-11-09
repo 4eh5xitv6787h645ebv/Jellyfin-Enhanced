@@ -12,8 +12,9 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.AspNetCore.Http;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     // Spoiler Guard for metadata JE shows from outside Jellyfin. More Info, the
     // Seerr cards, the release-date chips and the MDBList row render Seerr, TMDB

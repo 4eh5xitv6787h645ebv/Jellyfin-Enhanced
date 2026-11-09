@@ -938,7 +938,7 @@ public class RatingSourceTests
         var users = new Mock<IUserManager>(); users.Setup(m => m.GetUserById(user.Id)).Returns(user);
         using var cache = new TagCacheService(library.Object, fixture.Core.Paths.Object, Mock.Of<ILocalizationManager>(), fixture.Core.Logger, new MatroskaLanguageCache(fixture.Core.Paths.Object, fixture.Core.Logger), service);
         var controller = ApiAssetTests.Controller(fixture.Core, cache, library.Object, users.Object);
-        controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user.Id, false);
+        controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user.Id, false);
         var result = Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(ApiAssetTests.SiblingOf<JeMediaTagsController>(controller).GetTagData(user.Id, [movie.Id.ToString(), Guid.NewGuid().ToString()]));
         using var json = JsonDocument.Parse(JsonSerializer.Serialize(result.Value));
         var item = Assert.Single(json.RootElement.GetProperty("Items").EnumerateArray());

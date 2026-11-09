@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Extensions;
 using MediaBrowser.Controller.Session;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

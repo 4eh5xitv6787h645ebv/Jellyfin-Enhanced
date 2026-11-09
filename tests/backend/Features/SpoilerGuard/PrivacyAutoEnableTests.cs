@@ -12,8 +12,10 @@ using MediaBrowser.Controller.Session;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Events;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 [Collection("Plugin singleton")]
 public class PrivacyAutoEnableTests

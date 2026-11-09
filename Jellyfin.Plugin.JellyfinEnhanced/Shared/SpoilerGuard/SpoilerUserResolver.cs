@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
+using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     // Shared spoiler-state-load helper used by both SpoilerBlurImageFilter
     // and SpoilerFieldStripFilter, plus thin delegation into the plugin-wide

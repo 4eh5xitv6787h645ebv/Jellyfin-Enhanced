@@ -1,6 +1,6 @@
 using System;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 {
     /// <summary>
     /// The decorated parts of an image tag. <see cref="Base"/> is Jellyfin's own tag;

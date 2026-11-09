@@ -10,7 +10,7 @@ using Xunit;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 /// <summary>
 /// Paged full loads (GET tag-cache?limit=&amp;after=) read one shared, ordinally sorted key index per key set instead

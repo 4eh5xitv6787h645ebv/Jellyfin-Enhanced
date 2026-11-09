@@ -1,6 +1,7 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using SkiaSharp;
-namespace JE.Tests;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+namespace JE.Tests.Features.SpoilerGuard;
 
 public class PosterBlurTests
 {

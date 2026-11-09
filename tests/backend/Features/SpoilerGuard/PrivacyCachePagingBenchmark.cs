@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 /// <summary>
 /// Opt-in server benchmark of paged full loads (GET tag-cache?limit=2000&amp;after=): set JE_BENCH_TAG_CACHE=1 and run

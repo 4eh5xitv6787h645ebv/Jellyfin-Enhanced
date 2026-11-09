@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using SkiaSharp;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
 {
     // Produces a "spoiler-style" blurred version of an input image, using
     // SkiaSharp's CreateBlur ImageFilter (a separable Gaussian implemented

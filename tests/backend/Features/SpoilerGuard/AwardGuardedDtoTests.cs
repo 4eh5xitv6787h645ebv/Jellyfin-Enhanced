@@ -16,8 +16,10 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Models;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 [Collection("Plugin singleton")]
 public class AwardGuardedDtoTests
@@ -68,7 +70,7 @@ public class AwardGuardedDtoTests
         var resolver = new SpoilerUserResolver(f.Core.Manager, library.Object, f.Core.Logger, null!);
         var stripper = new SpoilerTagDataStripper(library.Object, data, resolver);
         var controller = ApiAssetTests.Controller(f.Core, users.Object, cache, library.Object, data, f.Core.Manager, resolver, stripper);
-        controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user.Id);
+        controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user.Id);
         var state = new UserSpoilerBlur();
         if (kind == "Series") state.Series[item.Id.ToString("N")] = new();
         else state.Movies[item.Id.ToString("N")] = new();

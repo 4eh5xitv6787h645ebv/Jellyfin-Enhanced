@@ -103,7 +103,7 @@ public class CoreLanguageTagDisplayTests
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
         var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), fixture.Core, maintenance, fixture.Core.Manager);
         var userId = Guid.NewGuid();
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(userId) } };
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(userId) } };
 
         // First read seeds settings.json from the admin defaults.
         Assert.IsType<OkObjectResult>(controller.GetUserSettingsSettings(userId.ToString("N")));
@@ -117,7 +117,7 @@ public class CoreLanguageTagDisplayTests
         seeded.LanguageTagsStyle = "flags";
         fixture.Core.Manager.SaveUserConfiguration(userId.ToString("N"), "settings.json", seeded);
         config.LanguageTagsCountBadge = "both";
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin: true) } };
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin: true) } };
         Assert.IsType<OkObjectResult>(controller.ResetAllUsersSettings());
         var reset = fixture.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(userId.ToString("N"), "settings.json");
         Assert.Equal("codes", reset.LanguageTagsStyle);

@@ -374,10 +374,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Settings
                 try
                 {
                     if (_userConfigurationManager.UserConfigurationExists(
-                            userId, Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerBlurImageFilter.SpoilerBlurFileName))
+                            userId, Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services.SpoilerBlurImageFilter.SpoilerBlurFileName))
                     {
                         _userConfigurationManager.RmwUserConfiguration<UserSpoilerBlur>(
-                            userId, Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerBlurImageFilter.SpoilerBlurFileName, sb =>
+                            userId, Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services.SpoilerBlurImageFilter.SpoilerBlurFileName, sb =>
                             {
                                 sb.Prefs = new SpoilerBlurUserPrefs();
                                 return 1;

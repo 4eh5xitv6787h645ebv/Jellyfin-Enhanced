@@ -31,7 +31,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly Services.SeerrParentalFilter _parentalFilter;
-        private readonly Services.SpoilerSeerrRedactor _spoilerSeerrRedactor;
+        private readonly Shared.SpoilerGuard.SpoilerSeerrRedactor _spoilerSeerrRedactor;
         private readonly UserDisplayResolver _userDisplayResolver;
         private readonly ArrInstanceClient _arrInstanceClient;
         private readonly SeerrUserLookup _seerrUserLookup;
@@ -42,7 +42,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
             IUserManager userManager,
             UserConfigurationManager userConfigurationManager,
             Services.SeerrParentalFilter parentalFilter,
-            Services.SpoilerSeerrRedactor spoilerSeerrRedactor)
+            Shared.SpoilerGuard.SpoilerSeerrRedactor spoilerSeerrRedactor)
             : base(userManager, logger, userConfigurationManager)
         {
             _httpClientFactory = httpClientFactory;
@@ -348,7 +348,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
             return result;
         }
 
-        private static object RedactDownloadRow(object row, Services.SpoilerSeerrRedactor.GuardedRows guards)
+        private static object RedactDownloadRow(object row, Shared.SpoilerGuard.SpoilerSeerrRedactor.GuardedRows guards)
         {
             if (System.Text.Json.JsonSerializer.SerializeToNode(row, row.GetType()) is not System.Text.Json.Nodes.JsonObject copy)
             {

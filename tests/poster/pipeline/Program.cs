@@ -5,6 +5,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.PosterTags;
 using SkiaSharp;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
 var failures = 0;
 var passes = 0;

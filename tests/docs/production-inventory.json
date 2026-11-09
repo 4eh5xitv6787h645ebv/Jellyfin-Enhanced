@@ -818,11 +818,11 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/ImageBlurService.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/ImageTagDecoration.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/ImageBlurService.cs",
       "category": "Features"
     },
     {
@@ -846,10 +846,6 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerIdentityService.cs",
-      "category": "Features"
-    },
-    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerIdentityTagFilter.cs",
       "category": "Features"
     },
@@ -866,15 +862,7 @@
       "category": "Features"
     },
     {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerSeerrRedactor.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerTagDataStripper.cs",
-      "category": "Features"
-    },
-    {
-      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/Services/SpoilerUserResolver.cs",
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/SpoilerGuardServiceRegistration.cs",
       "category": "Features"
     },
     {
@@ -1051,6 +1039,30 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/Reviews/ReviewVisibilityContext.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/ImageTagDecoration.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerIdentityService.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerPendingService.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerSeerrRedactor.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerTagDataStripper.cs",
+      "category": "Shared"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerUserResolver.cs",
       "category": "Shared"
     },
     {
@@ -2741,206 +2753,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/spoilerblur.json",
-      "method": "GetUserSpoilerBlur",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/user-settings/{userId}/spoilerblur.json",
-      "method": "SaveUserSpoilerBlur",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")",
-        "Consumes(\"application/json\")",
-        "RequestSizeLimit(2 * 1024 * 1024)"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/spoiler-blur/health",
-      "method": "GetSpoilerBlurHealth",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/spoiler-blur/health/{targetUserId}",
-      "method": "AckSpoilerBlurCorruption",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/spoiler-blur/apply-existing/preview",
-      "method": "PreviewSpoilerApplyExisting",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/spoiler-blur/apply-existing",
-      "method": "StartSpoilerApplyExisting",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/spoiler-blur/apply-existing/status",
-      "method": "GetSpoilerApplyExistingStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/spoiler-blur/movies/{movieId}/in-scope",
-      "method": "GetSpoilerMovieScope",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/spoiler-blur/series",
-      "method": "GetSpoilerBlurSeries",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/spoiler-blur/user-prefs",
-      "method": "GetSpoilerBlurUserPrefs",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/spoiler-blur/user-prefs",
-      "method": "SetSpoilerBlurUserPrefs",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")",
-        "Consumes(\"application/json\")",
-        "RequestSizeLimit(8 * 1024)"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/spoiler-blur/series/{seriesId}",
-      "method": "EnableSpoilerBlurForSeries",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/spoiler-blur/series/{seriesId}",
-      "method": "DisableSpoilerBlurForSeries",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/spoiler-blur/movies/{movieId}",
-      "method": "EnableSpoilerBlurForMovie",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "RequestSizeLimit(8 * 1024)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/spoiler-blur/movies/{movieId}",
-      "method": "DisableSpoilerBlurForMovie",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/spoiler-blur/collections/{collectionId}",
-      "method": "EnableSpoilerBlurForCollection",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "RequestSizeLimit(8 * 1024)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/spoiler-blur/collections/{collectionId}",
-      "method": "DisableSpoilerBlurForCollection",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/spoiler-blur/pending/{mediaType}/{tmdbId}",
-      "method": "EnableSpoilerBlurPending",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "DELETE",
-      "path": "/JellyfinEnhanced/spoiler-blur/pending/{mediaType}/{tmdbId}",
-      "method": "DisableSpoilerBlurPending",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/jellyseerr/issue",
       "method": "GetJellyseerrIssues",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3947,6 +3759,206 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/JeSettingsController.cs",
       "following_attributes": [
         "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/spoilerblur.json",
+      "method": "GetUserSpoilerBlur",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/user-settings/{userId}/spoilerblur.json",
+      "method": "SaveUserSpoilerBlur",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")",
+        "Consumes(\"application/json\")",
+        "RequestSizeLimit(2 * 1024 * 1024)"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/spoiler-blur/health",
+      "method": "GetSpoilerBlurHealth",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/spoiler-blur/health/{targetUserId}",
+      "method": "AckSpoilerBlurCorruption",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/spoiler-blur/apply-existing/preview",
+      "method": "PreviewSpoilerApplyExisting",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/spoiler-blur/apply-existing",
+      "method": "StartSpoilerApplyExisting",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/spoiler-blur/apply-existing/status",
+      "method": "GetSpoilerApplyExistingStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/spoiler-blur/movies/{movieId}/in-scope",
+      "method": "GetSpoilerMovieScope",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/spoiler-blur/series",
+      "method": "GetSpoilerBlurSeries",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/spoiler-blur/user-prefs",
+      "method": "GetSpoilerBlurUserPrefs",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/spoiler-blur/user-prefs",
+      "method": "SetSpoilerBlurUserPrefs",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")",
+        "Consumes(\"application/json\")",
+        "RequestSizeLimit(8 * 1024)"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/spoiler-blur/series/{seriesId}",
+      "method": "EnableSpoilerBlurForSeries",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/spoiler-blur/series/{seriesId}",
+      "method": "DisableSpoilerBlurForSeries",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/spoiler-blur/movies/{movieId}",
+      "method": "EnableSpoilerBlurForMovie",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "RequestSizeLimit(8 * 1024)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/spoiler-blur/movies/{movieId}",
+      "method": "DisableSpoilerBlurForMovie",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/spoiler-blur/collections/{collectionId}",
+      "method": "EnableSpoilerBlurForCollection",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "RequestSizeLimit(8 * 1024)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/spoiler-blur/collections/{collectionId}",
+      "method": "DisableSpoilerBlurForCollection",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/spoiler-blur/pending/{mediaType}/{tmdbId}",
+      "method": "EnableSpoilerBlurPending",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "DELETE",
+      "path": "/JellyfinEnhanced/spoiler-blur/pending/{mediaType}/{tmdbId}",
+      "method": "DisableSpoilerBlurPending",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
       ]
     }
   ],
@@ -9926,10 +9938,6 @@
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
     },
     {
-      "literal": "user-settings/{userId}/spoilerblur.json",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-    },
-    {
       "literal": "maintenance-state.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Services/MaintenanceModeService.cs"
     },
@@ -10156,6 +10164,10 @@
     {
       "literal": "settings.json",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Settings/Services/SettingsDocumentService.cs"
+    },
+    {
+      "literal": "user-settings/{userId}/spoilerblur.json",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs"
     },
     {
       "literal": "spoilerblur.json",
@@ -10446,7 +10458,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 515,
+    "files": 518,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,

@@ -9,6 +9,8 @@ using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Settings;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 
 namespace JE.Tests;
 
@@ -154,8 +156,8 @@ public class ApiConfigurationTests
         var controller = ApiAssetTests.Controller(fixture.Core, fixture.Core.Manager);
         controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("Jellyfin-UserId", user.ToString())], "test"));
         var body = new SpoilerBlurUserPrefs { HideTrickplay = hideTrickplay, HideReviews = false, UseAdvancedCategories = false };
-        Assert.IsType<OkObjectResult>(controller.SetSpoilerBlurUserPrefs(body));
-        var reloaded = Assert.IsType<SpoilerBlurUserPrefs>(Assert.IsType<OkObjectResult>(controller.GetSpoilerBlurUserPrefs()).Value);
+        Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(controller).SetSpoilerBlurUserPrefs(body));
+        var reloaded = Assert.IsType<SpoilerBlurUserPrefs>(Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(controller).GetSpoilerBlurUserPrefs()).Value);
         Assert.Equal(hideTrickplay, reloaded.HideTrickplay);
         Assert.False(reloaded.HideReviews);
         Assert.False(reloaded.UseAdvancedCategories);

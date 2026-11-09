@@ -15,7 +15,7 @@ using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services
 {
     // Promotes pending Spoiler Guard entries (UserSpoilerBlur.PendingTmdb) into
     // real Series/Movies entries when matching library items land via Seerr or

@@ -12,6 +12,9 @@ using MediaBrowser.Model.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 
 namespace JE.Tests;
 
@@ -364,13 +367,13 @@ public class ApiSeerrTests
     public void SpoilerMovieScopeAnswersForTheCallersOwnStateAndValidatesTheId()
     {
         using var f = GuardedSeerr(out var movieId);
-        var ok = Assert.IsType<OkObjectResult>(f.Controller.GetSpoilerMovieScope(movieId.ToString("N")));
+        var ok = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(movieId.ToString("N")));
         Assert.True(Body(JsonSerializer.Serialize(ok.Value)).GetProperty("inScope").GetBoolean());
         f.SetUser(f.OtherUserId);
-        var other = Assert.IsType<OkObjectResult>(f.Controller.GetSpoilerMovieScope(movieId.ToString("N")));
+        var other = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(movieId.ToString("N")));
         Assert.False(Body(JsonSerializer.Serialize(other.Value)).GetProperty("inScope").GetBoolean());
-        Assert.IsType<BadRequestObjectResult>(f.Controller.GetSpoilerMovieScope("not-a-guid"));
-        Assert.IsType<BadRequestObjectResult>(f.Controller.GetSpoilerMovieScope(Guid.Empty.ToString("N")));
+        Assert.IsType<BadRequestObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope("not-a-guid"));
+        Assert.IsType<BadRequestObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(Guid.Empty.ToString("N")));
     }
 
     private static JsonElement Rows(IActionResult result, string name) => JsonSerializer.SerializeToElement(Assert.IsType<OkObjectResult>(result).Value).GetProperty(name);

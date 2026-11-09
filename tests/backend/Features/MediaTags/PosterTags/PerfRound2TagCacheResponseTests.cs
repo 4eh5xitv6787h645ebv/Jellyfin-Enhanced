@@ -21,6 +21,8 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
 namespace JE.Tests.Features.MediaTags;
 
@@ -96,7 +98,7 @@ public class PerfRound2TagCacheResponseTests
 
         public void SignIn(User caller, bool admin = false) => Controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext { RequestServices = _provider, User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(caller.Id, admin) }
+            HttpContext = new DefaultHttpContext { RequestServices = _provider, User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(caller.Id, admin) }
         };
 
         public async Task<(int Status, string ETag, string Body)> Read(User caller, Guid? route = null, long? since = null, string? validator = null, bool admin = false, string? known = null, string? after = null, int? limit = null)
@@ -649,7 +651,7 @@ public class PerfRound2TagCacheResponseTests
 
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<MediaBrowser.Controller.Session.ISessionManager>(), endpoint.Fixture.Core.Paths.Object, endpoint.Fixture.Core.Logger);
         var bootstrap = ApiAssetTests.Controller(endpoint.Fixture.Core, maintenance, endpoint.Fixture.Core.Manager, endpoint.Library.Object);
-        bootstrap.ControllerContext.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(endpoint.Alice.Id, false);
+        bootstrap.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(endpoint.Alice.Id, false);
         string? Bootstrap() => Revision(Assert.IsType<JsonResult>(bootstrap.GetBootstrap()).Value, "Prefetched", "TagStripRevision");
 
         Assert.Equal((SpoilerTagDataStripper.NoTagStrip, SpoilerTagDataStripper.NoTagStrip), (Batch(), Bootstrap()));

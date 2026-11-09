@@ -4,8 +4,9 @@ using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Xunit;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
 
-namespace JellyfinEnhanced.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 public class PrivacyPolicyTests
 {

@@ -20,8 +20,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SkiaSharp;
+using Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.SpoilerGuard;
 
 [Collection("Plugin singleton")]
 public class PosterBlurFilterTests

@@ -185,7 +185,7 @@ public class SettingsPreservationTests
         f.Core.Write(User, """{"taggroupcaps":{"quality":2,"FutureCap":7},"ISADMIN":true}""");
         var maintenance = new MaintenanceModeService(Moq.Mock.Of<MediaBrowser.Controller.Library.IUserManager>(), Moq.Mock.Of<MediaBrowser.Controller.Session.ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
         var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), f.Core, maintenance, f.Core.Manager);
-        controller.HttpContext.User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user, false);
+        controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user, false);
         var loaded = Assert.IsType<RevisionedSettingsResponse>(Assert.IsType<Microsoft.AspNetCore.Mvc.JsonResult>(controller.GetRevisionedSettings(User)).Value);
         loaded.Settings.TagGroupCaps!.Quality = 4;
         Assert.IsType<Microsoft.AspNetCore.Mvc.JsonResult>(controller.SaveRevisionedSettings(User, new() { Revision = loaded.Revision, Settings = loaded.Settings }));

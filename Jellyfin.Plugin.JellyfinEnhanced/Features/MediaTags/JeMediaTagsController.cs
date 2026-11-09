@@ -58,8 +58,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
         private readonly TagCacheService _tagCacheService;
-        private readonly Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerUserResolver _spoilerResolver;
-        private readonly Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStripper _spoilerTagDataStripper;
+        private readonly Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerUserResolver _spoilerResolver;
+        private readonly Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStripper _spoilerTagDataStripper;
         private readonly MatroskaLanguageCache _matroskaLanguageCache;
         private readonly UserDisplayResolver _userDisplayResolver;
 
@@ -70,8 +70,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             ILibraryManager libraryManager,
             UserConfigurationManager userConfigurationManager,
             TagCacheService tagCacheService,
-            Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerUserResolver spoilerResolver,
-            Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStripper spoilerTagDataStripper,
+            Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerUserResolver spoilerResolver,
+            Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStripper spoilerTagDataStripper,
             MatroskaLanguageCache matroskaLanguageCache)
             : base(userManager, logger, userConfigurationManager)
         {
@@ -473,8 +473,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // read so a delta request can include the guarded entries (below).
             // Loaded for the resolved user, not the route value: an empty route id
             // resolves to the caller, whose own guard must still apply.
-            var spPolicy = Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStripper.IsConfigured(spCfg)
-                ? Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStripper.CreatePolicy(spCfg, LoadSpoilerStateForTagStrip(user.Id))
+            var spPolicy = Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStripper.IsConfigured(spCfg)
+                ? Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStripper.CreatePolicy(spCfg, LoadSpoilerStateForTagStrip(user.Id))
                 : null;
 
             // A delta (?since=) only carries entries the library changed, but a
@@ -851,11 +851,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
             // Per-category overrides apply on top of admin policy (same "opt-out wins"
             // contract as ShouldStrip); see SpoilerTagDataStripper.CreatePolicy.
             var spoilerCfg = JellyfinEnhanced.Instance?.Configuration;
-            Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagStripPolicy? spoilerPolicy = null;
-            if (Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStripper.IsConfigured(spoilerCfg))
+            Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagStripPolicy? spoilerPolicy = null;
+            if (Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStripper.IsConfigured(spoilerCfg))
             {
                 // The resolved user's state (see GetTagCache): an empty route id is the caller.
-                spoilerPolicy = Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStripper.CreatePolicy(spoilerCfg, LoadSpoilerStateForTagStrip(user.Id));
+                spoilerPolicy = Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStripper.CreatePolicy(spoilerCfg, LoadSpoilerStateForTagStrip(user.Id));
             }
             var stripTagsEnabled = spoilerPolicy != null;
             var spStripGenres = spoilerPolicy?.StripGenres == true;
@@ -921,13 +921,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 var isContainer = kind == BaseItemKind.Series || kind == BaseItemKind.Season;
                 var spoilerStub = stripTagsEnabled
                     ? _spoilerTagDataStripper.GetTagDataStub(spoilerPolicy!, user, item)
-                    : Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStub.None;
+                    : Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStub.None;
 
                 // Spoiler Guard tag-strip: for an unwatched Episode of a guarded
                 // series, return an Id+Type-only stub so the frontend tag renderers
                 // draw nothing. The pipeline still treats the item as processed
                 // (no retry loop) — it just produces zero overlays.
-                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStub.Episode
+                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStub.Episode
                     && item is MediaBrowser.Controller.Entities.TV.Episode spEp)
                 {
                     // When SpoilerReplaceTitle is on, the field-strip filter rewrites
@@ -1039,7 +1039,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 // strip stub. Covers home-rail cards bound to seriesId — e.g. NextUp /
                 // Continue Watching with "Use episode images" OFF, where cards show the
                 // series poster and the JE tag pipeline fetches series-level tag data.
-                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStub.Series
+                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStub.Series
                     && item is MediaBrowser.Controller.Entities.TV.Series spSeries)
                 {
                     string? stubName = item.Name;
@@ -1091,7 +1091,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 // Movie-stub: for an unwatched Movie in the user's spoiler scope,
                 // return the same Id+Type stub so JE tag overlays don't render on the
                 // blurred poster. Mirrors the Episode stub.
-                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStub.Movie
+                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStub.Movie
                     && item is MediaBrowser.Controller.Entities.Movies.Movie spMovie)
                 {
                     // Movie title is NOT rewritten under SpoilerReplaceTitle — it stays
@@ -1181,7 +1181,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 // and not S0/S1, return an Id+Type stub so JE tag overlays don't render
                 // on the blurred season poster. Mirrors the field-strip filter's Season
                 // strip + the image filter's HasWatchedAnyEpisodeInSeason gate.
-                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStub.Season
+                if (spoilerStub == Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStub.Season
                     && item is MediaBrowser.Controller.Entities.TV.Season spSeason)
                 {
                     string? stubName = item.Name;
@@ -1368,7 +1368,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
 
             // What Hide tags stripped from these answers ("none": nothing). The web batch
             // fallback stamps what it keeps with it (SpoilerTagDataStripper.TagStripRevision).
-            return Ok(new { Items = results, StripRevision = Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerTagDataStripper.TagStripRevision(spoilerPolicy) });
+            return Ok(new { Items = results, StripRevision = Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerTagDataStripper.TagStripRevision(spoilerPolicy) });
         }
 
 
@@ -1480,7 +1480,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
         private UserSpoilerBlur? LoadSpoilerStateForTagStrip(Guid userId)
         {
             var userKey = userId.ToString("N");
-            var fileName = Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerBlurImageFilter.SpoilerBlurFileName;
+            var fileName = Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services.SpoilerBlurImageFilter.SpoilerBlurFileName;
             if (!_userConfigurationManager.UserConfigurationExists(userKey, fileName))
             {
                 return null;
@@ -1494,7 +1494,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 _spoilerResolver.WarnRateLimited(
                     "tagstrip-corrupt:" + userKey,
                     $"Spoiler Guard tag-strip: spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {ex.Message}");
-                Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), ex.Message);
+                Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), ex.Message);
                 return null;
             }
             catch (Newtonsoft.Json.JsonException ex)
@@ -1502,7 +1502,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags
                 _spoilerResolver.WarnRateLimited(
                     "tagstrip-corrupt:" + userKey,
                     $"Spoiler Guard tag-strip: spoilerblur.json corrupt for {_userDisplayResolver.ResolveUserDisplay(userKey)} (backed up): {ex.Message}");
-                Jellyfin.Plugin.JellyfinEnhanced.Services.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), ex.Message);
+                Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard.SpoilerUserResolver.RecordCorruption(userKey, _userDisplayResolver.ResolveUserDisplay(userKey), ex.Message);
                 return null;
             }
             catch (IOException ex)

@@ -57,7 +57,7 @@ public class CoreLanguageTagPriorityTests
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), f.Core.Paths.Object, f.Core.Logger);
         var controller = (JeSettingsController)ApiAssetTests.Controller(typeof(JeSettingsController), f.Core, maintenance, f.Core.Manager);
         var user = Guid.NewGuid();
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(user) } };
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user) } };
         var bound = JsonSerializer.Deserialize<JellyfinEnhancedUserSettings>("{\"languageTagsPriority\":[\"jpn\",\"eng\",\"en\"],\"languageTagsPriorityStrict\":false}", new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
         Assert.IsType<OkObjectResult>(controller.SaveUserSettingsSettings(user.ToString("N"), bound));
         var saved = f.Core.Manager.GetUserConfiguration<JellyfinEnhancedUserSettings>(user.ToString("N"), "settings.json");
