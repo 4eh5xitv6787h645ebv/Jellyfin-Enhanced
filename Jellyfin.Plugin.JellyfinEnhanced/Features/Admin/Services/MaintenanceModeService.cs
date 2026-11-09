@@ -14,7 +14,7 @@ using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Session;
 using Newtonsoft.Json;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
 {
     public class MaintenanceState
     {

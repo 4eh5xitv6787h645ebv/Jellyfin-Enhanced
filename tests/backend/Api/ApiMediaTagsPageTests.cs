@@ -1,5 +1,8 @@
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
@@ -101,15 +104,15 @@ public class ApiMediaTagsPageTests
     }
 
     /// <summary>The admin page's field patch: per-field writes on top of the live configuration.</summary>
-    private static (JellyfinEnhancedController Controller, Action<bool> SignIn) PatchController(ApiPluginFixture f)
+    private static (JeAdminController Controller, Action<bool> SignIn) PatchController(ApiPluginFixture f)
     {
-        var controller = ApiAssetTests.Controller(f.Core);
+        var controller = (JeAdminController)ApiAssetTests.Controller(typeof(JeAdminController), f.Core);
         void SignIn(bool admin) => controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), admin) } };
         SignIn(true);
         return (controller, SignIn);
     }
 
-    private static JellyfinEnhancedController.ConfigurationPatchRequest Patch(object changes, object? expected = null) => new()
+    private static ConfigurationPatchRequest Patch(object changes, object? expected = null) => new()
     {
         Changes = StjSerializer.Deserialize<Dictionary<string, JsonElement>>(StjSerializer.Serialize(changes)),
         Expected = expected == null ? null : StjSerializer.Deserialize<Dictionary<string, JsonElement>>(StjSerializer.Serialize(expected)),
@@ -210,7 +213,7 @@ public class ApiMediaTagsPageTests
         signIn(true);
         Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(Patch(new { NoSuchField = 1 })));
         Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(Patch(new { TagsHideOnHover = "maybe" })));
-        Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest()));
+        Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new ConfigurationPatchRequest()));
         Assert.False(f.Plugin.Configuration.TagsHideOnHover);
     }
 
@@ -248,7 +251,7 @@ public class ApiMediaTagsPageTests
         var stored = System.Text.Json.Nodes.JsonNode.Parse(StjSerializer.Serialize(f.Plugin.Configuration, Jellyfin.Extensions.Json.JsonDefaults.Options))!.AsObject();
         foreach (var field in PageFields())
         {
-            var request = new JellyfinEnhancedController.ConfigurationPatchRequest { Changes = new() { [field] = StjSerializer.SerializeToElement(stored[field]) } };
+            var request = new ConfigurationPatchRequest { Changes = new() { [field] = StjSerializer.SerializeToElement(stored[field]) } };
             var result = controller.PatchConfiguration(request);
             Assert.True(result is OkObjectResult, $"{field}: {StjSerializer.Serialize((result as ObjectResult)?.Value)}");
         }
@@ -285,7 +288,7 @@ public class ApiMediaTagsPageTests
         f.Plugin.Configuration.TMDB_API_KEY = "server-key";
         foreach (var (field, value) in new (string, object)[] { ("DevMode", true), ("TMDB_API_KEY", "posted-key"), ("MdblistApiKey", "posted-key"), ("AnalyticsInstallSecret", "posted"), ("AnalyticsEnabled", true), ("CustomTagRuleKey", "posted"), ("CustomTagRuleSources", "posted") })
         {
-            var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest
+            var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new ConfigurationPatchRequest
             {
                 // With a page field in the same request: refused as a whole.
                 Changes = new() { ["TagsHideOnHover"] = StjSerializer.SerializeToElement(true), [field] = StjSerializer.SerializeToElement(value) },
@@ -347,7 +350,7 @@ public class ApiMediaTagsPageTests
         using var f = new ApiPluginFixture();
         var (controller, _) = PatchController(f);
         var before = StjSerializer.Serialize(f.Plugin.Configuration);
-        var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest
+        var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new ConfigurationPatchRequest
         {
             Changes = new() { ["TagsHideOnHover"] = StjSerializer.SerializeToElement(true), [field] = StjSerializer.Deserialize<JsonElement>(json) },
         }));
@@ -365,7 +368,7 @@ public class ApiMediaTagsPageTests
         // A correctly typed 1 MiB string, and one just over a field's own limit.
         foreach (var (field, length, limit) in new[] { ("NativePosterTagsWebClientNames", 1024 * 1024, 4096), ("LanguageTagsPriority", 257, 256), ("QualityTagsPreferredAudioLanguage", 33, 32) })
         {
-            var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest
+            var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new ConfigurationPatchRequest
             {
                 Changes = new() { [field] = StjSerializer.SerializeToElement(new string('a', length)) },
             }));
@@ -373,13 +376,13 @@ public class ApiMediaTagsPageTests
         }
 
         Assert.Equal(string.Empty, f.Plugin.Configuration.LanguageTagsPriority);
-        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest
+        Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new ConfigurationPatchRequest
         {
             Changes = new() { ["NativePosterTagsWebClientNames"] = StjSerializer.SerializeToElement(new string('a', 4096)) },
         }));
         // The body itself: reading past the action's limit fails before the action runs (Jellyfin then answers 500).
         // 8 MiB: an imported settings document sends every field it changes, with the values read before, in one patch.
-        var bodyLimit = typeof(JellyfinEnhancedController).GetMethod(nameof(JellyfinEnhancedController.PatchConfiguration))!
+        var bodyLimit = typeof(JeAdminController).GetMethod(nameof(JeAdminController.PatchConfiguration))!
             .GetCustomAttributes(typeof(RequestSizeLimitAttribute), false).Cast<RequestSizeLimitAttribute>().Single();
         Assert.Equal(8 * 1024 * 1024, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)bodyLimit).MaxRequestBodySize);
     }
@@ -408,7 +411,7 @@ public class ApiMediaTagsPageTests
         var (controller, _) = PatchController(f);
         Assert.False(MediaTagsPageFields.TryNormalize(field, value, out var stored, out _), $"'{value}' accepted for {field} as '{stored}'");
         var before = StjSerializer.Serialize(f.Plugin.Configuration);
-        var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest
+        var refused = Assert.IsType<BadRequestObjectResult>(controller.PatchConfiguration(new ConfigurationPatchRequest
         {
             Changes = new() { ["TagsHideOnHover"] = StjSerializer.SerializeToElement(true), [field] = StjSerializer.SerializeToElement(value) },
         }));
@@ -435,7 +438,7 @@ public class ApiMediaTagsPageTests
         using var f = new ApiPluginFixture();
         var (controller, _) = PatchController(f);
         // An unknown group and a slot the layout has not: dropped, as when the server reads the defaults.
-        var ok = Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new JellyfinEnhancedController.ConfigurationPatchRequest
+        var ok = Assert.IsType<OkObjectResult>(controller.PatchConfiguration(new ConfigurationPatchRequest
         {
             Changes = new()
             {
@@ -602,7 +605,7 @@ public class ApiMediaTagsPageTests
     {
         using var f = new ApiPluginFixture();
         var service = new WhatsNewService(f.Core.Paths.Object, f.Core.Logger);
-        var controller = ApiAssetTests.Controller(f.Core, service);
+        var controller = (JeAdminController)ApiAssetTests.Controller(typeof(JeAdminController), f.Core, service);
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = global::JellyfinEnhanced.Tests.PrivacyPolicyTests.Principal(Guid.NewGuid(), true) } };
         // An acknowledged baseline announces nothing again.
         service.Dismiss();

@@ -1,8 +1,8 @@
-using Jellyfin.Plugin.JellyfinEnhanced.Model;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Models;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Newtonsoft.Json;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Admin;
 
 [Collection("Plugin singleton")]
 public class CoreWhatsNewTests

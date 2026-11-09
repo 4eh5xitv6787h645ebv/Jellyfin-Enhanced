@@ -17,6 +17,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services.PosterTags.Rendering;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using SkiaSharp;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
 namespace JE.Tests;
 

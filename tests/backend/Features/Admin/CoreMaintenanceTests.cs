@@ -1,7 +1,7 @@
 using Jellyfin.Data;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
-using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Dto;
@@ -9,7 +9,7 @@ using MediaBrowser.Model.Users;
 using Moq;
 using Newtonsoft.Json;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Admin;
 
 [Collection("Plugin singleton")]
 public class CoreMaintenanceTests

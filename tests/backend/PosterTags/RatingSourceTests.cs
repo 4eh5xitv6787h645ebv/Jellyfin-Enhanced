@@ -14,6 +14,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
 namespace JE.Tests;
 

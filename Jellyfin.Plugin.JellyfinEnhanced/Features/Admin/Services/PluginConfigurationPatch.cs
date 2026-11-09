@@ -6,8 +6,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Jellyfin.Extensions.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
+using Jellyfin.Plugin.JellyfinEnhanced.Helpers;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Helpers
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
 {
     /// <summary>
     /// Writes a few configuration fields on top of the configuration the server holds at that moment, so a page

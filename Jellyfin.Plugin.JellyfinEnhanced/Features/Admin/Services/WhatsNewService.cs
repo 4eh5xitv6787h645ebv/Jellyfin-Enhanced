@@ -7,8 +7,9 @@ using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyfinEnhanced.Model;
 using MediaBrowser.Common.Configuration;
 using Newtonsoft.Json;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Models;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
 {
     /// <summary>
     /// Auto-detects newly added config-page settings by diffing the embedded

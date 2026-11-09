@@ -15,6 +15,7 @@ using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
 namespace JE.Tests;
 

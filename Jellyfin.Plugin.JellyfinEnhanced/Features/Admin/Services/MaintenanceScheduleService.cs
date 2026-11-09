@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services
 {
     /// <summary>
     /// Drives the daily maintenance window (MaintenanceScheduleEnabled / Start / End) and expires

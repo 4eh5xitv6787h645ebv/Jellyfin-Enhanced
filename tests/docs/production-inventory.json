@@ -162,7 +162,19 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/AdminServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Events/MaintenancePlaybackReminder.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/Models/ConfigurationPatchRequest.cs",
       "category": "Features"
     },
     {
@@ -2110,24 +2122,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/host-compat",
-      "method": "GetHostCompatibility",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyfin-urls",
-      "method": "GetJellyfinNetworkUrls",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/jellyseerr/{type}/{serverId}",
       "method": "GetServiceDetails",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3402,17 +3396,6 @@
       ]
     },
     {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/admin/configuration",
-      "method": "PatchConfiguration",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "RequestSizeLimit(PluginConfigurationPatch.MaxRequestBytes)",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
       "verb": "GET",
       "path": "/JellyfinEnhanced/admin/media-tags/export",
       "method": "ExportAdminMediaTags",
@@ -3442,25 +3425,6 @@
       "following_attributes": [
         "Authorize",
         "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/whats-new",
-      "method": "GetWhatsNew",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize",
-        "Produces(\"application/json\")"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/whats-new/dismiss",
-      "method": "DismissWhatsNew",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
       ]
     },
     {
@@ -3534,24 +3498,6 @@
       "verb": "POST",
       "path": "/JellyfinEnhanced/jellyseerr/issue",
       "method": "ReportJellyseerrIssue",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/validate/sonarr",
-      "method": "ValidateSonarr",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/arr/validate/radarr",
-      "method": "ValidateRadarr",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": [
         "Authorize"
@@ -3660,41 +3606,6 @@
     },
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Status",
-      "method": "GetMaintenanceStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Enable",
-      "method": "EnableMaintenanceMode",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Disable",
-      "method": "DisableMaintenanceMode",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Users",
-      "method": "GetMaintenanceModeUsers",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/MaintenanceMode/Broadcast",
-      "method": "BroadcastMaintenanceMessage",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": []
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/{viewName}",
       "method": "GetView",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -3710,6 +3621,107 @@
         "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
         "Produces(\"application/json\")"
       ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/host-compat",
+      "method": "GetHostCompatibility",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyfin-urls",
+      "method": "GetJellyfinNetworkUrls",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/admin/configuration",
+      "method": "PatchConfiguration",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize",
+        "RequestSizeLimit(PluginConfigurationPatch.MaxRequestBytes)",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/whats-new",
+      "method": "GetWhatsNew",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize",
+        "Produces(\"application/json\")"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/whats-new/dismiss",
+      "method": "DismissWhatsNew",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/validate/sonarr",
+      "method": "ValidateSonarr",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/arr/validate/radarr",
+      "method": "ValidateRadarr",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Status",
+      "method": "GetMaintenanceStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Enable",
+      "method": "EnableMaintenanceMode",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Disable",
+      "method": "DisableMaintenanceMode",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Users",
+      "method": "GetMaintenanceModeUsers",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/MaintenanceMode/Broadcast",
+      "method": "BroadcastMaintenanceMessage",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Admin/JeAdminController.cs",
+      "following_attributes": []
     },
     {
       "verb": "GET",
@@ -10346,7 +10358,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 497,
+    "files": 500,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 89,

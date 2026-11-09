@@ -2,6 +2,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Transport;
 using Newtonsoft.Json.Linq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
 namespace JE.Tests;
 

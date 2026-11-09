@@ -2,6 +2,8 @@ using System.Net.Http;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.EventHandlers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Catchup;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Chrome;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting;
@@ -57,7 +59,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // Auto-detects newly added config-page settings by diffing the
             // embedded configPage.html against a snapshot from the previous
             // startup -- see StartupService.
-            serviceCollection.AddSingleton<WhatsNewService>();
+            serviceCollection.AddJeAdmin();
             serviceCollection.AddSingleton<AutoSeasonRequestService>();
             serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();
             serviceCollection.AddSingleton<AutoMovieRequestService>();
@@ -128,7 +130,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             // (Resume, Items, Latest, NextUp, Upcoming, Suggestions, SearchHints), plus the Home Screen Sections
             // plugin's own section-content endpoint, which replaces those native lists on an HSS home screen. Same
             // filter handles "Remove from Continue Watching" via HideScope=continuewatching in hidden-content.json.
-            serviceCollection.AddSingleton<MaintenanceModeService>();
             // Maintenance Mode extras: a 30s timer that opens/closes the daily scheduled window
             // and expires timed manual windows, plus the per-playback-start reminder popup.
             serviceCollection.AddHostedService<MaintenanceScheduleService>();

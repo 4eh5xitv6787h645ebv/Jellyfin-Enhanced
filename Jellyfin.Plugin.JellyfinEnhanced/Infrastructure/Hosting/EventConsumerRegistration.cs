@@ -4,6 +4,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Events;
 using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.DependencyInjection;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Events;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Hosting
 {

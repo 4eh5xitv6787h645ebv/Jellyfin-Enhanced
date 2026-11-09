@@ -5,6 +5,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 
 namespace JE.Tests;
 

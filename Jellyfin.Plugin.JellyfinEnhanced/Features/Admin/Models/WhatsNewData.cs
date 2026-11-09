@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Model
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Models
 {
     /// <summary>
     /// Every setting control id as of the last acknowledged state (dismiss,
