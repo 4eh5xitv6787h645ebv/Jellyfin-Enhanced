@@ -263,6 +263,7 @@
         if (shown || isClosing) return;
         shown = true;
         openedUrl = window2.location.href;
+        for (const closing of Array.from(document2.querySelectorAll('.jellyseerr-season-modal[aria-hidden="true"]'))) closing.remove();
         document2.body.appendChild(modalElement);
         document2.body.classList.add("jellyseerr-modal-is-open");
         const previous = window2.history.state;
