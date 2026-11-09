@@ -291,7 +291,9 @@
       document.querySelectorAll(".je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker").forEach((el) => el.remove());
       document.querySelectorAll(".sections.bookmarks").forEach((el) => el.replaceChildren());
     }));
-    listen(window, "pagehide", dispose);
+    listen(window, "pagehide", (event) => {
+      if (event.target === window && !event.persisted) dispose();
+    });
     return result;
   }
 

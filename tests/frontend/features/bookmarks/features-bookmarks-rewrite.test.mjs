@@ -145,3 +145,20 @@ test('replacement search pages beyond 500 records and never offers a series as a
  await h.JE.internals.bookmarksLibrary.findAndOfferReplacement({details:{itemId:'old',mediaType:'tv',tmdbId:'42',seasonNumber:1,episodeNumber:2},bookmarks:[]},h.document.createElement('button'));
  assert.equal(calls,2);assert.equal(h.document.querySelectorAll('.replacement-option').length,1);assert.match(h.document.querySelector('.replacement-option').textContent,/Correct episode/);
 });
+// BUG-016: jellyfin-web's legacy page events include a bubbling "pagehide" on the view element it hides (seen after a
+// details page). Only the document's own unload may dispose the bookmarks lifetimes; otherwise the library page is
+// left unstyled and empty until reload.
+test('a bubbling element pagehide leaves the bookmarks library styled and rendering',async t=>{
+ const h=setup(t,{a:{itemId:'a',timestamp:4,mediaType:'movie',name:'Alpha'}});
+ h.document.body.innerHTML='<div class="mainAnimatedPages"><div class="page" id="itemDetailPage"></div></div>';
+ h.load('styles','render','items');
+ const styles=()=>h.document.head.querySelectorAll('style').length,before=styles();
+ assert.ok(before>=2);
+ h.document.getElementById('itemDetailPage').dispatchEvent(new h.window.CustomEvent('pagehide',{bubbles:true}));
+ // A back/forward-cache hide keeps the page alive too: it may be shown again.
+ h.window.dispatchEvent(new h.window.PageTransitionEvent('pagehide',{persisted:true}));
+ assert.equal(styles(),before,'library styles survive');
+ const container=h.document.createElement('div');h.document.body.append(container);
+ await h.JE.internals.bookmarksLibrary.renderBookmarksLibrary(container);
+ assert.equal(container.querySelectorAll('.je-bookmark-item').length,1,'the library still renders its rows');
+});

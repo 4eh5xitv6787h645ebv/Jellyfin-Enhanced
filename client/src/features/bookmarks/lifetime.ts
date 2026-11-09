@@ -77,6 +77,8 @@ export function createLifetime(ctx: BookmarksContext, name: string) {
   document.querySelectorAll('.je-bm-player-modal-overlay, .je-bm-library-modal-overlay, .je-bookmark-marker').forEach(el => el.remove());
   document.querySelectorAll('.sections.bookmarks').forEach(el => el.replaceChildren());
  }));
- listen(window, 'pagehide', dispose);
+ // Only the document's own unload disposes: jellyfin-web dispatches a bubbling legacy `pagehide` on the view it
+ // hides (it reaches window with that element as target), and a back/forward-cache hide (persisted) may be shown again.
+ listen(window, 'pagehide', event => {if (event.target === window && !(event as PageTransitionEvent).persisted) dispose();});
  return result;
 }
