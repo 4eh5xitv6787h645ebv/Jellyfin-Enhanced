@@ -15,6 +15,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 {
@@ -155,7 +156,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
 
             // Get all Jellyfin users, then filter out the JellyseerrImportBlockedUsers
             // so blocked users don't get watchlist sync.
-            var blockedIds = Helpers.Jellyseerr.JellyseerrUserImportHelper
+            var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
                 .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
             var allUsers = _userManager.GetAllUsers().ToList();
             var jellyfinUsers = allUsers

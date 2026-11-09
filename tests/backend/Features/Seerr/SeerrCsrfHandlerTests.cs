@@ -1,8 +1,8 @@
 using System.Net;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Seerr;
 
 public class SeerrCsrfHandlerTests
 {

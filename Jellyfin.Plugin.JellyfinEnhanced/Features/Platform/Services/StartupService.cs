@@ -11,6 +11,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Activity.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Admin.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Services
 {

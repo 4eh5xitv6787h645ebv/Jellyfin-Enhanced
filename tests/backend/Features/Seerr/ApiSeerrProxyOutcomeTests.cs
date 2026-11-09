@@ -4,8 +4,8 @@ using System.Net.Sockets;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
-using Jellyfin.Plugin.JellyfinEnhanced.Helpers.Jellyseerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
@@ -14,8 +14,9 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Seerr;
 
 /// <summary>
 /// The Seerr proxy's write outcomes (docs/rewrite/seerr-proxy-outcomes.md): a write handed to a
@@ -66,11 +67,11 @@ public class ApiSeerrProxyOutcomeTests
         public string HostA { get; } = "seerr-a-" + Guid.NewGuid().ToString("N") + ".invalid";
         public string HostB { get; } = "seerr-b-" + Guid.NewGuid().ToString("N") + ".invalid";
         public FakeSeerr Fake { get; }
-        public JellyfinEnhancedController Controller { get; }
+        public JeSeerrController Controller { get; }
 
         public Proxy(string? urls = null, Func<HttpMessageHandler>? primary = null)
         {
-            JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+            SeerrCaches.ClearAllSeerrCachesOnConfigChange();
             var config = Plugin.Plugin.Configuration;
             config.JellyseerrEnabled = true;
             config.JellyseerrAutoImportUsers = false;
@@ -81,7 +82,7 @@ public class ApiSeerrProxyOutcomeTests
             var factory = new SeerrClientFactory(primary ?? (() => new Forwarder(Fake)));
             var users = Mock.Of<IUserManager>();
             var filter = new SeerrParentalFilter(factory, users, Mock.Of<ILocalizationManager>(), Mock.Of<IServerConfigurationManager>(), Plugin.Core.Logger);
-            Controller = ApiAssetTests.Controller(Plugin.Core, factory, users, filter);
+            Controller = (JeSeerrController)ApiAssetTests.Controller(typeof(JeSeerrController), Plugin.Core, factory, users, filter);
             SetUser(admin: false);
         }
 
@@ -90,7 +91,7 @@ public class ApiSeerrProxyOutcomeTests
 
         public Task<IActionResult> Request() => Controller.JellyseerrRequest(JsonSerializer.Deserialize<JsonElement>(RequestBody));
 
-        public void Dispose() { JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange(); Plugin.Dispose(); }
+        public void Dispose() { SeerrCaches.ClearAllSeerrCachesOnConfigChange(); Plugin.Dispose(); }
     }
 
     /// <summary>Lets each HttpClient own (and dispose) its handler while the fake's state is shared.</summary>
@@ -242,7 +243,7 @@ public class ApiSeerrProxyOutcomeTests
         Assert.Equal(0, p.Fake.Count(p.HostB, "POST"));
 
         p.Permissions = JellyseerrPermission.REQUEST;
-        JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+        SeerrCaches.ClearAllSeerrCachesOnConfigChange();
         var (status, denied) = Failure(await p.Controller.ReportJellyseerrIssue(JsonSerializer.Deserialize<JsonElement>("{\"issueType\":1}")));
         Assert.Equal(403, status);
         Assert.Equal("no_issue_permission", denied.GetProperty("code").GetString());
@@ -274,7 +275,7 @@ public class ApiSeerrProxyOutcomeTests
         Assert.False(body.TryGetProperty("error", out _));
 
         p.Plugin.Plugin.Configuration.JellyseerrImportBlockedUsers = p.UserId.ToString("N");
-        JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+        SeerrCaches.ClearAllSeerrCachesOnConfigChange();
         (status, body) = Failure(await p.Request());
         Assert.Equal(403, status);
         Assert.Equal("blocked", body.GetProperty("code").GetString());
@@ -354,7 +355,7 @@ public class ApiSeerrProxyOutcomeTests
         Assert.Equal(1, p.Fake.Count(p.HostB, "GET"));
 
         // Exceptions also fail reads over, and the read envelope has no outcome.
-        JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+        SeerrCaches.ClearAllSeerrCachesOnConfigChange();
         p.Fake.Calls.Clear();
         p.Fake.Reply = (_, _) => Task.FromException<HttpResponseMessage>(LostReply("response-ended"));
         var (status, body) = Failure(await p.Controller.GetTvShow(8));

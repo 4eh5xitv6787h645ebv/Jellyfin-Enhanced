@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services
 {
     /// <summary>
     /// Shapes a TMDB discover/tv page as a Seerr /discover/tv page for the

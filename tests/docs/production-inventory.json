@@ -690,6 +690,42 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Issues.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Status.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Tmdb.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/PublicApi/SeerrApi.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/SeerrServiceRegistration.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/Services/AutoMovieRequestMonitor.cs",
       "category": "Features"
     },
@@ -763,6 +799,10 @@
     },
     {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/JeSpoilerGuardController.cs",
+      "category": "Features"
+    },
+    {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/SpoilerGuard/PublicApi/SpoilerGuardApi.cs",
       "category": "Features"
     },
     {
@@ -2085,529 +2125,6 @@
   "routes": [
     {
       "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/status",
-      "method": "GetJellyseerrStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/validate",
-      "method": "ValidateJellyseerr",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/jellyseerr/trigger-recently-added-scan",
-      "method": "TriggerJellyseerrRecentlyAddedScan",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/user-status",
-      "method": "GetJellyseerrUserStatus",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/permission-audit",
-      "method": "GetPermissionAudit",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/search",
-      "method": "JellyseerrSearch",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/sonarr",
-      "method": "GetSonarrInstances",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/radarr",
-      "method": "GetRadarrInstances",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/sonarr/lookup/{tmdbId}",
-      "method": "GetSonarrLookup",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/settings/{type}",
-      "method": "GetJellyseerrArrSettings",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/{type}/{serverId}",
-      "method": "GetServiceDetails",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/jellyseerr/request",
-      "method": "JellyseerrRequest",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/request",
-      "method": "GetJellyseerrRequests",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/quota",
-      "method": "GetJellyseerrQuota",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}",
-      "method": "GetTvShow",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/season/{seasonNumber}",
-      "method": "GetTvSeason",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}",
-      "method": "GetMovie",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/movie-collections",
-      "method": "GetMovieCollectionsBatch",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}/similar",
-      "method": "GetSimilarMovies",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}/recommendations",
-      "method": "GetRecommendedMovies",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}/ratingscombined",
-      "method": "GetMovieRatingsCombined",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/similar",
-      "method": "GetSimilarTvShows",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/recommendations",
-      "method": "GetRecommendedTvShows",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/ratings",
-      "method": "GetTvRatingsCombined",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/network/{networkId}",
-      "method": "DiscoverTvByNetwork",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/studio/{studioId}",
-      "method": "DiscoverMoviesByStudio",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/studio/{studioId}",
-      "method": "DiscoverTvByStudio",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/trending",
-      "method": "DiscoverTrending",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/movies",
-      "method": "DiscoverMovies",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/tv",
-      "method": "DiscoverTv",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/upcoming",
-      "method": "DiscoverUpcomingMovies",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/upcoming",
-      "method": "DiscoverUpcomingTv",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/studio/{studioId}",
-      "method": "GetStudioInfo",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/boxset/{boxsetId}",
-      "method": "GetBoxSetInfo",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/person/{personId}",
-      "method": "GetPersonInfo",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/people/info",
-      "method": "GetPeopleInfo",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/genre/{genreId}",
-      "method": "GetGenreInfo",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/person/{personId}",
-      "method": "GetJellyseerrPerson",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/person/{personId}/combined_credits",
-      "method": "GetJellyseerrPersonCredits",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/genre/{genreId}",
-      "method": "DiscoverTvByGenre",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/genre/{genreId}",
-      "method": "DiscoverMoviesByGenre",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/keyword/{keywordId}",
-      "method": "DiscoverTvByKeyword",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/keyword/{keywordId}",
-      "method": "DiscoverMoviesByKeyword",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tmdb/search/person",
-      "method": "SearchTmdbPerson",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tmdb/search/keyword",
-      "method": "SearchTmdbKeyword",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tmdb/genres/movie",
-      "method": "GetTmdbMovieGenres",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tmdb/genres/tv",
-      "method": "GetTmdbTvGenres",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/genreslider/movie",
-      "method": "GetMovieGenreSlider",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/discover/genreslider/tv",
-      "method": "GetTvGenreSlider",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/overrideRule",
-      "method": "GetOverrideRules",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/collection/{collectionId}",
-      "method": "GetCollection",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/user",
-      "method": "GetJellyseerrUsers",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/jellyseerr/request/tv/{tmdbId}/seasons",
-      "method": "RequestTvSeasons",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/watchlist",
-      "method": "GetJellyseerrWatchlist",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/jellyseerr/sync-watchlist",
-      "method": "SyncJellyseerrWatchlist",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/jellyseerr/import-users",
-      "method": "ImportJellyseerrUsers",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/settings/partial-requests",
-      "method": "GetJellyseerrPartialRequestsSetting",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tmdb/validate",
-      "method": "ValidateTmdb",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
       "path": "/JellyfinEnhanced/script",
       "method": "GetMainScript",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
@@ -2685,24 +2202,6 @@
       "following_attributes": []
     },
     {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/tmdb/{**apiPath}",
-      "method": "ProxyTmdbRequest",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/watch-providers",
-      "method": "GetWatchProvidersBatch",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
       "verb": "POST",
       "path": "/JellyfinEnhanced/usage/track",
       "method": "TrackUsage",
@@ -2750,33 +2249,6 @@
       "method": "GetLocale",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
       "following_attributes": []
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/issue",
-      "method": "GetJellyseerrIssues",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "GET",
-      "path": "/JellyfinEnhanced/jellyseerr/issue/{id}",
-      "method": "GetJellyseerrIssueById",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
-    },
-    {
-      "verb": "POST",
-      "path": "/JellyfinEnhanced/jellyseerr/issue",
-      "method": "ReportJellyseerrIssue",
-      "file": "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
-      "following_attributes": [
-        "Authorize"
-      ]
     },
     {
       "verb": "GET",
@@ -3680,6 +3152,574 @@
       "path": "/JellyfinEnhanced/native-poster-tags/preview/{itemId}",
       "method": "PreviewNativePosterTags",
       "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/JeMediaTagsController.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}",
+      "method": "GetTvShow",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/season/{seasonNumber}",
+      "method": "GetTvSeason",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}",
+      "method": "GetMovie",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/movie-collections",
+      "method": "GetMovieCollectionsBatch",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}/similar",
+      "method": "GetSimilarMovies",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}/recommendations",
+      "method": "GetRecommendedMovies",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/movie/{tmdbId}/ratingscombined",
+      "method": "GetMovieRatingsCombined",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/similar",
+      "method": "GetSimilarTvShows",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/recommendations",
+      "method": "GetRecommendedTvShows",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/tv/{tmdbId}/ratings",
+      "method": "GetTvRatingsCombined",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/network/{networkId}",
+      "method": "DiscoverTvByNetwork",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/studio/{studioId}",
+      "method": "DiscoverMoviesByStudio",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/studio/{studioId}",
+      "method": "DiscoverTvByStudio",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/trending",
+      "method": "DiscoverTrending",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/movies",
+      "method": "DiscoverMovies",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/tv",
+      "method": "DiscoverTv",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/upcoming",
+      "method": "DiscoverUpcomingMovies",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/upcoming",
+      "method": "DiscoverUpcomingTv",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/studio/{studioId}",
+      "method": "GetStudioInfo",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/boxset/{boxsetId}",
+      "method": "GetBoxSetInfo",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/person/{personId}",
+      "method": "GetPersonInfo",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/people/info",
+      "method": "GetPeopleInfo",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/genre/{genreId}",
+      "method": "GetGenreInfo",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/person/{personId}",
+      "method": "GetJellyseerrPerson",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/person/{personId}/combined_credits",
+      "method": "GetJellyseerrPersonCredits",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/genre/{genreId}",
+      "method": "DiscoverTvByGenre",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/genre/{genreId}",
+      "method": "DiscoverMoviesByGenre",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/tv/keyword/{keywordId}",
+      "method": "DiscoverTvByKeyword",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/movies/keyword/{keywordId}",
+      "method": "DiscoverMoviesByKeyword",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tmdb/search/person",
+      "method": "SearchTmdbPerson",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tmdb/search/keyword",
+      "method": "SearchTmdbKeyword",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tmdb/genres/movie",
+      "method": "GetTmdbMovieGenres",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tmdb/genres/tv",
+      "method": "GetTmdbTvGenres",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/genreslider/movie",
+      "method": "GetMovieGenreSlider",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/discover/genreslider/tv",
+      "method": "GetTvGenreSlider",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/overrideRule",
+      "method": "GetOverrideRules",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/collection/{collectionId}",
+      "method": "GetCollection",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Discover.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/issue",
+      "method": "GetJellyseerrIssues",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Issues.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/issue/{id}",
+      "method": "GetJellyseerrIssueById",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Issues.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/jellyseerr/issue",
+      "method": "ReportJellyseerrIssue",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Issues.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/search",
+      "method": "JellyseerrSearch",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/sonarr",
+      "method": "GetSonarrInstances",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/radarr",
+      "method": "GetRadarrInstances",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/sonarr/lookup/{tmdbId}",
+      "method": "GetSonarrLookup",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/settings/{type}",
+      "method": "GetJellyseerrArrSettings",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/{type}/{serverId}",
+      "method": "GetServiceDetails",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/jellyseerr/request",
+      "method": "JellyseerrRequest",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/request",
+      "method": "GetJellyseerrRequests",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/quota",
+      "method": "GetJellyseerrQuota",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Requests.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/status",
+      "method": "GetJellyseerrStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Status.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/validate",
+      "method": "ValidateJellyseerr",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Status.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/jellyseerr/trigger-recently-added-scan",
+      "method": "TriggerJellyseerrRecentlyAddedScan",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Status.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/user-status",
+      "method": "GetJellyseerrUserStatus",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Status.cs",
+      "following_attributes": [
+        "ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)",
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/permission-audit",
+      "method": "GetPermissionAudit",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Status.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tmdb/{**apiPath}",
+      "method": "ProxyTmdbRequest",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Tmdb.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/watch-providers",
+      "method": "GetWatchProvidersBatch",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Tmdb.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/user",
+      "method": "GetJellyseerrUsers",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/jellyseerr/request/tv/{tmdbId}/seasons",
+      "method": "RequestTvSeasons",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/watchlist",
+      "method": "GetJellyseerrWatchlist",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/jellyseerr/sync-watchlist",
+      "method": "SyncJellyseerrWatchlist",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "POST",
+      "path": "/JellyfinEnhanced/jellyseerr/import-users",
+      "method": "ImportJellyseerrUsers",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/jellyseerr/settings/partial-requests",
+      "method": "GetJellyseerrPartialRequestsSetting",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
+      "following_attributes": [
+        "Authorize"
+      ]
+    },
+    {
+      "verb": "GET",
+      "path": "/JellyfinEnhanced/tmdb/validate",
+      "method": "ValidateTmdb",
+      "file": "Jellyfin.Plugin.JellyfinEnhanced/Features/Seerr/JeSeerrController.Users.cs",
       "following_attributes": [
         "Authorize"
       ]
@@ -10458,7 +10498,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 518,
+    "files": 528,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 96,

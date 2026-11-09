@@ -14,7 +14,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services
 {
     // Monitors library additions to automatically add requested media to user watchlists.
     // Queries Jellyseerr API directly to check if added items were requested by users.
@@ -192,7 +192,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Services
                 // filter out users in the import
                 // blocklist so a blocked user's existing requests don't keep
                 // syncing to their Jellyfin watchlist (defeats admin intent).
-                var blockedIds = Helpers.Jellyseerr.JellyseerrUserImportHelper
+                var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
                     .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
 
                 var requesterIds = matchingRequests

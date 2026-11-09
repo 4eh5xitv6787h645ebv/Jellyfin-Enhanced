@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Seerr;
 
 [Collection("Plugin singleton")]
 public class IntegrationTmdbTests
@@ -177,7 +178,7 @@ public class IntegrationTmdbTests
         var library = new Mock<ILibraryManager>();
         library.Setup(l => l.GetItemById(fromTmdb.Id)).Returns(fromTmdb);
         library.Setup(l => l.GetItemById(fromJellyfin.Id)).Returns(fromJellyfin);
-        var controller = ApiAssetTests.Controller(f.Core, library.Object, cache);
+        var controller = (JeSeerrController)ApiAssetTests.Controller(typeof(JeSeerrController), f.Core, library.Object, cache);
         JsonElement tmdb, jellyfin;
         var old = CultureInfo.CurrentCulture;
         try

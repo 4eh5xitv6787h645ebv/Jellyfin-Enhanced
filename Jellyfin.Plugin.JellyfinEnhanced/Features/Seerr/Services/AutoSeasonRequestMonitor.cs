@@ -9,7 +9,7 @@ using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.JellyfinEnhanced.Services
+namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services
 {
     // Monitors playback events to automatically request next seasons when threshold is reached.
     public class AutoSeasonRequestMonitor : IDisposable

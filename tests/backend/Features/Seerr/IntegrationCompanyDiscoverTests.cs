@@ -1,7 +1,8 @@
 using System.Text.Json;
 using Jellyfin.Plugin.JellyfinEnhanced.Services;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Seerr;
 
 public class IntegrationCompanyDiscoverTests
 {

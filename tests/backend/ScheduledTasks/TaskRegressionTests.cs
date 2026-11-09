@@ -7,6 +7,7 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Moq;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
 namespace JE.Tests;
 

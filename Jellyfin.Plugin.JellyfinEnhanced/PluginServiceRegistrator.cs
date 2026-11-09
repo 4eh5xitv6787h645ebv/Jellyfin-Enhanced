@@ -22,8 +22,10 @@ using Microsoft.Extensions.DependencyInjection;
 using MediaBrowser.Controller;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Parental;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr.Services;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced
 {
@@ -59,20 +61,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
                     AllowAutoRedirect = false,
                     UseCookies = false
                 })
-                .AddHttpMessageHandler(() => new Helpers.Jellyseerr.SeerrCsrfHandler());
+                .AddHttpMessageHandler(() => new Features.Seerr.Services.SeerrCsrfHandler());
             serviceCollection.AddSingleton<Logger>();
             serviceCollection.AddSingleton<UserConfigurationManager>();
             // Auto-detects newly added config-page settings by diffing the
             // embedded configPage.html against a snapshot from the previous
             // startup -- see StartupService.
             serviceCollection.AddJeAdmin();
-            serviceCollection.AddSingleton<AutoSeasonRequestService>();
-            serviceCollection.AddSingleton<AutoSeasonRequestMonitor>();
-            serviceCollection.AddSingleton<AutoMovieRequestService>();
-            serviceCollection.AddSingleton<AutoMovieRequestMonitor>();
-            serviceCollection.AddSingleton<WatchlistMonitor>();
+            serviceCollection.AddJeSeerr();
             serviceCollection.AddJeCatchup();
-            serviceCollection.AddSingleton<SeerrScanTriggerService>();
             serviceCollection.AddJeMediaTags();
             // Local CDN subsystem: serves every third-party static asset (icons, fonts,
             // theme sheets, flags, remote locales) from the plugin's own route, backed by
@@ -92,9 +89,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
             serviceCollection.AddSingleton<AnalyticsReportingService>();
             serviceCollection.AddTransient<AnalyticsReportTask>();
             serviceCollection.AddTransient<RefreshCdnAssetsTask>();
-            serviceCollection.AddTransient<JellyseerrWatchlistSyncTask>();
-            serviceCollection.AddTransient<JellyfinToSeerrWatchlistSyncTask>();
-            serviceCollection.AddTransient<JellyseerrUserImportTask>();
 
             // Hidden Content: server-side filter for every native Jellyfin endpoint that surfaces user-facing item lists
             // (Resume, Items, Latest, NextUp, Upcoming, Suggestions, SearchHints), plus the Home Screen Sections

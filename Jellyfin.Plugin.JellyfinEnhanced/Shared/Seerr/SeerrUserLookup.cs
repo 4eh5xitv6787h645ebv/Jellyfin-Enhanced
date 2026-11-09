@@ -251,7 +251,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
 
         public static bool IsJellyseerrImportBlocked(string jellyfinUserId, Configuration.PluginConfiguration config)
         {
-            var blockedIds = Helpers.Jellyseerr.JellyseerrUserImportHelper.GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
+            var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper.GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
             if (blockedIds.Count == 0)
             {
                 return false;

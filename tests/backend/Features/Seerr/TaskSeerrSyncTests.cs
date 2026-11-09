@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Text.Json;
 using Jellyfin.Database.Implementations.Entities;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks;
 using MediaBrowser.Controller.Entities;
@@ -9,7 +10,7 @@ using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Seerr;
 
 [Collection("Plugin singleton")]
 public class TaskSeerrSyncTests
@@ -191,7 +192,7 @@ public class TaskSeerrSyncTests
                 : path == "/api/v1/user/28/watchlist" ? "{\"results\":[{\"tmdbId\":456,\"mediaType\":\"movie\"}]}"
                 : "{\"results\":[{\"requestedBy\":{\"id\":27},\"media\":{\"tmdbId\":555,\"mediaType\":\"movie\"}}]}"));
         });
-        var controller = ApiAssetTests.Controller(f.Core, Users(admin, blocked).Object, library.Object, data.Object, transport, f.Core.Manager);
+        var controller = (JeSeerrController)ApiAssetTests.Controller(typeof(JeSeerrController), f.Core, Users(admin, blocked).Object, library.Object, data.Object, transport, f.Core.Manager);
         controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
 
         var result = Assert.IsType<OkObjectResult>(await controller.SyncJellyseerrWatchlist());
@@ -218,7 +219,7 @@ public class TaskSeerrSyncTests
         config.JellyseerrApiKey = "test";
         var admin = new User("admin", "default", "default") { Id = Guid.NewGuid() };
         using var transport = new IntegrationTransport((_, _) => throw new InvalidOperationException("Must not call Seerr"));
-        var controller = ApiAssetTests.Controller(f.Core, Users(admin).Object, new Mock<ILibraryManager>().Object, new Mock<IUserDataManager>().Object, transport, f.Core.Manager);
+        var controller = (JeSeerrController)ApiAssetTests.Controller(typeof(JeSeerrController), f.Core, Users(admin).Object, new Mock<ILibraryManager>().Object, new Mock<IUserDataManager>().Object, transport, f.Core.Manager);
         controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
 
         var result = Assert.IsType<BadRequestObjectResult>(await controller.SyncJellyseerrWatchlist());
@@ -257,7 +258,7 @@ public class TaskSeerrSyncTests
                 ? JsonSerializer.Serialize(new { results = new[] { new { id = 27, jellyfinUserId = admin.Id.ToString("N") } } })
                 : "{\"results\":[{\"tmdbId\":123,\"mediaType\":\"movie\"}]}"));
         });
-        var controller = ApiAssetTests.Controller(f.Core, Users(admin).Object, library.Object, data.Object, transport, f.Core.Manager);
+        var controller = (JeSeerrController)ApiAssetTests.Controller(typeof(JeSeerrController), f.Core, Users(admin).Object, library.Object, data.Object, transport, f.Core.Manager);
         controller.ControllerContext.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(admin.Id, admin: true);
 
         var result = await controller.SyncJellyseerrWatchlist();

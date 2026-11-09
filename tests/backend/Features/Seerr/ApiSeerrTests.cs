@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Text.Json;
+using Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr;
 using Jellyfin.Plugin.JellyfinEnhanced.Controllers;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads;
@@ -18,7 +19,7 @@ using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard;
 using Jellyfin.Plugin.JellyfinEnhanced.Shared.Tmdb;
 
-namespace JE.Tests;
+namespace JE.Tests.Features.Seerr;
 
 [Collection("Plugin singleton")]
 public class ApiSeerrTests
@@ -32,11 +33,11 @@ public class ApiSeerrTests
         public ConcurrentQueue<(string Path, string Method, string? User, string? Body)> Calls { get; } = new();
         public Func<HttpRequestMessage, HttpResponseMessage> Reply { get; set; } = _ => IntegrationTransport.Response("{\"id\":99}");
         public IntegrationTransport Transport { get; }
-        public JellyfinEnhancedController Controller { get; }
+        public JeSeerrController Controller { get; }
         private readonly object[] services;
         public SeerrFixture(Func<SeerrFixture, IUserManager, object[]>? extraServices = null)
         {
-            JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+            SeerrCaches.ClearAllSeerrCachesOnConfigChange();
             Plugin.Plugin.Configuration.JellyseerrEnabled = true;
             Plugin.Plugin.Configuration.JellyseerrAutoImportUsers = false;
             Plugin.Plugin.Configuration.JellyseerrUrls = "http://private-seerr.invalid";
@@ -60,7 +61,7 @@ public class ApiSeerrTests
             var services = new List<object> { Transport, users, filter };
             if (extraServices != null) services.AddRange(extraServices(this, users));
             this.services = services.ToArray();
-            Controller = ApiAssetTests.Controller(Plugin.Core, this.services);
+            Controller = (JeSeerrController)ApiAssetTests.Controller(typeof(JeSeerrController), Plugin.Core, this.services);
             SetUser(UserId);
         }
         // The calendar actions live on JeCalendarController (restructure S2.5); same services, same HTTP context.
@@ -69,6 +70,13 @@ public class ApiSeerrTests
             var calendar = (JeCalendarController)ApiAssetTests.Controller(typeof(JeCalendarController), Plugin.Core, services);
             calendar.ControllerContext = Controller.ControllerContext;
             return calendar;
+        }
+        // The SpoilerGuard actions live on JeSpoilerGuardController (restructure S2.13); same services, same HTTP context.
+        public JeSpoilerGuardController SpoilerGuard()
+        {
+            var spoiler = (JeSpoilerGuardController)ApiAssetTests.Controller(typeof(JeSpoilerGuardController), Plugin.Core, services);
+            spoiler.ControllerContext = Controller.ControllerContext;
+            return spoiler;
         }
         // The DetailsProviders actions live on JeDetailsProvidersController (restructure S2.12); same services, same HTTP context.
         public JeDetailsProvidersController DetailsProviders()
@@ -86,7 +94,7 @@ public class ApiSeerrTests
         }
         public void SetUser(Guid user, bool admin = false) => Controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
             new Claim("Jellyfin-UserId", user.ToString()), new Claim(ClaimTypes.Role, admin ? "Administrator" : "User")], "test"));
-        public void Dispose() { Transport.Dispose(); JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange(); Plugin.Dispose(); }
+        public void Dispose() { Transport.Dispose(); SeerrCaches.ClearAllSeerrCachesOnConfigChange(); Plugin.Dispose(); }
     }
     private static JsonElement Body(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 
@@ -369,13 +377,13 @@ public class ApiSeerrTests
     public void SpoilerMovieScopeAnswersForTheCallersOwnStateAndValidatesTheId()
     {
         using var f = GuardedSeerr(out var movieId);
-        var ok = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(movieId.ToString("N")));
+        var ok = Assert.IsType<OkObjectResult>(f.SpoilerGuard().GetSpoilerMovieScope(movieId.ToString("N")));
         Assert.True(Body(JsonSerializer.Serialize(ok.Value)).GetProperty("inScope").GetBoolean());
         f.SetUser(f.OtherUserId);
-        var other = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(movieId.ToString("N")));
+        var other = Assert.IsType<OkObjectResult>(f.SpoilerGuard().GetSpoilerMovieScope(movieId.ToString("N")));
         Assert.False(Body(JsonSerializer.Serialize(other.Value)).GetProperty("inScope").GetBoolean());
-        Assert.IsType<BadRequestObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope("not-a-guid"));
-        Assert.IsType<BadRequestObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(f.Controller).GetSpoilerMovieScope(Guid.Empty.ToString("N")));
+        Assert.IsType<BadRequestObjectResult>(f.SpoilerGuard().GetSpoilerMovieScope("not-a-guid"));
+        Assert.IsType<BadRequestObjectResult>(f.SpoilerGuard().GetSpoilerMovieScope(Guid.Empty.ToString("N")));
     }
 
     private static JsonElement Rows(IActionResult result, string name) => JsonSerializer.SerializeToElement(Assert.IsType<OkObjectResult>(result).Value).GetProperty(name);

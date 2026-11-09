@@ -376,7 +376,7 @@
     "title": "➕[Feature Request]",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/Api/ApiSeerrTests.cs",
+      "tests/backend/Features/Seerr/ApiSeerrTests.cs",
       "tests/frontend/requests/request-submission.test.mjs"
     ],
     "assessment": "Request identity/permission/advanced option gates and submission covered; each historical partial-request control and ARR queue visibility not replayed."
@@ -1114,7 +1114,7 @@
     "title": "➕[Feature Request] Respect Override Rules from Jellyseerr when Requesting content",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/Api/ApiSeerrTests.cs",
+      "tests/backend/Features/Seerr/ApiSeerrTests.cs",
       "tests/frontend/requests/request-submission.test.mjs"
     ],
     "assessment": "Request identity/permission/advanced option gates and submission covered; each historical partial-request control and ARR queue visibility not replayed."
@@ -1363,7 +1363,7 @@
     "title": "Partial TV Show Requests Ignore Jellyseerr Settings",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/Api/ApiSeerrTests.cs",
+      "tests/backend/Features/Seerr/ApiSeerrTests.cs",
       "tests/frontend/requests/request-submission.test.mjs"
     ],
     "assessment": "Request identity/permission/advanced option gates and submission covered; each historical partial-request control and ARR queue visibility not replayed."
@@ -1384,7 +1384,7 @@
     "title": "🐛[BUG] isPartialRequestsEnabled failed with 403 for user account",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/Api/ApiSeerrTests.cs",
+      "tests/backend/Features/Seerr/ApiSeerrTests.cs",
       "tests/frontend/requests/request-submission.test.mjs"
     ],
     "assessment": "Request identity/permission/advanced option gates and submission covered; each historical partial-request control and ARR queue visibility not replayed."
@@ -1695,7 +1695,7 @@
     "title": "🐛[BUG] Automatic Advance Season Request not working",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskAutoRequestTests.cs"
+      "tests/backend/Features/Seerr/TaskAutoRequestTests.cs"
     ],
     "assessment": "SeasonThresholdAvailabilityAndExistingRequestsControlAutomaticRequest covers thresholds/existence/requests; cross-user concurrency/restart request de-dup and every reported release combination remain gaps."
   },
@@ -1751,7 +1751,7 @@
     "title": "🐛[BUG] Jellyseerr Automatic Advance Season Requests is requesting seasons that don't exist.",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskAutoRequestTests.cs"
+      "tests/backend/Features/Seerr/TaskAutoRequestTests.cs"
     ],
     "assessment": "SeasonThresholdAvailabilityAndExistingRequestsControlAutomaticRequest covers thresholds/existence/requests; cross-user concurrency/restart request de-dup and every reported release combination remain gaps."
   },
@@ -1849,7 +1849,7 @@
     "title": "🐛[BUG] [auto request]  \"season 2 already exists locally\" <-- but it does not.",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskAutoRequestTests.cs"
+      "tests/backend/Features/Seerr/TaskAutoRequestTests.cs"
     ],
     "assessment": "SeasonThresholdAvailabilityAndExistingRequestsControlAutomaticRequest covers thresholds/existence/requests; cross-user concurrency/restart request de-dup and every reported release combination remain gaps."
   },
@@ -1923,7 +1923,7 @@
     "title": "🐛[BUG] Automatic advance season request feature requests too much",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskAutoRequestTests.cs"
+      "tests/backend/Features/Seerr/TaskAutoRequestTests.cs"
     ],
     "assessment": "SeasonThresholdAvailabilityAndExistingRequestsControlAutomaticRequest covers thresholds/existence/requests; cross-user concurrency/restart request de-dup and every reported release combination remain gaps."
   },
@@ -2062,7 +2062,7 @@
     "title": "🐛[BUG] Jellyseerr Watchlist integration adds all Jellyseerr requests to all users",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskSeerrSyncTests.cs"
+      "tests/backend/Features/Seerr/TaskSeerrSyncTests.cs"
     ],
     "assessment": "InboundWatchlistIsUserScopedIdempotentAndDoesNotReaddRemovedItems covers per-user ownership and scheduled removal preservation; manual endpoint and library-event path are not equivalent proof."
   },
@@ -2397,7 +2397,7 @@
     "title": "🐛[BUG] Auto-Season Request does not check unreleased episodes for threshold",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskAutoRequestTests.cs"
+      "tests/backend/Features/Seerr/TaskAutoRequestTests.cs"
     ],
     "assessment": "SeasonThresholdAvailabilityAndExistingRequestsControlAutomaticRequest covers thresholds/existence/requests; cross-user concurrency/restart request de-dup and every reported release combination remain gaps."
   },
@@ -2581,7 +2581,7 @@
     "title": "Modify arr/requests endpoint to enforce Jellyseerr user permissions",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/Api/ApiSeerrTests.cs",
+      "tests/backend/Features/Seerr/ApiSeerrTests.cs",
       "tests/frontend/requests/request-submission.test.mjs"
     ],
     "assessment": "Request identity/permission/advanced option gates and submission covered; each historical partial-request control and ARR queue visibility not replayed."
@@ -2812,7 +2812,7 @@
     "title": "➕[Feature Request]/[Bug] allow Watchlist Removal",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskSeerrSyncTests.cs"
+      "tests/backend/Features/Seerr/TaskSeerrSyncTests.cs"
     ],
     "assessment": "InboundWatchlistIsUserScopedIdempotentAndDoesNotReaddRemovedItems covers per-user ownership and scheduled removal preservation; manual endpoint and library-event path are not equivalent proof."
   },
@@ -2823,7 +2823,7 @@
     "title": "fix: prevent watchlist sync from re-adding user-removed items",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskSeerrSyncTests.cs"
+      "tests/backend/Features/Seerr/TaskSeerrSyncTests.cs"
     ],
     "assessment": "InboundWatchlistIsUserScopedIdempotentAndDoesNotReaddRemovedItems covers per-user ownership and scheduled removal preservation; manual endpoint and library-event path are not equivalent proof."
   },
@@ -3005,7 +3005,7 @@
     "title": "🐛[BUG] Jellyseerr next season requests arent being de-duplicated",
     "status": "partial-existing",
     "tests": [
-      "tests/backend/ScheduledTasks/TaskAutoRequestTests.cs"
+      "tests/backend/Features/Seerr/TaskAutoRequestTests.cs"
     ],
     "assessment": "SeasonThresholdAvailabilityAndExistingRequestsControlAutomaticRequest covers thresholds/existence/requests; cross-user concurrency/restart request de-dup and every reported release combination remain gaps."
   }

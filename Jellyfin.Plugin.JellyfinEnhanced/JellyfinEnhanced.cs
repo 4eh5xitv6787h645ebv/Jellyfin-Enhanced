@@ -396,7 +396,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced
 
             try
             {
-                Controllers.JellyfinEnhancedController.ClearAllSeerrCachesOnConfigChange();
+                Shared.Seerr.SeerrCaches.ClearAllSeerrCachesOnConfigChange();
                 _logger.Info("Jellyfin Enhanced: configuration updated — Seerr caches cleared.");
             }
             catch (Exception ex)

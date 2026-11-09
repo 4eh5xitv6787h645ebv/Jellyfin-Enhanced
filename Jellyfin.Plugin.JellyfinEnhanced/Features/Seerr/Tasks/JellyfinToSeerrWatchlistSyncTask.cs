@@ -110,7 +110,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 _logger.Warning("[Jellyfin→Seerr Watchlist Sync] Unable to build Jellyseerr user map.");
             }
 
-            var blockedIds = Helpers.Jellyseerr.JellyseerrUserImportHelper
+            var blockedIds = Features.Seerr.Services.JellyseerrUserImportHelper
                 .GetBlockedUserIds(config.JellyseerrImportBlockedUsers);
             var allUsers = _userManager.GetAllUsers().ToList();
             var jellyfinUsers = allUsers
