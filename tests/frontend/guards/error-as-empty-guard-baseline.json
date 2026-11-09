@@ -9,9 +9,6 @@
   "client/src/features/calendar/calendar-page-data.ts": {
     "R9-fail-empty fetchUserData": 1
   },
-  "client/src/features/hidden-content/hidden-content-page-admin.ts": {
-    "R9-fail-empty openAdminAddModal.doSearch": 2
-  },
   "client/src/features/media-tags/settings/ui-panel-tag-looks.ts": {
     "R9-fail-empty installUiPanelTagLooks.loadGenres": 1
   },

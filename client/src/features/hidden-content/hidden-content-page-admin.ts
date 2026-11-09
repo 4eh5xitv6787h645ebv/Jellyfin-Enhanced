@@ -441,18 +441,21 @@ import { hiddenContentContext, host, registry, type HiddenHost } from './host';
       // Search the Jellyfin library AND Seerr (when available) in parallel, so the admin can hide
       // items that aren't in the library too.
       // Routed through the core fetch layer (auth + JSON parse identical to the
-      // former getApi().ajax call; any failure still resolves to []).
+      // former getApi().ajax call). A failed search resolves to null, so it is reported, not shown as "no matches".
+      const searchFailed = (source: string) => (error: unknown) => { console.warn(`${logPrefix} Admin add search (${source}) failed:`, error); return null; };
       const libP = JE.core.api.fetch(getApi().getUrl('/Items', {
         userId: getApi().getCurrentUserId(), searchTerm: term, IncludeItemTypes: 'Movie,Series',
         Recursive: true, Limit: 24, Fields: 'ProviderIds', ImageTypeLimit: 1, EnableImageTypes: 'Primary',
-      })).then(res => {const items=record(res).Items;if(!Array.isArray(items))throw new Error('Invalid item list');return items.map(decodeLibraryItem);}).catch(() => []);
+      })).then(res => {const items=record(res).Items;if(!Array.isArray(items))throw new Error('Invalid item list');return items.map(decodeLibraryItem);}).catch(searchFailed('library'));
       const seerrApi = featureCtx.peer('jellyseerrAPI');
       const seerrP = (seerrApi && seerrApi.search)
-        ? seerrApi.search(term).then(decodeSeerrSearch).then(res => res.results).catch(() => [])
+        ? seerrApi.search(term).then(decodeSeerrSearch).then(res => res.results).catch(searchFailed('Seerr'))
         : Promise.resolve([]);
 
-      const [libItems, seerrItems] = await Promise.all([libP, seerrP]);
+      const [libResult, seerrResult] = await Promise.all([libP, seerrP]);
       if (token !== searchToken || !selection.current() || !overlay.isConnected) return;
+      const libItems = libResult ?? [], seerrItems = seerrResult ?? [];
+      const failures = [libResult ? '' : JE.t('hidden_content_admin_add_failed'), seerrResult ? '' : JE.t('hidden_content_admin_add_seerr_failed')].filter(Boolean);
 
       const normalized: SearchResult[] = [];
       const seenTmdb = new Set();
@@ -473,8 +476,9 @@ import { hiddenContentContext, host, registry, type HiddenHost } from './host';
           year: ((r.releaseDate || r.firstAirDate || '') + '').slice(0, 4) });
       }
 
-      if (!normalized.length) { showMessage(JE.t('hidden_content_admin_add_none')); return; }
+      if (!normalized.length) { showMessage(failures.length ? failures.join(' ') : JE.t('hidden_content_admin_add_none')); return; }
       const frag = document.createDocumentFragment();
+      for (const text of failures) frag.appendChild(Object.assign(document.createElement('div'), { className: 'je-hidden-management-empty', textContent: text }));
       for (const n of normalized) frag.appendChild(buildResultCard(n));
       grid.replaceChildren(frag);
     };

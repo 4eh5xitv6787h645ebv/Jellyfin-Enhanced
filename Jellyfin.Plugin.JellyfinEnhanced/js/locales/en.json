@@ -1027,6 +1027,8 @@
     "hidden_content_admin_add_search": "Search a title to hide…",
     "hidden_content_admin_add_hint": "Search for a movie or show to hide for this user.",
     "hidden_content_admin_add_none": "No matching titles.",
+    "hidden_content_admin_add_failed": "The library search failed. Try again.",
+    "hidden_content_admin_add_seerr_failed": "Seerr results are unavailable right now.",
     "hidden_content_admin_add_hide": "Hide",
     "hidden_content_admin_add_hiding": "Hiding…",
     "hidden_content_admin_add_added": "Hidden ✓",
