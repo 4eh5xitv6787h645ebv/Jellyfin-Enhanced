@@ -44,7 +44,9 @@
         "docs/enhanced/enhanced-settings.md"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "047388051f5ed5c24ee44b007bddb3d430eaeb86"
+      ],
       "notes": "Same keys, step and panel flash as upstream. Differences: the two-second hide timer belongs to the player lifetime, so leaving the player hides the panel and drops the timer (upstream leaves a bare setTimeout); a new test pins the admin shortcut grid to the server defaults.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p1-subtitle-offset.*"
     },
@@ -107,8 +109,10 @@
         "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/StatusRules.cs",
         "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Same rule change on the web (statustags.ts) and native (StatusRules.cs) side. Added native tests (upstream changed the native rule without one) and corrected the New Episode row of docs/enhanced/tags.md, which upstream left saying \"aired or was added\" (filed as a found bug).",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p2-new-episode.*"
     },
     {
       "sha": "7a52d1e9e487cc6a8f80006cfda8342c575c0880",
@@ -128,9 +132,10 @@
       "paths": [
         "tests/frontend/features/features-status-tags-vocabulary.test.mjs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
-      "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1"
+      "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1",
+      "notes": "The same test row change, in tests/frontend/features/media-tags/."
     },
     {
       "sha": "ee1c92dc6d8e02890547d490fe979bb85a1ff5d7",
@@ -208,9 +213,10 @@
       "paths": [
         "tests/poster/parity/status-fixtures.mjs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
-      "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1"
+      "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1",
+      "notes": "The same fixture change; the offline parity run passes with 241 Status fixtures and 0 web/native differences."
     },
     {
       "sha": "800b768ca6674a061a2a54b67461bf1e839d5a19",
