@@ -1,0 +1,23 @@
+$ je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p18-maintainerr-key.mjs --keep before
+# deployed: upstream-189a0a26d2e9 (dll 33ca6b9ab300d143); exit 0
+SCRIPT {"saveEndpoint":{"setKey":"200 {\"values\":{\"LeavingSoonMaintainerrApiKey\":\"lab-key-one\"}}","staleExpected":"409 {\"conflicts\":{\"LeavingSoonMaintainerrApiKey\":\"lab-key-one\"}}","storedAfterStaleSave":"lab-key-one"},"keyBox":{"atRest":{"type":"text","class":"je-ta-masked","autocomplete":"off","value":"lab-key-one","textSecurity":"disc","description":"Optional. Only needed if Maintainerr has an API key set."},"textSecurityWhenFocused":"none","afterTypingAndSave":{"value":"lab-key-typed","stored":"lab-key-typed"}},"wideBoxes":{"leavingSoonMaintainerrUrl":{"control":"je-ta-field-control je-ta-field-control--wide","boxPx":392,"rowPx":719},"leavingSoonMaintainerrApiKey":{"control":"je-ta-field-control je-ta-field-control--wide","boxPx":392,"rowPx":719},"leavingSoonRefreshHours":{"control":"je-ta-field-control","boxPx":91,"rowPx":719},"awardsTagsImdbList":{"control":"je-ta-field-control je-ta-field-control--wide","boxPx":392,"rowPx":677},"awardsTagsLetterboxdList":{"control":"je-ta-field-control je-ta-field-control--wide","boxPx":392,"rowPx":677},"languageTagsPriority":{"control":"je-ta-field-control je-ta-field-control--wide","boxPx":392,"rowPx":677}},"servicesTab":{"cards":["TMDB","AniList","MDBList Ratings","Content Warnings (DoesTheDogDie)","Maintainerr"],"maintainerr":{"logo":"selfhst/svg/maintainerr.svg","note":"Maintainerr is only used to show how many days are left before an item leaves, on the Leaving soon media tag. Nothing else in Jellyfin Enhanced talks to it.","link":"sellSet up Leaving soon","href":"#/configurationpage?name=Jellyfin%20Enhanced&jeSection=media-tags&tab=badges","fields":0},"linkOpens":{"leavingSoonFieldsShown":true,"mediaTagsTab":"new_releasesStatus badgesBadges","views":1}},"keyClearedAfterwards":true}
+CONSOLE Failed to load resource: the server responded with a status of 409 (Conflict) /JellyfinEnhanced/admin/configuration
+CONSOLE Translation key is missing from dictionary: url
+CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+CONSOLE Translation key is missing from dictionary: img.width
+CONSOLE Translation key is missing from dictionary: img.height
+CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+CONSOLE Translation key is missing from dictionary: baseName
+CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+CONSOLE Translation key is missing from dictionary: index + 1
+CONSOLE Translation key is missing from dictionary: trimmedLine
+CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced&jeSection=media-tags&tab=badges
+kept as the 'before' evidence (je12 evidence shows it)

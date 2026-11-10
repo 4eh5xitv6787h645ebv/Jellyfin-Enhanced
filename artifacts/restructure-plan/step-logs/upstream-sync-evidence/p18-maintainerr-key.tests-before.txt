@@ -1,0 +1,24 @@
+# The port's tests on the tree before the port (aacfc2655bdb plus the tests): upstream's two updated tests and the
+# three added here for what upstream left untested (wide boxes, the Services card, the logo in the prefetch list).
+$ node --test --test-name-pattern 'Leaving soon: source fields save|boxes for long values|Services tab has a Maintainerr card' features-admin-tags-page-colours-status.test.mjs admin-config-rewrite.test.mjs
+✖ the Services tab has a Maintainerr card that says what it is for and links to the Leaving soon fields
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  -   'Maintainerr'
+✖ Status badges › Leaving soon: source fields save, the key shows like the TMDB key, and Refresh saves first then asks the server
+  AssertionError [ERR_ASSERTION]: a plain field, like the TMDB key
+  'password' !== 'text'
+✖ boxes for long values (URLs, keys, lists) are wide, short ones are not, and the stylesheet draws both the width and the mask
+  AssertionError [ERR_ASSERTION]: leavingSoonMaintainerrUrl
+  + 'je-ta-field-control'
+  - 'je-ta-field-control je-ta-field-control--wide'
+ℹ tests 3 / pass 0 / fail 3
+
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 --filter 'FullyQualifiedName~ApiMediaTagsPageTests.MaintainerrKey|FullyQualifiedName~ApiCdnRefreshTests.TheMaintainerrCardLogo'
+  Failed JE.Tests.Features.Platform.ApiCdnRefreshTests.TheMaintainerrCardLogoIsKeptWarmWithTheOtherServiceLogos
+   Assert.Contains() Failure: Item not found in collection
+Not found:  Tuple ("selfhst", "svg/maintainerr.svg")
+  Failed JE.Tests.Features.MediaTags.ApiMediaTagsPageTests.MaintainerrKeyIsShownAndConflictCheckedLikeTheTmdbKey
+   Assert.Equal() Failure: Strings differ
+Expected: ···"LeavingSoonMaintainerrApiKey":"new-key"}}"
+Actual:   ···"ues":{"LeavingSoonMaintainerrApiKey":""}}"
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2

@@ -1,0 +1,21 @@
+$ je12 smoke
+# deployed: rewrite b6f03481, the port; compared with the baseline recorded at aacfc2655bdb by je12 up
+page admin           FAIL    14 tabs; Media Tags section 7 tabs (1.9s); 1 new console error(s): Failed to load resource: the server responded with a status of <n> (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+page settings        ok      panel open, 24 tabs (1.9s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (1.9s)
+page poster          ok      28/100 cards tagged (1.9s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 80 JE elements (1.8s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.2s)
+page calendar        ok      5 events (3.2s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.7s)
+page catchup         ok      Catch Up tab rendered (1.4s)
+page seerr           ok      5 Seerr cards (1.7s)
+page player          ok      playing 1.0s; OSD rating present (3.4s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 474 paths, 180 under /JellyfinEnhanced
+bundle wire          ok      br 200 529555B 304:yes, gzip 200 642778B 304:yes, identity 200 2379598B 304:yes; decoded bodies identical
+server log           FAIL    168 ERR/WRN lines, 1 new kind(s): WRN Jellyfin.Plugin.JellyfinEnhanced: "[CDN] Failed to refresh known asset 'selfhst/svg/maintainerr.svg'."
+smoke: FAIL (2 failing, 0 changed, 0 known, 0 fixed) in 31s
