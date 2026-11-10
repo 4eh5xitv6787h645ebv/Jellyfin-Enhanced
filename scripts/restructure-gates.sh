@@ -458,12 +458,12 @@ PY
 # is a note (remove it from the list). Never add a line to baselines/browser-failures.txt.
 # Workers: JE_BROWSER_WORKERS, default the cores this process may use (at least 6). Playwright queues tests project by
 # project and file by file, so a test that alone takes half a minute and sits late in the queue ends the run on its
-# own. The spec files in JE_BROWSER_LONG (default none: one run) can therefore run as a second
+# own. The spec files in JE_BROWSER_LONG (default tag-row-subpixel.spec.cjs; empty = one run) therefore run as a second
 # Playwright run at the same time, with JE_BROWSER_LONG_WORKERS (default 2) of the workers and its own port; the
 # results of both runs are ratcheted together. Every spec runs exactly once either way.
 gate_browser() (
   set -e
-  local dir rc=0 rc2=0 new gone cores long=${JE_BROWSER_LONG-} pid
+  local dir rc=0 rc2=0 new gone cores long=${JE_BROWSER_LONG-tag-row-subpixel.spec.cjs} pid
   cores=$(nproc)
   export JE_BROWSER_WORKERS=${JE_BROWSER_WORKERS:-$(( cores > 6 ? cores : 6 ))}
   dir=$(mktemp -d)
