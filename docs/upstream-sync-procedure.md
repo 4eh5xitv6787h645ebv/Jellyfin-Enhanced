@@ -37,9 +37,9 @@ looked at it. `check` fails when a `pending` entry is older than `policy.maxPend
   `je12 found-bug`.
 - **Parity proof.** Tests first: translate upstream's new tests into the rewrite's test folders and watch them fail
   before the port. For anything a user can see, run the same `je12 browse` or `je12 api` command against an upstream
-  build of that commit and against the rewrite, with `--keep`. `je12 deploy` only installs rewrite builds; an upstream
-  build is made the way `je-upstream-bench/run.sh` makes one (`dotnet build -c Release -p:JellyfinTarget=jf12`) and
-  swapped into the lab's plugin folder. Record what could not be compared and why.
+  build of that commit and against the rewrite, with `--keep`: `JE12=<je12 script> scripts/upstream_lab_deploy.py <upstream sha>` puts the
+  upstream build on the lab (`--keep before`), `je12 deploy` puts the rewrite back (`--keep after`). `je12 evidence`
+  holds one pair, so copy each port's pair into the step log. Record what could not be compared and why.
 - **Commit format.** `feat(<feature>): …` or `fix(<feature>): …` as in the history, and one trailer line per upstream
   commit covered:
 
