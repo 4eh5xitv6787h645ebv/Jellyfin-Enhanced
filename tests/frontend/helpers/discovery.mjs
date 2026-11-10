@@ -50,5 +50,9 @@ export const testArguments = ['--test-timeout=300000', `--test-concurrency=${tes
 
 /** Dates and locale-formatted text must not depend on the machine running the tests. */
 export function testEnvironment(extra = {}) {
-  return { ...process.env, TZ: 'UTC', LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8', ...extra };
+  // Each of the ~180 test processes loads jsdom, the harness and esbuild's JS API afresh. NODE_COMPILE_CACHE lets
+  // Node reuse V8's compiled code for those modules between processes and runs (keyed by each file's content and the
+  // V8 version, so an edited module is compiled again). JE_NODE_COMPILE_CACHE=0 turns it off.
+  const cache = process.env.JE_NODE_COMPILE_CACHE === '0' ? {} : { NODE_COMPILE_CACHE: process.env.NODE_COMPILE_CACHE || join(repositoryRoot, 'node_modules/.cache/node-compile-cache') };
+  return { ...process.env, ...cache, TZ: 'UTC', LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8', ...extra };
 }
