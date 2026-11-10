@@ -14,7 +14,7 @@ never a live Jellyfin, Seerr, Sonarr or Radarr; nothing heavy while `/home/jake/
    worktree is left from an unfinished run, continue on its branch (rebase it onto the main line) instead.
 2. `python3 scripts/upstream_sync.py update --fetch` appends every upstream commit the ledger
    [`upstream-sync.json`](upstream-sync.json) lacks as `pending`, however many runs were missed, and prints the work
-   list, oldest first, with a `how:` line each. `nothing to do` means go to step 7.
+   list, oldest first, with a `how:` line each. `nothing to do`: no step log, nothing lands, go to step 7.
 3. Take each `pending` entry in order: read `git show <sha>`, correct its guessed `class` and `features`, give it a
    status. Commits that are one behaviour (a fix and its test update) go together: `"with": "<lead sha>"`.
 4. One commit per entry or group, ledger entry included, `je12 regen` first: `feat(<feature>): …` or
@@ -26,8 +26,9 @@ never a live Jellyfin, Seerr, Sonarr or Radarr; nothing heavy while `/home/jake/
    line moved, rebase, `je12 regen`, gate again. If the main checkout has uncommitted changes, do not land.
 7. Whatever happened: `je12 down`; the step log (`artifacts/restructure-plan/step-logs/upstream-sync-<date>.md`:
    the gap, each entry's status, evidence, gate result) and its evidence files are part of what lands (`git add -f`,
-   the folder is ignored); after landing remove the worktree and its branch, otherwise leave both for the next run;
-   remove `/home/jake/projects/.je-upstream-sync-running`; report what landed, or what stopped it.
+   the folder is ignored); after landing, or with nothing to do, remove the worktree and its branch, otherwise
+   leave both for the next run; remove `/home/jake/projects/.je-upstream-sync-running`; report what landed, or
+   what stopped it.
 
 ## Status: nothing stays `pending`
 
@@ -56,10 +57,10 @@ commit.
 - **Proof.** Tests first, failing before the port. For a change a user can see, also run one `je12 browse` or
   `je12 api` command against both builds on a lab from `je12 up`:
   `JE12=<path to je12> python3 scripts/upstream_lab_deploy.py <upstream sha>` (needs that lab, the fetched commit
-  and dotnet) installs upstream's build, `--keep before`; `je12 deploy` restores the rewrite, `--keep after`. Save
-  both outputs beside the step log. Skip the upstream side when nothing is user-visible or the helper fails (it
-  uses je12 internals): say so and rely on the tests. Box sets: `je12 env content --collections`, never the
-  collections API (it rescans the lab library away).
+  and dotnet) installs upstream's build: run the command with `--keep before`; `je12 deploy` restores the rewrite:
+  run it again with `--keep after`. Save both outputs beside the step log. Skip the upstream side when nothing is
+  user-visible or the helper fails (it uses je12 internals): say so and rely on the tests. Box sets:
+  `je12 env content --collections`, never the collections API (it rescans the lab library away).
 - **Contract changes** (a route, authorization or registration; the Architecture snapshot tests fail) are not
   landed unattended. Finish the port on its own branch `sync/contract-<sha>` with the additions as its last commit,
   `contract: upstream sync additions`; on the landing branch mark the entry `deferred` with the added lines in
