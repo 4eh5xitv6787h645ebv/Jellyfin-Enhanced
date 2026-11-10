@@ -622,9 +622,9 @@ import json, pathlib, sys
 mode, args = sys.argv[1], sys.argv[2:]
 features = json.load(open('docs/feature-map.json'))['features']
 root = json.load(open('docs/feature-map.json'))['backendRoot']
-if mode == 'features':                      # changed paths on stdin -> feature names
+if mode == 'features':                      # changed paths (arguments) -> feature names
     hit = []
-    for p in sys.stdin.read().split():
+    for p in args:
         if p.endswith(('.md', '.js', '.js.map')) or p.startswith(('docs/', 'artifacts/')) or p in (
                 'client/generated-manifest.json', 'tests/docs/production-inventory.json'):
             continue
@@ -665,7 +665,9 @@ gate_quick() (
   local base changed feats dir rc=0 new
   base=$(change_base)
   changed=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
-  if [ $# -gt 0 ]; then feats="$*"; else feats=$(printf '%s\n' "$changed" | quick_map features); fi
+  # (The paths go as arguments: quick_map's program is python's stdin, so a pipe into it would never be read.)
+  # shellcheck disable=SC2086  # one path per word
+  if [ $# -gt 0 ]; then feats="$*"; else feats=$(quick_map features $changed); fi
   step "QUICK: features ${feats:-(none; architecture and guards only)}"
   npm run client:typecheck
   npm run client:build

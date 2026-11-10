@@ -188,5 +188,23 @@ class FrontendRunnerTests(unittest.TestCase):
             self.assertFalse(log.exists())
 
 
+class QuickFeatureTests(unittest.TestCase):
+    """restructure-gates.sh quick finds the features a change touches from the changed paths."""
+
+    def quick_map(self, *args):
+        script = (ROOT / 'scripts/restructure-gates.sh').read_text()
+        start = script.index('quick_map() {')
+        end = script.index('\n}\n', script.index("\nPY\n", start)) + 3
+        r = subprocess.run(['bash', '-c', script[start:end] + '\nquick_map "$@"', 'quick_map', *args], cwd=ROOT,
+                           capture_output=True, text=True, check=True)
+        return r.stdout.split()
+
+    def test_changed_paths_map_to_their_features(self):
+        self.assertEqual(['seerr', 'platform'], self.quick_map(
+            'features', 'client/src/features/seerr/details/scroll/seamless-scroll.ts', 'client/src/core/api/retry.ts',
+            'docs/feature-map.json', 'Jellyfin.Plugin.JellyfinEnhanced/js/core/api-client.js'))
+        self.assertEqual([], self.quick_map('features'))
+
+
 if __name__ == '__main__':
     unittest.main()
