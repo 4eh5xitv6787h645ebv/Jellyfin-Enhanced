@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-25 upstream commits: 2 pending, 23 ported.
+25 upstream commits: 1 pending, 24 ported.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -31,5 +31,5 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 21 | [`23281542`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/232815422e3143b3930d30ad57de2bd243f60c7f) | 2026-11-10 | fix | admin | fix(config): search and New badges for the Media Tags tab, tidy the Maintainerr card link | ported | `87c0ac03` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p21-media-tags-search.* |
 | 22 | [`83b557cc`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/83b557ccf29ce809053fe9c884fafe654c4d90e9) | 2026-11-10 | fix | media-tags | fix(tags): keep a flush status tag at the top edge, over the count and watched badges | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p22-flush-status-top.* |
 | 23 | [`bcd6574a`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/bcd6574a221e042bbd7124c9833356f50cfe87d5) | 2026-11-10 | fix | spoiler-guard | fix(spoiler-guard): keep a neutral Path on guarded items so Download works | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p23-neutral-path.* |
-| 24 | [`57567775`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/5756777576d25a64824600e50bfefcd3040ce664) | 2026-11-10 | feature | media-tags, settings | feat(rating-tags): add MyAnimeList, AniList, Metacritic user, Roger Ebert and MDBList sources | pending |  |  |
+| 24 | [`57567775`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/5756777576d25a64824600e50bfefcd3040ce664) | 2026-11-10 | feature | media-tags | feat(rating-tags): add MyAnimeList, AniList, Metacritic user, Roger Ebert and MDBList sources | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p24-rating-sources.* |
 | 25 | [`910d1da4`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/910d1da4460a8bebf9203df34ba8494ae5ad4ecb) | 2026-11-10 | feature | media-tags, platform | feat(status-tags): show Binge ready instead of Series Finale on a show released in one drop | pending |  |  |

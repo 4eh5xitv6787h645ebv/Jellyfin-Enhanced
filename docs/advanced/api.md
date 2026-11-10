@@ -1232,7 +1232,7 @@ It contains the full aggregate map even on deltas; absent keys mean no visible r
 | `Genres`, `AudioLanguages`, `PartialAudioLanguages`, `SubtitleLanguages` | Nullable string arrays |
 | `CommunityRating`, `CriticRating` | Nullable numbers |
 | `Awards` | Optional immutable title facts: nullable `ImdbRank`, `LetterboxdRank` (1–250), booleans `CertifiedFresh`, `OscarWinner`, `EmmyWinner`, nullable `OscarYear`, `EmmyYear`; movie/series only, stripped with scores |
-| `Ratings` | Optional object of nullable native-unit scores: `imdb`, `tmdb`, `rtCritic`, `rtAudience`, `metacritic`, `letterboxd`, `trakt`; no key or upstream data means absent |
+| `Ratings` | Optional object of nullable native-unit scores: `imdb`, `tmdb`, `rtCritic`, `rtAudience`, `metacritic`, `letterboxd`, `trakt`, `myAnimeList`, `aniList`, `metacriticUser`, `rogerEbert`, `mdblist`; no key or upstream data means absent |
 | `LastUpdated` | Integer milliseconds |
 | `DateCreated`, `PremiereDate`, `LatestEpisodeAdded` | Nullable integer milliseconds |
 | `Status` | Nullable Jellyfin series status string |
