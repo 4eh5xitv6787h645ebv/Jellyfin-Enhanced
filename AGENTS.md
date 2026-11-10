@@ -49,26 +49,27 @@ Guidance for AI coding agents working in this repository. Human contributors: se
 
 ## How to verify
 
-Use Node 26.2.0 for `h` and for anything that regenerates poster language tables. Run one gate at a time per machine (`JE12_GATE_LOCK`); inside `be` and `all` the gate itself runs its suites at once (lanes), and at its peak it needs about 6 GB of memory.
+Use Node 26.2.0 for `h` and for anything that regenerates poster language tables.
 
 ```bash
 npm run verify:restructure                  # = restructure-gates.sh all && restructure-gates.sh browser (every gate except HOST)
+scripts/restructure-gates.sh all            # the merge gate: be's lanes plus fe's regeneration, each check once
+scripts/restructure-gates.sh browser        # Playwright (chromium, mobile-chromium, firefox), ratcheted against baselines/browser-failures.txt
 scripts/restructure-gates.sh be             # backend: build warnings, Architecture tests, dotnet + npm suites, INV, TOOL (lanes)
 scripts/restructure-gates.sh fe             # frontend gate G (client build/check, typecheck, npm test, output keys), INV, TOOL
-scripts/restructure-gates.sh all            # be's lanes plus fe's regeneration, each check once (use at merges)
-scripts/restructure-gates.sh browser        # Playwright, ratcheted against baselines/browser-failures.txt
 scripts/restructure-gates.sh inv            # production inventory is current; route list unchanged
-scripts/restructure-gates.sh tool           # runner unit tests + mutation/history path check
+scripts/restructure-gates.sh tool           # runner tests, no AI attribution, tsc-rs agrees with TypeScript 6, mutation/history paths
 scripts/restructure-gates.sh h              # poster harness builds + ResolutionData.g.cs check
 scripts/restructure-gates.sh r '<pattern>'  # no stale reference outside artifacts/
-scripts/restructure-gates.sh quick [feat…]  # inner loop (~30 s per feature): typecheck, build, the features' tests; not a merge gate
-scripts/restructure-gates.sh affected       # inner loop only: client build, then the tests whose traced inputs changed
+scripts/restructure-gates.sh quick [feat…]  # the inner loop, not a merge gate (below)
 npm run verify:rewrite                      # the rewrite's CI gate
 ```
 
-`all` and `be` run four lanes at once (dotnet; frontend suite; contracts; checks) and print each lane's result when it ends and a `FAILURE seen after N s` line as soon as any lane writes a failing test or a type or build error; the verdict still waits for every lane. `JE_GATE_FAIL_FAST=1` stops the other lanes at the first failure. T runs as four test hosts (three for the `Plugin singleton` classes, one for the rest; `JE_DOTNET_SINGLETON_SHARDS=0` for one). `affected` is never a merge gate: record its map once per base (`scripts/restructure-gates.sh affected record`, needs `strace`); with no map, or a stale one, it runs everything. `scripts/gate-timing.py` times any gate (per step, file and class).
+**Inner loop: `quick`.** A tsc-rs pre-check (0.2 s; it only fails fast, TypeScript 6 checks next and decides), the typecheck and build (sharing one cached check), inventory, then the node tests of the features the diff touches plus architecture and guards, and their dotnet tests when a `.cs` file changed: 30 s to 2 min. With an affected map it also runs the node test files and chromium specs whose traced inputs the change touches; record one on a clean base with `scripts/restructure-gates.sh affected record` (needs `strace`, ~5 min). `affected` alone is an alias of `quick`.
 
-Gate details are in `artifacts/restructure-plan/PLAN.md` ("Gates"). **Load-sensitive tests.** The ones this file used to list (dotnet `ApiSeerrProxyOutcomeTests.RealSocketWriteOnAReusedConnectionIsSentOnce`; browser `discovery-recommendations-rewrite.spec.cjs:70`; npm `core-api-runtime` retry jitter and retry budget, `bootstrap-loader-rewrite` idle slicing, `requests/seerr-review-*`, `features-status-tags-vocabulary`) were fixed at their causes; `artifacts/restructure-plan/test-speed/RESULTS.md` §3 has each cause. A test that fails under load and passes alone has a real cause in the test or the product: reproduce it with `scripts/test-under-load.py --starve` (blocks a Node test's event loop at random moments) or `--hog 30` (30 busy loops), then fix that cause; never loosen the assertion. The longest single test is browser `tag-fit-monotonic.spec.cjs:93` (frame-bound, up to ~95 s under load, timeout 240 s). **Flake protocol:** a failure counts as a flake only if an isolated rerun passes and then a clean full rerun passes; record both in the step log. Never add a flaky test to a baseline. On the 10-core Lenovo, quiet, `all` takes about 1¾ min and `browser` about 2 min (several times longer on a loaded machine): run them in the background and wait for them.
+**Merge gates.** `all` runs four lanes at once (dotnet, the frontend suite, contracts, checks) and keeps ~8.5 of 10 cores busy; a `FAILURE seen after N s in lane X` line appears as soon as any lane writes a failure (`JE_GATE_FAIL_FAST=1` stops the others). `all` takes about 2 min and `browser` about 2 min on the Lenovo (10 cores, quiet); on the second worker (16 threads, but 4 performance and 8 efficiency cores, power-limited, usually shared) about 5½ and 4½ min. Run them in the background. **Never side by side:** on this 10-core, 15 GB machine `all` and `browser` started together fail on timeouts, so heavy gates (`be`, `fe`, `all`, `browser`) take turns on a machine: one started while another runs waits for it. Callers still run one gate at a time per machine under `JE12_GATE_LOCK`. `scripts/gate-timing.py` times any gate per step, file and class.
+
+Gate details are in `artifacts/restructure-plan/PLAN.md` ("Gates"). **Load-sensitive tests:** a test that fails under load and passes alone has a real cause in the test or the product (the ones listed here before were fixed at theirs: `artifacts/restructure-plan/test-speed/RESULTS.md` §3). Reproduce it with `scripts/test-under-load.py --starve` (blocks a Node test's event loop at random moments) or `--hog 30`, fix the cause, never loosen the assertion. **Flake protocol:** a failure counts as a flake only if an isolated rerun passes and then a clean full rerun passes; record both in the step log. Never add a flaky test to a baseline.
 
 **HOST (real Jellyfin 12.4).** Run this before claiming that something works in Jellyfin:
 1. `scripts/restructure-gates.sh image` checks that the pinned image digest is unchanged.
