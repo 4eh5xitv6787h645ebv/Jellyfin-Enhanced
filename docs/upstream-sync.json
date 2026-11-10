@@ -1,0 +1,379 @@
+{
+  "$comment": "What the rewrite has taken from upstream, one entry per upstream commit after `base`, oldest first. The source of truth; docs/upstream-sync.md is rendered from it. Maintained with scripts/upstream_sync.py; the procedure is docs/upstream-sync-procedure.md.",
+  "schema": 1,
+  "upstream": {
+    "url": "https://github.com/n00bcodr/Jellyfin-Enhanced.git",
+    "branch": "main"
+  },
+  "base": "2e0f9251bfe833cb58866e9e245ba62be69a69ad",
+  "policy": {
+    "maxPendingDays": 14
+  },
+  "entries": [
+    {
+      "sha": "533614b80540f82c2b0b16aade6d810f577b50d0",
+      "date": "2026-11-07T18:12:53+00:00",
+      "subject": "feat(player): add keyboard shortcuts for subtitle offset",
+      "class": "feature",
+      "features": [
+        "player",
+        "chrome",
+        "settings-panel",
+        "admin",
+        "settings",
+        "platform"
+      ],
+      "issues": [
+        "#1012"
+      ],
+      "release": "12.15.0.0",
+      "size": {
+        "files": 41,
+        "insertions": 142,
+        "deletions": 2
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/events.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/playback.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-shortcut-editor.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-template.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (33 files)",
+        "docs/enhanced/enhanced-features.md",
+        "docs/enhanced/enhanced-settings.md"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "6daf211855528072876d441e58713066605f32fa",
+      "date": "2026-11-07T22:35:51+00:00",
+      "subject": "v12.15.0.0",
+      "class": "release",
+      "features": [],
+      "issues": [],
+      "release": "12.15.0.0",
+      "size": {
+        "files": 1,
+        "insertions": 2,
+        "deletions": 2
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "2e20cb83a58dd662e17dcb6784a9da3c55ac2886",
+      "date": "2026-11-07T22:50:32+00:00",
+      "subject": "v12.15.0.0 - Jellyfin Enhanced (synced from jellyfin-plugins)",
+      "class": "release",
+      "features": [],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 16,
+        "deletions": 0
+      },
+      "paths": [
+        "manifest.json"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "with": "6daf211855528072876d441e58713066605f32fa",
+      "notes": "The manifest entry of release 12.15.0.0 (written by the release workflow after the tag)."
+    },
+    {
+      "sha": "6ece3f529f32cf00294f19597c0e0c9daa826eb1",
+      "date": "2026-11-08T17:16:22+00:00",
+      "subject": "fix(status-tags): only show New Episode on recent air date, not on recent add",
+      "class": "fix",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 2,
+        "insertions": 2,
+        "deletions": 2
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/StatusRules.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "7a52d1e9e487cc6a8f80006cfda8342c575c0880",
+      "date": "2026-11-09T11:59:53+00:00",
+      "subject": "test(status-tags): update New Episode badge test for air-date-only rule",
+      "class": "test",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 2,
+        "deletions": 1
+      },
+      "paths": [
+        "tests/frontend/features/features-status-tags-vocabulary.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1"
+    },
+    {
+      "sha": "ee1c92dc6d8e02890547d490fe979bb85a1ff5d7",
+      "date": "2026-11-09T20:49:30+08:00",
+      "subject": "fix(tags): redraw changed cards and keep collection language flags current (#1029)",
+      "class": "fix",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [
+        "#1022",
+        "#1029"
+      ],
+      "release": null,
+      "size": {
+        "files": 8,
+        "insertions": 1562,
+        "deletions": 68
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/TagCacheService.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-renderer-base.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-pipeline.js",
+        "docs/enhanced/tags.md",
+        "tests/backend/PosterTags/TagCacheCollectionLanguagesTests.cs",
+        "tests/browser/tag-metadata-refresh.spec.cjs",
+        "tests/docs/coverage-matrix.md",
+        "tests/frontend/core/core-tag-metadata-refresh.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "af5f9678116a31b17bd86fe731131c54b92d9bd0",
+      "date": "2026-11-09T16:51:08+00:00",
+      "subject": "fix(toast): let a duration of 0 turn toasts off and make the preview match",
+      "class": "fix",
+      "features": [
+        "platform",
+        "settings",
+        "admin"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 5,
+        "insertions": 43,
+        "deletions": 6
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/ui-kit.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/config.js",
+        "tests/frontend/core/core-toast-duration.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "aa8f4312cb0f75e3d4a35c57b0fd3831548d4e4f",
+      "date": "2026-11-09T17:19:20+00:00",
+      "subject": "test(parity): update New Episode status fixture for the air-date-only rule",
+      "class": "test",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 2,
+        "deletions": 1
+      },
+      "paths": [
+        "tests/poster/parity/status-fixtures.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1"
+    },
+    {
+      "sha": "800b768ca6674a061a2a54b67461bf1e839d5a19",
+      "date": "2026-11-09T19:09:59+00:00",
+      "subject": "chore(ci)(deps): bump the github-actions group with 6 updates (#1031)",
+      "class": "deps",
+      "features": [],
+      "issues": [
+        "#1031"
+      ],
+      "release": null,
+      "size": {
+        "files": 9,
+        "insertions": 20,
+        "deletions": 20
+      },
+      "paths": [
+        ".github/workflows/ (9 files)"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "2e1f123de0860af12e87780ae898cb1092f6f787",
+      "date": "2026-11-09T22:51:31+00:00",
+      "subject": "feat(watchlist): two-way removal sync between Jellyfin and Seerr (#1032)",
+      "class": "feature",
+      "features": [
+        "seerr",
+        "admin",
+        "settings",
+        "platform"
+      ],
+      "issues": [
+        "#1032"
+      ],
+      "release": null,
+      "size": {
+        "files": 24,
+        "insertions": 1054,
+        "deletions": 103
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/UserConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/UserConfigurationManager.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.css",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Helpers/Jellyseerr/SeerrWatchlistReader.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/PluginServiceRegistrator.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyfinToSeerrWatchlistSyncTask.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/JellyseerrWatchlistSyncTask.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/ScheduledTasks/WatchlistRemovalSyncTask.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/WatchlistSyncPlanner.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/api.js",
+        "docs/advanced/api.md",
+        "docs/advanced/config-flag-groups.json",
+        "docs/advanced/project-structure.md",
+        "docs/seerr/seerr-features.md",
+        "docs/seerr/seerr-settings.md",
+        "tests/backend/Api/ApiSeerrTests.cs",
+        "tests/backend/ScheduledTasks/TaskVisibilityTests.cs",
+        "tests/backend/ScheduledTasks/WatchlistRemovalSyncTests.cs",
+        "tests/docs/production-inventory.json",
+        "tests/frontend/requests/request-submission.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "notes": "Adds the route POST jellyseerr/watchlist, a scheduled task and its DI registration: a contract change (JeSeerrController; upstream has one controller)."
+    },
+    {
+      "sha": "a2b4b2aba2177c52b6fb4a7faf90eb1b9a9e8c13",
+      "date": "2026-11-09T22:55:15+00:00",
+      "subject": "ci: skip browser tests on pull requests that do not touch web files",
+      "class": "ci",
+      "features": [],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 26,
+        "deletions": 0
+      },
+      "paths": [
+        ".github/workflows/regression.yml"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "d3bd07d3b9d282f05588065882351ea280d00559",
+      "date": "2026-11-09T22:57:19+00:00",
+      "subject": "fix(spoiler-guard): strip Home Screen Sections rows (#1033)",
+      "class": "fix",
+      "features": [
+        "spoiler-guard"
+      ],
+      "issues": [
+        "#1033"
+      ],
+      "release": null,
+      "size": {
+        "files": 4,
+        "insertions": 22,
+        "deletions": 2
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerFieldStripFilter.cs",
+        "docs/spoiler-guard/spoiler-guard-features.md",
+        "tests/backend/Privacy/PrivacyFieldFilterTests.cs",
+        "tests/docs/coverage-matrix.md"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "83510ea1332c9027536be52598e164e4ed9f59c5",
+      "date": "2026-11-09T22:59:55+00:00",
+      "subject": "fix(recommendations): don't open category tiles after dragging a row (#1030)",
+      "class": "fix",
+      "features": [
+        "seerr"
+      ],
+      "issues": [
+        "#1030"
+      ],
+      "release": null,
+      "size": {
+        "files": 3,
+        "insertions": 92,
+        "deletions": 1
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/jellyseerr/recommendations/recommendations-render.js",
+        "tests/docs/coverage-matrix.md",
+        "tests/frontend/pages/pages-recommendations.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "c22870b2d666a243a3a1269a1fbf7e25c662b95b",
+      "date": "2026-11-09T23:07:11+00:00",
+      "subject": "fix(audio-language): show audio languages on movie page",
+      "class": "fix",
+      "features": [
+        "details-providers"
+      ],
+      "issues": [
+        "#1034"
+      ],
+      "release": null,
+      "size": {
+        "files": 2,
+        "insertions": 9,
+        "deletions": 1
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-details-media-info.js",
+        "tests/frontend/features/features-media-info.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    }
+  ]
+}
