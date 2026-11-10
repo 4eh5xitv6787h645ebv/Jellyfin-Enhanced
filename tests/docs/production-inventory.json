@@ -482,6 +482,10 @@
       "category": "Features"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/TagCache/TagCacheCollectionMembers.cs",
+      "category": "Features"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Features/MediaTags/Services/TagCache/TagCacheCustomTags.cs",
       "category": "Features"
     },
@@ -10538,7 +10542,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 539,
+    "files": 540,
     "routes": 202,
     "configuration_properties": 741,
     "storage_references": 95,

@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-14 upstream commits: 6 pending, 8 ported.
+14 upstream commits: 5 pending, 9 ported.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -13,7 +13,7 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 3 | [`2e20cb83`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/2e20cb83a58dd662e17dcb6784a9da3c55ac2886) | 2026-11-07 | release |  | v12.15.0.0 - Jellyfin Enhanced (synced from jellyfin-plugins) | pending |  | With `6daf2118`. The manifest entry of release 12.15.0.0 (written by the release workflow after the tag). |
 | 4 | [`6ece3f52`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/6ece3f529f32cf00294f19597c0e0c9daa826eb1) | 2026-11-08 | fix | media-tags | fix(status-tags): only show New Episode on recent air date, not on recent add | ported | `b292ec58` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p2-new-episode.* |
 | 5 | [`7a52d1e9`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/7a52d1e9e487cc6a8f80006cfda8342c575c0880) | 2026-11-09 | test | media-tags | test(status-tags): update New Episode badge test for air-date-only rule | ported | `b292ec58` | With `6ece3f52`. The same test row change, in tests/frontend/features/media-tags/. |
-| 6 | [`ee1c92dc`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/ee1c92dc6d8e02890547d490fe979bb85a1ff5d7) | 2026-11-09 | fix | media-tags | fix(tags): redraw changed cards and keep collection language flags current (#1029) | pending |  |  |
+| 6 | [`ee1c92dc`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/ee1c92dc6d8e02890547d490fe979bb85a1ff5d7) | 2026-11-09 | fix | media-tags | fix(tags): redraw changed cards and keep collection language flags current (#1029) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-tag-redraw.* and p7-collection-languages.* |
 | 7 | [`af5f9678`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/af5f9678116a31b17bd86fe731131c54b92d9bd0) | 2026-11-09 | fix | platform, settings, admin | fix(toast): let a duration of 0 turn toasts off and make the preview match | ported | `d063821d` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p3-toast-zero.* |
 | 8 | [`aa8f4312`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/aa8f4312cb0f75e3d4a35c57b0fd3831548d4e4f) | 2026-11-09 | test | media-tags | test(parity): update New Episode status fixture for the air-date-only rule | ported | `b292ec58` | With `6ece3f52`. The same fixture change; the offline parity run passes with 241 Status fixtures and 0 web/native differences. |
 | 9 | [`800b768c`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/800b768ca6674a061a2a54b67461bf1e839d5a19) | 2026-11-09 | deps |  | chore(ci)(deps): bump the github-actions group with 6 updates (#1031) | pending |  |  |

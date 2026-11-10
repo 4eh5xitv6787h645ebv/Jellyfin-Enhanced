@@ -169,8 +169,10 @@
         "tests/docs/coverage-matrix.md",
         "tests/frontend/core/core-tag-metadata-refresh.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Client: the same redraw of changed cards, in the rewrite’s pipeline modules (scan.ts, delta-sync.ts, queue.ts). Server: the same collection-member tracking, but TagCacheService.cs is capped and may not grow, so the index, its rules and GetCollectionLanguages live in the new partial TagCacheCollectionMembers.cs and the service keeps one-line call sites (4,124 to 4,088 lines; the allow-list entry is lowered to match). Upstream’s 11 unit tests, 6 browser tests and 31 backend tests are translated unchanged in substance.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-tag-redraw.* and p7-collection-languages.*"
     },
     {
       "sha": "af5f9678116a31b17bd86fe731131c54b92d9bd0",
