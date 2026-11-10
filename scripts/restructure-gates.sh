@@ -687,6 +687,8 @@ case "$cmd" in
     export JE_TYPECHECK_CACHE_DIR
     trap 'rm -rf "$JE_TYPECHECK_CACHE_DIR"' EXIT
     ;;
+  # The inner loop keeps its cache between runs (the merge gates never read it).
+  affected) export JE_TYPECHECK_CACHE_DIR="$ROOT/node_modules/.cache/je-typecheck" ;;
   *) unset JE_TYPECHECK_CACHE_DIR ;;
 esac
 case "$cmd" in
