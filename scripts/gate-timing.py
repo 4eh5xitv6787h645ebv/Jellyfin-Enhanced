@@ -548,7 +548,8 @@ def analyse(run, out):
                                'start': p['start'] - t_start})
     runner = [p for p in procs if p['cat'] == 'node --test runner']
     reports = out / 'reports'
-    dotnet_classes, dotnet_meta = trx_classes(reports / 'T.trx') if (reports / 'T.trx').exists() else ([], {})
+    trxs = sorted(reports.glob('T*.trx'))
+    dotnet_classes, dotnet_meta = trx_classes(trxs) if trxs else ([], {})
     if dotnet_meta:
         hosts = [p for p in procs if p['cat'] == 'dotnet testhost']
         if hosts:
@@ -585,13 +586,15 @@ def descendants(p, kids):
     return out
 
 
-def trx_classes(path):
+def trx_classes(paths):
+    """Classes over one or more TRX files (T may run as several test hosts, one TRX each)."""
     ns = '{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}'
-    root = ET.parse(path).getroot()
+    roots = [ET.parse(p).getroot() for p in (paths if isinstance(paths, list) else [paths])]
     defs = {}
-    for d in root.iter(f'{ns}UnitTest'):
-        tm = d.find(f'{ns}TestMethod')
-        defs[d.get('id')] = tm.get('className') if tm is not None else '?'
+    for root in roots:
+        for d in root.iter(f'{ns}UnitTest'):
+            tm = d.find(f'{ns}TestMethod')
+            defs[d.get('id')] = tm.get('className') if tm is not None else '?'
 
     def ts(s):
         # 2026-11-10T10:41:02.1234567+08:00 -> epoch
@@ -600,7 +603,7 @@ def trx_classes(path):
         return datetime.fromisoformat(s).timestamp()
     cls = {}
     first, last, total_dur, n = None, None, 0.0, 0
-    for r in root.iter(f'{ns}UnitTestResult'):
+    for r in (x for root in roots for x in root.iter(f'{ns}UnitTestResult')):
         c = defs.get(r.get('testId'), '?')
         st, en = ts(r.get('startTime')), ts(r.get('endTime'))
         h, m, s = r.get('duration', '0:0:0').split(':')
@@ -615,7 +618,7 @@ def trx_classes(path):
         n += 1
     for e in cls.values():
         e['span'] = e['end'] - e['start']
-    times = root.find(f'{ns}Times')
+    times = roots[0].find(f'{ns}Times')
     return sorted(cls.values(), key=lambda e: -e['duration']), {
         'tests': n, 'first_test': first, 'last_test': last, 'test_span': (last - first) if first else 0,
         'sum_durations': total_dur, 'trx_start': ts(times.get('start')) if times is not None else None}

@@ -215,16 +215,52 @@ be_build_and_g() (
 )
 
 # T, plus the verify:rewrite backend part (coverage floors on T's results).
+# T runs as several test-host processes at once (tests/runner/dotnet_shards.py): JE_DOTNET_SINGLETON_SHARDS (default 3)
+# processes split the `Plugin singleton` classes, each running them alone and one at a time as xUnit does in one process,
+# and one process runs every other test with xUnit's parallel collections. Results and coverage are merged (exactly:
+# coverlet JSON, hits summed per line and branch). JE_DOTNET_SINGLETON_SHARDS=0 runs the whole suite in one process.
 be_t() (
   set -e
-  local res rc=0
-  step "T: full backend suite (failure ratchet vs $BASELINES/dotnet-failures.txt, dotnet-tests.txt)"
+  local res rc=0 plan name filter shards=${JE_DOTNET_SINGLETON_SHARDS:-3}
+  local -a names=() pids=()
   res=$(mktemp -d)
-  dotnet test "$TESTS" -c Release --no-restore --no-build -p:JellyfinTarget=jf12 \
-    --logger "trx;LogFileName=je.trx" --results-directory "$res" --collect:"XPlat Code Coverage" || rc=$?
-  [ -s "$res/je.trx" ] || { echo "T: no TRX written (dotnet test exit $rc)" >&2; false; }
-  keep_report "$res/je.trx" T.trx
-  trx_results "$res/je.trx" > "$res/results"
+  if [ "$shards" = 0 ]; then
+    plan='{"all":""}'
+  else
+    plan=$(python3 tests/runner/dotnet_shards.py plan --shards "$shards")
+  fi
+  mapfile -t names < <(jq -r 'keys[]' <<<"$plan")
+  step "T: full backend suite in ${#names[@]} test host(s): ${names[*]} (failure ratchet vs $BASELINES/dotnet-failures.txt, dotnet-tests.txt)"
+  # Coverlet instruments the plugin (and test) assembly in place in the output directory and restores it after the
+  # run, so concurrent test hosts must not share that directory: each host runs from its own copy (hard links, except
+  # the assemblies coverlet rewrites, which are real copies), inside bin/ so the tests' upward search for the
+  # repository root still works. `dotnet test` still runs the project (-p:OutDir points it at the copy), so the
+  # collector and settings the project's package targets supply are the same as in one process.
+  local out=tests/backend/bin/Release/net10.0 shards_dir=tests/backend/bin/Release/shards f
+  rm -rf "$shards_dir"
+  for name in "${names[@]}"; do
+    filter=$(jq -r --arg n "$name" '.[$n]' <<<"$plan")
+    mkdir -p "$shards_dir"
+    cp -al "$out" "$shards_dir/$name"
+    for f in "$out"/*.pdb; do
+      cp --remove-destination "$f" "$shards_dir/$name/"
+      cp --remove-destination "${f%.pdb}.dll" "$shards_dir/$name/"
+    done
+    # shellcheck disable=SC2086
+    dotnet test "$TESTS" -c Release --no-restore --no-build -p:JellyfinTarget=jf12 -p:OutDir="$ROOT/$shards_dir/$name/" ${filter:+--filter "$filter"} \
+      --logger "trx;LogFileName=$name.trx" --results-directory "$res/$name" --collect:"XPlat Code Coverage" \
+      -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=json,cobertura >"$res/$name.log" 2>&1 &
+    pids+=($!)
+  done
+  for name in "${!pids[@]}"; do wait "${pids[$name]}" || rc=$?; done
+  for name in "${names[@]}"; do
+    echo "-- T host $name:" >&2
+    grep -E '^(Passed|Failed)!|^\s+Failed |error' "$res/$name.log" >&2 || tail -n 20 "$res/$name.log" >&2
+    [ -s "$res/$name/$name.trx" ] || { echo "T: $name wrote no TRX (dotnet test exit $rc); its log:" >&2; tail -n 80 "$res/$name.log" >&2; false; }
+    keep_report "$res/$name/$name.trx" "T-$name.trx"
+  done
+  rm -rf "$shards_dir"
+  python3 tests/runner/dotnet_shards.py merge "$res" "${names[@]}" > "$res/results"
   ratchet "T (dotnet test)" "$BASELINES/dotnet-failures.txt" \
     "$(grep -oE 'Total: *[0-9]+' "$BASELINES/dotnet-tests.txt" | grep -oE '[0-9]+')" \
     "$(grep -oE 'Passed: *[0-9]+' "$BASELINES/dotnet-tests.txt" | grep -oE '[0-9]+')" \
@@ -232,9 +268,9 @@ be_t() (
   # `npm run verify:rewrite` (scripts/client-verify.mjs) = contracts:check, client:check, inventory:rewrite:check,
   # test:client-build, test:contract-boundary, test:frontend, then `tests/run.py backend` (dotnet test + coverage floors).
   # It stops at the first pre-existing failure, so F runs those parts here instead: test:frontend ratcheted, the dotnet
-  # run reused from T, and its coverage floors checked on T's results.
+  # run reused from T, and its coverage floors checked on T's results (merged over T's hosts).
   step "F: verify:rewrite backend part: coverage floors on T's results (tests/runner/coverage.py)"
-  python3 tests/runner/coverage.py "$res"
+  python3 tests/runner/coverage.py "$res/merged"
   rm -rf "$res"
 )
 
