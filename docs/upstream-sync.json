@@ -645,8 +645,10 @@
         "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
         "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.css"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Upstream edits the hand-written page script and section list; here the same behaviour is re-implemented in the page’s TypeScript modules: the search over the Media Tags sections’ declared titles, hints, labels, descriptions and ids, with its result list (client/src/admin/config/page/search.ts, the list’s element in client/html/admin-config/configPage.html), the New badges on the tab’s rows (page/whats-new.ts), the tab module handing over its section names (page/media-tags-tab.ts), the two members of JE.adminTags the search reads (host/admin-config-host.ts) and the card’s link (sections/about.ts). The stylesheet hunk applies as is (Configuration/jeAdmin.css is hand-written here too). Differences from upstream: (1) the watcher on the tab and the timers belong to the view’s lifecycle and end with it, and a search answered after the view is gone draws nothing; upstream never disconnects its MutationObserver; (2) Dismiss removes the Media Tags badges with the form’s and they stay away, where upstream’s Dismiss puts them straight back (it re-runs the badge pass without forgetting the list) until the page is reloaded: filed as a found bug; (3) the watcher is created only when What’s New lists something; (4) a row is found by its data-field-row value, not by a selector built from the id; (5) once the tab is drawn the search reads its declarations as they are, where upstream mounts the tab again for every query, which reads the whole plugin configuration and reloads the tab each time (ten reads while the word “collections” is typed, one here): filed as a found bug. Upstream’s commit has no tests: six are added (the search on the real page with the real tab and how often it reads the configuration, late answers, the badges and Dismiss, the watcher’s lifetime, the stylesheet rules, the card’s link), and tests/fixtures/admin-config-baseline.json gains the new element id jeMtSearchResults in renderedIds, as docs/rewrite/admin-config.md prescribes for an intended page change. No new setting, so the What’s New index is unchanged. No route, authorization or registration changes.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p21-media-tags-search.*"
     }
   ]
 }
