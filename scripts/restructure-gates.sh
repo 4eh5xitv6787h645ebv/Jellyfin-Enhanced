@@ -313,8 +313,11 @@ run_lanes() (
   step "lanes, concurrently: ${*%%=*} (separate logs; each result as it ends, then the tails)"
   for spec in "$@"; do
     name=${spec%%=*}
+    # Lanes that are one long chain (dotnet, contracts) bound the run; lanes that are many parallel files (frontend,
+    # checks) have slack. Under contention the chains should get the CPU first, so the wide lanes run at a lower
+    # priority (JE_GATE_WIDE_NICE, default 5; 0 = all equal). Only the order in which the CPU is shared changes.
     # shellcheck disable=SC2086  # the command and its arguments are single words
-    ( ${spec#*=} ) >"$dir/$name.log" 2>&1 &
+    ( case $name in frontend|checks) renice -n "${JE_GATE_WIDE_NICE:-5}" -p "$BASHPID" >/dev/null ;; esac; ${spec#*=} ) >"$dir/$name.log" 2>&1 &
     lane_pid[$name]=$!
   done
   local remaining=$#
