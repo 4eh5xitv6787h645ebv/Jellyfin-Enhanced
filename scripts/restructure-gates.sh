@@ -598,6 +598,18 @@ usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
+# One gate run checks the same tree's types several times (the plugin build's VerifyJellyfinEnhancedClient target,
+# client:check, client:build, the contract-boundary fixture): a passing check is cached for the rest of the run only
+# (scripts/client-build.mjs typecheckCache). Each run gets a fresh directory, so a gate never reuses a result from
+# before it started, whatever the caller's environment says.
+case "$cmd" in
+  be|fe|all)
+    JE_TYPECHECK_CACHE_DIR=$(mktemp -d)
+    export JE_TYPECHECK_CACHE_DIR
+    trap 'rm -rf "$JE_TYPECHECK_CACHE_DIR"' EXIT
+    ;;
+  *) unset JE_TYPECHECK_CACHE_DIR ;;
+esac
 case "$cmd" in
   be|fe|all|browser|h|inv|tool|size) [ $# -eq 0 ] || usage; "gate_$cmd" ;;
   r) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_r "$1" ;;
