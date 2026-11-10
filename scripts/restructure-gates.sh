@@ -108,26 +108,35 @@ ratchet() {
 frontend_tests() {
   local dir rc=0 first='' early=''
   dir=$(mktemp -d)
-  # Start first the files the affected map says this change can reach (none when there is no map or the change is
-  # global): a broken change then fails in the first seconds. Only the order changes; every file runs.
+  # Run the files the affected map says this change can reach (none when there is no map or the change is global) as a
+  # first part, then the rest: a broken change then fails in the first seconds. Every file runs once; the two parts'
+  # results and counts are added up. (`node --test` sorts the files it is given, so one command cannot set the order.)
   if [ -s node_modules/.cache/je-affected/map.json ]; then
     python3 tests/runner/affected.py select --json 2>/dev/null \
       | python3 -c 'import json, sys; s = json.load(sys.stdin); print("\n".join([] if s["all"] else s["suites"].get("frontend", [])))' \
       > "$dir/first" 2>/dev/null || true
-    if [ -s "$dir/first" ]; then echo "frontend tests: $(wc -l < "$dir/first") file(s) the change can reach start first" >&2; first="$dir/first"; fi
+    if [ -s "$dir/first" ]; then echo "frontend tests: the $(wc -l < "$dir/first") file(s) the change can reach run first" >&2; first="$dir/first"; fi
   fi
   # In the lanes, every failing test is also written to a lane log the moment it fails, for the failure watcher.
   if [ -n "${JE_LANE_LOG_DIR:-}" ]; then early="$JE_LANE_LOG_DIR/frontend-early.log"; fi
-  JE_TESTS_FIRST=$first JE_EARLY_FAILURES=$early node tests/frontend/run.mjs --test-reporter=spec --test-reporter-destination=stdout \
-    --test-reporter="$ROOT/scripts/restructure-gates-reporter.mjs" --test-reporter-destination="$dir/results" \
-    | tee "$dir/out" || rc=$?
+  local part parts=all
+  [ -z "$first" ] || parts='first rest'
+  for part in $parts; do
+    JE_TESTS_FIRST=$first JE_TESTS_PART=${first:+$part} JE_EARLY_FAILURES=$early node tests/frontend/run.mjs \
+      --test-reporter=spec --test-reporter-destination=stdout \
+      --test-reporter="$ROOT/scripts/restructure-gates-reporter.mjs" --test-reporter-destination="$dir/results-$part" \
+      | tee "$dir/out-$part" || rc=$?
+  done
+  cat "$dir"/results-* > "$dir/results" 2>/dev/null || true
+  cat "$dir"/out-* > "$dir/out"
   [ -s "$dir/results" ] || { echo "frontend tests: no results written (node exit $rc)" >&2; rm -rf "$dir"; return 1; }
   keep_report "$dir/results" frontend-results.txt
   rc=0
   ratchet "npm test" "$BASELINES/npm-failures.txt" \
     "$(awk '$1=="ℹ" && $2=="tests" {print $3}' "$BASELINES/npm-tests.txt")" \
     "$(awk '$1=="ℹ" && $2=="pass" {print $3}' "$BASELINES/npm-tests.txt")" \
-    "$dir/results" "$(awk '$1=="ℹ" && $2=="tests" {print $3}' "$dir/out")" "$(awk '$1=="ℹ" && $2=="pass" {print $3}' "$dir/out")" || rc=$?
+    "$dir/results" "$(awk '$1=="ℹ" && $2=="tests" {n++; s+=$3} END {if (n) print s}' "$dir/out")" \
+    "$(awk '$1=="ℹ" && $2=="pass" {n++; s+=$3} END {if (n) print s}' "$dir/out")" || rc=$?
   rm -rf "$dir"
   return "$rc"
 }

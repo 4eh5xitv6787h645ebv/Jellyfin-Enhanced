@@ -20,14 +20,16 @@ export function discoverTests(directory = frontendRoot) {
 }
 
 /**
- * The same files with the listed ones (repository-relative, e.g. the files a change can reach) moved to the front, in
- * discovery order. Only the order changes: every file stays exactly once, and a listed file not in `files` is ignored.
+ * The files split into the listed ones (repository-relative, e.g. the files a change can reach) and the rest, each in
+ * discovery order. Together they are exactly `files`, each once; a listed file not in `files` is ignored. (Passing
+ * the listed files first in one `node --test` command would not do: it sorts the files it is given.)
  */
-export function orderFirst(files, listed) {
-  const first = new Set(listed.map(file => resolve(repositoryRoot, file)));
-  const result = [...files.filter(file => first.has(file)), ...files.filter(file => !first.has(file))];
-  if (result.length !== files.length || new Set(result).size !== new Set(files).size) throw new Error('orderFirst changed the set of test files');
-  return result;
+export function splitFirst(files, listed) {
+  const wanted = new Set(listed.map(file => resolve(repositoryRoot, file)));
+  const first = files.filter(file => wanted.has(file)), rest = files.filter(file => !wanted.has(file));
+  if (first.length + rest.length !== files.length || new Set([...first, ...rest]).size !== new Set(files).size)
+    throw new Error('splitFirst changed the set of test files');
+  return { first, rest };
 }
 
 /**

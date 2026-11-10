@@ -139,20 +139,30 @@ class AffectedTests(unittest.TestCase):
 
 
 class FrontendRunnerTests(unittest.TestCase):
-    """tests/frontend/run.mjs may start some files first and report failures early, but never run fewer files."""
+    """tests/frontend/run.mjs may run some files as a first part and report failures early, but never runs fewer files."""
     node = shutil.which('node')
 
-    def test_order_first_moves_the_listed_files_to_the_front_and_keeps_every_file_once(self):
+    def test_split_first_parts_are_every_file_exactly_once(self):
         script = ("import('./tests/frontend/helpers/discovery.mjs').then(m => { const all = m.discoverTests();"
                   " const listed = ['tests/frontend/requests/seerr-review-r2.test.mjs', 'tests/frontend/no-such.test.mjs',"
                   " 'tests/frontend/core/core-api-runtime.test.mjs'];"
-                  " console.log(JSON.stringify({ all, ordered: m.orderFirst(all, listed) })); })")
+                  " console.log(JSON.stringify({ all, ...m.splitFirst(all, listed) })); })")
         out = json.loads(subprocess.run([self.node, '--input-type=module', '-e', script], cwd=ROOT, capture_output=True,
                                         text=True, check=True).stdout)
-        rel = [str(Path(f).relative_to(ROOT)) for f in out['ordered']]
-        self.assertEqual(['tests/frontend/core/core-api-runtime.test.mjs', 'tests/frontend/requests/seerr-review-r2.test.mjs'], rel[:2])
-        self.assertEqual(sorted(out['all']), sorted(out['ordered']))
-        self.assertEqual(len(out['all']), len(set(out['ordered'])))
+        self.assertEqual(['tests/frontend/core/core-api-runtime.test.mjs', 'tests/frontend/requests/seerr-review-r2.test.mjs'],
+                         [str(Path(f).relative_to(ROOT)) for f in out['first']])
+        self.assertEqual(sorted(out['all']), sorted(out['first'] + out['rest']))
+        self.assertEqual(len(out['all']), len(set(out['first'] + out['rest'])))
+
+    def test_an_empty_part_runs_nothing(self):
+        # `node --test` with no files would discover tests of its own; a part with no files must run none.
+        with tempfile.TemporaryDirectory() as d:
+            listed = Path(d) / 'first'
+            listed.write_text('tests/frontend/no-such.test.mjs\n')
+            env = dict(os.environ, JE_TESTS_FIRST=str(listed), JE_TESTS_PART='first')
+            r = subprocess.run([self.node, 'tests/frontend/run.mjs'], cwd=ROOT, env=env, capture_output=True, text=True,
+                               timeout=60)
+            self.assertEqual((0, ''), (r.returncode, r.stdout))
 
     def test_early_failures_reports_each_failing_test_at_once_and_nothing_else(self):
         hook = ROOT / 'tests/runner/early-failures.mjs'
