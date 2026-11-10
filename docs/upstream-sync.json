@@ -251,7 +251,9 @@
         ".github/workflows/ (9 files)"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "05a49463cdaf97eeca11e465c08be11135dca47d"
+      ],
       "notes": "The same six action pins in the nine workflows upstream changed, plus actions/setup-dotnet in rewrite-validation.yml, which only the rewrite has and which pinned the old commit."
     },
     {
@@ -323,8 +325,9 @@
       "paths": [
         ".github/workflows/regression.yml"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The same browser-changes job and condition. The path filter also counts client/, css/ and scripts/client*, where this tree’s web files are built from; upstream’s filter names only the built folders."
     },
     {
       "sha": "d3bd07d3b9d282f05588065882351ea280d00559",
