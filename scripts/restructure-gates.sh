@@ -283,21 +283,32 @@ gate_be() (
 
 gate_fe() ( set -e; fe_checks with-frontend-suite )
 
-# $1 = with-frontend-suite | without-frontend-suite (`all`, where be already ran it).
+# $1 = with-frontend-suite (`fe`) | in-all (`all`, after be). In `all`, be has already run on this same tree (gate_all
+# fails if fe's regeneration changes it) the frontend suite, test:client-build, client:check, inventory:rewrite:check,
+# INV and TOOL, so fe runs only what be does not: the regeneration itself (client:build, which type-checks exactly as
+# client:typecheck does before building, and inventory:rewrite), the bootstrap manifest test and the output keys.
 fe_checks() (
   set -e
-  step "FE G: typecheck, build, inventory"
-  npm run client:typecheck
-  npm run client:build
-  npm run inventory:rewrite
-  npm run client:check
-  npm run inventory:rewrite:check
-  gate_inv
-  gate_tool
-  step "FE G: client-build tests, bootstrap manifest, npm test (ratcheted)"
-  npm run test:client-build
-  node --test tests/frontend/bootstrap/bootstrap-manifest.test.mjs
-  if [ "$1" = with-frontend-suite ]; then frontend_tests; else step "FE G: npm test already ran in be"; fi
+  if [ "$1" = in-all ]; then
+    step "FE G: build (includes the typecheck), inventory; be ran the checks, INV, TOOL and client-build tests on this tree"
+    npm run client:build
+    npm run inventory:rewrite
+    step "FE G: bootstrap manifest"
+    node --test tests/frontend/bootstrap/bootstrap-manifest.test.mjs
+  else
+    step "FE G: typecheck, build, inventory"
+    npm run client:typecheck
+    npm run client:build
+    npm run inventory:rewrite
+    npm run client:check
+    npm run inventory:rewrite:check
+    gate_inv
+    gate_tool
+    step "FE G: client-build tests, bootstrap manifest, npm test (ratcheted)"
+    npm run test:client-build
+    node --test tests/frontend/bootstrap/bootstrap-manifest.test.mjs
+    frontend_tests
+  fi
   step "FE G: component-scripts.json and client/entries output keys vs restructure-base"
   git diff --exit-code restructure-base -- Jellyfin.Plugin.JellyfinEnhanced/js/component-scripts.json
   local f
@@ -306,14 +317,14 @@ fe_checks() (
   done
 )
 
-# Merge points: be, then fe without running the frontend suite a second time. fe regenerates (client:build,
-# inventory:rewrite); be's frontend-suite run covers fe's tree only if that leaves the working tree as it was.
+# Merge points: be, then fe without repeating what be ran. fe regenerates (client:build, inventory:rewrite); be's runs
+# cover fe's tree only if that leaves the working tree as it was.
 gate_all() (
   set -e
   local before after
   gate_be
   before=$(tree_state)
-  fe_checks without-frontend-suite
+  fe_checks in-all
   after=$(tree_state)
   if [ "$before" != "$after" ]; then
     echo "all: fe's regeneration changed the working tree after be ran, so be's results do not cover it:" >&2
