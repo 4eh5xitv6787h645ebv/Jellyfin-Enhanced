@@ -702,8 +702,10 @@
         "docs/spoiler-guard/spoiler-guard-settings.md",
         "tests/backend/Privacy/PrivacyFieldFilterTests.cs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The C# file moved, it was not rewritten: upstream’s hunks to Services/SpoilerGuard/SpoilerFieldStripFilter.cs apply at Shared/SpoilerGuard/SpoilerFieldStripFilter.cs, its test hunks at tests/backend/Features/SpoilerGuard/PrivacyFieldFilterTests.cs, and the docs hunk as is. Differences from upstream: (1) the neutral path’s extension. Upstream appends the item’s Container as it is, and for some files that is ffprobe’s whole format list (33 of the lab’s 3,000 episodes: every .mp4 has “mov,mp4,m4a,3gp,3g2,mj2”), so the file name jellyfin-web builds for Download is “Oswald S01E03.mov,mp4,m4a,3gp,3g2,mj2” (seen on upstream’s build on the lab). Here the extension is the name in that list the file itself uses (“mp4”), else the list’s first name; only a name from the list is ever used, never text of the real path, so a path such as “Show.S02E03.Secret.Ending” gives nothing away. For a one-name Container the result is upstream’s. Filed as a found bug against upstream. (2) NeutralPath sits above the comment block that documents ShouldStrip, where upstream’s hunk puts it between that comment and ShouldStrip. (3) One test theory is added to upstream’s (six cases through the filter’s real entry, on the single-item route and the episode list: an .mkv, the .mp4 list, a list name in another case, a path whose last dot is part of the title, no container, and a second pass over the same DTO changing nothing). Kept from upstream as it is: a guarded movie’s neutral path is “/Item.<ext>” and a season’s “/<Series> E02”; neither is read by Download all, which reads the episodes’. The access question: Path was removed and is now a made-up value built from the series name, the season and episode numbers and a container name, all of which the guarded DTO already carries; no spoiler check is loosened. No setting, route, authorization or registration changes.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p23-neutral-path.*"
     },
     {
       "sha": "5756777576d25a64824600e50bfefcd3040ce664",
