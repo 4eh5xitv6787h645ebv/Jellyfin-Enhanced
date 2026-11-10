@@ -8,9 +8,11 @@ wall time and exit code, the level's makespan (last finish), throughput (gates p
 lowest MemAvailable, swap in use, and the 1-minute load. The caller should hold the shared gate lock for the whole
 experiment (the runs inside it pass the lock to nobody; they are the experiment), so no other agent's gate runs beside.
 
-Guard: if MemAvailable falls below --min-mem-mb (default 1500) every run of the level is killed (SIGKILL, process
-groups) and the level is recorded as `killed for memory`: the experiment must never push the machine into the OOM
-killer, which could pick another agent's process.
+Guard: if MemAvailable falls below --min-mem-mb (default 2500), or the machine swaps in more than --max-swapin-mb-s
+(default 20 MB/s, averaged over 15 s), every run of the level is killed (SIGKILL, process groups) and the level is
+recorded as `killed for memory` with the reason: the experiment must never push the machine into the OOM killer or
+into thrashing, which slow or kill other agents' processes. (Measured: three base `all` runs at once kept
+MemAvailable just above 1.5 GB while swapping in up to 20 MB/s, with most processes blocked on I/O.)
 """
 import argparse
 import json
@@ -41,7 +43,14 @@ def free_port():
         return s.getsockname()[1]
 
 
-def level(k, trees, gate, min_mem, logdir, env_extra):
+def swapped_in_mb():
+    for line in open('/proc/vmstat'):
+        if line.startswith('pswpin '):
+            return int(line.split()[1]) * os.sysconf('SC_PAGE_SIZE') / 2 ** 20
+    return 0.0
+
+
+def level(k, trees, gate, min_mem, logdir, env_extra, max_swapin=20.0):
     env = dict(os.environ, UseSharedCompilation='false', MSBUILDDISABLENODEREUSE='1', DOTNET_CLI_USE_MSBUILD_SERVER='0',
                DOTNET_CLI_TELEMETRY_OPTOUT='1', **env_extra)
     env.pop('JE_UPDATE_SNAPSHOTS', None)
@@ -54,13 +63,18 @@ def level(k, trees, gate, min_mem, logdir, env_extra):
         p = subprocess.Popen(['bash', 'scripts/restructure-gates.sh', gate], cwd=trees[i], env=e, stdout=log,
                              stderr=subprocess.STDOUT, start_new_session=True)
         procs.append({'p': p, 'start': time.time(), 'tree': trees[i], 'log': log})
-    low, swap_max, load_max, killed = 10 ** 9, 0, 0.0, False
+    low, swap_max, load_max, killed, reason = 10 ** 9, 0, 0.0, False, None
+    swapins = [(time.time(), swapped_in_mb())]
     while any(x['p'].poll() is None for x in procs):
         m = meminfo()
         low = min(low, m['MemAvailable'])
         swap_max = max(swap_max, m['SwapTotal'] - m['SwapFree'])
         load_max = max(load_max, os.getloadavg()[0])
-        if m['MemAvailable'] < min_mem and not killed:
+        swapins = [s for s in swapins if s[0] > time.time() - 15] + [(time.time(), swapped_in_mb())]
+        rate = (swapins[-1][1] - swapins[0][1]) / max(1.0, swapins[-1][0] - swapins[0][0]) if len(swapins) > 10 else 0.0
+        if not killed and (m['MemAvailable'] < min_mem or rate > max_swapin):
+            reason = (f'MemAvailable {m["MemAvailable"]} MB < {min_mem} MB' if m['MemAvailable'] < min_mem
+                      else f'swapping in {rate:.0f} MB/s > {max_swapin} MB/s')
             killed = True
             for x in procs:
                 if x['p'].poll() is None:
@@ -78,7 +92,7 @@ def level(k, trees, gate, min_mem, logdir, env_extra):
             'runs': [{'tree': x['tree'], 'rc': x['p'].returncode, 'wall_s': round(x['end'] - x['start'], 1)} for x in procs],
             'gates_per_hour': round(3600 * k / makespan, 1), 'cpu_busy_pct': round(100 * (b1 - b0) / max(1, t1 - t0), 1),
             'min_mem_available_mb': low, 'max_swap_used_mb': swap_max, 'max_load1': round(load_max, 1),
-            'killed_for_memory': killed}
+            'killed_for_memory': killed, 'kill_reason': reason}
 
 
 def main():
@@ -87,7 +101,8 @@ def main():
     ap.add_argument('--levels', default='1,2,3,4')
     ap.add_argument('--gate', default='all')
     ap.add_argument('--repeat', type=int, default=1)
-    ap.add_argument('--min-mem-mb', type=int, default=1500)
+    ap.add_argument('--min-mem-mb', type=int, default=2500)
+    ap.add_argument('--max-swapin-mb-s', type=float, default=20.0)
     ap.add_argument('--env', action='append', default=[])
     ap.add_argument('--out', default='gate-concurrency.json')
     a = ap.parse_args()
@@ -100,11 +115,13 @@ def main():
         for k in map(int, a.levels.split(',')):
             if k > len(trees):
                 continue
-            res = level(k, trees, a.gate, a.min_mem_mb, logdir, extra)
+            res = level(k, trees, a.gate, a.min_mem_mb, logdir, extra, a.max_swapin_mb_s)
             res['repeat'] = r + 1
             results.append(res)
             print(json.dumps(res), flush=True)
             Path(a.out).write_text(json.dumps(results, indent=1))
+            if res['killed_for_memory']:
+                break           # a higher level would only swap harder
             time.sleep(20)
     return 0
 
