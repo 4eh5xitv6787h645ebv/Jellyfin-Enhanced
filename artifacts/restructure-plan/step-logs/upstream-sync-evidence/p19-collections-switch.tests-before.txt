@@ -1,0 +1,51 @@
+# The port's tests on the tree before the port (5aa34467d1da plus the tests): upstream's (the three "a collection
+# created just now" rows, the movie row, the native rule, the page-field fixture) and three added here for the
+# rewrite's own paths (the admin page's Collections card, the public configuration, the declarations the server reads).
+$ TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node --test --test-name-pattern 'a collection created just now|turning collections off leaves a movie|Status badges › Collections|read the same declarations|facade, module order and section order' features/media-tags/features-status-tags-vocabulary.test.mjs features/media-tags/admin/features-admin-tags-page-colours-status.test.mjs features/media-tags/admin/admin-tags-rewrite.test.mjs
+✖ the server, What's New and the docs generator read the same declarations from the generated modules as from the hand-written ones
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  -   'StatusTagsOnCollections',
+✖ the facade, module order and section order are the hand-written tab's
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  -   'badges/badges-collections',
+✖ Status badges › Collections: one switch between the families and the windows, on until the administrator turns it off for everyone
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  -   'badges-collections',
+  +   'badges-tmdb'
+✔ a collection created just now: the admin switch is on
+✔ a collection created just now: the setting is missing (an older server)
+✖ a collection created just now: the admin turns status badges off for collections
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  + [
+  +   'added',
+  +   'Just Added'
+  + ]
+  - null
+✔ turning collections off leaves a movie added just now with its badge
+ℹ tests 7 / pass 3 / fail 4
+(The three that pass say what must not change: a collection keeps its badge while the switch is on or unknown, and a
+movie keeps its badge whatever the switch says.)
+
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~NativeStatusBandTests.A_collection_shows|FullyQualifiedName~ApiConfigurationTests.PublicConfigCarriesTheSwitch|FullyQualifiedName~ApiMediaTagsPageTests.ThePatchAcceptsExactlyTheFields'
+First run, nothing but the tests: the test project does not compile.
+tests/backend/Api/ApiConfigurationTests.cs(155,50): error CS1061: 'PluginConfiguration' does not contain a definition for 'StatusTagsOnCollections'
+tests/backend/Features/MediaTags/PosterTags/NativeStatusBandTests.cs(56,64): error CS0117: 'PluginConfiguration' does not contain a definition for 'StatusTagsOnCollections'
+
+Second run, with only the property added to PluginConfiguration.cs (stored, read by nothing):
+  Failed JE.Tests.Features.MediaTags.NativeStatusBandTests.A_collection_shows_a_status_badge_unless_the_admin_turns_collections_off
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   StatusTag { Key = just_added, Text = Just Added, StyleKey = added }
+  Failed JE.Tests.ApiConfigurationTests.PublicConfigCarriesTheSwitchForStatusBadgesOnCollections(enabled: False)
+   System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+  Failed JE.Tests.ApiConfigurationTests.PublicConfigCarriesTheSwitchForStatusBadgesOnCollections(enabled: True)
+   System.Collections.Generic.KeyNotFoundException : The given key was not present in the dictionary.
+  Failed JE.Tests.Features.MediaTags.ApiMediaTagsPageTests.ThePatchAcceptsExactlyTheFieldsTheSectionModulesDeclare
+   Assert.Equal() Failure: Collections differ
+Expected: [···, "StatusTagsNewRelease", "StatusTagsNewReleaseDays", "StatusTagsOnCollections", "StatusTagsPosition", "StatusTagsScenes", ···]
+Actual:   [···, "StatusTagsNewRelease", "StatusTagsNewReleaseDays", "StatusTagsPosition", "StatusTagsScenes", "StatusTagsSchedule", ···]
+Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4

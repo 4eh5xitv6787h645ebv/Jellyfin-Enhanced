@@ -1,0 +1,7 @@
+$ je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p19-collections-switch.mjs
+# deployed: 961c95ae (dll 8f7f27175c5a4180); exit 0
+SCRIPT {"collection":"Aladdin Collection (lab)","movie":"Aladdin","publicConfig":{"asInstalled":true,"afterTurningItOff":false},"adminPage":{"cards":["badges-families","badges-collections","badges-windows","badges-tmdb","badges-leaving"],"switch":{"card":"badges-collections","cardHint":"This applies to everyone.","type":"checkbox","checked":true,"label":"Show status badges on collections","description":"A collection's date is when a tool created it, and some tools recreate collections often, which makes them show Just Added again and again. Turn this off to keep status badges off collections."},"afterTurningItOff":{"checked":false,"stored":false}},"webBadges":{"switchOn":{"collection":"Just Added","movie":"Just Added"},"switchOff":{"collection":null,"movie":"Just Added"}},"switchBackOn":true}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/search?query=Aladdin

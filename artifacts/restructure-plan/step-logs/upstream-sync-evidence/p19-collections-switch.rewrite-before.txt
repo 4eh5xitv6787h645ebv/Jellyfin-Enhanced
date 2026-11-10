@@ -1,0 +1,8 @@
+$ je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p19-collections-switch.mjs
+# deployed: HEAD+dirty (dll 510ef4eb20566a0a); exit 0
+SCRIPT {"collection":"Aladdin Collection (lab)","movie":"Aladdin","publicConfig":{"asInstalled":"absent","afterTurningItOff":"absent"},"adminPage":{"cards":["badges-families","badges-windows","badges-tmdb","badges-leaving"],"switch":"no switch","saveEndpointForTheField":"400 {\"error\":\"\\u0027StatusTagsOnCollections\\u0027 is not a Media Tags setting; this endpoint saves only those.\"}","stored":"absent"},"webBadges":{"switchOn":{"collection":"Just Added","movie":"Just Added"},"switchOff":{"collection":"Just Added","movie":"Just Added"}},"switchBackOn":"absent"}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/admin/configuration
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/search?query=Aladdin

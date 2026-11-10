@@ -1,0 +1,21 @@
+$ je12 smoke        (je12 v2.3.4; baseline recorded by `je12 smoke --record` from a clean build of de9915a6, the main line this branch is rebased on)
+# deployed: 752ed7ae (dll c417af74684d1b03)
+page admin           ok      14 tabs; Media Tags section 7 tabs (2.1s)
+page settings        ok      panel open, 24 tabs (1.9s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (2.2s)
+page poster          ok      28/100 cards tagged (1.9s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 83 JE elements (2.0s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (3.3s)
+page downloads       ok      4 items (4.8s)
+page activity        ok      Activity tab rendered (1.8s)
+page catchup         ok      Catch Up tab rendered (1.8s)
+page seerr           ok      5 Seerr cards (2.1s)
+page player          ok      playing 1.0s; OSD rating present (2.9s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 474 paths, 180 under /JellyfinEnhanced
+bundle wire          ok      br 200 530008B 304:yes, gzip 200 642968B 304:yes, identity 200 2379985B 304:yes; decoded bodies identical
+server log           ok      168 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 38s

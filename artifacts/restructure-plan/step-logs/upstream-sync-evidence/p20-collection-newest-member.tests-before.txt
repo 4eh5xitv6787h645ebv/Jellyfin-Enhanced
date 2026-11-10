@@ -1,0 +1,56 @@
+# The port's tests on the tree before the port (961c95ae plus the tests): upstream's, and two added here for what
+# upstream left untested (the /tag-data fallback's per-user member date, and the single-item fetch asking for it).
+$ TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node --test --test-name-pattern 'boxset:|video: just added|a collection whose newest member|older entry schema \((10|23|51)\)|look facts are asked for' features/media-tags/features-status-tags-vocabulary.test.mjs features/media-tags/core-tag-pipeline.test.mjs
+✖ one item's look facts are asked for with the episode and collection-member dates, which the Status renderer draws and keeps
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  null !== 'true'
+✖ a stored tag cache copy from an older entry schema (10) is dropped and downloaded in full
+  AssertionError [ERR_ASSERTION]: the copy without the current schema is cleared
+  + []
+  - [ 'server-a:user-a' ]
+✖ badge rule: boxset: just added by its newest member
+  + null
+  - [ 'added', 'Just Added' ]
+✖ badge rule: boxset: recreated by a scan, members all old
+  + [ 'added', 'Just Added' ]
+  - null
+✖ badge rule: boxset: its own date alone is no badge
+  + [ 'added', 'Just Added' ]
+  - null
+✖ a collection whose newest member was added just now: the admin switch is on
+  + null
+  - [ 'added', 'Just Added' ]
+✖ a collection whose newest member was added just now: the setting is missing (an older server)
+  + null
+  - [ 'added', 'Just Added' ]
+✔ a collection whose newest member was added just now: the admin turns status badges off for collections
+✔ a stored tag cache copy from an older entry schema (23) is dropped and downloaded in full
+✔ a stored tag cache copy from an older entry schema (51) is dropped and downloaded in full
+✔ badge rule: boxset: no release badges
+✔ badge rule: video: just added by its own date
+ℹ tests 12 / pass 5 / fail 7
+(The five that pass say what must not change: the switch still wins, a video keeps its own date, a collection gets
+no release badge, and copies from schemas the tree never wrote were already dropped.)
+
+$ dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~NativeStatusBandTests.A_collection_shows|FullyQualifiedName~NativeStatusBandTests.Status_urls_retire|FullyQualifiedName~StatusTagsCacheFactsTests.ACollectionsNewestMember|FullyQualifiedName~TagCacheCollectionLanguagesTests.ACollection|FullyQualifiedName~PerfRound2TagCacheResponseTests.TagDataFallbackGivesACollection|FullyQualifiedName~CoreTagLookSettingsTests.OlderSnapshotsAreDiscardedForRebuild|FullyQualifiedName~CoreTagItemLooksTests|FullyQualifiedName~PosterTokenTests|FullyQualifiedName~QualityDisplayTests.AdditiveQualitySettings'
+  Failed NativeStatusBandTests.A_collection_shows_a_status_badge_unless_the_admin_turns_collections_off
+   Assert.NotNull() Failure: Value is null            (a collection with an old date of its own and a member added yesterday: no badge)
+  Failed TagCacheCollectionLanguagesTests.ACollectionIsJustAddedByItsNewestMemberNotItsOwnDate
+   Assert.Equal() Failure: Values differ   Expected: 1698667200000   Actual: null      (the entry's LatestEpisodeAdded)
+  Failed TagCacheCollectionLanguagesTests.ACollectionOfOtherTaggedKindsIsJustAddedByItsNewestMember
+   Assert.Equal() Failure: Values differ   Expected: 1793275200000   Actual: null
+  Failed PerfRound2TagCacheResponseTests.TagDataFallbackGivesACollectionTheNewestMemberTheUserCanSee
+   System.InvalidOperationException : The requested operation requires an element of type 'Number', but the target element has type 'Null'.
+                                                      (the fallback's LatestEpisodeAdded for the collection)
+  Failed CoreTagLookSettingsTests.OlderSnapshotsAreDiscardedForRebuild(oldSchema: 10)
+   Assert.Equal() Failure: Values differ   Expected: 0   Actual: 1                    (a schema-10 snapshot is still loaded)
+  Failed NativeStatusBandTests.Status_urls_retire_each_five_minutes_even_when_settings_snapshot_is_cached
+  Failed PosterTokenTests.AudioResolverTenToElevenRetiresTokensAtTheSamePixelIdentity
+  Failed CoreTagItemLooksTests.ItemVariantAudioGateAndDigestFollowTheOriginalDocumentVersion (2 cases)
+  Failed QualityDisplayTests.AdditiveQualitySettingsChangeTheirDigestWithIntegratedResolverIdentity (5 cases)
+   Assert.Equal() Failure: Strings differ   Expected: "41"   Actual: "40"             (PosterTagSettings.ResolverVersion)
+Failed!  - Failed:    14, Passed:    54, Skipped:     0, Total:    68
+
+StatusTagsCacheFactsTests.ACollectionsNewestMemberDateIsDroppedForUsersWhoCannotSeeThatMember (upstream's) is among the
+54 that pass: the per-user filter already dropped a date whose source item the user cannot see, whatever the entry's
+type. It guards the privacy rule the port relies on rather than proving the port.

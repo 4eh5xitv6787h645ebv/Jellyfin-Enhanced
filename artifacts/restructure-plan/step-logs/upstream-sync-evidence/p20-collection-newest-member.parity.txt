@@ -1,0 +1,13 @@
+# Web rule (statustags.js) against native rule (StatusRules.cs) on the fixed-clock Status fixtures, after the port
+# (two fixtures more than before it: recreated-collection and collection-own-date-only; added-collection now
+#  carries a member date). Node 26.13.0 (ICU 78.3, CLDR 48, Unicode 17, the versions the README names).
+$ TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node tests/poster/parity/run.mjs --offline
+Compact vocabulary: 18 web/native fixtures match.
+Status web fixtures: 243 passed
+Status native/web parity: 243 fixtures, 0 differences
+names: 115960 codes, 0 mismatches
+casing: 30794 strings, 0 mismatches
+colours: 17 posters, 0 mismatches
+Total differences: 0
+exit 0
+(1m34s)

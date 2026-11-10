@@ -1,0 +1,6 @@
+$ je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p20-collection-newest-member.mjs
+# deployed: 752ed7ae (dll c417af74684d1b03); exit 0
+SCRIPT {"recreated":"An American Tail Collection (lab)","arrival":"Atlantis Collection (lab) (member added an hour ago: Atlantis: The Lost Empire)","afterSetup":{"recreatedCollection_ownDateAnHourAgo_membersOld":{"badge":null,"tagCacheEntry":"its newest member's added date","tagDataFallback":"its newest member's added date"},"collection_ownDateOld_oneMemberAddedAnHourAgo":{"badge":"Just Added","tagCacheEntry":"its newest member's added date","tagDataFallback":"its newest member's added date"}},"afterTheArrivalsDateIsEditedBackTwoYears":{"badge":null,"tagCacheEntry":"its newest member's added date","tagDataFallback":"its newest member's added date","tagCacheFollowedTheMember":"yes"}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+STORM 15x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+URL /web/index.html#/search?query=Collection%20(lab)

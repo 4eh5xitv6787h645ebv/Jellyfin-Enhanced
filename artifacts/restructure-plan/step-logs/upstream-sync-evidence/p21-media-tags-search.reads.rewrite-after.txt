@@ -1,0 +1,7 @@
+$ je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p21-media-tags-search.reads.mjs
+# deployed: d411ead9 (dll 58c9257c448188d1); exit 0
+SCRIPT {"typed":"collections","configurationReadsWhileTyping":1,"mediaTagsHits":8}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced

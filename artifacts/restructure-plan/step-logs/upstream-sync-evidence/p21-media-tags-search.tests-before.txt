@@ -1,0 +1,30 @@
+# The port's tests on the tree before the port (fa4c6ead plus the tests). Upstream's commit has no tests; these six
+# are written here, five of them on the real page with the real Media Tags tab in one browser realm
+# (features-admin-config-media-tags-tab.test.mjs), one on the generated page (admin-config-rewrite.test.mjs).
+$ TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node --test --test-name-pattern 'settings search lists matching Media Tags|search answered after a newer one|New badge on its row|badge watcher ends|stylesheet keeps the hidden Media Tags|Services tab has a Maintainerr card' features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs admin/config/admin-config-rewrite.test.mjs
+✖ the Services tab has a Maintainerr card that says what it is for and links to the Leaving soon fields
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + 'sell'
+  - 'new_releases'
+✖ the settings search lists matching Media Tags settings under the form, and a hit opens the setting on its tab
+  AssertionError [ERR_ASSERTION]: the list has its place on the page
+✖ the stylesheet keeps the hidden Media Tags result list hidden and draws its rows
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\.je-mt-search-results\s*\{[^}]*display:\s*flex/.
+✖ a search answered after a newer one, or after the view is gone, draws nothing
+  TypeError [Error]: Cannot read properties of null (reading 'hidden')          (there is no result list)
+✖ a new setting on the Media Tags tab gets its New badge on its row, keeps it when the tab redraws, and loses it on Dismiss
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + []
+  - [ [ 'statusTagsOnCollections', 'New in v12.16.0.0' ] ]
+✖ the Media Tags badge watcher ends with the view
+  AssertionError [ERR_ASSERTION]: one watcher on the tab
+  0 !== 1
+ℹ tests 6 / pass 0 / fail 6
+
+# One assertion of the search test, added after the lab showed that mounting the tab for every query (as upstream
+# does) reads the whole plugin configuration each time: run with the search written upstream's way, then with the
+# port's (it reads the drawn tab's declarations).
+$ node --test --test-name-pattern 'settings search lists matching Media Tags' features/media-tags/admin/features-admin-config-media-tags-tab.test.mjs
+✖ the settings search lists matching Media Tags settings under the form, and a hit opens the setting on its tab
+  AssertionError [ERR_ASSERTION]: later searches read the drawn tab's declarations: the configuration is not asked for again per query
+  6 !== 1
