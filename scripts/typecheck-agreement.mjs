@@ -34,9 +34,11 @@ for (let i = 0; i < args.length; i++) {
   else if (args[i] === '--per-kind') perKind = Number(args[++i]);
   else if (args[i] === '--jobs') jobs = Number(args[++i]);
   else if (args[i] === '--out') out = args[++i];
+  else if (args[i] === '--list') checkers.push({ list: true });
   else throw new Error(`unknown argument ${args[i]}`);
 }
-if (checkers.length < 2) throw new Error('give at least two --checker name=command (the first is the authority)');
+const listOnly = checkers.some(c => c.list);
+if (!listOnly && checkers.length < 2) throw new Error('give at least two --checker name=command (the first is the authority)');
 
 // ------------------------------------------------------------------ mutation sites (TypeScript 6 API, real sources)
 const config = ts.getParsedCommandLineOfConfigFile(join(root, 'client/tsconfig.json'), {}, { ...ts.sys, onUnRecoverableConfigFileDiagnostic: d => { throw new Error(String(d.messageText)); } });
@@ -186,11 +188,11 @@ const KINDS = {
     return { start: n.initializer.getStart(f), end: n.initializer.end, replacement: 'null', note: `: ${n.type.getText()}`.slice(0, 60) };
   },
   'wrong-generic-argument': (f, n) => {
-    if (!ts.isNewExpression(n) || !n.typeArguments?.length || !ts.isIdentifier(n.expression) || !['Map', 'Set', 'WeakMap', 'Promise'].includes(n.expression.text)) return null;
-    const decl = n.parent;
-    if (!(ts.isVariableDeclaration(decl) || ts.isPropertyDeclaration(decl)) || !decl.type) return null;
+    // An explicit type argument (a call `f<T>(…)` or `new C<T>(…)`, or a typed `Map`/`Set`) replaced by an unrelated type.
+    if (!(ts.isCallExpression(n) || ts.isNewExpression(n)) || !n.typeArguments?.length) return null;
     const a = n.typeArguments[0];
-    return { start: a.getStart(f), end: a.end, replacement: 'symbol', note: `${text(f, n).slice(0, 50)} as ${decl.type.getText().slice(0, 30)}` };
+    if (a.kind === ts.SyntaxKind.UnknownKeyword || a.kind === ts.SyntaxKind.AnyKeyword) return null;
+    return { start: a.getStart(f), end: a.end, replacement: 'symbol', note: text(f, n).slice(0, 60) };
   },
   'type-reexport-without-type (isolatedModules)': (f, n) => {
     if (!ts.isExportDeclaration(n) || !n.isTypeOnly || !n.moduleSpecifier) return null;
@@ -219,6 +221,12 @@ function pick(list) {
   return Array.from({ length: Math.min(perKind, pool.length) }, (_, i) => pool[Math.floor(i * step)]);
 }
 const mutations = Object.values(sites).flatMap(pick).map((m, i) => ({ id: i + 1, ...m }));
+if (listOnly) {
+  for (const [kind, list] of Object.entries(sites)) console.log(`${String(list.length).padStart(5)} sites, ${String(pick(list).length).padStart(2)} picked: ${kind}`);
+  console.log(`${mutations.length} mutations`);
+  for (const m of mutations.slice(0, 8)) console.log(`  #${m.id} ${m.kind} ${m.file}:${m.line} ${JSON.stringify(m.replacement).slice(0, 40)} (${m.note})`);
+  process.exit(0);
+}
 
 // ------------------------------------------------------------------ running the checkers
 const diag = /^(.+?)\((\d+),(\d+)\): error (TS\d+): (.*)$/;
