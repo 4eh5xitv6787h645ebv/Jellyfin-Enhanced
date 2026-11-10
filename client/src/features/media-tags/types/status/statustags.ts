@@ -1,6 +1,6 @@
 import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../host';
 import { finite, isRecord, own, record, stringList, text, type JsonRecord } from '../../pipeline/dto';
-import { addedDate, fromItem, fromServerEntry, normId, readFacts, readLeaving, toInt, toMs, type EpisodeFacts, type LeavingFacts, type MediaInputs, type StatusData } from './status-facts';
+import { addedDate, fromItem, fromServerEntry, normId, readFacts, readLeaving, releasedInOneDrop, toInt, toMs, type EpisodeFacts, type LeavingFacts, type MediaInputs, type StatusData } from './status-facts';
 import type { RefreshInfo, TagCtx, TagSpec } from '../../pipeline/contract';
 
 interface BadgeDefinition { kind: string; style: string; label: string; compact?: string }
@@ -550,10 +550,10 @@ export function createStatusTags(JE: TagRuntimeBridge) {
                 break;
             case 'Series': {
                 if (showSchedule && daysToNext === 0) return makeBadge('airing_today');
-                // The finale of an ended show, aired recently and in the library.
+                // The finale of an ended show, aired recently and in the library; binge ready when it was one drop.
                 if (showMilestones && finalRegular && TMDB_ENDED.has(facts?.status || '') && finalAiredRecently
                     && data.latestIndex && data.latestIndex.s === finalRegular.season && data.latestIndex.e === finalRegular.episode) {
-                    return makeBadge('series_finale');
+                    return makeBadge(releasedInOneDrop(releaseDay, finalDay) ? 'binge_ready' : 'series_finale');
                 }
                 const sp = data.seasonPremiere;
                 if (showMilestones && sp && sp.s > 1 && airedWithin(sp.aired, newReleaseMs)) return makeBadge('new_season');

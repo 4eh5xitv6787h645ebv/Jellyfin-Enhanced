@@ -69,6 +69,10 @@
       addedSpan: first !== null && last !== null && count !== null ? { first, last, count, coveredThrough: toInt(span.CoveredThrough) } : null
     };
   }
+  var BINGE_DROP_DAYS = 3;
+  function releasedInOneDrop(premiereDay, finalDay) {
+    return premiereDay !== null && finalDay !== null && finalDay - premiereDay <= BINGE_DROP_DAYS;
+  }
   function addedDate(data) {
     return data.type === "BoxSet" ? data.latest : data.created;
   }
@@ -417,7 +421,7 @@
         case "Series": {
           if (showSchedule && daysToNext === 0) return makeBadge("airing_today");
           if (showMilestones && finalRegular && TMDB_ENDED.has(facts?.status || "") && finalAiredRecently && data.latestIndex && data.latestIndex.s === finalRegular.season && data.latestIndex.e === finalRegular.episode) {
-            return makeBadge("series_finale");
+            return makeBadge(releasedInOneDrop(releaseDay, finalDay) ? "binge_ready" : "series_finale");
           }
           const sp = data.seasonPremiere;
           if (showMilestones && sp && sp.s > 1 && airedWithin(sp.aired, newReleaseMs)) return makeBadge("new_season");

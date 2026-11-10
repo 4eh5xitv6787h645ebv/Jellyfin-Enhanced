@@ -334,3 +334,23 @@ test('a parent response completing after the old fixed wait still updates an epi
   assert.equal(h.key(EPISODE), 'series_finale');
   assert.equal(h.calls.filter(c => c.url.includes('/tag-data/') && JSON.parse(c.data).includes(SERIES)).length, 1);
 });
+
+test('an ended show released in one drop is binge ready, a weekly one has a series finale', async t => {
+  const drop = await setup(t, (() => { const show = { ...aggregate, PremiereDate: NOW - 3 * DAY }; return { cards: [show], parent: show }; })());
+  assert.equal(drop.key(SERIES), 'binge_ready');
+  const weekly = await setup(t, (() => { const show = { ...aggregate, PremiereDate: NOW - 60 * DAY }; return { cards: [show], parent: show }; })());
+  assert.equal(weekly.key(SERIES), 'series_finale');
+});
+
+test('Binge Ready is the series card only, up to the three-day limit, and needs a premiere date', async t => {
+  // The final episode aired two days ago: a premiere five days ago is three days before it, six is four.
+  const show = days => ({ ...aggregate, PremiereDate: NOW - days * DAY });
+  const edge = await setup(t, { cards: [show(5), finale], parent: show(5) });
+  assert.equal(edge.key(SERIES), 'binge_ready');
+  assert.equal(edge.document.querySelector(`[data-id="${SERIES}"] .status-tag`).textContent.trim(), 'Binge Ready');
+  assert.equal(edge.key(EPISODE), 'series_finale', 'the final episode\'s own card is still the finale');
+  const past = await setup(t, { cards: [show(6)], parent: show(6) });
+  assert.equal(past.key(SERIES), 'series_finale');
+  const undated = await setup(t, { cards: [aggregate], parent: aggregate });
+  assert.equal(undated.key(SERIES), 'series_finale', 'nothing says it was one drop');
+});
