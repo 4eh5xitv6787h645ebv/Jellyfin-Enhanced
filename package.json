@@ -14,7 +14,6 @@
     "contracts:generate": "dotnet run --project tools/ClientContracts/ClientContracts.csproj --configuration Release -- .",
     "contracts:check": "dotnet run --project tools/ClientContracts/ClientContracts.csproj --configuration Release -- . --check",
     "client:typecheck": "node scripts/client-build.mjs --typecheck",
-    "client:typecheck:fast": "node scripts/typecheck-fast.mjs",
     "client:build": "node scripts/client-build.mjs",
     "client:check": "node scripts/client-build.mjs --check",
     "test:client-build": "node --test tests/client-build/*.test.mjs",

@@ -691,7 +691,6 @@ gate_quick() (
   # shellcheck disable=SC2086  # one path per word
   if [ $# -gt 0 ]; then feats="$*"; else feats=$(quick_map features $changed); fi
   step "QUICK: features ${feats:-(none; architecture and guards only)}"
-  npm run --silent client:typecheck:fast      # tsc-rs, ~0.2 s, fails fast; TypeScript 6 checks next and decides
   npm run client:typecheck
   npm run client:build
   npm run inventory:rewrite
@@ -787,20 +786,6 @@ case "$cmd" in
       flock -n "$heavy_lock" true 2>/dev/null || echo "restructure-gates: another heavy gate is running on this machine; $cmd waits for it ($heavy_lock)" >&2
       exec flock --close "$heavy_lock" bash "$SELF" "$cmd" "$@"
     fi ;;
-esac
-# One gate run checks the same tree's types several times (the plugin build's VerifyJellyfinEnhancedClient target,
-# client:check, client:build, the contract-boundary fixture): a passing check is cached for the rest of the run only
-# (scripts/client-build.mjs typecheckCache). Each run gets a fresh directory, so a gate never reuses a result from
-# before it started, whatever the caller's environment says.
-case "$cmd" in
-  be|fe|all)
-    JE_TYPECHECK_CACHE_DIR=$(mktemp -d)
-    export JE_TYPECHECK_CACHE_DIR
-    trap 'rm -rf "$JE_TYPECHECK_CACHE_DIR"' EXIT
-    ;;
-  # The inner loop keeps its cache between runs (the merge gates never read it), so its typecheck and build share one check.
-  quick|affected) export JE_TYPECHECK_CACHE_DIR="$ROOT/node_modules/.cache/je-typecheck" ;;
-  *) unset JE_TYPECHECK_CACHE_DIR ;;
 esac
 case "$cmd" in
   be|fe|all|browser|h|inv|tool|size) [ $# -eq 0 ] || usage; "gate_$cmd" ;;
