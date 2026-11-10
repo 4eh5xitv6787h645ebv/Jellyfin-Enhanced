@@ -106,11 +106,19 @@ ratchet() {
 # npm test == npm run test:frontend == node tests/frontend/run.mjs (package.json), so one ratcheted runner serves
 # both FE G (`npm test`) and BE F (`npm run test:frontend`). Counts come from the spec reporter's `ℹ tests|pass N` lines.
 frontend_tests() {
-  local dir rc=0 early=''
+  local dir rc=0 first='' early=''
   dir=$(mktemp -d)
+  # Start first the files the affected map says this change can reach (none when there is no map or the change is
+  # global): a broken change then fails in the first seconds. Only the order changes; every file runs.
+  if [ -s node_modules/.cache/je-affected/map.json ]; then
+    python3 tests/runner/affected.py select --json 2>/dev/null \
+      | python3 -c 'import json, sys; s = json.load(sys.stdin); print("\n".join([] if s["all"] else s["suites"].get("frontend", [])))' \
+      > "$dir/first" 2>/dev/null || true
+    if [ -s "$dir/first" ]; then echo "frontend tests: $(wc -l < "$dir/first") file(s) the change can reach start first" >&2; first="$dir/first"; fi
+  fi
   # In the lanes, every failing test is also written to a lane log the moment it fails, for the failure watcher.
   if [ -n "${JE_LANE_LOG_DIR:-}" ]; then early="$JE_LANE_LOG_DIR/frontend-early.log"; fi
-  JE_EARLY_FAILURES=$early node tests/frontend/run.mjs --test-reporter=spec --test-reporter-destination=stdout \
+  JE_TESTS_FIRST=$first JE_EARLY_FAILURES=$early node tests/frontend/run.mjs --test-reporter=spec --test-reporter-destination=stdout \
     --test-reporter="$ROOT/scripts/restructure-gates-reporter.mjs" --test-reporter-destination="$dir/results" \
     | tee "$dir/out" || rc=$?
   [ -s "$dir/results" ] || { echo "frontend tests: no results written (node exit $rc)" >&2; rm -rf "$dir"; return 1; }

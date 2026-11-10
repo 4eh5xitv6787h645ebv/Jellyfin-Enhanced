@@ -139,8 +139,20 @@ class AffectedTests(unittest.TestCase):
 
 
 class FrontendRunnerTests(unittest.TestCase):
-    """tests/frontend/run.mjs may report failures early, but never changes a result."""
+    """tests/frontend/run.mjs may start some files first and report failures early, but never run fewer files."""
     node = shutil.which('node')
+
+    def test_order_first_moves_the_listed_files_to_the_front_and_keeps_every_file_once(self):
+        script = ("import('./tests/frontend/helpers/discovery.mjs').then(m => { const all = m.discoverTests();"
+                  " const listed = ['tests/frontend/requests/seerr-review-r2.test.mjs', 'tests/frontend/no-such.test.mjs',"
+                  " 'tests/frontend/core/core-api-runtime.test.mjs'];"
+                  " console.log(JSON.stringify({ all, ordered: m.orderFirst(all, listed) })); })")
+        out = json.loads(subprocess.run([self.node, '--input-type=module', '-e', script], cwd=ROOT, capture_output=True,
+                                        text=True, check=True).stdout)
+        rel = [str(Path(f).relative_to(ROOT)) for f in out['ordered']]
+        self.assertEqual(['tests/frontend/core/core-api-runtime.test.mjs', 'tests/frontend/requests/seerr-review-r2.test.mjs'], rel[:2])
+        self.assertEqual(sorted(out['all']), sorted(out['ordered']))
+        self.assertEqual(len(out['all']), len(set(out['ordered'])))
 
     def test_early_failures_reports_each_failing_test_at_once_and_nothing_else(self):
         hook = ROOT / 'tests/runner/early-failures.mjs'

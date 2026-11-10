@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const repositoryRoot = fileURLToPath(new URL('../../../', import.meta.url));
@@ -17,6 +17,17 @@ export function discoverTests(directory = frontendRoot) {
   const files = walk(directory).sort();
   if (!files.length) throw new Error(`No frontend tests discovered under ${directory}`);
   return files;
+}
+
+/**
+ * The same files with the listed ones (repository-relative, e.g. the files a change can reach) moved to the front, in
+ * discovery order. Only the order changes: every file stays exactly once, and a listed file not in `files` is ignored.
+ */
+export function orderFirst(files, listed) {
+  const first = new Set(listed.map(file => resolve(repositoryRoot, file)));
+  const result = [...files.filter(file => first.has(file)), ...files.filter(file => !first.has(file))];
+  if (result.length !== files.length || new Set(result).size !== new Set(files).size) throw new Error('orderFirst changed the set of test files');
+  return result;
 }
 
 /**
