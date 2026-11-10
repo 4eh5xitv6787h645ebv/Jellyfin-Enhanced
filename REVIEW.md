@@ -1,20 +1,25 @@
-# Review JE changes
+# Review guide
 
-Read the change's intent, baseline, scoped diff (including new files) and covering test output. Review a stable revision: record its commit or file hashes and report if the files change during review. A review of an earlier revision does not clear later behavior changes.
+For anyone, person or agent, reviewing a change to this repository. Read `AGENTS.md` first.
 
-Prioritize observable failures:
-- Identity and authorization: server/user changes, logout and return to the same account; stale work must not apply to another session. Check server enforcement and protected responses, not just hidden controls.
-- Persistence: retain existing settings, bookmarks and overrides; migrations must survive interrupted writes and invalid documents.
-- Lifecycle: exercise repeated navigation, replacement, cancellation and disposal. Look for duplicate listeners, detached UI updates and leaked timers.
-- Feature parity: cover all entry points, host layouts, native-client server behavior and translations affected by the slice. Follow callers across module and transport boundaries.
-- Build/runtime: test actual generated assets and real routes. Types cannot validate network data or prove a Jellyfin host loads the plugin.
+## What a bad change looks like here, most costly first
 
-Report each finding with a stable ID, severity, file/line, concrete trigger and consequence, and reproduction or source evidence. Separate introduced defects from pre-existing ones. Do not report style preferences as bugs or infer a defect from a name. Say when no actionable defect was found and what was not exercised.
+1. **It can reach a real server.** Anything outside tests and disposable labs that contacts a live Jellyfin, Seerr, Sonarr or Radarr, or a new request from the browser to a host other than the Jellyfin server.
+2. **An access, privacy or spoiler check is loosened**, or data that belongs to one user is cached or stored under a key other users share.
+3. **A failure shown as "nothing".** A failed or unanswered request rendered as an empty list or a default, or stored state deleted or changed because a lookup failed.
+4. **Untrusted text reaches HTML, CSS or a URL unescaped.** Item names, Seerr and *arr responses, settings and query strings all count as untrusted.
+5. **The symptom is patched, not the cause.** The fix covers one path while the same logic lives elsewhere (client and server copies, the bootstrap path beside the direct endpoint, a twin feature), or stored data is rewritten to correct how something is displayed.
+6. **A check is weakened to pass.** A baseline or failure list raised, a snapshot or expected count edited, a test's expectation changed to fit new behaviour that nobody asked for, `JE_UPDATE_SNAPSHOTS` set.
+7. **Generated output is hand-edited or stale** relative to its source.
+8. **The regression test does not test the bug.** It passes on the old code, or it exercises an extracted helper instead of the real entry point.
+9. **Something outlives the page.** A listener, observer, timer or injected style that is not removed on navigation, or one URL requested over and over.
 
-The implementation owner verifies findings and records fixed, rejected-with-evidence or unresolved outcomes. Fix the relevant bug class rather than repeated instances one at a time. Add focused regression coverage where it catches behavior that can break. Prefer enforceable types, runtime boundaries and checks over accumulating prose rules.
+## Rules for findings
 
-One independent pass reviews the whole slice. Further passes cover changed behavior and unresolved findings. Reconsider the design after three rounds instead of indefinitely generating more comments; unresolved defects remain unresolved. A score, model agreement or exhausted round budget is not proof.
-
-Run focused checks during iteration and the combined gate after integration. Review effort follows consequences: account isolation, permissions, persistence and deployment paths need deeper evidence than copy edits. Preserve the existing assertions unless an intentional behavior change justifies changing them. Record real-host and visual gaps honestly.
-
-Implementation and validation must stay in the isolated rewrite checkout on the designated compute hosts. The rewrite is not complete while production modules or inline admin behavior remain unaccounted for.
+- Give the file and line, the input or state that triggers it, and the wrong result. No finding from a name alone: open the code.
+- On a bug fix, say whether the change removes the cause, and name every other place with the same fault.
+- Tag each finding **Important**, **Nit** or **Pre-existing**. A pre-existing fault is reported, never charged to the change, and is not fixed in it.
+- No findings about style, naming, comments or cleanup. At most three nits.
+- Skip generated paths (listed in `AGENTS.md`).
+- Start the summary with the number of Important findings, and say plainly when there is nothing to fix.
+- One review per change. A second look reads only what changed since the first and repeats nothing already said.
