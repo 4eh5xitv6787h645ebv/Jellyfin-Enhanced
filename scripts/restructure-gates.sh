@@ -34,7 +34,7 @@
 # JE_DOTNET_SINGLETON_SHARDS (T's singleton test hosts; default 3, 0 = one process), JE_GATE_WIDE_NICE (priority of the
 # frontend and checks lanes; default 5), JE_GATE_FAIL_FAST=1 (stop the other lanes at the first failure),
 # JE_BROWSER_WORKERS (Playwright workers; default the cores, at least 6), JE_BROWSER_LONG / JE_BROWSER_LONG_WORKERS
-# (spec files run as a second Playwright run; default tag-row-subpixel.spec.cjs with 2 workers).
+# (spec files run as a second Playwright run; default tag-row-subpixel.spec.cjs with 1 worker, 2 from 12).
 # scripts/gate-timing.py times any gate: wall, CPU and parallelism per step, test file and class.
 set -euo pipefail
 
@@ -466,7 +466,7 @@ PY
 # Workers: JE_BROWSER_WORKERS, default the cores this process may use (at least 6). Playwright queues tests project by
 # project and file by file, so a test that alone takes half a minute and sits late in the queue ends the run on its
 # own. The spec files in JE_BROWSER_LONG (default tag-row-subpixel.spec.cjs; empty = one run) therefore run as a second
-# Playwright run at the same time, with JE_BROWSER_LONG_WORKERS (default 2) of the workers and its own port; the
+# Playwright run at the same time, with JE_BROWSER_LONG_WORKERS (default 1, 2 from 12 workers) of the workers and its own port; the
 # results of both runs are ratcheted together. Every spec runs exactly once either way.
 gate_browser() (
   set -e
@@ -481,7 +481,8 @@ gate_browser() (
     keep_report "$dir/results.json" browser-results.json
     browser_results "$dir/results.json" > "$dir/results"
   else
-    local lw=${JE_BROWSER_LONG_WORKERS:-2} port2
+    # The long spec's 3 tests take ~100 test-seconds: 1 worker matches the rest's ~100 s below 12 workers; from 12, 2.
+    local lw=${JE_BROWSER_LONG_WORKERS:-$(( JE_BROWSER_WORKERS >= 12 ? 2 : 1 ))} port2
     port2=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
     step "BROWSER: npm run test:browser as two runs at once: $long ($lw workers, port $port2) and the rest ($(( JE_BROWSER_WORKERS - lw )) workers), failures vs $BASELINES/browser-failures.txt"
     JE_BROWSER_PART=long JE_BROWSER_LONG=$long JE_BROWSER_PORT=$port2 JE_BROWSER_WORKERS=$lw PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/long.json" \
