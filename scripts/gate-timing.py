@@ -888,6 +888,9 @@ def main():
     rp.add_argument('--top', type=int, default=30)
     rp.add_argument('--md', type=Path)
     rp.add_argument('--include-loaded', action='store_true')
+    dp = sub.add_parser('durations', help='write tests/frontend/durations.json (median wall per frontend file) from runs')
+    dp.add_argument('dirs', nargs='+')
+    dp.add_argument('--out', type=Path, default=ROOT / 'tests/frontend/durations.json')
     cp = sub.add_parser('compare')
     cp.add_argument('a', nargs='+')
     cp.add_argument('--vs', nargs='+', required=True)
@@ -898,6 +901,15 @@ def main():
         if args.md:
             args.md.write_text(text)
         print(text)
+        return 0
+    if args.cmd == 'durations':
+        per = {}
+        for a in load_analyses(args.dirs):
+            for f in a['node_files']:
+                if f['file'].startswith('tests/frontend/'):
+                    per.setdefault(f['file'], []).append(f['wall'])
+        args.out.write_text(json.dumps({k: round(statistics.median(v), 1) for k, v in sorted(per.items())}, indent=1) + '\n')
+        print(f'{len(per)} files -> {args.out}')
         return 0
     if args.cmd == 'compare':
         print(compare(args.a, args.vs, args.include_loaded))

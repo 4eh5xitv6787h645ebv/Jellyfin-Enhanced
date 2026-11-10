@@ -1,6 +1,6 @@
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const repositoryRoot = fileURLToPath(new URL('../../../', import.meta.url));
@@ -17,6 +17,19 @@ export function discoverTests(directory = frontendRoot) {
   const files = walk(directory).sort();
   if (!files.length) throw new Error(`No frontend tests discovered under ${directory}`);
   return files;
+}
+
+/**
+ * The order to start files in: longest first, by the wall seconds recorded in tests/frontend/durations.json (from timed
+ * gate runs, scripts/gate-timing.py), so the long files do not start last and finish alone. Files with no recorded time
+ * go first (a new file may be long); ties keep the name order. Only the start order changes: every file still runs, in
+ * its own process.
+ */
+export function longestFirst(files) {
+  let recorded = {};
+  try { recorded = JSON.parse(readFileSync(join(frontendRoot, 'durations.json'), 'utf8')); } catch { /* no durations: name order */ }
+  const seconds = file => recorded[relative(repositoryRoot, file).split(sep).join('/')] ?? Infinity;
+  return [...files].sort((a, b) => seconds(b) - seconds(a) || (a < b ? -1 : a > b ? 1 : 0));
 }
 
 /**
