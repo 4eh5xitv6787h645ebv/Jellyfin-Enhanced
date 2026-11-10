@@ -251,6 +251,7 @@ be_t() (
       --logger "trx;LogFileName=$name.trx" --results-directory "$res/$name" --collect:"XPlat Code Coverage" \
       -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=json,cobertura >"$res/$name.log" 2>&1 &
     pids+=($!)
+    if [ -n "${JE_LANE_LOG_DIR:-}" ]; then ln -sf "$res/$name.log" "$JE_LANE_LOG_DIR/dotnet-T-$name.log"; fi
   done
   for name in "${!pids[@]}"; do wait "${pids[$name]}" || rc=$?; done
   for name in "${names[@]}"; do
@@ -310,6 +311,8 @@ run_lanes() (
   local -A lane_pid lane_rc lane_end
   dir=$(mktemp -d)
   t0=$(date +%s)
+  # Lanes that start their own processes' logs (T's test hosts) put them here, so the watcher below sees them too.
+  export JE_LANE_LOG_DIR=$dir
   step "lanes, concurrently: ${*%%=*} (separate logs; each result as it ends, then the tails)"
   for spec in "$@"; do
     name=${spec%%=*}
@@ -320,12 +323,28 @@ run_lanes() (
     ( case $name in frontend|checks) renice -n "${JE_GATE_WIDE_NICE:-5}" -p "$BASHPID" >/dev/null ;; esac; ${spec#*=} ) >"$dir/$name.log" 2>&1 &
     lane_pid[$name]=$!
   done
+  # The first failing line of any lane, as soon as it is written (a failing test, a type or build error), so a broken
+  # change is reported long before its lane, let alone the gate, ends. Reporting only: every lane still runs.
+  (
+    seen=''
+    while :; do
+      for f in "$dir"/*.log; do
+        case " $seen " in *" $f "*) continue ;; esac
+        line=$(grep -m1 -E '^[[:space:]]*(✖|✘) |^[[:space:]]+Failed [A-Za-z]|error (TS|CS|MSB|NETSDK)[0-9]+|^Client build failed|failing test\(s\) not in|^not ok ' "$f" 2>/dev/null) || continue
+        echo "FAILURE seen after $(( $(date +%s) - t0 )) s in lane $(basename "$f" .log) (the lane keeps running): ${line:0:300}" >&2
+        seen="$seen $f"
+      done
+      sleep 1
+    done
+  ) &
+  local watcher=$!
   local remaining=$#
   while [ "$remaining" -gt 0 ]; do
     wait -n -p done_pid
     rc=$?
     for name in "${!lane_pid[@]}"; do
       if [ "${lane_pid[$name]}" = "$done_pid" ]; then
+        remaining=$((remaining - 1))
         lane_rc[$name]=$rc
         lane_end[$name]=$(( $(date +%s) - t0 ))
         if [ "$rc" = 0 ]; then
@@ -341,8 +360,8 @@ run_lanes() (
         fi
       fi
     done
-    remaining=$((remaining - 1))
   done
+  kill "$watcher" 2>/dev/null; wait "$watcher" 2>/dev/null
   for spec in "$@"; do
     name=${spec%%=*}
     step "lane $name: summary and tail (exit ${lane_rc[$name]}, ${lane_end[$name]} s)"
