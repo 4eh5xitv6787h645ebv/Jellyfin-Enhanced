@@ -17,7 +17,8 @@
 #   scripts/restructure-gates.sh quick [feature…] inner loop, not a merge gate: typecheck, client build, inventory, the
 #                                                features' node tests + architecture + guards (new failures only), and
 #                                                their dotnet tests + Architecture when a .cs file changed. Features
-#                                                default to those the diff from restructure/integration touches.
+#                                                default to those the diff from $JE_BASE_REF (else
+#                                                restructure/integration) touches.
 #
 # Pre-existing test failures are ratcheted, not fixed: a dotnet or node test run passes when every failing test is
 # listed in baselines/{dotnet,npm}-failures.txt and the total and passed counts are >= baselines/{dotnet,npm}-tests.txt.
@@ -457,7 +458,8 @@ gate_quick() (
   set -e
   no_snapshot_updates
   local base changed feats dir rc=0 new
-  base=$(git merge-base HEAD restructure/integration 2>/dev/null || git rev-parse HEAD)
+  base=${JE_BASE_REF:+$(git merge-base HEAD "$JE_BASE_REF")}
+  base=${base:-$(git merge-base HEAD restructure/integration 2>/dev/null || git rev-parse HEAD)}
   changed=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
   if [ $# -gt 0 ]; then feats="$*"; else feats=$(printf '%s\n' "$changed" | quick_map features); fi
   step "QUICK: features ${feats:-(none; architecture and guards only)}"
@@ -482,7 +484,7 @@ gate_quick() (
   if printf '%s\n' "$changed" | grep -q '\.cs$'; then
     step "QUICK: dotnet tests for ${feats:-Architecture}"
     # shellcheck disable=SC2086
-    dotnet test "$TESTS" -c Release -p:JellyfinTarget=jf12 --filter "$(quick_map filter $feats)" || rc=1
+    dotnet test "$TESTS" -c Release --no-restore -p:JellyfinTarget=jf12 --filter "$(quick_map filter $feats)" || rc=1
   fi
   return "$rc"
 )
@@ -500,7 +502,7 @@ gate_image() (
   echo "image: $tag = $digest" >&2
 )
 
-usage() { sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
