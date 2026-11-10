@@ -15,13 +15,14 @@
 #   scripts/restructure-gates.sh bundle-hash <f> prints `<stable sha256> <comment-stripped sha256>` of a bundle file
 #   scripts/restructure-gates.sh size            served bundle raw and gzip -9 bytes vs client/bundle-budget.json (ratchet)
 #   scripts/restructure-gates.sh image           the HOST image tag in baselines/jf12-digest.txt still has the recorded RepoDigest
-#   scripts/restructure-gates.sh quick [feature…] inner loop, not a merge gate: typecheck, client build, inventory, the
-#                                                features' node tests + architecture + guards (new failures only), and
-#                                                their dotnet tests + Architecture when a .cs file changed. Features
-#                                                default to those the diff from $JE_BASE_REF (else
-#                                                restructure/integration) touches.
-#   scripts/restructure-gates.sh affected [record] inner loop, not a merge gate: client build, then only the tests whose
-#                                                traced inputs the change touches (tests/runner/affected.py)
+#   scripts/restructure-gates.sh quick [feature…] THE inner loop, not a merge gate: typecheck, client build, inventory,
+#                                                the features' node tests + architecture + guards (new failures only),
+#                                                their dotnet tests + Architecture when a .cs file changed, and, when an
+#                                                affected map is recorded, also the node test files and (chromium) specs
+#                                                whose traced inputs the change touches. Features default to those the
+#                                                diff from $JE_BASE_REF (else restructure/integration) touches.
+#   scripts/restructure-gates.sh affected record records the affected map for HEAD (tests/runner/affected.py; needs
+#                                                strace, ~5 min); `affected` alone is an alias of `quick`
 #
 # Pre-existing test failures are ratcheted, not fixed: a dotnet or node test run passes when every failing test is
 # listed in baselines/{dotnet,npm}-failures.txt and the total and passed counts are >= baselines/{dotnet,npm}-tests.txt.
@@ -52,6 +53,8 @@ step() {
 }
 
 # scripts/gate-timing.py: keep a copy of a test report (TRX, node results, Playwright JSON) as $JE_GATE_KEEP/<name>.
+# A free TCP port on 127.0.0.1 (the fixture server binds it next).
+free_port() { python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])'; }
 keep_report() { if [ -n "${JE_GATE_KEEP:-}" ] && [ -s "$1" ]; then mkdir -p "$JE_GATE_KEEP"; cp "$1" "$JE_GATE_KEEP/$2"; fi; }
 
 no_snapshot_updates() {
@@ -502,7 +505,7 @@ gate_browser() (
   else
     # The long spec's 3 tests take ~100 test-seconds: 1 worker matches the rest's ~100 s below 12 workers; from 12, 2.
     local lw=${JE_BROWSER_LONG_WORKERS:-$(( JE_BROWSER_WORKERS >= 12 ? 2 : 1 ))} port2
-    port2=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
+    port2=$(free_port)
     step "BROWSER: npm run test:browser as two runs at once: $long ($lw workers, port $port2) and the rest ($(( JE_BROWSER_WORKERS - lw )) workers), failures vs $BASELINES/browser-failures.txt"
     JE_BROWSER_PART=long JE_BROWSER_LONG=$long JE_BROWSER_PORT=$port2 JE_BROWSER_WORKERS=$lw PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/long.json" \
       npm run test:browser -- --reporter=list,json >"$dir/long.log" 2>&1 &
@@ -675,6 +678,24 @@ gate_quick() (
   dir=$(mktemp -d)
   # shellcheck disable=SC2086  # feature names are single words
   quick_map tests $feats > "$dir/files"
+  # A recorded affected map adds the files whose traced inputs the change touches (a union: never fewer files than the
+  # feature map gives) and the Playwright specs; the contract-boundary test (it reads almost every source) is left
+  # to the gates. Without a map, or for a change the map calls global, the feature map alone decides.
+  : > "$dir/specs"
+  if [ -s node_modules/.cache/je-affected/map.json ]; then
+    python3 tests/runner/affected.py select --json 2>/dev/null | python3 -c '
+import json, sys
+s = json.load(sys.stdin)
+if s["all"]:
+    print("QUICK: the affected map selects everything (" + s["all"] + "); the feature map decides", file=sys.stderr)
+    sys.exit(0)
+node = s["suites"].get("frontend", []) + s["suites"].get("client-build", [])
+open(sys.argv[1], "a").write("".join(f + "\n" for f in node))
+open(sys.argv[2], "w").write("".join(f + "\n" for f in s["suites"].get("browser", [])))
+print(f"QUICK: the affected map adds {len(node)} node test file(s) and {len(s[\"suites\"].get(\"browser\", []))} spec(s)", file=sys.stderr)
+' "$dir/files" "$dir/specs" || echo "QUICK: the affected map could not be read; the feature map decides" >&2
+    LC_ALL=C sort -u -o "$dir/files" "$dir/files"
+  fi
   step "QUICK: $(wc -l < "$dir/files") node test files (failures ratcheted by name vs $BASELINES/npm-failures.txt)"
   # shellcheck disable=SC2046
   env TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node --test --test-timeout=300000 \
@@ -686,6 +707,12 @@ gate_quick() (
   new=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -23 - "$BASELINES/npm-failures.txt")
   echo "QUICK: node $(grep -c '^PASS ' "$dir/results" || true) passed, $(grep -c '^FAIL ' "$dir/results" || true) failed" >&2
   if [ -n "$new" ]; then echo "QUICK: failing test(s) not in $BASELINES/npm-failures.txt:" >&2; printf '  %s\n' "$new" >&2; rc=1; fi
+  if [ -s "$dir/specs" ]; then
+    step "QUICK: $(wc -l < "$dir/specs") Playwright spec(s) the change can reach (chromium; failures vs $BASELINES/browser-failures.txt)"
+    # shellcheck disable=SC2046
+    JE_BROWSER_PORT="${JE_BROWSER_PORT:-$(free_port)}" node node_modules/.bin/playwright test --config tests/browser/playwright.config.cjs \
+      --project=chromium --reporter=line $(cat "$dir/specs") || rc=1
+  fi
   rm -rf "$dir"
   if printf '%s\n' "$changed" | grep -q '\.cs$'; then
     step "QUICK: dotnet tests for ${feats:-Architecture}"
@@ -695,10 +722,8 @@ gate_quick() (
   return "$rc"
 )
 
-# affected: the inner loop's answer in seconds to minutes, never a merge gate (`all` and `browser` still run before
-# merge). Regenerates the client like `fe` does, then runs only the tests whose recorded inputs the change touches
-# (tests/runner/affected.py: traced reads of every test file; it runs everything when its map is missing or stale).
-# `affected record` (re)builds the map for HEAD; do that on a clean base commit.
+# affected record: (re)build the affected map for HEAD (every test file run once under strace; ~5 min on 10 cores), which
+# `quick` and the frontend lane of the gates then use. Do it on a clean base commit. `affected` alone runs `quick`.
 gate_affected() (
   set -e
   no_snapshot_updates
@@ -707,11 +732,8 @@ gate_affected() (
     python3 tests/runner/affected.py record
     return
   fi
-  step "AFFECTED: client build, inventory, then the selected tests"
-  npm run client:build
-  npm run inventory:rewrite
-  python3 tests/runner/affected.py select
-  python3 tests/runner/affected.py run
+  echo "affected: the inner loop is \`quick\`, which uses the affected map when one is recorded; running quick" >&2
+  gate_quick
 )
 
 # baselines/jf12-digest.txt: `<tag> <RepoDigest>`; HOST runs `je up <name> <port> --image <tag>`.
@@ -741,8 +763,8 @@ case "$cmd" in
     export JE_TYPECHECK_CACHE_DIR
     trap 'rm -rf "$JE_TYPECHECK_CACHE_DIR"' EXIT
     ;;
-  # The inner loop keeps its cache between runs (the merge gates never read it).
-  affected) export JE_TYPECHECK_CACHE_DIR="$ROOT/node_modules/.cache/je-typecheck" ;;
+  # The inner loop keeps its cache between runs (the merge gates never read it), so its typecheck and build share one check.
+  quick|affected) export JE_TYPECHECK_CACHE_DIR="$ROOT/node_modules/.cache/je-typecheck" ;;
   *) unset JE_TYPECHECK_CACHE_DIR ;;
 esac
 case "$cmd" in
