@@ -197,7 +197,9 @@
         "tests/frontend/core/core-toast-duration.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "d063821da28efd7dc861dd31e33fa308861dcc49"
+      ],
       "notes": "Same rule in the three places the rewrite reads the setting (features/settings/state.ts, core/ui/runtime.ts through host/ui-host.ts, admin/config/page/timing.ts). Difference: a toast shown before the configuration exists still gets 1500 ms; upstream would schedule it with an undefined duration when JE.CONFIG lacks the value.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p3-toast-zero.*"
     },
@@ -339,8 +341,10 @@
         "tests/backend/Privacy/PrivacyFieldFilterTests.cs",
         "tests/docs/coverage-matrix.md"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The same route-table row in Shared/SpoilerGuard/SpoilerFieldStripFilter.cs, upstream’s test, docs sentence and coverage-matrix note. Checked against the real Home Screen Sections 3.0.4.0 plugin on the lab, not only by action name.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p4-spoiler-hss.*"
     },
     {
       "sha": "83510ea1332c9027536be52598e164e4ed9f59c5",
