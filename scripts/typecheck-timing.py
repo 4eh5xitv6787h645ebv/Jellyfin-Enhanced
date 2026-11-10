@@ -20,6 +20,7 @@ import os
 import re
 import select
 import shlex
+import signal
 import statistics
 import subprocess
 import sys
@@ -183,12 +184,17 @@ def main():
     save()      # the rounds are kept even if the watch phase is interrupted
     if not a.no_watch:
         files = [tree / 'client/src/core/lifecycle-entry.ts', tree / 'client/src/host/context.ts']
-        for c in checkers:
-            if c.get('npm'):
-                continue
-            wt = watch_times(c['name'], prefix + c['argv'] + ['-p', 'client/tsconfig.json', '--pretty', 'false'], tree, env, a.edits, files)
-            res[c['name']]['watch'] = wt
-            print(f"watch {c['name']}: {wt}", file=sys.stderr, flush=True)
+        signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))     # so the finally below puts the sources back
+        try:
+            for c in checkers:
+                if c.get('npm'):
+                    continue
+                wt = watch_times(c['name'], prefix + c['argv'] + ['-p', 'client/tsconfig.json', '--pretty', 'false'], tree, env, a.edits, files)
+                res[c['name']]['watch'] = wt
+                print(f"watch {c['name']}: {wt}", file=sys.stderr, flush=True)
+                save()
+        finally:
+            restore(files)
     save()
     print(json.dumps(out, indent=1))
 
