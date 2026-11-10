@@ -69,6 +69,9 @@
       addedSpan: first !== null && last !== null && count !== null ? { first, last, count, coveredThrough: toInt(span.CoveredThrough) } : null
     };
   }
+  function addedDate(data) {
+    return data.type === "BoxSet" ? data.latest : data.created;
+  }
   function fromServerEntry(entry, itemId, inputs) {
     const type = export13(entry.Type);
     const tmdb = entry.TmdbId ? String(entry.TmdbId) : null;
@@ -162,7 +165,7 @@
     const badgeDefinitions = vocabulary.badges;
     const DAY_MS = vocabulary.thresholds.dayMs;
     const CACHE_FRESH_MS = 60 * 60 * 1e3;
-    const CACHE_ENTRY_VERSION = 6;
+    const CACHE_ENTRY_VERSION = 7;
     const TRENDING_TTL_MS = 30 * 60 * 1e3;
     const TRENDING_RETRY_MS = 5 * 60 * 1e3;
     const SERIES_TTL_MS = 60 * 60 * 1e3;
@@ -393,7 +396,7 @@
       const isNewRelease = airedWithin(data.premiere, newReleaseMs);
       const releaseDay = premiereDay(data.premiere);
       const comingSoon = releaseDay !== null && releaseDay > today;
-      const addedRecently = isWithin(data.created, now, justAddedMs);
+      const addedRecently = isWithin(addedDate(data), now, justAddedMs);
       const newEpisode = isWithin(data.latest, now, justAddedMs) && data.created !== null && now - data.created > justAddedMs;
       const nextDay = airDay(facts?.next?.date);
       const lastDay = airDay(facts?.last?.date);

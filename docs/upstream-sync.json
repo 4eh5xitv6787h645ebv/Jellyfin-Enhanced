@@ -587,8 +587,7 @@
       "subject": "fix(status-tags): base a collection's Just Added on its newest member",
       "class": "fix",
       "features": [
-        "media-tags",
-        "settings"
+        "media-tags"
       ],
       "issues": [],
       "release": null,
@@ -621,11 +620,10 @@
         "tests/frontend/features/features-status-tags-vocabulary.test.mjs",
         "tests/poster/parity/status-fixtures.mjs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
-      "unmappedPaths": [
-        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
-      ]
+      "notes": "The C# hunks apply at the rewrite’s paths (Shared/MediaTags/TagCacheEntry.cs, Shared/MediaTags/PosterTags/Resolution/StatusRules.cs, the comment in Configuration/PluginConfiguration.cs), and the collection branch of the /tag-data fallback is the same code in Features/MediaTags/JeMediaTagsController.TagCache.cs. TagCacheService.cs is capped at its recorded size, so the member-date code lives in the partial TagCacheCollectionMembers.cs, where GetCollectionLanguages has been since ee1c92dc: it returns the newest member, with IsDatedCollectionMember and FolderChildren beside it, and a new SetCollectionFacts holds the three assignments upstream writes inline, so the service keeps a one-line call site and its 4,088 lines. Version numbers: the cache schema is 52 as upstream (the disk snapshot and the browser’s stored copy are the same data in both trees); PosterTagSettings.ResolverVersion goes 40 to 41 where upstream goes 39 to 40, because this tree already spent 40 on the New Episode rule (6ece3f52), which upstream changed without a bump; the web fallback’s entry version goes 6 to 7 where upstream goes 5 to 6, because this tree was already at 6. Re-implemented in TypeScript: the rule (addedDate in features/media-tags/types/status/status-facts.ts, read by statustags.ts, which is frozen at its recorded size and changes only lines in place), the stored-copy schema (pipeline/tag-cache-store.ts, pipeline/state.ts), the single-item fetch asking for the dates (pipeline/look-facts.ts) and the switch’s description (admin/sections/badges.ts). Tests: upstream’s ten files apply at the moved paths, the resolver assertions reading 41; two are added for what upstream left untested (the fallback’s date counts only members the asking user can see, skips kinds the tags do not cover and nested collections, and one unreadable collection does not fail the batch; the single-item fetch asks with latestEpisode=true); the rewrite’s own fallback-shape test moves with the bumped number (7 is current, 6 and 5 are misses). In docs/enhanced/tags.md upstream’s Just Added row is taken and the New Episode row beside it stays as this tree has it. The web and native rules agree on all 243 Status fixtures. Carried over from upstream, filed as a found bug: only movie and series members are indexed per collection, so a Date Added edit on a member of another kind (a home video, an episode) reaches the collection only when the collection is next rebuilt. No route, authorization or registration changes.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p20-collection-newest-member.*"
     },
     {
       "sha": "232815422e3143b3930d30ad57de2bd243f60c7f",

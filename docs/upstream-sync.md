@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-21 upstream commits: 2 pending, 19 ported.
+21 upstream commits: 1 pending, 20 ported.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -27,5 +27,5 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 17 | [`0586df79`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/0586df7979b3d1f400357ba6efd4b1c2f61735fa) | 2026-11-10 | docs |  | docs(readme): add test badges and icons, recolor badge row | ported | `d25914be` | The same badge changes. The three test-count badges carry this tree’s counts (699 browser, 3.3k backend, 3.9k frontend) instead of upstream’s, and the 10.11 download badge is not here because the rewrite’s README has none. |
 | 18 | [`189a0a26`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/189a0a26d2e9e84afab63bdd48f07b08183a6148) | 2026-11-10 | feature | media-tags, admin, platform | feat(leaving-soon): show the Maintainerr key like the TMDB key, add a Maintainerr card and wider URL fields | ported | `47c7e3cd` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p18-maintainerr-key.* |
 | 19 | [`0e141dfa`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/0e141dfae70366c87e1ccd7eedd4b368887f5d3b) | 2026-11-10 | feature | media-tags, platform | feat(status-tags): add an admin switch for status badges on collections | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p19-collections-switch.* |
-| 20 | [`324b5c92`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/324b5c92ddac41370f1931acccc747e7e0941a9e) | 2026-11-10 | fix | media-tags, settings | fix(status-tags): base a collection's Just Added on its newest member | pending |  |  |
+| 20 | [`324b5c92`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/324b5c92ddac41370f1931acccc747e7e0941a9e) | 2026-11-10 | fix | media-tags | fix(status-tags): base a collection's Just Added on its newest member | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p20-collection-newest-member.* |
 | 21 | [`23281542`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/232815422e3143b3930d30ad57de2bd243f60c7f) | 2026-11-10 | fix | admin | fix(config): search and New badges for the Media Tags tab, tidy the Maintainerr card link | pending |  |  |
