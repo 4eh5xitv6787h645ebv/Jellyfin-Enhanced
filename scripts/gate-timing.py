@@ -64,7 +64,7 @@ BOOT = time.time() - time.clock_gettime(time.CLOCK_BOOTTIME)
 
 
 def read_stat(pid):
-    """-> (comm, ppid, utime, stime, cutime, cstime, start epoch) or None."""
+    """-> (comm, ppid, utime, stime, cutime, cstime, start epoch, state) or None."""
     try:
         raw = open(f'/proc/{pid}/stat', 'rb').read().decode('utf-8', 'replace')
     except OSError:
@@ -72,7 +72,8 @@ def read_stat(pid):
     lp, rp = raw.find('('), raw.rfind(')')
     comm, rest = raw[lp + 1:rp], raw[rp + 2:].split()
     # rest[0] = state (field 3); field n is rest[n - 3]
-    return (comm, int(rest[1]), int(rest[11]), int(rest[12]), int(rest[13]), int(rest[14]), BOOT + int(rest[19]) / HZ)
+    return (comm, int(rest[1]), int(rest[11]), int(rest[12]), int(rest[13]), int(rest[14]), BOOT + int(rest[19]) / HZ,
+            rest[0])
 
 
 def read_cmdline(pid):
@@ -133,12 +134,13 @@ def load_snapshot(seconds=2.0):
 
 
 class Proc:
-    __slots__ = ('pid', 'ppid', 'comm', 'argv', 'start', 'first', 'last', 'self', 'children', 'series', 'env', 'alive')
+    __slots__ = ('pid', 'ppid', 'comm', 'argv', 'start', 'first', 'last', 'self', 'children', 'series', 'env', 'alive',
+                 'execs')
 
     def __init__(self, pid, st, now):
         self.pid, self.comm, self.ppid, self.start = pid, st[0], st[1], st[6]
         self.argv, self.first, self.last, self.self, self.children = [], now, now, 0, 0
-        self.series, self.env, self.alive = [], {}, True
+        self.series, self.env, self.alive, self.execs = [], {}, True, []
 
 
 class Sampler(threading.Thread):
@@ -188,6 +190,8 @@ class Sampler(threading.Thread):
                 p = self.procs[key] = Proc(pid, st, now)
             if p.comm != st[0] or not p.argv:
                 p.comm, p.argv = st[0], read_cmdline(pid) or p.argv
+                # A subshell that execs its last command keeps its pid: remember each image it ran.
+                p.execs.append((now, p.comm, p.argv[:8]))
                 if p.comm in ('node', 'MainThread') or (p.argv and p.argv[0].endswith('node')):
                     p.env = read_environ_keys(pid, ('TEST_WORKER_INDEX', 'TEST_PARALLEL_INDEX'))
             p.ppid, p.last = st[1], now
@@ -199,6 +203,14 @@ class Sampler(threading.Thread):
         for key, p in self.procs.items():
             if p.alive and key not in seen:
                 p.alive = False
+        # Orphans re-parented to this subreaper are reaped as they exit (their CPU then lands in RUSAGE_CHILDREN);
+        # the command itself is left to Popen.wait.
+        for pid, st in live.items():
+            if st[1] == self.me and st[7] == 'Z' and pid != self.root:
+                try:
+                    os.waitpid(pid, os.WNOHANG)
+                except ChildProcessError:
+                    pass
         busy, total = machine_cpu()
         ours = sum(p.self for p in self.procs.values())
         self.ticks.append((now, ours, busy, total, os.getloadavg()[0]))
@@ -324,7 +336,7 @@ def one_run(cmd, cwd, out, args, label):
     for p in sampler.procs.values():
         procs.append({'pid': p.pid, 'ppid': p.ppid, 'comm': p.comm, 'argv': p.argv[:40], 'start': p.start,
                       'first': p.first, 'last': p.last, 'self': p.self / HZ, 'children': p.children / HZ,
-                      'env': p.env, 'series': [(round(t, 3), c) for t, c in p.series] if p.env or 'browser' in args.series else []})
+                      'env': p.env, 'execs': p.execs, 'series': [(round(t, 3), c) for t, c in p.series] if p.env or 'browser' in args.series else []})
     run = {'label': label, 'cmd': cmd, 'cwd': str(cwd), 'git': git(cwd, 'rev-parse', 'HEAD'),
            'dirty': bool(git(cwd, 'status', '--porcelain')), 'host': socket.gethostname(), 'cores': cores(),
            'cpu_count': os.cpu_count(), 'start': t0, 'end': t1, 'wall': wall, 'rc': rc, 'cpu_exact': cpu_exact,
@@ -407,6 +419,11 @@ def analyse(run, out):
 
     for p in procs:
         p['cat'] = classify(p['argv'], p['comm'])
+        execs = p.get('execs') or []
+        # A gate subshell that exec'd its last command: still a shell for steps and parents; the command it became
+        # is listed from the exec on.
+        p['was_shell'] = bool(execs) and classify(execs[0][2], execs[0][1]) == 'shell'
+        p['exec_at'] = execs[-1][0] if len(execs) > 1 else p['start']
     # Children's reaped CPU that was never sampled: cutime - sum of sampled direct children's (self + children).
     kids = {}
     for p in procs:
@@ -414,22 +431,39 @@ def analyse(run, out):
         p['_parent'] = par
         if par is not None:
             kids.setdefault(id(par), []).append(p)
-    for p in procs:
-        sampled = sum(c['self'] + c['children'] for c in kids.get(id(p), []))
-        p['unsampled'] = max(0.0, p['children'] - sampled)
+    # tree(p) = self + max(reaped children's CPU as the kernel reports it, sum of the sampled children's trees): a
+    # child's own counter misses what it reaped after its last sample, so the larger of the two is used, and what the
+    # kernel reports beyond the sampled children (processes too short to sample) is attributed to p itself.
+    roots = [p for p in procs if p['_parent'] is None]
+    stack = [(r, False) for r in roots]
+    while stack:                       # post-order, iteratively (deep trees)
+        p, done = stack.pop()
+        ks = kids.get(id(p), [])
+        if not done:
+            stack.append((p, True))
+            stack.extend((k, False) for k in ks)
+            continue
+        sub = sum(c['tree'] for c in ks)
+        p['tree'] = p['self'] + max(p['children'], sub)
+        p['unsampled'] = max(0.0, p['children'] - sub)
         p['cpu'] = p['self'] + p['unsampled']
     # Steps: per subshell pid, its markers in order.
     markers = {}
     t_start = run['start']
-    for t, pid, label in run['trace']:
-        markers.setdefault(int(pid), []).append((float(t), label))
-    step_names = []
+    step_names, seen_label, marker_time = [], {}, {}
     for t, pid, label in sorted(run['trace'], key=lambda x: float(x[0])):
-        key = f'{label}'
-        if key not in step_names:
-            step_names.append(key)
+        seen_label[label] = seen_label.get(label, 0) + 1
+        name = label if seen_label[label] == 1 else f'{label} [#{seen_label[label]}]'
+        markers.setdefault(int(pid), []).append((float(t), name))
+        step_names.append(name)
+        marker_time[name] = float(t)
 
     def step_of(p):
+        own = markers.get(p['pid'])
+        if own and p['was_shell']:
+            act = [label for t, label in own if t <= p['exec_at'] + 0.02]
+            if act:
+                return act[-1]
         q = p
         while q is not None:
             ms = markers.get(q['pid'])
@@ -448,9 +482,6 @@ def analyse(run, out):
         s['cats'][p['cat']] = s['cats'].get(p['cat'], 0.0) + p['cpu']
         s['procs'] += 1
     # Wall per step: from its marker to the end of the last process attributed to it.
-    marker_time = {}
-    for t, pid, label in run['trace']:
-        marker_time.setdefault(label, float(t))
     for name, s in steps.items():
         ps = [p for p in procs if p['step'] == name]
         s['start'] = marker_time.get(name, min(p['start'] for p in ps))
@@ -478,13 +509,18 @@ def analyse(run, out):
     cmds = {}
     for p in procs:
         par = p['_parent']
-        if par is None or par['cat'] != 'shell' or p['cat'] == 'shell':
+        if p['was_shell'] and p['cat'] != 'shell':
+            pass                       # an exec'd last command: listed from its exec on
+        elif par is None or not (par['cat'] == 'shell' or par['was_shell']) or p['cat'] == 'shell':
             continue
         sig = ' '.join(p['argv'][:4])[:140]
-        total = p['cpu'] + sum(d['cpu'] for d in descendants(p, kids))
+        if p['was_shell']:
+            total = sum(d['cpu'] for d in descendants(p, kids) if d['start'] >= p['exec_at'] - 0.05) + p['self']
+        else:
+            total = p['cpu'] + sum(d['cpu'] for d in descendants(p, kids))
         c = cmds.setdefault(sig, {'count': 0, 'wall': 0.0, 'cpu': 0.0, 'steps': []})
         c['count'] += 1
-        c['wall'] += p['last'] - p['start']
+        c['wall'] += p['last'] - p['exec_at']
         c['cpu'] += total
         if p['step'] not in c['steps']:
             c['steps'].append(p['step'])
