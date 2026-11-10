@@ -1,0 +1,5 @@
+# je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p28-user-created-icon.names.mjs
+# build: deployed 27898826 (dll adb076f2d71c67df); exit 0
+SCRIPT {"fontLoaded":true,"ink":{"block":140,"check_circle":201,"delete":140,"download":90,"error":206,"inventory_2":206,"key":109,"login":90,"logout":94,"person_add":121,"person_remove":105,"play_arrow":58,"security_update_warning":178,"update":123,"warning":142,"plus":0}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

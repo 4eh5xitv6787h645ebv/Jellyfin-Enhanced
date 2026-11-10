@@ -1,0 +1,8 @@
+# port 28 (upstream 20291fc4): its test on the tree before the port (0390f885 plus the test only)
+# TZ=UTC node --test --test-name-pattern 'created user gets a real Material icon' tests/frontend/pages/pages-social-rewrite.test.mjs
+✖ a created user gets a real Material icon in each of the fourteen languages (88.013815ms)
+✖ failing tests:
+ℹ fail 1
+ℹ pass 0
+ℹ tests 1
+#    all fourteen entries read "plus" where "person_add" is expected (each sample matched its language's User created rule)

@@ -1,0 +1,7 @@
+# je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p28-user-created-icon.mjs
+# build: deployed 0390f885+dirty (dll 38fb410413a30940); exit 0
+# (+dirty: the ledger with its two pending entries, the new test and this script; no product file differs from 0390f885)
+SCRIPT {"enabled":true,"entry":{"text":"User <name> has been created","icon":"plus","font":"\"Material Icons\"","ink":0,"background":"rgb(46, 214, 46)","nativeIconHidden":true}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/dashboard
+kept as the 'before' evidence (je12 evidence shows it)

@@ -1,0 +1,6 @@
+# je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p28-user-created-icon.mjs
+# build: deployed 27898826 (dll adb076f2d71c67df); exit 0
+SCRIPT {"enabled":true,"entry":{"text":"User <name> has been created","icon":"person_add","font":"\"Material Icons\"","ink":121,"background":"rgb(46, 214, 46)","nativeIconHidden":true}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/dashboard
+kept as the 'after' evidence (je12 evidence shows it)

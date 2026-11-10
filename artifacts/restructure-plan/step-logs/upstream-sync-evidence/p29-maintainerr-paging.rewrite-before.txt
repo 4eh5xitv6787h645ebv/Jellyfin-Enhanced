@@ -1,0 +1,9 @@
+# je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p29-maintainerr-paging.mjs
+# build: deployed 27898826 (dll adb076f2d71c67df); exit 0
+SCRIPT {"status":{"http":200,"items":4,"dated":4,"lastError":null},"moviesLibrary":{"cards":100,"leaving":2,"texts":["Leaving in 20d"]},"episodesOfTheSecondCollection":{"asked":620,"answered":620,"leaving":2,"deleteAt":["2026-11-15T10:00:00.000Z"]}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+STORM 17x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+URL /web/index.html#/movies?topParentId=f137a2dd21bbc1b99aa5c0f6bf02a805&collectionType=movies
+kept as the 'before' evidence (je12 evidence shows it)
+# je12 mock sonarr log 60 | (the Maintainerr requests since 22:10:18Z, the start of the run above)
+22:10:53Z GET    200 rule      /api/collections

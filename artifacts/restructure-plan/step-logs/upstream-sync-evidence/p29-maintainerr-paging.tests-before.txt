@@ -1,0 +1,59 @@
+# port 29 (upstream 53ebf043): its tests on the tree before the port, on upstream's change applied as it is, and upstream's own tests
+# 1. je12 test media-tags on 27898826 plus the test file only (the fixture's paged route, three tests added, two expectations changed):
+JE.Tests.Features.MediaTags.LeavingSoonTests.A_page_that_fails_or_is_not_a_page_is_a_failed_refresh_that_keeps_the_last_good_answer [FAIL]
+JE.Tests.Features.MediaTags.LeavingSoonTests.Every_member_of_a_collection_is_read_page_by_page_not_only_the_few_the_list_embeds [FAIL]
+JE.Tests.Features.MediaTags.LeavingSoonTests.The_pages_add_to_the_embedded_members_and_a_maintainerr_without_the_route_keeps_the_embedded_ones [FAIL]
+JE.Tests.Features.MediaTags.LeavingSoonTests.Requests_the_collections_with_the_key_header_and_never_logs_or_persists_the_key [FAIL]
+Error Message:
+Assert.Equal() Failure: Values differ
+Expected: 600
+Actual:   2
+Error Message:
+Assert.Equal() Failure: Values differ
+Expected: 1104
+Actual:   6
+Error Message:
+Assert.Equal() Failure: Collections differ
+Expected: string[]     ["/api/collections/media/7/content/1?size=500", "/api/collections/media/8/content/1?size=500"]
+Actual:   List<string> []
+Error Message:
+Assert.Equal() Failure: Collections differ
+Expected: ValueTuple<string, string>[]     [Tuple ("/maintainerr/api/collections", "secret-key-123"), Tuple ("/maintainerr/api/collections/media/1/content/1", "secret-key-123")]
+Actual:   List<ValueTuple<string, string>> [Tuple ("/maintainerr/api/collections", "secret-key-123")]
+Failed!  - Failed:     4, Passed:  1869, Skipped:     0, Total:  1873, Duration: 28 s - JE.Tests.dll (net10.0)
+#    the three added tests fail (the unported service never asks for a page: 2 of 600 and 6 of 1,104 members, no page request);
+#    Requests_the_collections_… fails at its changed expectation (one request seen, two expected)
+# 2. the same tests on upstream's hunk applied as it is at the moved path
+#    (git show 53ebf043c1 | sed 's#…/Services/LeavingSoonService.cs#…/Features/MediaTags/Services/LeavingSoonService.cs#g; s#Helpers\.ArrUrlGuard#Shared.Arr.ArrUrlGuard#g' | git apply):
+JE.Tests.Features.MediaTags.LeavingSoonTests.A_page_that_fails_or_is_not_a_page_is_a_failed_refresh_that_keeps_the_last_good_answer [FAIL]
+JE.Tests.Features.MediaTags.LeavingSoonTests.Every_member_of_a_collection_is_read_page_by_page_not_only_the_few_the_list_embeds [FAIL]
+JE.Tests.Features.MediaTags.LeavingSoonTests.The_pages_add_to_the_embedded_members_and_a_maintainerr_without_the_route_keeps_the_embedded_ones [FAIL]
+Error Message:
+Assert.False() Failure
+Expected: False
+Actual:   True
+Error Message:
+Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   "request failed"
+Error Message:
+Assert.Equal() Failure: Values differ
+Expected: Tuple (4, 4)
+Actual:   Tuple (2, 2)
+Failed!  - Failed:     3, Passed:  1870, Skipped:     0, Total:  1873, Duration: 31 s - JE.Tests.dll (net10.0)
+#    A_page_that_fails_…: the first case (HTTP 500 on the second page) is a successful refresh with a changed, shortened answer;
+#    Every_member_…: LastError is "request failed" (the collection with "id": "x-11": TryGetInt32 throws for a string);
+#    The_pages_add_…: (2, 2) items where (4, 4) are expected (the paged rows replace the embedded ones)
+# 3. upstream's own tests at 53ebf043 (in a checkout of that commit):
+#    dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~LeavingSoonTests'
+JE.Tests.LeavingSoonTests.Collection_facts_reach_only_users_who_can_access_a_leaving_collection_and_maintainerr_facts_reach_everyone [FAIL]
+JE.Tests.LeavingSoonTests.Refreshes_only_when_due_and_backs_off_after_failures_keeping_the_last_good_answer [FAIL]
+JE.Tests.LeavingSoonTests.Requests_the_collections_with_the_key_header_and_never_logs_or_persists_the_key [FAIL]
+JE.Tests.LeavingSoonTests.A_delete_date_beyond_ten_years_from_now_refuses_the_answer_and_keeps_the_last_good_one [FAIL]
+JE.Tests.LeavingSoonTests.An_unrecognisable_list_is_a_failure_that_keeps_the_last_good_answer_but_a_real_empty_answer_clears_it [FAIL]
+JE.Tests.LeavingSoonTests.A_publish_cancelled_after_the_answer_was_saved_is_repaired_by_the_next_run_even_when_nothing_changed [FAIL]
+JE.Tests.LeavingSoonTests.The_cache_carries_leaving_onto_seasons_and_episodes_and_hides_it_once_the_source_is_removed [FAIL]
+JE.Tests.LeavingSoonTests.A_restart_after_a_publish_that_never_reached_the_cache_file_reapplies_the_snapshot [FAIL]
+JE.Tests.LeavingSoonTests.A_redirect_is_never_followed_so_the_key_never_reaches_another_origin [FAIL]
+Failed!  - Failed:     9, Passed:    38, Skipped:     0, Total:    47, Duration: 2 s - JE.Tests.dll (net10.0)
+# 4. after the port (cf86e164): je12 test media-tags -> node 2012 passed, 0 failed; dotnet Passed! - Failed: 0, Passed: 1873, Total: 1873

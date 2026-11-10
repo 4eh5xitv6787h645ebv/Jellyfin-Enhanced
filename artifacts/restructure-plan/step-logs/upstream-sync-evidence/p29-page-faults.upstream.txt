@@ -1,0 +1,12 @@
+# JE12=… artifacts/restructure-plan/step-logs/upstream-sync-evidence/p29-page-faults.sh
+# build: deployed upstream-53ebf043c189 (dll 7dfd245e26e82c67)
+== no fault (971 members: 351 movies in collection 7, 620 episodes in collection 9)
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 971, "Dated": 971}
+== the second page of collection 9 answers HTTP 500 once (its other 500 rows and collection 7 answer as before)
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 353, "Dated": 353}
+== no fault again
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 971, "Dated": 971}
+== the page of collection 7 comes back without rows once ({"totalSize":351,"items":[]}: Maintainerr could not read their metadata)
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 620, "Dated": 620}
+== no fault again
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 971, "Dated": 971}
