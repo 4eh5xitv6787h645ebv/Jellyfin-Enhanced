@@ -256,7 +256,8 @@ def one_run(cmd, cwd, out, args, label):
             deadline = time.time() + args.wait_quiet
             while time.time() < deadline:
                 snap = load_snapshot(2.0)
-                if snap['load'][0] <= args.max_load and snap['busy_cores'] <= args.max_foreign:
+                # The load average lags by a minute and still holds the previous run; the 2 s CPU sample does not.
+                if snap['busy_cores'] <= args.max_foreign:
                     break
                 print(f"gate-timing: machine busy (load1 {snap['load'][0]:.1f}, {snap['busy_cores']} cores); waiting",
                       file=sys.stderr, flush=True)
@@ -327,7 +328,7 @@ def one_run(cmd, cwd, out, args, label):
         n = os.cpu_count()
         foreign = max(0.0, (dbusy - ours) / max(1, dtotal) * n)
     loaded_reasons = []
-    if before['load'][0] > args.max_load:
+    if before['load'][0] > args.max_load and before['busy_cores'] > args.max_foreign / 2:
         loaded_reasons.append(f"load1 {before['load'][0]:.2f} > {args.max_load} at start")
     if before['busy_cores'] > args.max_foreign:
         loaded_reasons.append(f"{before['busy_cores']} cores busy at start > {args.max_foreign}")
