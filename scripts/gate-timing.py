@@ -49,6 +49,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 HZ = os.sysconf('SC_CLK_TCK')
+PAGE = os.sysconf('SC_PAGE_SIZE')
 QUIET_FILE = Path('/home/jake/projects/.lenovo-quiet')
 BUILD_ENV = {'UseSharedCompilation': 'false', 'MSBUILDDISABLENODEREUSE': '1', 'DOTNET_CLI_USE_MSBUILD_SERVER': '0',
              'DOTNET_CLI_TELEMETRY_OPTOUT': '1', 'DOTNET_NOLOGO': '1', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE': '1'}
@@ -181,6 +182,7 @@ class Sampler(threading.Thread):
                     known.add(pid)
                     changed = True
         seen = set()
+        rss = 0
         for pid in known:
             st = live.get(pid)
             if not st:
@@ -201,6 +203,10 @@ class Sampler(threading.Thread):
                 p.series.append((now, cpu))
             p.self, p.children = cpu, st[4] + st[5]
             seen.add(key)
+            try:
+                rss += int(open(f'/proc/{pid}/statm').read().split()[1])
+            except (OSError, IndexError, ValueError):
+                pass
         for key, p in self.procs.items():
             if p.alive and key not in seen:
                 p.alive = False
@@ -214,7 +220,7 @@ class Sampler(threading.Thread):
                     pass
         busy, total = machine_cpu()
         ours = sum(p.self for p in self.procs.values())
-        self.ticks.append((now, ours, busy, total, os.getloadavg()[0]))
+        self.ticks.append((now, ours, busy, total, os.getloadavg()[0], rss * PAGE // (1 << 20), mem_available_mb()))
 
 
 def set_subreaper():
@@ -346,7 +352,7 @@ def one_run(cmd, cwd, out, args, label):
            'foreign_cores': None if foreign is None else round(foreign, 3), 'loaded': loaded_reasons,
            'leftovers': [{'pid': p.pid, 'comm': p.comm, 'argv': p.argv[:6]} for p in leftovers],
            'interval': args.interval, 'hz': HZ,
-           'ticks': [(round(t, 3), o, b, tot, round(l, 2)) for t, o, b, tot, l in ticks],
+           'ticks': [(round(x[0], 3), x[1], x[2], x[3], round(x[4], 2), *x[5:]) for x in ticks],
            'trace': [line.split('\t', 2) for line in trace.read_text().splitlines() if line.count('\t') >= 2],
            'procs': procs}
     (out / 'run.json').write_text(json.dumps(run))
@@ -554,10 +560,14 @@ def analyse(run, out):
     if (reports / 'browser-results.json').exists():
         browser_files, browser_meta = playwright_files(reports / 'browser-results.json', procs, kids, run)
     attributed = sum(p['cpu'] for p in procs)
+    rss_series = [x[5] for x in ticks if len(x) > 5]
+    avail_series = [x[6] for x in ticks if len(x) > 6 and x[6] is not None]
     return {'label': run['label'], 'git': run['git'], 'dirty': run['dirty'], 'host': run['host'], 'cores': run['cores'],
             'wall': run['wall'], 'rc': run['rc'], 'cpu': run['cpu_exact'], 'attributed_cpu': attributed,
             'before': run['before'], 'foreign_cores': run['foreign_cores'], 'loaded': run['loaded'],
             'leftovers': run['leftovers'], 'idle': idle, 'max_rss_mb': run['max_rss_mb'],
+            'peak_tree_rss_mb': max(rss_series) if rss_series else None,
+            'min_mem_available_mb': min(avail_series) if avail_series else None,
             'steps': {k: {kk: vv for kk, vv in v.items()} for k, v in steps.items()},
             'step_order': [n for n in step_names if n in steps] + [n for n in steps if n not in step_names],
             'categories': cats, 'commands': cmds, 'node_files': node_files,
@@ -631,11 +641,14 @@ def playwright_files(path, procs, kids, run):
     for s in data['suites']:
         walk(s)
     # Worker processes by TEST_WORKER_INDEX; their CPU series plus their descendants'.
+    # Worker processes (playwright/lib/common/process.js under the runner): the dispatcher numbers workers in the order
+    # it creates them, and it creates each with a synchronous spawn, so start order gives TEST_WORKER_INDEX (the
+    # worker sets that variable itself at runtime, so /proc/<pid>/environ does not show it).
     workers = {}
-    for p in procs:
-        wi = p['env'].get('TEST_WORKER_INDEX') if p['env'] else None
-        if wi is not None and p['cat'] == 'playwright':
-            workers.setdefault(int(wi), []).append(p)
+    wprocs = sorted((p for p in procs if p['cat'] == 'playwright' and any(a.endswith('common/process.js') for a in p['argv'])),
+                    key=lambda p: p['start'])
+    for i, p in enumerate(wprocs):
+        workers.setdefault(i, []).append(p)
     by_worker = {}
     for t in tests:
         by_worker.setdefault(t['worker'], []).append(t)
@@ -720,6 +733,8 @@ def render(analyses, top=30, include_loaded=False):
     L.append(f"| core utilisation | {fmt(100 * med([a['cpu'] / a['wall'] / c for a in used]), 0)}% | | |")
     L.append(f"| idle (our tree < 0.3 cores) s | {fmt(med([a['idle'] for a in used]))} | | |")
     L.append(f"| CPU attributed by sampling | {fmt(100 * med([a['attributed_cpu'] / max(1e-6, a['cpu']) for a in used]), 0)}% | | |")
+    L.append(f"| peak RSS of the run's processes, MB | {fmt(med([a.get('peak_tree_rss_mb') for a in used]), 0)} | | |")
+    L.append(f"| lowest MemAvailable during the run, MB | {fmt(med([a.get('min_mem_available_mb') for a in used]), 0)} | | |")
     L.append(f"| exit codes | {', '.join(str(a['rc']) for a in used)} | | |")
     L.append(f"| load1 at start | {', '.join(fmt(a['before']['load'][0], 2) for a in used)} | | |")
     L.append(f"| foreign CPU during run (cores) | {', '.join(fmt(a['foreign_cores'], 2) for a in used)} | | |\n")
