@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-14 upstream commits: 7 pending, 7 ported.
+14 upstream commits: 6 pending, 8 ported.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -20,5 +20,5 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 10 | [`2e1f123d`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/2e1f123de0860af12e87780ae898cb1092f6f787) | 2026-11-09 | feature | seerr, admin, settings, platform | feat(watchlist): two-way removal sync between Jellyfin and Seerr (#1032) | pending |  | Adds the route POST jellyseerr/watchlist, a scheduled task and its DI registration: a contract change (JeSeerrController; upstream has one controller). |
 | 11 | [`a2b4b2ab`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/a2b4b2aba2177c52b6fb4a7faf90eb1b9a9e8c13) | 2026-11-09 | ci |  | ci: skip browser tests on pull requests that do not touch web files | pending |  |  |
 | 12 | [`d3bd07d3`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/d3bd07d3b9d282f05588065882351ea280d00559) | 2026-11-09 | fix | spoiler-guard | fix(spoiler-guard): strip Home Screen Sections rows (#1033) | ported | `414c1b45` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p4-spoiler-hss.* |
-| 13 | [`83510ea1`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/83510ea1332c9027536be52598e164e4ed9f59c5) | 2026-11-09 | fix | seerr | fix(recommendations): don't open category tiles after dragging a row (#1030) | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p5-recommendations-drag.* |
-| 14 | [`c22870b2`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/c22870b2d666a243a3a1269a1fbf7e25c662b95b) | 2026-11-09 | fix | details-providers | fix(audio-language): show audio languages on movie page | pending |  |  |
+| 13 | [`83510ea1`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/83510ea1332c9027536be52598e164e4ed9f59c5) | 2026-11-09 | fix | seerr | fix(recommendations): don't open category tiles after dragging a row (#1030) | ported | `8f419419` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p5-recommendations-drag.* |
+| 14 | [`c22870b2`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/c22870b2d666a243a3a1269a1fbf7e25c662b95b) | 2026-11-09 | fix | details-providers | fix(audio-language): show audio languages on movie page | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p6-audio-language.* |

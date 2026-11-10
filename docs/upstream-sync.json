@@ -371,7 +371,9 @@
         "tests/frontend/pages/pages-recommendations.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "8f4194195b81ad930751b7d0b4cf62ce4530d6b5"
+      ],
       "notes": "The same 8px mouse-drag guard on the studio, network and genre tile rows (client/src/features/seerr/recommendations/recommendations-render.ts), with upstream’s three tests. Added a test that media rows are not guarded, since the rewrite builds all rows from one shell.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p5-recommendations-drag.*"
     },
@@ -396,8 +398,10 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/itemdetails/features-details-media-info.js",
         "tests/frontend/features/features-media-info.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The same fallback in client/src/features/details-providers/media-info.ts: a selected version whose /tag-data source entry carries no streams reads the top-level streams. Upstream’s test, plus one that a selected version never borrows another version’s streams.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p6-audio-language.*"
     }
   ]
 }
