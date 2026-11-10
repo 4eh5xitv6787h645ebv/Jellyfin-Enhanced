@@ -1,0 +1,5 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync-pre/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-collection-languages.mjs
+# deployed: 42582efa (dll 7275e1e8f6683815); exit 0
+SCRIPT {"collection":"Aladdin Collection (lab)","members":["Aladdin [eng]","Aladdin and the King of Thieves [eng]"],"added":"Warriors of the Wind [deu,eng,fra,jpn,kor,zho]","collectionLanguagesWithTheAddedMember":["deu","eng","fra","jpn","kor","zho"],"collectionLanguagesAfterDeletingThatMember":["eng"],"followedTheDeletion":true}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

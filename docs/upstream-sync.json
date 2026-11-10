@@ -67,7 +67,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "13eb94ffd8f5185f63c2efcb71b8896985cb4a25"
+      ],
       "notes": "AssemblyVersion and FileVersion 12.15.0.0, as upstream main. docs/advanced/api.md names the same version."
     },
     {
@@ -87,7 +89,9 @@
         "manifest.json"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "13eb94ffd8f5185f63c2efcb71b8896985cb4a25"
+      ],
       "with": "6daf211855528072876d441e58713066605f32fa",
       "notes": "manifest.json is byte-identical to upstream’s at c22870b2. That includes the catalog entry for the Jellyfin 10.11 build of 12.15.0.0: it is release data about an artifact upstream published, not 10.11 code, and the catalog serves 10.11 servers from the same file. The rewrite builds for Jellyfin 12 only; nothing is built or published by this commit."
     },
@@ -174,7 +178,7 @@
       "rewriteCommits": [
         "42582efacd6e62894d89ae670ead6802684acb53"
       ],
-      "notes": "Client: the same redraw of changed cards, in the rewrite’s pipeline modules (scan.ts, delta-sync.ts, queue.ts). Server: the same collection-member tracking, but TagCacheService.cs is capped and may not grow, so the index, its rules and GetCollectionLanguages live in the new partial TagCacheCollectionMembers.cs and the service keeps one-line call sites (4,124 to 4,088 lines; the allow-list entry is lowered to match). Upstream’s 11 unit tests, 6 browser tests and 31 backend tests are translated unchanged in substance.",
+      "notes": "Client: the same redraw of changed cards, in the rewrite’s pipeline modules (scan.ts, delta-sync.ts, queue.ts). Server: the same collection-member tracking, but TagCacheService.cs is capped and may not grow, so the index, its rules and GetCollectionLanguages live in the new partial TagCacheCollectionMembers.cs and the service keeps one-line call sites (4,124 to 4,088 lines; the allow-list entry is lowered to match). Upstream’s 11 node tests, 6 browser tests and 22 backend tests are translated unchanged in substance.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-tag-redraw.* and p7-collection-languages.*"
     },
     {

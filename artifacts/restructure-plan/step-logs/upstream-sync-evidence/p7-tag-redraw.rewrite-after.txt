@@ -1,0 +1,16 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync-pre/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-tag-redraw.mjs
+# deployed: 42582efa (dll 7275e1e8f6683815); exit 0
+SCRIPT {"card":"The Fox and the Hound 2","ratingChangedOnServer":"6.019 -> 1.1","chipBefore":"20%star6.0person_heart6.7","chipAfterComingBack":"20%star1.1person_heart6.7"}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Users/6444be8e54cc4ef09845bd43f64a881c/Images/Primary
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Users/457987fae65f4bc9839cfe1eba108199/Images/Primary
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Users/42847155cc4642f5b60f93256c9e25ee/Images/Primary
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+STORM 15x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3

@@ -35,11 +35,18 @@ looked at it. `check` fails when a `pending` entry is older than `policy.maxPend
   settings, strings and routes as the neighbouring code does them. Where upstream's change has a bug or a weaker
   pattern than AGENTS.md allows, port the intent correctly, say so in `notes`, and file the upstream fault with
   `je12 found-bug`.
+- **What usually transfers as is.** The C# files were moved, not rewritten, so an upstream C# hunk often applies
+  with a path change (`git show <sha> -- <old path> | sed 's#<old path>#<new path>#g' | git apply --3way`); so do
+  locale files and most docs. Upstream's tests load the built `js/` files by the same names, so they translate
+  with new imports and namespaces. Client code never transfers: re-implement it. A new setting also needs a line
+  in the What's New index and `tests/fixtures/admin-config-baseline.json` (see `docs/rewrite/admin-config.md`).
 - **Parity proof.** Tests first: translate upstream's new tests into the rewrite's test folders and watch them fail
   before the port. For anything a user can see, run the same `je12 browse` or `je12 api` command against an upstream
   build of that commit and against the rewrite, with `--keep`: `JE12=<je12 script> scripts/upstream_lab_deploy.py <upstream sha>` puts the
   upstream build on the lab (`--keep before`), `je12 deploy` puts the rewrite back (`--keep after`). `je12 evidence`
-  holds one pair, so copy each port's pair into the step log. Record what could not be compared and why.
+  holds one pair, so copy each port's pair into the step log. Record what could not be compared and why. In a lab,
+  get box sets from `je12 env content --collections`: creating the first collection by API starts a library scan
+  that removes the lab's file-less items.
 - **Commit format.** `feat(<feature>): …` or `fix(<feature>): …` as in the history, and one trailer line per upstream
   commit covered:
 

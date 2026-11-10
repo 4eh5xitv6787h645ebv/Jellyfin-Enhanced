@@ -1,0 +1,20 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync-pre/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist-admin.mjs
+# deployed: upstream-c22870b2d666 (dll e9a334b4293fbc84); exit 0
+SCRIPT {"groups":["Removing itemsauto_awesomeNew in v12.15.0.0"],"label":"When an item is removed from a watchlist","options":["jellyfin: Jellyfin decides: removed from Jellyfin → also removed from Seerr","seerr: Seerr decides: removed from Seerr → also removed from Jellyfin","both: Both stay in sync: a removal on either side is copied to the other","off: Never remove anything automatically"],"requestedMediaLabel":"Requested media goes on the requester's watchlist","saved":"jellyfin","rowsShown":{"jellyfin":{"dontReAdd":false,"days":false,"daysDescription":false},"seerr":{"dontReAdd":true,"days":true,"daysDescription":true},"both":{"dontReAdd":false,"days":false,"daysDescription":false},"off":{"dontReAdd":true,"days":true,"daysDescription":true},"jellyfinAfterAnotherToggle":{"dontReAdd":false,"days":false,"daysDescription":false}}}
+CONSOLE Translation key is missing from dictionary: url
+CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+CONSOLE Translation key is missing from dictionary: img.width
+CONSOLE Translation key is missing from dictionary: img.height
+CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+CONSOLE Translation key is missing from dictionary: baseName
+CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+CONSOLE Translation key is missing from dictionary: index + 1
+CONSOLE Translation key is missing from dictionary: trimmedLine
+CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced

@@ -1,0 +1,6 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync-pre/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist.mjs
+# deployed: 42582efacd6e (dll 7559bf7a3204b19d); exit 0
+SCRIPT {"removalSetting":"(no such setting)","movie":"101 Dalmatians II: Patch's London Adventure","addToSeerrWatchlist":{"status":405},"addAgain":{"status":405},"addInvalid":{"status":405},"onSeerrWatchlistAfterAdd":false,"removalTask":"no such task","firstRun":"no such task","onSeerrAfterFirstRun":false,"secondRun":"no such task","onSeerrAfterRemovingInJellyfin":false}
+CONSOLE Failed to load resource: the server responded with a status of 405 (Method Not Allowed) /JellyfinEnhanced/jellyseerr/watchlist
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

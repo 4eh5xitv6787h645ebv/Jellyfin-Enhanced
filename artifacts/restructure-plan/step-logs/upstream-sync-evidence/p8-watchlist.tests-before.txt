@@ -1,0 +1,11 @@
+# The port's node tests run on the tree before the port (42582efa):
+$ node --test tests/frontend/requests/request-submission.test.mjs tests/frontend/admin/config/admin-config-rewrite.test.mjs
+✖ the watchlist re-add rows follow the removal mode and the toggle, and stay that way through other dependency passes (893.040097ms)
+✖ the removal mode is saved as chosen and loaded back (776.53945ms)
+✖ a movie request also goes on the Seerr watchlist when the setting is on (4.770855ms)
+✖ a tv request also goes on the Seerr watchlist when the setting is on (4.072176ms)
+✖ a title already on the Seerr watchlist (409) is fine, and any other failure never fails the request (7.994185ms)
+✖ addToWatchlist rejects an invalid id or media type without calling Seerr (3.286468ms)
+ℹ tests 127
+ℹ pass 121
+ℹ fail 6

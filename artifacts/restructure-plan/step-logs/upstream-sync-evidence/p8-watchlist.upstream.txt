@@ -1,0 +1,7 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync-pre/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist.mjs
+# deployed: upstream-c22870b2d666 (dll e9a334b4293fbc84); exit 0
+SCRIPT {"removalSetting":"jellyfin","movie":"101 Dalmatians II: Patch's London Adventure","addToSeerrWatchlist":{"status":200,"tmdbId":13654,"mediaType":"movie"},"addAgain":{"status":409,"code":"UpstreamError"},"addInvalid":{"status":400,"code":"invalid_watchlist_item"},"onSeerrWatchlistAfterAdd":true,"removalTask":"Sync Watchlist Removals between Jellyfin and Seerr (DailyTrigger@4h)","firstRun":"Completed","onSeerrAfterFirstRun":true,"secondRun":"Completed","onSeerrAfterRemovingInJellyfin":false}
+CONSOLE Failed to load resource: the server responded with a status of 409 (Conflict) /JellyfinEnhanced/jellyseerr/watchlist
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/jellyseerr/watchlist
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

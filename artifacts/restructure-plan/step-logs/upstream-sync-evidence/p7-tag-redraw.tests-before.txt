@@ -1,0 +1,35 @@
+# The port's tests run on the tree before the port (16c962f0 plus the new tests), `je12 test media-tags --dotnet`:
+je12: dotnet restore tests/backend/JE.Tests.csproj (first build in this worktree)
+ok   typecheck                      4s
+ok   client build                   6s
+ok   inventory                      1s
+FAIL npm tests (69 files)          57s  7 failure(s) not in the known-failure list:
+tests/frontend/features/media-tags/core-tag-metadata-refresh.test.mjs :: a metadata delta removes obsolete language flags from existing cards
+tests/frontend/features/media-tags/core-tag-metadata-refresh.test.mjs :: a metadata replacement removes obsolete language flags from existing cards
+tests/frontend/features/media-tags/core-tag-metadata-refresh.test.mjs :: a removal delta retires stale batch work (in-flight=true)
+tests/frontend/features/media-tags/core-tag-metadata-refresh.test.mjs :: a removed item can render again when a later delta restores it
+tests/frontend/features/media-tags/core-tag-metadata-refresh.test.mjs :: a removed item loses its flags when its fallback lookup finds nothing
+tests/frontend/features/media-tags/core-tag-metadata-refresh.test.mjs :: an access-only delta removes flags from cards the user can no longer see
+tests/frontend/features/media-tags/core-tag-metadata-refresh.test.mjs :: an item removed from the cache keeps the tags its fallback lookup finds
+FAIL dotnet tests                  43s
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.ANativePosterBuildOfACollectionLeavesItsMemberRecordAlone
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AMemberChangedJustBeforeShutdownReachesItsCollectionAfterRestart
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AMemberLinkedByPathReachesItsCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AManualRebuildReadsTheSeriesItBuilds
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.ADeletedMemberLeavesItsCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.ADeletedMemberInAnExcludedLibraryLeavesItsCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.ACollectionDeletedDuringTheUpgradeRepairDoesNotHoldBackTheIndex
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AReconciliationCatchesAnExcludedMemberChangedWhileNothingListened
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.TurningTheCacheOffKeepsAQueuedCollectionRebuild
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AnEpisodeTrackChangeReachesACollectionOfItsSeries
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.ADeletedMemberWhoseLinkWasAlreadyClearedLeavesItsCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AChangeThatKeepsTheLanguagesQueuesNoCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AnExcludedMemberSharedByTwoCollectionsReachesBothWhenOneRebuildsFirst
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AnExcludedMemberSharedByTwoCollectionsReachesBothInOneBatch
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AnExcludedMemberResavedWithTheSameLanguagesQueuesNoCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AMemberLosingATrackUpdatesItsCollectionsOnly
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AMemberInAnExcludedLibraryStillReachesItsCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AnUnchangedCollectionRebuiltAfterLoadingAnOldSnapshotStillSavesItsMembers
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AMemberJellyfinDeletedAndUnlinkedLeavesItsCollection
+JE.Tests.Features.MediaTags.TagCacheCollectionLanguagesTests.AManualRebuildForgetsACollectionDeletedMeanwhile
+test: FAIL in 110s
