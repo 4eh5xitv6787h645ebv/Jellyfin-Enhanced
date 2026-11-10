@@ -655,6 +655,121 @@
       ],
       "notes": "Upstream edits the hand-written page script and section list; here the same behaviour is re-implemented in the page’s TypeScript modules: the search over the Media Tags sections’ declared titles, hints, labels, descriptions and ids, with its result list (client/src/admin/config/page/search.ts, the list’s element in client/html/admin-config/configPage.html), the New badges on the tab’s rows (page/whats-new.ts), the tab module handing over its section names (page/media-tags-tab.ts), the two members of JE.adminTags the search reads (host/admin-config-host.ts) and the card’s link (sections/about.ts). The stylesheet hunk applies as is (Configuration/jeAdmin.css is hand-written here too). Differences from upstream: (1) the watcher on the tab and the timers belong to the view’s lifecycle and end with it, and a search answered after the view is gone draws nothing; upstream never disconnects its MutationObserver; (2) Dismiss removes the Media Tags badges with the form’s and they stay away, where upstream’s Dismiss puts them straight back (it re-runs the badge pass without forgetting the list) until the page is reloaded: filed as a found bug; (3) the watcher is created only when What’s New lists something; (4) a row is found by its data-field-row value, not by a selector built from the id; (5) once the tab is drawn the search reads its declarations as they are, where upstream mounts the tab again for every query, which reads the whole plugin configuration and reloads the tab each time (ten reads while the word “collections” is typed, one here): filed as a found bug. Upstream’s commit has no tests: six are added (the search on the real page with the real tab and how often it reads the configuration, late answers, the badges and Dismiss, the watcher’s lifetime, the stylesheet rules, the card’s link), and tests/fixtures/admin-config-baseline.json gains the new element id jeMtSearchResults in renderedIds, as docs/rewrite/admin-config.md prescribes for an intended page change. No new setting, so the What’s New index is unchanged. No route, authorization or registration changes.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p21-media-tags-search.*"
+    },
+    {
+      "sha": "83b557ccf29ce809053fe9c884fafe654c4d90e9",
+      "date": "2026-11-10T18:07:45+00:00",
+      "subject": "fix(tags): keep a flush status tag at the top edge, over the count and watched badges",
+      "class": "fix",
+      "features": [
+        "media-tags"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 2,
+        "insertions": 7,
+        "deletions": 1
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/js/core/tag-layout.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-layout-styles.js"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Upstream edits the hand-written js/core/tag-layout.js and js/tags/tag-layout-styles.js; here the same two changes are made in the TypeScript those files are built from: the anchor measurement skips the count and watched badges when a Flush top-centre row is led by a status tag (client/src/features/media-tags/layout/fit-measure.ts) and the tag layer of such a card gets z-index 3 (layout/tag-layout-styles.ts). No difference from upstream in behaviour, including what it leaves as it is: the measurement looks only at the row’s first chip while the stylesheet rule matches a status tag anywhere in the row, so a row led by another chip still works around the badges but its layer is raised too. Upstream’s commit has no tests: two browser tests are added to tests/browser/flush-edges.spec.cjs (the wide status tag stays at the top edge over the badge with the layer at z-index 3; a wide chip of another group, a status tag behind another chip, and the Default and Tight spacings keep what they did). No setting, route, authorization or registration changes; no cached output changes (layout only).",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p22-flush-status-top.*"
+    },
+    {
+      "sha": "bcd6574a221e042bbd7124c9833356f50cfe87d5",
+      "date": "2026-11-10T18:51:41+00:00",
+      "subject": "fix(spoiler-guard): keep a neutral Path on guarded items so Download works",
+      "class": "fix",
+      "features": [
+        "spoiler-guard"
+      ],
+      "issues": [
+        "#1039"
+      ],
+      "release": null,
+      "size": {
+        "files": 3,
+        "insertions": 48,
+        "deletions": 6
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/SpoilerGuard/SpoilerFieldStripFilter.cs",
+        "docs/spoiler-guard/spoiler-guard-settings.md",
+        "tests/backend/Privacy/PrivacyFieldFilterTests.cs"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "5756777576d25a64824600e50bfefcd3040ce664",
+      "date": "2026-11-10T19:06:06+00:00",
+      "subject": "feat(rating-tags): add MyAnimeList, AniList, Metacritic user, Roger Ebert and MDBList sources",
+      "class": "feature",
+      "features": [
+        "media-tags",
+        "settings"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 16,
+        "insertions": 62,
+        "deletions": 22
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Assets/PosterTags/manifest.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/Assets/PosterTags/rating-source-icons.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/RatingSourceSettings.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Model/TagSourceRatings.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagModel.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/TagStylePalettes.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Rendering/PosterTagAssets.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Rendering/PosterTagRenderer.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/RatingRules.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/rating.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/tag-styles-editor.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/settingspanel/ui-panel-tag-preview.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/rating-sources.js",
+        "docs/enhanced/tags.md",
+        "tests/backend/PosterTags/RatingSourceTests.cs",
+        "tests/inventory/test_poster_assets.py"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "910d1da4460a8bebf9203df34ba8494ae5ad4ecb",
+      "date": "2026-11-10T19:24:44+00:00",
+      "subject": "feat(status-tags): show Binge ready instead of Series Finale on a show released in one drop",
+      "class": "feature",
+      "features": [
+        "media-tags",
+        "platform"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 40,
+        "insertions": 66,
+        "deletions": 4
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/StatusRules.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/locales/ (33 files)",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/status-vocabulary.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/status-vocabulary.json",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js",
+        "docs/enhanced/tags.md",
+        "tests/backend/PosterTags/ScoreNumbersTests.cs",
+        "tests/frontend/features/features-status-tags-finale-parity.test.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
     }
   ]
 }
