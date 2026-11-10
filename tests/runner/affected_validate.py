@@ -75,7 +75,7 @@ def node_failures(tree, files, env):
         return set(), 0.0
     with tempfile.TemporaryDirectory() as d:
         res = Path(d) / 'r'
-        rc, out, secs = run(['node', '--test', '--test-timeout=300000', f'--test-concurrency={max(4, os.cpu_count() - 1)}',
+        rc, out, secs = run(['node', '--test', '--test-timeout=300000', f'--test-concurrency={max(2, len(os.sched_getaffinity(0)) - 1)}',
                              '--test-reporter=' + str(Path(tree) / 'scripts/restructure-gates-reporter.mjs'),
                              f'--test-reporter-destination={res}', *files], tree, env)
         failed = {l.split(' ', 1)[1].split(' :: ')[0] for l in res.read_text().splitlines() if l.startswith('FAIL ')} if res.exists() else set()

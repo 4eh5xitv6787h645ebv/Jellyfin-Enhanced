@@ -187,6 +187,9 @@ def record_one(suite, f, port):
 
 
 def record(args):
+    if not shutil.which('strace'):
+        print('affected: strace is not installed; the map needs it (apt install strace). Nothing recorded.', file=sys.stderr)
+        return 2
     suites = args.suites.split(',')
     head = git('rev-parse', 'HEAD').strip()
     dirty = git('status', '--porcelain', '--untracked-files=no').strip()
@@ -320,7 +323,7 @@ def cmd_run(args):
     node = s['suites'].get('frontend', []) + s['suites'].get('client-build', []) + s['suites'].get('boundary', [])
     if node:
         print(f'affected: node test files: {len(node)}', file=sys.stderr, flush=True)
-        r = subprocess.run(['node', '--test', '--test-timeout=300000', f'--test-concurrency={max(4, (os.cpu_count() or 4) - 1)}', *node],
+        r = subprocess.run(['node', '--test', '--test-timeout=300000', f'--test-concurrency={max(2, len(os.sched_getaffinity(0)) - 1)}', *node],
                            cwd=ROOT, env=env)
         rc |= r.returncode
     specs = s['suites'].get('browser', [])
@@ -341,7 +344,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
     r = sub.add_parser('record')
-    r.add_argument('--jobs', type=int, default=max(2, (os.cpu_count() or 4) // 2))
+    r.add_argument('--jobs', type=int, default=max(2, len(os.sched_getaffinity(0)) // 2))
     r.add_argument('--suites', default=','.join(SUITES))
     r.add_argument('--update', action='store_true', help='keep other suites of an existing map')
     r.add_argument('--allow-dirty', action='store_true')
