@@ -6,15 +6,17 @@ Branch `perf/test-speed` from `restructure/integration` 2917a115. Profile: [PROF
 
 | | before (2917a115 + harness) | after (this branch) | change |
 |---|---:|---:|---:|
-| `all`, median of interleaved runs | 276.4 s (270.8–278.8) | ⟨ALL-AFTER⟩ | ⟨ALL-DELTA⟩ |
+| `all`, median of interleaved runs | 276.4 s (270.8–278.8) | 102.2 s (101.5–102.6), the last configuration measured 5× interleaved (rotation 2, C8); the final commit: 103.9 s on a quiet machine | **−174.2 s (−63%)** |
 | `browser`, median of interleaved runs | 192.5 s (192.1–199.2) | 120.6 s (119.6–122.6) | −71.9 s (−37%) |
-| `all` then `browser` (sum) | 468.9 s | ⟨SUM-AFTER⟩ | ⟨SUM-DELTA⟩ |
-| `all` and `browser` started at the same time (2 runs each) | both done in 342.3 and 337.7 s, both passed | **both failed** both times (17 browser test timeouts, one dotnet node-child timeout; 307 and 544 s): the final design must not run two gates side by side (§8); in sequence they take ⟨SEQ⟩ | |
+| `all` then `browser` (sum) | 468.9 s | 222.8 s (102.2 + 120.6); the final commit, quiet: 225.4 s (103.9 + 121.5) | **−246.1 s (−52%)** |
+| `all` and `browser` started at the same time (2 runs each) | both done in 342.3 and 337.7 s, both passed | **both failed** both times (17 browser test timeouts, one dotnet node-child timeout; 307 and 544 s): the final design must not run two gates side by side (§8); in sequence they take 225.4 s on the final commit | |
 | first failure of a broken change named (`scripts/first-failure.py`, `all`) | type error 4.3 s; dotnet fault 132.4 s; frontend fault 172.5 s | type error 10.0–10.6 s; dotnet fault 40.2–43.1 s; frontend fault **2.1–4.2 s** with an affected map, 74.3–81.9 s without one | |
 | cores used by `all` (CPU-seconds ÷ wall ÷ cores) | 34% | 85–86% (8.5 of 10 cores) | |
-| baseline browser runs that failed (quiet machine) | 2 of 6 | ⟨FLAKE-AFTER⟩ | |
+| baseline browser runs that failed (quiet machine) | 2 of 6 | `browser` on the final commit: 0 of 3 (two of them beside another agent's Jellyfin lab); the discovery spec 0 of 60 repeats beside a hog. `all` on the final commit: 1 of 3, the run beside that lab (360 s: three hang guards on child processes fired; isolated reruns and a clean full rerun passed, §9) | |
 
-Targets from the brief: `all` < 150 s (2.5 min), `browser` < 240 s (4 min), both together < 300 s (5 min), first failure < 60 s. ⟨TARGETS⟩
+Targets from the brief: `all` < 150 s (2.5 min), `browser` < 240 s (4 min), both together < 300 s (5 min), first failure < 60 s.
+
+**Three targets are met outright on the final commit, on a quiet machine:** `all` 103.9 s (< 150), `browser` 121.5 s (< 240), both in sequence 225.4 s (< 300; side by side they fail on this machine, §8). **The fourth, first failure < 60 s, is met for type errors (10 s) and dotnet faults (41 s), and for frontend faults when an affected map of the base exists (2–4 s); without a map a frontend fault is named after 74–82 s** (it waits for its file's alphabetical turn).
 
 
 ## 1. The changes, one commit each
@@ -246,11 +248,41 @@ Nothing was added to the repository. To adopt tsc-rs reproducibly: add `"tsc-rs"
 
 **`all` and `browser` started together** (each in its own worktree, twice per design, alternating; the base `browser` is 6 workers, this branch's 10): the base finished both in 342.3 and 337.7 s and passed. This branch failed both times: `browser` had 17 tests over their 15 s timeout (mobile-chromium and chromium pages under 2× oversubscription) and one dotnet test's node child exceeded its 15 s hang guard (`BootstrapContractTests.SpoilerStateWire…`), in 307 s the first time and 544 s the second. Nothing in the tests is wrong; the machine was asked for about twice what it has. The final design assumes it has the machine to itself: `all` uses 8.5 of 10 cores and up to ~6 GB, `browser` a worker per core.
 
-**Policy this supports.** One gate per machine at a time, which agents already follow through the gate lock (`JE12_GATE_LOCK`); `restructure-gates.sh` does not take the lock itself, so the rule holds only as long as every caller wraps it (a decision below). Run `all` then `browser` in sequence: ⟨SEQ⟩ in total, faster than the base ran the two side by side (342 s), and every test passes. More agents finishing at once queue for the lock instead of slowing each other: at 102 s per `all`, a queue of four is done in under 7 minutes, where four base gates side by side do not finish at all on this machine.
+**Policy this supports.** One gate per machine at a time, which agents already follow through the gate lock (`JE12_GATE_LOCK`); `restructure-gates.sh` does not take the lock itself, so the rule holds only as long as every caller wraps it (a decision below). Run `all` then `browser` in sequence: 225.4 s in total on the final commit, faster than the base ran the two side by side (342 s), and every test passes. More agents finishing at once queue for the lock instead of slowing each other: at 102 s per `all`, a queue of four is done in under 7 minutes, where four base gates side by side do not finish at all on this machine.
 
 ## 9. Final gates on the final commit
 
-⟨FINAL⟩
+The full gates, run through `scripts/gate-timing.py` (gate lock held) on the final commit `db907c54` in a clean worktree, three times each, alternating `all` and `browser`. The machine was shared: another agent's Jellyfin lab and benchmarks ran beside the second and third pairs (the harness flags them).
+
+| pair | `all` | `browser` |
+|---|---|---|
+| 1 (quiet: other processes 0.4 cores) | **passed, 103.9 s** (8.5 of 10 cores) | **passed, 121.5 s** |
+| 2 (beside the lab: load 7.6 at the start, other processes 2.1–3.0 cores) | **failed, 360.4 s**: 3 dotnet tests and the contract-boundary test, all on hang guards around child processes (`BootstrapContractTests.SpoilerStateWire…`'s node child, 15 s; `ApiItemLookMutationTests.ProductionPageSavesThroughRealHttpValidator`, 2 min; the boundary test's `spawnSync node ETIMEDOUT`); the run used only 3.2 cores, so it waited on something other than CPU | passed, 166.3 s |
+| 3 (load 29 at the start, other processes 1.1–1.4 cores during) | **passed, 110.3 s** | passed, 131.1 s |
+
+Under the flake protocol the pair-2 failures are load flakes: the isolated reruns passed (the 21 test cases of the two dotnet tests in 12 s; the boundary test), and the clean full rerun (pair 3) passed. They are newly seen load-sensitive tests: fixed time limits on child processes that a 3.5× slower machine exceeds. Raising a hang guard does not touch an assertion, but it is the maintainer's call; they are recorded here and in the decisions below, not changed.
+
+Output summary of the passing `all` runs (pairs 1 and 3, identical counts):
+
+```
+lane checks: passed after 69 s          lane contracts: passed after 83 s
+lane dotnet: passed after 85 s          lane frontend: passed after 104 s
+G   Passed!  - Failed: 0, Passed:   24, Total:   24
+T   Passed!  - Failed: 0, Passed: 1243 / 347 / 515 / 1133 (four test hosts)
+T (dotnet test): total 3238 (baseline 3238), passed 3238 (baseline 3238), failed 0 (baseline list 0)
+coverage: "passed": true
+npm test: total 3864 (baseline 3864), passed 3864 (baseline 3864), failed 0 (baseline list 0)
+contract boundary: tests 1, pass 1   client-build: tests 230, pass 230   bootstrap manifest: tests 2, pass 2
+restructure-gates: all passed
+```
+
+Output summary of the `browser` runs (all three identical):
+
+```
+the rest: 687 passed, 3 skipped      the long run (tag-row-subpixel.spec.cjs): 3 passed
+BROWSER: 693 tests, passed 690, failed 0 (baseline list 0), skipped 3
+restructure-gates: browser passed
+```
 
 ## 10. What remains slow, and what next
 
@@ -268,6 +300,7 @@ Nothing was added to the repository. To adopt tsc-rs reproducibly: add `"tsc-rs"
 3. **Enforce one gate per machine in `restructure-gates.sh`.** The final design assumes it has the machine to itself (§8: two at once fail on timeouts; three base gates thrash). Today only callers that wrap the script in `flock` on `JE12_GATE_LOCK` keep the rule. Taking the lock inside the script needs a re-entrancy marker so callers that already hold it do not deadlock.
 4. **je12's `summarize` should show `FAILURE seen after N s in lane X` lines** (and its `quick` mode could call `affected`): the early failure lines go to the gate's stderr while the lanes still run; a summary that keeps only the last lines hides them.
 5. **Who records the affected map, and when** (next step 3): it needs `strace` (the laptop has none) and 3.5 minutes per base.
+6. **Hang guards on child processes in three tests** (§9: `BootstrapContractTests.SpoilerStateWire…` 15 s, `ApiItemLookMutationTests.ProductionPageSavesThroughRealHttpValidator`, the contract-boundary test's `spawnSync` timeout) fired once when another agent's lab slowed the machine 3.5×. Raise them to a hang-only limit, or accept them as load flakes under the protocol.
 
 ### What I would do next, and what it needs
 
