@@ -21,14 +21,14 @@ affected = load('affected')
 NS = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'
 
 
-def trx(path, results):
+def trx(path, results, outcome='Completed'):
     rows = ''.join(f'<UnitTestResult testId="{i}" testName="{name}" outcome="{outcome}" duration="00:00:00.0100000"/>'
                    for i, (name, outcome) in enumerate(results))
     defs = ''.join(f'<UnitTest id="{i}"><TestMethod className="{name.rsplit(".", 1)[0]}"/></UnitTest>' for i, (name, _) in enumerate(results))
     passed = sum(1 for _, o in results if o == 'Passed')
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f'<TestRun xmlns="{NS}"><Results>{rows}</Results><TestDefinitions>{defs}</TestDefinitions>'
-                    f'<ResultSummary><Counters total="{len(results)}" passed="{passed}"/></ResultSummary></TestRun>')
+                    f'<ResultSummary outcome="{outcome}"><Counters total="{len(results)}" passed="{passed}"/></ResultSummary></TestRun>')
 
 
 def coverage(path, lines, branches):
@@ -72,6 +72,9 @@ class DotnetShardsTests(unittest.TestCase):
             self.assertIn('line-rate="0.6666"', xml)     # lines 1 and 2 of 3 covered by one shard or the other (coverlet truncates)
             self.assertIn('branch-rate="1.0"', xml)                  # each branch path covered by one shard
             trx(res / 'b' / 'b.trx', [('N.C.t1', 'Passed')])
+            with self.assertRaises(SystemExit):
+                shards.merge(res, ['a', 'b'])
+            trx(res / 'b' / 'b.trx', [], outcome='Aborted')     # a test host that crashed
             with self.assertRaises(SystemExit):
                 shards.merge(res, ['a', 'b'])
 
