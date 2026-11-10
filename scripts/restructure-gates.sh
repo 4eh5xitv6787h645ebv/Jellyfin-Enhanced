@@ -20,6 +20,8 @@
 #                                                their dotnet tests + Architecture when a .cs file changed. Features
 #                                                default to those the diff from $JE_BASE_REF (else
 #                                                restructure/integration) touches.
+#   scripts/restructure-gates.sh affected [record] inner loop, not a merge gate: client build, then only the tests whose
+#                                                traced inputs the change touches (tests/runner/affected.py)
 #
 # Pre-existing test failures are ratcheted, not fixed: a dotnet or node test run passes when every failing test is
 # listed in baselines/{dotnet,npm}-failures.txt and the total and passed counts are >= baselines/{dotnet,npm}-tests.txt.
@@ -639,6 +641,25 @@ gate_quick() (
   return "$rc"
 )
 
+# affected: the inner loop's answer in seconds to minutes, never a merge gate (`all` and `browser` still run before
+# merge). Regenerates the client like `fe` does, then runs only the tests whose recorded inputs the change touches
+# (tests/runner/affected.py: traced reads of every test file; it runs everything when its map is missing or stale).
+# `affected record` (re)builds the map for HEAD; do that on a clean base commit.
+gate_affected() (
+  set -e
+  no_snapshot_updates
+  if [ "${1:-}" = record ]; then
+    step "AFFECTED: recording the map for $(git rev-parse --short HEAD) (every test file once, traced)"
+    python3 tests/runner/affected.py record
+    return
+  fi
+  step "AFFECTED: client build, inventory, then the selected tests"
+  npm run client:build
+  npm run inventory:rewrite
+  python3 tests/runner/affected.py select
+  python3 tests/runner/affected.py run
+)
+
 # baselines/jf12-digest.txt: `<tag> <RepoDigest>`; HOST runs `je up <name> <port> --image <tag>`.
 gate_image() (
   set -e
@@ -652,7 +673,7 @@ gate_image() (
   echo "image: $tag = $digest" >&2
 )
 
-usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
@@ -675,6 +696,7 @@ case "$cmd" in
   bundle-hash) [ $# -eq 1 ] && [ -n "$1" ] || usage; gate_bundle_hash "$1"; exit 0 ;;
   image) [ $# -eq 0 ] || usage; gate_image ;;
   quick) gate_quick "$@" ;;
+  affected) [ $# -le 1 ] || usage; gate_affected "$@" ;;
   *) usage ;;
 esac
 echo "restructure-gates: $cmd passed" >&2
