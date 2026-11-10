@@ -1,0 +1,6 @@
+# The port's node tests run on the tree before the port (3f1ad5ee plus the new tests):
+$ node --test --test-name-pattern ... pages-reviews.test.mjs features-pause.test.mjs admin-config-rewrite.test.mjs
+✖ the Custom Tabs copy snippets escape their quotes in the markup and still copy the plain HTML
+✖ pause screen image URLs encode the item ids and the image tag, and leave ordinary ids as they are
+✖ a review tag assembled from the pieces of another is stripped too, and never shows as text
+ℹ tests 3 / pass 0 / fail 3

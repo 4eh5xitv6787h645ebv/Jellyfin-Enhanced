@@ -748,3 +748,25 @@ test('the removal mode is saved as chosen and loaded back', async t => {
   assert.equal(h.calls.puts.length, 1);
   assert.equal(h.calls.puts[0].WatchlistRemovalSync, 'off');
 });
+
+// Upstream 19cfe99a (#1036): the Custom Tabs copy snippet escapes quotes as well as angle brackets.
+test('the Custom Tabs copy snippets escape their quotes in the markup and still copy the plain HTML', async t => {
+  const h = await loadedPage(t);
+  const markup = [];
+  const walk = value => {
+    if (typeof value === 'string') { if (value.includes('je-copy-html-btn')) markup.push(value); return; }
+    if (value && typeof value === 'object') Object.values(value).forEach(walk);
+  };
+  walk(h.window.JEAdmin.sections);
+  const snippets = markup.flatMap(html => [...html.matchAll(/data-copy-text='([^']*)'/g)].map(m => m[1]));
+  assert.ok(snippets.length >= 5, `found ${snippets.length} snippets`);
+  for (const snippet of snippets) {
+    assert.match(snippet, /^&lt;div class=&quot;[a-z0-9 -]+&quot;&gt;&lt;\/div&gt;$/, snippet);
+  }
+  const buttons = [...h.document.querySelectorAll('.je-copy-html-btn')];
+  assert.equal(buttons.length, snippets.length);
+  for (const button of buttons) {
+    assert.match(button.dataset.copyText, /^<div class="[a-z0-9 -]+"><\/div>$/);
+    assert.equal(button.parentElement.querySelector('code').textContent, button.dataset.copyText);
+  }
+});

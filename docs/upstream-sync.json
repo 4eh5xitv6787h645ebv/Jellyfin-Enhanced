@@ -45,7 +45,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "047388051f5ed5c24ee44b007bddb3d430eaeb86"
+        "a05926866042222facd4571fddb5f37677e5ad89"
       ],
       "notes": "Same keys, step and panel flash as upstream. Differences: the two-second hide timer belongs to the player lifetime, so leaving the player hides the panel and drops the timer (upstream leaves a bare setTimeout); a new test pins the admin shortcut grid to the server defaults.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p1-subtitle-offset.*"
@@ -68,7 +68,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "13eb94ffd8f5185f63c2efcb71b8896985cb4a25"
+        "d17ea5dca4083e0fb468fcf7f4341db9d960e2f7"
       ],
       "notes": "AssemblyVersion and FileVersion 12.15.0.0, as upstream main. docs/advanced/api.md names the same version."
     },
@@ -90,7 +90,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "13eb94ffd8f5185f63c2efcb71b8896985cb4a25"
+        "d17ea5dca4083e0fb468fcf7f4341db9d960e2f7"
       ],
       "with": "6daf211855528072876d441e58713066605f32fa",
       "notes": "manifest.json is byte-identical to upstream’s at c22870b2. That includes the catalog entry for the Jellyfin 10.11 build of 12.15.0.0: it is release data about an artifact upstream published, not 10.11 code, and the catalog serves 10.11 servers from the same file. The rewrite builds for Jellyfin 12 only; nothing is built or published by this commit."
@@ -116,7 +116,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "b292ec58181bd7996ccb9f73cc59c6d60c25f24d"
+        "5e7a385912f5eca9aafe072ecf5f117b8cf37d82"
       ],
       "notes": "Same rule change on the web (statustags.ts) and native (StatusRules.cs) side. Added native tests (upstream changed the native rule without one) and corrected the New Episode row of docs/enhanced/tags.md, which upstream left saying \"aired or was added\" (filed as a found bug).",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p2-new-episode.*"
@@ -141,7 +141,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "b292ec58181bd7996ccb9f73cc59c6d60c25f24d"
+        "5e7a385912f5eca9aafe072ecf5f117b8cf37d82"
       ],
       "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1",
       "notes": "The same test row change, in tests/frontend/features/media-tags/."
@@ -176,7 +176,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "42582efacd6e62894d89ae670ead6802684acb53"
+        "cdc1dcf356d920ea2036f28ce1f67e7d1e6bb2cb"
       ],
       "notes": "Client: the same redraw of changed cards, in the rewrite’s pipeline modules (scan.ts, delta-sync.ts, queue.ts). Server: the same collection-member tracking, but TagCacheService.cs is capped and may not grow, so the index, its rules and GetCollectionLanguages live in the new partial TagCacheCollectionMembers.cs and the service keeps one-line call sites (4,124 to 4,088 lines; the allow-list entry is lowered to match). Upstream’s 11 node tests, 6 browser tests and 22 backend tests are translated unchanged in substance.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-tag-redraw.* and p7-collection-languages.*"
@@ -207,7 +207,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "d063821da28efd7dc861dd31e33fa308861dcc49"
+        "8e109a432a0a3e350c2b021e2a45cebd7054ac42"
       ],
       "notes": "Same rule in the three places the rewrite reads the setting (features/settings/state.ts, core/ui/runtime.ts through host/ui-host.ts, admin/config/page/timing.ts). Difference: a toast shown before the configuration exists still gets 1500 ms; upstream would schedule it with an undefined duration when JE.CONFIG lacks the value.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p3-toast-zero.*"
@@ -232,7 +232,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "b292ec58181bd7996ccb9f73cc59c6d60c25f24d"
+        "5e7a385912f5eca9aafe072ecf5f117b8cf37d82"
       ],
       "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1",
       "notes": "The same fixture change; the offline parity run passes with 241 Status fixtures and 0 web/native differences."
@@ -257,7 +257,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "05a49463cdaf97eeca11e465c08be11135dca47d"
+        "b8398cff8baf3c4991c75658363bf7ef0bb35248"
       ],
       "notes": "The same six action pins in the nine workflows upstream changed, plus actions/setup-dotnet in rewrite-validation.yml, which only the rewrite has and which pinned the old commit."
     },
@@ -309,7 +309,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "c18edf465efc55f38b7c4e46ee5f50998a46f984"
+        "850f42c87fdea2d4a0fa719292e5116868300a6f"
       ],
       "notes": "Route POST jellyseerr/watchlist in JeSeerrController (Users partial) beside the GET, with the same [Authorize] and proxy checks; planner and Seerr watchlist reader in Features/Seerr/Services; the task in Features/Seerr/Tasks under the …ScheduledTasks namespace; registered in SeerrServiceRegistration. Differences from upstream: cancellation reaches every Seerr call of the removal task and is not logged as an error; the rule that hides the two re-add rows runs inside the admin page’s dependency pass; the admin description of the requested-media switch and the docs use the new names and say what the code does (two found bugs filed upstream-side). Contract additions (1 route, 1 action, 1 registration) are in the separate contract commit; tests/fixtures/admin-config-baseline.json gains the new control and its default, as docs/rewrite/admin-config.md prescribes for a schema change.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist.* and p8-watchlist-admin.* (real Seerr 3.5.1)"
@@ -332,7 +332,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "6fa91b452af67198e81d9ea7ac66bad5053bdbea"
+        "8442308771655d311195ad3da32cb2678d43928b"
       ],
       "notes": "The same browser-changes job and condition. The path filter also counts client/, css/ and scripts/client*, where this tree’s web files are built from; upstream’s filter names only the built folders."
     },
@@ -361,7 +361,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "414c1b4519b5e3055c41dbabac14134870d28ed8"
+        "f61aba6763b9375138e0c7bee4ef0155712c7f1e"
       ],
       "notes": "The same route-table row in Shared/SpoilerGuard/SpoilerFieldStripFilter.cs, upstream’s test, docs sentence and coverage-matrix note. Checked against the real Home Screen Sections 3.0.4.0 plugin on the lab, not only by action name.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p4-spoiler-hss.*"
@@ -390,7 +390,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "8f4194195b81ad930751b7d0b4cf62ce4530d6b5"
+        "f824bde56ea53f1071837d21612370849d89b88f"
       ],
       "notes": "The same 8px mouse-drag guard on the studio, network and genre tile rows (client/src/features/seerr/recommendations/recommendations-render.ts), with upstream’s three tests. Added a test that media rows are not guarded, since the rewrite builds all rows from one shell.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p5-recommendations-drag.*"
@@ -418,10 +418,83 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "06fb4f81d6ce3d278cd07753f4cad32c7cce06e8"
+        "df9e087381a35af00c26049ddc1dfea58dcc5913"
       ],
       "notes": "The same fallback in client/src/features/details-providers/media-info.ts: a selected version whose /tag-data source entry carries no streams reads the top-level streams. Upstream’s test, plus one that a selected version never borrows another version’s streams.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p6-audio-language.*"
+    },
+    {
+      "sha": "19cfe99a152195482d0bd95598f490e155e9810c",
+      "date": "2026-11-10T08:50:56+00:00",
+      "subject": "ci: Fix/code scanning alerts (#1036)",
+      "class": "security",
+      "features": [
+        "admin",
+        "details-providers",
+        "player"
+      ],
+      "issues": [
+        "#1036"
+      ],
+      "release": null,
+      "size": {
+        "files": 8,
+        "insertions": 704,
+        "deletions": 16
+      },
+      "paths": [
+        ".github/codeql/codeql-config.yml",
+        ".github/docs/requirements.in",
+        ".github/docs/requirements.txt",
+        ".github/workflows/dependency-review.yml",
+        ".github/workflows/docs.yml",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/elsewhere/reviews.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/pausescreen.js"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The three code-scanning fixes in the rewrite’s files: the Custom Tabs snippet escaper also escapes quotes (admin/config/sections/pages.ts), review HTML is stripped until no tag is left (details-providers/review-domain.ts), and pause-screen image URLs encode ids and the image tag (player/pausescreen.ts). Upstream added no tests; three are added here and fail before the change. The CI part (CodeQL query filters, hash-pinned docs requirements, licence allow-list) applies as is. No lab comparison: none of the three changes what a user sees with ordinary data.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p9-code-scanning.tests-before.txt"
+    },
+    {
+      "sha": "b1919a258b327d2b2f6b541ed8434b523c100a30",
+      "date": "2026-11-10T08:52:05+00:00",
+      "subject": "ci(regression): run the browser suite as one parallel job per Playwright project",
+      "class": "ci",
+      "features": [],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 2,
+        "insertions": 11,
+        "deletions": 4
+      },
+      "paths": [
+        ".github/workflows/regression.yml",
+        "tests/run.py"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
+    },
+    {
+      "sha": "0586df7979b3d1f400357ba6efd4b1c2f61735fa",
+      "date": "2026-11-10T09:10:32+00:00",
+      "subject": "docs(readme): add test badges and icons, recolor badge row",
+      "class": "docs",
+      "features": [],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 1,
+        "insertions": 10,
+        "deletions": 3
+      },
+      "paths": [
+        "README.md"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
     }
   ]
 }
