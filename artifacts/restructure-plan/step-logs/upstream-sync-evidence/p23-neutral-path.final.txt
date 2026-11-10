@@ -1,0 +1,5 @@
+# je12 browse '#/home'  --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p23-neutral-path.mjs
+# build: deployed e75f5c34 (dll 9afa668b9da534d4); exit 0
+SCRIPT {"mkv":{"series":"13 Reasons Why","guarded":true,"episode":"S1E2","name":"Season 1, Episode 2","container":"mkv","canDownload":true,"itemPage":{"path":"/13 Reasons Why S01E02.mkv","webFileName":"13 Reasons Why S01E02.mkv"},"downloadAll":{"path":"/13 Reasons Why S01E02.mkv","webFileName":"13 Reasons Why S01E02.mkv"}},"mp4":{"series":"Oswald","guarded":true,"episode":"S1E3","name":"Season 1, Episode 3","container":"mov,mp4,m4a,3gp,3g2,mj2","canDownload":true,"itemPage":{"path":"/Oswald S01E03.mp4","webFileName":"Oswald S01E03.mp4"},"downloadAll":{"path":"/Oswald S01E03.mp4","webFileName":"Oswald S01E03.mp4"}},"menuDownload":{"pageErrors":[],"downloads":["a download started"]}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/details?id=5be5e4c23818869253296dd4cc04013d

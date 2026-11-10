@@ -1,0 +1,23 @@
+# je12 smoke on the final tree, against a baseline recorded by je12 smoke --record from a clean build of the main line it sits on
+# baseline build: deployed 6525f45d8612 (dll a8e2eee31c8c0fbd) to http://172.29.90.3:8096: restart 4s, total 18s
+# baseline run:   smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 35s; details /home/jake/.local/share/je12/state/je125ce284-smoke.json
+# final build:    deployed e75f5c34 (dll 9afa668b9da534d4) to http://172.29.90.3:8096: restart 4s, total 17s
+page admin           ok      14 tabs; Media Tags section 16 tabs (2.0s)
+page settings        ok      panel open, 24 tabs (2.3s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (2.1s)
+page poster          ok      51/100 cards tagged (1.9s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 72 JE elements (1.8s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (3.2s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.8s)
+page catchup         ok      Catch Up tab rendered (1.4s)
+page seerr           ok      5 Seerr cards (1.7s)
+page player          ok      playing 1.1s; OSD rating present (2.8s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 474 paths, 180 under /JellyfinEnhanced
+bundle wire          ok      br 200 534163B 304:yes, gzip 200 648062B 304:yes, identity 200 2396755B 304:yes; decoded bodies identical
+server log           ok      168 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 35s; details /home/jake/.local/share/je12/state/je125ce284-smoke.json

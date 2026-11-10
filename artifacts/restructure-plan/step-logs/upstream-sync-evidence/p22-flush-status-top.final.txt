@@ -1,0 +1,5 @@
+# je12 browse '#/home' --width 420 --height 900 --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p22-flush-status-top.mjs
+# build: deployed e75f5c34 (dll 9afa668b9da534d4); exit 0
+SCRIPT {"series":"13 Reasons Why","unwatched":49,"flush":{"status":"Just Added","edge":"flush","slot":"tc","cardWidth":150.2,"tagWidth":92.8,"badge":"49","gapBesideTheBadge":91.1,"tagTop":0,"badgeBottom":29.5,"tagCoversTheBadge":true,"tagLayerZIndex":"3","tagHidden":false},"tight":{"status":"Just Added","edge":"tight","slot":"tc","cardWidth":150.2,"tagWidth":80.7,"badge":"49","gapBesideTheBadge":91.1,"tagTop":3,"badgeBottom":29.5,"tagCoversTheBadge":false,"tagLayerZIndex":"0","tagHidden":false}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/search?query=13%20Reasons%20Why

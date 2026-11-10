@@ -1,0 +1,32 @@
+# port 23 (upstream bcd6574a): its tests on the tree before the port (67983e50 plus the test file only)
+# 1. je12 test --dotnet  -> the test project does not compile:
+tests/backend/Features/SpoilerGuard/PrivacyFieldFilterTests.cs(122,44): error CS0117: 'SpoilerFieldStripFilter' does not contain a definition for 'NeutralPath'
+# 2. with the one test that calls NeutralPath directly set aside (#if), je12 test --dotnet spoiler-guard:
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.GuardedSeriesAndMovieKeepExternalLinksButNotTheOtherAuxiliaryFields(kind: "Series", isSeries: True, controller: "Items", action: "GetItems", replaceTitle: False, stripOverview: True) [16 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.GuardedSeriesAndMovieKeepExternalLinksButNotTheOtherAuxiliaryFields(kind: "Series", isSeries: True, controller: "UserLibrary", action: "GetItemLegacy", replaceTitle: True, stripOverview: True) [7 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.GuardedSeriesAndMovieKeepExternalLinksButNotTheOtherAuxiliaryFields(kind: "Movie", isSeries: False, controller: "UserLibrary", action: "GetItem", replaceTitle: True, stripOverview: False) [8 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.GuardedSeriesAndMovieKeepExternalLinksButNotTheOtherAuxiliaryFields(kind: "Series", isSeries: True, controller: "UserLibrary", action: "GetItem", replaceTitle: True, stripOverview: False) [6 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.GuardedSeriesAndMovieKeepExternalLinksButNotTheOtherAuxiliaryFields(kind: "Movie", isSeries: False, controller: "UserLibrary", action: "GetItemLegacy", replaceTitle: True, stripOverview: True) [9 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.GuardedSeriesAndMovieKeepExternalLinksButNotTheOtherAuxiliaryFields(kind: "Movie", isSeries: False, controller: "Items", action: "GetItems", replaceTitle: False, stripOverview: True) [10 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.AGuardedEpisodeLeavesTheFilterWithAFileNameWebCanDownloadUnder(controller: "TvShows", action: "GetEpisodes", container: "mkv,webm", path: "/media/Show/Show - S02E03 - Secret ending.WEBM", fileName: "Show S02E03.webm") [7 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.AGuardedEpisodeLeavesTheFilterWithAFileNameWebCanDownloadUnder(controller: "UserLibrary", action: "GetItem", container: null, path: "/media/Show/Show.S02E03.Secret.Ending", fileName: "Show S02E03") [6 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.AGuardedEpisodeLeavesTheFilterWithAFileNameWebCanDownloadUnder(controller: "UserLibrary", action: "GetItem", container: "mov,mp4,m4a,3gp,3g2,mj2", path: "/media/Show/Show.S02E03.Secret.Ending", fileName: "Show S02E03.mov") [6 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.AGuardedEpisodeLeavesTheFilterWithAFileNameWebCanDownloadUnder(controller: "TvShows", action: "GetEpisodes", container: "mkv", path: "/media/Show/Show - S02E03 - Secret ending.mkv", fileName: "Show S02E03.mkv") [5 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.AGuardedEpisodeLeavesTheFilterWithAFileNameWebCanDownloadUnder(controller: "UserLibrary", action: "GetItem", container: "mkv", path: "/media/Show/Show - S02E03 - Secret ending.mkv", fileName: "Show S02E03.mkv") [5 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.AGuardedEpisodeLeavesTheFilterWithAFileNameWebCanDownloadUnder(controller: "UserLibrary", action: "GetItem", container: "mov,mp4,m4a,3gp,3g2,mj2", path: "/media/Show/Show - S02E03 - Secret ending.mp4", fileName: "Show S02E03.mp4") [7 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.EpisodeSeasonAndExtraExternalLinksStayStripped(kind: "Trailer", isExtra: True) [7 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.EpisodeSeasonAndExtraExternalLinksStayStripped(kind: "Episode", isExtra: False) [5 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.EpisodeSeasonAndExtraExternalLinksStayStripped(kind: "Season", isExtra: False) [6 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.EpisodeSeasonAndExtraExternalLinksStayStripped(kind: "Video", isExtra: True) [6 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.HomeScreenSectionsRowsStripGuardedUnwatchedEpisodes [8 ms]
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.LazyLatestMediaIsMaterializedSoSerializationCannotRecreateUnstrippedItems [14 ms]
+Failed!  - Failed:    18, Passed:   288, Skipped:     0, Total:   306, Duration: 5 s - JE.Tests.dll (net10.0)
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.AGuardedEpisodeLeavesTheFilterWithAFileNameWebCanDownloadUnder(controller: "UserLibrary", action: "GetItem", container: "mkv", path: "/media/Show/Show - S02E03 - Secret ending.mkv", fileName: "Show S02E03.mkv") [5 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+--
+  Failed JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.LazyLatestMediaIsMaterializedSoSerializationCannotRecreateUnstrippedItems [14 ms]
+  Error Message:
+   Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+[0]: Item:  BaseItemDto { AirDays = null, AirsAfterSeasonNumber = null, AirsBeforeEpisodeNumber = null, AirsBeforeSeasonNumber = null, AirTime = null, ··· }

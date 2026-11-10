@@ -1,0 +1,37 @@
+# port 24 (upstream 57567775): its tests on the tree before the port (e00ee737 plus the test files only)
+# 1. node --test <file> (TZ=UTC), the four files with new or changed tests:
+== tests/frontend/features/media-tags/admin/features-admin-tags-page-groups.test.mjs
+✖ Groups › Rating: the five further MDBList sources are offered after the first nine and save in the order chosen (256.6787ms)
+ℹ fail 1
+ℹ pass 5
+ℹ tests 6
+== tests/frontend/bootstrap/bootstrap-tag-group-editor.test.mjs
+ℹ fail 1
+ℹ pass 31
+ℹ tests 32
+✖ the five further MDBList sources can be chosen in the hub, and the preview draws each with a sample score (58.021213ms)
+== tests/frontend/features/media-tags/features-tag-styles-editor.test.mjs
+✖ all source labels use their own logo with the bundle and readable names without it (16.475274ms)
+ℹ fail 1
+ℹ pass 18
+ℹ tests 19
+== tests/frontend/features/media-tags/features-rating-sources.test.mjs
+ℹ fail 2
+ℹ pass 7
+ℹ tests 9
+✖ the five further MDBList sources draw on their own scales with their names, colours and bundled logos (10.022487ms)
+✖ the further sources compare on the scale of ten, are held to their own maximum, and load their bundled image (6.877328ms)
+# 2. python3 -m unittest tests/inventory/test_poster_assets.py:
+FAIL: test_complete_build_emits_source_logos_and_records_them_in_manifest (tests.inventory.test_poster_assets.RatingSourceAssetsTests.test_complete_build_emits_source_logos_and_records_them_in_manifest)
+AssertionError: Items in the second set but not the first:
+Ran 2 tests in 0.007s
+FAILED (failures=1)
+# 3. je12 test --dotnet media-tags -> the test project does not compile:
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(55,108): error CS0117: 'TagSourceRatings' does not contain a definition for 'MetacriticUser'
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(55,130): error CS0117: 'TagSourceRatings' does not contain a definition for 'RogerEbert'
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(55,148): error CS0117: 'TagSourceRatings' does not contain a definition for 'Mdblist'
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(55,75): error CS0117: 'TagSourceRatings' does not contain a definition for 'MyAnimeList'
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(55,94): error CS0117: 'TagSourceRatings' does not contain a definition for 'AniList'
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(67,108): error CS0117: 'TagSourceRatings' does not contain a definition for 'MetacriticUser'
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(67,74): error CS0117: 'TagSourceRatings' does not contain a definition for 'MyAnimeList'
+tests/backend/Features/MediaTags/PosterTags/RatingSourceTests.cs(67,92): error CS0117: 'TagSourceRatings' does not contain a definition for 'RogerEbert'

@@ -1,0 +1,21 @@
+# je12 browse '#/home'  --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p24-rating-sources.mjs
+# build: deployed upstream-5756777576d2 (dll 17f25c3c314da117); exit 0
+SCRIPT {"webChips":{"offered":["community","critic","imdb","tmdb","rtCritic","rtAudience","metacritic","letterboxd","trakt","myAnimeList","aniList","metacriticUser","rogerEbert","mdblist"],"accepted":["imdb","myAnimeList","aniList","metacriticUser","rogerEbert","mdblist"],"chips":[{"id":"imdb","label":"IMDb: 8.1","logo":"mdblist-logos/imdb.png","served":"200 image/png","colour":"#f5c518"},{"id":"myAnimeList","label":"MyAnimeList: 8.4","logo":"mdblist-logos/myanimelist.png","served":"200 image/png","colour":"#2e51a2"},{"id":"aniList","label":"AniList: 82%","logo":"mdblist-logos/anilist.png","served":"200 image/png","colour":"#02a9ff"},{"id":"metacriticUser","label":"Metacritic user: 7.9","logo":"mdblist-logos/metacritic_audience.png","served":"200 image/png","colour":"#00ce7a"},{"id":"rogerEbert","label":"Roger Ebert: 3.5","logo":"mdblist-logos/rogerebert.png","served":"200 image/png","colour":"#e8a33d"},{"id":"mdblist","label":"MDBList: 78%","logo":"mdblist-logos/master.png","served":"200 image/png","colour":"#4aa3df"}]},"server":{"save":200,"stored":["mdblist","rogerEbert","imdb"],"publicConfig":["mdblist","rogerEbert","imdb"]},"adminPage":{"sourceRows":["[x] mdblist = MDBList","[x] rogerEbert = Roger Ebert","[x] imdb = IMDb","[ ] community = Community","[ ] critic = Critic","[ ] tmdb = TMDb","[ ] rtCritic = RT critic","[ ] rtAudience = RT audience","[ ] metacritic = Metacritic","[ ] letterboxd = Letterboxd","[ ] trakt = Trakt","[ ] myAnimeList = MyAnimeList","[ ] aniList = AniList","[ ] metacriticUser = Metacritic user"],"tagStyleLabels":["imdb 8.1 (logo)","tmdb 81% (logo)","rtCritic 92% (logo)","rtAudience 88% (logo)","metacritic 74 (logo)","letterboxd 4.1 (logo)","trakt 85% (logo)","myAnimeList 8.4 (logo)","aniList 82% (logo)","metacriticUser 7.9 (logo)","rogerEbert 3.5 (logo)","mdblist 78% (logo)"]},"serverRestored":true,"userHub":{"offered":["imdb","community","critic","tmdb","rtCritic","rtAudience","metacritic","letterboxd","trakt","myAnimeList","aniList","metacriticUser","rogerEbert","mdblist"],"ticked":["myAnimeList","aniList","metacriticUser","rogerEbert","mdblist"],"savedSources":["imdb","myAnimeList","aniList","metacriticUser","rogerEbert","mdblist"],"moviePreview":["imdb 8.1","myAnimeList 8.4","aniList 82%","metacriticUser 7.9","rogerEbert 3.5","mdblist 78%"]}}
+CONSOLE Translation key is missing from dictionary: url
+CONSOLE Translation key is missing from dictionary: maxFileSize / (1024 * 1024)
+CONSOLE Translation key is missing from dictionary: img.width
+CONSOLE Translation key is missing from dictionary: img.height
+CONSOLE Translation key is missing from dictionary: error || 'Upload failed'
+CONSOLE Translation key is missing from dictionary: error.message || 'Upload error'
+CONSOLE Translation key is missing from dictionary: error || 'Delete failed'
+CONSOLE Translation key is missing from dictionary: err.message || 'Delete error'
+CONSOLE Translation key is missing from dictionary: baseName
+CONSOLE Translation key is missing from dictionary: code.split('-')[1]
+CONSOLE Translation key is missing from dictionary: index + 1
+CONSOLE Translation key is missing from dictionary: trimmedLine
+CONSOLE Translation key is missing from dictionary: invalidLines.join('\n')
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://api.github.com/repos/n00bcodr/Jellyfin-Enhanced/contents/Jellyfin.Plugin.JellyfinEnhanced/js/locales
+URL /web/index.html#/home

@@ -1,0 +1,11 @@
+# port 27 (upstream 8d91169c): its tests on the tree before the port (02e39cf5 plus the test files only)
+# 1. node --test tests/frontend/features/media-tags/features-status-tags-finale-parity.test.mjs (TZ=UTC):
+✖ a fully watched season hides New Episode too, and only the card's own played check counts (18.443141ms)
+ℹ fail 2
+ℹ pass 24
+ℹ tests 26
+✖ New Episode is not shown on a series the viewer has watched in full (21.076864ms)
+#    both fail at the played card's assertion: Expected "actual" to be strictly unequal to: 'newEpisode'
+# 2. je12 test --dotnet media-tags -> the test project does not compile:
+tests/backend/Features/MediaTags/PosterTags/PosterTokenTests.cs(113,39): error CS0117: 'PosterTagVariantFlags' does not contain a definition for 'WatchedAll'
+tests/backend/Features/MediaTags/PosterTags/PosterTokenTests.cs(114,116): error CS0117: 'PosterTagVariantFlags' does not contain a definition for 'WatchedAll'

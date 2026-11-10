@@ -1,0 +1,13 @@
+# Web rule (statustags.js) against native rule (StatusRules.cs) on the fixed-clock Status fixtures, after port 25
+# (four fixtures more than before it: binge-ready, binge-ready-three-days-apart, binge-ready-four-days-apart-is-a-finale,
+#  binge-ready-needs-milestones). Node 26.13.0 (ICU 78.3, CLDR 48, Unicode 17, the versions the README names).
+$ TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node tests/poster/parity/run.mjs --offline
+301 profiles (1 real users), 388 synthetic entries, 14 synthetic review keys
+Compact vocabulary: 18 web/native fixtures match.
+Status web fixtures: 247 passed
+Status native/web parity: 247 fixtures, 0 differences
+names: 115960 codes, 0 mismatches
+casing: 30794 strings, 0 mismatches
+colours: 17 posters, 0 mismatches
+Total differences: 0
+exit 0

@@ -1,0 +1,7 @@
+# je12 browse '#/home'  --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p25-binge-ready.mjs
+# build: deployed e75f5c34 (dll 9afa668b9da534d4); exit 0
+SCRIPT {"series":"13 Reasons Why","finalEpisode":"S4E10 aired yesterday","oneDrop":{"premiereDaysBeforeTheFinalEpisode":2,"key":"binge_ready","text":"Binge Ready","libraryLatestEpisode":"S4E10"},"weekly":{"premiereDaysBeforeTheFinalEpisode":60,"key":"series_finale","text":"Series Finale","libraryLatestEpisode":"S4E10"},"tagStyles":{"statusLabels":22,"bingeReady":true,"seriesFinale":true}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

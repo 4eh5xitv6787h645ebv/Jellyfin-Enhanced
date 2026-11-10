@@ -1,0 +1,5 @@
+# je12 browse '#/home'  --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p27-new-episode-watched.mjs
+# build: deployed upstream-8d91169c90e8 (dll 7856fc43ec540735); exit 0
+SCRIPT {"series":"The Adventures of Paddington","episodes":66,"notWatched":{"jellyfinSaysPlayed":false,"jellyfinIndicator":"unwatched count 66","statusBadge":"New Episode"},"watchedInFull":{"jellyfinSaysPlayed":true,"jellyfinIndicator":"played check","statusBadge":null}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/search?query=Adventures%20of%20Paddington

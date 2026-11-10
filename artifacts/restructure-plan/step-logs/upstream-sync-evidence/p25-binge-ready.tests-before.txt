@@ -1,0 +1,11 @@
+# port 25 (upstream 910d1da4): its tests on the tree before the port (8465f367 plus the test files only)
+# 1. node --test tests/frontend/features/media-tags/features-status-tags-finale-parity.test.mjs (TZ=UTC):
+✖ an ended show released in one drop is binge ready, a weekly one has a series finale (11.347366ms)
+✖ Binge Ready is the series card only, up to the three-day limit, and needs a premiere date (9.222267ms)
+ℹ fail 2
+ℹ pass 22
+ℹ tests 24
+# 2. je12 test --dotnet media-tags (dotnet part):
+  Failed JE.Tests.Features.MediaTags.StatusCompletionProofTests.BingeReadyReachesThreeDaysAndNeedsAPremiereDate(premiereDaysAgo: 5, expected: "binge_ready") [1 ms]
+  Failed JE.Tests.Features.MediaTags.StatusCompletionProofTests.AnEndedShowReleasedInOneDropIsBingeReady(premiereDaysAgo: 3, expected: "binge_ready") [< 1 ms]
+Failed!  - Failed:     2, Passed:  1854, Skipped:     0, Total:  1856, Duration: 29 s - JE.Tests.dll (net10.0)

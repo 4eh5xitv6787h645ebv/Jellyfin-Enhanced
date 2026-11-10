@@ -1,0 +1,37 @@
+# port 22 (upstream 83b557cc): the new browser tests on the tree before the port (31d8faec, built js/ outputs as committed)
+# JE_BROWSER_PORT=<free> npx playwright test --config tests/browser/playwright.config.cjs tests/browser/flush-edges.spec.cjs --project=chromium -g 'status tag'
+
+Running 2 tests using 2 workers
+
+  ✓  1 [chromium] › tests/browser/flush-edges.spec.cjs:98:1 › only a Flush row led by a status tag rides over the count badge (276ms)
+  ✘  2 [chromium] › tests/browser/flush-edges.spec.cjs:88:1 › a Flush status tag too wide for the gap stays at the top edge, over the count badge (222ms)
+
+
+  1) [chromium] › tests/browser/flush-edges.spec.cjs:88:1 › a Flush status tag too wide for the gap stays at the top edge, over the count badge 
+
+    Error: expect(received).toBeCloseTo(expected, precision)
+
+    Expected: 0
+    Received: 34
+
+    Expected precision:    2
+    Expected difference: < 0.005
+    Received difference:   34
+
+      90 |   // 170px of a 180px card: wider than the gap the 30px count badge leaves.
+      91 |   const flush=await topCentreStatus(page,'flush',['status']);
+    > 92 |   expect(flush.top).toBeCloseTo(0,2);
+         |                     ^
+      93 |   expect(flush.hidden).toBe(false);
+      94 |   expect(flush.overBadge).toBe(true);
+      95 |   expect(flush.zIndex).toBe('3');
+        at /home/jake/projects/je-upstream-auto/tests/browser/flush-edges.spec.cjs:92:21
+
+
+
+
+
+
+  1 failed
+    [chromium] › tests/browser/flush-edges.spec.cjs:88:1 › a Flush status tag too wide for the gap stays at the top edge, over the count badge 
+  1 passed (1.0s)

@@ -1,0 +1,8 @@
+# je12 browse '#/home'  --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p24-rating-sources.mjs
+# build: deployed e00ee737 (dll aed758b2f9118b06); exit 0
+SCRIPT {"webChips":{"offered":["community","critic","imdb","tmdb","rtCritic","rtAudience","metacritic","letterboxd","trakt"],"accepted":["imdb"],"chips":[{"id":"imdb","label":"IMDb: 8.1","logo":"mdblist-logos/imdb.png","served":"200 image/png","colour":"#f5c518"}]},"server":{"save":400,"publicConfig":["community","critic"]},"adminPage":{"sourceRows":["[x] community = Community","[x] critic = Critic","[ ] imdb = IMDb","[ ] tmdb = TMDb","[ ] rtCritic = RT critic","[ ] rtAudience = RT audience","[ ] metacritic = Metacritic","[ ] letterboxd = Letterboxd","[ ] trakt = Trakt"],"tagStyleLabels":["imdb 8.1 (logo)","tmdb 81% (logo)","rtCritic 92% (logo)","rtAudience 88% (logo)","metacritic 74 (logo)","letterboxd 4.1 (logo)","trakt 85% (logo)"]},"serverRestored":true,"userHub":{"offered":["imdb","community","critic","tmdb","rtCritic","rtAudience","metacritic","letterboxd","trakt"],"ticked":[],"savedSources":["imdb"],"moviePreview":["imdb 8.1"]}}
+CONSOLE Failed to load resource: the server responded with a status of 400 (Bad Request) /JellyfinEnhanced/admin/configuration
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/maintainerr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home
