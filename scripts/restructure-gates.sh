@@ -9,7 +9,8 @@
 #   scripts/restructure-gates.sh r <pattern>     no stale references: fails if `git grep -nE <pattern>` matches outside artifacts/
 #   scripts/restructure-gates.sh h               poster harness builds + gen-resolution-data --check
 #   scripts/restructure-gates.sh inv             generate.py --check + route list == baselines/inventory-routes.txt (never regenerates)
-#   scripts/restructure-gates.sh tool            python3 tests/run.py tooling + mutation/history path check vs baselines/mutation-check.txt
+#   scripts/restructure-gates.sh tool            python3 tests/run.py tooling + no AI attribution in commits since the base
+#                                                + mutation/history path check vs baselines/mutation-check.txt
 #   scripts/restructure-gates.sh bundle <out.js> raw bytes of the in-process GET /JellyfinEnhanced/bundle.js; prints nothing on stdout
 #   scripts/restructure-gates.sh bundle-hash <f> prints `<stable sha256> <comment-stripped sha256>` of a bundle file
 #   scripts/restructure-gates.sh size            served bundle raw and gzip -9 bytes vs client/bundle-budget.json (ratchet)
@@ -135,6 +136,31 @@ inventory_routes() {
   python3 -c "import json;[print(r['verb'],r['path']) for r in sorted(json.load(open('tests/docs/production-inventory.json'))['routes'],key=lambda r:(r['path'],r['verb']))]"
 }
 
+# The commits a change owns start after this: JE_BASE_REF, else restructure/integration, else main (the trial
+# checkouts have only main); HEAD itself when none exists.
+change_base() {
+  local ref
+  for ref in ${JE_BASE_REF:-} restructure/integration main; do
+    if git rev-parse -q --verify "$ref^{commit}" >/dev/null; then git merge-base HEAD "$ref"; return; fi
+  done
+  git rev-parse HEAD
+}
+
+# No AI attribution in commit messages (AGENTS.md): Co-Authored-By trailers or "Generated with/by" lines naming a tool.
+attribution_check() (
+  set -e
+  local base c hits=0 pat
+  base=$(change_base)
+  pat='^[[:space:]]*co-authored-by:.*(claude|anthropic|codex|openai|chatgpt|copilot|gemini|cursor|devin|aider)|generated (with|by|using) .{0,40}(claude|codex|chatgpt|gpt-|copilot|gemini|cursor|openai|anthropic|\bai\b)'
+  for c in $(git rev-list "$base..HEAD"); do
+    while IFS= read -r line; do
+      echo "  $(git rev-parse --short "$c"): $line" >&2
+      hits=$((hits + 1))
+    done < <(git log -1 --format=%B "$c" | grep -iE "$pat" || true)
+  done
+  if [ "$hits" -gt 0 ]; then echo "TOOL: $hits AI-attribution line(s) in $(git rev-parse --short "$base")..HEAD (above); reword those commits" >&2; false; fi
+)
+
 gate_inv() (
   set -e
   step "INV: generate.py --check"
@@ -147,6 +173,8 @@ gate_tool() (
   set -e
   step "TOOL: python3 tests/run.py tooling"
   python3 tests/run.py tooling
+  step "TOOL: no AI attribution in commit messages since the base"
+  attribution_check
   step "TOOL: mutation/history path check vs $BASELINES/mutation-check.txt"
   local out new
   out=$(mutation_check)
@@ -458,8 +486,7 @@ gate_quick() (
   set -e
   no_snapshot_updates
   local base changed feats dir rc=0 new
-  base=${JE_BASE_REF:+$(git merge-base HEAD "$JE_BASE_REF")}
-  base=${base:-$(git merge-base HEAD restructure/integration 2>/dev/null || git rev-parse HEAD)}
+  base=$(change_base)
   changed=$( { git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)
   if [ $# -gt 0 ]; then feats="$*"; else feats=$(printf '%s\n' "$changed" | quick_map features); fi
   step "QUICK: features ${feats:-(none; architecture and guards only)}"
@@ -502,7 +529,7 @@ gate_image() (
   echo "image: $tag = $digest" >&2
 )
 
-usage() { sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
