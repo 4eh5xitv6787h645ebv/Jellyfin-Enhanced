@@ -134,11 +134,12 @@ def load_snapshot(seconds=2.0):
 
 
 class Proc:
-    __slots__ = ('pid', 'ppid', 'comm', 'argv', 'start', 'first', 'last', 'self', 'children', 'series', 'env', 'alive',
+    __slots__ = ('pid', 'ppid', 'ppid0', 'comm', 'argv', 'start', 'first', 'last', 'self', 'children', 'series', 'env', 'alive',
                  'execs')
 
     def __init__(self, pid, st, now):
         self.pid, self.comm, self.ppid, self.start = pid, st[0], st[1], st[6]
+        self.ppid0 = st[1]           # the parent it had when first seen (an orphan is re-parented here later)
         self.argv, self.first, self.last, self.self, self.children = [], now, now, 0, 0
         self.series, self.env, self.alive, self.execs = [], {}, True, []
 
@@ -334,7 +335,7 @@ def one_run(cmd, cwd, out, args, label):
         loaded_reasons.append(f'foreign CPU {foreign:.2f} cores during the run > {args.max_foreign}')
     procs = []
     for p in sampler.procs.values():
-        procs.append({'pid': p.pid, 'ppid': p.ppid, 'comm': p.comm, 'argv': p.argv[:40], 'start': p.start,
+        procs.append({'pid': p.pid, 'ppid': p.ppid, 'ppid0': p.ppid0, 'comm': p.comm, 'argv': p.argv[:40], 'start': p.start,
                       'first': p.first, 'last': p.last, 'self': p.self / HZ, 'children': p.children / HZ,
                       'env': p.env, 'execs': p.execs, 'series': [(round(t, 3), c) for t, c in p.series] if p.env or 'browser' in args.series else []})
     run = {'label': label, 'cmd': cmd, 'cwd': str(cwd), 'git': git(cwd, 'rev-parse', 'HEAD'),
@@ -369,7 +370,9 @@ def classify(argv, comm):
         return 'dotnet datacollector'
     if 'MSBuild.dll' in a and '/nodemode' in a:
         return 'dotnet msbuild node'
-    if 'VBCSCompiler' in a or 'csc.dll' in a:
+    if comm.startswith('npm'):
+        return 'npm'
+    if 'VBCSCompiler' in a or 'csc.dll' in a or base == 'csc' or comm == 'csc':
         return 'dotnet compiler'
     if base == 'dotnet' or comm == 'dotnet':
         if len(argv) > 1 and argv[1] in ('build', 'test', 'run', 'restore', 'exec'):
@@ -414,7 +417,7 @@ def analyse(run, out):
         by_pid.setdefault(p['pid'], []).append(p)
 
     def parent_of(p):
-        cands = [q for q in by_pid.get(p['ppid'], []) if q['start'] <= p['start'] + 0.05]
+        cands = [q for q in by_pid.get(p.get('ppid0', p['ppid']), []) if q['start'] <= p['start'] + 0.05]
         return max(cands, key=lambda q: q['start']) if cands else None
 
     for p in procs:
@@ -485,7 +488,9 @@ def analyse(run, out):
     for name, s in steps.items():
         ps = [p for p in procs if p['step'] == name]
         s['start'] = marker_time.get(name, min(p['start'] for p in ps))
-        s['end'] = max(p['last'] for p in ps)
+        # The step's subshells live as long as their caller needs them; the work is what they run.
+        work = [p for p in ps if p['cat'] != 'shell'] or ps
+        s['end'] = max(p['last'] for p in work)
         s['wall'] = max(0.0, s['end'] - s['start'])
     # Idle: ticks where our tree used less than 0.3 cores.
     t_end = t_start + run['wall']
