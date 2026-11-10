@@ -11,6 +11,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Assets;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
 {
@@ -96,7 +97,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                 return manifest;
             }
 
-            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ManifestResource)
+            using var stream = PackedResources.Open(Assembly.GetExecutingAssembly(), ManifestResource)
                 ?? throw new InvalidOperationException("Embedded component-script manifest js/component-scripts.json is missing.");
             var entries = JsonSerializer.Deserialize<string[]>(stream)
                 ?? throw new InvalidOperationException("js/component-scripts.json did not deserialize to a string array.");
@@ -252,7 +253,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
 
         private static string? ReadResource(Assembly assembly, string name)
         {
-            using var stream = assembly.GetManifestResourceStream(name);
+            using var stream = PackedResources.Open(assembly, name);
             if (stream == null) return null;
             using var reader = new StreamReader(stream, Encoding.UTF8);
             return reader.ReadToEnd();
@@ -288,7 +289,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
 
         private static JsonObject? ReadEmbeddedSourceMap(Assembly assembly, string path, string prefix = ResourcePrefix)
         {
-            using var stream = assembly.GetManifestResourceStream(prefix + path.Replace('/', '.') + ".map");
+            using var stream = PackedResources.Open(assembly, prefix + path.Replace('/', '.') + ".map");
             if (stream == null) return null;
             var map = JsonNode.Parse(stream) as JsonObject
                 ?? throw new InvalidDataException($"Invalid embedded source map for {path}.");
