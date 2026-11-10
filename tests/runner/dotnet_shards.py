@@ -29,6 +29,7 @@ recomputes the rates from one unsharded run's JSON and compares them with that r
 """
 import argparse
 import glob
+import math
 import json
 import os
 import re
@@ -177,7 +178,13 @@ def rates(merged_or_report, module_name):
     raise SystemExit(f'module {module_name} not in the coverage report')
 
 
+def coverlet_rate(rate):
+    """Coverlet writes a rate truncated to four decimal places (0.650379 -> 0.6503), not rounded."""
+    return math.floor(rate * 10000) / 10000
+
+
 def write_cobertura(path, line_rate, branch_rate, counts):
+    line_rate, branch_rate = coverlet_rate(line_rate), coverlet_rate(branch_rate)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         '<?xml version="1.0" encoding="utf-8"?>\n'
@@ -227,9 +234,10 @@ def self_check(run_dir):
     cob = sorted(glob.glob(str(Path(run_dir) / '**' / 'coverage.cobertura.xml'), recursive=True))[0]
     pkg = ET.parse(cob).getroot().find("./packages/package[@name='Jellyfin.Plugin.JellyfinEnhanced']")
     want = (float(pkg.get('line-rate')), float(pkg.get('branch-rate')))
-    print(json.dumps({'from_json': [lr, br], 'cobertura': want, 'counts': counts,
-                      'equal_to_4_places': [round(lr, 4) == round(want[0], 4), round(br, 4) == round(want[1], 4)]}))
-    return 0 if round(lr, 4) == round(want[0], 4) and round(br, 4) == round(want[1], 4) else 1
+    same = [coverlet_rate(lr) == want[0], coverlet_rate(br) == want[1]]
+    print(json.dumps({'from_json': [lr, br], 'as_coverlet_writes_them': [coverlet_rate(lr), coverlet_rate(br)],
+                      'cobertura': want, 'counts': counts, 'equal': same}))
+    return 0 if all(same) else 1
 
 
 def main():

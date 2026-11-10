@@ -69,7 +69,7 @@ class DotnetShardsTests(unittest.TestCase):
             lines = [c[0] for c in out.call_args_list if c[0]]
             self.assertEqual((3, 2), lines[0])
             xml = (res / 'merged/coverage.cobertura.xml').read_text()
-            self.assertIn('line-rate="0.6666666666666666"', xml)     # lines 1 and 2 of 3 covered by one shard or the other
+            self.assertIn('line-rate="0.6666"', xml)     # lines 1 and 2 of 3 covered by one shard or the other (coverlet truncates)
             self.assertIn('branch-rate="1.0"', xml)                  # each branch path covered by one shard
             trx(res / 'b' / 'b.trx', [('N.C.t1', 'Passed')])
             with self.assertRaises(SystemExit):
