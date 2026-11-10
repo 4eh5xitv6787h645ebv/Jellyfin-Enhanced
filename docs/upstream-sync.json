@@ -342,7 +342,9 @@
         "tests/docs/coverage-matrix.md"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "414c1b4519b5e3055c41dbabac14134870d28ed8"
+      ],
       "notes": "The same route-table row in Shared/SpoilerGuard/SpoilerFieldStripFilter.cs, upstream’s test, docs sentence and coverage-matrix note. Checked against the real Home Screen Sections 3.0.4.0 plugin on the lab, not only by action name.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p4-spoiler-hss.*"
     },
@@ -368,8 +370,10 @@
         "tests/docs/coverage-matrix.md",
         "tests/frontend/pages/pages-recommendations.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The same 8px mouse-drag guard on the studio, network and genre tile rows (client/src/features/seerr/recommendations/recommendations-render.ts), with upstream’s three tests. Added a test that media rows are not guarded, since the rewrite builds all rows from one shell.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p5-recommendations-drag.*"
     },
     {
       "sha": "c22870b2d666a243a3a1269a1fbf7e25c662b95b",
