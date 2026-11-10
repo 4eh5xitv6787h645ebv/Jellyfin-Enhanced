@@ -1,0 +1,5 @@
+$ je12 browse #/home --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-collection-languages.mjs
+# deployed: 19caa62e (dll 01b5f2550b5699cd); exit 0
+SCRIPT {"collection":"Aladdin Collection (lab)","members":["Aladdin [eng]","Aladdin and the King of Thieves [eng]"],"added":"The Wind Rises [eng,jpn]","collectionLanguagesWithTheAddedMember":["eng","jpn"],"collectionLanguagesAfterDeletingThatMember":["eng"],"followedTheDeletion":true}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

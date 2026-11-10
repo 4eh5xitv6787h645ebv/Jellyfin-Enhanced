@@ -1,0 +1,5 @@
+$ je12 browse #/home --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-collection-languages.mjs
+# deployed: upstream-0586df7979b3 (dll 4de9af4aded74297); exit 0
+SCRIPT {"collection":"Aladdin Collection (lab)","members":["Aladdin [eng]","Aladdin and the King of Thieves [eng]"],"added":"Whisper of the Heart [eng,jpn]","collectionLanguagesWithTheAddedMember":["eng","jpn"],"collectionLanguagesAfterDeletingThatMember":["eng"],"followedTheDeletion":true}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

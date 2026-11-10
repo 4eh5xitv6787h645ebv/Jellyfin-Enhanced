@@ -1,10 +1,11 @@
 # Upstream sync procedure
 
 For an agent that starts with this page only and has to bring the rewrite up to date with upstream
-(`n00bcodr/Jellyfin-Enhanced`). Codebase rules: [AGENTS.md](../AGENTS.md). Lab, test loop and gates: the je12 skill
-(`je12/SKILL.md` under `/home/jake/projects/je12-skill`; use its newest tag from a worktree, such as
-`/home/jake/projects/je12-skill-v232`; `je12` below is its `scripts/je12`). Never push and never contact upstream:
-the main line is published automatically when it moves, so land only what passed the gate.
+(`n00bcodr/Jellyfin-Enhanced`). Codebase rules: [AGENTS.md](../AGENTS.md). Lab, test loop and gates: the je12 skill;
+`je12` below is `/home/jake/projects/je12-skill-v232/je12/scripts/je12` (or a newer tagged worktree beside it), and
+`je12/SKILL.md` sits beside that `scripts/` folder. Never push and never contact upstream: the main line is published
+automatically when it moves, so land only what passed the gate. Servers only as labs from `je12 up`, one at a time,
+never a live Jellyfin, Seerr, Sonarr or Radarr; nothing heavy while `/home/jake/projects/.lenovo-quiet` exists.
 
 ## The run
 
@@ -23,9 +24,10 @@ the main line is published automatically when it moves, so land only what passed
    untouched and keep calling `je12 wait`.
 6. Land: `git -C /home/jake/projects/jellyfin-enhanced-v12-rewrite merge --ff-only sync/auto-<date>`. If the main
    line moved, rebase, `je12 regen`, gate again. If the main checkout has uncommitted changes, do not land.
-7. Whatever happened: `je12 down`; the step log (`artifacts/restructure-plan/step-logs/upstream-sync-<date>.md`,
-   `git add -f`: the gap, each entry's status, evidence, gate result) is part of what lands; after landing remove
-   the worktree and its branch; remove `/home/jake/projects/.je-upstream-sync-running`; report.
+7. Whatever happened: `je12 down`; the step log (`artifacts/restructure-plan/step-logs/upstream-sync-<date>.md`:
+   the gap, each entry's status, evidence, gate result) and its evidence files are part of what lands (`git add -f`,
+   the folder is ignored); after landing remove the worktree and its branch, otherwise leave both for the next run;
+   remove `/home/jake/projects/.je-upstream-sync-running`; report what landed, or what stopped it.
 
 ## Status: nothing stays `pending`
 
@@ -34,17 +36,19 @@ the main line is published automatically when it moves, so land only what passed
 | `ported` | Re-implemented here and proved, or applied as is. | `notes`: every difference from upstream. |
 | `already-present` | The rewrite already behaves this way (a test or lab run shows it). | `evidence`. |
 | `not-applicable` | No meaning here: Jellyfin 10.11 support, a file this tree generates or lacks. | `reason`. |
-| `deferred` | It applies but cannot be landed in this run. | `reason`, and `needs`. |
+| `deferred` | It applies but cannot be landed in this run. | `reason`, and `needs`. A later run leaves it until `needs` is met. |
 
 Housekeeping is ported, not parked. CI, dependency, translation and docs commits apply as is
 (`git show <sha> | git apply --3way`; give workflows only this tree has the same pins; client sources live in
-`client/`). A release is one last `chore(release)` commit: the version in `JellyfinEnhanced.csproj` and
-`manifest.json` copied from upstream, covering the version commit and the bot's manifest commit.
+`client/`). A release is one last `chore(release)` commit: the version in `JellyfinEnhanced.csproj` (`git grep` the
+old one for the rest) and `manifest.json` copied from upstream, covering the version commit and the bot's manifest
+commit.
 
 ## A port
 
 - **Behaviour, not text.** Code goes where AGENTS.md puts it. If upstream's change has a bug or a weaker pattern
-  than AGENTS.md allows, port the intent correctly, say so in `notes`, and file it with `je12 found-bug`.
+  than AGENTS.md allows (a cached-output version it did not bump, say), port the intent correctly, say so in `notes`,
+  and file it with `je12 found-bug`.
 - **What transfers.** C# files were moved, not rewritten: a hunk often applies after
   `sed 's#<old path>#<new path>#g'`. Upstream's tests load the built `js/` files by the same names. Client code is
   always re-implemented. A new setting needs its line in the What's New index and

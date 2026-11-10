@@ -1,0 +1,7 @@
+$ je12 browse #/home --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p3-toast-zero.mjs
+# deployed: 19caa62e (dll 01b5f2550b5699cd); exit 0
+SCRIPT {"saved0":{"TOAST_DURATION":0,"toastsShown":0},"saved10":{"TOAST_DURATION":10,"toastsShown":2},"saved4000":{"TOAST_DURATION":4000,"toastsShown":2},"previewTyped0":["Toasts are turned off (0 ms). Nothing will pop up."],"previewTyped50":["Example toast, disappears in 0.1s"],"restoredTo":1500}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+STORM 16x GET /JellyfinEnhanced/tag-cache/7ef882cd307344279240d0eca8333a9f
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced

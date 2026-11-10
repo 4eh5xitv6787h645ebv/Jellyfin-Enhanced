@@ -68,7 +68,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "d17ea5dca4083e0fb468fcf7f4341db9d960e2f7"
+        "d636336454a207c4ad1ce2c932b9652b580af2d8"
       ],
       "notes": "AssemblyVersion and FileVersion 12.15.0.0, as upstream main. docs/advanced/api.md names the same version."
     },
@@ -90,7 +90,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "d17ea5dca4083e0fb468fcf7f4341db9d960e2f7"
+        "d636336454a207c4ad1ce2c932b9652b580af2d8"
       ],
       "with": "6daf211855528072876d441e58713066605f32fa",
       "notes": "manifest.json is byte-identical to upstream’s at c22870b2. That includes the catalog entry for the Jellyfin 10.11 build of 12.15.0.0: it is release data about an artifact upstream published, not 10.11 code, and the catalog serves 10.11 servers from the same file. The rewrite builds for Jellyfin 12 only; nothing is built or published by this commit."
@@ -176,7 +176,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "cdc1dcf356d920ea2036f28ce1f67e7d1e6bb2cb"
+        "4dbcd596c3a80290a4607a403d17af22eb187e07"
       ],
       "notes": "Client: the same redraw of changed cards, in the rewrite’s pipeline modules (scan.ts, delta-sync.ts, queue.ts). Server: the same collection-member tracking, but TagCacheService.cs is capped and may not grow, so the index, its rules and GetCollectionLanguages live in the new partial TagCacheCollectionMembers.cs and the service keeps one-line call sites (4,124 to 4,088 lines; the allow-list entry is lowered to match). Upstream’s 11 node tests, 6 browser tests and 22 backend tests are translated unchanged in substance.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-tag-redraw.* and p7-collection-languages.*"
@@ -257,7 +257,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "b8398cff8baf3c4991c75658363bf7ef0bb35248"
+        "2dc0a0a00dfa0b3a158e6a99318b2bd0ac52632c"
       ],
       "notes": "The same six action pins in the nine workflows upstream changed, plus actions/setup-dotnet in rewrite-validation.yml, which only the rewrite has and which pinned the old commit."
     },
@@ -309,7 +309,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "850f42c87fdea2d4a0fa719292e5116868300a6f"
+        "aa5947ea9ab03cd067338eaed2abd1c43282f427"
       ],
       "notes": "Route POST jellyseerr/watchlist in JeSeerrController (Users partial) beside the GET, with the same [Authorize] and proxy checks; planner and Seerr watchlist reader in Features/Seerr/Services; the task in Features/Seerr/Tasks under the …ScheduledTasks namespace; registered in SeerrServiceRegistration. Differences from upstream: cancellation reaches every Seerr call of the removal task and is not logged as an error; the rule that hides the two re-add rows runs inside the admin page’s dependency pass; the admin description of the requested-media switch and the docs use the new names and say what the code does (two found bugs filed upstream-side). Contract additions (1 route, 1 action, 1 registration) are in the separate contract commit; tests/fixtures/admin-config-baseline.json gains the new control and its default, as docs/rewrite/admin-config.md prescribes for a schema change.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist.* and p8-watchlist-admin.* (real Seerr 3.5.1)"
@@ -332,7 +332,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "8442308771655d311195ad3da32cb2678d43928b"
+        "ac22e0a6393ca2aa406b25168233724e936f4544"
       ],
       "notes": "The same browser-changes job and condition. The path filter also counts client/, css/ and scripts/client*, where this tree’s web files are built from; upstream’s filter names only the built folders."
     },
@@ -454,7 +454,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "e76b6c11d8c3a81b52152fb181b34554801e1631"
+        "1f60ffd29817568507bb423b3821c39ed2dbf78c"
       ],
       "notes": "The three code-scanning fixes in the rewrite’s files: the Custom Tabs snippet escaper also escapes quotes (admin/config/sections/pages.ts), review HTML is stripped until no tag is left (details-providers/review-domain.ts), and pause-screen image URLs encode ids and the image tag (player/pausescreen.ts). Upstream added no tests; three are added here and fail before the change. The CI part (CodeQL query filters, hash-pinned docs requirements, licence allow-list) applies as is. No lab comparison: none of the three changes what a user sees with ordinary data.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p9-code-scanning.tests-before.txt"
@@ -478,7 +478,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "710e2b41fc0355f39296219e2e0df6fdbdecbcec"
+        "5b002a30848fef42d4b08ad5213d8caab864a135"
       ],
       "notes": "The same job matrix (one job per Playwright project, each installing only its browser) and `tests/run.py --project`. The rewrite’s runner keeps its jf12-only `--target`; a tooling test for the new option is added."
     },
@@ -500,7 +500,7 @@
       ],
       "status": "ported",
       "rewriteCommits": [
-        "c19c1407ca67e6b525061057eb6a15b173785386"
+        "d25914be38373281eba145830d5fda0a68180201"
       ],
       "notes": "The same badge changes. The three test-count badges carry this tree’s counts (699 browser, 3.3k backend, 3.9k frontend) instead of upstream’s, and the 10.11 download badge is not here because the rewrite’s README has none."
     }

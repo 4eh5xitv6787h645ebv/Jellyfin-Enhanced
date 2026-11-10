@@ -1,0 +1,12 @@
+$ je12 browse #/home --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p6-audio-language.mjs
+# deployed: 19caa62e (dll 01b5f2550b5699cd); exit 0
+SCRIPT {"movie":"101 Dalmatians II: Patch's London Adventure","versions":1,"jellyfinAudioStreams":["zho","dan","deu","eng","spa","fin","fra","isl","jpn","kor","nld","nor","por","por","swe","zho"],"shown":{"selectedVersion":"set","audioLanguages":["zho","dan","deu","eng","spa","fin","fra","isl","jpn","kor","nld","nor","por","swe"],"container":"Chinese, Danish, German, English, Spanish, Finnish, French, Icelandic, Japanese,"}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+URL /web/index.html#/details?id=0ff8461bed0a2658ec63487586efdbd3

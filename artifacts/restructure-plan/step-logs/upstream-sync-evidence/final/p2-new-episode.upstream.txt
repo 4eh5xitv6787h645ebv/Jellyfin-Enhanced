@@ -1,0 +1,5 @@
+$ je12 browse #/home --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p2-new-episode.mjs
+# deployed: upstream-0586df7979b3 (dll 4de9af4aded74297); exit 0
+SCRIPT {"addedAnHourAgoAiredLongAgo":"Just Added","airedTwoDaysAgoAddedLongAgo":"New Episode","episodes":["13 Reasons Why: Tape 1, Side A","13 Reasons Why: Tape 1, Side B"],"firstRead":[{"drawn":true,"status":"Just Added"},{"drawn":true,"status":"New Episode"}]}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/search?query=Tape%201%2C%20Side

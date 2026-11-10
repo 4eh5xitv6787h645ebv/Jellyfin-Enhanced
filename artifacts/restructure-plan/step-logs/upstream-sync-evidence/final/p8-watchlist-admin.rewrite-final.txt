@@ -1,0 +1,6 @@
+$ je12 browse #/home --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist-admin.mjs
+# deployed: HEAD (dll 01b5f2550b5699cd); exit 0
+SCRIPT {"groups":["Removing itemsauto_awesomeNew in v12.15.0.0"],"label":"When an item is removed from a watchlist","options":["jellyfin: Jellyfin decides: removed from Jellyfin → also removed from Seerr","seerr: Seerr decides: removed from Seerr → also removed from Jellyfin","both: Both stay in sync: a removal on either side is copied to the other","off: Never remove anything automatically"],"requestedMediaLabel":"Requested media goes on the requester's watchlist","saved":"jellyfin","rowsShown":{"jellyfin":{"dontReAdd":false,"days":false,"daysDescription":false},"seerr":{"dontReAdd":true,"days":true,"daysDescription":true},"both":{"dontReAdd":false,"days":false,"daysDescription":false},"off":{"dontReAdd":true,"days":true,"daysDescription":true},"jellyfinAfterAnotherToggle":{"dontReAdd":false,"days":false,"daysDescription":false}}}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/selfhst/svg/tmdb.svg
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/configurationpage?name=Jellyfin%20Enhanced
