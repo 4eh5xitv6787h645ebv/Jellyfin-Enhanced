@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 // Does another TypeScript checker agree with the one the gates use (the repository's TypeScript 6 `tsc`)?
 //
-//   node scripts/typecheck-agreement.mjs --checker tsc6='node node_modules/typescript/bin/tsc' \
+//   node scripts/typecheck-agreement.mjs --checker tsc6="node $PWD/node_modules/typescript/bin/tsc" \
 //        --checker ts7='node /path/ts7/bin/tsc' --checker tsrs='/path/tsc-rs' [--per-kind 6] [--jobs 4] [--out FILE]
+//   node scripts/typecheck-agreement.mjs --gate --sample 4 --seed <commit> --jobs 2 --checker tsc6=... --checker tsrs=...
+//        the `tool` gate's cheap form: the clean tree plus 4 of all the sites, drawn by the seed (so each commit
+//        tries others), and a failure only when the verdict or the file:line set differs (codes may differ: TypeScript
+//        7, and so tsc-rs, reports some TS2345 as TS2741 by design).
 //
 // 1. Copies client/ to a scratch directory and runs every checker on the clean tree (`-p <copy>/tsconfig.json
 //    --pretty false`): all must report nothing.
@@ -28,12 +32,15 @@ const ts = createRequire(import.meta.url)('typescript');
 
 const args = process.argv.slice(2);
 const checkers = [];
-let perKind = 6, jobs = 4, out = null;
+let perKind = 6, jobs = 4, out = null, sample = 0, seed = '', gate = false;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--checker') { const [name, ...cmd] = args[++i].split('='); checkers.push({ name, cmd: cmd.join('=').split(' ') }); }
   else if (args[i] === '--per-kind') perKind = Number(args[++i]);
   else if (args[i] === '--jobs') jobs = Number(args[++i]);
   else if (args[i] === '--out') out = args[++i];
+  else if (args[i] === '--sample') sample = Number(args[++i]);
+  else if (args[i] === '--seed') seed = args[++i];
+  else if (args[i] === '--gate') gate = true;
   else if (args[i] === '--list') checkers.push({ list: true });
   else throw new Error(`unknown argument ${args[i]}`);
 }
@@ -220,7 +227,17 @@ function pick(list) {
   const step = pool.length / Math.min(perKind, pool.length);
   return Array.from({ length: Math.min(perKind, pool.length) }, (_, i) => pool[Math.floor(i * step)]);
 }
-const mutations = Object.values(sites).flatMap(pick).map((m, i) => ({ id: i + 1, ...m }));
+function sampled(all) {
+  // A seeded draw over every site of every kind (mulberry32 over a hash of the seed), in a fixed order for a seed.
+  if (!sample) return Object.values(sites).flatMap(pick);
+  let h = 2166136261;
+  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+  const random = () => { h = (h + 0x6D2B79F5) >>> 0; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const pool = all.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  return pool.slice(0, sample);
+}
+const mutations = sampled(Object.values(sites).flat()).map((m, i) => ({ id: i + 1, ...m }));
 if (listOnly) {
   for (const [kind, list] of Object.entries(sites)) console.log(`${String(list.length).padStart(5)} sites, ${String(pick(list).length).padStart(2)} picked: ${kind}`);
   console.log(`${mutations.length} mutations`);
@@ -241,9 +258,14 @@ function parse(output, dir) {
 async function check(c, dir) {
   const started = performance.now();
   let output = '';
+  let failed = false;
   try { output = (await run(c.cmd[0], [...c.cmd.slice(1), '-p', join(dir, 'tsconfig.json'), '--pretty', 'false'], { cwd: dir, maxBuffer: 64 << 20 })).stdout; }
-  catch (e) { output = `${e.stdout ?? ''}${e.stderr ?? ''}`; }
-  return { diags: parse(output, dir), ms: performance.now() - started, raw: output.slice(0, 4000) };
+  catch (e) { output = `${e.stdout ?? ''}${e.stderr ?? ''}`; failed = true; }
+  const diags = parse(output, dir);
+  // A checker that fails without a single diagnostic did not check anything (a wrong path, a missing binary): that
+  // must never read as "no errors". (The commands run in the copy, so give them absolute paths.)
+  if (failed && !diags.length) throw new Error(`checker ${c.name} (${c.cmd.join(' ')}) failed without a diagnostic:\n${output.slice(0, 2000)}`);
+  return { diags, ms: performance.now() - started, raw: output.slice(0, 4000) };
 }
 const key = d => `${d.file}:${d.line} ${d.code}`;
 const fileLine = d => `${d.file}:${d.line}`;
@@ -312,4 +334,10 @@ if (out) {
   writeFileSync(`${out}.json`, JSON.stringify({ checkers, clean, mutations: results }, null, 1));
 }
 process.stdout.write(md);
-process.exitCode = disagreements.length || checkers.some(c => clean[c.name].diags.length) ? 1 : 0;
+// --gate fails on a different verdict or file:line set only; the default also fails on a different error code.
+const failing = gate ? disagreements.filter(d => { const r = results.find(x => x.id === d.id);
+  const a = r.results[authority].diags, b = r.results[d.checker].diags;
+  return (a.length > 0) !== (b.length > 0) || JSON.stringify([...new Set(a.map(fileLine))].sort()) !== JSON.stringify([...new Set(b.map(fileLine))].sort()); })
+  : disagreements;
+if (gate) console.error(`typecheck agreement: ${results.length} mutation(s) and the clean tree; ${failing.length} verdict or file:line disagreement(s), ${disagreements.length - failing.length} error-code difference(s)`);
+process.exitCode = failing.length || checkers.some(c => clean[c.name].diags.length) ? 1 : 0;
