@@ -10,12 +10,13 @@ experiment (the runs inside it pass the lock to nobody; they are the experiment)
 
 Guard: if MemAvailable falls below --min-mem-mb (default 2000), or the kernel reports memory thrashing, i.e. the
 `full` memory pressure stall (/proc/pressure/memory, avg10: the share of the last 10 s in which every runnable task
-waited for memory) exceeds --max-memory-stall (default 15%), every run of the level is killed (SIGKILL, process
+waited for memory) exceeds --max-memory-stall (default 40%), every run of the level is killed (SIGKILL, process
 groups), the level is recorded as `killed for memory` with the reason, and no higher level is tried: the experiment
 must never push the machine into the OOM killer or into thrashing, which slow or kill other agents' processes.
 (Measured: three base `all` runs at once kept MemAvailable just above 1.5 GB while code pages were evicted and re-read
-at 1.5 GB/s and the 5-minute `full` stall reached 47%; swap-in alone is not a usable signal, because pages swapped
-out earlier come back in long after the pressure is gone.)
+at 1.5 GB/s and the 5-minute `full` stall reached 47%, while two final-design gates starting at once briefly reached
+16% over 10 s with 5 GB still available; swap-in alone is not a usable signal, because pages swapped out earlier come
+back in long after the pressure is gone.)
 """
 import argparse
 import json
@@ -57,7 +58,7 @@ def memory_stall():
     return 0.0
 
 
-def level(k, trees, gate, min_mem, logdir, env_extra, max_stall=15.0):
+def level(k, trees, gate, min_mem, logdir, env_extra, max_stall=40.0):
     env = dict(os.environ, UseSharedCompilation='false', MSBUILDDISABLENODEREUSE='1', DOTNET_CLI_USE_MSBUILD_SERVER='0',
                DOTNET_CLI_TELEMETRY_OPTOUT='1', **env_extra)
     env.pop('JE_UPDATE_SNAPSHOTS', None)
@@ -108,7 +109,7 @@ def main():
     ap.add_argument('--gate', default='all')
     ap.add_argument('--repeat', type=int, default=1)
     ap.add_argument('--min-mem-mb', type=int, default=2000)
-    ap.add_argument('--max-memory-stall', type=float, default=15.0, help='percent, /proc/pressure/memory full avg10')
+    ap.add_argument('--max-memory-stall', type=float, default=40.0, help='percent, /proc/pressure/memory full avg10')
     ap.add_argument('--env', action='append', default=[])
     ap.add_argument('--out', default='gate-concurrency.json')
     a = ap.parse_args()
