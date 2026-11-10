@@ -29,7 +29,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
     /// Bundle format: a prologue publishing window.__JE_BUNDLE_TOTAL (module
     /// count) and window.__JE_BUNDLE_PROGRESS = 0, then one array,
     /// window.__JE_BUNDLE_MODULES, holding one function per file:
-    ///   /* ---- js/&lt;path&gt; ---- */\nfunction () {\n&lt;file content&gt;\n},\n
+    ///   /* ---- js/&lt;path&gt; ---- */\n(function () {\n&lt;file content&gt;\n}),\n
+    /// Each function is parenthesized because every one of them runs exactly once, at
+    /// boot: V8 compiles a parenthesized function expression together with its script
+    /// (off the main thread while the script streams in) instead of lazily, on the
+    /// main thread, at its first call.
     /// The client runs the functions in order, yielding to the event loop every
     /// few milliseconds, so evaluating 150+ modules never blocks jellyfin-web's
     /// own rendering for one long task (a single flat script would), and a module
@@ -202,7 +206,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                     continue;
                 }
 
-                Append($"/* ---- js/{path} ---- */\nfunction () {{\n");
+                Append($"/* ---- js/{path} ---- */\n(function () {{\n");
                 var start = line;
                 Append(content);
                 if (!content.EndsWith('\n'))
@@ -210,7 +214,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                     Append("\n");
                 }
                 sections.Add(new Section { Path = path, Line = start, LineCount = line - start, Minified = minified });
-                Append("},\n");
+                Append("}),\n");
             }
 
             Append("];\n");

@@ -116,6 +116,27 @@ public class BundleServingTests
         Assert.Same(bundle.SourceMap, bundle.SourceMap);
     }
 
+    // perf-runtime: every module function runs exactly once, at boot. Parenthesized, V8 compiles it with the script
+    // (off the main thread while the script streams in); bare, it was compiled lazily on the main thread at its call,
+    // which the CPU profile showed as about 7 ms of every page load.
+    [Fact]
+    public void EveryModuleFunctionIsParenthesizedSoItIsCompiledWithTheScript()
+    {
+        using var fixture = new CoreFixture();
+        var lines = Encoding.UTF8.GetString(ClientScriptBundle.BuildUncached("wrapper-check", fixture.Logger).Script).Split('\n');
+        var opened = 0;
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (!lines[i].StartsWith("/* ---- js/", StringComparison.Ordinal)) continue;
+            Assert.Equal("(function () {", lines[i + 1]);
+            opened++;
+        }
+
+        Assert.Equal(ClientScriptBundle.GetComponentScripts().Count, opened);
+        Assert.Equal(opened, lines.Count(line => line == "}),"));
+        Assert.DoesNotContain("function () {", lines);
+    }
+
     [Fact]
     public async Task BrotliIsUpgradedInTheBackgroundToASmallerBodyWithANewValidator()
     {
