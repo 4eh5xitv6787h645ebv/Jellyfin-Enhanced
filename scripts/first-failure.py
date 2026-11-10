@@ -7,8 +7,8 @@ Applies one deliberate fault to the clean checkout DIR (restored afterwards), ru
 line, and stops the gate at the first line that names a failing test, a type error or a build error (or when it
 exits). Prints the seconds to that line and the line. The faults:
   typecheck  a number assigned to a string in client/src/host/context.ts (tsc error TS2322)
-  frontend   the status tags' series batch skips every non-empty batch (`batch.length !== 0`) in the generated
-             Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js, which the frontend tests load
+  frontend   the status tags' series batch skips every non-empty batch (`batch.length !== 0`) in
+             client/src/features/media-tags/types/status/statustags.ts, regenerated (client:build) before the gate
   dotnet     TagStyleKeys.Groups loses the Quality group (TagStylePalettes.cs; backend tests notice)
 """
 import argparse
@@ -22,7 +22,8 @@ from pathlib import Path
 
 FAULTS = {
     'typecheck': ('client/src/host/context.ts', None, '\nexport const firstFailureProbe: string = 1;\n'),
-    'frontend': ('Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js', ' === ', ' !== '),
+    'frontend': ('client/src/features/media-tags/types/status/statustags.ts', 'if (batch.length === 0) continue;',
+                 'if (batch.length !== 0) continue;'),
     'dotnet': ('Jellyfin.Plugin.JellyfinEnhanced/Shared/MediaTags/PosterTags/TagStylePalettes.cs',
                'Groups = new[] { Quality, AgeRating,', 'Groups = new[] { AgeRating,'),
 }
@@ -36,15 +37,12 @@ def apply(tree, kind):
     text = p.read_text()
     if kind == 'typecheck':
         p.write_text(text + new)
-    elif kind == 'frontend':
-        # the first strict comparison inside the batch flush, a branch the status-tags tests exercise
-        i = text.index('function flushSeries')
-        j = text.index(old, i)
-        p.write_text(text[:j] + new + text[j + len(old):])
-    elif kind == 'dotnet':
+    elif kind in ('frontend', 'dotnet'):
         if text.count(old) != 1:
             sys.exit(f'cannot find {old!r} once in {path}')
         p.write_text(text.replace(old, new))
+        if kind == 'frontend':   # as an agent would: regenerate the shipped js from the edited source first
+            subprocess.run(['node', 'scripts/client-build.mjs'], cwd=tree, check=True, capture_output=True)
     return p, text
 
 
