@@ -71,7 +71,10 @@ class DotnetShardsTests(unittest.TestCase):
             xml = (res / 'merged/coverage.cobertura.xml').read_text()
             self.assertIn('line-rate="0.6666"', xml)     # lines 1 and 2 of 3 covered by one shard or the other (coverlet truncates)
             self.assertIn('branch-rate="1.0"', xml)                  # each branch path covered by one shard
-            trx(res / 'b' / 'b.trx', [('N.C.t1', 'Passed')])
+            trx(res / 'b' / 'b.trx', [('N.D.t3', 'Passed'), ('N.D.t3', 'Passed')])   # two theory cases, one truncated name
+            with mock.patch('builtins.print'):
+                shards.merge(res, ['a', 'b'])
+            trx(res / 'b' / 'b.trx', [('N.C.t1', 'Passed')])    # class N.C in both hosts
             with self.assertRaises(SystemExit):
                 shards.merge(res, ['a', 'b'])
             trx(res / 'b' / 'b.trx', [], outcome='Aborted')     # a test host that crashed
