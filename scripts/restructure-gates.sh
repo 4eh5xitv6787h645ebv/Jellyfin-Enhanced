@@ -240,45 +240,83 @@ be_t() (
 
 # T and the ratcheted frontend suite at the same time, each in its own subshell with its own log. The frontend suite
 # runs no dotnet, so dotnet still builds and tests one process at a time. Both tails are printed; either failing fails.
-be_t_and_frontend() (
+# Lanes. be and all run four lanes at once, each in its own subshell with its own log:
+#   dotnet     B (plugin build, warning ratchet) -> test-project build -> G -> T (+ coverage floors on T's results)
+#   frontend   the ratcheted frontend suite (node only; needs no dotnet build)
+#   contracts  contracts:check -> test:contract-boundary (own tool project and fixture copy, no shared build output)
+#   checks     test:client-build -> client:check -> inventory:rewrite:check -> INV -> TOOL [-> all: fe's part]
+# Each lane stops at its own first failure (set -e). A lane's result is printed the moment it ends, so the first
+# failure shows when it happens; then every lane's summary and tail (whole tail on failure). Any failed lane fails the
+# gate. JE_GATE_FAIL_FAST=1 also stops the other lanes at the first failure (default: they run to the end).
+lane_dotnet() ( set -e; be_build_and_g; be_t )
+lane_frontend() ( set -e; step "F: frontend suite (ratcheted)"; frontend_tests )
+lane_contracts() (
   set -e
-  local dir tpid fpid trc=0 frc=0
-  dir=$(mktemp -d)
-  step "T and F's frontend suite, concurrently (separate logs; tails below)"
-  ( be_t ) >"$dir/t.log" 2>&1 &
-  tpid=$!
-  ( step "F: frontend suite (ratcheted)"; frontend_tests ) >"$dir/frontend.log" 2>&1 &
-  fpid=$!
-  wait "$tpid" || trc=$?
-  wait "$fpid" || frc=$?
-  step "T log: summary and tail (exit $trc)"
-  grep -E '^(Passed|Failed)!|^T \(dotnet test\)|^  JE\.|"passed"' "$dir/t.log" >&2 || true
-  if [ "$trc" = 0 ]; then tail -n 4 "$dir/t.log" >&2; else tail -n 150 "$dir/t.log" >&2; fi
-  step "F frontend suite log: summary and tail (exit $frc)"
-  grep -E '^ℹ (tests|pass|fail|duration_ms) ' "$dir/frontend.log" >&2 || true
-  if [ "$frc" = 0 ]; then tail -n 4 "$dir/frontend.log" >&2; else tail -n 250 "$dir/frontend.log" >&2; fi
-  rm -rf "$dir"
-  [ "$trc" = 0 ] && [ "$frc" = 0 ]
-)
-
-# The rest of F: client-build tests, contracts, path readers.
-be_f_rest() (
-  set -e
-  step "F: client-build tests + contracts + path readers"
-  npm run test:client-build
+  step "F: contracts"
   npm run contracts:check
   npm run test:contract-boundary
+)
+lane_checks() (
+  set -e
+  step "F: client-build tests + path readers"
+  npm run test:client-build
   npm run client:check
   npm run inventory:rewrite:check
+  gate_inv
+  gate_tool
+  if [ "${1:-}" = with-fe ]; then fe_checks in-all; fi
+)
+
+# run_lanes <name>=<command> ...: runs each command (a function, with its arguments) as a lane.
+run_lanes() (
+  set +e
+  local dir t0 spec name pid rc failed=0 done_pid
+  local -A lane_pid lane_rc lane_end
+  dir=$(mktemp -d)
+  t0=$(date +%s)
+  step "lanes, concurrently: ${*%%=*} (separate logs; each result as it ends, then the tails)"
+  for spec in "$@"; do
+    name=${spec%%=*}
+    # shellcheck disable=SC2086  # the command and its arguments are single words
+    ( ${spec#*=} ) >"$dir/$name.log" 2>&1 &
+    lane_pid[$name]=$!
+  done
+  local remaining=$#
+  while [ "$remaining" -gt 0 ]; do
+    wait -n -p done_pid
+    rc=$?
+    for name in "${!lane_pid[@]}"; do
+      if [ "${lane_pid[$name]}" = "$done_pid" ]; then
+        lane_rc[$name]=$rc
+        lane_end[$name]=$(( $(date +%s) - t0 ))
+        if [ "$rc" = 0 ]; then
+          echo "lane $name: passed after ${lane_end[$name]} s" >&2
+        else
+          failed=1
+          echo "lane $name: FAILED (exit $rc) after ${lane_end[$name]} s; its last lines:" >&2
+          tail -n 25 "$dir/$name.log" | sed 's/^/  | /' >&2
+          if [ "${JE_GATE_FAIL_FAST:-}" = 1 ]; then
+            echo "JE_GATE_FAIL_FAST=1: stopping the other lanes" >&2
+            for pid in "${lane_pid[@]}"; do pkill -TERM -P "$pid" 2>/dev/null; kill -TERM "$pid" 2>/dev/null; done
+          fi
+        fi
+      fi
+    done
+    remaining=$((remaining - 1))
+  done
+  for spec in "$@"; do
+    name=${spec%%=*}
+    step "lane $name: summary and tail (exit ${lane_rc[$name]}, ${lane_end[$name]} s)"
+    grep -E '^(Passed|Failed)!|^T \(dotnet test\)|^npm test:|^ℹ (tests|pass|fail|duration_ms) |"passed"|^B: build warnings|^lane |^restructure-gates' "$dir/$name.log" >&2 || true
+    if [ "${lane_rc[$name]}" = 0 ]; then tail -n 4 "$dir/$name.log" >&2; else tail -n 250 "$dir/$name.log" >&2; fi
+  done
+  rm -rf "$dir"
+  [ "$failed" = 0 ]
 )
 
 gate_be() (
   set -e
-  be_build_and_g
-  be_t_and_frontend
-  be_f_rest
-  gate_inv
-  gate_tool
+  run_lanes dotnet=lane_dotnet frontend=lane_frontend contracts=lane_contracts checks=lane_checks
 )
 
 gate_fe() ( set -e; fe_checks with-frontend-suite )
@@ -317,17 +355,18 @@ fe_checks() (
   done
 )
 
-# Merge points: be, then fe without repeating what be ran. fe regenerates (client:build, inventory:rewrite); be's runs
-# cover fe's tree only if that leaves the working tree as it was.
+# Merge points: be's lanes, with fe's part (which regenerates: client:build, inventory:rewrite) at the end of the checks
+# lane, so nothing is repeated. Everything be ran covers fe's tree only if the regeneration leaves the working tree as it
+# was: the tree is compared at the start and at the end of the whole run.
 gate_all() (
   set -e
   local before after
-  gate_be
+  no_snapshot_updates
   before=$(tree_state)
-  fe_checks in-all
+  run_lanes dotnet=lane_dotnet frontend=lane_frontend contracts=lane_contracts "checks=lane_checks with-fe"
   after=$(tree_state)
   if [ "$before" != "$after" ]; then
-    echo "all: fe's regeneration changed the working tree after be ran, so be's results do not cover it:" >&2
+    echo "all: the working tree changed during the run (fe's regeneration, or a step that writes outside ignored paths), so the results do not cover one tree:" >&2
     git status --short >&2
     false
   fi
