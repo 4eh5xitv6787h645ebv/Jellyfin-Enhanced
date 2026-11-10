@@ -8,9 +8,11 @@ Each round runs every checker (in a rotating order) twice: cold, after evicting 
 DONTNEED, no root needed) every file under client/ and every file of the checker's own install (its --evict paths, or
 the directory of its first argument that is not `node`), then warm, straight after. Both are full `-p client/tsconfig.json`
 checks (the tsconfig has noEmit) in a new process; `--pretty false`. Every run must report zero errors.
-Watch mode: each checker with `--watch` is started once; after its first report, --edits one-line edits (a comment line
-appended to, then removed from, a real source file, alternating files) are timed from the write to the checker's next
-"Found N errors" line. A checker whose watch mode never reports is recorded as such.
+Watch mode: each checker with `--watch` is started once; after its first report, --edits one-line edits are timed from
+the write to the checker's next "Found N errors" line after its "File change detected" line. The edits alternate between
+adding a line with a type error to a real source file (`export const timingProbe: string = 1;`, expect 1 error) and
+removing it again (expect 0), so a report only counts when it shows the checker really checked the edit; a report with
+the wrong count is recorded as a mismatch. A checker whose watch mode never reports is recorded as such.
 --npm-step also times `npm run client:typecheck` (the repository's own step: tag data, source policy, then the
 TypeScript 6 API check) cold and warm in the same rotation.
 """
@@ -58,7 +60,7 @@ def run_check(cmd, cwd, env):
     return wall, errors, r.returncode, (r.stdout + r.stderr)[-400:]
 
 
-EDIT = '\n// timing edit\n'
+EDIT = '\nexport const timingProbe: string = 1;\n'
 
 
 def restore(files):
@@ -100,11 +102,12 @@ def watch_times(name, cmd, cwd, env, edits, files):
     if first is None:
         proc.kill()
         return {'error': f'no first result in 120 s; output: {buf[-500:]}'}
+    mismatches = 0
     for i in range(edits):
-        f = files[i % len(files)]
+        f = files[(i // 2) % len(files)]          # add then remove in the same file
         text = f.read_text()
         add = i % 2 == 0
-        new = text + '\n// timing edit\n' if add else text.replace('\n// timing edit\n', '', 1)
+        new = text + EDIT if add else text.replace(EDIT, '', 1)
         # Let the watcher settle, then drop whatever it printed since its last result (a second report of one edit
         # must not count as the answer to the next edit).
         time.sleep(1.0)
@@ -115,19 +118,23 @@ def watch_times(name, cmd, cwd, env, edits, files):
         t = time.perf_counter()
         f.write_text(new)
         line = wait_result(60, after_change=True)
-        times.append(time.perf_counter() - t if line else None)
+        if line is None:
+            outs.append(f'NO REPORT in 60 s; output tail: {buf[-300:]!r}')
+            times.append(None)
+            continue
+        found = int(re.search(r'Found (\d+) errors?', line).group(1)) if line else None
+        if line is not None and found != (1 if add else 0):
+            mismatches += 1
+            line = f'MISMATCH (expected {1 if add else 0}): {line}'
+        times.append(time.perf_counter() - t if line and not line.startswith('MISMATCH') else None)
         outs.append(line)
-    # leave the files as they were
-    for f in files:
-        txt = f.read_text()
-        if txt.endswith('\n// timing edit\n'):
-            f.write_text(txt[:-len('\n// timing edit\n')])
+    restore(files)
     proc.terminate()
     try:
         proc.wait(5)
     except subprocess.TimeoutExpired:
         proc.kill()
-    return {'times': times, 'results': outs}
+    return {'times': times, 'results': outs, 'mismatches': mismatches}
 
 
 def summary(xs):
