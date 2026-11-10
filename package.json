@@ -16,7 +16,7 @@
     "client:typecheck": "node scripts/client-build.mjs --typecheck",
     "client:build": "node scripts/client-build.mjs",
     "client:check": "node scripts/client-build.mjs --check",
-    "test:client-build": "node --test --test-concurrency=1 tests/client-build/*.test.mjs",
+    "test:client-build": "node --test tests/client-build/*.test.mjs",
     "verify:rewrite": "node scripts/client-verify.mjs",
     "verify:restructure": "scripts/restructure-gates.sh all && scripts/restructure-gates.sh browser",
     "inventory:rewrite": "node scripts/rewrite-inventory.mjs",
