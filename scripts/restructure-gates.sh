@@ -36,7 +36,15 @@ BASELINES=artifacts/restructure-plan/baselines
 PLUGIN=Jellyfin.Plugin.JellyfinEnhanced/JellyfinEnhanced.csproj
 TESTS=tests/backend/JE.Tests.csproj
 
-step() { printf '\n== %s\n' "$*" >&2; }
+step() {
+  printf '\n== %s\n' "$*" >&2
+  # scripts/gate-timing.py: one `<epoch seconds> <subshell pid> <label>` line per step, so the harness can attribute
+  # each process to the step whose subshell started it. Unset (the default), nothing is written.
+  if [ -n "${JE_GATE_TRACE:-}" ]; then printf '%s\t%s\t%s\n' "$(date +%s.%N)" "$BASHPID" "$*" >> "$JE_GATE_TRACE"; fi
+}
+
+# scripts/gate-timing.py: keep a copy of a test report (TRX, node results, Playwright JSON) as $JE_GATE_KEEP/<name>.
+keep_report() { if [ -n "${JE_GATE_KEEP:-}" ] && [ -s "$1" ]; then mkdir -p "$JE_GATE_KEEP"; cp "$1" "$JE_GATE_KEEP/$2"; fi; }
 
 no_snapshot_updates() {
   if [ -n "${JE_UPDATE_SNAPSHOTS:-}" ]; then
@@ -96,6 +104,7 @@ frontend_tests() {
     --test-reporter="$ROOT/scripts/restructure-gates-reporter.mjs" --test-reporter-destination="$dir/results" \
     | tee "$dir/out" || rc=$?
   [ -s "$dir/results" ] || { echo "frontend tests: no results written (node exit $rc)" >&2; rm -rf "$dir"; return 1; }
+  keep_report "$dir/results" frontend-results.txt
   rc=0
   ratchet "npm test" "$BASELINES/npm-failures.txt" \
     "$(awk '$1=="ℹ" && $2=="tests" {print $3}' "$BASELINES/npm-tests.txt")" \
@@ -210,6 +219,7 @@ be_t() (
   dotnet test "$TESTS" -c Release --no-restore -p:JellyfinTarget=jf12 \
     --logger "trx;LogFileName=je.trx" --results-directory "$res" --collect:"XPlat Code Coverage" || rc=$?
   [ -s "$res/je.trx" ] || { echo "T: no TRX written (dotnet test exit $rc)" >&2; false; }
+  keep_report "$res/je.trx" T.trx
   trx_results "$res/je.trx" > "$res/results"
   ratchet "T (dotnet test)" "$BASELINES/dotnet-failures.txt" \
     "$(grep -oE 'Total: *[0-9]+' "$BASELINES/dotnet-tests.txt" | grep -oE '[0-9]+')" \
@@ -340,6 +350,7 @@ gate_browser() (
   step "BROWSER: npm run test:browser ($JE_BROWSER_WORKERS workers), failures vs $BASELINES/browser-failures.txt"
   PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/results.json" npm run test:browser -- --reporter=list,json || rc=$?
   [ -s "$dir/results.json" ] || { echo "BROWSER: no JSON report written (exit $rc)" >&2; rm -rf "$dir"; false; }
+  keep_report "$dir/results.json" browser-results.json
   browser_results "$dir/results.json" > "$dir/results"
   new=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -23 - "$BASELINES/browser-failures.txt")
   gone=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -13 - "$BASELINES/browser-failures.txt")
