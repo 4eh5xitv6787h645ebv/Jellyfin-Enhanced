@@ -709,3 +709,42 @@ test('the toast preview uses the typed duration, and says toasts are off at 0', 
   assert.equal(preview('999999'), 'Example toast, disappears in 120.0s');
   assert.match(h.document.querySelector('[data-desc-for="ToastDuration"]').textContent, /Set to 0 to turn toasts off\./);
 });
+
+// Upstream 2e1f123d (#1032): "Don't re-add" and its days only apply when removals are Seerr decides or Never.
+test('the watchlist re-add rows follow the removal mode and the toggle, and stay that way through other dependency passes', async t => {
+  const h = await loadedPage(t);
+  const doc = h.document;
+  const mode = doc.getElementById('watchlistRemovalSync'), toggle = doc.getElementById('preventWatchlistReAddition'), days = doc.getElementById('watchlistMemoryRetentionDays');
+  const hidden = el => el.classList.contains('jea-dep-hidden') || el.style.display === 'none';
+  const state = () => ({
+    toggleRow: !hidden(toggle.closest('.checkboxContainer, .inputContainer, .selectContainer') || toggle.closest('label')),
+    daysRow: !hidden(days.closest('.inputContainer')),
+    daysDescription: !hidden(doc.querySelector('.je-setting-description[data-desc-for="watchlistMemoryRetentionDays"]')),
+  });
+  const set = (el, change) => { change(el); el.dispatchEvent(new h.window.Event('change', { bubbles: true })); };
+  assert.equal(mode.value, 'jellyfin', 'the default mode');
+  assert.deepEqual([...mode.options].map(o => o.value), ['jellyfin', 'seerr', 'both', 'off']);
+  assert.deepEqual(state(), { toggleRow: false, daysRow: false, daysDescription: false }, 'Jellyfin decides: nothing to re-add');
+  // Any other parent toggle reruns every dependency rule; the rows must not come back.
+  set(doc.getElementById('syncJellyseerrWatchlist'), el => { el.checked = !el.checked; });
+  assert.deepEqual(state(), { toggleRow: false, daysRow: false, daysDescription: false }, 'after an unrelated dependency pass');
+  for (const [value, shown] of [['seerr', true], ['both', false], ['off', true], ['jellyfin', false]]) {
+    set(mode, el => { el.value = value; });
+    assert.deepEqual(state(), { toggleRow: shown, daysRow: shown, daysDescription: shown }, value);
+  }
+  set(mode, el => { el.value = 'seerr'; });
+  set(toggle, el => { el.checked = false; });
+  assert.deepEqual(state(), { toggleRow: true, daysRow: false, daysDescription: false }, 'toggle off hides only the days');
+  set(toggle, el => { el.checked = true; });
+  assert.deepEqual(state(), { toggleRow: true, daysRow: true, daysDescription: true });
+});
+
+test('the removal mode is saved as chosen and loaded back', async t => {
+  const h = await loadedPage(t, { saved: { JellyseerrEnabled: true, JellyseerrUrls: 'http://seerr.test', JellyseerrApiKey: 'k', TMDB_API_KEY: 'stored', WatchlistRemovalSync: 'both' } });
+  assert.equal(h.document.getElementById('watchlistRemovalSync').value, 'both');
+  h.document.getElementById('watchlistRemovalSync').value = 'off';
+  h.submit();
+  await settle(h.window, 80);
+  assert.equal(h.calls.puts.length, 1);
+  assert.equal(h.calls.puts[0].WatchlistRemovalSync, 'off');
+});

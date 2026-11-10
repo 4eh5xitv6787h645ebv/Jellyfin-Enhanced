@@ -170,7 +170,9 @@
         "tests/frontend/core/core-tag-metadata-refresh.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "42582efacd6e62894d89ae670ead6802684acb53"
+      ],
       "notes": "Client: the same redraw of changed cards, in the rewrite’s pipeline modules (scan.ts, delta-sync.ts, queue.ts). Server: the same collection-member tracking, but TagCacheService.cs is capped and may not grow, so the index, its rules and GetCollectionLanguages live in the new partial TagCacheCollectionMembers.cs and the service keeps one-line call sites (4,124 to 4,088 lines; the allow-list entry is lowered to match). Upstream’s 11 unit tests, 6 browser tests and 31 backend tests are translated unchanged in substance.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p7-tag-redraw.* and p7-collection-languages.*"
     },
@@ -297,9 +299,10 @@
         "tests/docs/production-inventory.json",
         "tests/frontend/requests/request-submission.test.mjs"
       ],
-      "status": "pending",
+      "status": "ported",
       "rewriteCommits": [],
-      "notes": "Adds the route POST jellyseerr/watchlist, a scheduled task and its DI registration: a contract change (JeSeerrController; upstream has one controller)."
+      "notes": "Route POST jellyseerr/watchlist in JeSeerrController (Users partial) beside the GET, with the same [Authorize] and proxy checks; planner and Seerr watchlist reader in Features/Seerr/Services; the task in Features/Seerr/Tasks under the …ScheduledTasks namespace; registered in SeerrServiceRegistration. Differences from upstream: cancellation reaches every Seerr call of the removal task and is not logged as an error; the rule that hides the two re-add rows runs inside the admin page’s dependency pass; the admin description of the requested-media switch and the docs use the new names and say what the code does (two found bugs filed upstream-side). Contract additions (1 route, 1 action, 1 registration) are in the separate contract commit; tests/fixtures/admin-config-baseline.json gains the new control and its default, as docs/rewrite/admin-config.md prescribes for a schema change.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist.* and p8-watchlist-admin.* (real Seerr 3.5.1)"
     },
     {
       "sha": "a2b4b2aba2177c52b6fb4a7faf90eb1b9a9e8c13",
