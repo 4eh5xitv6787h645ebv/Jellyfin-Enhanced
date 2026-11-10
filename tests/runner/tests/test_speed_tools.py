@@ -1,6 +1,9 @@
 """The test-speed tooling must never lose a test, double a test, or select less than a change can reach."""
 import importlib.util
 import json
+import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -133,6 +136,34 @@ class AffectedTests(unittest.TestCase):
         self.assertIsNotNone(self.selection({}, lock='other')['all'])
         s = self.selection({}, suites={'frontend': {}})      # files the map does not know are selected
         self.assertEqual(['tests/frontend/a.test.mjs', 'tests/frontend/b.test.mjs'], s['suites']['frontend'])
+
+
+class FrontendRunnerTests(unittest.TestCase):
+    """tests/frontend/run.mjs may report failures early, but never changes a result."""
+    node = shutil.which('node')
+
+    def test_early_failures_reports_each_failing_test_at_once_and_nothing_else(self):
+        hook = ROOT / 'tests/runner/early-failures.mjs'
+        with tempfile.TemporaryDirectory() as d:
+            spec = Path(d) / 'sample.test.mjs'
+            spec.write_text("import test from 'node:test';\n"
+                            "test('passes', () => {});\n"
+                            "test('fails', () => { throw new Error('no'); });\n"
+                            "test('outer', async t => { await t.test('inner fails', () => { throw new Error('no'); }); });\n")
+            log = Path(d) / 'early.log'
+            env = dict(os.environ, JE_EARLY_FAILURES=str(log))
+            r = subprocess.run([self.node, f'--import={hook}', '--test', '--test-reporter=tap', str(spec)], cwd=d,
+                               env=env, capture_output=True, text=True)
+            self.assertNotEqual(0, r.returncode)
+            self.assertIn('# tests 4', r.stdout)                        # the hook adds no test
+            self.assertEqual(['✖ sample.test.mjs :: fails', '✖ sample.test.mjs :: outer > inner fails'],
+                             sorted(log.read_text().splitlines()))
+            # A node process that is not a test file's process (a script a test starts) is left alone.
+            log.unlink()
+            r = subprocess.run([self.node, f'--import={hook}', '-e', "console.log('plain')"], cwd=d, env=env,
+                               capture_output=True, text=True, check=True)
+            self.assertEqual('plain\n', r.stdout)
+            self.assertFalse(log.exists())
 
 
 if __name__ == '__main__':
