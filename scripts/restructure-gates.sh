@@ -39,6 +39,7 @@
 # scripts/gate-timing.py times any gate: wall, CPU and parallelism per step, test file and class.
 set -euo pipefail
 
+SELF=$(readlink -f "${BASH_SOURCE[0]}")
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
 BASELINES=artifacts/restructure-plan/baselines
@@ -753,6 +754,21 @@ usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 cmd=$1; shift
+# One heavy gate at a time per machine. `all` keeps ~8.5 of 10 cores busy and needs up to ~6 GB, `browser` runs a
+# worker per core; started side by side on a 10-core, 15 GB machine they fail on timeouts (RESULTS.md §8 of
+# artifacts/restructure-plan/test-speed). So a heavy gate started while another runs (in any checkout, e.g. a caller
+# that starts `all` and `browser` together) waits for it, then runs: the two finish in sequence instead of failing.
+# The slot is its own lock file, never JE12_GATE_LOCK, so callers that hold the gate lock cannot deadlock on it.
+# JE_GATE_HEAVY_LOCK moves it; JE_GATE_SIDE_BY_SIDE=1 skips the wait.
+case "$cmd" in
+  be|fe|all|browser)
+    if [ -z "${JE_GATE_HEAVY_HELD:-}" ] && [ "${JE_GATE_SIDE_BY_SIDE:-}" != 1 ]; then
+      heavy_lock=${JE_GATE_HEAVY_LOCK:-${TMPDIR:-/tmp}/je-restructure-gates-heavy.lock}
+      export JE_GATE_HEAVY_HELD=1
+      flock -n "$heavy_lock" true 2>/dev/null || echo "restructure-gates: another heavy gate is running on this machine; $cmd waits for it ($heavy_lock)" >&2
+      exec flock --close "$heavy_lock" bash "$SELF" "$cmd" "$@"
+    fi ;;
+esac
 # One gate run checks the same tree's types several times (the plugin build's VerifyJellyfinEnhancedClient target,
 # client:check, client:build, the contract-boundary fixture): a passing check is cached for the rest of the run only
 # (scripts/client-build.mjs typecheckCache). Each run gets a fresh directory, so a gate never reuses a result from

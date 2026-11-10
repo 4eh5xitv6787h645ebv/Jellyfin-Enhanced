@@ -3,8 +3,10 @@ import importlib.util
 import json
 import os
 import shutil
+import signal
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -204,6 +206,32 @@ class QuickFeatureTests(unittest.TestCase):
             'features', 'client/src/features/seerr/details/scroll/seamless-scroll.ts', 'client/src/core/api/retry.ts',
             'docs/feature-map.json', 'Jellyfin.Plugin.JellyfinEnhanced/js/core/api-client.js'))
         self.assertEqual([], self.quick_map('features'))
+
+
+class HeavyGateSlotTests(unittest.TestCase):
+    """Two heavy gates on one machine run one after the other, never side by side."""
+
+    def test_a_heavy_gate_waits_while_another_holds_the_machine_slot(self):
+        with tempfile.TemporaryDirectory() as d:
+            lock = Path(d) / 'heavy.lock'
+            holder = subprocess.Popen(['flock', str(lock), 'sleep', '60'])
+            try:
+                time.sleep(0.3)
+                env = {k: v for k, v in os.environ.items() if k not in ('JE_GATE_HEAVY_HELD', 'JE_GATE_SIDE_BY_SIDE')}
+                env['JE_GATE_HEAVY_LOCK'] = str(lock)
+                gate = subprocess.Popen(['bash', 'scripts/restructure-gates.sh', 'browser'], cwd=ROOT, env=env, text=True,
+                                        stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
+                try:
+                    gate.communicate(timeout=3)
+                    self.fail('the gate did not wait for the slot')
+                except subprocess.TimeoutExpired:
+                    pass
+                os.killpg(gate.pid, signal.SIGKILL)
+                _, err = gate.communicate()
+                self.assertIn('another heavy gate is running on this machine; browser waits for it', err)
+            finally:
+                holder.kill()
+                holder.wait()
 
 
 if __name__ == '__main__':
