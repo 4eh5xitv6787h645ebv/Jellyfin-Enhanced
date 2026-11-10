@@ -34,8 +34,9 @@
 # (peak about 6 GB). Tuning: JE_TEST_CONCURRENCY (node test files at once; default max(4, cores - 1)),
 # JE_DOTNET_SINGLETON_SHARDS (T's singleton test hosts; default 3, 0 = one process), JE_GATE_WIDE_NICE (priority of the
 # frontend and checks lanes; default 5), JE_GATE_FAIL_FAST=1 (stop the other lanes at the first failure),
-# JE_BROWSER_WORKERS (Playwright workers; default the cores, at least 6), JE_BROWSER_LONG / JE_BROWSER_LONG_WORKERS
-# (spec files run as a second Playwright run; default tag-row-subpixel.spec.cjs with 1 worker, 2 from 12).
+# JE_BROWSER_WORKERS (Playwright workers; default the cores up to 10, less those busy now, at least 6),
+# JE_BROWSER_LONG / JE_BROWSER_LONG_WORKERS (spec files run as a second Playwright run; default
+# tag-row-subpixel.spec.cjs with 1 worker, 2 from 12).
 # scripts/gate-timing.py times any gate: wall, CPU and parallelism per step, test file and class.
 set -euo pipefail
 
@@ -495,7 +496,7 @@ PY
 
 # BROWSER (PLAN.md): npm run test:browser with a failure ratchet. New failures fail by name; a listed test that passes
 # is a note (remove it from the list). Never add a line to baselines/browser-failures.txt.
-# Workers: JE_BROWSER_WORKERS, default the cores this process may use (at least 6). Playwright queues tests project by
+# Workers: JE_BROWSER_WORKERS, default below. Playwright queues tests project by
 # project and file by file, so a test that alone takes half a minute and sits late in the queue ends the run on its
 # own. The spec files in JE_BROWSER_LONG (default tag-row-subpixel.spec.cjs; empty = one run) therefore run as a second
 # Playwright run at the same time, with JE_BROWSER_LONG_WORKERS (default 1, 2 from 12 workers) of the workers and its own port; the
@@ -504,7 +505,20 @@ gate_browser() (
   set -e
   local dir rc=0 rc2=0 new gone cores long=${JE_BROWSER_LONG-tag-row-subpixel.spec.cjs} pid
   cores=$(nproc)
-  export JE_BROWSER_WORKERS=${JE_BROWSER_WORKERS:-$(( cores > 6 ? cores : 6 ))}
+  # Workers: the cores, at most 10, less the cores other processes keep busy right now (sampled over 1 s, not the
+  # lagging load average), at least 6. The long tests wait on frames, so on 10 real cores 10 workers beat 6 by a
+  # third; but on the 16-thread second worker (4 performance + 8 efficiency cores, power-limited) 16 workers pushed
+  # Firefox tests past their 15 s timeout, and a machine shared with other work gets the same.
+  local busy cap
+  busy=$(python3 -c '
+import time
+def snap():
+    v = list(map(int, open("/proc/stat").readline().split()[1:9]))
+    return sum(v) - v[3] - v[4], sum(v)
+b0, t0 = snap(); time.sleep(1); b1, t1 = snap()
+import os; print(round((b1 - b0) / max(1, t1 - t0) * os.cpu_count()))' 2>/dev/null || echo 0)
+  cap=$(( cores < 10 ? cores : 10 ))
+  export JE_BROWSER_WORKERS=${JE_BROWSER_WORKERS:-$(( cap - busy > 6 ? cap - busy : 6 ))}
   dir=$(mktemp -d)
   if [ -z "$long" ]; then
     step "BROWSER: npm run test:browser ($JE_BROWSER_WORKERS workers), failures vs $BASELINES/browser-failures.txt"
