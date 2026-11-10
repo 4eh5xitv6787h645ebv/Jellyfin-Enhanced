@@ -47,6 +47,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
     /// (version + DLL timestamp), which changes on every deploy. Dev mode
     /// bypasses the cache so edits show up after a restart without a version bump.
     ///
+    /// The source map is built on its first request, not with the script: only a
+    /// browser with developer tools open asks for it, and building it means parsing
+    /// two embedded maps per module and serializing about 11 MB of JSON, which the
+    /// first page load after every server start used to wait for and every server
+    /// then kept in memory.
+    ///
     /// Minified (canopy K1): each module's content is its minified twin
     /// min/js/&lt;path&gt; (scripts/client-build.mjs builds it from the same source),
     /// falling back to the readable js/&lt;path&gt; when a module has no twin. The
@@ -114,7 +120,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
         /// The bundle and its map as served: identity bytes plus their brotli and
         /// gzip encodings (see <see cref="ServedFile"/>). Same caching as
         /// <see cref="GetBundle"/>; a rebuild (dev mode) skips the background
-        /// brotli upgrade, because its result would never be reused.
+        /// brotli upgrade, because its result would never be reused. The map is
+        /// built when <see cref="ServedBundle.SourceMap"/> is first read.
         /// </summary>
         internal static ServedBundle GetServedBundle(string cacheKey, bool rebuild, Logger logger)
         {
@@ -125,27 +132,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                     return _cached.Value.Bundle;
                 }
 
-                var built = Build(cacheKey, logger);
+                var (script, sections) = BuildScript(cacheKey, logger);
                 var bundle = new ServedBundle(
-                    new ServedFile(built.Script, ServedFile.ScriptLevels, upgradeBrotli: !rebuild, logger),
-                    new ServedFile(built.SourceMap, ServedFile.MapLevels, upgradeBrotli: false, logger));
+                    new ServedFile(script, ServedFile.ScriptLevels, upgradeBrotli: !rebuild, logger),
+                    new Lazy<ServedFile>(() => new ServedFile(BuildSourceMap(cacheKey, sections), ServedFile.MapLevels, upgradeBrotli: false, logger)));
                 _cached = (cacheKey, bundle);
                 return bundle;
             }
         }
 
         /// <summary>The bundle built fresh, bypassing (and leaving) the cache; for measurements such as the size budget.</summary>
-        internal static (byte[] Script, byte[] SourceMap) BuildUncached(string cacheKey, Logger logger) => Build(cacheKey, logger);
+        internal static (byte[] Script, byte[] SourceMap) BuildUncached(string cacheKey, Logger logger)
+        {
+            var (script, sections) = BuildScript(cacheKey, logger);
+            return (script, BuildSourceMap(cacheKey, sections));
+        }
 
+        /// <summary>Where one module's content sits in the bundle; all the source map needs to be built later.</summary>
         private sealed class Section
         {
             public string Path { get; init; } = string.Empty;
             public int Line { get; init; }
             public int LineCount { get; init; }
-            public JsonObject? SourceMap { get; init; }
+            public bool Minified { get; init; }
         }
 
-        private static (byte[] Script, byte[] SourceMap) Build(string cacheKey, Logger logger)
+        private static (byte[] Script, IReadOnlyList<Section> Sections) BuildScript(string cacheKey, Logger logger)
         {
             var scripts = GetComponentScripts();
             var assembly = Assembly.GetExecutingAssembly();
@@ -197,14 +209,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                 {
                     Append("\n");
                 }
-                sections.Add(new Section { Path = path, Line = start, LineCount = line - start,
-                    SourceMap = minified ? ReadMinifiedSourceMap(assembly, path) : ReadEmbeddedSourceMap(assembly, path) });
+                sections.Add(new Section { Path = path, Line = start, LineCount = line - start, Minified = minified });
                 Append("},\n");
             }
 
             Append("];\n");
             Append($"//# sourceMappingURL=bundle.js.map?v={cacheKey}\n");
 
+            return (Encoding.UTF8.GetBytes(sb.ToString()), sections);
+        }
+
+        /// <summary>The index map for a script built by <see cref="BuildScript"/>, from the embedded per-module maps.</summary>
+        private static byte[] BuildSourceMap(string cacheKey, IReadOnlyList<Section> sections)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
             var map = new
             {
                 version = 3,
@@ -212,7 +230,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                 sections = sections.Select(s => new
                 {
                     offset = new { line = s.Line, column = 0 },
-                    map = (object?)s.SourceMap ?? new
+                    map = (object?)(s.Minified ? ReadMinifiedSourceMap(assembly, s.Path) : ReadEmbeddedSourceMap(assembly, s.Path)) ?? new
                     {
                         version = 3,
                         file = s.Path,
@@ -225,7 +243,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
                 }).ToArray()
             };
 
-            return (Encoding.UTF8.GetBytes(sb.ToString()), JsonSerializer.SerializeToUtf8Bytes(map));
+            return JsonSerializer.SerializeToUtf8Bytes(map);
         }
 
         private static string? ReadResource(Assembly assembly, string name)
@@ -316,8 +334,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform.Services
         }
     }
 
-    /// <summary>The served bundle script and its source map.</summary>
-    internal sealed record ServedBundle(ServedFile Script, ServedFile SourceMap);
+    /// <summary>The served bundle script and its source map (built when first read; see <see cref="ClientScriptBundle"/>).</summary>
+    internal sealed record ServedBundle(ServedFile Script, Lazy<ServedFile> Map)
+    {
+        internal ServedFile SourceMap => Map.Value;
+    }
 
     /// <summary>One representation of a <see cref="ServedFile"/>: its bytes, Content-Encoding (null = identity) and strong ETag.</summary>
     internal sealed record EncodedBody(byte[] Bytes, string? Encoding, string ETag);
