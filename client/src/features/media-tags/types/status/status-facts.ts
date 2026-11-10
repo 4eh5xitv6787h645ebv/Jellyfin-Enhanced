@@ -123,6 +123,13 @@ export function readFacts(src: JsonRecord): EpisodeFacts {
     };
 }
 
+/**
+ * Whether the viewer has watched everything in a card's item: Jellyfin shows that as the card's played check.
+ * @param el - The card, or an element inside it.
+ */
+export function watchedAll(el: Element | null | undefined): boolean {
+    return !!(el?.closest('.card') || el)?.querySelector('.playedIndicator');
+}
 /** A show released in one drop: its premiere and its final episode aired at most this many days apart. */
 export const BINGE_DROP_DAYS = 3;
 /**

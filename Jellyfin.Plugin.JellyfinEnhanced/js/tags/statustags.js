@@ -69,6 +69,9 @@
       addedSpan: first !== null && last !== null && count !== null ? { first, last, count, coveredThrough: toInt(span.CoveredThrough) } : null
     };
   }
+  function watchedAll(el) {
+    return !!(el?.closest(".card") || el)?.querySelector(".playedIndicator");
+  }
   var BINGE_DROP_DAYS = 3;
   function releasedInOneDrop(premiereDay, finalDay) {
     return premiereDay !== null && finalDay !== null && finalDay - premiereDay <= BINGE_DROP_DAYS;
@@ -373,7 +376,7 @@
       const regularSeason = (episode) => (episode?.season ?? 0) > 0 ? episode : null;
       return regularSeason(facts.last) || regularSeason(facts.regular) || regular(aggregate) || regular(readFacts((seriesId && data.season !== null ? JE.tagPipeline?.peekSeasonFacts?.(seriesId, data.season) : null) || {})) || regular(data);
     }
-    function pickBadge(data, itemId) {
+    function pickBadge(data, itemId, el) {
       const normalizedId = normId(itemId);
       const current = normalizedId ? JE.tagPipeline?.peekItemFacts?.(normalizedId) : null;
       if (current) Object.assign(data, readFacts(current), { latest: toMs(current.LatestEpisodeAdded) });
@@ -401,7 +404,7 @@
       const releaseDay = premiereDay(data.premiere);
       const comingSoon = releaseDay !== null && releaseDay > today;
       const addedRecently = isWithin(addedDate(data), now, justAddedMs);
-      const newEpisode = isWithin(data.latest, now, justAddedMs) && data.created !== null && now - data.created > justAddedMs;
+      const newEpisode = isWithin(data.latest, now, justAddedMs) && data.created !== null && now - data.created > justAddedMs && !watchedAll(el);
       const nextDay = airDay(facts?.next?.date);
       const lastDay = airDay(facts?.last?.date);
       const daysToNext = nextDay === null ? null : nextDay - today;
@@ -590,7 +593,7 @@
       activateStatus(ctx);
       ensureTrending(ctx);
       const readsSeries = wantsSeriesFacts(data);
-      const badge = pickBadge(data, itemId);
+      const badge = pickBadge(data, itemId, el);
       const previous = liveCards.get(el);
       if (!readsSeries || previous && (previous.id !== normId(itemId) || previous.domId !== cardIdentity(el))) {
         unobserveSeriesCard(el);
@@ -718,7 +721,7 @@
           forgetSeriesCard(el);
           return;
         }
-        const badge = pickBadge(card.data, card.id);
+        const badge = pickBadge(card.data, card.id, el);
         const key = badgeKey(badge);
         if (key === card.shown) return;
         card.shown = key;

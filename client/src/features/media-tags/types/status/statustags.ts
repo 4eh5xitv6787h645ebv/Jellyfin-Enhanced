@@ -1,6 +1,6 @@
 import { apiClient, hasApiClient, type TagRuntimeBridge } from '../../host';
 import { finite, isRecord, own, record, stringList, text, type JsonRecord } from '../../pipeline/dto';
-import { addedDate, fromItem, fromServerEntry, normId, readFacts, readLeaving, releasedInOneDrop, toInt, toMs, type EpisodeFacts, type LeavingFacts, type MediaInputs, type StatusData } from './status-facts';
+import { addedDate, fromItem, fromServerEntry, normId, readFacts, readLeaving, releasedInOneDrop, toInt, toMs, watchedAll, type EpisodeFacts, type LeavingFacts, type MediaInputs, type StatusData } from './status-facts';
 import type { RefreshInfo, TagCtx, TagSpec } from '../../pipeline/contract';
 
 interface BadgeDefinition { kind: string; style: string; label: string; compact?: string }
@@ -491,8 +491,9 @@ export function createStatusTags(JE: TagRuntimeBridge) {
      * Pick the one badge a card shows (first match wins), or null.
      * @param data - Card snapshot, refreshed from shared facts when available.
      * @param itemId - The card's own item id (never its parent id).
+     * @param [el] - The card, whose played check says the viewer has watched it all.
      * */
-    function pickBadge(data: StatusData, itemId: string | null | undefined): StatusBadge | null {
+    function pickBadge(data: StatusData, itemId: string | null | undefined, el?: Element | null): StatusBadge | null {
         const normalizedId = normId(itemId);
         const current = normalizedId ? JE.tagPipeline?.peekItemFacts?.(normalizedId) : null;
         // Shared caller-filtered facts are authoritative, including removed fields.
@@ -524,11 +525,10 @@ export function createStatusTags(JE: TagRuntimeBridge) {
         const releaseDay = premiereDay(data.premiere);
         const comingSoon = releaseDay !== null && releaseDay > today;
         const addedRecently = isWithin(addedDate(data), now, justAddedMs);
-        // "New Episode" on a container: an episode arrived recently in a
-        // container that was itself already there before the window (else it
-        // is just added).
+        // "New Episode" on a container: an episode arrived recently in a container that was itself already there
+        // before the window (else it is just added), unless the viewer has watched all of it (the played check).
         const newEpisode = isWithin(data.latest, now, justAddedMs)
-            && data.created !== null && now - data.created > justAddedMs;
+            && data.created !== null && now - data.created > justAddedMs && !watchedAll(el);
         // TMDB's next/last episode, as day numbers and days from today.
         const nextDay = airDay(facts?.next?.date);
         const lastDay = airDay(facts?.last?.date);
@@ -784,7 +784,7 @@ export function createStatusTags(JE: TagRuntimeBridge) {
         activateStatus(ctx);
         ensureTrending(ctx);
         const readsSeries = wantsSeriesFacts(data);
-        const badge = pickBadge(data, itemId);
+        const badge = pickBadge(data, itemId, el);
         // All date badges can change when a local day passes.
         const previous = liveCards.get(el);
         if (!readsSeries || (previous && (previous.id !== normId(itemId) || previous.domId !== cardIdentity(el)))) {
@@ -973,7 +973,7 @@ export function createStatusTags(JE: TagRuntimeBridge) {
                 forgetSeriesCard(el);
                 return;
             }
-            const badge = pickBadge(card.data, card.id);
+            const badge = pickBadge(card.data, card.id, el);
             const key = badgeKey(badge);
             if (key === card.shown) return;
             card.shown = key;
