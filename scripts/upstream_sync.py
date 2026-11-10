@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Keep docs/upstream-sync.json, the ledger of what the rewrite has taken from upstream, current.
 
-  scripts/upstream_sync.py update [--no-fetch]   fetch upstream, append unlisted commits as `pending`, render, list
-  scripts/upstream_sync.py list                  the work list (pending and deferred entries); reads only
+  scripts/upstream_sync.py update [--no-fetch]   fetch upstream, append every commit after the ledger's base that it
+                                                 does not list as `pending` (however many runs were missed), render,
+                                                 list. `--fetch` is accepted; fetching is the default.
+  scripts/upstream_sync.py list                  the work list (pending and deferred entries) with how to take each;
+                                                 reads only
   scripts/upstream_sync.py resolve               fill `rewriteCommits` of ported entries from `Upstream:` trailers
   scripts/upstream_sync.py render [--check]      write (or compare) docs/upstream-sync.md
   scripts/upstream_sync.py check [--fetch] [--max-pending-days N]
@@ -53,6 +56,20 @@ STATUSES = {
     'deferred': ('reason', 'needs'),
 }
 OPEN = ('pending', 'deferred')
+# How an entry of each class is usually taken (docs/upstream-sync-procedure.md has the rules). `{sha}` is filled in.
+HOW = {
+    'feature': 're-implement in the owning feature; upstream\'s tests first; lab parity',
+    'fix': 're-implement in the owning feature; a test that fails first; lab parity if a user can see it',
+    'performance': 're-implement; keep upstream\'s measurement or test',
+    'security': 're-implement; a test that fails first; never weaken a check',
+    'translation': 'applies as is: git show {sha} | git apply --3way',
+    'docs': 'applies as is where the page exists: git show {sha} | git apply --3way',
+    'ci': 'applies as is to the workflows this tree has: git show {sha} | git apply --3way',
+    'deps': 'applies as is; give this tree\'s own files the same pins: git show {sha} | git apply --3way',
+    'release': 'one chore(release) commit, last: the version in JellyfinEnhanced.csproj and manifest.json from upstream',
+    'test': 'port with the change it pins: set "with" to that entry\'s sha',
+    'unclassified': 'read git show {sha}, then set its class',
+}
 
 # Every git subcommand this script may run. Nothing here writes to a remote; `fetch` only reads one.
 GIT_ALLOWED = frozenset({'cat-file', 'diff-tree', 'fetch', 'for-each-ref', 'log', 'ls-files', 'merge-base', 'rev-list',
@@ -487,6 +504,8 @@ def work_list(ledger, now, extra=()):
         lines.append(f"{entry['status']:9} {entry['sha'][:10]} {entry['date'][:10]} {age_days(entry, now):5.0f}d  "
                      f"{entry['class']:12} {','.join(entry.get('features', [])) or '-':24} "
                      f"+{size.get('insertions', 0)}/-{size.get('deletions', 0)} in {size.get('files', 0)}  {entry['subject']}")
+        if entry['status'] == 'pending':
+            lines.append(f"{'':9} how: {HOW[entry['class']].format(sha=entry['sha'][:10])}")
         if entry.get('unmappedPaths'):
             lines.append(f"{'':9} unmapped: {', '.join(entry['unmappedPaths'])}")
         if entry['status'] == 'deferred':

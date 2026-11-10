@@ -118,7 +118,7 @@
       "rewriteCommits": [
         "5e7a385912f5eca9aafe072ecf5f117b8cf37d82"
       ],
-      "notes": "Same rule change on the web (statustags.ts) and native (StatusRules.cs) side. Added native tests (upstream changed the native rule without one) and corrected the New Episode row of docs/enhanced/tags.md, which upstream left saying \"aired or was added\" (filed as a found bug).",
+      "notes": "Same rule change on the web (statustags.ts) and native (StatusRules.cs) side. Added native tests (upstream changed the native rule without one) and corrected the New Episode row of docs/enhanced/tags.md, which upstream left saying \"aired or was added\" (filed as a found bug). The rule change alters the tags produced for the same data, so PosterTagSettings.ResolverVersion goes from 39 to 40 here (AGENTS.md, \"Cached output\"); upstream left it at 39 (filed as a found bug).",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p2-new-episode.*"
     },
     {
@@ -499,7 +499,9 @@
         "README.md"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "c19c1407ca67e6b525061057eb6a15b173785386"
+      ],
       "notes": "The same badge changes. The three test-count badges carry this tree’s counts (699 browser, 3.3k backend, 3.9k frontend) instead of upstream’s, and the 10.11 download badge is not here because the rewrite’s README has none."
     }
   ]

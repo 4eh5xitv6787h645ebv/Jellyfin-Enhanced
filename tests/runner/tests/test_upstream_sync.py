@@ -112,13 +112,16 @@ class UpstreamSyncTests(unittest.TestCase):
         self.assertEqual((fix, 'fix', ['spoiler-guard'], ['#1033'], None), (second['sha'], second['class'], second['features'], second['issues'], second['release']))
         self.assertEqual([PLUGIN + 'Controllers/JellyfinEnhancedController.cs'], second['unmappedPaths'])
         self.assertIn('2 new commit(s) appended as pending', out)
+        self.assertIn('how: re-implement in the owning feature; upstream\'s tests first; lab parity', out)
         self.assertIn('unmapped: ' + PLUGIN + 'Controllers/JellyfinEnhancedController.cs', out)
         self.assertIn('| pending |', (r.rewrite / 'docs/upstream-sync.md').read_text())
 
     def test_update_is_idempotent_and_keeps_hand_edits(self):
         r = self.repos
         sha = commit(r.upstream, 'docs: explain', {'docs/a.md': 'a\n'}, '2026-02-01T10:00:00+00:00')
-        self.assertEqual(0, r.run('update')[0])
+        code, out, _ = r.run('update', '--fetch')   # fetching is the default; the flag is accepted
+        self.assertEqual(0, code)
+        self.assertIn(f'how: applies as is where the page exists: git show {sha[:10]} | git apply --3way', out)
         r.edit(sha, status='not-applicable', reason='The rewrite has no such page.')
         later = commit(r.upstream, 'ci: faster', {'.github/workflows/x.yml': 'x\n'}, '2026-02-02T10:00:00+00:00')
         self.assertEqual(0, r.run('update')[0])
@@ -126,6 +129,23 @@ class UpstreamSyncTests(unittest.TestCase):
         entries = r.ledger()['entries']
         self.assertEqual([(sha, 'docs', 'not-applicable'), (later, 'ci', 'pending')], [(e['sha'], e['class'], e['status']) for e in entries])
         self.assertEqual('The rewrite has no such page.', entries[0]['reason'])
+
+    def test_a_run_that_starts_several_upstream_commits_behind_lists_all_of_them_oldest_first(self):
+        r = self.repos
+        first = commit(r.upstream, 'fix(player): seek', {PLUGIN + 'js/enhanced/player/playback.js': '// seek\n'}, '2026-02-01T10:00:00+00:00')
+        self.assertEqual(0, r.run('update')[0])
+        r.edit(first, status='deferred', reason='later', needs='a lab')
+        later = [commit(r.upstream, subject, files, f'2026-02-0{day}T10:00:00+00:00') for day, (subject, files) in enumerate([
+            ('v12.16.0.0', {PLUGIN + 'JellyfinEnhanced.csproj': '<v/>\n'}),
+            ('ci: faster', {'.github/workflows/x.yml': 'x\n'}),
+            ('feat(player): more', {PLUGIN + 'js/enhanced/player/playback.js': '// more\n'}),
+        ], start=2)]
+        code, out, _ = r.run('update', '--now', '2026-02-05T10:00:00+00:00')
+        self.assertEqual(0, code)
+        self.assertEqual([first, *later], [e['sha'] for e in r.ledger()['entries']])
+        self.assertEqual(['deferred', 'pending', 'pending', 'pending'], [e['status'] for e in r.ledger()['entries']])
+        self.assertIn('how: one chore(release) commit, last', out)
+        self.assertIn(f'how: applies as is to the workflows this tree has: git show {later[1][:10]} | git apply --3way', out)
 
     def test_class_guesses_follow_paths_before_the_message(self):
         cases = [
