@@ -453,7 +453,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/player/pausescreen.js"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "e76b6c11d8c3a81b52152fb181b34554801e1631"
+      ],
       "notes": "The three code-scanning fixes in the rewrite’s files: the Custom Tabs snippet escaper also escapes quotes (admin/config/sections/pages.ts), review HTML is stripped until no tag is left (details-providers/review-domain.ts), and pause-screen image URLs encode ids and the image tag (player/pausescreen.ts). Upstream added no tests; three are added here and fail before the change. The CI part (CodeQL query filters, hash-pinned docs requirements, licence allow-list) applies as is. No lab comparison: none of the three changes what a user sees with ordinary data.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p9-code-scanning.tests-before.txt"
     },
@@ -474,8 +476,9 @@
         ".github/workflows/regression.yml",
         "tests/run.py"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The same job matrix (one job per Playwright project, each installing only its browser) and `tests/run.py --project`. The rewrite’s runner keeps its jf12-only `--target`; a tooling test for the new option is added."
     },
     {
       "sha": "0586df7979b3d1f400357ba6efd4b1c2f61735fa",
