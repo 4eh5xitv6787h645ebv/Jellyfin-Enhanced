@@ -2,9 +2,9 @@
 # Gates for the v12 restructure (artifacts/restructure-plan/PLAN.md "Gates", backend.md §4 "Commands",
 # frontend.md §3 gate G). Each gate runs in a `set -e` subshell; the script exits non-zero on the first failure.
 #
-#   scripts/restructure-gates.sh be              backend B, G, T, F + INV + TOOL (T and the frontend suite run at once)
+#   scripts/restructure-gates.sh be              backend B, G, T, F + INV + TOOL, as four concurrent lanes (run_lanes)
 #   scripts/restructure-gates.sh fe              frontend gate G (includes INV and TOOL)
-#   scripts/restructure-gates.sh all             be, then fe without a second frontend-suite run (merge points)
+#   scripts/restructure-gates.sh all             be's lanes plus fe's regeneration, each check once (merge points)
 #   scripts/restructure-gates.sh browser         npm run test:browser, failures ratcheted vs baselines/browser-failures.txt
 #   scripts/restructure-gates.sh r <pattern>     no stale references: fails if `git grep -nE <pattern>` matches outside artifacts/
 #   scripts/restructure-gates.sh h               poster harness builds + gen-resolution-data --check
@@ -27,9 +27,15 @@
 # listed in baselines/{dotnet,npm}-failures.txt and the total and passed counts are >= baselines/{dotnet,npm}-tests.txt.
 # The browser suite passes when every failing test is listed in baselines/browser-failures.txt.
 #
-# Run dotnet gates one worktree at a time on the 16 GB worker (PLAN.md "Worktrees and parallelism"). Inside `be` one
-# dotnet build or test runs at a time; the node frontend suite runs beside T. JE_TEST_CONCURRENCY (node test files at
-# once; default max(4, cores - 1)) and JE_BROWSER_WORKERS (Playwright workers; `browser` uses 6 unless set) tune them.
+# Run dotnet gates one worktree at a time on the 16 GB worker (PLAN.md "Worktrees and parallelism"). Inside be and all
+# the lanes run at once: dotnet (B, one test build, G, T as several test hosts), frontend, contracts (its own tool build
+# and a fixture copy) and checks; at most the dotnet lane's build or test hosts and the contracts lane's tool run overlap
+# (peak about 6 GB). Tuning: JE_TEST_CONCURRENCY (node test files at once; default max(4, cores - 1)),
+# JE_DOTNET_SINGLETON_SHARDS (T's singleton test hosts; default 3, 0 = one process), JE_GATE_WIDE_NICE (priority of the
+# frontend and checks lanes; default 5), JE_GATE_FAIL_FAST=1 (stop the other lanes at the first failure),
+# JE_BROWSER_WORKERS (Playwright workers; default the cores, at least 6), JE_BROWSER_LONG / JE_BROWSER_LONG_WORKERS
+# (spec files run as a second Playwright run; default tag-row-subpixel.spec.cjs with 2 workers).
+# scripts/gate-timing.py times any gate: wall, CPU and parallelism per step, test file and class.
 set -euo pipefail
 
 ROOT=$(git rev-parse --show-toplevel)
