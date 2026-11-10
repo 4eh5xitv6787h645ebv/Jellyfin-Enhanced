@@ -57,25 +57,38 @@ def run_check(cmd, cwd, env):
     return wall, errors, r.returncode, (r.stdout + r.stderr)[-400:]
 
 
+EDIT = '\n// timing edit\n'
+
+
+def restore(files):
+    for f in files:
+        txt = f.read_text()
+        if txt.endswith(EDIT):
+            f.write_text(txt[:-len(EDIT)])
+
+
 def watch_times(name, cmd, cwd, env, edits, files):
     """Seconds from each one-line edit to the watcher's next result line."""
-    proc = subprocess.Popen(cmd + ['--watch'], cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            text=True, bufsize=1)
-    pat = re.compile(r'Found (\d+) errors?|Watching for file changes')
-    buf = ''
+    proc = subprocess.Popen(cmd + ['--watch'], cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    fd = proc.stdout.fileno()
+    buf, pending = '', ''
 
     def wait_result(timeout):
-        nonlocal buf
+        """The next `Found N errors` line. Reads the raw pipe: select() on a buffered reader misses lines it holds."""
+        nonlocal buf, pending
         end = time.time() + timeout
         while time.time() < end:
-            r, _, _ = select.select([proc.stdout], [], [], 0.05)
-            if r:
-                line = proc.stdout.readline()
-                if not line:
-                    return None
-                buf += line
+            while '\n' in pending:
+                line, pending = pending.split('\n', 1)
                 if re.search(r'Found (\d+) errors?', line):
                     return line.strip()
+            r, _, _ = select.select([fd], [], [], 0.05)
+            if r:
+                chunk = os.read(fd, 65536).decode('utf-8', 'replace')
+                if not chunk:
+                    return None
+                buf += chunk
+                pending += chunk
         return None
     first = wait_result(120)
     times, outs = [], []
@@ -160,6 +173,14 @@ def main():
         if not c.get('npm'):
             v = subprocess.run(c['argv'] + ['--version'], cwd=tree, capture_output=True, text=True)
             out['versions'][c['name']] = (v.stdout + v.stderr).strip()
+    def save():
+        for name, r in res.items():
+            out['results'][name] = {'cold': summary(r['cold']), 'warm': summary(r['warm']), 'errors': r['errors'],
+                                    'watch': summary(r.get('watch', {}).get('times', [])) if r.get('watch') else None,
+                                    'watch_raw': r.get('watch'), 'raw': {'cold': r['cold'], 'warm': r['warm']}}
+        if a.out:
+            Path(a.out).write_text(json.dumps(out, indent=1))
+    save()      # the rounds are kept even if the watch phase is interrupted
     if not a.no_watch:
         files = [tree / 'client/src/core/lifecycle-entry.ts', tree / 'client/src/host/context.ts']
         for c in checkers:
@@ -168,14 +189,8 @@ def main():
             wt = watch_times(c['name'], prefix + c['argv'] + ['-p', 'client/tsconfig.json', '--pretty', 'false'], tree, env, a.edits, files)
             res[c['name']]['watch'] = wt
             print(f"watch {c['name']}: {wt}", file=sys.stderr, flush=True)
-    for name, r in res.items():
-        out['results'][name] = {'cold': summary(r['cold']), 'warm': summary(r['warm']), 'errors': r['errors'],
-                                'watch': summary(r.get('watch', {}).get('times', [])) if r.get('watch') else None,
-                                'watch_raw': r.get('watch'), 'raw': {'cold': r['cold'], 'warm': r['warm']}}
-    text = json.dumps(out, indent=1)
-    if a.out:
-        Path(a.out).write_text(text)
-    print(text)
+    save()
+    print(json.dumps(out, indent=1))
 
 
 if __name__ == '__main__':
