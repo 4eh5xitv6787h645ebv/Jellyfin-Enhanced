@@ -280,6 +280,7 @@ be_t() (
   # run reused from T, and its coverage floors checked on T's results (merged over T's hosts).
   step "F: verify:rewrite backend part: coverage floors on T's results (tests/runner/coverage.py)"
   python3 tests/runner/coverage.py "$res/merged"
+  keep_report "$res/merged/coverage-summary.json" coverage-summary.json
   rm -rf "$res"
 )
 
