@@ -250,8 +250,9 @@
       "paths": [
         ".github/workflows/ (9 files)"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The same six action pins in the nine workflows upstream changed, plus actions/setup-dotnet in rewrite-validation.yml, which only the rewrite has and which pinned the old commit."
     },
     {
       "sha": "2e1f123de0860af12e87780ae898cb1092f6f787",
@@ -300,7 +301,9 @@
         "tests/frontend/requests/request-submission.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "c18edf465efc55f38b7c4e46ee5f50998a46f984"
+      ],
       "notes": "Route POST jellyseerr/watchlist in JeSeerrController (Users partial) beside the GET, with the same [Authorize] and proxy checks; planner and Seerr watchlist reader in Features/Seerr/Services; the task in Features/Seerr/Tasks under the …ScheduledTasks namespace; registered in SeerrServiceRegistration. Differences from upstream: cancellation reaches every Seerr call of the removal task and is not logged as an error; the rule that hides the two re-add rows runs inside the admin page’s dependency pass; the admin description of the requested-media switch and the docs use the new names and say what the code does (two found bugs filed upstream-side). Contract additions (1 route, 1 action, 1 registration) are in the separate contract commit; tests/fixtures/admin-config-baseline.json gains the new control and its default, as docs/rewrite/admin-config.md prescribes for a schema change.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p8-watchlist.* and p8-watchlist-admin.* (real Seerr 3.5.1)"
     },
