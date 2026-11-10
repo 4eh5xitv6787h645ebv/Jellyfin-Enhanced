@@ -112,7 +112,8 @@ def browser_failures(tree, specs, env, workers):
 
 
 def dotnet_failures(tree, env):
-    rc, out, secs = run(['dotnet', 'test', 'tests/backend/JE.Tests.csproj', '-c', 'Release', '--no-restore', '-p:JellyfinTarget=jf12'],
+    lock = ['flock', '--close', os.environ['JE_DOTNET_LOCK']] if os.environ.get('JE_DOTNET_LOCK') else []
+    rc, out, secs = run(lock + ['dotnet', 'test', 'tests/backend/JE.Tests.csproj', '-c', 'Release', '--no-restore', '-p:JellyfinTarget=jf12'],
                         tree, dict(env, UseSharedCompilation='false', MSBUILDDISABLENODEREUSE='1'), timeout=3600)
     return ({'tests/backend (dotnet)'} if rc else set()), secs
 

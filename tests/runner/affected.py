@@ -180,7 +180,8 @@ def record_one(suite, f, port):
             shutil.rmtree(out, ignore_errors=True)
     if suite == 'dotnet':
         env.update(UseSharedCompilation='false', MSBUILDDISABLENODEREUSE='1', DOTNET_CLI_USE_MSBUILD_SERVER='0')
-        return traced(['dotnet', 'test', f, '-c', 'Release', '--no-restore', '--no-build', '-p:JellyfinTarget=jf12'], env,
+        lock = ['flock', '--close', os.environ['JE_DOTNET_LOCK']] if os.environ.get('JE_DOTNET_LOCK') else []
+        return traced(lock + ['dotnet', 'test', f, '-c', 'Release', '--no-restore', '--no-build', '-p:JellyfinTarget=jf12'], env,
                       timeout=1800)
     raise ValueError(suite)
 
