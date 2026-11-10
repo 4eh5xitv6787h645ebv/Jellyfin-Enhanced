@@ -215,6 +215,15 @@ gate_tool() (
   python3 tests/run.py tooling
   step "TOOL: no AI attribution in commit messages since the base"
   attribution_check
+  # The inner loop's fast pre-check (tsc-rs) must keep agreeing with TypeScript 6, the gates' authority: the clean tree
+  # plus 4 mutation sites drawn by the commit (each commit tries others), verdict and file:line compared (~15 s).
+  if node scripts/typecheck-fast.mjs --available; then
+    step "TOOL: tsc-rs agrees with TypeScript 6 (clean tree + 4 seeded mutations; scripts/typecheck-agreement.mjs --gate)"
+    node scripts/typecheck-agreement.mjs --gate --sample 4 --seed "$(git rev-parse HEAD)" --jobs 2 \
+      --checker "tsc6=node $ROOT/node_modules/typescript/bin/tsc" --checker "tsc-rs=$ROOT/node_modules/.bin/tsc-rs" > /dev/null
+  else
+    step "TOOL: tsc-rs agreement skipped: tsc-rs is not installed here (an optional dependency)"
+  fi
   step "TOOL: mutation/history path check vs $BASELINES/mutation-check.txt"
   local out new
   out=$(mutation_check)
@@ -673,6 +682,7 @@ gate_quick() (
   # shellcheck disable=SC2086  # one path per word
   if [ $# -gt 0 ]; then feats="$*"; else feats=$(quick_map features $changed); fi
   step "QUICK: features ${feats:-(none; architecture and guards only)}"
+  npm run --silent client:typecheck:fast      # tsc-rs, ~0.2 s, fails fast; TypeScript 6 checks next and decides
   npm run client:typecheck
   npm run client:build
   npm run inventory:rewrite
