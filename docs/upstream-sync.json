@@ -110,7 +110,9 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "b292ec58181bd7996ccb9f73cc59c6d60c25f24d"
+      ],
       "notes": "Same rule change on the web (statustags.ts) and native (StatusRules.cs) side. Added native tests (upstream changed the native rule without one) and corrected the New Episode row of docs/enhanced/tags.md, which upstream left saying \"aired or was added\" (filed as a found bug).",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p2-new-episode.*"
     },
@@ -133,7 +135,9 @@
         "tests/frontend/features/features-status-tags-vocabulary.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "b292ec58181bd7996ccb9f73cc59c6d60c25f24d"
+      ],
       "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1",
       "notes": "The same test row change, in tests/frontend/features/media-tags/."
     },
@@ -192,8 +196,10 @@
         "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/config.js",
         "tests/frontend/core/core-toast-duration.test.mjs"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Same rule in the three places the rewrite reads the setting (features/settings/state.ts, core/ui/runtime.ts through host/ui-host.ts, admin/config/page/timing.ts). Difference: a toast shown before the configuration exists still gets 1500 ms; upstream would schedule it with an undefined duration when JE.CONFIG lacks the value.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p3-toast-zero.*"
     },
     {
       "sha": "aa8f4312cb0f75e3d4a35c57b0fd3831548d4e4f",
@@ -214,7 +220,9 @@
         "tests/poster/parity/status-fixtures.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "b292ec58181bd7996ccb9f73cc59c6d60c25f24d"
+      ],
       "with": "6ece3f529f32cf00294f19597c0e0c9daa826eb1",
       "notes": "The same fixture change; the offline parity run passes with 241 Status fixtures and 0 web/native differences."
     },

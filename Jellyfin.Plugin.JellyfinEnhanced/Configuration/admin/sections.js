@@ -772,7 +772,7 @@
             min: 0,
             step: 1,
             label: "Toast Notification Duration (ms)",
-            desc: "How long pop-up toast messages (e.g. &ldquo;Shuffle enabled&rdquo;, &ldquo;Bookmark saved&rdquo;) stay on-screen before fading out. Default: 3000 ms (3 seconds)."
+            desc: "How long pop-up toast messages (e.g. &ldquo;Shuffle enabled&rdquo;, &ldquo;Bookmark saved&rdquo;) stay on-screen before fading out. Default: 3000 ms (3 seconds). Set to <strong>0</strong> to turn toasts off. Use 1000 or more so they can be read; the preview uses the value you typed, before saving."
           },
           { type: "button", id: "jeTestToast", label: "Preview toast" }
         ]

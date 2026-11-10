@@ -690,3 +690,22 @@ test('a failure that is not a refusal is not reported as one', async () => {
   assert.equal(isAbortError(Object.assign(new Error('x'), { name: 'AbortError' })), true);
   for (const other of [new Error('x'), { name: 'TypeError' }, null, 'AbortError', undefined]) assert.equal(isAbortError(other), false);
 });
+
+// Upstream af5f9678: the preview follows the real toast: 0 means off, any other value is used as typed.
+test('the toast preview uses the typed duration, and says toasts are off at 0', async t => {
+  const h = await loadedPage(t);
+  const preview = value => {
+    h.document.getElementById('ToastDuration').value = value;
+    h.document.getElementById('jeTestToast').click();
+    const shown = h.document.querySelectorAll('.je-preview-toast');
+    assert.equal(shown.length, 1, 'one preview at a time');
+    return shown[0].textContent;
+  };
+  assert.equal(preview('0'), 'Toasts are turned off (0 ms). Nothing will pop up.');
+  assert.equal(preview('50'), 'Example toast, disappears in 0.1s');
+  assert.equal(preview('4000'), 'Example toast, disappears in 4.0s');
+  assert.equal(preview(''), 'Example toast, disappears in 3.0s');
+  assert.equal(preview('-20'), 'Example toast, disappears in 3.0s');
+  assert.equal(preview('999999'), 'Example toast, disappears in 120.0s');
+  assert.match(h.document.querySelector('[data-desc-for="ToastDuration"]').textContent, /Set to 0 to turn toasts off\./);
+});
