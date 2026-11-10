@@ -456,16 +456,41 @@ PY
 
 # BROWSER (PLAN.md): npm run test:browser with a failure ratchet. New failures fail by name; a listed test that passes
 # is a note (remove it from the list). Never add a line to baselines/browser-failures.txt.
+# Workers: JE_BROWSER_WORKERS, default the cores this process may use (at least 6). Playwright queues tests project by
+# project and file by file, so a test that alone takes half a minute and sits late in the queue ends the run on its
+# own. The spec files in JE_BROWSER_LONG (default none: one run) can therefore run as a second
+# Playwright run at the same time, with JE_BROWSER_LONG_WORKERS (default 2) of the workers and its own port; the
+# results of both runs are ratcheted together. Every spec runs exactly once either way.
 gate_browser() (
   set -e
-  local dir rc=0 new gone
-  export JE_BROWSER_WORKERS=${JE_BROWSER_WORKERS:-6}
+  local dir rc=0 rc2=0 new gone cores long=${JE_BROWSER_LONG-} pid
+  cores=$(nproc)
+  export JE_BROWSER_WORKERS=${JE_BROWSER_WORKERS:-$(( cores > 6 ? cores : 6 ))}
   dir=$(mktemp -d)
-  step "BROWSER: npm run test:browser ($JE_BROWSER_WORKERS workers), failures vs $BASELINES/browser-failures.txt"
-  PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/results.json" npm run test:browser -- --reporter=list,json || rc=$?
-  [ -s "$dir/results.json" ] || { echo "BROWSER: no JSON report written (exit $rc)" >&2; rm -rf "$dir"; false; }
-  keep_report "$dir/results.json" browser-results.json
-  browser_results "$dir/results.json" > "$dir/results"
+  if [ -z "$long" ]; then
+    step "BROWSER: npm run test:browser ($JE_BROWSER_WORKERS workers), failures vs $BASELINES/browser-failures.txt"
+    PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/results.json" npm run test:browser -- --reporter=list,json || rc=$?
+    [ -s "$dir/results.json" ] || { echo "BROWSER: no JSON report written (exit $rc)" >&2; rm -rf "$dir"; false; }
+    keep_report "$dir/results.json" browser-results.json
+    browser_results "$dir/results.json" > "$dir/results"
+  else
+    local lw=${JE_BROWSER_LONG_WORKERS:-2} port2
+    port2=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
+    step "BROWSER: npm run test:browser as two runs at once: $long ($lw workers, port $port2) and the rest ($(( JE_BROWSER_WORKERS - lw )) workers), failures vs $BASELINES/browser-failures.txt"
+    JE_BROWSER_PART=long JE_BROWSER_LONG=$long JE_BROWSER_PORT=$port2 JE_BROWSER_WORKERS=$lw PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/long.json" \
+      npm run test:browser -- --reporter=list,json >"$dir/long.log" 2>&1 &
+    pid=$!
+    JE_BROWSER_PART=rest JE_BROWSER_LONG=$long JE_BROWSER_WORKERS=$(( JE_BROWSER_WORKERS - lw )) PLAYWRIGHT_JSON_OUTPUT_NAME="$dir/rest.json" \
+      npm run test:browser -- --reporter=list,json || rc=$?
+    wait "$pid" || rc2=$?
+    step "BROWSER: the long run ($long), exit $rc2"
+    cat "$dir/long.log" >&2
+    [ -s "$dir/rest.json" ] && [ -s "$dir/long.json" ] || { echo "BROWSER: a JSON report is missing (exits $rc, $rc2)" >&2; rm -rf "$dir"; false; }
+    keep_report "$dir/rest.json" browser-results.json
+    keep_report "$dir/long.json" browser-results-long.json
+    { browser_results "$dir/rest.json"; browser_results "$dir/long.json"; } > "$dir/results"
+    if [ -n "$(cut -d' ' -f2- "$dir/results" | sort | uniq -d)" ]; then echo "BROWSER: a test ran in both runs" >&2; rm -rf "$dir"; false; fi
+  fi
   new=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -23 - "$BASELINES/browser-failures.txt")
   gone=$(sed -n 's/^FAIL //p' "$dir/results" | LC_ALL=C sort -u | LC_ALL=C comm -13 - "$BASELINES/browser-failures.txt")
   echo "BROWSER: $(wc -l < "$dir/results") tests, passed $(grep -c '^PASS ' "$dir/results" || true), failed $(grep -c '^FAIL ' "$dir/results" || true) (baseline list $(wc -l < "$BASELINES/browser-failures.txt")), skipped $(grep -c '^SKIP ' "$dir/results" || true)" >&2
