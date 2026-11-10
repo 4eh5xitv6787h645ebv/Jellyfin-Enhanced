@@ -74,14 +74,18 @@ def watch_times(name, cmd, cwd, env, edits, files):
     fd = proc.stdout.fileno()
     buf, pending = '', ''
 
-    def wait_result(timeout):
-        """The next `Found N errors` line. Reads the raw pipe: select() on a buffered reader misses lines it holds."""
+    def wait_result(timeout, after_change=False):
+        """The next `Found N errors` line (after a `File change detected` line when after_change). Reads the raw pipe:
+        select() on a buffered reader misses lines it holds."""
         nonlocal buf, pending
         end = time.time() + timeout
+        seen_change = not after_change
         while time.time() < end:
             while '\n' in pending:
                 line, pending = pending.split('\n', 1)
-                if re.search(r'Found (\d+) errors?', line):
+                if 'File change detected' in line:
+                    seen_change = True
+                elif seen_change and re.search(r'Found (\d+) errors?', line):
                     return line.strip()
             r, _, _ = select.select([fd], [], [], 0.05)
             if r:
@@ -101,10 +105,16 @@ def watch_times(name, cmd, cwd, env, edits, files):
         text = f.read_text()
         add = i % 2 == 0
         new = text + '\n// timing edit\n' if add else text.replace('\n// timing edit\n', '', 1)
-        time.sleep(1.0)    # let the watcher settle (file-system event coalescing)
+        # Let the watcher settle, then drop whatever it printed since its last result (a second report of one edit
+        # must not count as the answer to the next edit).
+        time.sleep(1.0)
+        while select.select([fd], [], [], 0.2)[0]:
+            if not os.read(fd, 65536):
+                break
+        pending = ''
         t = time.perf_counter()
         f.write_text(new)
-        line = wait_result(60)
+        line = wait_result(60, after_change=True)
         times.append(time.perf_counter() - t if line else None)
         outs.append(line)
     # leave the files as they were
