@@ -477,7 +477,9 @@
         "tests/run.py"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "710e2b41fc0355f39296219e2e0df6fdbdecbcec"
+      ],
       "notes": "The same job matrix (one job per Playwright project, each installing only its browser) and `tests/run.py --project`. The rewrite’s runner keeps its jf12-only `--target`; a tooling test for the new option is added."
     },
     {
@@ -496,8 +498,9 @@
       "paths": [
         "README.md"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The same badge changes. The three test-count badges carry this tree’s counts (699 browser, 3.3k backend, 3.9k frontend) instead of upstream’s, and the 10.11 download badge is not here because the rewrite’s README has none."
     }
   ]
 }

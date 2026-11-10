@@ -4,7 +4,7 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-17 upstream commits: 1 pending, 16 ported.
+17 upstream commits: 17 ported.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -23,5 +23,5 @@ What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-
 | 13 | [`83510ea1`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/83510ea1332c9027536be52598e164e4ed9f59c5) | 2026-11-09 | fix | seerr | fix(recommendations): don't open category tiles after dragging a row (#1030) | ported | `f824bde5` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p5-recommendations-drag.* |
 | 14 | [`c22870b2`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/c22870b2d666a243a3a1269a1fbf7e25c662b95b) | 2026-11-09 | fix | details-providers | fix(audio-language): show audio languages on movie page | ported | `df9e0873` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p6-audio-language.* |
 | 15 | [`19cfe99a`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/19cfe99a152195482d0bd95598f490e155e9810c) | 2026-11-10 | security | admin, details-providers, player | ci: Fix/code scanning alerts (#1036) | ported | `e76b6c11` | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p9-code-scanning.tests-before.txt |
-| 16 | [`b1919a25`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/b1919a258b327d2b2f6b541ed8434b523c100a30) | 2026-11-10 | ci |  | ci(regression): run the browser suite as one parallel job per Playwright project | ported |  | The same job matrix (one job per Playwright project, each installing only its browser) and `tests/run.py --project`. The rewrite’s runner keeps its jf12-only `--target`; a tooling test for the new option is added. |
-| 17 | [`0586df79`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/0586df7979b3d1f400357ba6efd4b1c2f61735fa) | 2026-11-10 | docs |  | docs(readme): add test badges and icons, recolor badge row | pending |  |  |
+| 16 | [`b1919a25`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/b1919a258b327d2b2f6b541ed8434b523c100a30) | 2026-11-10 | ci |  | ci(regression): run the browser suite as one parallel job per Playwright project | ported | `710e2b41` | The same job matrix (one job per Playwright project, each installing only its browser) and `tests/run.py --project`. The rewrite’s runner keeps its jf12-only `--target`; a tooling test for the new option is added. |
+| 17 | [`0586df79`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/0586df7979b3d1f400357ba6efd4b1c2f61735fa) | 2026-11-10 | docs |  | docs(readme): add test badges and icons, recolor badge row | ported |  | The same badge changes. The three test-count badges carry this tree’s counts (699 browser, 3.3k backend, 3.9k frontend) instead of upstream’s, and the 10.11 download badge is not here because the rewrite’s README has none. |
