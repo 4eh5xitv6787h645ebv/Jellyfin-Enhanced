@@ -544,6 +544,111 @@
       ],
       "notes": "The C# hunks apply at the rewrite’s paths (Shared/MediaTags/PluginConfigurationPatch.cs and MediaTagsPortable.cs, Features/Platform/Services/CdnAssetService.cs) and the stylesheet as is (js/enhanced/admintags/admin-tags.css is hand-written here too). Re-implemented in TypeScript: the `wide` and `mask` field options (features/media-tags/admin/types.ts and fields.ts), the five field declarations (sections/awards.ts, badges.ts, language.ts), and the Maintainerr card (admin/config/sections/about.ts, with its placeholder in client/html/admin-config/configPage.html). Differences from upstream: docs/enhanced/tags.md carries the same paragraph as the two advanced pages and upstream left it describing a write-only password field, so it is corrected here as well (found bug filed); three tests are added for what upstream left untested (the wide boxes and the stylesheet rules, the Services card, the logo in the CDN prefetch list); tests/fixtures/admin-config-baseline.json gains the `svc-maintainerr` section, as docs/rewrite/admin-config.md prescribes for a schema change. The card has no setting of its own, so the What’s New index is unchanged. No route, authorization or registration changes.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p18-maintainerr-key.*"
+    },
+    {
+      "sha": "0e141dfae70366c87e1ccd7eedd4b368887f5d3b",
+      "date": "2026-11-10T15:14:20+00:00",
+      "subject": "feat(status-tags): add an admin switch for status badges on collections",
+      "class": "feature",
+      "features": [
+        "media-tags",
+        "platform"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 13,
+        "insertions": 76,
+        "deletions": 2
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagSettings.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/StatusRules.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js",
+        "docs/advanced/api.md",
+        "docs/advanced/config-flag-groups.json",
+        "docs/enhanced/tags.md",
+        "tests/backend/PosterTags/NativeStatusBandTests.cs",
+        "tests/docs/production-inventory.json",
+        "tests/fixtures/admin-tags-page-fields.json",
+        "tests/frontend/features/features-status-tags-vocabulary.test.mjs"
+      ],
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "The C# hunks apply at the rewrite’s paths (Configuration/PluginConfiguration.cs as is; Shared/MediaTags/PosterTags/PosterTagSettings.cs and Resolution/StatusRules.cs). Upstream adds the flag to the public configuration inside its single controller; here it is a required member of BootstrapPublicConfig (Transport/BootstrapConfig.cs) filled in Features/Platform/JePlatformController.Bootstrap.cs, so public-config and the bootstrap response both carry it and contracts/bootstrap.schema.json and client/src/contracts are regenerated. Re-implemented in TypeScript: the Collections card (features/media-tags/admin/sections/badges.ts, with its line in the module’s lexical index, which is what the save allowlist, What’s New and the docs generator read) and the check in the web resolver (features/media-tags/types/status/statustags.ts). That file is frozen at its recorded size (1,454 lines), so the two added lines take the place of a three-line block written as one line; nothing else in it changes. Tests: upstream’s three files apply at the moved paths; two are added for the rewrite’s own paths (the card on the admin page and what turning it off saves; the flag in the public configuration); admin-tags-rewrite.declarations.json, the record of what the server reads from upstream’s hand-written section modules, is regenerated from those modules at 0e141dfa (it was taken at 2e0f9251) and gains exactly this field. docs/advanced/config-flag-groups.json and tests/docs/production-inventory.json are regenerated, not patched. PosterTagSettings.ResolverVersion is not bumped, as upstream: the switch is part of the settings digest only when off, so the same settings and data still give the same tags. No route, authorization or registration changes.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p19-collections-switch.*"
+    },
+    {
+      "sha": "324b5c92ddac41370f1931acccc747e7e0941a9e",
+      "date": "2026-11-10T17:08:45+00:00",
+      "subject": "fix(status-tags): base a collection's Just Added on its newest member",
+      "class": "fix",
+      "features": [
+        "media-tags",
+        "settings"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 22,
+        "insertions": 276,
+        "deletions": 44
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Model/TagCacheEntry.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/PosterTagSettings.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/PosterTags/Resolution/StatusRules.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/Services/TagCacheService.cs",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/enhanced/admintags/sections/badges.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/statustags.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-cache-store.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/js/tags/tag-pipeline.js",
+        "docs/advanced/api.md",
+        "docs/enhanced/tags.md",
+        "tests/backend/Core/CoreTagItemLooksTests.cs",
+        "tests/backend/Core/CoreTagLookSettingsTests.cs",
+        "tests/backend/PosterTags/NativeStatusBandTests.cs",
+        "tests/backend/PosterTags/PosterTokenTests.cs",
+        "tests/backend/PosterTags/QualityDisplayTests.cs",
+        "tests/backend/PosterTags/StatusTagsCacheFactsTests.cs",
+        "tests/backend/PosterTags/TagCacheCollectionLanguagesTests.cs",
+        "tests/frontend/core/core-tag-pipeline.test.mjs",
+        "tests/frontend/features/features-status-tags-vocabulary.test.mjs",
+        "tests/poster/parity/status-fixtures.mjs"
+      ],
+      "status": "pending",
+      "rewriteCommits": [],
+      "unmappedPaths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Controllers/JellyfinEnhancedController.cs"
+      ]
+    },
+    {
+      "sha": "232815422e3143b3930d30ad57de2bd243f60c7f",
+      "date": "2026-11-10T17:37:05+00:00",
+      "subject": "fix(config): search and New badges for the Media Tags tab, tidy the Maintainerr card link",
+      "class": "fix",
+      "features": [
+        "admin"
+      ],
+      "issues": [],
+      "release": null,
+      "size": {
+        "files": 3,
+        "insertions": 115,
+        "deletions": 1
+      },
+      "paths": [
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/admin/sections.js",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/configPage.html",
+        "Jellyfin.Plugin.JellyfinEnhanced/Configuration/jeAdmin.css"
+      ],
+      "status": "pending",
+      "rewriteCommits": []
     }
   ]
 }

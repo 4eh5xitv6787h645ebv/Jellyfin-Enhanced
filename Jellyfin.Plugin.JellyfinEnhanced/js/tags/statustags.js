@@ -369,9 +369,8 @@
     function pickBadge(data, itemId) {
       const normalizedId = normId(itemId);
       const current = normalizedId ? JE.tagPipeline?.peekItemFacts?.(normalizedId) : null;
-      if (current) {
-        Object.assign(data, readFacts(current), { latest: toMs(current.LatestEpisodeAdded) });
-      }
+      if (current) Object.assign(data, readFacts(current), { latest: toMs(current.LatestEpisodeAdded) });
+      if (data.type === "BoxSet" && JE.pluginConfig?.StatusTagsOnCollections === false) return null;
       const now = Date.now();
       const today = localDay(now);
       const justAddedMs = windowMs("StatusTagsJustAddedDays", vocabulary.thresholds.justAddedDays);

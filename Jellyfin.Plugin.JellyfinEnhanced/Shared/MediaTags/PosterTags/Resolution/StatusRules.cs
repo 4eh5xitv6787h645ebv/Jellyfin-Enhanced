@@ -58,6 +58,7 @@ public static class StatusRules
     public static StatusTag? Resolve(TagCacheEntry data, PosterTagSettings settings, PosterStatusContext context)
     {
         if (!settings.Shows(PosterTagGroup.Status)) return null;
+        if (data.Type == "BoxSet" && !settings.StatusOnCollections) return null;
         var now = context.Now.ToUnixTimeMilliseconds();
         var today = LocalDate(context.Now, settings.StatusTimeZone);
         var justAddedMs = settings.StatusJustAddedDays * Thresholds.DayMs;
