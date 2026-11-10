@@ -202,9 +202,13 @@ be_build_and_g() (
   new=$(build_warnings <"$log" | LC_ALL=C comm -23 - "$BASELINES/build-warnings.txt")
   rm -f "$log"
   if [ -n "$new" ]; then echo "B: build warnings not in $BASELINES/build-warnings.txt (code file):" >&2; printf '  %s\n' "$new" >&2; false; fi
+  # One build serves G and T: the plugin was just built (B, same configuration), so the test project builds against
+  # its output without building it again (BuildProjectReferences=false), and both test runs use --no-build.
+  step "B: build the test project once against B's plugin build (G and T run --no-build)"
+  dotnet build "$TESTS" -c Release --no-restore -p:JellyfinTarget=jf12 -p:BuildProjectReferences=false -tl:off
   if [ -d tests/backend/Architecture ]; then
     step "G: Architecture gates"
-    dotnet test "$TESTS" -c Release --no-restore -p:JellyfinTarget=jf12 --filter "FullyQualifiedName~Architecture"
+    dotnet test "$TESTS" -c Release --no-restore --no-build -p:JellyfinTarget=jf12 --filter "FullyQualifiedName~Architecture"
   else
     step "G: skipped (tests/backend/Architecture does not exist yet; added by backend S0)"
   fi
@@ -216,7 +220,7 @@ be_t() (
   local res rc=0
   step "T: full backend suite (failure ratchet vs $BASELINES/dotnet-failures.txt, dotnet-tests.txt)"
   res=$(mktemp -d)
-  dotnet test "$TESTS" -c Release --no-restore -p:JellyfinTarget=jf12 \
+  dotnet test "$TESTS" -c Release --no-restore --no-build -p:JellyfinTarget=jf12 \
     --logger "trx;LogFileName=je.trx" --results-directory "$res" --collect:"XPlat Code Coverage" || rc=$?
   [ -s "$res/je.trx" ] || { echo "T: no TRX written (dotnet test exit $rc)" >&2; false; }
   keep_report "$res/je.trx" T.trx
