@@ -1,0 +1,7 @@
+# The port's node tests run on the tree before the port (414c1b45):
+$ node --test tests/frontend/pages/pages-recommendations.test.mjs
+✖ category rows suppress clicks after mouse drags, including across tiles and back to the start (74.609291ms)
+✖ category rows preserve small mouse movements, subsequent clicks and keyboard activation (7.98423ms)
+ℹ tests 11
+ℹ pass 9
+ℹ fail 2

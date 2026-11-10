@@ -1,0 +1,4 @@
+# The port's test run on the tree before the fix (d063821d plus the new test), `je12 test spoiler-guard --dotnet`:
+FAIL dotnet tests
+       JE.Tests.Features.SpoilerGuard.PrivacyFieldFilterTests.HomeScreenSectionsRowsStripGuardedUnwatchedEpisodes
+test: FAIL in 47s

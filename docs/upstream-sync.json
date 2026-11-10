@@ -399,7 +399,9 @@
         "tests/frontend/features/features-media-info.test.mjs"
       ],
       "status": "ported",
-      "rewriteCommits": [],
+      "rewriteCommits": [
+        "06fb4f81d6ce3d278cd07753f4cad32c7cce06e8"
+      ],
       "notes": "The same fallback in client/src/features/details-providers/media-info.ts: a selected version whose /tag-data source entry carries no streams reads the top-level streams. Upstream’s test, plus one that a selected version never borrows another version’s streams.",
       "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p6-audio-language.*"
     }

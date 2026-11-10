@@ -1,0 +1,5 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p4-spoiler-hss.mjs
+# deployed: upstream-c22870b2d666 (dll 1533ef66dbdbe2da); exit 0
+SCRIPT {"seriesGuarded":true,"homeScreenSectionsNextUp":[{"episode":"S1E2","name":"Season 1, Episode 2","overview":null,"path":null}],"jellyfinNextUp":[{"episode":"S1E2","name":"Season 1, Episode 2","overview":"Spoiler Guard activated","path":null}]}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

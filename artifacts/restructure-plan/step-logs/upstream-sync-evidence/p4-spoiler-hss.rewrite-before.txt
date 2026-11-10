@@ -1,0 +1,6 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p4-spoiler-hss.mjs
+# deployed: d063821da28e (dll ca4d2cc92a432fb6); exit 0
+# (the file name in "path" is replaced here; the response held the full path of the episode file)
+SCRIPT {"seriesGuarded":true,"homeScreenSectionsNextUp":[{"episode":"S1E2","name":"Tape 1, Side B","overview":null,"path":"/tv/<series folder>/Season 01/<the episode's real file name>"}],"jellyfinNextUp":[{"episode":"S1E2","name":"Season 1, Episode 2","overview":"Spoiler Guard activated","path":null}]}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+URL /web/index.html#/home

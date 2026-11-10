@@ -1,0 +1,7 @@
+# The port's node tests run on the tree before the port (8f419419):
+$ node --test tests/frontend/features/details-providers/features-media-info.test.mjs
+✖ audio language for a selected version reads the top-level streams when its source entry carries none (6.974064ms)
+✖ audio language for a selected version never borrows another version's streams, with or without top-level ones (8.330353ms)
+ℹ tests 18
+ℹ pass 16
+ℹ fail 2

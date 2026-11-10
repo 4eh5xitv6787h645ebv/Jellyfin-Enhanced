@@ -1,0 +1,14 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p5-recommendations-drag.mjs
+# deployed: upstream-c22870b2d666 (dll 1533ef66dbdbe2da); exit 0
+SCRIPT {"tiles":32,"categoryOpenAfterDrag":null,"categoryOpenAfterPlainClick":"Marvel Studios"}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://image.tmdb.org/t/p/w300/hUzeosd33nzE5MCNsZxCGEKTXaQ.png
+BLOCKED https://image.tmdb.org/t/p/w300/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png
+BLOCKED https://image.tmdb.org/t/p/w300/wdrCwmRnLFJhEoH8GSfymY85KHT.png
+BLOCKED https://image.tmdb.org/t/p/w300/zhD3hhtKB5qyv7ZeL4uLpNxgMVU.png
+BLOCKED https://image.tmdb.org/t/p/w300/wwemzKWzjKYJFfCeiB57q3r4Bcm.png
+BLOCKED https://image.tmdb.org/t/p/w300/tuomPhY2UtuPTqqFnKMVHvSb724.png
+BLOCKED https://image.tmdb.org/t/p/w300/1edZOYAfoyZyZ3rklNSiUpXX30Q.png
+BLOCKED https://image.tmdb.org/t/p/w300/bngHRFi794mnMq34gfVcm9nDxN1.png
+BLOCKED https://image.tmdb.org/t/p/w300/8lvHyhjr8oUKOOy2dKXoALWKdp0.png
+URL /web/index.html#/recommendations

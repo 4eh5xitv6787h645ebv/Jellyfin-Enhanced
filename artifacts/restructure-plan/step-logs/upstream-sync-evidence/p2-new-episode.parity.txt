@@ -1,0 +1,8 @@
+# Web rule (statustags.js) against native rule (StatusRules.cs) on the fixed-clock Status fixtures, after the port
+$ TZ=UTC LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 node tests/poster/parity/run.mjs --offline     (Node 26.2.0)
+Status web fixtures: 241 passed
+Status native/web parity: 241 fixtures, 0 differences
+names: 115960 codes, 0 mismatches
+casing: 30794 strings, 0 mismatches
+colours: 17 posters, 0 mismatches
+exit 0 (1m34s)

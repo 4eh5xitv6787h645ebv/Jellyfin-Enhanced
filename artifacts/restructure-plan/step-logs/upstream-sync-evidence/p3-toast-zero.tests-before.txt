@@ -1,0 +1,8 @@
+# The port's node tests run on the tree before the port (b292ec58):
+$ node --test tests/frontend/core/core-toast-duration.test.mjs tests/frontend/admin/config/admin-config-rewrite.test.mjs
+✖ the toast preview uses the typed duration, and says toasts are off at 0 (959.949876ms)
+✖ a toast duration of 0 turns toasts off, including ones that pass their own duration (66.804019ms)
+✖ a configured duration is used as set, and a missing or invalid one falls back to 1500 (20.169188ms)
+ℹ tests 55
+ℹ pass 52
+ℹ fail 3

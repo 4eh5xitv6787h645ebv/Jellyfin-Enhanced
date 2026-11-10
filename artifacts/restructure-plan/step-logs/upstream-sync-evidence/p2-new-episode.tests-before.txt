@@ -1,0 +1,7 @@
+# The port's tests run on the tree before the fix (04738805 plus the new and updated tests), `je12 test media-tags --dotnet`:
+FAIL npm tests (68 files)   1 failure(s) not in the known-failure list:
+       tests/frontend/features/media-tags/features-status-tags-vocabulary.test.mjs :: badge rule: episode: recently added alone is Just Added, not New Episode
+FAIL dotnet tests
+       JE.Tests.Features.MediaTags.NativeStatusNewEpisodeTests.An_episode_added_recently_but_aired_long_ago_is_Just_Added
+       JE.Tests.Features.MediaTags.NativeStatusNewEpisodeTests.An_episode_added_recently_with_no_air_date_is_Just_Added_and_nothing_with_Just_Added_off
+test: FAIL in 108s

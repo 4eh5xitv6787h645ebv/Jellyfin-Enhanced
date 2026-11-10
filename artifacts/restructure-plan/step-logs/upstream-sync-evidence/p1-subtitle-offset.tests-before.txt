@@ -1,0 +1,13 @@
+# The port's node tests run on the tree before the port (226e8982):
+$ node --test tests/frontend/features/player/features-player-rewrite.test.mjs tests/frontend/bootstrap/bootstrap-shortcuts.test.mjs tests/frontend/features/settings-panel/settings-panel-rewrite.test.mjs tests/frontend/admin/config/admin-shortcut-defaults.test.mjs
+✖ the subtitle offset shortcuts default to [ and ] in the Player category (1.132028ms)
+✖ [ and ] nudge the subtitle offset through the player, only on the video page (5.093786ms)
+✖ DecreaseSubtitleOffset is a player action: it cannot take a key Jellyfin's player uses, and can be rebound (5.326536ms)
+✖ IncreaseSubtitleOffset is a player action: it cannot take a key Jellyfin's player uses, and can be rebound (5.003879ms)
+✖ subtitle offset shortcut moves the host slider in 0.1 s steps and shows its panel for two idle seconds (4.884851ms)
+✖ subtitle offset shortcut says so when the host has no usable slider and changes nothing (4.218404ms)
+✖ leaving the player hides the subtitle offset panel the shortcut opened and drops its timer (4.001368ms)
+✖ the panel lists the subtitle offset shortcuts in the Player column with their keys (25.973956ms)
+ℹ tests 58
+ℹ pass 50
+ℹ fail 8

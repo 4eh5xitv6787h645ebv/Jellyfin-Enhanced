@@ -1,0 +1,14 @@
+$ je12 browse \#/home --script /home/jake/projects/je-upstream-sync/artifacts/restructure-plan/step-logs/upstream-sync-evidence/p1-subtitle-offset.mjs
+# deployed: upstream-c22870b2d666 (dll 1533ef66dbdbe2da); exit 0
+SCRIPT {"bindings":{"DecreaseSubtitleOffset":"[","IncreaseSubtitleOffset":"]"},"start":{"offset":"0","panelHidden":true,"toasts":[]},"afterIncrease":{"offset":"0.1","panelHidden":false,"toasts":[]},"afterIncreaseAgain":{"offset":"0.2","panelHidden":false,"toasts":[]},"afterDecrease":{"offset":"0.1","panelHidden":false,"toasts":[]},"afterIdle":{"offset":"0.1","panelHidden":true,"toasts":[]},"panelRows":[["DecreaseSubtitleOffset","[","[ 🚫"],["IncreaseSubtitleOffset","]","] 🚫"]]}
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/fi.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/is.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/kr.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/no.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /JellyfinEnhanced/cdn/flag-icons/flags/4x3/se.svg
+CONSOLE Failed to load resource: the server responded with a status of 404 (Not Found) /Videos/0ff8461b-ed0a-2658-ec63-487586efdbd3/0ff8461bed0a2658ec63487586efdbd3/Subtitles/17/0/Stream.js
+PAGEERROR Error: [object Response]
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/imdb/imdb.png
+BLOCKED https://cdn.jsdelivr.net/gh/Druidblack/jellyfin-icon-metadata@main/icons/themoviedb/themoviedb.png
+URL /web/index.html#/video
