@@ -4,11 +4,11 @@
 
 What the rewrite has taken from [upstream](https://github.com/n00bcodr/Jellyfin-Enhanced) (`main`) since it branched at `2e0f9251bf`. The source of truth is [`upstream-sync.json`](upstream-sync.json); the procedure is [upstream-sync-procedure.md](upstream-sync-procedure.md).
 
-14 upstream commits: 14 pending.
+14 upstream commits: 13 pending, 1 ported.
 
 | # | Upstream | Date | Class | Features | Subject | Status | Rewrite commit | Note |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [`533614b8`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/533614b80540f82c2b0b16aade6d810f577b50d0) | 2026-11-07 (12.15.0.0) | feature | player, chrome, settings-panel, admin, settings, platform | feat(player): add keyboard shortcuts for subtitle offset | pending |  |  |
+| 1 | [`533614b8`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/533614b80540f82c2b0b16aade6d810f577b50d0) | 2026-11-07 (12.15.0.0) | feature | player, chrome, settings-panel, admin, settings, platform | feat(player): add keyboard shortcuts for subtitle offset | ported |  | artifacts/restructure-plan/step-logs/upstream-sync-evidence/p1-subtitle-offset.* |
 | 2 | [`6daf2118`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/6daf211855528072876d441e58713066605f32fa) | 2026-11-07 (12.15.0.0) | release |  | v12.15.0.0 | pending |  |  |
 | 3 | [`2e20cb83`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/2e20cb83a58dd662e17dcb6784a9da3c55ac2886) | 2026-11-07 | release |  | v12.15.0.0 - Jellyfin Enhanced (synced from jellyfin-plugins) | pending |  | With `6daf2118`. The manifest entry of release 12.15.0.0 (written by the release workflow after the tag). |
 | 4 | [`6ece3f52`](https://github.com/n00bcodr/Jellyfin-Enhanced/commit/6ece3f529f32cf00294f19597c0e0c9daa826eb1) | 2026-11-08 | fix | media-tags | fix(status-tags): only show New Episode on recent air date, not on recent add | pending |  |  |

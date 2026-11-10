@@ -44,7 +44,7 @@ def main(argv):
     if not sha:
         sys.exit(f'upstream_lab_deploy: unknown ref {argv[0]} (run scripts/upstream_sync.py update, or git fetch origin)')
     if (Path(subprocess.run(['git', '-C', str(root), 'rev-parse', '--show-toplevel'], capture_output=True, text=True).stdout.strip())
-            / 'client/src').is_dir() and subprocess.run(['git', '-C', str(root), 'cat-file', '-e', f'{sha}:client/src']).returncode == 0:
+            / 'client/src').is_dir() and subprocess.run(['git', '-C', str(root), 'cat-file', '-e', f'{sha}:client/src'], capture_output=True).returncode == 0:
         sys.exit(f'upstream_lab_deploy: {sha[:12]} is a rewrite commit (it has client/src); use je12 deploy --base {argv[0]}')
 
     started = time.time()

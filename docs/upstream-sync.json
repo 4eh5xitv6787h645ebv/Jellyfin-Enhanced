@@ -43,8 +43,10 @@
         "docs/enhanced/enhanced-features.md",
         "docs/enhanced/enhanced-settings.md"
       ],
-      "status": "pending",
-      "rewriteCommits": []
+      "status": "ported",
+      "rewriteCommits": [],
+      "notes": "Same keys, step and panel flash as upstream. Differences: the two-second hide timer belongs to the player lifetime, so leaving the player hides the panel and drops the timer (upstream leaves a bare setTimeout); a new test pins the admin shortcut grid to the server defaults.",
+      "evidence": "artifacts/restructure-plan/step-logs/upstream-sync-evidence/p1-subtitle-offset.*"
     },
     {
       "sha": "6daf211855528072876d441e58713066605f32fa",
