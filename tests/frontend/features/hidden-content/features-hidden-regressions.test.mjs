@@ -339,3 +339,15 @@ test('in-app navigation to Hidden Content keeps it over the router\'s Page not f
  await router.push('#/hidden-content');assert.deepEqual(router.seen(),{visible:['je-hidden-content-page'],title:'Hidden Content'});
  await router.push('#/home');assert.deepEqual(router.seen(),{visible:['indexPage'],title:'Home'});
 });
+for(const mode of ['HiddenContentUseNativeTab','HiddenContentUseCustomTabs','HiddenContentUsePluginPages'])test(`Manage Hidden Content opens the management panel when the page is placed with ${mode}`,async t=>{
+ // With Plugin Pages the page's own sidebar entry exists; the JE page then never shows itself.
+ const h=setup(t,{html:'<div class="mainDrawer-scrollContainer"><a is="emby-linkbutton" data-itemid="Jellyfin.Plugin.JellyfinEnhanced.HiddenContentPage"></a></div>'});
+ h.JE.pluginConfig[mode]=true;h.JE.initializeHiddenContentPage();
+ h.load('enhanced/settingspanel/ui-panel-hidden-content.js');
+ const button=h.document.createElement('button');button.id='manageHiddenContentBtn';h.document.body.append(button);
+ let closed=0;h.JE.internals.enhancedUi.wireHiddenContentListeners({closePanel:()=>closed++,resetAutoCloseTimer:()=>{}});
+ button.click();
+ assert.equal(closed,1);
+ assert.ok(h.document.querySelector('.je-hidden-management-overlay'),'the management panel opened');
+ assert.equal(h.document.getElementById('je-hidden-content-page'),null);
+});
