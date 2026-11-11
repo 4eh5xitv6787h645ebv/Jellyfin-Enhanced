@@ -1317,9 +1317,11 @@
         if (labelInput) labelInput.focus();
         modal.style.opacity = "1";
       }, 10);
-      required(modal, ".je-bookmark-btn-submit").addEventListener("click", async () => {
+      const submit = required(modal, ".je-bookmark-btn-submit");
+      submit.addEventListener("click", async () => {
         if (!isCurrent()) return;
         const labelInput = required(modal, "#bookmark-label").value.trim();
+        submit.disabled = true;
         try {
           if (isEdit && existingBookmark) {
             if (!await updateBookmark(existingBookmark.id, { label: labelInput })) {
@@ -1336,6 +1338,8 @@
           closeDialog();
         } catch (e) {
           if (isCurrent()) JE.toast(JE.t("toast_bookmark_save_failed"), 3e3);
+        } finally {
+          submit.disabled = false;
         }
       });
       modal.querySelectorAll(".je-bookmark-btn-jump").forEach((btn) => {

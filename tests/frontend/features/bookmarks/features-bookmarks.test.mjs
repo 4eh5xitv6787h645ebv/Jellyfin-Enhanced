@@ -258,6 +258,20 @@ test('player bookmark modal reports a failed edit or delete instead of success',
   assert.equal(h.JE.userConfig.bookmark.bookmarks.one.label,'old');
 });
 
+test('player bookmark modal adds one bookmark when Add is clicked again while the first save is pending',async t=>{
+  const saves=controlledSaves();const h=setup(t,{},saves.save);
+  h.document.body.innerHTML='<div class="videoOsdBottom"><button class="btnUserRating" data-id="item"></button></div>';
+  h.routes.items=async()=>({Items:[{Id:'item',Name:'Movie',Type:'Movie'}]});
+  await h.api.showModal('add');
+  const add=h.document.querySelector('.je-bookmark-btn-submit');
+  add.click();(await saves.next(1));add.click();
+  saves.calls[0].resolve();
+  await settle(()=>h.toasts.includes('toast_bookmark_updated'));
+  for(let i=0;i<50;i++)await new Promise(done=>setImmediate(done));
+  assert.equal(saves.calls.length,1);
+  assert.equal(Object.keys(h.JE.userConfig.bookmark.bookmarks).length,1);
+});
+
 // Episode backfill, delete-all and repeated deletes share the per-owner queue, so
 // memory always ends equal to what the server last accepted.
 const episodeLookup=(season,episode,tvdb)=>({Items:[{Id:'episode',Type:'Episode',ParentIndexNumber:season,IndexNumber:episode,ProviderIds:tvdb?{Tvdb:tvdb}:{}}]});
