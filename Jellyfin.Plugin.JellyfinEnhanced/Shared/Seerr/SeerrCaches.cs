@@ -15,6 +15,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
         // upstream Seerr on every request. Entries expire after 1 hour.
         internal static readonly ConcurrentDictionary<string, (byte[] Content, string ContentType, string ETag, DateTime CachedAt)> _avatarCache = new();
         internal static readonly TimeSpan _avatarCacheDuration = TimeSpan.FromHours(1);
+        // Bounds: one avatar Seerr sends, and the whole cache (past them the oldest entries go first).
+        // Seerr answers the same avatar under many spellings of its path, so entries are not bounded by users.
+        internal const int MaxAvatarBytes = 10 * 1024 * 1024;
+        internal const int MaxAvatarCacheEntries = 500;
+        internal const long MaxAvatarCacheBytes = 64L * 1024 * 1024;
 
         // Cache for Seerr user ID lookups (JellyfinUserId -> SeerrUserId)
         internal static readonly Dictionary<string, (string JellyseerrUserId, DateTime CachedAt)> _userIdCache = new();
