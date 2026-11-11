@@ -214,3 +214,11 @@ test('admin add-items search does not offer a title Seerr links to the library a
  assert.match(grid.textContent,/hidden_content_admin_add_failed/);
  assert.deepEqual([...grid.querySelectorAll('.je-hidden-item-name')].map(n=>n.textContent),['Star vs. the Forces of Evil']);
 });
+// Seerr cards used to store their titles HTML-escaped; such stored entries read back as the plain title.
+test('a stored HTML-escaped title reads back as the plain title without rewriting the stored entry',t=>{
+ const stored={x:{itemId:'',tmdbId:61923,type:'Series',name:'Tom &amp; Jerry&#039;s Lab Day'}};
+ const h=setup(t,{items:stored});
+ assert.equal(h.api.getAllHiddenItems()[0].name,"Tom & Jerry's Lab Day");
+ assert.equal(h.api.filterCalendarEvents([{title:"Tom & Jerry's Lab Day"}]).length,0);
+ assert.equal(stored.x.name,'Tom &amp; Jerry&#039;s Lab Day');
+});

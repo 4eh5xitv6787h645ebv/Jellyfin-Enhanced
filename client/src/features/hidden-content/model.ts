@@ -22,6 +22,9 @@ export function normalizeId(id: unknown): string {
  return typeof id === 'string' || typeof id === 'number' || typeof id === 'bigint' ? String(id).replace(/-/g,'').toLowerCase() : '';
 }
 const itemStrings = ['itemId','name','type','posterPath','seriesId','seriesName','hiddenAt','hideScope'] as const;
+// Seerr cards used to store titles HTML-escaped; such names read back as the title they escaped.
+const ESCAPED: Readonly<Record<string, string>> = {'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&#039;':"'",'&#39;':"'"};
+const unescapeName = (name: string) => name.replace(/&(?:amp|lt|gt|quot|#0?39);/g, e => ESCAPED[e] ?? e);
 function field(source: Record<string, unknown>, name: string): unknown {
  return Object.prototype.hasOwnProperty.call(source,name) ? source[name] : source[name[0]?.toUpperCase() + name.slice(1)];
 }
@@ -31,7 +34,7 @@ export function decodeItem(value: unknown): HiddenItem {
  for(const key of [...itemStrings,'tmdbId','seasonNumber','episodeNumber']) delete item[key];
  for (const key of itemStrings) {
   const v = field(raw,key);
-  if (v !== undefined && v !== null) { if (typeof v !== 'string') throw new Error(`Invalid ${key}`); item[key]=v; }
+  if (v !== undefined && v !== null) { if (typeof v !== 'string') throw new Error(`Invalid ${key}`); item[key]=key==='name' ? unescapeName(v) : v; }
  }
  const tmdb = field(raw,'tmdbId');
  if (tmdb !== undefined && tmdb !== null) {
