@@ -588,6 +588,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         /// </summary>
         public void BuildFullCache(IProgress<double>? progress, CancellationToken cancellationToken)
         {
+            WarmRemoteFacts(cancellationToken);
             _rebuildLock.Wait(cancellationToken);
             try
             {
@@ -671,10 +672,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
 
         private void BuildFullCacheBody(IProgress<double>? progress, CancellationToken cancellationToken, DateTime reconciliationStartedUtc)
         {
-            WarmSourceRatings(cancellationToken);
             NoteLogoBaseline();
-            WarmLogos(cancellationToken);
-            WarmScenes(cancellationToken);
             var customTagsFingerprint = PrepareCustomTagsForBuild();
             _logger.Info("[TagCache] Starting full cache build...");
             var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -881,6 +879,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
         /// </summary>
         public void ReconcileCache(IProgress<double>? progress, CancellationToken cancellationToken)
         {
+            WarmRemoteFacts(cancellationToken);
             _rebuildLock.Wait(cancellationToken);
             try
             {
@@ -915,10 +914,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.MediaTags.Services
                 _logger.Info("[TagCache] No previous reconciliation marker; seeding marker and running delta reconciliation");
             }
 
-            WarmSourceRatings(cancellationToken);
             RefreshSourceRatings();
-            WarmLogos(cancellationToken);
-            WarmScenes(cancellationToken);
             RefreshLogos();
             RefreshScenes();
             var changedSinceUtc = new DateTime(previousTicks, DateTimeKind.Utc).Subtract(TimeSpan.FromMinutes(2));
