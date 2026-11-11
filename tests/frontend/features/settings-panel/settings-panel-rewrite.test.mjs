@@ -40,6 +40,24 @@ function panelHarness(t, { revision = 'loaded-r1', isAdmin = false, hostAdmin, a
   return { ...h, ui, requests, posts, snapshot, panel: () => h.document.getElementById('jellyfin-enhanced-panel') };
 }
 
+test('the panel stays open while it is used by keyboard, TV remote or touch, and still closes once left alone', async t => {
+  const h = panelHarness(t, { ajax: request => request.type === 'GET' ? h.snapshot('loaded-r1') : null });
+  h.JE.pluginConfig.HelpPanelAutocloseDelay = 15000;
+  let now = 0, nextId = 1; const timers = new Map();
+  h.window.setTimeout = (fn, ms = 0) => { timers.set(nextId, { at: now + Number(ms), fn }); return nextId++; };
+  h.window.clearTimeout = id => { timers.delete(id); };
+  const advance = ms => { now += ms; for (const [id, timer] of [...timers].sort((a, b) => a[1].at - b[1].at)) if (timer.at <= now && timers.delete(id)) timer.fn(); };
+  await h.JE.showEnhancedPanel();
+  // No mouse event at all: the pointer never enters the panel.
+  const inside = h.panel().querySelector('.je-pane-title');
+  const uses = [() => inside.dispatchEvent(new h.window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })),
+    () => inside.dispatchEvent(new h.window.FocusEvent('focusin', { bubbles: true })),
+    () => inside.dispatchEvent(new h.window.Event('touchstart', { bubbles: true }))];
+  for (const use of uses) for (let i = 0; i < 3; i++) { advance(10000); assert.ok(h.panel(), `open ${now / 1000} s after opening, used every 10 s`); use(); }
+  advance(14999); assert.ok(h.panel());
+  advance(1); assert.equal(h.panel(), null, 'closed once nobody used it for the configured delay');
+});
+
 test('SETTINGS-PANEL-01: opening the panel loads the revisioned document and the next save uses its revision', async t => {
   let answer;
   const h = panelHarness(t, { ajax: request => request.type === 'GET' ? answer : { Revision: 'saved-r3' } });
