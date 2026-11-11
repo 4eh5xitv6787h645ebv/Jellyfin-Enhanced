@@ -63,3 +63,15 @@ test('in-app navigation to the page renders the loaded queue instead of loading 
  await settled();assert.equal(h.window.location.hash,'#/downloads');
  assert.deepEqual(shown(),{hidden:false,placeholders:0,cards:1});
 });
+test('an issue reporter avatar is downloaded with the session through the avatar proxy and shown',async t=>{
+ // Jellyfin's ApiClient.getUrl returns an absolute address with the query appended.
+ const h=setup(t,{realHelpers:true});const downloads=[];
+ h.window.ApiClient.getUrl=(path,query)=>'http://jellyfin.test'+path+(query?'?'+new h.window.URLSearchParams(query):'');
+ h.window.fetch=async(url,options)=>{downloads.push({url,token:options?.headers?.['X-MediaBrowser-Token']});return new Response('image');};
+ h.window.URL.createObjectURL=()=>'blob:reporter';
+ h.P.state.issues=[{id:9,status:1,issueType:1,createdBy:{displayName:'Reporter',avatar:'/avatar/abc'}}];h.P.renderPage();
+ for(let i=0;i<10;i++)await new Promise(resolve=>setImmediate(resolve));
+ const avatar=h.document.querySelector('.je-issue-card img.je-request-avatar');
+ assert.ok(avatar);assert.equal(avatar.getAttribute('src'),'blob:reporter');assert.notEqual(avatar.style.display,'none');
+ assert.deepEqual(downloads,[{url:'http://jellyfin.test/JellyfinEnhanced/proxy/avatar?path=%2Favatar%2Fabc',token:'test-token'}]);
+});
