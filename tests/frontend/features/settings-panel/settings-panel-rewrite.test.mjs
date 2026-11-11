@@ -347,6 +347,29 @@ test('SETTINGS-PANEL-03: in-range stored indexes keep their presets', async t =>
   assert.equal(h.writes.at(-1).selectedFontSizePresetIndex, 0);
 });
 
+test('the release notes panel and its failure toast are translated, with the date in the chosen language', async t => {
+  const toasts = [];
+  let fail = false;
+  const h = createHarness({
+    JE: { t: key => key, toast: message => toasts.push(message), icon: () => '', IconName: {}, escapeHtml: value => String(value ?? ''),
+      themer: { getThemeVariables: () => ({}) }, core: { mediaLanguage: { uiLocale: () => 'de' } } },
+    fetch: async () => fail ? jsonResponse({}, 500) : jsonResponse({ body: 'Notes', tag_name: 'v12.1', published_at: '2026-11-01T12:00:00Z', html_url: 'https://github.com/x' }),
+  });
+  t.after(() => h.close());
+  h.load('enhanced/settingspanel/ui-release-notes.js');
+  await h.JE.internals.enhancedUi.showReleaseNotesNotification();
+  const panel = h.document.getElementById('jellyfin-release-notes-notification');
+  assert.match(panel.textContent, /release_notes_latest/);
+  assert.match(panel.textContent, new RegExp(`v12\\.1 - ${new Date('2026-11-01T12:00:00Z').toLocaleDateString('de').replace(/\./g, '\\.')}`));
+  assert.equal(panel.querySelector('a[target="_blank"]').textContent, 'release_notes_view_full');
+  assert.equal([...panel.querySelectorAll('button')].at(-1).textContent, 'release_notes_close');
+  panel.remove();
+  fail = true;
+  h.expectConsoleError(/Failed to fetch release notes/);
+  await h.JE.internals.enhancedUi.showReleaseNotesNotification();
+  assert.match(toasts.at(-1), /release_notes_load_failed/);
+});
+
 test('release notes keep a GitHub link only when it is http(s), and escape release text', async t => {
   const h = createHarness({
     JE: { t: key => key, toast() {}, icon: () => '', IconName: {}, escapeHtml: value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),

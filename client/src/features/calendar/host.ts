@@ -26,7 +26,7 @@ export interface CalendarHost {
  isActiveTabContainer(element: HTMLElement): boolean;
  observeTabContainers(id: string, selector: string, callback: () => void): {teardown(): void};};
  nativeTabs: {register(id: string, title: string, mount: (panel: HTMLElement) => void, icon: string): void};
- core: {api: {plugin(path: string, options?: {method: string; body: unknown}): Promise<unknown>};
+ core: {api: {plugin(path: string, options?: {method: string; body: unknown}): Promise<unknown>}; mediaLanguage?: {uiLocale?(): string | undefined};
  ui: {injectCss(id: string, css: string): void; skeletonGridHtml(count: number, options: {minWidth: string; height: string; label: string}): string};
  lifecycle: {register(name: string): Lifecycle}};
 }
