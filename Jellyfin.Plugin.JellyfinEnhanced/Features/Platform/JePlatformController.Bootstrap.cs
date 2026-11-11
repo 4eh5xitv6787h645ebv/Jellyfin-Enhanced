@@ -657,6 +657,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
                     ? null
                     : Shared.SpoilerGuard.SpoilerTagDataStripper.TagStripRevision(Shared.SpoilerGuard.SpoilerTagDataStripper.CreatePolicy(config, spoilerBlurSeries));
 
+            // The client gets the same list GET spoiler-blur/series sends: no title the caller may not see.
+            if (spoilerBlurSeries != null)
+            {
+                try
+                {
+                    spoilerBlurSeries = Shared.SpoilerGuard.SpoilerTitleVisibility.WithoutHiddenTitles(_libraryManager, _userManager.GetUserById(userId), spoilerBlurSeries);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Bootstrap: could not check which Spoiler Guard titles the user may see: {ex.Message}");
+                    spoilerBlurSeries = null;
+                }
+            }
+
             if (config.JellyseerrEnabled)
             {
                 // Same "D"-format id GetJellyseerrUserStatus reads from the token.

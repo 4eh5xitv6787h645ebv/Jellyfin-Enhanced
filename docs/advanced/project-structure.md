@@ -484,7 +484,8 @@ Files in this table are under `Features/SpoilerGuard/Services/` unless the row n
 | `Shared/SpoilerGuard/SpoilerTagDataStripper.cs` | Removes sensitive tag data, shared by web tag endpoints and native poster rendering. |
 | `Shared/SpoilerGuard/SpoilerSeerrRedactor.cs` | Applies the same per-user policy to Seerr, TMDB and MDBList data, after parental filtering and on top of their shared caches, and to the Requests, Downloads and calendar rows JE builds itself. Must change with `SpoilerFieldStripFilter.cs`. |
 | `SpoilerAutoEnableFilter.cs` | Shared content-type/library scope gate for first-play, Seerr-request and library-add automation. |
-| `SpoilerAutoEnableArmer.cs` | Bulk arming for users with library access, including disabled accounts, with one locked `spoilerblur.json` update per user. |
+| `SpoilerAutoEnableArmer.cs` | Bulk arming for users who may see each title (library access, parental rating, tags), including disabled accounts, with one locked `spoilerblur.json` update per user. |
+| `Shared/SpoilerGuard/SpoilerTitleVisibility.cs` | Which series and films a user may see by Jellyfin's own rules: bulk arming skips the others, and a user's Spoiler Guard list is sent to them without them. |
 | `SpoilerLibraryAddAutoEnabler.cs` | Batches new-title library events into bulk arming. |
 | `SpoilerExistingTitlesApplier.cs` | Preview/application for existing titles, run by `Features/SpoilerGuard/Tasks/SpoilerApplyExistingTitlesTask.cs`. |
 | `Shared/SpoilerGuard/SpoilerSeerrPendingPromoter.cs` | Converts pending pre-acquisition protection into library-item entries when content arrives. |

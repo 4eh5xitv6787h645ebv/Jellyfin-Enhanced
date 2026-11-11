@@ -1,4 +1,5 @@
 using System.Reflection;
+using Jellyfin.Data;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -22,10 +23,10 @@ namespace JE.Tests.Features.Platform;
 [Collection("Plugin singleton")]
 public class BootstrapContractTests
 {
-    private static JePlatformController Controller(ApiPluginFixture fixture, Guid user, bool admin, bool documents = true)
+    private static JePlatformController Controller(ApiPluginFixture fixture, Guid user, bool admin, bool documents = true, params object[] services)
     {
         var maintenance = new MaintenanceModeService(Mock.Of<IUserManager>(), Mock.Of<ISessionManager>(), fixture.Core.Paths.Object, fixture.Core.Logger);
-        var controller = ApiAssetTests.Controller(fixture.Core, maintenance, documents ? fixture.Core.Manager : new object());
+        var controller = ApiAssetTests.Controller(fixture.Core, new object[] { maintenance, documents ? fixture.Core.Manager : new object() }.Concat(services).ToArray());
         controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user, admin);
         return controller;
     }
@@ -164,7 +165,11 @@ public class BootstrapContractTests
             fixture.Core.Manager.SaveUserConfiguration(user.ToString("N"), SpoilerBlurImageFilter.SpoilerBlurFileName, new { state.Series });
         else if (document == "full")
             fixture.Core.Manager.SaveUserConfiguration(user.ToString("N"), SpoilerBlurImageFilter.SpoilerBlurFileName, state);
-        var controller = Controller(fixture, user, false);
+        // A viewer with no library, rating or tag limits: every entry is sent.
+        var viewer = new Jellyfin.Database.Implementations.Entities.User("viewer", "default", "default") { Id = user };
+        viewer.SetPermission(Jellyfin.Database.Implementations.Enums.PermissionKind.EnableAllFolders, true);
+        var users = new Mock<IUserManager>(); users.Setup(x => x.GetUserById(user)).Returns(viewer);
+        var controller = Controller(fixture, user, false, true, users.Object, Mock.Of<ILibraryManager>());
         var endpoint = Assert.IsType<OkObjectResult>(ApiAssetTests.SiblingOf<JeSpoilerGuardController>(controller).GetSpoilerBlurSeries());
         var bootstrap = Assert.IsType<JsonResult>(controller.GetBootstrap());
         var root = new DirectoryInfo(AppContext.BaseDirectory);

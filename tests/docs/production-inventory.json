@@ -1158,6 +1158,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerTitleVisibility.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerUserResolver.cs",
       "category": "Shared"
     },
@@ -10648,7 +10652,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 544,
+    "files": 545,
     "routes": 203,
     "configuration_properties": 750,
     "storage_references": 96,
