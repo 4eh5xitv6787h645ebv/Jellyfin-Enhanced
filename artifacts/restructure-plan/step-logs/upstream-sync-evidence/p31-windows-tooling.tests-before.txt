@@ -1,0 +1,32 @@
+tree: 68e07d45, the two generator test files from 685b1958
+folder: <temporary>/je sync check
+python3 3.12.3, node v24.22.2
+
+default encoding with PYTHONUTF8=0 PYTHONCOERCECLOCALE=0 LC_ALL=C LANG=C: ANSI_X3.4-1968
+
+$ PYTHONUTF8=0 PYTHONCOERCECLOCALE=0 LC_ALL=C LANG=C python3 scripts/generate_genre_labels.py --check
+UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 2046: ordinal not in range(128)
+exit 1
+
+$ PYTHONUTF8=0 PYTHONCOERCECLOCALE=0 LC_ALL=C LANG=C python3 scripts/generate_config_flag_groups.py --check
+UnicodeDecodeError: 'ascii' codec can't decode byte 0xc2 in position 1241: ordinal not in range(128)
+exit 1
+
+$ node --test --test-name-pattern 'whatever the default' tests/frontend/features/media-tags/features-tag-runtime-generators.test.mjs tests/frontend/admin/config/features-config-flag-check.test.mjs
+✖ config flag --check passes whatever the default text encoding is
+✖ the genre generator reads and writes UTF-8 with \n line ends whatever the default encoding is
+ℹ tests 2
+ℹ pass 0
+ℹ fail 2
+✖ failing tests:
+  UnicodeDecodeError: 'ascii' codec can't decode byte 0xc2 in position 1241: ordinal not in range(128)
+  UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 2046: ordinal not in range(128)
+
+$ node --test tests/frontend/features/media-tags/features-tag-translation-coverage.test.mjs    (in a folder whose name has a space)
+✔ every shipped locale is reported and its translated Media Tags strings keep their placeholders
+✖ the coverage report counts every string the Media Tags code uses
+ℹ tests 2
+ℹ pass 1
+ℹ fail 1
+✖ failing tests:
+  Error: ENOENT: no such file or directory, open '<temporary>/je%20sync%20check/Jellyfin.Plugin.JellyfinEnhanced/js/locales/en.json'
