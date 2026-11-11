@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Jellyfin.Plugin.JellyfinEnhanced.Configuration;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity;
+using Jellyfin.Data.Enums;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Jellyfin.Plugin.JellyfinEnhanced.Features.SpoilerGuard.Services;
@@ -264,7 +266,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
             }
 
             // 3. Miss — read from disk. Missing is an empty state; a file that cannot be read (I/O error,
-            //    damaged content) keeps the last state read for this user and is left as it is.
+            //    damaged content) keeps the last state read for this user and is left as it is, or, with
+            //    nothing read since the start, guards every series and movie until it reads.
             UserSpoilerBlur state;
             try
             {
@@ -279,8 +282,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                 var known = _lastReadState.TryGetValue(userIdN, out var last);
                 WarnRateLimited(
                     "userstate-load:" + ex.GetType().FullName,
-                    $"Spoiler Guard resolver: could not read the state of {userId}; {(known ? "keeping the last state read" : "no earlier state is known")}. {ex.Message}");
-                state = last ?? new UserSpoilerBlur();
+                    $"Spoiler Guard resolver: could not read the state of {userId}; {(known ? "keeping the last state read" : "guarding every series and movie until it reads")}. {ex.Message}");
+                state = last ?? EverythingGuarded();
             }
 
             _userStateCache[userIdN] = (state, now);
@@ -295,6 +298,30 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                 }
             }
             httpContext.Items[cacheKey] = state;
+            return state;
+        }
+
+        // What a user could guard, all of it: the answer for a state that exists but is unknown, never
+        // written anywhere. It lives in the cache above, so the file is tried again within its TTL.
+        private UserSpoilerBlur EverythingGuarded()
+        {
+            var state = new UserSpoilerBlur();
+            IEnumerable<Guid> Ids(BaseItemKind kind) => _libraryManager.GetItemIds(new InternalItemsQuery
+            {
+                IncludeItemTypes = new[] { kind },
+                IsVirtualItem = false,
+                Recursive = true,
+            });
+            try
+            {
+                foreach (var id in Ids(BaseItemKind.Series)) state.Series[id.ToString("N")] = new SpoilerBlurSeriesEntry { SeriesId = id.ToString("N") };
+                foreach (var id in Ids(BaseItemKind.Movie)) state.Movies[id.ToString("N")] = new SpoilerBlurMovieEntry { MovieId = id.ToString("N") };
+            }
+            catch (Exception ex)
+            {
+                WarnRateLimited("userstate-everything:" + ex.GetType().FullName, $"Spoiler Guard resolver: could not list the library to guard it. {ex.Message}");
+            }
+
             return state;
         }
 

@@ -165,6 +165,28 @@ public class PrivacyFieldFilterTests
         Assert.Equal("Show - S02E03 - Secret ending - pt2", kept.Name); Assert.Equal("/media/Show/Show - S02E03 - Secret ending - pt2.mkv", kept.Path);
     }
 
+    [Fact]
+    public async Task AStateFileUnreadableBeforeAnyReadGuardsEverySeriesUntilItReads()
+    {
+        using var f = new Fixture();
+        // Nothing has read the user's file since the server started, and it cannot be read now.
+        var path = Path.Combine(f.Plugin.Core.ConfigRoot, f.User.ToString("N"), "spoilerblur.json");
+        File.WriteAllText(path, "{\"Series\":{");
+        f.Library.Setup(l => l.GetItemIds(It.Is<MediaBrowser.Controller.Entities.InternalItemsQuery>(q => q.IncludeItemTypes.Contains(BaseItemKind.Series)))).Returns([f.Series]);
+        var episode = f.Episode();
+        await f.Invoke(episode);
+        Assert.Equal("Season 2, Episode 3", episode.Name);
+        Assert.NotEqual("Secret plot", episode.Overview);
+        Assert.Equal("{\"Series\":{", File.ReadAllText(path));
+
+        // Once it reads, its own answer applies: here the user guards nothing.
+        f.Save(new UserSpoilerBlur());
+        SpoilerUserResolver.InvalidateUser(f.User.ToString("N"));
+        var later = f.Episode();
+        await f.Invoke(later);
+        Assert.Equal("Secret ending", later.Name);
+    }
+
     // Upstream d3bd07d3: Home Screen Sections serves the web home rows from its own endpoint.
     [Fact]
     public async Task HomeScreenSectionsRowsStripGuardedUnwatchedEpisodes()

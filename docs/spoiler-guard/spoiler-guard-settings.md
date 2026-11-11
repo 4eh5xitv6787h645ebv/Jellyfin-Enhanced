@@ -477,9 +477,9 @@ Spoiler Guard stores each account's title lists and preferences in a file. Back 
 2. Restore a known-good file or reconfigure your title list and preferences.
 3. Reload any web session whose state failed to load.
 
-!!! warning "Unreadable state can stop protection"
+!!! warning "Unreadable state"
 
-    Some reads return empty defaults when state is unreadable. An empty health response does not prove every store is readable. There is no in-UI health banner.
+    While the file cannot be read, image and metadata filtering keep the last state read since the server started. With none, they guard every series and movie in the library until the file reads, so titles you never guarded can look protected for a while. Some other reads return empty defaults. An empty health response does not prove every store is readable. There is no in-UI health banner.
 
 ??? note "Storage and corruption handling"
 
@@ -493,7 +493,7 @@ Spoiler Guard stores each account's title lists and preferences in a file. Back 
 
     Strict Spoiler Guard operations can quarantine an unreadable store as `spoilerblur.json.corrupt-<timestamp>-<suffix>` and return an error. Relevant interactive endpoints record corruption and return HTTP 503 asking you to reconfigure. A quarantine move does not immediately write a replacement defaults file. If moving fails, deletion can be attempted instead.
 
-    Image/metadata filtering and the raw inspection GET use lenient reads that can return empty defaults without quarantine or a health event. Bulk operations can log failures without recording health events.
+    Image/metadata filtering reads without quarantine or a health event, as the warning above describes. The raw inspection GET uses a lenient read that can return empty defaults. Bulk operations can log failures without recording health events.
 
 ??? note "Inspecting and acknowledging health events"
 
