@@ -363,6 +363,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
             return scope == null ? null : new GuardedRows(this, scope);
         }
 
+        /// <summary>
+        /// <see cref="LoadRows"/> for the caller the request identity ladder resolves (the token's
+        /// user on an authenticated request), as the field filter resolves it for Jellyfin's own
+        /// responses: for a route that does not read the caller itself.
+        /// </summary>
+        /// <param name="httpContext">The current request.</param>
+        /// <returns>The guards, or null when Spoiler Guard doesn't apply to this caller.</returns>
+        public GuardedRows? LoadRowsForRequest(HttpContext httpContext)
+            => LoadRows(_resolver.ResolveUserId(httpContext)?.ToString(), httpContext);
+
         // Null when Spoiler Guard can't apply to this caller, the path nearly every
         // request takes: no body parsing and no library lookups.
         private GuardScope? LoadScope(string? jellyfinUserId, HttpContext httpContext)

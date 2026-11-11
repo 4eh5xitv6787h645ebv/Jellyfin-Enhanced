@@ -31,6 +31,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
         private readonly ArrInstanceClient _arrInstanceClient;
         private readonly ActiveSessionsService _activeSessionsService;
         private readonly HiddenContentDocumentService _hiddenContentDocumentService;
+        private readonly Shared.SpoilerGuard.SpoilerSeerrRedactor _spoilerSeerrRedactor;
 
         public JePlatformController(
             IHttpClientFactory httpClientFactory,
@@ -43,7 +44,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
             Features.Platform.Services.CdnAssetService cdnAssetService,
             Shared.Analytics.UsageEventCounterService usageEventCounterService,
             Features.Platform.Services.AnalyticsReportingService analyticsReportingService,
-            IPluginManager pluginManager)
+            IPluginManager pluginManager,
+            Shared.SpoilerGuard.SpoilerSeerrRedactor spoilerSeerrRedactor)
             : base(userManager, logger, userConfigurationManager)
         {
             _httpClientFactory = httpClientFactory;
@@ -57,6 +59,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
             _arrInstanceClient = new ArrInstanceClient(httpClientFactory, logger);
             _activeSessionsService = new ActiveSessionsService(sessionManager);
             _hiddenContentDocumentService = new HiddenContentDocumentService(userConfigurationManager, logger, _userDisplayResolver);
+            _spoilerSeerrRedactor = spoilerSeerrRedactor;
         }
 
         // [AllowAnonymous]: version is loaded by translations.js cache-buster pre-login.

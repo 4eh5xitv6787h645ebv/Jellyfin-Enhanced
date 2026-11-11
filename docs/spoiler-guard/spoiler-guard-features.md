@@ -160,7 +160,7 @@ With **Blur images** selected, unplayed episodes lose their original artwork and
 | JE Reviews panel | Hides reviews on guarded series, their season/episode pages, and guarded movies, including movies guarded through a collection. |
 | More Info and Seerr cards | Follow the same settings for protected titles, on every page that shows them. See below. |
 | Release date chips | Follow **Hide air date**. |
-| Calendar and Downloads | Episode titles follow **Replace episode titles**, until you play the episode. Calendar dates stay. |
+| Calendar, Downloads and Active Streams | Episode titles follow **Replace episode titles**, until you play the episode. Calendar dates stay. |
 | Requests page | Dates follow **Hide air date**. |
 | MDBList ratings row | Follows **Hide ratings**. |
 

@@ -691,7 +691,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
             {
                 try
                 {
-                    activeStreamSessions = _activeSessionsService.BuildActiveSessionList(isAdmin);
+                    activeStreamSessions = _activeSessionsService.BuildActiveSessionList(isAdmin, _spoilerSeerrRedactor.LoadRows(userId.ToString(), HttpContext));
                 }
                 catch (Exception ex)
                 {
