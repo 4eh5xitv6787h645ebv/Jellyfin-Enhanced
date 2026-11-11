@@ -9,7 +9,7 @@ import type { AdminConfig } from '../domain/config';
 import type { CustomTabsSyncResult } from './types';
 
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
-export type SaveDeps = Pick<PageModules, 'context' | 'arr' | 'blockedUsers' | 'customTabs' | 'dirty' | 'displayCards' | 'gatedHelp' | 'mediaTagsTab' | 'shortcuts' | 'spoiler' | 'load'>;
+export type SaveDeps = Pick<PageModules, 'context' | 'arr' | 'blockedUsers' | 'customTabs' | 'dirty' | 'displayCards' | 'gatedHelp' | 'maintenance' | 'mediaTagsTab' | 'shortcuts' | 'spoiler' | 'load'>;
 
 export function createSave(m: SaveDeps) {
     const { ApiClient, Dashboard, JEAdmin, lifecycle, pluginId } = m.context;
@@ -56,9 +56,11 @@ export function createSave(m: SaveDeps) {
             const mmRemote   = needInput(document.getElementById('mmAction_remote')).checked;
             config.MaintenanceModeAction = maintenanceAction(mmAccounts, mmRemote);
             const mmUsersMode = (asControl(document.querySelector('input[name="maintenanceModeUsers"]:checked')) || {}).value || 'all';
+            // Until the user list has loaded there are no boxes to read, and "[]" would mean every non-admin
+            // user: the fresh read above then keeps the stored selection.
             if (mmUsersMode === 'all') {
                 config.MaintenanceModeAffectedUsers = 'all';
-            } else {
+            } else if (m.maintenance.usersLoaded) {
                 const checked = Array.from(document.querySelectorAll<HTMLInputElement>('.je-mm-user-cb:checked')).map(cb => cb.value);
                 config.MaintenanceModeAffectedUsers = JSON.stringify(checked);
             }
