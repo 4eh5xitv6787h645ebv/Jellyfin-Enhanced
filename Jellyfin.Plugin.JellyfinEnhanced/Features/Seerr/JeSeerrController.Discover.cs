@@ -445,12 +445,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Seerr
         {
             try
             {
-                // Only an item the caller may see, as Jellyfin's own item routes decide
-                // (a hidden item reads as a missing one); administrators as before.
-                var userId = UserHelper.GetCurrentUserId(User);
-                var user = userId.HasValue ? _userManager.GetUserById(userId.Value) : null;
-                var person = IsAdminUser() ? _libraryManager.GetItemById(personId)
-                    : user == null ? null : _libraryManager.GetItemById<BaseItem>(personId, user);
+                // Only an item the caller may see (a hidden item reads as a missing one); administrators as before.
+                var person = GetItemForCaller(personId);
                 if (person == null)
                 {
                     return NotFound(new { message = "Person not found" });
