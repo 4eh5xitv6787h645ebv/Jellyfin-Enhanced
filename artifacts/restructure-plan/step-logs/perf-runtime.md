@@ -454,7 +454,7 @@ evaluation cost (cause A) and the bootstrap validation, which only a profile sho
 
 ## Found bugs
 
-- `NEW-20261110-175959-admin-config-page-html-carries-about-1-mb-of-inl` (`/home/jake/projects/je-found-bugs/inbox`):
+- Admin config page HTML carries about 1 MB of inline source maps (filed as a found bug):
   `configPage.html` is 1.36 MB (upstream 0.47 MB) because its two scripts carry inline base64 source maps (996 KB);
   each plugin page carries one too. Jellyfin serves these pages itself, so they cannot be packed.
 
@@ -552,7 +552,7 @@ all: PASS in 6.0 min (part of final) (2026-11-11 02:41:10, tree b3f18431)
 browser: PASS in 3.2 min (2026-11-11 03:20:14, tree b3f18431)
 == lab
 down: removed lab je128e7253: no container, network, firewall rule or data left (2026-11-10 20:17:22)
-found bugs filed: NEW-20261110-175959-admin-config-page-html-carries-about-1-mb-of-inl
+found bugs filed: 1 (admin config page HTML carries about 1 MB of inline source maps)
 missing: before, after, test, smoke   <- those ran on the second machine, above
 ```
 
@@ -680,7 +680,7 @@ every entry of every delta, and the lab's deltas carry thousands of entries. It 
 cards and keep collection language flags current", a faithful port of upstream `ee1c92dc` (#1029), so upstream's
 current code pays the same; the benchmark's reference `2e0f9251` is older than that fix. Without that function the
 rebased tree stands where the branch stood against upstream (Home cold about +8 ms). It was not changed here; it is
-filed as `NEW-20261111-045449-tag-cache-delta-entrychanged-serializes-every-de` with the numbers and two possible
+filed as a found bug with the numbers and two possible
 fixes.
 
 Gates on the rebased tree: `je12 gate final` on the second machine at 04:15 (`dfb17389`): `all` passed (dotnet 3,321

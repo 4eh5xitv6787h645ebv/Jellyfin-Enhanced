@@ -28,7 +28,7 @@ async function page(t, { saved = {}, answers = [] } = {}) {
 const selectedMaintenance = { MaintenanceModeEnabled: true, MaintenanceModeAction: 'disable_accounts', MaintenanceModeAffectedUsers: JSON.stringify([USER_A]) };
 
 for (const [what, answer] of [['failed to load', failed], ['has not answered yet', pending]]) {
-  test(`FR-035: with the maintenance user list that ${what}, a save keeps the stored selection and maintenance keeps its targets`, async t => {
+  test(`with the maintenance user list that ${what}, a save keeps the stored selection and maintenance keeps its targets`, async t => {
     const h = await page(t, { saved: selectedMaintenance, answers: [[/MaintenanceMode\/Users/, answer]] });
     assert.equal(h.document.getElementById('mmUsers_select').checked, true, 'the page shows "Select specific users"');
     assert.equal(h.document.querySelectorAll('.je-mm-user-cb').length, 0, 'no user boxes to read');
@@ -39,7 +39,7 @@ for (const [what, answer] of [['failed to load', failed], ['has not answered yet
   });
 }
 
-test('FR-035 control: with the user list loaded, a save stores the users ticked', async t => {
+test('control: with the user list loaded, a save stores the users ticked', async t => {
   const users = [{ id: USER_A, username: 'child', hasImage: false }, { id: USER_B, username: 'guest', hasImage: false }];
   const h = await page(t, { saved: selectedMaintenance, answers: [[/MaintenanceMode\/Users/, () => users]] });
   assert.deepEqual([...h.document.querySelectorAll('.je-mm-user-cb')].map(cb => [cb.value, cb.checked]), [[USER_A, true], [USER_B, false]]);
@@ -64,7 +64,7 @@ for (const [what, saved, answers] of [
   ['the server\'s profiles and folders failed', customMovieRequests, [[/jellyseerr\/radarr$/, radarrServers], [/jellyseerr\/radarr\/2$/, failed]]],
   ['the mode is not "Custom", so nothing was loaded', { ...customMovieRequests, AutoMovieRequestQualityMode: 'default' }, []],
 ]) {
-  test(`FR-036: when ${what}, a save keeps the stored automatic-request server, profile and folder`, async t => {
+  test(`when ${what}, a save keeps the stored automatic-request server, profile and folder`, async t => {
     const h = await page(t, { saved, answers });
     await h.submit();
     assert.equal(h.calls.puts.length, 1);
@@ -72,7 +72,7 @@ for (const [what, saved, answers] of [
   });
 }
 
-test('FR-036 control: with the lists loaded, a save stores what the selects show', async t => {
+test('control: with the lists loaded, a save stores what the selects show', async t => {
   const h = await page(t, { saved: customMovieRequests, answers: [[/jellyseerr\/radarr$/, radarrServers], [/jellyseerr\/radarr\/2$/, radarrDetails]] });
   assert.equal(h.document.getElementById('autoMovieRequestProfile').value, '7', 'the stored profile is shown');
   h.document.getElementById('autoMovieRequestProfile').value = '8';
@@ -80,7 +80,7 @@ test('FR-036 control: with the lists loaded, a save stores what the selects show
   assert.deepEqual(autoMovie(h.lastPut()), [2, 8, '/movies4k']);
 });
 
-test('FR-036 control: picking another server whose details fail stores that server with Seerr\'s default profile and folder', async t => {
+test('control: picking another server whose details fail stores that server with Seerr\'s default profile and folder', async t => {
   const h = await page(t, { saved: customMovieRequests, answers: [[/jellyseerr\/radarr$/, radarrServers], [/jellyseerr\/radarr\/2$/, radarrDetails], [/jellyseerr\/radarr\/0$/, failed]] });
   const server = h.document.getElementById('autoMovieRequestServer');
   server.value = '0';
@@ -93,13 +93,13 @@ test('FR-036 control: picking another server whose details fail stores that serv
 const locales = () => ['en', 'de', 'fr'];
 const cultures = () => [{ TwoLetterISOLanguageName: 'en', DisplayName: 'English' }, { TwoLetterISOLanguageName: 'de', DisplayName: 'German' }, { TwoLetterISOLanguageName: 'fr', DisplayName: 'French' }];
 
-test('FR-036: when the language list fails, a save keeps the stored default language', async t => {
+test('when the language list fails, a save keeps the stored default language', async t => {
   const h = await page(t, { saved: { DefaultLanguage: 'de' }, answers: [[/JellyfinEnhanced\/locales/, failed], [/Localization\/Cultures/, cultures]] });
   await h.submit();
   assert.equal(h.lastPut().DefaultLanguage, 'de');
 });
 
-test('FR-036: when the language list arrives after the settings, the stored default language is shown and kept', async t => {
+test('when the language list arrives after the settings, the stored default language is shown and kept', async t => {
   let release;
   const late = new Promise(resolve => { release = resolve; });
   const h = await page(t, { saved: { DefaultLanguage: 'de' }, answers: [[/JellyfinEnhanced\/locales/, () => late.then(locales)], [/Localization\/Cultures/, cultures]] });
@@ -112,7 +112,7 @@ test('FR-036: when the language list arrives after the settings, the stored defa
   assert.equal(h.lastPut().DefaultLanguage, 'de');
 });
 
-test('FR-036 control: with the language list in first, the admin\'s pick is saved', async t => {
+test('control: with the language list in first, the admin\'s pick is saved', async t => {
   const h = await page(t, { saved: { DefaultLanguage: 'de' }, answers: [[/JellyfinEnhanced\/locales/, locales], [/Localization\/Cultures/, cultures]] });
   const select = h.document.getElementById('DefaultLanguage');
   assert.equal(select.value, 'de');
@@ -124,7 +124,7 @@ test('FR-036 control: with the language list in first, the admin\'s pick is save
 const radarrInstances = count => JSON.stringify(Array.from({ length: count }, (_, i) => (
   { Name: 'Radarr ' + (i + 1), Url: 'http://radarr' + (i + 1) + '.test:7878', ApiKey: 'key-' + (i + 1), UrlMappings: '', Enabled: true })));
 
-test('FR-039: a page left open saves what was changed on it over what was saved elsewhere since it loaded', async t => {
+test('a page left open saves what was changed on it over what was saved elsewhere since it loaded', async t => {
   const h = await page(t, { saved: { RadarrInstances: radarrInstances(1), RadarrUrl: 'http://radarr1.test:7878', RadarrApiKey: 'key-1', ShowFileSizes: false, TMDB_API_KEY: 'tmdb-old' } });
   // Another tab, opened later, adds a Radarr instance and changes a key this page also shows.
   Object.assign(h.server.config, { RadarrInstances: radarrInstances(2), TMDB_API_KEY: 'tmdb-new' });
@@ -141,7 +141,7 @@ test('FR-039: a page left open saves what was changed on it over what was saved 
   assert.deepEqual([second.ShowFileSizes, second.RadarrInstances, second.TMDB_API_KEY], [false, radarrInstances(2), 'tmdb-new']);
 });
 
-test('FR-039 control: a setting changed on this page is saved even when another tab changed it too', async t => {
+test('control: a setting changed on this page is saved even when another tab changed it too', async t => {
   const h = await page(t, { saved: { TMDB_API_KEY: 'tmdb-old' } });
   h.server.config.TMDB_API_KEY = 'tmdb-elsewhere';
   const key = h.document.getElementById('TMDB_API_KEY');
@@ -154,7 +154,7 @@ test('FR-039 control: a setting changed on this page is saved even when another 
 const BROADCAST = '/JellyfinEnhanced/MaintenanceMode/Broadcast';
 const ENABLE = '/JellyfinEnhanced/MaintenanceMode/Enable';
 
-test('FR-040: saving while maintenance is already on re-applies it but does not announce it again', async t => {
+test('saving while maintenance is already on re-applies it but does not announce it again', async t => {
   const h = await page(t, { saved: { MaintenanceModeEnabled: true, MaintenanceModeAction: 'disable_remote' } });
   h.document.getElementById('showFileSizes').checked = true;
   await h.submit();
@@ -162,7 +162,7 @@ test('FR-040: saving while maintenance is already on re-applies it but does not 
   assert.equal(h.posted(BROADCAST).length, 0);
 });
 
-test('FR-040 control: turning maintenance on announces it once, and later saves while it is on do not', async t => {
+test('control: turning maintenance on announces it once, and later saves while it is on do not', async t => {
   const h = await page(t, { saved: { MaintenanceModeEnabled: false, MaintenanceModeAction: 'disable_remote' } });
   h.document.getElementById('maintenanceModeEnabled').checked = true;
   await h.submit();
@@ -174,7 +174,7 @@ test('FR-040 control: turning maintenance on announces it once, and later saves 
 
 const statusRequests = h => h.calls.ajax.filter(r => /mdblist-ratings\/account-status/.test(r.url)).map(r => r.url);
 
-test('FR-038: the MDBList status check sends no key when the key is the saved one (the server uses the saved key)', async t => {
+test('the MDBList status check sends no key when the key is the saved one (the server uses the saved key)', async t => {
   const h = await page(t, { saved: { MdblistRatingsEnabled: true, MdblistApiKey: 'mdb-saved-secret' } });
   h.document.getElementById('checkMdblistStatusBtn').click();
   await settle(h.window, 20);
@@ -183,7 +183,7 @@ test('FR-038: the MDBList status check sends no key when the key is the saved on
   for (const url of urls) assert.doesNotMatch(url, /apiKey|mdb-saved-secret/);
 });
 
-test('FR-038 control: a typed key that is not saved yet is still the one checked', async t => {
+test('control: a typed key that is not saved yet is still the one checked', async t => {
   const h = await page(t, { saved: { MdblistRatingsEnabled: true, MdblistApiKey: 'mdb-saved-secret' } });
   h.document.getElementById('mdblistApiKey').value = 'mdb-new-key';
   h.document.getElementById('checkMdblistStatusBtn').click();

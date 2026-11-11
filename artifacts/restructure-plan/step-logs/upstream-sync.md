@@ -392,12 +392,12 @@ the rewrite carries the corrected text or value. The last two are older than thi
 
 | Note | Symptom |
 |---|---|
-| `NEW-20261110-163200-upstream-docs-still-say-an-episode-added-recentl.md` | `docs/enhanced/tags.md` still says an episode "aired or was added" recently shows New Episode, after `6ece3f52` removed the added case. |
-| `NEW-20261110-185543-upstream-admin-text-says-a-request-adds-nothing-.md` | The admin description of "Requested media goes on the requester's watchlist" says nothing is added when a request is made; the same commit puts it on the Seerr watchlist at once. |
-| `NEW-20261110-185543-upstream-docs-keep-the-old-watchlist-setting-nam.md` | Six docs pages keep the five old watchlist setting names (21 lines) and do not list the new removal setting. |
-| `NEW-20261110-223928-upstream-changed-the-new-episode-status-rule-wit.md` | `6ece3f52` changes the tags produced for the same data without bumping `PosterTagSettings.ResolverVersion`, so cached native posters keep the old badge. |
-| `NEW-20261110-230039-spoiler-guard-reading-a-guarded-unwatched-episod.md` | Spoiler Guard: a client that reads a guarded, unwatched episode and saves it back stores the placeholder title and overview as the episode's metadata. Reproduced on the rewrite and on upstream `0586df79`; not fixed here. Found when a parity script did exactly that. |
-| `NEW-20261110-230040-a-backend-test-measures-a-real-300-ms-window-wit.md` | The timing test of section 8 fails under load on either line of code. |
+| Upstream docs on New Episode | `docs/enhanced/tags.md` still says an episode "aired or was added" recently shows New Episode, after `6ece3f52` removed the added case. |
+| Upstream admin text on requested media | The admin description of "Requested media goes on the requester's watchlist" says nothing is added when a request is made; the same commit puts it on the Seerr watchlist at once. |
+| Upstream docs keep old watchlist setting names | Six docs pages keep the five old watchlist setting names (21 lines) and do not list the new removal setting. |
+| Upstream New Episode rule without a version bump | `6ece3f52` changes the tags produced for the same data without bumping `PosterTagSettings.ResolverVersion`, so cached native posters keep the old badge. |
+| Spoiler Guard: a guarded episode saved back | Spoiler Guard: a client that reads a guarded, unwatched episode and saves it back stores the placeholder title and overview as the episode's metadata. Reproduced on the rewrite and on upstream `0586df79`; not fixed here. Found when a parity script did exactly that. |
+| A backend timing test under load | The timing test of section 8 fails under load on either line of code. |
 
 ## 11. Deferred, not applicable
 

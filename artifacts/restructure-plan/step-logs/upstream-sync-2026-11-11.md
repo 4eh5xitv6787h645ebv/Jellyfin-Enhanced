@@ -40,8 +40,7 @@ What upstream changed, and where each part went here:
 Differences from upstream, all in the ledger entry's `notes`:
 
 - **`docs/enhanced/tags.md`** has the same paragraph as the two advanced pages. Upstream left it describing a
-  write-only password field; it is corrected here with the other two. Filed as a found bug for upstream
-  (`NEW-20261111-003541-upstream-docs-enhanced-tags-md-still-says-the-ma`).
+  write-only password field; it is corrected here with the other two. Filed as a found bug for upstream.
 - **Three tests added** for what upstream left untested: the five wide boxes, two short ones that must stay narrow and
   the four stylesheet rules; the Services card (title order, logo, text, link, no field of its own); the logo in
   `CdnAssetService.KnownAssets`.

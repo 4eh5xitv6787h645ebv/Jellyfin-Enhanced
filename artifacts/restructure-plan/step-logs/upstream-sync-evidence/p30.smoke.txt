@@ -6,7 +6,7 @@ smoke: FAIL (1 failing, 0 changed, 0 known, 0 fixed) in 34s
 #    review by an unknown user on every request of a non-admin; the baseline is recorded as real-admin only. In the lab's log it was
 #    written per minute (UTC): 07:27 852, 07:28 3834, 07:29 4260 (reads on the base build 1a68c68a, deployed 07:26:54, and from 07:29:37
 #    on upstream's build), 07:30 852 (upstream's build), 07:33 2982 (the port, deployed 07:33:08). One page load as lab-kid adds 213, as
-#    real-admin 0. Filed: NEW-20261111-153725-a-page-load-by-a-non-admin-logs-one-wrn-line-per.
+#    real-admin 0. Filed as a found bug.
 # 2. je12 deploy (the same build again, which starts the log window anew), then je12 smoke:
 page admin           ok      14 tabs; Media Tags section 16 tabs (1.9s)
 page settings        ok      panel open, 24 tabs (1.9s)
