@@ -171,3 +171,22 @@ test('FR-040 control: turning maintenance on announces it once, and later saves 
   await h.submit();
   assert.deepEqual([h.posted(ENABLE).length, h.posted(BROADCAST).length], [2, 1]);
 });
+
+const statusRequests = h => h.calls.ajax.filter(r => /mdblist-ratings\/account-status/.test(r.url)).map(r => r.url);
+
+test('FR-038: the MDBList status check sends no key when the key is the saved one (the server uses the saved key)', async t => {
+  const h = await page(t, { saved: { MdblistRatingsEnabled: true, MdblistApiKey: 'mdb-saved-secret' } });
+  h.document.getElementById('checkMdblistStatusBtn').click();
+  await settle(h.window, 20);
+  const urls = statusRequests(h);
+  assert.ok(urls.length >= 3, 'the status dashboard, the check on page load and the button');
+  for (const url of urls) assert.doesNotMatch(url, /apiKey|mdb-saved-secret/);
+});
+
+test('FR-038 control: a typed key that is not saved yet is still the one checked', async t => {
+  const h = await page(t, { saved: { MdblistRatingsEnabled: true, MdblistApiKey: 'mdb-saved-secret' } });
+  h.document.getElementById('mdblistApiKey').value = 'mdb-new-key';
+  h.document.getElementById('checkMdblistStatusBtn').click();
+  await settle(h.window, 20);
+  assert.equal(new URL(statusRequests(h).at(-1)).searchParams.get('apiKey'), 'mdb-new-key');
+});
