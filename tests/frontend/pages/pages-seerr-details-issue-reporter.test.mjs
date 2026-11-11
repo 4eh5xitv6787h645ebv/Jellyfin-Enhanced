@@ -437,6 +437,37 @@ test('initialize waits for Seerr, watches views once, and uses the bootstrap sta
   assert.deepEqual(inactive.clock.pending(), []);
 });
 
+for (const failure of ['inactive', 'unanswered']) test(`Seerr ${failure} at start-up is asked again on a later page view, at most once a minute`, async t => {
+  const status = { active: false };
+  const h = setup(t, { status });
+  let now = 1_000_000;
+  h.window.Date.now = () => now;
+  const answer = h.window.ApiClient.ajax;
+  if (failure === 'unanswered') h.window.ApiClient.ajax = async request => {
+    if (!request.url.includes('/jellyseerr/status')) return answer(request);
+    h.ajaxCalls.push(request.url);
+    throw new Error('timeout');
+  };
+  const asked = () => h.ajaxCalls.filter(url => url.includes('/jellyseerr/status')).length;
+  await h.R.initialize();
+  assert.equal(asked(), 1);
+  now += 30_000;
+  h.document.dispatchEvent(new h.window.Event('viewshow'));
+  await h.settle();
+  assert.equal(asked(), 1, 'no second check within the minute');
+
+  status.active = true;
+  h.window.ApiClient.ajax = answer;
+  now += 31_000;
+  h.document.dispatchEvent(new h.window.Event('viewshow'));
+  await h.settle();
+  assert.equal(asked(), 2);
+  h.clock.run(500);
+  h.clock.run(100);
+  await h.settle();
+  assert.equal(h.document.querySelectorAll('.jellyseerr-report-issue-icon').length, 1);
+});
+
 test('with the feature off nothing runs', async t => {
   const h = setup(t, { config: { JellyseerrShowReportButton: false } });
   assert.equal(await h.R.tryAddButton(), false);

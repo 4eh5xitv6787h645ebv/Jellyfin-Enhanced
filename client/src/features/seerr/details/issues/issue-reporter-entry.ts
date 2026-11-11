@@ -592,6 +592,13 @@ async function tryAddButton(): Promise<boolean> {
 }
 
 let initialized = false;
+const STATUS_RETRY_MS = 60_000;
+let lastStatusCheck = 0;
+/** Seerr down or silent at start-up is not final: a page view a minute later asks again. */
+const retryOnView = (): void => {
+    if (initialized || Date.now() - lastStatusCheck < STATUS_RETRY_MS) return;
+    void initialize();
+};
 
 /** Starts the reporter once Seerr answers as active. */
 async function initialize(): Promise<void> {
@@ -602,20 +609,24 @@ async function initialize(): Promise<void> {
     if (initialized) return;
     JE.jellyseerrUI?.addMainStyles?.();
     console.log(`${logPrefix} Initializing... (verifying Jellyseerr status)`);
+    lastStatusCheck = Date.now();
     try {
         // The page-load bootstrap carries the cached probe (same body as the endpoint), once.
         const client = apiClient();
         const status = JE.takePrefetched?.('SeerrStatus') || await client.ajax({ type: 'GET', url: client.getUrl('/JellyfinEnhanced/jellyseerr/status'), dataType: 'json' });
         if (!record(status)?.active) {
-            console.debug(`${logPrefix} Jellyseerr status check returned inactive, skipping reporter init`);
+            console.debug(`${logPrefix} Jellyseerr status check returned inactive, asking again on a later page view`);
+            document.addEventListener('viewshow', retryOnView);
             return;
         }
     } catch (error) {
-        console.warn(`${logPrefix} Failed to verify Jellyseerr status, skipping reporter init:`, error);
+        console.warn(`${logPrefix} Failed to verify Jellyseerr status, asking again on a later page view:`, error);
+        document.addEventListener('viewshow', retryOnView);
         return;
     }
     if (initialized) return;
     initialized = true;
+    document.removeEventListener('viewshow', retryOnView);
 
     // A short delay lets Jellyfin finish building the view.
     const handleViewShow = () => {
