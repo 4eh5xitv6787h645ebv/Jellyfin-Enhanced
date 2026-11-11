@@ -46,6 +46,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
         private static readonly TimeSpan SaveDebounce = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan SaveMaxWait = TimeSpan.FromMinutes(2);
         private const int CurrentSchemaVersion = 2;
+        // Titles kept in memory and in mdblist-ratings.json. Well above a library's movies and series:
+        // the library-wide fetch, the ratings sync and the rating tags all read this cache.
+        internal const int MaxCacheEntries = 50000;
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IApplicationPaths _applicationPaths;
@@ -134,6 +137,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 fetched = KeepLastGood(cached, fetched);
                 _cache[key] = fetched;
+                // Expired entries without ratings go at once; past the cap, the oldest. Expired ratings
+                // stay: a failed refresh keeps them (KeepLastGood) and rating tags show them meanwhile.
+                foreach (var entry in _cache.Where(e => !e.Value.Found && IsExpired(e.Value)).ToList()) _cache.TryRemove(entry);
+                foreach (var entry in _cache.OrderBy(e => e.Value.FetchedAtUnixMs).Take(_cache.Count - MaxCacheEntries).ToList()) _cache.TryRemove(entry);
                 ScheduleDebouncedSave();
                 return fetched;
             }

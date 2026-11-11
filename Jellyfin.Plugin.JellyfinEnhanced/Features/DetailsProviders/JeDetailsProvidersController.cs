@@ -278,7 +278,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
                 return BadRequest("mediaType must be 'movie' or 'tv'.");
             }
 
-            if (string.IsNullOrWhiteSpace(tmdbId) || !tmdbId.All(char.IsDigit))
+            // At most 10 digits: each id becomes a key in mdblist-ratings.json.
+            if (string.IsNullOrWhiteSpace(tmdbId) || tmdbId.Length > 10 || !tmdbId.All(char.IsDigit))
             {
                 return BadRequest("tmdbId must be a positive integer.");
             }
@@ -331,7 +332,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
         {
             if (!DoesTheDogDieActive(out _)) return StatusCode(503, "DoesTheDogDie is not enabled.");
             if (mediaType != "movie" && mediaType != "tv") return BadRequest("mediaType must be 'movie' or 'tv'.");
-            if (string.IsNullOrWhiteSpace(tmdbId) || !tmdbId.All(char.IsDigit)) return BadRequest("tmdbId must be a positive integer.");
+            // At most 10 digits: each id becomes a key in ddd-cache.json.
+            if (string.IsNullOrWhiteSpace(tmdbId) || tmdbId.Length > 10 || !tmdbId.All(char.IsDigit)) return BadRequest("tmdbId must be a positive integer.");
 
             try
             {
