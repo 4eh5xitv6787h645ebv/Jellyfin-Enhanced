@@ -77,6 +77,13 @@ test('replacement lookup cannot create an old-account dialog after logout',async
  h.change();resolve({Items:[{Id:'new',Name:'Private',ProviderIds:{Tmdb:'42'}}]});await pending;
  assert.equal(h.document.querySelector('.je-bm-library-modal-overlay'),null);assert.deepEqual(h.toasts,[]);
 });
+test('a bookmark document that failed to load is shown as a failure, not as no bookmarks',async t=>{
+ const h=setup(t);h.JE.userConfig.bookmarkRevision=null;
+ h.load('render','items');const container=h.document.createElement('div');h.document.body.append(container);
+ await h.JE.internals.bookmarksLibrary.renderBookmarksLibrary(container);
+ assert.equal(container.querySelector('.je-bookmarks-empty-title')?.textContent.trim(),'bookmarks_library_load_failed');
+ assert.equal(container.textContent.includes('bookmarks_library_empty_title'),false);
+});
 test('library search and tab changes operate on the generated controls',async t=>{
  const h=setup(t,{a:{itemId:'a',timestamp:4,mediaType:'movie',name:'Alpha'},b:{itemId:'b',timestamp:8,mediaType:'movie',name:'Beta'},c:{itemId:'c',timestamp:1,mediaType:'tv',name:'Series'}});
  h.load('render','items');const container=h.document.createElement('div');h.document.body.append(container);
