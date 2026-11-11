@@ -26,6 +26,8 @@ export function createAutoMovie(m: AutoMovieDeps) {
         function resetSelectWithMessage(selectEl: HTMLSelectElement, value: string, message: string) : void {
             clearSelectOptions(selectEl);
             addSelectOption(selectEl, value, message);
+            // A placeholder, not a choice from Seerr's list: a save keeps the stored value (save.ts).
+            delete selectEl.dataset.jeLoaded;
         }
 
         function initAutoMovieQualityMode() : void {
@@ -69,6 +71,7 @@ export function createAutoMovie(m: AutoMovieDeps) {
                     serverSelect.value = String(savedServerId);
                     loadAutoMovieServerDetails(String(savedServerId), savedConfig);
                 }
+                serverSelect.dataset.jeLoaded = 'true';
             }).catch(function(err) {
                 resetSelectWithMessage(serverSelect, '-1', 'Failed to load servers');
                 console.warn('[Auto-Movie-Request] Failed to load Radarr servers:', err);
@@ -115,6 +118,7 @@ export function createAutoMovie(m: AutoMovieDeps) {
                 if (typeof savedProfileId === 'number' && savedProfileId > 0) profileSelect.value = String(savedProfileId);
                 var savedRootFolder = (savedConfig && savedConfig.AutoMovieRequestCustomRootFolder) || '';
                 if (savedRootFolder) folderSelect.value = shown(savedRootFolder);
+                profileSelect.dataset.jeLoaded = folderSelect.dataset.jeLoaded = 'true';
             }).catch(function(err) {
                 resetSelectWithMessage(profileSelect, '0', 'Failed to load');
                 resetSelectWithMessage(folderSelect, '', 'Failed to load');

@@ -5,7 +5,7 @@ import { shortcutEntries } from '../domain/shortcuts';
 import { asControl, asHtml, asInput, needControl, needHtml, needInput } from './dom';
 
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
-export type LoadDeps = Pick<PageModules, 'context' | 'arr' | 'autoMovie' | 'blockedUsers' | 'customTabs' | 'dependencies' | 'dirty' | 'displayCards' | 'gatedHelp' | 'maintenance' | 'misc' | 'plugins' | 'regions' | 'shortcuts' | 'spoiler'>;
+export type LoadDeps = Pick<PageModules, 'context' | 'arr' | 'autoMovie' | 'blockedUsers' | 'customTabs' | 'dependencies' | 'dirty' | 'displayCards' | 'gatedHelp' | 'locales' | 'maintenance' | 'misc' | 'plugins' | 'regions' | 'shortcuts' | 'spoiler'>;
 
 export function createLoad(m: LoadDeps) {
     const { ApiClient, Dashboard, JEAdmin, lifecycle, pluginId } = m.context;
@@ -136,7 +136,7 @@ export function createLoad(m: LoadDeps) {
 
                 // Load multi-instance Sonarr/Radarr
                 m.arr.loadArrInstances(config);
-                needControl(document.querySelector('#DefaultLanguage')).value = shown(config.DefaultLanguage || '');
+                m.locales.showDefaultLanguage(text(config.DefaultLanguage));
                 // Tie icon display settings
                 if (config.MetadataIconsEnabled) {
                     // Force icon display where applicable

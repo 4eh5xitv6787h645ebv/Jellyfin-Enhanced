@@ -105,11 +105,21 @@ export function createSave(m: SaveDeps) {
             const onMinutes = needInput(document.querySelector('#autoMovieRequestTriggerOnMinutesWatched')).checked;
             config.AutoMovieRequestTriggerType = autoMovieTrigger(onStart, onMinutes);
             config.AutoMovieRequestMinutesWatched = clampedInt(needControl(document.querySelector('#autoMovieRequestMinutesWatched')).value, 20, 1, 180);
-            var serverVal = parseInt(needControl(document.querySelector('#autoMovieRequestServer')).value);
-            config.AutoMovieRequestCustomServerId = (!isNaN(serverVal) && serverVal >= 0) ? serverVal : -1;
-            var profileVal = parseInt(needControl(document.querySelector('#autoMovieRequestProfile')).value);
-            config.AutoMovieRequestCustomProfileId = (!isNaN(profileVal) && profileVal > 0) ? profileVal : 0;
-            config.AutoMovieRequestCustomRootFolder = needControl(document.querySelector('#autoMovieRequestRootFolder')).value || '';
+            // These selects hold a placeholder until Seerr's list for them is in (Seerr down or slow, or the mode
+            // not "Custom"): the fresh read above then keeps the stored values. The stored profile and folder
+            // belong to the stored server, so for another server the selects' values are saved.
+            const serverSelect = needControl(document.querySelector('#autoMovieRequestServer'));
+            const profileSelect = needControl(document.querySelector('#autoMovieRequestProfile'));
+            if (serverSelect.dataset.jeLoaded) {
+                const storedServerId = config.AutoMovieRequestCustomServerId;
+                var serverVal = parseInt(serverSelect.value);
+                config.AutoMovieRequestCustomServerId = (!isNaN(serverVal) && serverVal >= 0) ? serverVal : -1;
+                if (profileSelect.dataset.jeLoaded || config.AutoMovieRequestCustomServerId !== storedServerId) {
+                    var profileVal = parseInt(profileSelect.value);
+                    config.AutoMovieRequestCustomProfileId = (!isNaN(profileVal) && profileVal > 0) ? profileVal : 0;
+                    config.AutoMovieRequestCustomRootFolder = needControl(document.querySelector('#autoMovieRequestRootFolder')).value || '';
+                }
+            }
             m.blockedUsers.syncBlockedUsersToHiddenInput();
             config.JellyseerrImportBlockedUsers = needControl(document.querySelector('#jellyseerrImportBlockedUsers')).value || '';
             const retentionDays = parseInt(needControl(document.querySelector('#watchlistMemoryRetentionDays')).value);
