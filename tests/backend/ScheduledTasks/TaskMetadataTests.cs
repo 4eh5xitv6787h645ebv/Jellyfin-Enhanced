@@ -232,6 +232,34 @@ public class TaskMetadataTests
         finally { BaseItem.LibraryManager = previous; }
     }
 
+    // A blank or missing stored prefix (configuration API, hand-edited XML) means the server's
+    // default, the one the details-page links look for, never "every tag starts with it".
+    [Theory]
+    [InlineData("")][InlineData(null)]
+    public async Task ArrSyncWithABlankPrefixUsesTheDefaultAndKeepsOtherTags(string? prefix)
+    {
+        using var f = new ApiPluginFixture();
+        var config = f.Plugin.Configuration;
+        config.ArrTagsSyncEnabled = true;
+        config.ArrTagsClearOldTags = true;
+        config.ArrTagsPrefix = prefix!;
+        config.RadarrInstances = "[{\"Name\":\"Test\",\"Url\":\"http://radarr.test\",\"ApiKey\":\"test\",\"Enabled\":true}]";
+        var movie = new Movie { Id = Guid.NewGuid(), Tags = ["keep-me", "JE Arr Tag: stale"], ProviderIds = new() { ["Tmdb"] = "123" } };
+        var library = new Mock<ILibraryManager>();
+        library.Setup(l => l.GetItemList(It.IsAny<InternalItemsQuery>())).Returns(new BaseItem[] { movie });
+        library.Setup(l => l.UpdateItemAsync(movie, It.IsAny<BaseItem>(), ItemUpdateType.MetadataEdit, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        using var transport = new IntegrationTransport((request, _) => Task.FromResult(IntegrationTransport.Response(
+            request.RequestUri!.AbsolutePath.EndsWith("/tag") ? "[{\"id\":1,\"label\":\"alice\"}]" : "[{\"tmdbId\":123,\"tags\":[1]}]")));
+        var previous = BaseItem.LibraryManager;
+        BaseItem.LibraryManager = library.Object;
+        try
+        {
+            await new ArrTagsSyncTask(library.Object, transport, f.Core.Logger).ExecuteAsync(new Progress<double>(), default);
+            Assert.Equal(new[] { "keep-me", "JE Arr Tag: alice" }, movie.Tags);
+        }
+        finally { BaseItem.LibraryManager = previous; }
+    }
+
     private static class AudioItems
     {
         public sealed class Movie : MediaBrowser.Controller.Entities.Movies.Movie

@@ -218,7 +218,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             var processedItems = 0;
             var updatedItemNames = new List<string>(); // Track updated items for batch logging
 
-            string tagPrefix = config.ArrTagsPrefix ?? "Requested by: ";
+            // A blank prefix would match every tag in the clean-up below: use the server's default,
+            // the one the details-page links fall back to.
+            string tagPrefix = string.IsNullOrEmpty(config.ArrTagsPrefix) ? "JE Arr Tag: " : config.ArrTagsPrefix;
             bool clearOldTags = config.ArrTagsClearOldTags;
 
             // Parse sync filter - if empty, sync all tags

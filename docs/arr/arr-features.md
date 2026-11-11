@@ -148,7 +148,7 @@ These are admin (server) settings:
     **Clear old tags before sync** also affects unmatched items and runs where upstream tag results are empty or failed. Check connectivity before running cleanup. Turning cleanup off preserves stale tags; changing **Tag Prefix** leaves tags bearing the previous prefix in place.
 
 ??? note "Prefix behavior"
-    Keep **Tag Prefix** nonempty and its spelling/case consistent. The factory default is `JE Arr Tag: `, and settings save a blank value as that default, which is also what displayed tag links use for a blank prefix; sync uses `Requested by: ` only if the stored prefix is unset, rather than empty. Links require matching prefix capitalization; cleanup ignores capitalization.
+    Keep **Tag Prefix** nonempty and its spelling/case consistent. The factory default is `JE Arr Tag: `, and settings save a blank value as that default. When the stored prefix is blank or unset, sync and displayed tag links both use `JE Arr Tag: `. Links require matching prefix capitalization; cleanup ignores capitalization.
 
 ### Tag Filtering
 
