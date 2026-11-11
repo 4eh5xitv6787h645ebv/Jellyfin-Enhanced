@@ -31,11 +31,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
         private static bool IsValidTmdbKey(string tmdbId) =>
             !string.IsNullOrWhiteSpace(tmdbId) && _tmdbIdExtendedRegex.IsMatch(tmdbId);
 
+        // While user reviews are switched off no user posts, reads or removes one; the admin
+        // routes stay, so text posted earlier can still be found and removed.
+        private static bool UserReviewsOff => JellyfinEnhanced.Instance?.Configuration?.ShowUserReviews != true;
+
         [HttpGet("reviews/{mediaType}/{tmdbId}")]
         [Authorize]
         [Produces("application/json")]
         public IActionResult GetItemReviews(string mediaType, string tmdbId)
         {
+            if (UserReviewsOff) return NotFound();
+
             if (mediaType != "movie" && mediaType != "tv")
                 return BadRequest(new { message = "MediaType must be 'movie' or 'tv'." });
 
@@ -106,6 +112,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
         [Produces("application/json")]
         public IActionResult GetReviewRatings([FromQuery] string? keys)
         {
+            if (UserReviewsOff) return NotFound();
+
             // Insertion-ordered so the response lists keys in request order.
             var requested = new Dictionary<string, (double Sum, int Count)>(StringComparer.Ordinal);
             var order = new List<string>();
@@ -147,6 +155,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
         [Produces("application/json")]
         public IActionResult UpsertReview(string mediaType, string tmdbId, [FromBody] ReviewPayload payload)
         {
+            if (UserReviewsOff) return NotFound();
+
             if (mediaType != "movie" && mediaType != "tv")
                 return BadRequest(new { success = false, message = "MediaType must be 'movie' or 'tv'." });
 
@@ -247,6 +257,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
         [Produces("application/json")]
         public IActionResult DeleteReview(string mediaType, string tmdbId)
         {
+            if (UserReviewsOff) return NotFound();
+
             if (mediaType != "movie" && mediaType != "tv")
                 return BadRequest(new { success = false, message = "MediaType must be 'movie' or 'tv'." });
 

@@ -51,7 +51,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Activity
                 ? _userConfigurationManager.GetAllActivity().Entries.Values.AsEnumerable()
                 : Enumerable.Empty<ActivityEntry>();
             cancellationToken.ThrowIfCancellationRequested();
-            var reviews = config.ActivityFeedShowReviewed
+            var reviews = config.ActivityFeedShowReviewed && config.ShowUserReviews
                 ? _userConfigurationManager.GetAllReviews().Reviews.Values.AsEnumerable()
                 : Enumerable.Empty<UserReview>();
 
