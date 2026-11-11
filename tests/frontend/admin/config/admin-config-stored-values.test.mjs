@@ -227,3 +227,13 @@ test('a region picked before the full region list arrives stays picked, and a sa
   await settle(h.window, 120);
   assert.equal(h.calls.puts.at(-1).DEFAULT_REGION, 'DE');
 });
+
+test('the TMDB key test sends the key in a header, not in the address Jellyfin and proxies log', async t => {
+  const h = await page(t, { saved: { TMDB_API_KEY: 'tmdb-secret-key' }, answers: [[/tmdb\/validate/, () => ({ ok: true })]] });
+  h.document.querySelector('.testTmdbBtn').dispatchEvent(new h.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+  await settle(h.window, 60);
+  const request = h.calls.ajax.find(r => /tmdb\/validate/.test(r.url));
+  assert.ok(request, 'the key was tested');
+  assert.doesNotMatch(request.url, /tmdb-secret-key/);
+  assert.equal(request.headers?.['X-Arr-ApiKey'], 'tmdb-secret-key');
+});
