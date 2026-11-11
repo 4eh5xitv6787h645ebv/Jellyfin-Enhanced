@@ -194,9 +194,9 @@
                     #jellyfin-enhanced-panel .je-panel-dock { position: relative; display: flex; flex: 0 0 auto; gap: 8px; padding: 8px 12px; background: ${panelBgColor}; z-index: 3; }
                     #jellyfin-enhanced-panel .je-panel-dock select { width: 40%; min-width: 0; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgb(24,24,24); color: #fff; font: inherit; font-size: 13px; }
                     #jellyfin-enhanced-panel .je-panel-dock .je-panel-search { flex: 1; min-width: 0; width: 0; }
-                    #jellyfin-enhanced-panel .je-panel-dock .je-panel-search-results { position: absolute; top: 100%; left: 12px; right: 12px; max-height: 45dvh; background: rgb(24,24,24); }
+                    #jellyfin-enhanced-panel .je-panel-dock .je-panel-search-results { position: absolute; top: 100%; left: 12px; right: 12px; max-height: 45vh; max-height: 45dvh; background: rgb(24,24,24); }
 
-                    #jellyfin-enhanced-panel { top: 0 !important; left: 0 !important; transform: none !important; width: 100vw !important; max-width: 100vw !important; height: 100dvh !important; max-height: 100dvh !important; border-radius: 0 !important; border: none !important; box-sizing: border-box !important; }
+                    #jellyfin-enhanced-panel { top: 0 !important; left: 0 !important; transform: none !important; width: 100vw !important; max-width: 100vw !important; height: 100vh !important; height: 100dvh !important; max-height: 100vh !important; max-height: 100dvh !important; border-radius: 0 !important; border: none !important; box-sizing: border-box !important; }
                     #jellyfin-enhanced-panel .je-panel-body { display: block; position: relative; overflow: clip; }
                     #jellyfin-enhanced-panel .je-panel-nav { position: absolute; inset: 0; border-right: none; z-index: 1; }
                     /* The closed pane is parked off-screen by the transform alone —
