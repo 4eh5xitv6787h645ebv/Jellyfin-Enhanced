@@ -790,6 +790,13 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Calendar
             }
 
             var itemIds = _itemRepository.GetItemIdsByProviders(providers, includeItemTypes);
+            if (!IsAdminUser())
+            {
+                // Only an item the caller may see, as Jellyfin's own item routes decide; administrators as before.
+                var userId = UserHelper.GetCurrentUserId(User);
+                var user = userId.HasValue ? _userManager.GetUserById(userId.Value) : null;
+                itemIds = itemIds.Where(id => user != null && _libraryManager.GetItemById<BaseItem>(id, user) != null).Take(1).ToList();
+            }
 
             if (itemIds.Count == 0)
                 return BadRequest("No provider ids supplied or no items found");
