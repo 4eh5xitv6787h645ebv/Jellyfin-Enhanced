@@ -64,7 +64,7 @@ public class PosterBlurFilterTests
             var state=new UserSpoilerBlur(); if(guarded) { state.Movies[Movie.Id.ToString("N")]=new(); state.Series[Episode.SeriesId.ToString("N")]=new(); }
             Plugin.Core.Manager.SaveUserConfiguration(UserId.ToString("N"),"spoilerblur.json",state);
             Sessions.SetupGet(s=>s.Sessions).Returns(Array.Empty<SessionInfo>());
-            var markers=new SpoilerIdentityService(Users.Object,Plugin.Core.Logger);
+            var markers=new SpoilerIdentityService(Users.Object,Plugin.Core.Logger,Plugin.Core.Paths.Object);
             var identity=new RequestIdentityService(Sessions.Object,Users.Object,markers,Plugin.Core.Logger);
             var resolver=new SpoilerUserResolver(Plugin.Core.Manager,Library.Object,Plugin.Core.Logger,identity);
             next=new SpoilerNextUnwatchedService(Library.Object,Users.Object,UserData.Object,Plugin.Core.Logger);

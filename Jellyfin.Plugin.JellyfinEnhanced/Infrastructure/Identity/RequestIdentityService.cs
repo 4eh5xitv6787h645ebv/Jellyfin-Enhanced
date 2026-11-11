@@ -227,11 +227,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity
             // user (stale device cache after a user was deleted, forged value)
             // falls through to the ladder below. No session check on purpose:
             // the tag only reaches a client inside that user's authenticated
-            // DTO response, and a forged marker merely lets a client
-            // deliberately opt into another user's blur policy — Spoiler Guard
-            // protects users from their OWN spoilers, so that "attack" only
-            // self-spoils (anonymous IPs with no sessions get clean bytes
-            // today anyway).
+            // DTO response, and the marker is keyed with the server secret, so
+            // it cannot be computed from a user id to read another user's
+            // spoiler state anonymously.
             var taggedValue = ExtractTagCandidate(httpContext);
             if (taggedValue != null
                 && SpoilerIdentityService.TryParseMarker(taggedValue, out _, out var markerHex)

@@ -794,6 +794,10 @@
       "category": "Infrastructure"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Persistence/PluginSecretFile.cs",
+      "category": "Infrastructure"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Infrastructure/Persistence/UserConfigurationDocument.cs",
       "category": "Infrastructure"
     },
@@ -10656,7 +10660,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 546,
+    "files": 547,
     "routes": 203,
     "configuration_properties": 750,
     "storage_references": 96,

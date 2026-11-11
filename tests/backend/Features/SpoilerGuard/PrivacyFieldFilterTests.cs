@@ -36,7 +36,7 @@ public class PrivacyFieldFilterTests
         {
             Plugin.Plugin.Configuration.SpoilerBlurEnabled = true;
             var identities = new RequestIdentityService(Mock.Of<ISessionManager>(), Users.Object,
-                new SpoilerIdentityService(Users.Object, Plugin.Core.Logger), Plugin.Core.Logger);
+                new SpoilerIdentityService(Users.Object, Plugin.Core.Logger, Plugin.Core.Paths.Object), Plugin.Core.Logger);
             var resolver = new SpoilerUserResolver(Plugin.Core.Manager, Library.Object, Plugin.Core.Logger, identities);
             next = new SpoilerNextUnwatchedService(Library.Object, Users.Object, Data.Object, Plugin.Core.Logger);
             filter = new SpoilerFieldStripFilter(resolver, Library.Object, Users.Object, Data.Object, next);

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Extensions;
+using Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Persistence;
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
 
 namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
@@ -22,16 +24,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
     // no IP involvement, which is what makes Spoiler Guard precise behind
     // reverse proxies that hide the real client IP.
     //
-    // The marker is an UNKEYED short hash of the userId — deliberately not an
-    // HMAC. Spoiler Guard protects a user from their OWN spoilers: a forged
-    // marker only lets a client deliberately request another user's blur
-    // policy, i.e. self-spoil — and anonymous requests from IPs with no
-    // sessions already receive clean bytes today, so forgery gains nothing.
-    // What actually matters is (a) collision resistance between real users
+    // The marker is an HMAC of the userId under the plugin's server secret
+    // (PluginSecretFile). An unkeyed hash could be computed by anyone who
+    // knows a user id (the login page lists them), and a blurred image
+    // against a clear one would then tell an anonymous caller whether that
+    // user guards a series and which episodes they have not watched yet.
+    // What else matters is (a) collision resistance between real users
     // (12 hex = 48 bits; pairwise collision odds are negligible and detected
     // at map build), and (b) staleness: a marker naming a deleted/unknown
-    // user simply fails to resolve and the resolver falls back to the
-    // existing IP ladder. Strictly additive, fail-safe.
+    // user, or one minted before markers were keyed, simply fails to resolve
+    // and the resolver falls back to the existing IP ladder, which protects
+    // every user with a session on the request IP. Fail-safe.
     public sealed class SpoilerIdentityService
     {
         // Tag suffix sentinel. Composes with the existing "sb-{8hex}-{tag}"
@@ -48,30 +51,35 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
         private static readonly TimeSpan MapRebuildMinInterval = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan MapTtl = TimeSpan.FromSeconds(60);
 
+        // Domain separation from the other HMACs under the same secret; bumping it retires every issued marker.
+        private const string MarkerVersion = "jeu1";
+
         private readonly IUserManager _userManager;
         private readonly Logger _logger;
+        private readonly PluginSecretFile _secret;
 
         private readonly ConcurrentDictionary<Guid, string> _mintCache = new();
         private readonly object _mapLock = new();
         private Dictionary<string, Guid>? _markerMap;
         private DateTime _mapBuiltAt = DateTime.MinValue;
 
-        public SpoilerIdentityService(IUserManager userManager, Logger logger)
+        public SpoilerIdentityService(IUserManager userManager, Logger logger, IApplicationPaths applicationPaths)
         {
             _userManager = userManager;
             _logger = logger;
+            _secret = new PluginSecretFile(PluginSecretFile.DefaultPath(applicationPaths), logger.Warning);
         }
 
         /// <summary>
-        /// The stable 12-hex marker for a user: prefix of SHA-256 over the
-        /// N-format userId. Deterministic across restarts (no persisted
-        /// secret needed) so native-client image caches stay valid.
+        /// The stable 12-hex marker for a user: prefix of HMAC-SHA256 under the
+        /// plugin's persisted secret over the N-format userId. Deterministic
+        /// across restarts so native-client image caches stay valid.
         /// </summary>
         public string MintMarker(Guid userId)
         {
-            return _mintCache.GetOrAdd(userId, static id =>
+            return _mintCache.GetOrAdd(userId, id =>
             {
-                var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(id.ToString("N")));
+                var bytes = HMACSHA256.HashData(_secret.Get(), Encoding.UTF8.GetBytes(MarkerVersion + "|" + id.ToString("N")));
                 return Convert.ToHexString(bytes).Substring(0, MarkerHexLength).ToLowerInvariant();
             });
         }

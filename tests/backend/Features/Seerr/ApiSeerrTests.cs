@@ -371,7 +371,7 @@ public class ApiSeerrTests
         var f = new SeerrFixture((fixture, users) =>
         {
             var identities = new RequestIdentityService(Mock.Of<MediaBrowser.Controller.Session.ISessionManager>(), users,
-                new SpoilerIdentityService(users, fixture.Plugin.Core.Logger), fixture.Plugin.Core.Logger);
+                new SpoilerIdentityService(users, fixture.Plugin.Core.Logger, fixture.Plugin.Core.Paths.Object), fixture.Plugin.Core.Logger);
             var resolver = new SpoilerUserResolver(fixture.Plugin.Core.Manager, library.Object, fixture.Plugin.Core.Logger, identities);
             return [resolver, new JE.Tests.Features.Calendar.IntegrationCalendarTests.CalendarDatabase(), new SpoilerSeerrRedactor(resolver, library.Object, users, Mock.Of<IUserDataManager>(), new SpoilerNextUnwatchedService(library.Object, users, Mock.Of<IUserDataManager>(), fixture.Plugin.Core.Logger)), new TmdbResponseCache(new IntegrationTransport((_, _) => Task.FromResult(IntegrationTransport.Response(TmdbBody))), TimeProvider.System)];
         });

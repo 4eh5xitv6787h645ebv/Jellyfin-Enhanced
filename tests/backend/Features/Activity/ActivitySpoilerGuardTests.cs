@@ -67,7 +67,7 @@ public class ActivitySpoilerGuardTests
             manager.UpsertReview(Author.Id.ToString("N"), "movie", "550", "Great film", 5, "2026-11-01T13:00:00Z");
 
             var identities = new RequestIdentityService(Mock.Of<ISessionManager>(), Users.Object,
-                new SpoilerIdentityService(Users.Object, Plugin.Core.Logger), Plugin.Core.Logger);
+                new SpoilerIdentityService(Users.Object, Plugin.Core.Logger, Plugin.Core.Paths.Object), Plugin.Core.Logger);
             var resolver = new SpoilerUserResolver(manager, Library.Object, Plugin.Core.Logger, identities);
             var data = new Mock<IUserDataManager>();
             redactor = new SpoilerSeerrRedactor(resolver, Library.Object, Users.Object, data.Object,

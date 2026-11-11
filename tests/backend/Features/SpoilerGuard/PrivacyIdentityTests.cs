@@ -19,6 +19,7 @@ public sealed class PrivacyIdentityTests : IDisposable
     private readonly Mock<IUserManager> _users = new();
     private readonly Mock<ISessionManager> _sessions = new();
     private readonly SpoilerIdentityService _markers;
+    private readonly Logger _logger;
     private readonly RequestIdentityService _identity;
     private static int _ipCounter;
     private readonly IPAddress _ip = IPAddress.Parse("198.18." + (Interlocked.Increment(ref _ipCounter) / 250) + "." + (_ipCounter % 250 + 1));
@@ -30,10 +31,12 @@ public sealed class PrivacyIdentityTests : IDisposable
         Directory.CreateDirectory(_directory);
         var paths = new Mock<IApplicationPaths>();
         paths.SetupGet(x => x.LogDirectoryPath).Returns(_directory);
+        paths.SetupGet(x => x.PluginsPath).Returns(_directory);
         var logger = new Logger(paths.Object, NullLoggerFactory.Instance);
+        _logger = logger;
         SetUsers(_alice, _bob);
         _sessions.SetupGet(x => x.Sessions).Returns(Array.Empty<SessionInfo>());
-        _markers = new SpoilerIdentityService(_users.Object, logger);
+        _markers = new SpoilerIdentityService(_users.Object, logger, paths.Object);
         _identity = new RequestIdentityService(_sessions.Object, _users.Object, _markers, logger);
     }
 
@@ -164,6 +167,46 @@ public sealed class PrivacyIdentityTests : IDisposable
         // A null row throws on its first member access, like a corrupt SessionInfo would.
         _sessions.SetupGet(x => x.Sessions).Returns(new[] { Session(_bob, "203.0.113.9:8096"), null!, Session(_alice) });
         Assert.Equal(new[] { _alice }, _identity.Resolve(Context()).Candidates);
+    }
+
+    // Anyone who can read a user id (the login page lists them) could compute an unkeyed hash of it.
+    private static string UnkeyedMarker(Guid userId)
+        => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(userId.ToString("N")))).Substring(0, 12).ToLowerInvariant();
+
+    [Fact]
+    public void AMarkerComputedFromAUserIdAloneSelectsNobody()
+    {
+        var context = Context();
+        context.Request.QueryString = new QueryString("?tag=abc-jeu" + UnkeyedMarker(_bob));
+        var identity = _identity.Resolve(context);
+        Assert.Equal(IdentityConfidence.None, identity.Confidence);
+        Assert.Empty(identity.Candidates);
+    }
+
+    [Fact]
+    public void AnOldUnkeyedMarkerFallsBackToTheSessionOnTheRequestIp()
+    {
+        // A page or TV still holding a marker minted before markers were keyed keeps its user's protection.
+        _sessions.SetupGet(x => x.Sessions).Returns(new[] { Session(_bob) });
+        var context = Context();
+        context.Request.QueryString = new QueryString("?tag=abc-jeu" + UnkeyedMarker(_bob));
+        var identity = _identity.Resolve(context);
+        Assert.Equal(IdentityConfidence.SharedIpCandidates, identity.Confidence);
+        Assert.Equal(new[] { _bob }, identity.Candidates);
+    }
+
+    [Fact]
+    public void MarkersAreKeyedWithThePersistedServerSecret()
+    {
+        Assert.NotEqual(UnkeyedMarker(_alice), _markers.MintMarker(_alice));
+        // Another service over the same plugin directory (a restart) mints the same marker...
+        var samePaths = new Mock<IApplicationPaths>();
+        samePaths.SetupGet(x => x.PluginsPath).Returns(_directory);
+        Assert.Equal(_markers.MintMarker(_alice), new SpoilerIdentityService(_users.Object, _logger, samePaths.Object).MintMarker(_alice));
+        // ...and a server with its own secret mints a different one for the same user id.
+        var otherPaths = new Mock<IApplicationPaths>();
+        otherPaths.SetupGet(x => x.PluginsPath).Returns(Path.Combine(_directory, "other-server"));
+        Assert.NotEqual(_markers.MintMarker(_alice), new SpoilerIdentityService(_users.Object, _logger, otherPaths.Object).MintMarker(_alice));
     }
 
     [Fact]
