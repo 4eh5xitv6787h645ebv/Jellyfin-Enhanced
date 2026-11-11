@@ -164,7 +164,7 @@
       modalElement.setAttribute("aria-modal", "true");
       modalElement.setAttribute("tabindex", "-1");
       let backdropImage;
-      if (backdropUrl) backdropImage = `url('${escapeHtml(backdropUrl)}')`;
+      if (backdropUrl) backdropImage = `url('${backdropUrl.replace(/['"\\\s]/g, (c) => c === "'" ? "%27" : encodeURIComponent(c))}')`;
       else if (backdropPath && export20(backdropPath)) backdropImage = `url('https://image.tmdb.org/t/p/w1280${escapeHtml(backdropPath)}')`;
       else backdropImage = "linear-gradient(45deg, #3b82f6, #8b5cf6)";
       const contentEl = document2.createElement("div");

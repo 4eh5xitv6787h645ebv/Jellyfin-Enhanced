@@ -275,6 +275,20 @@ test('the button goes before the More menu, and opens the dialog for that title 
   assert.match(h.document.querySelector('.jellyseerr-season-header').style.backgroundImage, /Items\/m1\/Images\/Backdrop/);
 });
 
+test('the dialog header requests the small backdrop it asks for, and a quote in its address stays inside it', async t => {
+  const h = setup(t, { items: { m1: { ...MOVIE, BackdropImageTags: ["it's"] } } });
+  // Jellyfin's ApiClient.getUrl: each query value through encodeURIComponent, which leaves ' as it is.
+  h.window.ApiClient.getUrl = (path, params) => `http://jellyfin.test/${path}?${Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')}`;
+  assert.equal(await h.R.tryAddButton(), true);
+  h.document.querySelector('.jellyseerr-report-issue-icon').click();
+  // What the browser requests: the url() of the header's background, as the style resolves it.
+  const image = h.document.querySelector('.jellyseerr-season-header').style.backgroundImage;
+  const requested = new URL(/^url\("(.*)"\)$/.exec(image)[1]);
+  assert.equal(requested.pathname, '/Items/m1/Images/Backdrop');
+  assert.equal(requested.searchParams.get('quality'), '40');
+  assert.equal(requested.searchParams.get('tag'), "it's");
+});
+
 test('overlapping checks for one page add one button; a page left behind adds none', async t => {
   const item = deferred();
   const h = setup(t, { je: { helpers: { getItemCached: () => item.promise } } });

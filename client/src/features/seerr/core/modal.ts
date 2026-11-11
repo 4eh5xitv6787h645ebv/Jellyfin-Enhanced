@@ -115,7 +115,8 @@ export function installModal(host: SeerrCoreHost): void {
         modalElement.setAttribute('aria-modal', 'true');
         modalElement.setAttribute('tabindex', '-1');
         let backdropImage: string;
-        if (backdropUrl) backdropImage = `url('${escapeHtml(backdropUrl)}')`;
+        // CSS, not HTML: an entity such as &amp; would reach the request. Percent-encode only what could end the string.
+        if (backdropUrl) backdropImage = `url('${backdropUrl.replace(/['"\\\s]/g, c => c === "'" ? '%27' : encodeURIComponent(c))}')`;
         else if (backdropPath && isSafeTmdbImagePath(backdropPath)) backdropImage = `url('https://image.tmdb.org/t/p/w1280${escapeHtml(backdropPath)}')`;
         else backdropImage = 'linear-gradient(45deg, #3b82f6, #8b5cf6)';
 
