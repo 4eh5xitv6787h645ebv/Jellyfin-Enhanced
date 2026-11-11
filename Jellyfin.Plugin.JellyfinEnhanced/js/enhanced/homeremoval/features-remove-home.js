@@ -44,7 +44,8 @@
     record: () => record,
     sameValue: () => sameValue,
     settingsFor: () => settingsFor,
-    widestScope: () => widestScope
+    widestScope: () => widestScope,
+    withChanges: () => withChanges
   });
   var defaults = {
     enabled: true,
@@ -207,6 +208,19 @@
     if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((v, i) => sameValue(v, right[i]));
     const a = record(left), b = record(right), keys = Object.keys(a);
     return keys.length === Object.keys(b).length && keys.every((k) => Object.prototype.hasOwnProperty.call(b, k) && sameValue(a[k], b[k]));
+  }
+  function withChanges(base, edited, onto) {
+    const apply = (from, to, target) => {
+      const out = { ...target };
+      for (const key of /* @__PURE__ */ new Set([...Object.keys(from), ...Object.keys(to)])) {
+        const value = to[key];
+        if (sameValue(from[key], value)) continue;
+        if (value === void 0) delete out[key];
+        else out[key] = value;
+      }
+      return out;
+    };
+    return { ...apply(base, edited, onto), items: apply(base.items, edited.items, onto.items), settings: apply(base.settings, edited.settings, onto.settings) };
   }
   function parsedFraction(stamp, time) {
     const seconds = Math.floor(time / 1e3) * 1e3, millis = time - seconds;
@@ -612,7 +626,7 @@
           const newerLocalIntent = intent?.current() === false;
           if (view.current() && !newerLocalIntent) optimisticHideRemovedCard(itemId, surface, card);
           try {
-            if (!newerLocalIntent) JE.hiddenContent?.markScopedHidden?.(itemId, surface);
+            JE.hiddenContent?.markScopedHidden?.(itemId, surface, newerLocalIntent);
           } catch (e) {
             console.warn("🪼 Jellyfin Enhanced: markScopedHidden mirror failed", e);
           }

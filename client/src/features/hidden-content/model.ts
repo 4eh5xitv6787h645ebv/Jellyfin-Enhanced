@@ -122,6 +122,19 @@ export function sameValue(left:unknown,right:unknown):boolean {
  const a=record(left),b=record(right),keys=Object.keys(a);
  return keys.length===Object.keys(b).length&&keys.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&sameValue(a[k],b[k]));
 }
+/** `onto` with each top-level field, item and setting that differs between `base` and `edited` taken from `edited`. */
+export function withChanges(base:HiddenDocument,edited:HiddenDocument,onto:HiddenDocument):HiddenDocument {
+ const apply=<T>(from:Record<string,T>,to:Record<string,T>,target:Record<string,T>):Record<string,T> => {
+  const out={...target};
+  for(const key of new Set([...Object.keys(from),...Object.keys(to)])) {
+   const value=to[key];
+   if(sameValue(from[key],value))continue;
+   if(value===undefined)delete out[key];else out[key]=value;
+  }
+  return out;
+ };
+ return {...apply(base,edited,onto),items:apply(base.items,edited.items,onto.items),settings:apply(base.settings,edited.settings,onto.settings)};
+}
 /** Ask the same parser which decimal fraction supplies the clock, ignoring comments/date fields. */
 function parsedFraction(stamp:string,time:number):string {
  const seconds=Math.floor(time/1000)*1000,millis=time-seconds;
