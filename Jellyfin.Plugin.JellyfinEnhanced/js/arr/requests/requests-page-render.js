@@ -63,7 +63,7 @@
         if (state.isLoading && state.requests.length === 0) {
           html += JE.core.ui.skeletonGridHtml(6);
         } else if (state.requestsError) {
-          html += `<div class="je-empty-state">Unable to load requests</div>`;
+          html += `<div class="je-empty-state">${JE.t?.("requests_requests_load_failed") || "Unable to load requests"}</div>`;
         } else if (state.requests.length === 0) {
           html += `
                     <div class="je-empty-state">
@@ -163,7 +163,7 @@
         if (state.isLoading && state.history.length === 0) {
           html += JE.core.ui.skeletonGridHtml(6);
         } else if (state.historyError) {
-          html += `<div class="je-empty-state">Unable to load history</div>`;
+          html += `<div class="je-empty-state">${JE.t?.("requests_history_load_failed") || "Unable to load history"}</div>`;
         } else if (state.history.length === 0) {
           const labelNoHistory = JE.t && JE.t("requests_no_history_found") || "No history found";
           html += `
@@ -219,7 +219,7 @@
         if (state.isLoading && state.downloads.length === 0) {
           html += JE.core.ui.skeletonGridHtml(6);
         } else if (state.downloadsError) {
-          html += `<div class="je-empty-state">Unable to load downloads</div>`;
+          html += `<div class="je-empty-state">${JE.t?.("requests_downloads_load_failed") || "Unable to load downloads"}</div>`;
         } else if (state.downloads.length === 0) {
           const labelNoActiveDownloads = JE.t && JE.t("requests_no_active_downloads") || "No active downloads";
           html += `

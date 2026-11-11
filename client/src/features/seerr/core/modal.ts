@@ -292,9 +292,9 @@ export function installModal(host: SeerrCoreHost): void {
                 return;
             }
             window.clearInterval(interval);
-            serverSelect.innerHTML = '<option value="">Select Server...</option>';
-            qualitySelect.innerHTML = '<option value="">Select Quality...</option>';
-            folderSelect.innerHTML = '<option value="">Select Folder...</option>';
+            serverSelect.innerHTML = `<option value="">${JE.t('jellyseerr_server_placeholder')}</option>`;
+            qualitySelect.innerHTML = `<option value="">${JE.t('jellyseerr_quality_placeholder')}</option>`;
+            folderSelect.innerHTML = `<option value="">${JE.t('jellyseerr_folder_placeholder')}</option>`;
             // Seerr's own order (e.g. 4K first) is not meaningful: list by name.
             const sorted = [...data.servers].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             for (const server of sorted) {
@@ -306,8 +306,8 @@ export function installModal(host: SeerrCoreHost): void {
             }
             const updateServerDependentOptions = () => {
                 const selected = data.servers.find(server => String(server.id) === serverSelect.value);
-                qualitySelect.innerHTML = '<option value="">Select Quality...</option>';
-                folderSelect.innerHTML = '<option value="">Select Folder...</option>';
+                qualitySelect.innerHTML = `<option value="">${JE.t('jellyseerr_quality_placeholder')}</option>`;
+                folderSelect.innerHTML = `<option value="">${JE.t('jellyseerr_folder_placeholder')}</option>`;
                 if (!selected) return;
                 for (const profile of selected.qualityProfiles) {
                     const option = document.createElement('option');

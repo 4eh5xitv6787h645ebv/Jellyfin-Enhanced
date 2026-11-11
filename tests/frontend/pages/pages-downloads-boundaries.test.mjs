@@ -64,3 +64,12 @@ test('disposed feature rejects new refresh and request reads before sending netw
 test('server identity change rejects an in-flight response even before session notification',async t=>{
  const pending=deferred();const h=setup(t,{render:false,api:()=>pending.promise});const run=h.P.fetchRequests();h.window.ApiClient.serverAddress=()=> 'http://other-server';pending.resolve({requests:[{id:'old-server'}],canApproveRequests:true});await run;assert.equal(h.P.state.requests.length,0);assert.equal(h.P.state.canApproveRequests,false);
 });
+test('each section that failed to load says so from the translations',async t=>{
+ const h=setup(t,{api:async p=>{throw new Error('offline '+p);}});h.JE.t=key=>key;
+ h.expectConsoleError('Failed to fetch downloads');h.expectConsoleError('Failed to fetch requests');h.expectConsoleError('Failed to fetch history');
+ await h.P.loadAllData();
+ assert.match(h.document.querySelector('.je-active-downloads-section').textContent,/requests_downloads_load_failed/);
+ assert.match(h.document.querySelector('.je-requests-section').textContent,/requests_requests_load_failed/);
+ assert.match(h.document.querySelector('.je-history-section').textContent,/requests_history_load_failed/);
+});
+

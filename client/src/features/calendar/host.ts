@@ -19,7 +19,7 @@ export interface CalendarHost {
  JellyseerrEnabled?: boolean; ShokoConfigured?: boolean; ShokoUrl?: string; ShokoUrlMappings?: string;
  };
  session?: {userScopedKey(base: string): string; getEpoch(): number; isCurrent(epoch: number): boolean; getServerId?(): string | null; getUserId?(): string | null; createLease?(): {isCurrent(): boolean}; onUserChange(name: string, callback: () => void): (() => void) | void};
- t(key: string): string; escapeHtml(value: string | undefined): string; toast?(message: string): void;
+ t(key: string, params?: Record<string, string | number>): string; escapeHtml(value: string | undefined): string; toast?(message: string): void;
  cdn: {selfhst(path: string): string}; themer?: {getThemeVariables(): {primaryAccent?: string}};
  helpers: {escHtml?(value: unknown): string; onNavigate?(callback: () => void): () => void;
  onSidebarRebuilt(id: string, selector: string, callback: () => void): () => void;

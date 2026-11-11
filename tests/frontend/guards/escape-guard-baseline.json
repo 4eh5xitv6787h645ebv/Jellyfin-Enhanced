@@ -202,10 +202,6 @@
     "X1 adjustPlaybackSpeed": 1,
     "X1 jumpToPercentage": 1
   },
-  "client/src/features/player/segment-controls.ts": {
-    "X1 installSegmentControls.clickSkipButton": 1,
-    "X1 installSegmentControls.skipIntroOutro": 1
-  },
   "client/src/features/seerr/core/modal.ts": {
     "X1 installModal.create": 1
   },

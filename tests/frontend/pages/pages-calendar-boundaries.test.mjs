@@ -32,7 +32,7 @@ test('overlapping refresh rejects old events and old completion rendering',async
  assert.equal(h.P.state.events[0].id,'new');assert.equal(h.P.state.isLoading,false);assert.match(h.document.body.textContent,/new/);assert.equal(h.document.querySelector('[data-event-id=old]'),null);
 });
 test('malformed responses show an error instead of a successful empty calendar',async t=>{
- const h=setup(t,async()=>({events:[{...event('bad'),hasFile:'true'}]}));await h.P.loadAllData();assert.equal(h.P.state.events.length,0);assert.match(h.document.querySelector('[role=alert]').textContent,/could not be loaded/);assert.equal(h.document.querySelector('.je-calendar-empty'),null);
+ const h=setup(t,async()=>({events:[{...event('bad'),hasFile:'true'}]}));await h.P.loadAllData();assert.equal(h.P.state.events.length,0);assert.match(h.document.querySelector('[role=alert]').textContent,/calendar_load_failed/);assert.equal(h.document.querySelector('.je-calendar-empty'),null);
 });
 test('failed requests remain retryable and never install a partial pagination result',async t=>{
  let calls=0,fail=true;const h=setup(t,async()=>{calls++;if(fail&&calls===2)throw Error('offline');return {requests:[{type:'tv',tmdbId:7}],totalPages:fail?2:1};});h.JE.pluginConfig.JellyseerrEnabled=true;
