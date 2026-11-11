@@ -27,7 +27,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
         public const int MaxChunkLength = 2000;
 
         /// <summary>
-        /// What one client may have translated per <see cref="ClientWindow"/>. Every signed-in account may use the
+        /// What one account (or, without one, one client address) may have translated per <see cref="ClientWindow"/>. Every signed-in account may use the
         /// route and the administrator's key pays for it, so one caller cannot spend it all or get it blocked.
         /// </summary>
         public const int ClientRequestsPerWindow = 60;

@@ -166,8 +166,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
                 return BadRequest("The translation URL is not allowed.");
             }
 
-            // A bounded share per client address (as Jellyfin resolves it behind its known proxies).
-            if (!_reviewTranslationService.TryUseClientBudget(HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty, request.Text.Length, out var budgetWait))
+            // A bounded share per signed-in account: behind a proxy Jellyfin does not know, every account has the
+            // proxy's address. The client address (as Jellyfin resolves it) only when there is no account.
+            var budgetOwner = UserHelper.GetCurrentUserId(User)?.ToString("N") ?? HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+            if (!_reviewTranslationService.TryUseClientBudget(budgetOwner, request.Text.Length, out var budgetWait))
             {
                 var seconds = Math.Max(1, (int)Math.Ceiling(budgetWait.TotalSeconds));
                 Response.Headers["Retry-After"] = seconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
