@@ -129,6 +129,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
             // queue/history caches rather than waiting out their TTL.
             lock (_arrQueueCacheLock) { _arrQueueCache = null; }
             lock (_arrHistoryCacheLock) { _arrHistoryCache = null; }
+            lock (_downloadsAllowedRequestsCacheLock) { _downloadsAllowedRequestsCache.Clear(); }
         }
 
         // *arr download caches (Downloads), cleared by ClearAllSeerrCachesOnConfigChange.
@@ -140,5 +141,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
         internal static readonly object _arrQueueCacheLock = new();
         internal static (List<dynamic> Items, List<object> Errors, DateTime CachedAt)? _arrHistoryCache;
         internal static readonly object _arrHistoryCacheLock = new();
+
+        // Downloads: each Seerr user's requested titles (a failed read is not kept), the filter a
+        // non-administrator's queue and history rows go through; same TTL as the arr caches.
+        internal static readonly Dictionary<string, (Task<HashSet<(int TmdbId, string MediaType)>?> Allowed, DateTime CachedAt)> _downloadsAllowedRequestsCache = new();
+        internal static readonly object _downloadsAllowedRequestsCacheLock = new();
     }
 }

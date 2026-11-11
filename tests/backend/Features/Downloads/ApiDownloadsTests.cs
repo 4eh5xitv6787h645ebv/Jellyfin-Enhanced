@@ -73,6 +73,26 @@ public class ApiDownloadsTests
         Assert.Empty(Rows(await f.Downloads().GetDownloadHistory(), "items").EnumerateArray());
     }
 
+    // The page polls arr/queue and arr/history together: a non-administrator's Seerr request list is
+    // read once for both (and for the next poll inside the poll interval), and per Seerr user.
+    [Fact]
+    public async Task NonAdminQueueAndHistoryShareOneSeerrRequestRead()
+    {
+        using var f = GuardedSeerr(out _);
+        f.Plugin.Plugin.Configuration.DownloadsShowHistory = true;
+        f.Plugin.Plugin.Configuration.DownloadsPollIntervalSeconds = 300;
+        f.Reply = request => request.RequestUri!.AbsolutePath == "/api/v1/request"
+            ? IntegrationTransport.Response("{\"results\":[{\"requestedBy\":{\"id\":27},\"media\":{\"tmdbId\":1433,\"mediaType\":\"tv\"}}]}")
+            : IntegrationTransport.Response("{\"records\":[]}");
+        f.SetUser(f.UserId);
+        await Task.WhenAll(f.Downloads().GetDownloadQueue(), f.Downloads().GetDownloadHistory());
+        await f.Downloads().GetDownloadQueue();
+        Assert.Single(f.Calls, c => c.Path.StartsWith("/api/v1/request?"));
+        f.SetUser(f.OtherUserId);
+        await f.Downloads().GetDownloadQueue();
+        Assert.Equal(2, f.Calls.Count(c => c.Path.StartsWith("/api/v1/request?")));
+    }
+
     [Fact]
     public async Task RequestRowsHideGuardedDatesWhileComingSoonStillWorks()
     {

@@ -208,11 +208,48 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
             if (string.IsNullOrEmpty(jellyseerrUserId))
                 return (true, null, false);
 
-            var userRequests = await GetJellyseerrRequestsForUser(jellyseerrUserId);
-            if (userRequests == null || userRequests.Count == 0)
-                return (true, null, userRequests == null);
+            var allowed = await GetAllowedRequestSetAsync(jellyseerrUserId, config);
+            if (allowed == null || allowed.Count == 0)
+                return (true, null, allowed == null);
 
-            return (false, new HashSet<(int, string)>(userRequests.Select(r => (r.TmdbId, r.MediaType))), false);
+            return (false, allowed, false);
+        }
+
+        /// <summary>
+        /// The Seerr user's requested titles, read once per poll interval and shared by arr/queue and
+        /// arr/history (the page polls both together) like the arr caches. A failed read is not kept.
+        /// </summary>
+        private async Task<HashSet<(int TmdbId, string MediaType)>?> GetAllowedRequestSetAsync(string jellyseerrUserId, PluginConfiguration config)
+        {
+            async Task<HashSet<(int TmdbId, string MediaType)>?> Read() =>
+                (await GetJellyseerrRequestsForUser(jellyseerrUserId))?.Select(r => (r.TmdbId, r.MediaType)).ToHashSet();
+
+            if (config.JellyseerrDisableCache)
+                return await Read();
+
+            Task<HashSet<(int TmdbId, string MediaType)>?> read;
+            lock (_downloadsAllowedRequestsCacheLock)
+            {
+                if (!_downloadsAllowedRequestsCache.TryGetValue(jellyseerrUserId, out var cached) || DateTime.UtcNow - cached.CachedAt >= GetArrPollCacheTtl(config))
+                {
+                    cached = (Read(), DateTime.UtcNow);
+                    _downloadsAllowedRequestsCache[jellyseerrUserId] = cached;
+                }
+
+                read = cached.Allowed;
+            }
+
+            var allowed = await read;
+            if (allowed == null)
+            {
+                lock (_downloadsAllowedRequestsCacheLock)
+                {
+                    if (_downloadsAllowedRequestsCache.TryGetValue(jellyseerrUserId, out var cached) && cached.Allowed == read)
+                        _downloadsAllowedRequestsCache.Remove(jellyseerrUserId);
+                }
+            }
+
+            return allowed;
         }
 
         private ObjectResult SeerrRequestsUnavailable() => StatusCode(502, new
