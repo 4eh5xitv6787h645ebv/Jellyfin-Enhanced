@@ -59,8 +59,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders.Services
         private static readonly TimeSpan SaveDebounce = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan SaveMaxWait = TimeSpan.FromMinutes(2);
         private const int CurrentSchemaVersion = 1;
-        // Titles kept in memory and in awards.json.
-        internal const int MaxCacheEntries = 10000;
+        // Titles kept in memory and in awards.json. Well above a library's movies and series, as for the
+        // MDBList cache: the awards tag refresh reads every library title through this cache.
+        internal const int MaxCacheEntries = 50000;
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly SemaphoreSlim _upstreamGate = new(1, 1);
