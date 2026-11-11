@@ -1,0 +1,29 @@
+# port 30: je12 smoke on 0e1ca9eb (the port and its ledger commit), against the baseline je12 up recorded from a clean build of 1a68c68a
+# 1. first run, straight after the five users' reads and the teardown: 17 rows ok, one failing:
+server log           FAIL    3152 ERR/WRN lines, 1 new kind(s): WRN Jellyfin.Plugin.JellyfinEnhanced: "Hiding orphaned review for unknown userId=<id> on movie:<n> from non-admin viewer."
+smoke: FAIL (1 failing, 0 changed, 0 known, 0 fixed) in 34s
+#    That line is written by Infrastructure/Http/JeControllerBase.cs (the review visibility check, not touched by the port) for every
+#    review by an unknown user on every request of a non-admin; the baseline is recorded as real-admin only. In the lab's log it was
+#    written per minute (UTC): 07:27 852, 07:28 3834, 07:29 4260 (reads on the base build 1a68c68a, deployed 07:26:54, and from 07:29:37
+#    on upstream's build), 07:30 852 (upstream's build), 07:33 2982 (the port, deployed 07:33:08). One page load as lab-kid adds 213, as
+#    real-admin 0. Filed: NEW-20261111-153725-a-page-load-by-a-non-admin-logs-one-wrn-line-per.
+# 2. je12 deploy (the same build again, which starts the log window anew), then je12 smoke:
+page admin           ok      14 tabs; Media Tags section 16 tabs (1.9s)
+page settings        ok      panel open, 24 tabs (1.9s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (1.8s)
+page poster          ok      71/100 cards tagged (1.9s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 62 JE elements (1.8s)
+page hidden-content  ok      page rendered (1.2s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (3.2s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.7s)
+page catchup         ok      Catch Up tab rendered (1.4s)
+page seerr           ok      5 Seerr cards (1.6s)
+page player          ok      playing 1.2s; OSD rating present (2.8s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 474 paths, 180 under /JellyfinEnhanced
+bundle wire          ok      br 200 487392B 304:yes, gzip 200 648162B 304:yes, identity 200 2396995B 304:yes; decoded bodies identical
+server log           ok      270 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 34s; details /home/jake/.local/share/je12/state/je125ce284-smoke.json

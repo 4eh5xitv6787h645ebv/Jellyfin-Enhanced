@@ -1,0 +1,33 @@
+# port 30 (upstream c693f0ed): its tests on the tree before the port
+# je12 test activity --dotnet on 1a68c68a plus the test file only (tests/backend/Features/Activity/ActivityFeedHiddenItemsTests.cs,
+# upstream's ten Jellyfin 12 tests at the moved path and namespace):
+JE.Tests.Features.Activity.ActivityFeedHiddenItemsTests.PlaysAndFavoritesOfAVersionShowAsItsTitleForEveryoneWhoCanReachIt [FAIL]
+JE.Tests.Features.Activity.ActivityFeedHiddenItemsTests.AnOlderVersionPlayMergesEvenWhenTheFeedFilledPagesEarlier [FAIL]
+JE.Tests.Features.Activity.ActivityFeedHiddenItemsTests.VersionsOfOneTitleMakeOneRowPerPersonWithTheNewestTimeAndHighestProgress [FAIL]
+JE.Tests.Features.Activity.ActivityFeedHiddenItemsTests.AnOlderPlayOfAHiddenVersionMergesOnlyWhenTheViewerCanReachIt [FAIL]
+JE.Tests.Features.Activity.ActivityFeedHiddenItemsTests.FavoritedPeopleGenresStudiosAndArtistsFollowJellyfinsByNameRule [FAIL]
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+Expected: ValueTuple<string, string, string>[]                                     [Tuple ("Watched", "965fe12664b04d40b98dc5edba99f35c", "00218c87383c412c8b6455af1a9233be"), Tuple ("Favorited", "f041dd1454334c1781bb7dfc1ffb0b62", "00218c87383c412c8b6455af1a9233be"), Tuple ("Watched", "f041dd1454334c1781bb7dfc1ffb0b62", "ec07a6cdc3b745e595ae16c32a172967")]
+Actual:   ListSelectIterator<ActivityFeedItem, ValueTuple<string, string, string>> []
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Tuple ("ad17c25c4b60499f9d17abf055cf355e", "cf41fd6980714fc48cbac520a527b49d", True, 1)
+Actual:   Tuple ("28dde42795dc410f82808f97cc5affb9", "b2a756bff87b461b90c5bae521246005", False, 0.5)
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+Expected: string[]                                     ["Watched", "Watched", "Favorited"]
+Actual:   ListSelectIterator<ActivityFeedItem, string> ["Watched"]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Tuple ("37d01b2cbf0d4b998f87f368e91dfb13", True, 1)
+Actual:   Tuple ("37d01b2cbf0d4b998f87f368e91dfb13", False, 0.20000000000000001)
+  Error Message:
+   Assert.Equal() Failure: Collections differ
+Expected: string[]                                     ["89bef6f9b2fb4845b1c632b26c0b7824", "f59127d2206242e7aa286761111064c4", "3db2bc19af1f4001b1ba482c7bc16e34", "954c8210428141edae9f745b7d191a6f", "3fb8c3c3ff8d4edfb2e9625f540399a8"]
+Actual:   ListSelectIterator<ActivityFeedItem, string> []
+Failed!  - Failed:     5, Passed:    37, Skipped:     0, Total:    42, Duration: 662 ms - JE.Tests.dll (net10.0)
+#    five of the ten added tests fail: no row for a play or favorite of a version, none for a favorited person,
+#    genre, studio or music artist or genre, two rows where versions of one title should make one, and no merge
+#    of an older play past the read window. The other five (the denied cases, the failing lookup, the single
+#    query for ordinary entries, removed items) describe what must not change and pass on both trees.
