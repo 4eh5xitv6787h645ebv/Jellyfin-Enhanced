@@ -543,6 +543,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.MediaTags
                 var to = PluginConfigurationPatch.ToJson(normalized, property.PropertyType);
                 imported[field] = to?.DeepClone();
                 var from = PluginConfigurationPatch.ToJson(property.GetValue(config), property.PropertyType);
+                // Jellyfin's XML storage reads a list saved as null back as an empty one: for a list they are one value.
+                var list = property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
+                if (list && (from is null or JsonArray { Count: 0 }) && (to is null or JsonArray { Count: 0 })) continue;
                 if (!JsonNode.DeepEquals(from, to)) changes.Add(new Change { Field = field, From = from, To = to });
             }
 
