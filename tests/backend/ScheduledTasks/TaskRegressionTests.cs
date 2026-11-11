@@ -176,12 +176,12 @@ public class TaskRegressionTests
         IDisposable monitor;
         if (movie)
         {
-            var m = new AutoMovieRequestMonitor(sessions.Object, users.Object, null!, new AutoMovieRequestService(null!, f.Core.Logger, users.Object, null!), f.Core.Logger);
+            var m = new AutoMovieRequestMonitor(sessions.Object, users.Object, null!, new AutoMovieRequestService(null!, f.Core.Logger, users.Object, null!, null!), f.Core.Logger);
             m.Initialize(); m.Initialize(); monitor = m;
         }
         else
         {
-            var m = new AutoSeasonRequestMonitor(sessions.Object, users.Object, null!, new AutoSeasonRequestService(null!, f.Core.Logger, users.Object, null!, null!), f.Core.Logger);
+            var m = new AutoSeasonRequestMonitor(sessions.Object, users.Object, null!, new AutoSeasonRequestService(null!, f.Core.Logger, users.Object, null!, null!, null!), f.Core.Logger);
             m.Initialize(); m.Initialize(); monitor = m;
         }
         void Play(Guid userId)
