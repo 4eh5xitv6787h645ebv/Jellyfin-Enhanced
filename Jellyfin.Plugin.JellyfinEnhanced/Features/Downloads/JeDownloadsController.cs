@@ -189,30 +189,38 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
         /// Non-admin users can only see downloads/history for items they requested via Seerr,
         /// unless the admin has disabled per-user filtering. Returns Blocked=true when the
         /// caller should be shown an empty result (no Seerr link, no linked account, or no
-        /// requests to filter by) rather than the unfiltered arr queue/history.
+        /// requests to filter by) rather than the unfiltered arr queue/history, and Failed=true
+        /// when the caller's requests could not be read, which is not the same as having none.
         /// </summary>
-        private async Task<(bool Blocked, HashSet<(int TmdbId, string MediaType)>? Allowed)> GetAllowedRequestsForCurrentUserAsync(PluginConfiguration config)
+        private async Task<(bool Blocked, HashSet<(int TmdbId, string MediaType)>? Allowed, bool Failed)> GetAllowedRequestsForCurrentUserAsync(PluginConfiguration config)
         {
             if (IsAdminUser() || !config.DownloadsFilterByUserRequests)
-                return (false, null);
+                return (false, null, false);
 
             if (!config.JellyseerrEnabled || string.IsNullOrWhiteSpace(config.JellyseerrUrls) || string.IsNullOrWhiteSpace(config.JellyseerrApiKey))
-                return (true, null);
+                return (true, null, false);
 
             var jellyfinUserId = UserHelper.GetCurrentUserId(User)?.ToString();
             if (string.IsNullOrEmpty(jellyfinUserId))
-                return (true, null);
+                return (true, null, false);
 
             var jellyseerrUserId = await _seerrUserLookup.GetJellyseerrUserId(jellyfinUserId);
             if (string.IsNullOrEmpty(jellyseerrUserId))
-                return (true, null);
+                return (true, null, false);
 
             var userRequests = await GetJellyseerrRequestsForUser(jellyseerrUserId);
             if (userRequests == null || userRequests.Count == 0)
-                return (true, null);
+                return (true, null, userRequests == null);
 
-            return (false, new HashSet<(int, string)>(userRequests.Select(r => (r.TmdbId, r.MediaType))));
+            return (false, new HashSet<(int, string)>(userRequests.Select(r => (r.TmdbId, r.MediaType))), false);
         }
+
+        private ObjectResult SeerrRequestsUnavailable() => StatusCode(502, new
+        {
+            error = true,
+            code = "seerr_requests_failed",
+            message = "Could not read your Seerr requests to filter the downloads.",
+        });
 
         private static TimeSpan GetArrPollCacheTtl(PluginConfiguration config)
         {
@@ -255,7 +263,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
             if (config == null)
                 return StatusCode(500, "Plugin configuration not available");
 
-            var (blocked, allowedRequests) = await GetAllowedRequestsForCurrentUserAsync(config);
+            var (blocked, allowedRequests, failed) = await GetAllowedRequestsForCurrentUserAsync(config);
+            if (failed)
+                return SeerrRequestsUnavailable();
             if (blocked)
                 return Ok(new { items = new List<object>(), errors = new List<object>() });
 
@@ -512,7 +522,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
             if (config.DownloadsHistoryAdminOnly && !IsAdminUser())
                 return Ok(new { items = new List<object>(), totalPages = 0, visible = false });
 
-            var (blocked, allowedRequests) = await GetAllowedRequestsForCurrentUserAsync(config);
+            var (blocked, allowedRequests, failed) = await GetAllowedRequestsForCurrentUserAsync(config);
+            if (failed)
+                return SeerrRequestsUnavailable();
             if (blocked)
                 return Ok(new { items = new List<object>(), totalPages = 0, visible = true });
 
@@ -521,13 +533,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
 
             var ttl = GetArrPollCacheTtl(config);
             List<dynamic>? rawItems = null;
+            List<object>? errors = null;
             lock (_arrHistoryCacheLock)
             {
                 if (_arrHistoryCache.HasValue && DateTime.UtcNow - _arrHistoryCache.Value.CachedAt < ttl)
+                {
                     rawItems = _arrHistoryCache.Value.Items;
+                    errors = _arrHistoryCache.Value.Errors;
+                }
             }
 
-            if (rawItems == null)
+            if (rawItems == null || errors == null)
             {
                 var ct = HttpContext.RequestAborted;
                 var sonarrTasks = sonarrInstances.Select(i => FetchSonarrHistory(i, ct)).ToList();
@@ -537,8 +553,19 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
                 var radarrResults = await Task.WhenAll(radarrTasks);
 
                 var merged = new List<dynamic>();
-                foreach (var result in sonarrResults) merged.AddRange(result.Items);
-                foreach (var result in radarrResults) merged.AddRange(result.Items);
+                errors = new List<object>();
+                for (int i = 0; i < sonarrResults.Length; i++)
+                {
+                    merged.AddRange(sonarrResults[i].Items);
+                    if (sonarrResults[i].Error != null)
+                        errors.Add(new { instanceName = sonarrInstances[i].Name, source = "Sonarr", reason = sonarrResults[i].Error });
+                }
+                for (int i = 0; i < radarrResults.Length; i++)
+                {
+                    merged.AddRange(radarrResults[i].Items);
+                    if (radarrResults[i].Error != null)
+                        errors.Add(new { instanceName = radarrInstances[i].Name, source = "Radarr", reason = radarrResults[i].Error });
+                }
 
                 rawItems = merged
                     .OrderByDescending(i => (DateTime?)i.date ?? DateTime.MinValue)
@@ -547,7 +574,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
 
                 lock (_arrHistoryCacheLock)
                 {
-                    _arrHistoryCache = (rawItems, DateTime.UtcNow);
+                    _arrHistoryCache = (rawItems, errors, DateTime.UtcNow);
                 }
             }
 
@@ -555,7 +582,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Downloads
             var totalPages = filtered.Count == 0 ? 0 : (int)Math.Ceiling(filtered.Count / (double)take);
             var page = RedactDownloadRows(filtered.Skip(skip).Take(take));
 
-            return Ok(new { items = page, totalPages, visible = true });
+            return Ok(new { items = page, totalPages, visible = true, errors });
         }
 
         private Task<(List<dynamic> Items, string? Error)> FetchSonarrHistory(ArrInstance instance, CancellationToken ct)

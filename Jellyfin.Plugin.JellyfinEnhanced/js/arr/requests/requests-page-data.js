@@ -444,7 +444,7 @@
         const data = response(await JE.core.api.plugin(`/arr/history?${query.toString()}`));
         if (!lease.current()) return null;
         state.history = readItems(data.items);
-        state.historyError = false;
+        state.historyError = state.history.length === 0 && Array.isArray(data.errors) && data.errors.length > 0;
         state.historyVisible = data.visible !== false;
         state.historyTotalPages = pages(data.totalPages);
         return data;

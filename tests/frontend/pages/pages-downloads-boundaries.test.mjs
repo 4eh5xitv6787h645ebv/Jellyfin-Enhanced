@@ -38,6 +38,10 @@ test('detached and hidden buttons and stale selection never send a write',async 
 test('malformed queue response surfaces failure, not a successful empty state',async t=>{
  const h=setup(t,{api:async p=>p==='/arr/queue'?{items:[{progress:'bad'}]}:{}});h.expectConsoleError('Failed to fetch downloads');await h.P.loadAllData();assert.equal(h.P.state.downloadsError,true);assert.match(h.document.body.textContent,/Unable to load downloads/);
 });
+test('history that failed on every instance shows the failure, not "no history"',async t=>{
+ const h=setup(t,{api:async p=>p.startsWith('/arr/history')?{items:[],totalPages:0,visible:true,errors:[{instanceName:'Sonarr',source:'Sonarr',reason:'HTTP 500'}]}:p==='/arr/queue'?{items:[]}:{requests:[]}});
+ await h.P.loadAllData();assert.equal(h.P.state.historyError,true);assert.match(h.document.querySelector('.je-history-section').textContent,/Unable to load history/);
+});
 test('queue titles, ETA and search markup cannot create elements; progress remains bounded',t=>{
  const h=setup(t);h.P.state.downloads=[{title:'<img id="attack">',subtitle:'<svg onload="x">',timeRemaining:'<img id="eta">',progress:900,status:'Downloading'}];h.P.state.downloadsSearchVisible=true;h.P.state.downloadsSearchQuery='" autofocus onfocus="x';h.P.renderPage();
  assert.equal(h.document.querySelector('#attack,#eta,[onfocus]'),null);assert.equal(h.document.querySelector('.je-downloads-search-input').value,'" autofocus onfocus="x');

@@ -138,7 +138,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr
         // user-specific is ever stored in these caches.
         internal static (List<object> Items, List<object> Errors, DateTime CachedAt)? _arrQueueCache;
         internal static readonly object _arrQueueCacheLock = new();
-        internal static (List<dynamic> Items, DateTime CachedAt)? _arrHistoryCache;
+        internal static (List<dynamic> Items, List<object> Errors, DateTime CachedAt)? _arrHistoryCache;
         internal static readonly object _arrHistoryCacheLock = new();
     }
 }
