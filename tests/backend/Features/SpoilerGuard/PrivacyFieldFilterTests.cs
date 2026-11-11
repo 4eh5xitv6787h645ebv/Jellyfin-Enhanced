@@ -103,6 +103,27 @@ public class PrivacyFieldFilterTests
         Assert.Equal("Secret plot", other.Overview);
     }
 
+    [Fact]
+    public async Task AnUnreadableStateFileKeepsTheLastStateReadAndIsLeftAsItIs()
+    {
+        using var f = new Fixture();
+        var first = f.Episode();
+        await f.Invoke(first);
+        Assert.Equal("Season 2, Episode 3", first.Name);
+
+        // The file then cannot be read (a write cut short, a share that dropped) once the cached copy has gone.
+        var path = Path.Combine(f.Plugin.Core.ConfigRoot, f.User.ToString("N"), "spoilerblur.json");
+        File.WriteAllText(path, "{\"Series\":{");
+        SpoilerUserResolver.InvalidateUser(f.User.ToString("N"));
+        var later = f.Episode();
+        await f.Invoke(later);
+        Assert.Equal("Season 2, Episode 3", later.Name);
+        Assert.NotEqual("Secret plot", later.Overview);
+        // Reading it never moves or rewrites it.
+        Assert.Equal("{\"Series\":{", File.ReadAllText(path));
+        Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path)!, "*.corrupt-*"));
+    }
+
     // Upstream d3bd07d3: Home Screen Sections serves the web home rows from its own endpoint.
     [Fact]
     public async Task HomeScreenSectionsRowsStripGuardedUnwatchedEpisodes()

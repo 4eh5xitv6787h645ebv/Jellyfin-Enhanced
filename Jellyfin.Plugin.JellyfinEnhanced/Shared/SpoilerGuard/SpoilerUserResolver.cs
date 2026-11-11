@@ -38,6 +38,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
         private static readonly ConcurrentDictionary<string, (UserSpoilerBlur State, DateTime CachedAt)> _userStateCache
             = new(StringComparer.OrdinalIgnoreCase);
 
+        // The last state read from each user's file, kept past the cache above: it stays in force while the
+        // file cannot be read, so an unreadable file never reads as "nothing guarded".
+        private static readonly ConcurrentDictionary<string, UserSpoilerBlur> _lastReadState = new(StringComparer.OrdinalIgnoreCase);
+
         // F6: memoized result of the O(opted-collections × members) collection
         // walk in FindOptedInCollectionForMovie (runs 2-3× per movie image/DTO).
         // Keyed by (movieId + the SORTED set of opted collection GUIDs), because
@@ -259,33 +263,24 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                 return entry.State;
             }
 
-            // 3. Miss — read from disk.
+            // 3. Miss — read from disk. Missing is an empty state; a file that cannot be read (I/O error,
+            //    damaged content) keeps the last state read for this user and is left as it is.
             UserSpoilerBlur state;
             try
             {
-                state = _userConfigManager.GetUserConfiguration<UserSpoilerBlur>(
+                state = _userConfigManager.GetUserConfigurationStrict<UserSpoilerBlur>(
                     userIdN,
-                    SpoilerBlurImageFilter.SpoilerBlurFileName);
+                    SpoilerBlurImageFilter.SpoilerBlurFileName,
+                    quarantineCorrupt: false);
+                _lastReadState[userIdN] = state;
             }
             catch (Exception ex)
             {
-                // GetUserConfiguration is the LENIENT path — it already
-                // swallows IOException + JsonException + parse failures
-                // internally and returns `new T()` (it logs at Error level
-                // via the config manager's own _logger, so the corruption
-                // fact is observable, just not under our namespace). This
-                // outer catch-all only fires for exceptions that escape the
-                // lenient path (e.g. ResolveUserFile throwing on a bad
-                // userId). Rate-limited so a flood of bad requests doesn't
-                // spam logs. Do NOT populate the cross-request cache with a
-                // spurious empty on this rare escape — only the per-request
-                // layer, so a retry re-reads.
+                var known = _lastReadState.TryGetValue(userIdN, out var last);
                 WarnRateLimited(
                     "userstate-load:" + ex.GetType().FullName,
-                    $"Spoiler Guard resolver: failed to read user state for {userId} — passing through unblurred. {ex.Message}");
-                state = new UserSpoilerBlur();
-                httpContext.Items[cacheKey] = state;
-                return state;
+                    $"Spoiler Guard resolver: could not read the state of {userId}; {(known ? "keeping the last state read" : "no earlier state is known")}. {ex.Message}");
+                state = last ?? new UserSpoilerBlur();
             }
 
             _userStateCache[userIdN] = (state, now);
