@@ -236,7 +236,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             }
         }
 
-        private static void WriteUserDocument(string path, byte[] bytes)
+        internal static void WriteUserDocument(string path, byte[] bytes)
         {
             var temporaryPath = path + ".tmp." + Guid.NewGuid().ToString("N");
             try
