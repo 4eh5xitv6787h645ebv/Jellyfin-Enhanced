@@ -240,6 +240,23 @@ test('a season page and an episode page preset and lock what they are about, and
   assert.equal(episode.document.querySelector('#issue-episode').disabled, true);
 });
 
+test('a report cannot be sent while the season and episode lists load, so it is never filed against all seasons', async t => {
+  const lists = deferred();
+  const reply = seasonsReply([1, 2]);
+  const h = setup(t, { ajax: async request => { await lists.promise; return reply(request); } });
+  withQuery(h.window.ApiClient);
+  h.R.showReportModal('1', 'Show', 'tv', null, { Id: 'e', Type: 'Episode', IndexNumber: 2, ParentIndexNumber: 1, SeriesId: 'series', ParentId: 's1' });
+  h.pickType('3');
+  h.submit();
+  await h.settle();
+  assert.equal(h.reports.length, 0, 'nothing is sent before the lists are in');
+  lists.resolve();
+  await h.settle();
+  h.submit();
+  await h.settle();
+  assert.deepEqual(plain(h.reports.map(report => report.slice(4))), [[1, 2]]);
+});
+
 test('an episode never reads its season as the series', async t => {
   const h = setup(t, { ajax: seasonsReply([1]) });
   withQuery(h.window.ApiClient);
@@ -329,6 +346,7 @@ test('a season and an episode report against their series', async t => {
   const h = setup(t, { items: { m1: { Id: 'm1', Type: 'Episode', Name: 'Ep', ParentIndexNumber: 1, SeriesId: 'series' }, series: { Id: 'series', Type: 'Series', ProviderIds: { Tmdb: '77' } } } });
   await h.R.tryAddButton();
   h.document.querySelector('.jellyseerr-report-issue-icon').click();
+  await h.settle();
   h.pickType('1');
   h.submit();
   await h.settle();

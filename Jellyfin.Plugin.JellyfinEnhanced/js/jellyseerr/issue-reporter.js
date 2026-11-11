@@ -553,7 +553,11 @@
     handle.show();
     void loadExistingIssues(handle.modalElement, tmdbId, mediaType, open);
     if (mediaType === "tv") {
-      buildTvControls(handle.modalElement, item, open).catch((error) => console.debug(`${logPrefix} Error building tv controls:`, error));
+      const submit = handle.modalElement.querySelector(".jellyseerr-modal-button-primary");
+      if (submit) submit.disabled = true;
+      buildTvControls(handle.modalElement, item, open).catch((error) => console.debug(`${logPrefix} Error building tv controls:`, error)).finally(() => {
+        if (submit) submit.disabled = false;
+      });
     }
   }
   function createReportButton(container, tmdbId, itemName, mediaType, backdropUrl = null, item = null) {

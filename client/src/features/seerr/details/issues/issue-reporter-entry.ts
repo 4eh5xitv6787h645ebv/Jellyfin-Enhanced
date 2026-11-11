@@ -338,7 +338,12 @@ function showReportModal(tmdbId: TmdbId, itemName: string, mediaType: MediaType,
 
     void loadExistingIssues(handle.modalElement, tmdbId, mediaType, open);
     if (mediaType === 'tv') {
-        buildTvControls(handle.modalElement, item, open).catch(error => console.debug(`${logPrefix} Error building tv controls:`, error));
+        // Empty selectors read as "all seasons", so the report waits for the lists.
+        const submit = handle.modalElement.querySelector<HTMLButtonElement>('.jellyseerr-modal-button-primary');
+        if (submit) submit.disabled = true;
+        buildTvControls(handle.modalElement, item, open)
+            .catch(error => console.debug(`${logPrefix} Error building tv controls:`, error))
+            .finally(() => { if (submit) submit.disabled = false; });
     }
 }
 
