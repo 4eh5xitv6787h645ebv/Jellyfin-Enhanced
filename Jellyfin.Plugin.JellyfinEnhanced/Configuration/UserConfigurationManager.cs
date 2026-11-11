@@ -839,7 +839,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             try
             {
                 var json = JsonConvert.SerializeObject(store, Formatting.Indented);
-                File.WriteAllText(ReviewsFilePath, json);
+                // Write a temporary file and move it into place, so an interrupted write leaves the previous store whole.
+                WriteUserDocument(ReviewsFilePath, Encoding.UTF8.GetBytes(json));
             }
             catch (Exception ex)
             {
