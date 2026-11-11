@@ -929,7 +929,7 @@ Use local GUID routes for Jellyfin metadata, the generic TMDB route for external
 | GET | `tmdb/search/keyword` | Seerr-linked | Required nonblank `query` → Seerr keyword-search response. |
 | GET | `tmdb/genres/movie` | Seerr-linked | Upstream Seerr movie genre list. |
 | GET | `tmdb/genres/tv` | Seerr-linked | Upstream Seerr TV genre list. |
-| GET | `tmdb/validate` | Administrator | Supplied query `apiKey` → `{"ok":true}`. |
+| GET | `tmdb/validate` | Administrator | The key in the `X-Arr-ApiKey` header (or, as before, the query `apiKey`) → `{"ok":true}`. |
 | GET | `tmdb/{**apiPath}` | Authenticated | TMDB `/3/` resource path and query → upstream TMDB JSON/status. |
 | GET | `watch-providers` | Authenticated | Query `items`, optional `region` → regional flat-rate provider map. |
 | GET | `logo/{size}/{file}` | Anonymous | `size` `w45` or `w92`, `file` a logo file name the server has seen in a Logos lookup, spelled exactly as TMDB spells it (case-sensitive) → the image from the server's cache; `404` otherwise. |
