@@ -174,6 +174,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             var totalItemsAdded = 0;
             var totalItemsProcessed = 0;
             var failedUsers = 0;
+            // Library movies and series by TMDB id, each read once per pass, on first use.
+            var libraryByTmdbId = new Dictionary<BaseItemKind, Dictionary<string, BaseItem>>();
 
             foreach (var jellyfinUser in jellyfinUsers)
             {
@@ -258,7 +260,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                             continue;
                         }
 
-                        var result = await ProcessWatchlistItem(jellyfinUser, item);
+                        var result = await ProcessWatchlistItem(jellyfinUser, item, libraryByTmdbId);
                         var itemInfo = $"TMDB: {item.TmdbId}";
 
                         switch (result)
@@ -560,7 +562,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             Skipped
         }
 
-        private Task<WatchlistItemResult> ProcessWatchlistItem(JUser user, WatchlistItem watchlistItem)
+        private Task<WatchlistItemResult> ProcessWatchlistItem(JUser user, WatchlistItem watchlistItem, Dictionary<BaseItemKind, Dictionary<string, BaseItem>> libraryByTmdbId)
         {
             try
             {
@@ -578,22 +580,27 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                 // Determine Jellyfin item type based on Jellyseerr media type
                 var itemType = watchlistItem.MediaType == "movie" ? BaseItemKind.Movie : BaseItemKind.Series;
 
-                // Find the item in Jellyfin library by TMDB ID
-                var items = _libraryManager.GetItemList(new InternalItemsQuery
+                // Find the item in Jellyfin library by TMDB ID (the first one listed, as before)
+                if (!libraryByTmdbId.TryGetValue(itemType, out var byTmdbId))
                 {
-                    IncludeItemTypes = new[] { itemType },
-                    HasTmdbId = true,
-                    Recursive = true
-                });
-
-                var item = items.FirstOrDefault(i =>
-                {
-                    if (i.ProviderIds != null && i.ProviderIds.TryGetValue("Tmdb", out var tmdbId))
+                    byTmdbId = new Dictionary<string, BaseItem>();
+                    foreach (var i in _libraryManager.GetItemList(new InternalItemsQuery
                     {
-                        return tmdbId == watchlistItem.TmdbId.ToString();
+                        IncludeItemTypes = new[] { itemType },
+                        HasTmdbId = true,
+                        Recursive = true
+                    }))
+                    {
+                        if (i.ProviderIds != null && i.ProviderIds.TryGetValue("Tmdb", out var tmdbId))
+                        {
+                            byTmdbId.TryAdd(tmdbId, i);
+                        }
                     }
-                    return false;
-                });
+
+                    libraryByTmdbId[itemType] = byTmdbId;
+                }
+
+                byTmdbId.TryGetValue(watchlistItem.TmdbId.ToString(), out var item);
 
                 if (item == null)
                 {
