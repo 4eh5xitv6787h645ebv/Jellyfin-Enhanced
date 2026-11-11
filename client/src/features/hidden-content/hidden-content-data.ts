@@ -485,7 +485,8 @@ import { host, registry, type HiddenHost } from './host';
         policyRevision++; intentReset++; itemIntents.clear();
         try {
             const next = JE.userConfig?.hiddenContent == null ? { items: {}, settings: {} } : decodeDocument(JE.userConfig.hiddenContent);
-            hiddenData = next; dataOwner=lease(JE); itemEdits.clear(); loadValid = true; rebuildSets();
+            // A list that failed to load (null) is unknown, not empty: nothing shows as hidden and edits are refused.
+            hiddenData = next; dataOwner=lease(JE); itemEdits.clear(); loadValid = JE.userConfig?.hiddenContent != null; rebuildSets();
         } catch (error) { hiddenData ??= {items:{},settings:{}}; loadValid = false; console.warn("Invalid hidden-content policy", error); }
     }
 

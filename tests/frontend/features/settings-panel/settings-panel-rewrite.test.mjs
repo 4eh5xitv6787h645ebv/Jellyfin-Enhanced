@@ -336,6 +336,31 @@ test('a rebound shortcut the plugin defaults lack is stored under its action nam
   assert.deepEqual(writes.at(-1).Shortcuts, [{ Name: 'FrameStepBack', Key: '' }]);
 });
 
+test('shortcut overrides that failed to load are listed but cannot be rebound over the stored list', t => {
+  const writes = [];
+  const Shortcuts = [{ Name: 'FrameStepForward', Key: '.', Label: 'Step Forward One Frame', Category: 'Player' }];
+  const h = createHarness({ JE: { pluginConfig: { HelpPanelAutocloseDelay: 60000, Shortcuts }, userConfig: { settings: {}, shortcuts: null }, currentSettings: {},
+    state: { activeShortcuts: { FrameStepForward: '.' } }, pauseScreenInstance: {}, t: k => k, toast() {},
+    keyCombo: e => e.key.toUpperCase() } });
+  t.after(() => h.close());
+  for (const file of ['core/ui-kit.js', 'tags/rating-sources.js', 'enhanced/config.js', 'enhanced/icons.js', 'enhanced/helpers.js', 'enhanced/player/subtitles.js']) h.load(file);
+  h.JE.saveUserSettings = async (file, doc) => { writes.push([file, JSON.parse(JSON.stringify(doc))]); };
+  h.JE.currentSettings = h.JE.loadSettings();
+  h.JE.themer = { getThemeVariables: () => ({}) };
+  for (const file of ['ui-panel-settings.js', 'ui-panel-template.js', 'ui-panel-shortcut-editor.js']) h.load(`enhanced/settingspanel/${file}`);
+  const help = h.document.createElement('div');
+  help.innerHTML = h.JE.internals.enhancedUi.buildPanelHtml({});
+  h.document.body.append(help);
+  h.JE.internals.enhancedUi.wireShortcutEditor({ help, pluginShortcuts: Shortcuts, primaryAccentColor: '#0af', kbdBackground: '#222' });
+  const key = help.querySelector('.shortcut-key[data-action="FrameStepForward"]');
+  assert.equal(key.textContent, '.');
+  key.focus();
+  key.dispatchEvent(new h.window.KeyboardEvent('keydown', { key: 'q', bubbles: true, cancelable: true }));
+  help.querySelector('.shortcut-toggle[data-action="FrameStepForward"]').click();
+  assert.deepEqual(writes, []);
+  assert.equal(h.JE.state.activeShortcuts.FrameStepForward, '.');
+});
+
 test('the shared panel registry keeps every member the admin page and item editor read', t => {
   const h = createHarness({ JE: { t: key => key, escapeHtml: value => String(value), core: {}, currentSettings: {}, pluginConfig: {}, session: { onUserChange() {} } } });
   t.after(() => h.close());

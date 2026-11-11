@@ -306,6 +306,31 @@ test('real loader preserves null document failures without throwing or inventing
   assert.equal(h.plugin.currentSettings.qualityTagsEnabled, false);
 });
 
+// Both are saved whole: an empty stand-in would let the next edit replace the stored list with one entry.
+test('real loader keeps a hidden list or shortcut list the bootstrap could not load unknown instead of empty', async t => {
+  const h = setup(t, { data: payload({ UserSettings: { Shortcuts: null, HiddenContent: null } }) });
+  await until(() => h.plugin.initialized);
+  assert.equal(h.plugin.userConfig.hiddenContent, null);
+  assert.equal(h.plugin.userConfig.shortcuts, null);
+});
+
+test('real loader keeps a hidden list or shortcut list whose fallback request failed unknown instead of empty', async t => {
+  const invalid = payload();
+  invalid.UserSettings.Bookmark = { Bookmarks: { stolen: {} } };
+  const h = setup(t, { ajax: async path => {
+    if (path.endsWith('/bootstrap')) return invalid;
+    if (path.endsWith('/component-scripts.json')) return modules;
+    if (path === '/Plugins') return [];
+    if (path.endsWith('/version')) return { Version: 'fallback' };
+    if (path.endsWith('/hidden-content.json') || path.endsWith('/shortcuts.json')) throw Object.assign(new Error('Gateway Timeout'), { status: 504 });
+    return {};
+  } });
+  await until(() => h.plugin.initialized);
+  assert.ok(h.calls.some(path => path.endsWith('/hidden-content.json')));
+  assert.equal(h.plugin.userConfig.hiddenContent, null);
+  assert.equal(h.plugin.userConfig.shortcuts, null);
+});
+
 
 test('real loader discards a same-user response after server identity changes during boot', async t => {
   const stale = deferred();

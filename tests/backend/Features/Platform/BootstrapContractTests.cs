@@ -78,6 +78,30 @@ public class BootstrapContractTests
         await ValidateClientWire(body, false);
     }
 
+    // Both are saved whole, so an empty stand-in for a stored file that cannot be read becomes the
+    // next save. The bootstrap and the fallback endpoints report the read as failed and keep the bytes.
+    [Fact]
+    public void UnreadableHiddenListAndShortcutsAreReportedAsFailedNotEmpty()
+    {
+        using var fixture = new ApiPluginFixture();
+        var user = Guid.NewGuid();
+        var directory = Path.Combine(fixture.Core.ConfigRoot, user.ToString("N"));
+        Directory.CreateDirectory(directory);
+        const string Stored = "{\"Items\":{\"kept\":";
+        var files = new[] { "hidden-content.json", "shortcuts.json" };
+        foreach (var file in files) File.WriteAllText(Path.Combine(directory, file), Stored);
+        var controller = Controller(fixture, user, false);
+
+        var body = Assert.IsType<BootstrapResponse>(Assert.IsType<JsonResult>(controller.GetBootstrap()).Value);
+        Assert.Null(body.UserSettings.HiddenContent);
+        Assert.Null(body.UserSettings.Shortcuts);
+        var hidden = ApiAssetTests.Sibling<Jellyfin.Plugin.JellyfinEnhanced.Features.HiddenContent.JeHiddenContentController>(controller, fixture.Core, fixture.Core.Manager, Mock.Of<IUserManager>());
+        Assert.Equal(500, Assert.IsAssignableFrom<ObjectResult>(hidden.GetUserHiddenContent(user.ToString("N"))).StatusCode);
+        var settings = ApiAssetTests.Sibling<JeSettingsController>(controller, fixture.Core, fixture.Core.Manager);
+        Assert.Equal(500, Assert.IsAssignableFrom<ObjectResult>(settings.GetUserSettingsShortcuts(user.ToString("N"))).StatusCode);
+        foreach (var file in files) Assert.Equal(Stored, File.ReadAllText(Path.Combine(directory, file)));
+    }
+
     // This verifies the generated browser boundary against actual server serialization,
     // not a separately maintained mock of the DTO shape. Node is also required by the build gate.
     private static async Task ValidateClientWire(BootstrapResponse body, bool admin, JsonSerializerOptions? options = null)

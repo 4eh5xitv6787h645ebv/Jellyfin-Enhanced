@@ -96,7 +96,7 @@ export function installUiPanelTemplate(JE: Deps, featureCtx = settingsPanelConte
         const subtitleFontFamily = isSafeFontFamily(posPreviewFontFamilyPreset.family) ? posPreviewFontFamilyPreset.family : 'inherit';
         const previewTextShadow = JE.getSubtitleTextShadow(subtitleBgColor || '#00000000');
 
-        const userShortcuts = new Set((JE.userConfig.shortcuts.Shortcuts || []).map(s => s.Name));
+        const userShortcuts = new Set((JE.userConfig.shortcuts?.Shortcuts || []).map(s => s.Name));
         const pluginShortcuts = pluginShortcutList(JE.pluginConfig.Shortcuts);
 
         return `

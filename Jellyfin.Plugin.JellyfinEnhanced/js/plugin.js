@@ -453,6 +453,7 @@
     const userConfig = emptyUserConfig();
     for (const name of DOCUMENT_NAMES) {
       const value = documents[name];
+      if (value === null && (name === "hiddenContent" || name === "shortcuts")) userConfig[name] = null;
       if (!isRecord(value)) continue;
       const converted = CAMEL_CASED.has(name) ? toCamelCase(value) : value;
       if (name === "settings") userConfig.settings = requireObject(converted) ?? {};

@@ -435,7 +435,7 @@
         hiddenData = next;
         dataOwner = lease(JE);
         itemEdits.clear();
-        loadValid = true;
+        loadValid = JE.userConfig?.hiddenContent != null;
         rebuildSets();
       } catch (error) {
         hiddenData ?? (hiddenData = { items: {}, settings: {} });

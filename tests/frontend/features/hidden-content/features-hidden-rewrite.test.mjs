@@ -36,6 +36,14 @@ test('invalid bootstrap policy blocks writes until a validated reload',async t=>
  assert.equal(h.api.isLoadOk(),false);assert.throws(()=>h.api.hideItem({itemId:'b'}),/unavailable/);
  assert.throws(()=>h.api.updateSettings({enabled:false}),/unavailable/);assert.throws(()=>h.api.unhideAll(),/unavailable/);
 });
+test('a hidden list that failed to load is unknown: edits are refused and nothing is written over the stored list',async t=>{
+ const writes=[];const h=setup(t,{ajax:async request=>{writes.push(request);return {};}});
+ h.JE.userConfig.hiddenContent=null;h.ready();
+ assert.equal(h.api.isLoadOk(),false);
+ assert.throws(()=>h.api.hideItem({itemId:'b',name:'B'}),/unavailable/);
+ assert.throws(()=>h.api.updateSettings({enabled:false}),/unavailable/);
+ await h.api.flushPendingSave();assert.deepEqual(writes,[]);
+});
 test('Pascal document fields decode without altering extension data or map keys',async t=>{
  const h=setup(t,{ajax:async()=>({Items:{'AA-BB':{ItemId:'AA-BB',Name:'Title',FutureField:{ExactCase:1}}},Settings:{FilterSearch:true,FutureSetting:'keep'},FutureDocument:{ExactCase:2}})});
  assert.equal(await h.api.refresh(),true);assert.equal(h.api.isHidden('aabb'),true);

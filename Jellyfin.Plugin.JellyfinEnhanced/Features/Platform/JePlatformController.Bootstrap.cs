@@ -609,7 +609,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
                 {
                     Settings = settingsSnapshot?.Settings,
                     SettingsRevision = settingsSnapshot?.Revision,
-                    Shortcuts = TryLoadUserDocument("shortcuts.json", authorizedUserId, () => _userConfigurationManager.GetUserConfiguration<UserShortcuts>(authorizedUserId, "shortcuts.json")),
+                    Shortcuts = TryLoadUserDocument("shortcuts.json", authorizedUserId, () => _userConfigurationManager.GetUserConfigurationStrict<UserShortcuts>(authorizedUserId, "shortcuts.json", quarantineCorrupt: false)),
                     Bookmark = null,
                     BookmarkSnapshot = bookmarkSnapshot,
                     Elsewhere = TryLoadUserDocument("elsewhere.json", authorizedUserId, () => _userConfigurationManager.GetUserConfiguration<ElsewhereSettings>(authorizedUserId, "elsewhere.json")),
