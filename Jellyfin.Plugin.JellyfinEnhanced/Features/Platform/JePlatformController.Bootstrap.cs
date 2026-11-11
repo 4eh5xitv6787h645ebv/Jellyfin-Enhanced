@@ -181,7 +181,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.Platform
                 ToastDuration = config.ToastDuration,
                 HelpPanelAutocloseDelay = config.HelpPanelAutocloseDelay,
                 EnableCustomSplashScreen = config.EnableCustomSplashScreen,
-                SplashScreenImageUrl = config.SplashScreenImageUrl,
+                SplashScreenImageUrl = Features.Platform.Services.SplashImage.Resolve(config.SplashScreenImageUrl, JellyfinEnhanced.Instance?.WebPath),
 
                 // Jellyfin Elsewhere Settings
                 ElsewhereEnabled = config.ElsewhereEnabled,
