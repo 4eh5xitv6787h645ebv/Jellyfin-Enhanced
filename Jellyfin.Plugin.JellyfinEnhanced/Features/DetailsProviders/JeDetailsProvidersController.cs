@@ -285,9 +285,17 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
 
             // Unconfirmed so neither the browser nor the client cache keeps this answer,
             // which only holds while the title is guarded.
-            if (_spoilerSeerrRedactor.HidesRatings(mediaType, tmdbId, UserHelper.GetCurrentUserId(User)?.ToString(), HttpContext))
+            var userId = UserHelper.GetCurrentUserId(User);
+            if (_spoilerSeerrRedactor.HidesRatings(mediaType, tmdbId, userId?.ToString(), HttpContext))
             {
                 return Ok(new { Found = false, Confirmed = false });
+            }
+
+            // A title not cached (or due a refresh) spends the administrator's quota: past the
+            // account's share, the answer on record, else "not known yet" (Confirmed false).
+            if (_mdblistService.NeedsFetch(mediaType, tmdbId) && !_mdblistService.TryUseUserLookup(userId?.ToString("N") ?? string.Empty))
+            {
+                return Ok(_mdblistService.GetCachedEntry(mediaType, tmdbId) ?? (object)new { Found = false, Confirmed = false });
             }
 
             try
