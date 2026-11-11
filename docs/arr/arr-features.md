@@ -313,7 +313,7 @@ These are admin (server) settings; users cannot override them as personal defaul
 | **Time Format** | **5pm/5:30pm** | Selects 12-hour or **17:00/17:30** 24-hour formatting. |
 | **Highlight Favorites/Watchlist** | Off | Adds watchlist indicators and a **Watchlist** filter. |
 | **Highlight Watched Series** | Off | Adds watched indicators and a **Watched** filter for the matched played/started episode or movie. |
-| **Filter by Library Access** | On | Filters releases by your library access; access checks for titles not yet in Jellyfin may be incomplete. |
+| **Filter by Library Access** | On | Filters releases by your library access. A title not yet in Jellyfin is shown to an account limited to some libraries only when its Sonarr/Radarr root folder is known to be one the account can open. |
 | **Show Requested Only (Default)** | Off | Initially selects **Requests**; you can change filters. |
 | **Force Only Requested Items** | Off | Always limits the displayed Calendar to your requested titles and hides the **Requests** chip. |
 

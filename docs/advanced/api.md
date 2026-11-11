@@ -1674,13 +1674,13 @@ Read upcoming events from configured sources, then use user-data to retrieve fav
 | GET | `arr/calendar` | Authenticated | Optional query `start`, `end` → `{events,errors}`. |
 | POST | `arr/calendar/user-data` | Existing caller | `{Events:[<event reference>]}` → `{results:[{id,isFavorite,isWatched}]}`. |
 
-GET defaults to today's UTC date through 90 days ahead. Parseable dates override each endpoint; invalid dates retain defaults, reversed ranges swap, ranges over 365 days cap at 365. Missing configuration returns `500`. Enabled Sonarr/Radarr and configured Shoko contribute events; per-source errors contain `instanceName`, `source`, `reason`.
+While the Calendar page is off, GET answers `404` to everyone but administrators. It defaults to today's UTC date through 90 days ahead. Parseable dates override each endpoint; invalid dates retain defaults, reversed ranges swap, ranges over 365 days cap at 365. Missing configuration returns `500`. Enabled Sonarr/Radarr and configured Shoko contribute events; per-source errors contain `instanceName`, `source`, `reason`.
 
 Calendar events contain `id`, `source`, `type`, `title`, `subtitle`, `releaseDate`, `releaseType`, `hasFile`, `monitored`, `posterUrl`, `backdropUrl`, `imdbId`, Jellyfin `itemId`, `itemEpisodeId`, `overview`, `tvdbId`, `seasonNumber`, `episodeNumber`, `episodeTvdbId`, `episodeImdbId`, upstream `seriesId`, `tmdbId`, `shokoSeriesId`, `shokoEpisodeId`, `instanceName`, `alsoInInstances`. Nullable fields can be absent.
 
 Duplicate entries across instances are combined, preferring accessible/file-backed entries and recording other instance names.
 
-Internal root-folder access information is not serialized in calendar events. If item/root-folder access cannot be determined, an event can pass the access filter. Requested-only display preferences operate in the client.
+Internal root-folder access information is not serialized in calendar events. When neither an event's library item nor its root folder's access can be determined, it passes the access filter only for a caller who can see every library. For a caller with a parental limit, titles the access filter has not checked against the library are checked like Seerr titles and dropped when that check fails. With **Force Only Requested Items** on, only the caller's own Seerr requests are returned; if they cannot be read, no events are returned and `errors` has a `Seerr` entry. None of these narrow an administrator's answer. **Show Requested Only (Default)** remains a client-side default filter.
 
 ```bash
 curl -H "Authorization: MediaBrowser Token=\"$TOKEN\"" \

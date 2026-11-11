@@ -467,6 +467,7 @@ public class ApiSeerrTests
     {
         using var f = GuardedSeerr(out _);
         f.Plugin.Plugin.Configuration.CalendarFilterByLibraryAccess = false;
+        f.Plugin.Plugin.Configuration.CalendarPageEnabled = true;
         f.Reply = _ => IntegrationTransport.Response("[{\"id\":1,\"seriesId\":3,\"seasonNumber\":2,\"episodeNumber\":5,\"title\":\"Secret title\",\"overview\":\"Secret plot\",\"airDateUtc\":\"2026-11-10T00:00:00Z\",\"series\":{\"title\":\"Show\",\"tvdbId\":71663}},"
             + "{\"id\":2,\"seriesId\":4,\"seasonNumber\":1,\"episodeNumber\":1,\"title\":\"Open title\",\"airDateUtc\":\"2026-11-10T00:00:00Z\",\"series\":{\"title\":\"Other\",\"tvdbId\":7}}]");
         var calendar = f.Calendar();

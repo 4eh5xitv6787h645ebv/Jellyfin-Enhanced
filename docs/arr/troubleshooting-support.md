@@ -105,7 +105,7 @@ Filters can hide events even when a source loads successfully. Check the visible
 
 1. Return to **Today**, change the view, and clear selected chips and **NOT**. **AND** between mutually exclusive release categories can show nothing.
 2. Turn on **Unmonitored** if the missing upstream event is unmonitored; it is excluded by default.
-3. Check **Filter by Library Access** and your Jellyfin library permissions. Future-title root-folder inference is best-effort; unknown roots and unmatched Shoko events can remain visible.
+3. Check **Filter by Library Access** and your Jellyfin library permissions. For an account limited to some libraries, a future title whose root folder cannot be tied to an accessible library is hidden, as are unmatched Shoko events.
 4. Review **Show Requested Only (Default)** and **Force Only Requested Items**. These need request data for your linked Seerr account; they exclude Shoko events. Forced mode hides the **Requests** chip.
 5. For Shoko, verify the six episode-type switches; only **Episodes** defaults on. Enter both **Shoko URL** and **Shoko API Key**. A URL without a key, or a key without a URL, produces an error. Check Shoko API v3 access and server logs.
 6. Check [Hidden Content filtering](#hidden-content-filtering) and named source failures.

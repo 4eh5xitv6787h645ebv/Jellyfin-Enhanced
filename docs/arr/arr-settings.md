@@ -259,7 +259,7 @@ Choose how Calendar looks and which releases it shows. These are admin (server) 
 | **Time Format** | **5pm/5:30pm** | Chooses 12-hour or **17:00/17:30** 24-hour format; times use the browser timezone. |
 | **Highlight Favorites/Watchlist** | Off | Adds watchlist indicators and a **Watchlist** filter. |
 | **Highlight Watched Series** | Off | Marks the event's matched played/started episode; movie events also use played/started state. |
-| **Filter by Library Access** | On | Filters releases by your library access, with best-effort checks for future titles. |
+| **Filter by Library Access** | On | Filters releases by your library access. A future title whose root folder cannot be tied to an accessible library is hidden from accounts limited to some libraries. |
 | **Show Requested Only (Default)** | Off | Initially selects **Requests**; viewers can change filters. |
 | **Force Only Requested Items** | Off | Always limits the displayed Calendar to your requested titles and hides the **Requests** chip. |
 
