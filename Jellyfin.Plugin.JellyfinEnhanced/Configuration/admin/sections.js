@@ -2073,7 +2073,7 @@
             id: "arrTagsPrefix",
             prop: "ArrTagsPrefix",
             type: "text",
-            default: "Requested by: ",
+            default: "JE Arr Tag: ",
             label: "Tag Prefix",
             placeholder: "JE Arr Tag: ",
             desc: 'Prefix to add before each tag (e.g., "JE Arr Tag: " will result in "JE Arr Tag: 1 - Jellyfish")'

@@ -252,6 +252,24 @@ test('preservation: defaults, conversions and field order survive collect', () =
   } finally { dom.window.close(); }
 });
 
+test('an emptied arr Tag Prefix stores the prefix the field suggests, which is the server default', () => {
+  const serverDefault = /ArrTagsPrefix = "([^"]*)";/.exec(readFileSync(join(repo, 'Jellyfin.Plugin.JellyfinEnhanced/Configuration/PluginConfiguration.cs'), 'utf8'))[1];
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM(pageHtml(), { runScripts: 'outside-only' });
+  try {
+    dom.window.eval(servedEngine());
+    dom.window.JEAdmin.mount(dom.window.document, { shell: false });
+    dom.window.JEAdmin.load({ ArrTagsPrefix: 'Mine: ' });
+    const field = dom.window.document.getElementById('arrTagsPrefix');
+    assert.equal(field.value, 'Mine: ');
+    field.value = '';
+    assert.equal(dom.window.JEAdmin.collect({}).ArrTagsPrefix, field.placeholder);
+    assert.equal(field.placeholder, serverDefault);
+    dom.window.JEAdmin.load({ ArrTagsPrefix: '' });
+    assert.equal(field.value, serverDefault, 'a stored empty prefix shows as the default it is saved as');
+  } finally { dom.window.close(); }
+});
+
 test('the generated page has no handwritten script, no synchronous load and no literal the host would rewrite', () => {
   const html = pageHtml();
   assert.equal((html.match(/<script>/g) || []).length, 2, 'startup and page');
