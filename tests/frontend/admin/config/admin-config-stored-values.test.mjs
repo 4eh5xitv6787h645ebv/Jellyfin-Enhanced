@@ -190,3 +190,40 @@ test('control: a typed key that is not saved yet is still the one checked', asyn
   await settle(h.window, 20);
   assert.equal(new URL(statusRequests(h).at(-1)).searchParams.get('apiKey'), 'mdb-new-key');
 });
+
+test('switching automatic requests to Custom shows the stored server, profile and folder, and a save keeps them', async t => {
+  const saved = { ...customMovieRequests, AutoMovieRequestQualityMode: 'default' };
+  const h = await page(t, { saved, answers: [[/jellyseerr\/radarr$/, radarrServers], [/jellyseerr\/radarr\/2$/, radarrDetails]] });
+  const mode = h.document.getElementById('autoMovieRequestQualityMode');
+  mode.value = 'custom';
+  mode.dispatchEvent(new h.window.Event('change', { bubbles: true }));
+  await settle(h.window, 60);
+  assert.deepEqual(['autoMovieRequestServer', 'autoMovieRequestProfile', 'autoMovieRequestRootFolder'].map(id => h.document.getElementById(id).value), ['2', '7', '/movies4k']);
+  await h.submit();
+  assert.deepEqual(autoMovie(h.lastPut()), [2, 7, '/movies4k']);
+});
+
+test('a region picked before the full region list arrives stays picked, and a save stores it', async t => {
+  const h = bootGenerated({ saved: { DEFAULT_REGION: 'US' } });
+  t.after(() => h.close());
+  await h.ready();
+  let release;
+  const empty = { ok: true, status: 200, json: async () => ({}), text: async () => '' };
+  h.window.fetch = async url => /regions\.txt/.test(String(url))
+    ? new Promise(resolve => { release = () => resolve({ ok: true, status: 200, text: async () => 'US\tUnited States\nDE\tGermany\nPT\tPortugal\n' }); })
+    : empty;
+  h.show();
+  await settle(h.window, 60);
+  const region = h.document.getElementById('DEFAULT_REGION');
+  assert.equal(region.value, 'US');
+  region.value = 'DE';
+  region.dispatchEvent(new h.window.Event('change', { bubbles: true }));
+  assert.equal(typeof release, 'function', 'the region list was requested');
+  release();
+  await settle(h.window, 60);
+  assert.ok(h.document.querySelector('#DEFAULT_REGION option[value="PT"]'), 'the full list arrived');
+  assert.equal(region.value, 'DE');
+  h.document.querySelector('#JellyfinEnhancedForm').dispatchEvent(new h.window.Event('submit', { bubbles: true, cancelable: true }));
+  await settle(h.window, 120);
+  assert.equal(h.calls.puts.at(-1).DEFAULT_REGION, 'DE');
+});

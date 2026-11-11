@@ -4,7 +4,7 @@ import { asControl, asHtml, asSelect, needSelect } from './dom';
 import type { AdminConfig } from '../domain/config';
 
 /** Dependencies this module calls; members are resolved lazily, after every module exists. */
-export type AutoMovieDeps = Pick<PageModules, 'context'>;
+export type AutoMovieDeps = Pick<PageModules, 'context' | 'load'>;
 
 export function createAutoMovie(m: AutoMovieDeps) {
     const { ApiClient } = m.context;
@@ -38,7 +38,8 @@ export function createAutoMovie(m: AutoMovieDeps) {
             qualityModeSelect.addEventListener('change', function() {
                 customSettingsDiv.style.display = (qualityModeSelect.value === 'custom') ? 'block' : 'none';
                 if (qualityModeSelect.value === 'custom') {
-                    loadAutoMovieRadarrServers();
+                    // Show the stored server, profile and folder, as a page loaded in Custom mode does.
+                    loadAutoMovieRadarrServers(m.load.formBase);
                 }
             });
         }
