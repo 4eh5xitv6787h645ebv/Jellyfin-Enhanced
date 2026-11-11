@@ -22,12 +22,17 @@
     if (internals.hiddenContentRuntime) return internals.hiddenContentRuntime;
     const state = { modules: /* @__PURE__ */ new Set(), view: 0, policy: 0, queues: /* @__PURE__ */ new Map(), cleanups: /* @__PURE__ */ new Set(), identityCleanups: /* @__PURE__ */ new Set() };
     internals.hiddenContentRuntime = state;
+    let counted = location.href;
     const invalidate = () => {
+      counted = location.href;
       state.view++;
       for (const cleanup of [...state.cleanups]) cleanup();
     };
-    window.addEventListener("hashchange", invalidate);
-    window.addEventListener("popstate", invalidate);
+    const navigated = () => {
+      if (location.href !== counted) invalidate();
+    };
+    window.addEventListener("hashchange", navigated);
+    window.addEventListener("popstate", navigated);
     document.addEventListener("viewhide", invalidate);
     const invalidateIdentity = () => {
       invalidate();

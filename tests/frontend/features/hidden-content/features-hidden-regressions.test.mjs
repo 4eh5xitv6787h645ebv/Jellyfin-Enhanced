@@ -294,6 +294,31 @@ for(const method of ['ordinary','scoped'])for(const [label,early,late] of [
  if(method==='ordinary')h.api.hideItem({itemId:compact});else h.api.markScopedHidden(compact,'nextup');
  assert.equal(h.internal.getHiddenData().items[compact].hiddenAt,early);
 });
+// Jellyfin 12.4 answers a hash navigation (address bar, Back, a #/ link) inside its own popstate listener, which runs before
+// JE's: it shows "Page not found" and JE shows Hidden Content over it at once. Only then do JE's popstate and hashchange
+// listeners hear that same navigation (lab trace on 1a68c68a). What the page drew for the visit must stay usable.
+// Chromium calls the window's own popstate/hashchange listeners in the order they were added, capture or not; jsdom (like
+// Firefox) calls capture ones first, where the page's capture-phase intercept stops the event. Both probed in the lab.
+const chromiumWindowOrder={
+ addEventListener(type,listener,options){const capture=type==='popstate'||type==='hashchange'?{capture:false}:{};this.EventTarget.prototype.addEventListener.call(this,type,listener,typeof options==='object'?{...options,...capture}:capture.capture===false?false:options);},
+ removeEventListener(type,listener,options){this.EventTarget.prototype.removeEventListener.call(this,type,listener,type==='popstate'||type==='hashchange'?false:options);},
+};
+test('after a hash visit the router answered first, the admin user filter appears and switches users',async t=>{
+ const h=setup(t,{globals:chromiumWindowOrder,ajax:async r=>r.url.includes('/admin/hidden-content-users')?{users:[{userId:'b',userName:'Bob',count:1}]}
+  :r.url.includes('/admin/hidden-content/b')?{hiddenContent:{items:{x:{itemId:'x',name:'Bob secret',type:'Movie'}},settings:{}}}:{success:true}});
+ h.JE.helpers.isAdmin=()=>true;
+ const router=installJellyfinRouter(h);h.JE.initializeHiddenContentPage();
+ const oldURL=h.window.location.href;
+ await router.push('#/hidden-content');
+ h.window.dispatchEvent(new h.window.PopStateEvent('popstate',{state:null}));
+ h.window.dispatchEvent(new h.window.HashChangeEvent('hashchange',{oldURL,newURL:h.window.location.href}));
+ await tick();
+ const filter=h.document.querySelector('.je-hidden-admin-user-filter');
+ assert.ok(filter,'the user filter is drawn');
+ filter.value='b';filter.dispatchEvent(new h.window.Event('change'));
+ await new Promise(resolve=>h.window.setTimeout(resolve,0));await tick();
+ assert.match(h.document.getElementById('je-hidden-content-container').textContent,/Bob secret/);
+});
 test('in-app navigation to Hidden Content keeps it over the router\'s Page not found page by hash or router, and leaving still hides it',async t=>{
  const h=setup(t);const router=installJellyfinRouter(h);h.JE.initializeHiddenContentPage();
  await router.go('#/hidden-content');assert.deepEqual(router.seen(),{visible:['je-hidden-content-page'],title:'Hidden Content'});
