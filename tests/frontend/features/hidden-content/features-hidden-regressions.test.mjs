@@ -207,6 +207,25 @@ for(const event of ['hashchange','popstate','viewhide'])test(`HC-R4B-001 same-ac
  else {h.window.history.replaceState({},'', '#/details?id=another');h.window.dispatchEvent(new h.window.Event(event));}
  assert.ok(h.document.querySelector('.je-undo-btn'));h.document.querySelector('.je-undo-btn').click();await h.api.flushPendingSave();assert.deepEqual(saved.items,{});
 });
+// jellyfin-web dispatches a bubbling legacy `pagehide` on the view it leaves at every in-app navigation (window sees it with
+// that view as its target). It is not the page going away: a save waiting to retry and Undo survive it; the document's own
+// pagehide still cancels the retry.
+test('in-app navigation (jellyfin-web\'s view pagehide) keeps a failed save\'s retry and Undo',async t=>{
+ const timers=new Map();let next=0,posts=0;
+ const h=setup(t,{ajax:async r=>{if(r.type!=='POST')return {};posts++;if(posts!==2)throw Object.assign(new Error('unavailable'),{status:503});return {};},
+  globals:{setTimeout:(fn,delay)=>{const id=++next;timers.set(id,{fn,delay});return id;},clearTimeout:id=>timers.delete(id)}});
+ h.window.console.warn=()=>{};
+ const due=delay=>[...timers].find(([,timer])=>timer.delay===delay);
+ const run=async delay=>{const [id,timer]=due(delay);timers.delete(id);await timer.fn();await tick();};
+ h.api.hideItem({itemId:'a'});await run(500);assert.equal(posts,1,'the save failed');assert.ok(due(1000),'its retry waits 1 s');
+ const view=h.document.body.appendChild(Object.assign(h.document.createElement('div'),{className:'page'}));
+ view.dispatchEvent(new h.window.CustomEvent('pagehide',{bubbles:true}));
+ assert.ok(h.document.querySelector('.je-undo-btn'),'Undo survives the view change');
+ assert.ok(due(1000),'the retry survives the view change');await run(1000);assert.equal(posts,2,'the retry saved');
+ h.api.hideItem({itemId:'b'});await run(500);assert.equal(posts,3);assert.ok(due(1000));
+ h.window.dispatchEvent(new h.window.PageTransitionEvent('pagehide',{persisted:false}));
+ assert.equal(due(1000),undefined,'the document\'s own pagehide cancels the retry');
+});
 test('HC-R4B-001 identity change dismisses Undo synchronously',t=>{
  const h=setup(t);h.api.hideItem({itemId:'a'});
  h.window.ApiClient={...h.window.ApiClient,getCurrentUserId:()=> 'user-b'};h.JE.session.checkNow('test');

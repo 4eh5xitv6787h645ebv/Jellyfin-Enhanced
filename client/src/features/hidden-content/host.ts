@@ -125,7 +125,9 @@ function runtime(JE:HiddenHost):Runtime {
  window.addEventListener('popstate',invalidate);
  document.addEventListener('viewhide',invalidate);
  const invalidateIdentity=()=>{invalidate();for(const cleanup of [...state.identityCleanups])cleanup();};
- window.addEventListener('pagehide',invalidateIdentity);
+ // Page exit is the document's own pagehide (its target is the document): jellyfin-web dispatches a bubbling `pagehide` on
+ // each view it leaves, and a back/forward-cache hide (persisted) may be shown again.
+ window.addEventListener('pagehide',event=>{if((event.target===window||event.target===document)&&!event.persisted)invalidateIdentity();});
  JE.session?.onUserChange('hidden-content-runtime',invalidateIdentity);
  return state;
 }

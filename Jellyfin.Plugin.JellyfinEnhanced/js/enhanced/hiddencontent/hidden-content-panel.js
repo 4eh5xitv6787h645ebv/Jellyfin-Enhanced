@@ -62,7 +62,9 @@
       invalidate();
       for (const cleanup of [...state.identityCleanups]) cleanup();
     };
-    window.addEventListener("pagehide", invalidateIdentity);
+    window.addEventListener("pagehide", (event) => {
+      if ((event.target === window || event.target === document) && !event.persisted) invalidateIdentity();
+    });
     JE.session?.onUserChange("hidden-content-runtime", invalidateIdentity);
     return state;
   }
