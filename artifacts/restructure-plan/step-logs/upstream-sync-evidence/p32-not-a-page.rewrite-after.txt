@@ -1,0 +1,21 @@
+# JE12=… artifacts/restructure-plan/step-logs/upstream-sync-evidence/p32-not-a-page.sh <scratch dir>
+# build: deployed 7049f091 (dll 83ff3b0dfffc269c), the port 1aeba588 and its ledger commit
+== part 1: a source without the paged route: every address under /api/collections/media/ answers the list again
+{"mode": "list-only", "maintainerrAt": "http://sonarr:8989", "itemsWhileTheSourceWasRemoved": 0, "collection7Movies": 351, "collection9Episodes": 620, "collection8PausedMembers": 2, "embeddedPerCollection": 2, "firstTwoMovies": ["101 Dalmatians II: Patch's London Adventure", "Abominable"], "members": 971}
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 4, "Dated": 4}
+   asked: GET 200 /api/collections
+   asked: GET 200 /api/collections/media/7/content/1?size=500
+   asked: GET 200 /api/collections/media/9/content/1?size=500
+== part 2: a source that pages (971 members: 351 movies in collection 7, 620 episodes in collection 9)
+{"mode": "paged", "maintainerrAt": "http://sonarr:8989", "itemsWhileTheSourceWasRemoved": 0, "collection7Movies": 351, "collection9Episodes": 620, "collection8PausedMembers": 2, "embeddedPerCollection": 2, "firstTwoMovies": ["101 Dalmatians II: Patch's London Adventure", "Abominable"], "members": 971}
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 971, "Dated": 971}
+== the second page of collection 9 answers the collections list once (its first page and collection 7 answer as before)
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 971, "Dated": 971, "LastError": "not a Maintainerr collections answer"}
+== no fault again
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 971, "Dated": 971}
+== the first page of collection 7 answers the collections list once
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 622, "Dated": 622}
+== no fault again
+HTTP 200 {"Configured": true, "Maintainerr": true, "Collections": 0, "CollectionsFound": 0, "Items": 971, "Dated": 971}
+== the source and the mock's rules are removed
+{"mode": "off", "source": "removed", "items": 0}

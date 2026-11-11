@@ -1,0 +1,45 @@
+# je12 smoke on the lab after the port's checks; baseline: the je12 up run of this lab, a clean build of e8aeccf40500
+# 1. deployed 7049f091 (dll 83ff3b0dfffc269c), straight after p32-not-a-page.sh, whose second step makes the port refuse a later page on purpose:
+page admin           ok      14 tabs; Media Tags section 16 tabs (1.9s)
+page settings        ok      panel open, 24 tabs (1.9s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (1.9s)
+page poster          ok      72/100 cards tagged (1.9s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 74 JE elements (1.8s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (3.2s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.8s)
+page catchup         ok      Catch Up tab rendered (1.4s)
+page seerr           ok      5 Seerr cards (1.8s)
+page player          ok      playing 1.1s; OSD rating present (2.9s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 474 paths, 180 under /JellyfinEnhanced
+bundle wire          ok      br 200 534429B 304:yes, gzip 200 648857B 304:yes, identity 200 2399686B 304:yes; decoded bodies identical
+server log           FAIL    169 ERR/WRN lines, 1 new kind(s): WRN Jellyfin.Plugin.JellyfinEnhanced: "[LeavingSoon] Maintainerr refresh failed (not a Maintainerr collections answer); keeping the previous answer."
+smoke: FAIL (1 failing, 0 changed, 0 known, 0 fixed) in 34s; details /home/jake/.local/share/je12/state/je125ce284-smoke.json
+server log: new WRN Jellyfin.Plugin.JellyfinEnhanced: "[LeavingSoon] Maintainerr refresh failed (not a Maintainerr collections answer); keeping the previous answer."
+#    the one failing row is that step's own warning. je12 deploy again (the same commit; it restarts the server-log window), then:
+# 2. deployed 7049f091 (dll 83ff3b0dfffc269c):
+page admin           ok      14 tabs; Media Tags section 16 tabs (1.9s)
+page settings        ok      panel open, 24 tabs (2.0s)
+page media-tags-hub  ok      #jeMediaTagsHub visible (1.7s)
+page poster          ok      91/100 cards tagged (1.8s)
+page details         ok      101 Dalmatians II: Patch's London Adventure: 82 JE elements (1.8s)
+page hidden-content  ok      page rendered (1.3s)
+page bookmarks       ok      page rendered (1.3s)
+page calendar        ok      5 events (3.2s)
+page downloads       ok      4 items (4.7s)
+page activity        ok      Activity tab rendered (1.7s)
+page catchup         ok      Catch Up tab rendered (1.6s)
+page seerr           ok      5 Seerr cards (1.9s)
+page player          ok      playing 1.1s; OSD rating present (2.9s)
+plugin               ok      12.15.0.0 Active
+scheduled tasks      ok      16 JE tasks (keys and ids)
+openapi              ok      HTTP 200, 474 paths, 180 under /JellyfinEnhanced
+bundle wire          ok      br 200 487714B 304:yes, gzip 200 648857B 304:yes, identity 200 2399686B 304:yes; decoded bodies identical
+server log           ok      168 ERR/WRN lines, 0 new kind(s)
+smoke: pass (0 failing, 0 changed, 0 known, 0 fixed) in 34s; details /home/jake/.local/share/je12/state/je125ce284-smoke.json
+# 3. the poster row's count is taken about 2 s after the page opens and varies on this lab on both builds (je12 smoke --pages poster, three runs each):
+#    e8aeccf40500 (je12 deploy --base): 92/100, 31/100, 51/100 cards tagged; 7049f091: 100/100, 100/100, 72/100. The row is ok in every run.

@@ -1,0 +1,11 @@
+# JE12=… python3 artifacts/restructure-plan/step-logs/upstream-sync-evidence/p32-not-a-page.setup.py <scratch dir> list-only
+# je12 browse '#/home' --script artifacts/restructure-plan/step-logs/upstream-sync-evidence/p29-maintainerr-paging.mjs
+# build: deployed upstream-8fe1e7054d1c (dll 6c101236f443a131), upstream's build (scripts/upstream_lab_deploy.py 8fe1e7054d1c0a6c082de8705d1c077e7d3e3451); exit 0
+SCRIPT {"status":{"http":200,"items":4,"dated":4,"lastError":null},"moviesLibrary":{"cards":100,"leaving":2,"texts":["Leaving in 20d"]},"episodesOfTheSecondCollection":{"asked":620,"answered":620,"leaving":2,"deleteAt":["2026-11-15T10:00:00.000Z"]}}
+BLOCKED https://www.gstatic.com/cv/js/sender/v1/cast_sender.js
+STORM 17x POST /JellyfinEnhanced/tag-data/7ef882cd307344279240d0eca8333a9f
+URL /web/index.html#/movies?topParentId=f137a2dd21bbc1b99aa5c0f6bf02a805&collectionType=movies
+# je12 mock sonarr log 40 | (the source's requests since 10:04:52Z, the start of the run above)
+10:04:56Z GET    200 rule      /api/collections
+10:04:56Z GET    200 rule      /api/collections/media/7/content/1?size=500
+10:04:56Z GET    200 rule      /api/collections/media/9/content/1?size=500

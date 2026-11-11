@@ -1,0 +1,21 @@
+# port 32 (upstream 8fe1e705): its tests on the tree before the port, and upstream's own tests
+# 1. dotnet test tests/backend/JE.Tests.csproj -c Release -p:JellyfinTarget=jf12 -p:UseSharedCompilation=false --filter 'FullyQualifiedName~LeavingSoonTests'
+#    in a scratch worktree of e8aeccf4 (the starting commit) plus the port's test file only (one test added, one row of the failure test replaced by two):
+JE.Tests.Features.MediaTags.LeavingSoonTests.A_first_page_answered_with_json_that_is_not_a_page_keeps_the_embedded_members_like_a_404 [FAIL]
+  Failed JE.Tests.Features.MediaTags.LeavingSoonTests.A_first_page_answered_with_json_that_is_not_a_page_keeps_the_embedded_members_like_a_404 [8 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   "not a Maintainerr collections answer"
+  Stack Trace:
+     at JE.Tests.Features.MediaTags.LeavingSoonTests.A_first_page_answered_with_json_that_is_not_a_page_keeps_the_embedded_members_like_a_404() in tests/backend/Features/MediaTags/PosterTags/LeavingSoonTests.cs:line 365
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:    50, Skipped:     0, Total:    51, Duration: 5 s - JE.Tests.dll (net10.0)
+#    the added test fails at its first refresh: a collection whose first page answers [] fails the whole refresh ("not a Maintainerr
+#    collections answer") where the port reads that collection from the members the list embeds. The other 50 pass, the failure test
+#    with its two new rows among them (a first page that is not JSON was a failed refresh before the port and stays one).
+# 2. je12 test media-tags --dotnet on the port (working tree): node 2016 passed, 0 failed; dotnet:
+Passed!  - Failed:     0, Passed:  1877, Skipped:     0, Total:  1877, Duration: 30 s - JE.Tests.dll (net10.0)
+# 3. upstream's own LeavingSoonTests, the same dotnet test command in a checkout of 8fe1e7054d1c (9 of 47 failed at 53ebf043, three commits earlier: the log of that port):
+Passed!  - Failed:     0, Passed:    47, Skipped:     0, Total:    47, Duration: 2 s - JE.Tests.dll (net10.0)
