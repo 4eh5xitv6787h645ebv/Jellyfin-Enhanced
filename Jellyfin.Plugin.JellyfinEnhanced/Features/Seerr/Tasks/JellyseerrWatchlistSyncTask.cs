@@ -202,8 +202,21 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
                         continue;
                     }
 
-                    // Get watchlist from Jellyseerr
-                    var watchlistItems = await GetJellyseerrWatchlist(httpClient, jellyseerrUrl, jellyseerrUserId, config.JellyseerrApiKey) ?? new List<WatchlistItem>();
+                    // Every page of the Seerr watchlist; null when a page could not be read, so the list is unknown.
+                    var watchlistKeys = await SeerrWatchlistReader.ReadKeysAsync(httpClient, jellyseerrUrl, jellyseerrUserId, config.JellyseerrApiKey,
+                        m => _logger.Warning($"[Seerr→Jellyfin Watchlist Sync] {m}"), cancellationToken);
+                    if (watchlistKeys == null)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested(); // a cancelled run, not an unreadable list
+                        _logger.Warning($"[Seerr→Jellyfin Watchlist Sync] Could not read the Seerr watchlist of user {jellyfinUser.Username}; skipped until the next run");
+                        failedUsers++;
+                        processedUsers++;
+                        continue;
+                    }
+
+                    var watchlistItems = watchlistKeys
+                        .Select(key => new WatchlistItem { MediaType = key[..key.LastIndexOf(':')], TmdbId = int.Parse(key[(key.LastIndexOf(':') + 1)..], System.Globalization.CultureInfo.InvariantCulture) })
+                        .ToList();
 
                     var requestItems = new List<WatchlistItem>();
                     if (config.AddRequestedMediaToWatchlist)
@@ -389,62 +402,6 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.ScheduledTasks
             }
 
             return result;
-        }
-
-        private async Task<List<WatchlistItem>?> GetJellyseerrWatchlist(HttpClient httpClient, string jellyseerrUrl, string jellyseerrUserId, string apiKey)
-        {
-            try
-            {
-                var requestUri = $"{jellyseerrUrl.TrimEnd('/')}/api/v1/user/{jellyseerrUserId}/watchlist";
-                using var request = Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.BuildRequest(
-                    HttpMethod.Get, requestUri, apiKey, jellyseerrUserId);
-                using var response = await httpClient.SendAsync(request);
-                var (content, error) = await Jellyfin.Plugin.JellyfinEnhanced.Shared.Seerr.SeerrHttpHelper.ReadResponseAsync(response, requestUri);
-
-                if (error == null && content != null)
-                {
-                    var watchlistResponse = JsonSerializer.Deserialize<JsonElement>(content);
-
-                    var items = new List<WatchlistItem>();
-
-                    if (watchlistResponse.TryGetProperty("results", out var resultsArray))
-                    {
-                        foreach (var item in resultsArray.EnumerateArray())
-                        {
-                            var watchlistItem = new WatchlistItem();
-
-                            if (item.TryGetProperty("tmdbId", out var tmdbId))
-                            {
-                                watchlistItem.TmdbId = tmdbId.GetInt32();
-                            }
-
-                            if (item.TryGetProperty("mediaType", out var mediaType))
-                            {
-                                watchlistItem.MediaType = mediaType.GetString() ?? "";
-                            }
-
-                            if (item.TryGetProperty("title", out var title))
-                            {
-                                watchlistItem.Title = title.GetString() ?? "";
-                            }
-
-                            items.Add(watchlistItem);
-                        }
-                    }
-
-                    return items;
-                }
-                else if (error != null)
-                {
-                    _logger.Debug($"[Seerr→Jellyfin Watchlist Sync] Watchlist fetch failed: code={error.Code} status={error.HttpStatus} cf-ray={error.CfRay}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"[Seerr→Jellyfin Watchlist Sync] Error getting Jellyseerr watchlist: {ex.Message}");
-            }
-
-            return null;
         }
 
         private async Task<List<WatchlistItem>?> GetJellyseerrRequests(HttpClient httpClient, string jellyseerrUrl, string jellyseerrUserId, string apiKey)
