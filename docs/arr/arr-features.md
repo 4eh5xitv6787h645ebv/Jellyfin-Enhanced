@@ -145,7 +145,7 @@ These are admin (server) settings:
     Radarr matches movies by TMDB ID; Sonarr tag sync matches series by IMDb ID. Sync updates movies and series in your library, excluding virtual placeholders, combines tags from enabled instances, and avoids duplicates regardless of letter case. Bazarr and Shoko do not supply tags.
 
 !!! warning "Cleanup can remove tags without replacements"
-    **Clear old tags before sync** also affects unmatched items and runs where upstream tag results are empty or failed. Check connectivity before running cleanup. Turning cleanup off preserves stale tags; changing **Tag Prefix** leaves tags bearing the previous prefix in place.
+    **Clear old tags before sync** also affects unmatched items, and items whose service answered with no tags. When a Radarr or Sonarr instance cannot be read (unreachable, an error, an unreadable answer), its items (movies for Radarr, series for Sonarr) keep their tags for that run. Turning cleanup off preserves stale tags; changing **Tag Prefix** leaves tags bearing the previous prefix in place.
 
 ??? note "Prefix behavior"
     Keep **Tag Prefix** nonempty and its spelling/case consistent. The factory default is `JE Arr Tag: `, and settings save a blank value as that default. When the stored prefix is blank or unset, sync and displayed tag links both use `JE Arr Tag: `. Links require matching prefix capitalization; cleanup ignores capitalization.
