@@ -97,8 +97,9 @@ test('development mode bypasses bundle and executes manifest modules', async t =
 });
 
 test('wrong-user bootstrap is rejected and endpoint failures retain safe defaults', async t => {
-  const h = setup(t, { expectedConsoleErrors: ['Failed to fetch public config', 'Failed to fetch version'], ajax: async path => {
+  const h = setup(t, { expectedConsoleErrors: ['Failed to fetch version'], ajax: async path => {
     if (path.endsWith('/bootstrap')) return payload({ UserId: 'other-user', PrivateConfig: { SonarrUrl: 'secret' }, UserSettings: { Settings: { QualityTagsEnabled: true } } });
+    if (path.endsWith('/public-config')) return {};
     if (path.endsWith('/component-scripts.json')) return modules;
     if (path === '/Plugins') return [];
     throw new Error('offline');
