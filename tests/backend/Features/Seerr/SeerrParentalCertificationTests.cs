@@ -36,8 +36,16 @@ public class SeerrParentalCertificationTests
         ["NZ"] = new(StringComparer.OrdinalIgnoreCase) { ["G"] = 0, ["PG"] = 13, ["M"] = 16, ["R18"] = 18 },
     };
 
+    // Ratings scored with a sub-score, as some of Jellyfin's rating tables give one.
+    private static readonly Dictionary<string, ParentalRatingScore> SubScored = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["TEST-10-1"] = new ParentalRatingScore(10, 1),
+        ["TEST-12-1"] = new ParentalRatingScore(12, 1),
+    };
+
     private static ParentalRatingScore? Score(string rating, string? country)
     {
+        if (SubScored.TryGetValue(rating, out var scored)) return scored;
         if (int.TryParse(rating, out var n)) return new ParentalRatingScore(n, null);
         foreach (var table in new[] { country ?? "", "US" }.Select(c => Tables.GetValueOrDefault(c)).Concat(Tables.Values))
         {
@@ -140,6 +148,20 @@ public class SeerrParentalCertificationTests
 
         Assert.True(Refused(await lab.Controller.GetTvShow(602)));
         Assert.False(Refused(await lab.Controller.GetTvShow(603)));
+    }
+
+    [Fact]
+    public async Task ASubScoreLimitAppliesOnlyAtItsOwnScoreLikeJellyfin()
+    {
+        // Jellyfin compares (score, sub-score) in order: under a (12, 0) limit the library shows a title scored
+        // (10, 1) and hides one scored (12, 1).
+        using var lab = new Lab(blockUnrated: false);
+        lab.Kid.MaxParentalRatingSubScore = 0;
+        lab.Details["/api/v1/movie/507"] = Movie(507, ("DE", "TEST-10-1"));
+        lab.Details["/api/v1/movie/508"] = Movie(508, ("DE", "TEST-12-1"));
+
+        Assert.False(Refused(await lab.Controller.GetMovie(507)));
+        Assert.True(Refused(await lab.Controller.GetMovie(508)));
     }
 
     [Theory]
