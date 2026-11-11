@@ -188,7 +188,7 @@
     "POST JellyfinEnhanced/spoiler-blur/user-prefs": {"User":1,"UserHelper.GetCurrentUserId":1},
     "POST JellyfinEnhanced/tag-cache/rebuild": {"IsAdminUser":1},
     "POST JellyfinEnhanced/tag-data/{userId}": {"AuthorizeUserAccess":1},
-    "POST JellyfinEnhanced/translate": {},
+    "POST JellyfinEnhanced/translate": {"User":1,"UserHelper.GetCurrentUserId":1},
     "POST JellyfinEnhanced/usage/preview": {"IsAdminUser":1},
     "POST JellyfinEnhanced/usage/track": {},
     "POST JellyfinEnhanced/user-settings/{userId}/bookmark-document": {"AuthorizeUserConfigAccess":1},

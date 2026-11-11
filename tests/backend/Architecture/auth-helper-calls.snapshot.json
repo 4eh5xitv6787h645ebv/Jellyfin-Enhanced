@@ -191,7 +191,7 @@
   "StartSpoilerApplyExisting": {"IsAdminUser":1,"User":1,"UserHelper.GetCurrentUserId":1},
   "SyncJellyseerrWatchlist": {"IsAdminUser":1},
   "TrackUsage": {},
-  "TranslateReview": {},
+  "TranslateReview": {"User":1,"UserHelper.GetCurrentUserId":1},
   "TriggerJellyseerrRecentlyAddedScan": {"IsAdminUser":1},
   "UnhideFromContinueWatching": {"User":1,"UserHelper.GetCurrentUserId":1},
   "UnhideFromNextUp": {"User":1,"UserHelper.GetCurrentUserId":1},
