@@ -57,4 +57,49 @@ public class ApiReviewTranslationTests
         Assert.Equal(502, failed.StatusCode);
         Assert.Equal("Failed to translate the review.", failed.Value);
     }
+
+    // The route is open to every signed-in account and spends the administrator's key, so each client
+    // gets a bounded share: requests and characters per window, answered as a rate limit with the wait.
+    [Fact]
+    public async Task EachClientHasABoundedTranslationBudget()
+    {
+        using var f = new ApiPluginFixture();
+        f.Plugin.Configuration.ReviewTranslationEnabled = true;
+        f.Plugin.Configuration.ReviewTranslationUrl = "http://127.0.0.1:5000/";
+        var forwarded = 0;
+        using var transport = new IntegrationTransport(async (request, _) =>
+        {
+            Interlocked.Increment(ref forwarded);
+            var pieces = JsonDocument.Parse(await request.Content!.ReadAsStringAsync()).RootElement.GetProperty("q").GetArrayLength();
+            return IntegrationTransport.Response(JsonSerializer.Serialize(new { translatedText = Enumerable.Repeat("Hallo", pieces) }));
+        });
+        var service = new ReviewTranslationService(transport, f.Core.Logger);
+        async Task<ObjectResult> Send(string address, int length, int n)
+        {
+            var controller = (JeDetailsProvidersController)ApiAssetTests.Controller(typeof(JeDetailsProvidersController), f.Core, service);
+            controller.HttpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse(address);
+            var text = $"Review {n} " + new string('x', length);
+            return Assert.IsAssignableFrom<ObjectResult>(await controller.TranslateReview(new JeDetailsProvidersController.TranslateRequest { Text = text[..length], Target = "de" }, default));
+        }
+
+        // 60 translations and 100,000 characters per client in 10 minutes.
+        for (var n = 0; n < 60; n++)
+        {
+            Assert.Equal(200, (await Send("192.0.2.10", 100, n)).StatusCode);
+        }
+
+        var limited = await Send("192.0.2.10", 100, -1);
+        Assert.Equal(429, limited.StatusCode);
+        Assert.Equal("translation_rate_limited", Body(limited).GetProperty("code").GetString());
+        Assert.InRange(Body(limited).GetProperty("retryAfterSeconds").GetInt32(), 1, 600);
+        Assert.Equal(60, forwarded);
+
+        for (var n = 0; n < 5; n++)
+        {
+            Assert.Equal(200, (await Send("192.0.2.11", ReviewTranslationService.MaxTextLength, n)).StatusCode);
+        }
+
+        Assert.Equal(429, (await Send("192.0.2.11", ReviewTranslationService.MaxTextLength, -1)).StatusCode);
+        Assert.Equal(200, (await Send("192.0.2.12", 100, 0)).StatusCode);
+    }
 }

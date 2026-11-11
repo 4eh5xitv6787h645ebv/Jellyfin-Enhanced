@@ -166,6 +166,20 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
                 return BadRequest("The translation URL is not allowed.");
             }
 
+            // A bounded share per client address (as Jellyfin resolves it behind its known proxies).
+            if (!_reviewTranslationService.TryUseClientBudget(HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty, request.Text.Length, out var budgetWait))
+            {
+                var seconds = Math.Max(1, (int)Math.Ceiling(budgetWait.TotalSeconds));
+                Response.Headers["Retry-After"] = seconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                return StatusCode(429, new
+                {
+                    error = true,
+                    code = "translation_rate_limited",
+                    message = "Too many translations from this client. Try again later.",
+                    retryAfterSeconds = seconds,
+                });
+            }
+
             try
             {
                 var translated = await _reviewTranslationService.TranslateAsync(
