@@ -191,6 +191,7 @@
       }
       return html;
     }
+    let shown = null;
     function renderPage(targetContainer) {
       let container;
       if (targetContainer) {
@@ -286,10 +287,19 @@
       html += buildRequestsSection();
       html += buildIssuesSection();
       html += buildHistorySection();
+      if (shown && shown.container === container && shown.html === html && shown.first && container.firstChild === shown.first) return;
+      const active = document.activeElement;
+      const caret = active instanceof HTMLInputElement && active.classList.contains("je-downloads-search-input") && container.contains(active) ? [active.selectionStart, active.selectionEnd] : null;
       clearAvatarObjectUrlCache();
       container.innerHTML = html;
+      shown = { container, html, first: container.firstChild };
       hydrateAvatarImages(container);
       hydrateExternalLinks(container);
+      const search = caret ? container.querySelector(".je-downloads-search-input") : null;
+      if (search && caret) {
+        search.focus();
+        search.setSelectionRange(caret[0], caret[1]);
+      }
       const refreshBtn = container.querySelector(".je-refresh-btn");
       if (refreshBtn) {
         refreshBtn.addEventListener("click", (e) => {
@@ -335,14 +345,7 @@
           }
           state.searchDebounceTimer = setTimeout(() => {
             if (!lease.current()) return;
-            const currentInput = document.querySelector(".je-downloads-search-input");
-            const cursorPosition = currentInput ? currentInput.selectionStart : 0;
             renderPage();
-            const newInput = document.querySelector(".je-downloads-search-input");
-            if (newInput) {
-              newInput.focus();
-              newInput.setSelectionRange(cursorPosition, cursorPosition);
-            }
           }, 300);
         });
       }

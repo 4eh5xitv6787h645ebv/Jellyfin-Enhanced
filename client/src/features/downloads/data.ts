@@ -20,6 +20,8 @@ export function install(deps: Dependencies) {
 
   // State management
   let requestsOwner: Lease | undefined;
+  /** Whether this account's data has been loaded once; until then a load shows the loading state. */
+  let loaded = false;
   const state: State = {
     downloads: [],
     requests: [],
@@ -55,6 +57,7 @@ export function install(deps: Dependencies) {
   const unsubscribeSession=JE.session?.onUserChange('requests-page', () => {
     life.invalidate();
     requestsOwner=undefined;
+    loaded=false;
     _toastedDownloadsErrors.clear();
     state.downloads = [];
     state.requests = [];
@@ -419,12 +422,17 @@ export function install(deps: Dependencies) {
     const lease=life.capture("load");
     if(!lease.current())return;
     state.isLoading = true;
-    renderPage();
+    // A poll or refresh keeps the cards on screen; only a page with nothing loaded yet shows the loading state.
+    if (!loaded) renderPage();
 
     await Promise.all([fetchDownloads(), fetchRequests(), fetchIssues(), fetchHistory()]);
 
     if(!lease.current())return;
     state.isLoading = false;
+    loaded = true;
+    // A list that moved under a pointer or focus resting on Approve or Decline would take the click to another
+    // request: leave the page as it is until the next poll or refresh.
+    if (document.querySelector('.je-request-approve-btn:hover, .je-request-decline-btn:hover, .je-request-approve-btn:focus, .je-request-decline-btn:focus')) return;
     renderPage();
   }
 

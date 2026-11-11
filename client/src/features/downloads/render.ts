@@ -206,6 +206,8 @@ export function install(deps: Dependencies) {
    * @param {HTMLElement} [targetContainer] - Optional container to render into
    *   (used by custom-tab mode to avoid duplicate-ID conflicts).
    */
+  /** What the last rebuild wrote, and where. */
+  let shown: { container: HTMLElement; html: string; first: ChildNode | null } | null = null;
   function renderPage(targetContainer?: HTMLElement) {
     let container: HTMLElement|null;
     if (targetContainer) {
@@ -331,10 +333,19 @@ export function install(deps: Dependencies) {
     html += buildIssuesSection();
     html += buildHistorySection();
 
+    // Unchanged data leaves the page as it is: a rebuild drops focus, typed text and the element under the pointer.
+    if (shown && shown.container === container && shown.html === html && shown.first && container.firstChild === shown.first) return;
+    const active = document.activeElement;
+    const caret = active instanceof HTMLInputElement && active.classList.contains('je-downloads-search-input') && container.contains(active)
+      ? [active.selectionStart, active.selectionEnd] as const : null;
     clearAvatarObjectUrlCache();
     container.innerHTML = html; // existing pattern from upstream — html built from escapeHtml'd values
+    shown = { container, html, first: container.firstChild };
     hydrateAvatarImages(container);
     hydrateExternalLinks(container);
+    // The search box was rebuilt under the user's typing: give it back its focus and caret.
+    const search = caret ? container.querySelector<HTMLInputElement>('.je-downloads-search-input') : null;
+    if (search && caret) { search.focus(); search.setSelectionRange(caret[0], caret[1]); }
 
     // Add event listener for refresh button
     const refreshBtn = container.querySelector('.je-refresh-btn');
@@ -392,20 +403,10 @@ export function install(deps: Dependencies) {
           clearTimeout(state.searchDebounceTimer);
         }
 
-        // Debounce rendering to avoid losing focus
+        // Debounce rendering; renderPage keeps the search box's focus and caret.
         state.searchDebounceTimer = setTimeout(() => {
           if(!lease.current())return;
-          const currentInput = document.querySelector<HTMLInputElement>('.je-downloads-search-input');
-          const cursorPosition = currentInput ? currentInput.selectionStart : 0;
-
           renderPage();
-
-          // Restore focus and cursor position
-          const newInput = document.querySelector<HTMLInputElement>('.je-downloads-search-input');
-          if (newInput) {
-            newInput.focus();
-            newInput.setSelectionRange(cursorPosition, cursorPosition);
-          }
         }, 300);
       });
     }
