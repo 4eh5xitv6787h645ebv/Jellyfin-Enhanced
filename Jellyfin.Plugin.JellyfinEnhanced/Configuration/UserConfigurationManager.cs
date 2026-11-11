@@ -858,6 +858,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
             }
         }
 
+        /// <summary>Most reviews (titles, seasons and episodes together) one user can hold.</summary>
+        public const int MaxReviewsPerUser = 10_000;
+
+        /// <summary>Most review text, in characters, one user can hold across all their reviews.</summary>
+        public const int MaxReviewTextPerUser = 2_000_000;
+
         /// <summary>
         /// Atomically creates or updates a user's review for a specific item.
         /// The read-modify-write happens inside a single critical section so
@@ -877,8 +883,16 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 // read failure.
                 var store = ReadStoreUnlocked(throwOnCorruption: true);
                 var key = $"{userIdN}:{mediaType}:{tmdbId}";
+                store.Reviews.TryGetValue(key, out var existing);
 
-                if (store.Reviews.TryGetValue(key, out var existing))
+                // Bounds no honest use reaches, so one account cannot grow the store every user reads.
+                var own = store.Reviews.Values.Where(r => string.Equals(r.UserId, userIdN, StringComparison.OrdinalIgnoreCase)).ToList();
+                var addedText = content.Length - (existing?.Content?.Length ?? 0);
+                if ((existing == null && own.Count >= MaxReviewsPerUser)
+                    || (addedText > 0 && own.Sum(r => (long)(r.Content?.Length ?? 0)) + addedText > MaxReviewTextPerUser))
+                    throw new ReviewLimitException();
+
+                if (existing != null)
                 {
                     previousRating = existing.Rating;
                     existing.Content = content;
@@ -1149,5 +1163,11 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 _logger.Error($"Error cleaning up processed watchlist items for user {userId}: {ex.Message}");
             }
         }
+    }
+
+    /// <summary>A review save refused because the user holds <see cref="UserConfigurationManager.MaxReviewsPerUser"/> reviews or <see cref="UserConfigurationManager.MaxReviewTextPerUser"/> characters of review text.</summary>
+    public sealed class ReviewLimitException : InvalidOperationException
+    {
+        public ReviewLimitException() : base("You have reached the review limit. Delete or shorten some reviews before adding more.") { }
     }
 }

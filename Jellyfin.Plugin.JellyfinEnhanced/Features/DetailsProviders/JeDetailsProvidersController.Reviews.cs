@@ -23,9 +23,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
         private static readonly System.Text.RegularExpressions.Regex _tmdbIdRegex =
             new System.Text.RegularExpressions.Regex(@"^\d+$", System.Text.RegularExpressions.RegexOptions.Compiled);
 
-        // Extended key for season/episode reviews: {tmdbId}:s{n} or {tmdbId}:s{n}e{n}
+        // Extended key for season/episode reviews: {tmdbId}:s{n} or {tmdbId}:s{n}e{n}. Each number is a
+        // 32-bit id (at most 10 digits), and \z, unlike $, does not accept a trailing newline.
         private static readonly System.Text.RegularExpressions.Regex _tmdbIdExtendedRegex =
-            new System.Text.RegularExpressions.Regex(@"^\d+(:s\d+(:e\d+)?)?$", System.Text.RegularExpressions.RegexOptions.Compiled);
+            new System.Text.RegularExpressions.Regex(@"^\d{1,10}(:s\d{1,10}(:e\d{1,10})?)?\z", System.Text.RegularExpressions.RegexOptions.Compiled);
 
         private static bool IsValidTmdbKey(string tmdbId) =>
             !string.IsNullOrWhiteSpace(tmdbId) && _tmdbIdExtendedRegex.IsMatch(tmdbId);
@@ -179,6 +180,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
                 MirrorReviewRatingToUserData(userIdN, mediaType, tmdbId, previousRating, payload.Rating);
                 return Ok(new { success = true });
             }
+            catch (ReviewLimitException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
             catch (Exception ex)
             {
                 _logger.Error($"Failed to save review for user {_userDisplayResolver.ResolveUserDisplay(userIdN)}: {ex.Message}");
@@ -225,6 +230,10 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
                 _logger.Info($"Admin saved review for {mediaType}:{tmdbId} on behalf of {_userDisplayResolver.ResolveUserDisplay(userIdN)}.");
                 MirrorReviewRatingToUserData(userIdN, mediaType, tmdbId, previousRating, payload.Rating);
                 return Ok(new { success = true });
+            }
+            catch (ReviewLimitException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {
