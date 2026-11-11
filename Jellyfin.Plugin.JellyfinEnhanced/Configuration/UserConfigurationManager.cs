@@ -332,8 +332,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Configuration
                 }
                 catch (Exception ex)
                 {
+                    // Not reading says nothing about the content (a lock, a dropped share):
+                    // leave the file where it is and fail.
                     _logger.Error($"Failed to read '{fileName}' for user '{userId}': {ex.Message}");
-                    if (quarantineCorrupt) BackupCorruptFile(configPath);
                     throw;
                 }
 
