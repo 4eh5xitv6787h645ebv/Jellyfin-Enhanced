@@ -53,12 +53,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
 
         // Domain separation from the other HMACs under the same secret; bumping it retires every issued marker.
         private const string MarkerVersion = "jeu1";
+        private const string CookieVersion = "jec1";
+        private const int CookieSignatureBytes = 16;
 
         private readonly IUserManager _userManager;
         private readonly Logger _logger;
         private readonly PluginSecretFile _secret;
 
         private readonly ConcurrentDictionary<Guid, string> _mintCache = new();
+        private readonly ConcurrentDictionary<Guid, string> _cookieCache = new();
         private readonly object _mapLock = new();
         private Dictionary<string, Guid>? _markerMap;
         private DateTime _mapBuiltAt = DateTime.MinValue;
@@ -82,6 +85,32 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                 var bytes = HMACSHA256.HashData(_secret.Get(), Encoding.UTF8.GetBytes(MarkerVersion + "|" + id.ToString("N")));
                 return Convert.ToHexString(bytes).Substring(0, MarkerHexLength).ToLowerInvariant();
             });
+        }
+
+        /// <summary>
+        /// The signed value of a browser's je-spoiler-uid cookie: "{userId:N}.{32 hex}", the hex an HMAC
+        /// of the user id under the same secret as the markers. A bare user id names anyone a caller
+        /// knows of (the login page lists them), so only this form picks one user out of an address.
+        /// </summary>
+        public string MintCookie(Guid userId)
+        {
+            return _cookieCache.GetOrAdd(userId, id =>
+            {
+                var bytes = HMACSHA256.HashData(_secret.Get(), Encoding.UTF8.GetBytes(CookieVersion + "|" + id.ToString("N")));
+                return id.ToString("N") + "." + Convert.ToHexString(bytes, 0, CookieSignatureBytes).ToLowerInvariant();
+            });
+        }
+
+        /// <summary>The user a cookie value names when the server signed it; false for anything else.</summary>
+        public bool TryReadCookie(string? value, out Guid userId)
+        {
+            userId = Guid.Empty;
+            var dot = value?.IndexOf('.') ?? -1;
+            if (value == null || dot < 0 || !Guid.TryParseExact(value.AsSpan(0, dot), "N", out var id) || id == Guid.Empty) return false;
+            var expected = Encoding.ASCII.GetBytes(MintCookie(id));
+            if (!CryptographicOperations.FixedTimeEquals(expected, Encoding.ASCII.GetBytes(value.ToLowerInvariant()))) return false;
+            userId = id;
+            return true;
         }
 
         /// <summary>

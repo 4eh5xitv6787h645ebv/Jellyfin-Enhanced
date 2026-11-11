@@ -141,6 +141,16 @@ test('spoiler identity cookie follows login, switch and logout',t=>{
   h.switchUser('second'); assert.match(h.window.document.cookie,/je-spoiler-uid=second/);
   h.switchUser(null); assert.equal(h.window.document.cookie,'');
 });
+test('spoiler identity cookie the server signed for this user is kept, and one for another user is replaced',t=>{
+  // The server answers an unsigned cookie with its signed value ("<id>.<signature>"); writing the bare id over it
+  // again would leave the browser with a value the server no longer trusts.
+  const h=setup(t);
+  h.window.document.cookie='je-spoiler-uid=0123456789abcdef0123456789abcdef.signed; path=/';
+  h.window.ApiClient={getCurrentUserId:()=> '01234567-89ab-cdef-0123-456789abcdef'};
+  h.load('enhanced/spoilerguard/identity.js');
+  assert.equal(h.window.document.cookie,'je-spoiler-uid=0123456789abcdef0123456789abcdef.signed');
+  h.switchUser('fedcba9876543210fedcba9876543210'); assert.equal(h.window.document.cookie,'je-spoiler-uid=fedcba9876543210fedcba9876543210');
+});
 test('Spoiler Guard exposes policy inputs for UI but no independent browser cache stamp', async t => {
   const h = setup(t, async () => stateFixture({ Series: { aabb: {} }, Prefs: {} }));
   await h.state.whenLoaded();

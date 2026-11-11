@@ -94,10 +94,10 @@ public sealed class PrivacyIdentityTests : IDisposable
         var result = _identity.Resolve(context);
         Assert.Equal(IdentityConfidence.SharedIpCandidates, result.Confidence);
         Assert.Equal(new[] { _alice, _bob }.Order(), result.Candidates.Order());
-        context.Request.Headers.Cookie = "je-spoiler-uid=" + _bob;
+        context.Request.Headers.Cookie = "je-spoiler-uid=" + _markers.MintCookie(_bob);
         Assert.Equal(new[] { _bob }, _identity.Resolve(context).Candidates);
         Assert.Equal(IdentityConfidence.Cookie, _identity.Resolve(context).Confidence);
-        context.Request.Headers.Cookie = "je-spoiler-uid=" + Guid.NewGuid();
+        context.Request.Headers.Cookie = "je-spoiler-uid=" + _markers.MintCookie(Guid.NewGuid());
         Assert.Equal(new[] { _alice, _bob }.Order(), _identity.Resolve(context).Candidates.Order());
     }
 
@@ -109,7 +109,7 @@ public sealed class PrivacyIdentityTests : IDisposable
         var context = Context();
         Assert.Equal(new[] { _alice }, _identity.Resolve(context).Candidates);
         sessions.Add(Session(_bob));
-        context.Request.Headers.Cookie = "je-spoiler-uid=" + _bob;
+        context.Request.Headers.Cookie = "je-spoiler-uid=" + _markers.MintCookie(_bob);
         var result = _identity.Resolve(context);
         Assert.Equal(IdentityConfidence.Cookie, result.Confidence);
         Assert.Equal(new[] { _bob }, result.Candidates);
@@ -121,7 +121,7 @@ public sealed class PrivacyIdentityTests : IDisposable
     {
         _sessions.SetupGet(x => x.Sessions).Returns(new[] { Session(_alice) });
         var context = Context();
-        context.Request.Headers.Cookie = "je-spoiler-uid=" + Guid.NewGuid();
+        context.Request.Headers.Cookie = "je-spoiler-uid=" + _markers.MintCookie(Guid.NewGuid());
         for (var i = 0; i < 20; i++) Assert.Equal(new[] { _alice }, _identity.Resolve(context).Candidates);
         _sessions.VerifyGet(x => x.Sessions, Times.Exactly(2));
     }
@@ -207,6 +207,19 @@ public sealed class PrivacyIdentityTests : IDisposable
         var otherPaths = new Mock<IApplicationPaths>();
         otherPaths.SetupGet(x => x.PluginsPath).Returns(Path.Combine(_directory, "other-server"));
         Assert.NotEqual(_markers.MintMarker(_alice), new SpoilerIdentityService(_users.Object, _logger, otherPaths.Object).MintMarker(_alice));
+    }
+
+    // On one address (a household NAT, a proxy Jellyfin does not know) anyone can send a cookie naming another user id,
+    // which the login page lists: only a value the server signed may pick one user out of the address's sessions.
+    [Fact]
+    public void ACookieNamingAUserIdAloneDoesNotSelectThatUser()
+    {
+        _sessions.SetupGet(x => x.Sessions).Returns(new[] { Session(_alice), Session(_bob) });
+        var context = Context();
+        context.Request.Headers.Cookie = "je-spoiler-uid=" + _bob;
+        var identity = _identity.Resolve(context);
+        Assert.Equal(IdentityConfidence.SharedIpCandidates, identity.Confidence);
+        Assert.Equal(new[] { _alice, _bob }.Order(), identity.Candidates.Order());
     }
 
     [Fact]

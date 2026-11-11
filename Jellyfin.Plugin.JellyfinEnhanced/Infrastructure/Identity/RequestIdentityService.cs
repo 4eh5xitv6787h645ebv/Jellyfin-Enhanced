@@ -65,13 +65,15 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity
     // Trust model (documented in research/spoiler-guard-identity-attempts.md):
     // markers and cookies are DISAMBIGUATION signals, not authentication —
     // consumers must never grant access based on them, only choose which
-    // user's own preferences (e.g. spoiler policy) to apply. A forged value
-    // can only opt the sender into another user's stricter/looser view of
-    // content the sender could already reach anonymously.
+    // user's own preferences (e.g. spoiler policy) to apply. Both are keyed
+    // with the server secret: a value computed from a user id alone would let
+    // an anonymous sender compare that user's view with another's and so read
+    // which titles the user guards and has not watched.
     public sealed class RequestIdentityService
     {
-        // Per-browser identity cookie the web client sets on load (see
-        // js/enhanced/spoilerguard/). Browsers attach it to every
+        // Per-browser identity cookie: the web client writes its user id (see
+        // js/enhanced/spoilerguard/) and SpoilerIdentityTagFilter answers with
+        // the value the server signed. Browsers attach it to every
         // same-origin request INCLUDING anonymous <img>/CSS-background image
         // fetches, which carry no other user identity on Jellyfin 12 (the
         // image endpoint ignores legacy token params, and <img> tags can't
@@ -258,11 +260,12 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Infrastructure.Identity
 
             // Tier 3: per-browser cookie disambiguation. The je-spoiler-uid
             // cookie pins THIS request to its browser's user — trusted ONLY
-            // when that user genuinely has a session from this IP, so a
-            // stale/forged value can't select a user who isn't present.
+            // when the server signed it (SpoilerIdentityService.MintCookie) and
+            // that user genuinely has a session from this IP, so a stale/forged
+            // value can't select a user who isn't present, and a bare user id
+            // (an older client's cookie, or anyone's guess) selects nobody.
             if (httpContext.Request.Cookies.TryGetValue(SpoilerUidCookie, out var raw)
-                && Guid.TryParse(raw, out var cookieUid)
-                && cookieUid != Guid.Empty)
+                && _markers.TryReadCookie(raw, out var cookieUid))
             {
                 // A cookie naming a user absent from the (up-to-TTL-stale)
                 // cached set may be a JUST-logged-in user the cache hasn't
