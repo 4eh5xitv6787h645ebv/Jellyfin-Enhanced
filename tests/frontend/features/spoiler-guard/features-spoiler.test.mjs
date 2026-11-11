@@ -52,6 +52,33 @@ test('spoiler load failure settles fail-closed and disabled feature makes no req
   await h.state.whenLoaded();
   assert.equal(h.calls.length,1);
 });
+test('a failed spoiler state load stays fail-closed and is retried later, with a growing delay, until it loads', async t => {
+  let fail = true;
+  const h = setup(t, async () => { if (fail) throw new Error('offline'); return stateFixture({Series:{'AA-BB':{}}}); });
+  const timers = [];
+  h.window.setTimeout = (fn, ms) => { timers.push({fn, ms}); return timers.length; };
+  h.expectConsoleError(/state load failed/);
+  await h.state.whenLoaded();
+  assert.equal(h.state.isLoadOk(), false);
+  assert.equal(h.calls.length, 1);
+  assert.equal(timers.length, 1, 'one retry is scheduled, not run at once');
+  const first = timers.shift();
+  assert.ok(first.ms >= 1000, `retry waits (${first.ms} ms)`);
+  first.fn();
+  await h.state.loadState();
+  assert.equal(h.calls.length, 2);
+  assert.equal(h.state.isLoadOk(), false, 'still unknown, still fail-closed');
+  assert.equal(timers.length, 1);
+  const second = timers.shift();
+  assert.ok(second.ms > first.ms, `the delay grows (${first.ms} then ${second.ms} ms)`);
+  fail = false;
+  second.fn();
+  await h.state.loadState();
+  assert.equal(h.calls.length, 3);
+  assert.equal(h.state.isLoadOk(), true);
+  assert.equal(h.state.isEnabledFor('aabb'), true);
+  assert.equal(timers.length, 0, 'no retry after a successful load');
+});
 test('old-user spoiler load cannot populate the new session', async t => {
   let resolve;
   const h = setup(t, () => new Promise(r => {resolve=r;}));
