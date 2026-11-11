@@ -375,3 +375,9 @@ test('library and player delete buttons are disabled while their delete is in fl
   assert.deepEqual(h.toasts,['toast_bookmark_deleted','toast_bookmark_delete_failed']);
   assert.equal(player.disabled,false);assert.equal(saves.calls.length,2);
 });
+// The title link stays inside the web client, so it keeps a reverse proxy's base path.
+test('library title links to the item in the current web client, not the server root',async t=>{
+  const h=setup(t,{a:{itemId:'one',mediaType:'movie',timestamp:1}});
+  const container=await renderLibrary(h);
+  assert.equal(container.querySelector('.je-bookmark-item-title').getAttribute('href'),'#/details?id=one');
+});

@@ -787,3 +787,12 @@ test('the Services tab has a Maintainerr card that says what it is for and links
   assert.equal(link.textContent.replace('new_releases', '').trim(), 'Set up Leaving soon');
   assert.equal(card.querySelectorAll('input, select, textarea, button').length, 0, 'nothing here is a setting: the fields live on the Media Tags tab');
 });
+
+// The Custom Tabs link stays inside the web client, so it keeps a reverse proxy's base path.
+test('the Custom Tabs configuration link is relative to the current web client', async t => {
+  const h = boot(t, {});
+  await h.ready();
+  const links = [...h.document.querySelectorAll('a.je-custom-tabs-link')];
+  assert.ok(links.length > 0);
+  for (const link of links) assert.equal(link.getAttribute('href'), '#/configurationpage?name=Custom%20Tabs');
+});
