@@ -231,6 +231,35 @@ test('a crafted subtitle colour never breaks out of the panel preview style attr
   assert.equal(tpl.content.getElementById('customSubtitleTextColorPicker').value, '#ffffff');
 });
 
+// A recognised theme's stylesheet (an @import of the author's hosted file) controls the variables the panel is drawn
+// with; a stylesheet must not be able to run script through them in the panel's <style>, style attributes or handlers.
+test('a theme variable that is not a plain CSS value never reaches the opened panel as markup or script', async t => {
+  const h = panelHarness(t, { ajax: request => request.type === 'GET' ? h.snapshot('loaded-r1') : null });
+  h.window.console.log = () => {};
+  for (const file of ['tags/rating-sources.js', 'enhanced/icons.js', 'enhanced/helpers.js', 'enhanced/player/subtitles.js']) h.load(file);
+  Object.assign(h.JE, { themer: undefined, cdn: { url: (repo, file) => `/cdn/${repo}/${file}` } });
+  h.load('enhanced/themer.js');
+  h.load('enhanced/settingspanel/ui-panel-settings.js');
+  // The real template; the controls' wiring is not what this checks.
+  for (const name of ['wireShortcutEditor', 'wireSettingsListeners', 'wireHiddenContentListeners', 'wireMiscSettingsControls', 'wireTagGroupEditor', 'wireLanguageControls']) h.ui[name] = () => {};
+  delete h.ui.buildPanelHtml;
+  h.load('enhanced/settingspanel/ui-panel-template.js');
+  const root = h.document.documentElement.style;
+  root.setProperty('--theme-updated-on', '2025-01-01'); // Jellyfish
+  root.setProperty('--primary-accent-color', '</style><img id="je-theme-probe" src="x" onerror="window.pwned=1">');
+  root.setProperty('--alt-accent-color', "red';window.pwned=2;'");
+  root.setProperty('--secondary-background-transparent', 'red" onfocus="window.pwned=3" data-x="');
+  root.setProperty('--text-color', 'rgba(1, 2, 3, 0.5)');
+  await h.JE.showEnhancedPanel();
+  const panel = h.panel();
+  assert.ok(panel, 'the panel opened with the real template');
+  assert.equal(panel.querySelector('#je-theme-probe'), null, 'nothing closed the panel <style> element');
+  const carriers = [...panel.querySelectorAll('*')].flatMap(el => [...el.attributes].filter(a => /pwned/.test(a.value)).map(a => `${el.tagName}[${a.name}]`));
+  assert.deepEqual(carriers, [], 'no attribute or handler holds the theme text');
+  assert.doesNotMatch([...panel.querySelectorAll('style')].map(s => s.textContent).join(''), /pwned|<img/);
+  assert.match(panel.querySelector('#releaseNotesBtn').getAttribute('style'), /color:\s*rgba\(1, 2, 3, 0\.5\)/, 'a plain colour is still used');
+});
+
 // Upstream 533614b8: the two subtitle offset shortcuts are listed in the panel's Player column.
 test('the panel lists the subtitle offset shortcuts in the Player column with their keys', t => {
   const Shortcuts = [{ Name: 'FrameStepForward', Key: '.', Label: 'Step Forward One Frame', Category: 'Player' },

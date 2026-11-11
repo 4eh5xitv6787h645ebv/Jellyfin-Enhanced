@@ -260,8 +260,8 @@
     "X1 installUiPanelSettings.wireSettingsListeners.addSettingToggleListener": 1
   },
   "client/src/features/settings-panel/ui-panel-template.ts": {
-    "X1 installUiPanelTemplate.buildPanelHtml": 133,
-    "X1 installUiPanelTemplate.buildPanelHtml.generatePresetHTML": 7
+    "X1 installUiPanelTemplate.buildPanelHtml": 130,
+    "X1 installUiPanelTemplate.buildPanelHtml.generatePresetHTML": 6
   },
   "client/src/features/settings-panel/ui-panel.ts": {
     "X1 installUiPanel.showEnhancedPanel": 1
