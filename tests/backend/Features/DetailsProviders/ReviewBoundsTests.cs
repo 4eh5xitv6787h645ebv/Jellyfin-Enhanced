@@ -12,6 +12,8 @@ public class ReviewBoundsTests
 {
     private static JeDetailsProvidersController SignedIn(ApiPluginFixture f, Guid user)
     {
+        // User reviews are switched on: while they are off the review routes answer 404.
+        f.Plugin.Configuration.ShowUserReviews = true;
         var controller = (JeDetailsProvidersController)ApiAssetTests.Controller(typeof(JeDetailsProvidersController), f.Core, f.Core.Manager, Moq.Mock.Of<MediaBrowser.Controller.Library.IUserManager>());
         controller.HttpContext.User = global::JE.Tests.Features.SpoilerGuard.PrivacyPolicyTests.Principal(user, false);
         return controller;

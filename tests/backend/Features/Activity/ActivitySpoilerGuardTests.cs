@@ -42,6 +42,8 @@ public class ActivitySpoilerGuardTests
         {
             Config.ActivityFeedEnabled = true;
             Config.SpoilerBlurEnabled = true;
+            // Stored reviews reach the feed only while user reviews are switched on.
+            Config.ShowUserReviews = true;
             Users.Setup(u => u.GetUserById(Viewer.Id)).Returns(Viewer);
             Users.Setup(u => u.GetUserById(Author.Id)).Returns(Author);
             Show.ProviderIds["Tmdb"] = "1433";
