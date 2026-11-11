@@ -124,6 +124,28 @@ public class PrivacyFieldFilterTests
         Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path)!, "*.corrupt-*"));
     }
 
+    // GET /Sessions: a session's NowPlayingItem and NowViewingItem are built without a user (no UserData) and are
+    // the session's own DTOs, which every other reader of the session gets too.
+    [Fact]
+    public async Task SessionListStripsAGuardedEpisodeBeingPlayedAsACopyOfTheSharedSessionItem()
+    {
+        using var f = new Fixture();
+        var playing = f.Episode(); playing.UserData = null;
+        playing.MediaStreams = [new MediaStream { Type = MediaStreamType.Audio, Title = "Secret ending commentary" }];
+        var outside = f.Episode(); outside.SeriesId = Guid.NewGuid(); outside.UserData = null;
+        var sessions = new List<SessionInfoDto> { new() { Id = "tv", NowPlayingItem = playing, NowViewingItem = outside } };
+        var session = Assert.Single(Assert.IsAssignableFrom<IEnumerable<SessionInfoDto>>(await f.Invoke(sessions, "Session", "GetSessions")));
+        Assert.Equal("Season 2, Episode 3", session.NowPlayingItem!.Name); Assert.NotEqual("Secret plot", session.NowPlayingItem.Overview);
+        Assert.Null(Assert.Single(session.NowPlayingItem.MediaStreams!).Title);
+        Assert.Equal("Secret ending", playing.Name); Assert.Equal("Secret plot", playing.Overview); Assert.Equal("/Secret.mkv", playing.Path);
+        Assert.Equal("Secret ending commentary", Assert.Single(playing.MediaStreams).Title);
+        Assert.Same(outside, session.NowViewingItem);
+        // Someone who guards nothing gets the session's own item, unchanged.
+        var others = new List<SessionInfoDto> { new() { Id = "tv", NowPlayingItem = playing } };
+        var unguarded = Assert.Single(Assert.IsAssignableFrom<IEnumerable<SessionInfoDto>>(await f.Invoke(others, "Session", "GetSessions", Guid.NewGuid())));
+        Assert.Same(playing, unguarded.NowPlayingItem);
+    }
+
     // Upstream d3bd07d3: Home Screen Sections serves the web home rows from its own endpoint.
     [Fact]
     public async Task HomeScreenSectionsRowsStripGuardedUnwatchedEpisodes()
