@@ -123,6 +123,17 @@ public class ApiSeerrTests
         Assert.Single(f.Calls, c => c.Path.StartsWith("/api/v1/user?"));
     }
 
+    [Theory]
+    [InlineData("pending", "filter=pending")]
+    [InlineData("all&requestedBy=1&sort=modified", "filter=all%26requestedBy%3D1%26sort%3Dmodified")]
+    public async Task RequestListFilterReachesSeerrAsOneValue(string filter, string expected)
+    {
+        using var f = new SeerrFixture { Reply = _ => IntegrationTransport.Response("{\"results\":[]}") };
+        await f.Controller.GetJellyseerrRequests(filter: filter);
+        var call = Assert.Single(f.Calls, c => c.Path.StartsWith("/api/v1/request?"));
+        Assert.Equal("/api/v1/request?take=500&skip=0&" + expected, call.Path);
+    }
+
     // Seerr 3.5 and Jellyseerr 2.7 let only their admins read override rules (GET /api/v1/overrideRule is
     // isAuthenticated(Permission.ADMIN)), and apply the rules themselves when a request is created. The proxy
     // acts as the linked Seerr user, so for anyone else Seerr answered 403 and the client logged an error.
