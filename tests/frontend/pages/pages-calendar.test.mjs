@@ -149,6 +149,17 @@ test('calendar Shoko lookup tries episode then series after a missing match and 
   assert.equal(await h.P.searchFromProviders({}),null);
 });
 
+// items/by-providers answers 400 "No provider ids supplied or no items found" when nothing matches.
+test('calendar episode missing from the library falls back to its series on the server not-found answer', async t=>{
+  const calls=[]; const h=setup(t,{core:{api:{plugin:async path=>{
+    const url=new URL(path,'http://test'); calls.push(url);
+    if(url.searchParams.get('types')==='Episode') throw Object.assign(new Error('HTTP 400'),{name:'HttpError',status:400,responseText:'No provider ids supplied or no items found'});
+    return 'series-id';
+  }}}});
+  assert.equal(await h.P.searchFromProviders({type:'Series',episodeTvdbId:999999991,tvdbId:71663}),'series-id');
+  assert.deepEqual(calls.map(c=>c.searchParams.get('types')),['Episode','Series']);
+});
+
 function rendering(t) {
   const h=setup(t,{escapeHtml: value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),cdn:{selfhst:path=>`https://icons.test/${path}`},t:key=>key,pluginConfig:{ShokoUrl:'http://internal-shoko/',ShokoUrlMappings:'http://jellyfin.test | https://public.test/shoko/'}});
   h.window.ApiClient.getImageUrl=id=>`http://jellyfin.test/Items/${id}/Images/Primary`;

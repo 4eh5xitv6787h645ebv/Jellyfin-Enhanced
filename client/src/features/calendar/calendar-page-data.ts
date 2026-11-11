@@ -516,9 +516,9 @@ import type { CalendarEvent, CalendarState, InstanceError } from './types';
           if (typeof itemId !== "string") throw new Error("Invalid provider lookup response");
           return itemId;
         } catch (error) {
-          // An HTTP error (e.g. 404) means "not found" — fall through to the
+          // "Not found" (the route answers 400 when nothing matches) falls through to the
           // next provider lookup, matching the pre-core `!response.ok` path.
-          if (record(error) && error.status === 404) return null;
+          if (record(error) && (error.status === 400 || error.status === 404)) return null;
           throw error;
         }
       };

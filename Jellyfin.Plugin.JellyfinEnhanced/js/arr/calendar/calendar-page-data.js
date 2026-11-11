@@ -543,7 +543,7 @@
             if (typeof itemId !== "string") throw new Error("Invalid provider lookup response");
             return itemId;
           } catch (error) {
-            if (record(error) && error.status === 404) return null;
+            if (record(error) && (error.status === 400 || error.status === 404)) return null;
             throw error;
           }
         };
