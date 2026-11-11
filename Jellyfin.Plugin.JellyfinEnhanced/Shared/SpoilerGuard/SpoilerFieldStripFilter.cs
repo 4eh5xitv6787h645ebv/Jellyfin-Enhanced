@@ -32,7 +32,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
     // from a particular endpoint's response shape, we skip stripping for
     // that item (fail-safe, matches the action-filter rule pattern in
     // HiddenContentResponseFilter).
-    public sealed class SpoilerFieldStripFilter : IAsyncActionFilter
+    public sealed partial class SpoilerFieldStripFilter : IAsyncActionFilter
     {
         // Action-name table built from live observation on Jellyfin 10.11.x:
         // - /Items                        → Items.GetItems
@@ -116,6 +116,9 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                 // Matching on controller/action name alone means no
                 // dependency on that plugin: without it, this never matches.
                 { ("HomeScreen",  "GetSectionContent"),      true },
+                // GET /Videos/{id}/AdditionalParts: the other files of a
+                // multi-part video, named after their files.
+                { ("Videos",      "GetAdditionalPart"),      true },
                 // GET /Sessions: what each session is playing or viewing, as
                 // full item DTOs (remote control, the dashboard's devices).
                 { ("Session",     "GetSessions"),            true },
@@ -269,6 +272,7 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Shared.SpoilerGuard
                     if (qr.Items != null)
                     {
                         foreach (var item in qr.Items) StripItem(item, userState, cfg, userId);
+                        StripAdditionalParts(qr.Items, userState, cfg, userId, context);
                     }
                     break;
                 case IEnumerable<BaseItemDto> seq:

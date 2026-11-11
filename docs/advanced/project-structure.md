@@ -476,7 +476,7 @@ Files in this table are under `Features/SpoilerGuard/Services/` unless the row n
 |---|---|
 | `ImageBlurService.cs` | SkiaSharp Gaussian blur, stock cards and pre-encoded fail-closed JPEG fallback, with result caching. |
 | `SpoilerBlurImageFilter.cs` | Replaces protected image/trickplay responses with parent art, blur or fallback according to mode and availability. |
-| `Shared/SpoilerGuard/SpoilerFieldStripFilter.cs` | Strips/rewrites supported unwatched-item metadata in Jellyfin API responses, honoring user state and overrides. |
+| `Shared/SpoilerGuard/SpoilerFieldStripFilter.cs`, `SpoilerFieldStripFilter.AdditionalParts.cs` | Strips/rewrites supported unwatched-item metadata in Jellyfin API responses, honoring user state and overrides. The partial file handles the extra files of a multi-part episode. |
 | `Shared/SpoilerGuard/SpoilerIdentityService.cs`, `Features/SpoilerGuard/Services/SpoilerIdentityTagFilter.cs` | Stable per-user markers and item DTO image-tag stamping for anonymous image requests. The tag filter also calls native poster stamping. |
 | `Shared/SpoilerGuard/ImageTagDecoration.cs` | Shared parsing/composition of `[sb-{8hex}-]{jellyfinTag}[-jet{23hex}][-jeu{12hex}]`. |
 | `Shared/SpoilerGuard/SpoilerUserResolver.cs` | Loads Spoiler Guard state for the resolved requester. |

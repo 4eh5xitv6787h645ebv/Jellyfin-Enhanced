@@ -53,10 +53,11 @@ public class PrivacyFieldFilterTests
             ParentIndexNumber = 2, IndexNumber = 3, UserData = new UserItemDataDto { Key = "test", Played = played },
             Tags = ["Secret tag"], CommunityRating = 9, CriticRating = 80, SortName = "Secret sort",
         };
-        public async Task<object?> Invoke(object value, string controller = "Items", string action = "GetItems", Guid? user = null)
+        public async Task<object?> Invoke(object value, string controller = "Items", string action = "GetItems", Guid? user = null, Guid? routeItem = null)
         {
             var http = new DefaultHttpContext();
             http.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("Jellyfin-UserId", (user ?? User).ToString())], "Test"));
+            if (routeItem != null) http.Request.RouteValues["itemId"] = routeItem.Value.ToString("N");
             var descriptor = new ActionDescriptor { RouteValues = new Dictionary<string, string?> { ["controller"] = controller, ["action"] = action } };
             var context = new ActionContext(http, new RouteData(), descriptor, new ModelStateDictionary());
             var result = new ObjectResult(value);
@@ -144,6 +145,24 @@ public class PrivacyFieldFilterTests
         var others = new List<SessionInfoDto> { new() { Id = "tv", NowPlayingItem = playing } };
         var unguarded = Assert.Single(Assert.IsAssignableFrom<IEnumerable<SessionInfoDto>>(await f.Invoke(others, "Session", "GetSessions", Guid.NewGuid())));
         Assert.Same(playing, unguarded.NowPlayingItem);
+    }
+
+    // GET /Videos/{id}/AdditionalParts: the other files of a multi-part episode are plain videos with no series id,
+    // named after their files.
+    [Fact]
+    public async Task AdditionalPartsOfAGuardedUnwatchedEpisodeLoseTheTitleTheirFileNamesCarry()
+    {
+        using var f = new Fixture();
+        BaseItemDto Part() => new() { Id = Guid.NewGuid(), Type = BaseItemKind.Video, Name = "Show - S02E03 - Secret ending - pt2", Path = "/media/Show/Show - S02E03 - Secret ending - pt2.mkv", Container = "mkv" };
+        var guarded = new MediaBrowser.Controller.Entities.TV.Episode { Id = Guid.NewGuid(), SeriesId = f.Series };
+        var outside = new MediaBrowser.Controller.Entities.TV.Episode { Id = Guid.NewGuid(), SeriesId = Guid.NewGuid() };
+        foreach (var episode in new[] { guarded, outside }) f.Library.Setup(x => x.GetItemById(episode.Id)).Returns(episode);
+        var part = Part();
+        await f.Invoke(new QueryResult<BaseItemDto> { Items = [part] }, "Videos", "GetAdditionalPart", routeItem: guarded.Id);
+        Assert.Equal("Part 2", part.Name); Assert.DoesNotContain("Secret", part.Path);
+        var kept = Part();
+        await f.Invoke(new QueryResult<BaseItemDto> { Items = [kept] }, "Videos", "GetAdditionalPart", routeItem: outside.Id);
+        Assert.Equal("Show - S02E03 - Secret ending - pt2", kept.Name); Assert.Equal("/media/Show/Show - S02E03 - Secret ending - pt2.mkv", kept.Path);
     }
 
     // Upstream d3bd07d3: Home Screen Sections serves the web home rows from its own endpoint.

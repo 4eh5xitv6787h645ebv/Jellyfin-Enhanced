@@ -1130,6 +1130,10 @@
       "category": "Shared"
     },
     {
+      "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerFieldStripFilter.AdditionalParts.cs",
+      "category": "Shared"
+    },
+    {
       "path": "Jellyfin.Plugin.JellyfinEnhanced/Shared/SpoilerGuard/SpoilerFieldStripFilter.cs",
       "category": "Shared"
     },
@@ -10652,7 +10656,7 @@
   ],
   "counts": {
     "build_targets": 1,
-    "files": 545,
+    "files": 546,
     "routes": 203,
     "configuration_properties": 750,
     "storage_references": 96,
