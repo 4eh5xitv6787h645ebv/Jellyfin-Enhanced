@@ -191,6 +191,9 @@
       if (typeof r.id !== "number" || !Number.isFinite(r.id)) throw new Error("Invalid Seerr ID");
       result.id = r.id;
     }
+    const info = r.mediaInfo && typeof r.mediaInfo === "object" && !Array.isArray(r.mediaInfo) ? record(r.mediaInfo) : {};
+    const linked = [info.jellyfinMediaId, info.jellyfinMediaId4k].find((id) => typeof id === "string" && id !== "");
+    if (linked) result.jellyfinMediaId = linked;
     return result;
   }
   function decodeSeerrSearch(value) {

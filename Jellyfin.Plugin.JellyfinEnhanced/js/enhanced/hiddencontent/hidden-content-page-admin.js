@@ -462,6 +462,7 @@
           if (r.mediaType !== "movie" && r.mediaType !== "tv") continue;
           const tmdb = String(r.id);
           if (seenTmdb.has(tmdb)) continue;
+          if (r.jellyfinMediaId) continue;
           seenTmdb.add(tmdb);
           normalized.push({
             source: "seerr",
