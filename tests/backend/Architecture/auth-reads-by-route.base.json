@@ -108,7 +108,7 @@
     "GET JellyfinEnhanced/mdblist-ratings/{mediaType}/{tmdbId}": {"User":1,"UserHelper.GetCurrentUserId":1},
     "GET JellyfinEnhanced/native-poster-tags/preview/{itemId}": {"IsAdminUser":1,"User":1,"UserHelper.GetCurrentUserId":1},
     "GET JellyfinEnhanced/people/info": {"User":1,"UserHelper.GetCurrentUserId":1},
-    "GET JellyfinEnhanced/person/{personId}": {"User":1,"UserHelper.GetCurrentUserId":1},
+    "GET JellyfinEnhanced/person/{personId}": {"IsAdminUser":1,"User":2,"UserHelper.GetCurrentUserId":2},
     "GET JellyfinEnhanced/private-config": {"IsAdminUser":1},
     "GET JellyfinEnhanced/proxy/avatar": {},
     "GET JellyfinEnhanced/public-config": {"User":3,"UserHelper.GetCurrentUserId":1},

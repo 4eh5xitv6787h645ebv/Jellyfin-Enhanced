@@ -101,7 +101,7 @@
   "GetOverrideRules": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
   "GetPeopleInfo": {"User":1,"UserHelper.GetCurrentUserId":1},
   "GetPermissionAudit": {"IsAdminUser":1},
-  "GetPersonInfo": {"User":1,"UserHelper.GetCurrentUserId":1},
+  "GetPersonInfo": {"IsAdminUser":1,"User":2,"UserHelper.GetCurrentUserId":2},
   "GetPrivateConfig": {"IsAdminUser":1},
   "GetPublicConfig": {"User":1},
   "GetRadarrInstances": {"IsAdminUser":5,"User":1,"UserHelper.GetCurrentUserId":1},
