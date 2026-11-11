@@ -18,6 +18,8 @@ export function createSave(m: SaveDeps) {
 
         /** The form's own values in each configuration buildConfigFromForm returned, before the merge. */
         const formValues = new WeakMap<AdminConfig, AdminConfig>();
+        /** Whether maintenance mode was on in the configuration the last build read, before the form's value. */
+        let maintenanceWasOn = false;
 
         async function buildConfigFromForm(scope: WriteScope) : Promise<AdminConfig> {
             if (!m.load.configLoaded) throw new Error('the saved settings have not been read');
@@ -25,6 +27,7 @@ export function createSave(m: SaveDeps) {
             const config = await ApiClient.getPluginConfiguration(pluginId);
             scope.throwIfStale();
             const stored = { ...config };
+            maintenanceWasOn = config.MaintenanceModeEnabled === true;
             const finalShortcuts = [...m.shortcuts.defaultShortcuts];
             m.shortcuts.shortcutOverrides.forEach(override => {
                 const index = finalShortcuts.findIndex(s => s.Name === override.Name);
@@ -409,6 +412,7 @@ export function createSave(m: SaveDeps) {
 
             try {
                 const config = await buildConfigFromForm(scope);
+                const wasOn = maintenanceWasOn;
                 scope.throwIfStale();
                 const result = await writeFormConfig(config);
                 scope.throwIfStale();
@@ -437,24 +441,28 @@ export function createSave(m: SaveDeps) {
                             })
                         });
                         // Broadcast a native Jellyfin message to all active sessions
-                        // (reaches non-web clients like TV apps too — works regardless of Active Streams setting)
+                        // (reaches non-web clients like TV apps too — works regardless of Active Streams setting).
+                        // Only when this save turns maintenance on: Enable above is re-sent on every save, and a
+                        // window already running was announced when it started.
                         const mmMsg = text(config.MaintenanceModeNotificationMessage).trim()
                             || text(config.MaintenanceModeMessage).trim()
                             || 'Server maintenance is starting. Please finish up and try again later.';
                         scope.throwIfStale();
-                        try {
-                            await ApiClient.ajax({
-                                type: 'POST',
-                                url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Broadcast'),
-                                contentType: 'application/json',
-                                data: JSON.stringify({
-                                    header: 'Server Maintenance',
-                                    text: mmMsg,
-                                    timeoutMs: 30000
-                                })
-                            });
-                        } catch (bcErr) {
-                            console.warn('[JE] Maintenance broadcast failed (no active sessions?):', bcErr);
+                        if (!wasOn) {
+                            try {
+                                await ApiClient.ajax({
+                                    type: 'POST',
+                                    url: ApiClient.getUrl('/JellyfinEnhanced/MaintenanceMode/Broadcast'),
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({
+                                        header: 'Server Maintenance',
+                                        text: mmMsg,
+                                        timeoutMs: 30000
+                                    })
+                                });
+                            } catch (bcErr) {
+                                console.warn('[JE] Maintenance broadcast failed (no active sessions?):', bcErr);
+                            }
                         }
                     } else {
                         // With the daily schedule on, "manual off" must leave a scheduled window running;

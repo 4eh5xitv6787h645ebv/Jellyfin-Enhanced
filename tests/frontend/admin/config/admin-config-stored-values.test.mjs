@@ -150,3 +150,24 @@ test('FR-039 control: a setting changed on this page is saved even when another 
   await h.submit();
   assert.equal(h.lastPut().TMDB_API_KEY, 'tmdb-here');
 });
+
+const BROADCAST = '/JellyfinEnhanced/MaintenanceMode/Broadcast';
+const ENABLE = '/JellyfinEnhanced/MaintenanceMode/Enable';
+
+test('FR-040: saving while maintenance is already on re-applies it but does not announce it again', async t => {
+  const h = await page(t, { saved: { MaintenanceModeEnabled: true, MaintenanceModeAction: 'disable_remote' } });
+  h.document.getElementById('showFileSizes').checked = true;
+  await h.submit();
+  assert.equal(h.posted(ENABLE).length, 1, 'the server still reconciles the window');
+  assert.equal(h.posted(BROADCAST).length, 0);
+});
+
+test('FR-040 control: turning maintenance on announces it once, and later saves while it is on do not', async t => {
+  const h = await page(t, { saved: { MaintenanceModeEnabled: false, MaintenanceModeAction: 'disable_remote' } });
+  h.document.getElementById('maintenanceModeEnabled').checked = true;
+  await h.submit();
+  assert.deepEqual([h.posted(ENABLE).length, h.posted(BROADCAST).length], [1, 1]);
+  h.document.getElementById('showFileSizes').checked = true;
+  await h.submit();
+  assert.deepEqual([h.posted(ENABLE).length, h.posted(BROADCAST).length], [2, 1]);
+});
