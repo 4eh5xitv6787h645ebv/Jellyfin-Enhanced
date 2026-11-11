@@ -68,6 +68,39 @@ public class IntegrationAwardsTests
         Assert.Equal(2, transport.Calls);
     }
 
+    [Fact]
+    public async Task CacheDropsExpiredEntriesThenTheOldestAndKeepsNoIdleTitleGate()
+    {
+        using var env = new IntegrationEnvironment();
+        var path = Path.Combine(env.Root, "configurations/Jellyfin.Plugin.JellyfinEnhanced/awards.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var now = DateTimeOffset.UtcNow;
+        var items = Enumerable.Range(0, WikidataAwardsService.MaxCacheEntries).ToDictionary(
+            i => $"movie-{i}", i => new AwardsCacheEntry { Found = true, Confirmed = true, FetchedAtUnixMs = now.AddMinutes(-i).ToUnixTimeMilliseconds() });
+        for (var i = 0; i < 5; i++)
+        {
+            items[$"tv-{i}"] = new AwardsCacheEntry { Found = false, Confirmed = true, FetchedAtUnixMs = now.AddDays(-31).ToUnixTimeMilliseconds() };
+        }
+
+        File.WriteAllText(path, JsonSerializer.Serialize(new AwardsCacheDiskFormat { SchemaVersion = 1, Items = items }));
+        using var transport = new IntegrationTransport((_, _) => Task.FromResult(IntegrationTransport.Response(Body())));
+        int idleGates;
+        using (var service = new WikidataAwardsService(transport, env.Paths.Object, env.Logger))
+        {
+            await service.GetAwardsAsync("movie", "123456789", default);
+            idleGates = ((System.Collections.ICollection)typeof(WikidataAwardsService)
+                .GetField("_inFlight", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(service)!).Count;
+        }
+
+        var saved = JsonSerializer.Deserialize<AwardsCacheDiskFormat>(File.ReadAllText(path))!.Items;
+        Assert.Equal(WikidataAwardsService.MaxCacheEntries, saved.Count);
+        Assert.Contains("movie-123456789", saved.Keys);
+        Assert.Contains("movie-0", saved.Keys);
+        Assert.DoesNotContain($"movie-{WikidataAwardsService.MaxCacheEntries - 1}", saved.Keys);
+        Assert.DoesNotContain(saved.Keys, k => k.StartsWith("tv-", StringComparison.Ordinal));
+        Assert.Equal(0, idleGates);
+    }
+
     [Theory]
     [InlineData(true, true, 179, false)][InlineData(true, true, 181, true)]
     [InlineData(false, true, 29, false)][InlineData(false, true, 31, true)]

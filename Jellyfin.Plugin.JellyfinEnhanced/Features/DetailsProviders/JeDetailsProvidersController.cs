@@ -235,7 +235,8 @@ namespace Jellyfin.Plugin.JellyfinEnhanced.Features.DetailsProviders
                 return BadRequest("mediaType must be 'movie', 'tv', or 'person'.");
             }
 
-            if (string.IsNullOrWhiteSpace(tmdbId) || !tmdbId.All(char.IsDigit))
+            // At most 10 digits: each id becomes a key in awards.json.
+            if (string.IsNullOrWhiteSpace(tmdbId) || tmdbId.Length > 10 || !tmdbId.All(char.IsDigit))
             {
                 return BadRequest("tmdbId must be a positive integer.");
             }
