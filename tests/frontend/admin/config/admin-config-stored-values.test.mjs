@@ -120,3 +120,33 @@ test('FR-036 control: with the language list in first, the admin\'s pick is save
   await h.submit();
   assert.equal(h.lastPut().DefaultLanguage, 'fr');
 });
+
+const radarrInstances = count => JSON.stringify(Array.from({ length: count }, (_, i) => (
+  { Name: 'Radarr ' + (i + 1), Url: 'http://radarr' + (i + 1) + '.test:7878', ApiKey: 'key-' + (i + 1), UrlMappings: '', Enabled: true })));
+
+test('FR-039: a page left open saves what was changed on it over what was saved elsewhere since it loaded', async t => {
+  const h = await page(t, { saved: { RadarrInstances: radarrInstances(1), RadarrUrl: 'http://radarr1.test:7878', RadarrApiKey: 'key-1', ShowFileSizes: false, TMDB_API_KEY: 'tmdb-old' } });
+  // Another tab, opened later, adds a Radarr instance and changes a key this page also shows.
+  Object.assign(h.server.config, { RadarrInstances: radarrInstances(2), TMDB_API_KEY: 'tmdb-new' });
+  h.document.getElementById('showFileSizes').checked = true;
+  await h.submit();
+  const first = h.lastPut();
+  assert.equal(first.ShowFileSizes, true, 'the change made on this page');
+  assert.equal(first.RadarrInstances, radarrInstances(2), 'the instance added elsewhere stays');
+  assert.equal(first.TMDB_API_KEY, 'tmdb-new', 'the key changed elsewhere stays');
+  // The form still shows what it loaded; a second save from it reverts nothing either.
+  h.document.getElementById('showFileSizes').checked = false;
+  await h.submit();
+  const second = h.lastPut();
+  assert.deepEqual([second.ShowFileSizes, second.RadarrInstances, second.TMDB_API_KEY], [false, radarrInstances(2), 'tmdb-new']);
+});
+
+test('FR-039 control: a setting changed on this page is saved even when another tab changed it too', async t => {
+  const h = await page(t, { saved: { TMDB_API_KEY: 'tmdb-old' } });
+  h.server.config.TMDB_API_KEY = 'tmdb-elsewhere';
+  const key = h.document.getElementById('TMDB_API_KEY');
+  key.value = 'tmdb-here';
+  key.dispatchEvent(new h.window.Event('input', { bubbles: true }));
+  await h.submit();
+  assert.equal(h.lastPut().TMDB_API_KEY, 'tmdb-here');
+});

@@ -16,11 +16,15 @@ export function createSave(m: SaveDeps) {
 
             const resetAllUserSettingsBtn = asHtml(document.querySelector('#resetAllUserSettingsBtn'));
 
+        /** The form's own values in each configuration buildConfigFromForm returned, before the merge. */
+        const formValues = new WeakMap<AdminConfig, AdminConfig>();
+
         async function buildConfigFromForm(scope: WriteScope) : Promise<AdminConfig> {
             if (!m.load.configLoaded) throw new Error('the saved settings have not been read');
             scope.throwIfStale();
             const config = await ApiClient.getPluginConfiguration(pluginId);
             scope.throwIfStale();
+            const stored = { ...config };
             const finalShortcuts = [...m.shortcuts.defaultShortcuts];
             m.shortcuts.shortcutOverrides.forEach(override => {
                 const index = finalShortcuts.findIndex(s => s.Name === override.Name);
@@ -264,7 +268,21 @@ export function createSave(m: SaveDeps) {
                 config[entry.ownedKey] = m.displayCards._jeCustomTabOwnedCache[entry.ownedKey] === true;
             });
 
+            // Another tab or administrator may have saved since this form was filled. A setting the form still
+            // holds as it was filled keeps the value just read, so only what was changed here is written over it.
+            formValues.set(config, { ...config });
+            const base = m.load.formBase;
+            Object.keys(config).forEach(function(key) {
+                if (JSON.stringify(config[key]) === JSON.stringify(base[key])) config[key] = stored[key];
+            });
             return config;
+        }
+
+        /** Writes a configuration from buildConfigFromForm; the form's values in it are then what the form was saved from. */
+        async function writeFormConfig(config: AdminConfig) : Promise<unknown> {
+            const result = await ApiClient.updatePluginConfiguration(pluginId, config);
+            m.load.formBase = formValues.get(config) ?? m.load.formBase;
+            return result;
         }
 
         /**
@@ -392,7 +410,7 @@ export function createSave(m: SaveDeps) {
             try {
                 const config = await buildConfigFromForm(scope);
                 scope.throwIfStale();
-                const result = await ApiClient.updatePluginConfiguration(pluginId, config);
+                const result = await writeFormConfig(config);
                 scope.throwIfStale();
                 // After JE config is persisted, sync any managed Custom Tabs entries.
                 // We surface non-OK results to the admin via Dashboard.alert so a
@@ -501,7 +519,7 @@ export function createSave(m: SaveDeps) {
                     // First, save the current configuration
                     const config = await buildConfigFromForm(scope);
                     scope.throwIfStale();
-                    await ApiClient.updatePluginConfiguration(pluginId, config);
+                    await writeFormConfig(config);
                     scope.throwIfStale();
                     m.dirty.jeMarkSaved();
 
@@ -552,7 +570,7 @@ export function createSave(m: SaveDeps) {
             try {
                 const config = await buildConfigFromForm(scope);
                 scope.throwIfStale();
-                await ApiClient.updatePluginConfiguration(pluginId, config);
+                await writeFormConfig(config);
                 scope.throwIfStale();
                 m.dirty.jeMarkSaved();
                 await runCustomTabsSync(config, scope);
